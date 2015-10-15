@@ -1,0 +1,34 @@
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Rhino.PlugIns;
+
+// Plug-In title and Guid are extracted from the following two attributes
+[assembly: AssemblyTitle("RhinoCycles")]
+[assembly: Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97")]
+
+// Plug-in Description Attributes - all of these are optional
+[assembly: PlugInDescription(DescriptionType.Address, "-")]
+[assembly: PlugInDescription(DescriptionType.Country, "Finland")]
+[assembly: PlugInDescription(DescriptionType.Email, "nathan@mcneel.com")]
+[assembly: PlugInDescription(DescriptionType.Phone, "-")]
+[assembly: PlugInDescription(DescriptionType.Fax, "-")]
+[assembly: PlugInDescription(DescriptionType.Organization, "McNeel")]
+[assembly: PlugInDescription(DescriptionType.UpdateUrl, "http://www.rhino3d.com/download")]
+[assembly: PlugInDescription(DescriptionType.WebSite, "http://www.rhino3d.com")]
+
+// General Information about an assembly is controlled through the following 
+// set of attributes. Change these attribute values to modify the information
+// associated with an assembly.
+[assembly: AssemblyDescription("RhinoCycles")]
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("RhinoCycles")]
+[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyTrademark("")]
+[assembly: AssemblyCulture("")]
+
+// Setting ComVisible to false makes the types in this assembly not visible 
+// to COM components.  If you need to access a type in this assembly from 
+// COM, set the ComVisible attribute to true on that type.
+[assembly: ComVisible(false)]

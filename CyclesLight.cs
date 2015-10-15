@@ -1,0 +1,66 @@
+﻿using ccl;
+using System;
+using Rhino.DocObjects.Tables;
+using Light = Rhino.Render.ChangeQueue.Light;
+
+namespace RhinoCycles
+{
+	/// <summary>
+	/// Intermediate class used for converting rhino light sources 
+	/// to Cycles light sources.
+	/// </summary>
+	public class CyclesLight
+	{
+		public Light.Event Event { get; set; }
+		public LightType Type { get; set; }
+		/// <summary>
+		/// Location of light in world
+		/// </summary>
+		public float4 Co { get; set; }
+		/// <summary>
+		/// Direction of light (ignored for point light)
+		/// </summary>
+		public float4 Dir { get; set; }
+		/// <summary>
+		/// Size of soft-shadow. Higher values give softer shadows, lower values
+		/// sharper shadows.
+		/// 
+		/// Note that lower values will contribute to fireflies.
+		/// </summary>
+		public float Size { get; set; }
+
+		public float SizeU { get; set; }
+		public float SizeV { get; set; }
+
+		public float4 AxisU { get; set; }
+		public float4 AxisV { get; set; }
+
+		public float SpotAngle { get; set; }
+		public float SpotSmooth { get; set; }
+
+		/// <summary>
+		/// Color of the light
+		/// </summary>
+		public float4 DiffuseColor { get; set; }
+		/// <summary>
+		/// Intensity of the light. This is generally
+		/// between 0.0f and 1.0f, but can be higher
+		/// </summary>
+		public float Strength { get; set; }
+
+		/// <summary>
+		/// Set to true if light source should cast shadows
+		/// </summary>
+		public bool CastShadow { get; set; }
+
+		/// <summary>
+		/// Set to true if multiple importance sampling is to
+		/// be used for this light
+		/// </summary>
+		public bool UseMis { get; set; }
+
+		public Guid Id { get; set; }
+
+		public float Gamma { get; set; }
+	}
+}

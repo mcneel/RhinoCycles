@@ -1,0 +1,173 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{7DB01F36-A1C2-49A0-8326-FF09FFC6ADF3}</ProjectGuid>
+    <OutputType>library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RhinoCycles</RootNamespace>
+    <AssemblyName>RhinoCycles</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="WindowsFormsIntegration" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\..\..\version.cs">
+      <Link>Properties\version.cs</Link>
+    </Compile>
+    <Compile Include="BitmapImage.cs" />
+    <Compile Include="Commands\ShowInfo.cs" />
+    <Compile Include="Commands\ShowPaths.cs" />
+    <Compile Include="Commands\SelectDevice.cs" />
+    <Compile Include="Commands\ShowDeviceCapabilities.cs" />
+    <Compile Include="Commands\SetDebugOptions.cs" />
+    <Compile Include="Commands\SetThreads.cs" />
+    <Compile Include="Commands\ToggleShaders.cs" />
+    <Compile Include="CyclesBackground.cs" />
+    <Compile Include="CyclesLight.cs" />
+    <Compile Include="CyclesMesh.cs" />
+    <Compile Include="CyclesObject.cs" />
+    <Compile Include="CyclesObjectShader.cs" />
+    <Compile Include="CyclesObjectTransform.cs" />
+    <Compile Include="CyclesShader.cs" />
+    <Compile Include="CyclesTextureImage.cs" />
+    <Compile Include="CyclesView.cs" />
+    <Compile Include="Environments\SimpleNoiseEnvironment.cs" />
+    <Compile Include="LinearWorkflow.cs" />
+    <Compile Include="Materials\DiffuseMaterial.cs" />
+    <Compile Include="Materials\GlassMaterial.cs" />
+    <Compile Include="Materials\ICyclesMaterial.cs" />
+    <Compile Include="Materials\FlakedCarPaintMaterial.cs" />
+    <Compile Include="Materials\BrickWithCheckeredMortar.cs" />
+    <Compile Include="Materials\SimpleBrickMaterial.cs" />
+    <Compile Include="Materials\PhongTestMaterial.cs" />
+    <Compile Include="Materials\SimplePlasticMaterial.cs" />
+    <Compile Include="Materials\TranslucentMaterial.cs" />
+    <Compile Include="Materials\TestMaterial.cs" />
+    <Compile Include="Measurement.cs" />
+    <Compile Include="Plugin.BitmapConversion.cs" />
+    <Compile Include="Plugin.Settings.cs" />
+    <Compile Include="Plugin.ShaderConversion.cs" />
+    <Compile Include="RCChangeQueue.cs" />
+    <Compile Include="RenderEngine.Modal.cs" />
+    <Compile Include="RenderEngine.Preview.cs" />
+    <Compile Include="RenderEngine.Viewport.cs" />
+    <Compile Include="Viewport\RenderedViewport.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="RenderEngine.Settings.cs" />
+    <Compile Include="RenderEngine.Shaders.cs" />
+    <Compile Include="RenderEngine.Utils.cs" />
+    <Compile Include="RenderPipeline.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="RenderEngine.cs" />
+    <Compile Include="Commands\SetRenderOptions.cs" />
+    <Compile Include="Plugin.cs" />
+    <Compile Include="Commands\ListDevices.cs" />
+    <Compile Include="EngineSettings.cs" />
+    <Compile Include="RenderEngine.UploadData.cs" />
+    <Compile Include="Shaders\RhinoFullNxt.cs" />
+    <Compile Include="Shaders\RhinoLight.cs" />
+    <Compile Include="Shaders\RhinoBackground.cs" />
+    <Compile Include="Shaders\RhinoFull.cs" />
+    <Compile Include="Shaders\RhinoNotYetImplemented.cs" />
+    <Compile Include="Shaders\RhinoShader.cs" />
+    <Compile Include="ViewPlane.cs" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\Source\Eto.Wpf\Eto.Wpf - net45.csproj">
+      <Project>{63137fa0-ca55-11e3-9c1a-0800200c9a66}</Project>
+      <Name>Eto.Wpf - net45</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\Source\Eto\Eto - pcl.csproj">
+      <Project>{35ef0a4e-2a1a-492c-8bed-106774ea09f2}</Project>
+      <Name>Eto - pcl</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj">
+      <Project>{3d7c4cfa-38e3-46ed-a689-862a34f6656c}</Project>
+      <Name>Rhino.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj">
+      <Project>{ed38373e-290c-4bde-acba-1601484e582a}</Project>
+      <Name>RhinoCommon</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
+      <Project>{78e5c303-7764-446e-baba-fdb410bd98e1}</Project>
+      <Name>RhinoWindows</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\cycles\csycles\csycles.csproj">
+      <Project>{36396655-e087-4c00-990b-ce44f08e4fb2}</Project>
+      <Name>csycles</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>Copy /Y "$(TargetPath)" "$(TargetDir)$(ProjectName).rhp"
+Copy /Y "$(TargetDir)$(ProjectName).rhp" "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins"
+MkDir "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses"
+Copy /Y /A "$(ProjectDir)..\cycles\cycles\src\doc\license\*.txt" "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses"
+Copy /Y /A "$(ProjectDir)..\cycles\pthreads\COPYING" /A "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses\pthreads.txt"
+Copy /Y "$(ProjectDir)..\cycles\cycles\third_party\cuew\LICENSE" /A "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses\cuew.txt"
+Del "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses\CMakeLists.txt"
+Del "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses\OSL.txt"</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

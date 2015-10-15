@@ -1,0 +1,115 @@
+﻿using System.Drawing;
+using System.Runtime.InteropServices;
+using Rhino.Display;
+using Rhino.DocObjects;
+using Rhino.Render;
+
+namespace RhinoCycles.Materials
+{
+	[Guid("3CEC0E39-8A13-4E73-8D0C-F1F1DF730C35")]
+	public class GlassMaterial : RenderMaterial, ICyclesMaterial
+	{
+		public override string TypeName
+		{
+			get { return "Cycles Glass"; }
+		}
+
+		public override string TypeDescription
+		{
+			get { return "Cycles Glass Material"; }
+		}
+
+		public float Gamma { get; set; }
+
+		public CyclesShader.CyclesMaterial MaterialType
+		{
+			get { return CyclesShader.CyclesMaterial.Glass; }
+		}
+
+		public GlassMaterial()
+		{
+			Fields.Add("glass_color", Color4f.White, "Glass Color");
+			Fields.Add("frost-amount", 0.0f, "Frost");
+			Fields.Add("ior", 1.45f, "IOR");
+		}
+
+		protected override void OnAddUserInterfaceSections()
+		{
+			AddAutomaticUserInterfaceSection("Parameters", 0);
+		}
+
+		public override void SimulateMaterial(ref Material simulatedMaterial, bool forDataOnly)
+		{
+			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
+
+			simulatedMaterial.Reflectivity = 1.0;
+			simulatedMaterial.Transparency = 1.0;
+			simulatedMaterial.FresnelReflections = true;
+			simulatedMaterial.DiffuseColor = Color.Black;
+
+			Color4f color;
+			if (Fields.TryGetValue("glass_color", out color))
+				simulatedMaterial.TransparentColor = color.AsSystemColor();
+
+			float f;
+			if (Fields.TryGetValue("frost-amount", out f))
+			{
+				simulatedMaterial.ReflectionGlossiness = f;
+				simulatedMaterial.RefractionGlossiness = f;
+			}
+			if (Fields.TryGetValue("ior", out f))
+			{
+				simulatedMaterial.IndexOfRefraction = f;
+			}
+
+			simulatedMaterial.Name = Name;
+
+
+		}
+
+		public override Material SimulateMaterial(bool isForDataOnly)
+		{
+			var m = base.SimulateMaterial(isForDataOnly);
+
+			SimulateMaterial(ref m, isForDataOnly);
+
+			return m;
+		}
+
+
+		public string MaterialXml
+		{
+			get
+			{
+				Color4f color;
+				float frost;
+				float IOR;
+
+				Fields.TryGetValue("glass_color", out color);
+				Fields.TryGetValue("frost-amount", out frost);
+				Fields.TryGetValue("ior", out IOR);
+
+				color = Color4f.ApplyGamma(color, Gamma);
+
+				return string.Format("" +
+					"<transparent_bsdf color=\"{0} {1} {2}\" name=\"transp\" />" +
+					"<glass_bsdf color=\"{0} {1} {2}\" roughness=\"{3}\" ior=\"{4}\" name=\"glass\" />" +
+					"<light_path name=\"lp\" />" +
+					"<math type=\"Maximum\" name=\"max\" />" +
+					"<mix_closure name=\"mix\" />" +
+
+					"<connect from=\"transp bsdf\" to=\"mix closure2\" />" +
+					"<connect from=\"glass bsdf\" to=\"mix closure1\" />" +
+					"<connect from=\"lp isshadowray\" to=\"max value1\" />" +
+					"<connect from=\"lp isreflectionray\" to=\"max value2\" />" +
+					"<connect from=\"max value\" to=\"mix fac\" />" +
+					"<connect from=\"mix closure\" to=\"output surface\" />" +
+					"",
+					
+					color.R, color.G, color.B,
+					frost,
+					IOR);
+			}
+		}
+	}
+}
