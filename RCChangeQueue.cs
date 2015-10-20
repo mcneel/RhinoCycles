@@ -519,7 +519,7 @@ namespace RhinoCycles
 
 		protected override bool NeedsBakingOnAnyChannel(RenderMaterial material)
 		{
-			return false;
+			return true;
 		}
 	}
 }
