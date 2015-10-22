@@ -46,7 +46,7 @@ namespace RhinoCycles
 
 			if (crm == null)
 			{
-				if (rm.TypeName == "Plaster")
+				if (rm.SmellsLikePlaster)
 				{
 					var plaster = new DiffuseMaterial();
 					Color4f c;
@@ -56,7 +56,7 @@ namespace RhinoCycles
 					}
 					crm = plaster;
 				}
-				else if (rm.TypeName == "Glass")
+				else if (rm.SmellsLikeGlass)
 				{
 					var glass = new GlassMaterial();
 					Color4f c;
@@ -76,7 +76,7 @@ namespace RhinoCycles
 					}
 					crm = glass;
 				}
-				else if (rm.TypeName == "Plastic")
+				else if (rm.SmellsLikePlastic)
 				{
 					var plastic = new SimplePlasticMaterial();
 					Color4f c;
