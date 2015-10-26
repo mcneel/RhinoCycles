@@ -680,6 +680,12 @@ namespace RhinoCycles
 			m_cq_background.Clear();
 		}
 
+		public void UploadEnvironmentChanges()
+		{
+			if(BackgroundHasChanged)
+				RenderEngine.RecreateBackgroundShader();
+		}
+
 		/// <summary>
 		/// Handle skylight changes
 		/// </summary>

@@ -35,7 +35,7 @@ namespace RhinoCycles
 			Database.UploadGammaChanges();
 
 			// environment changes
-			UploadEnvironmentChanges();
+			Database.UploadEnvironmentChanges();
 
 			// transforms on objects, no geometry changes
 			UploadDynamicObjectTransforms();
@@ -73,12 +73,6 @@ namespace RhinoCycles
 			ClearObjectShaderChanges();
 		}
 
-
-		private void UploadEnvironmentChanges()
-		{
-			if(Database.BackgroundHasChanged)
-				RecreateBackgroundShader();
-		}
 
 		/// <summary>
 		/// Change shaders on objects and their meshes
