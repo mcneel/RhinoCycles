@@ -129,7 +129,7 @@ namespace RhinoCycles
 
 		internal Shader CreateBackgroundShader(CyclesShader shader)
 		{
-			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Client, m_cq_background, null);
+			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Client, ChangeQueue.m_cq_background, null);
 			return rhinobg.GetShader();
 		}
 
@@ -137,7 +137,7 @@ namespace RhinoCycles
 		internal void RecreateBackgroundShader()
 		{
 			var bg = Session.Scene.Background.Shader;
-			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Client, m_cq_background, bg);
+			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Client, ChangeQueue.m_cq_background, bg);
 			rhinobg.Reset();
 			Session.Scene.Background.Shader = rhinobg.GetShader();
 			m_current_background_shader = rhinobg;

@@ -68,6 +68,7 @@ namespace RhinoCycles
 		{
 			ClearGamma();
 			ClearLinearWorkflow();
+			ClearBackground();
 		}
 
 		public bool HasChanges()
@@ -100,7 +101,7 @@ namespace RhinoCycles
 		}
 
 
-		public void ClearGamma()
+		private void ClearGamma()
 		{
 			GammaHasChanged = false;
 		}
@@ -147,7 +148,7 @@ namespace RhinoCycles
 			}
 		}
 
-		public void ClearLinearWorkflow()
+		private void ClearLinearWorkflow()
 		{
 			LinearWorkflowHasChanged = false;
 		}
@@ -540,15 +541,31 @@ namespace RhinoCycles
 		}
 
 		/// <summary>
+		/// record background shader changes to push to cycles
+		/// note that we have only one object that gets updated when necessary.
+		/// </summary>
+		public CyclesBackground m_cq_background = new CyclesBackground();
+
+		public bool BackgroundHasChanged
+		{
+			get { return m_cq_background.modified; }
+		}
+
+		private void ClearBackground()
+		{
+			m_cq_background.Clear();
+		}
+
+		/// <summary>
 		/// Handle skylight changes
 		/// </summary>
 		/// <param name="skylight">New skylight information</param>
 		protected override void ApplySkylightChanges(Skylight skylight)
 		{
 			//System.Diagnostics.Debug.WriteLine("{0}", skylight);
-			RenderEngine.m_cq_background.skylight_enabled =  skylight.Enabled;
-			RenderEngine.m_cq_background.gamma = Gamma;
-			RenderEngine.m_cq_background.modified = true;
+			m_cq_background.skylight_enabled =  skylight.Enabled;
+			m_cq_background.gamma = Gamma;
+			m_cq_background.modified = true;
 		}
 
 		protected override void ApplyBackgroundChanges(RenderSettings rs)
@@ -556,11 +573,11 @@ namespace RhinoCycles
 			if (rs != null)
 			{
 				//System.Diagnostics.Debug.WriteLine("ApplyBackgroundChanges: fillstyle {0} color1 {1} color2 {2}", rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
-				RenderEngine.m_cq_background.background_fill = rs.BackgroundStyle;
-				RenderEngine.m_cq_background.color1 = rs.BackgroundColorTop;
-				RenderEngine.m_cq_background.color2 = rs.BackgroundColorBottom;
-				RenderEngine.m_cq_background.gamma = Gamma;
-				RenderEngine.m_cq_background.modified = true;
+				m_cq_background.background_fill = rs.BackgroundStyle;
+				m_cq_background.color1 = rs.BackgroundColorTop;
+				m_cq_background.color2 = rs.BackgroundColorBottom;
+				m_cq_background.gamma = Gamma;
+				m_cq_background.modified = true;
 			}
 		}
 
@@ -575,20 +592,20 @@ namespace RhinoCycles
 			switch (usage)
 			{
 				case RenderEnvironment.Usage.Background:
-					RenderEngine.m_cq_background.background_environment = env;
+					m_cq_background.background_environment = env;
 					break;
 				case RenderEnvironment.Usage.Skylighting:
-					RenderEngine.m_cq_background.skylight_environment = env;
+					m_cq_background.skylight_environment = env;
 					break;
 				case RenderEnvironment.Usage.ReflectionAndRefraction:
-					RenderEngine.m_cq_background.reflection_environment = env;
+					m_cq_background.reflection_environment = env;
 					break;
 			}
-			RenderEngine.m_cq_background.gamma = Gamma;
+			m_cq_background.gamma = Gamma;
 
-			RenderEngine.m_cq_background.HandleEnvironments();
+			m_cq_background.HandleEnvironments();
 
-			RenderEngine.m_cq_background.modified = true;
+			m_cq_background.modified = true;
 
 			//System.Diagnostics.Debug.WriteLine("{0}, env {1}", usage, env);
 		}

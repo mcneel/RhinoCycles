@@ -181,11 +181,6 @@ namespace RhinoCycles
 		private readonly List<CyclesView> m_cq_view_changes = new List<CyclesView>();
 
 		/// <summary>
-		/// record background shader changes to push to cycles
-		/// note that we have only one object that gets updated when necessary.
-		/// </summary>
-		public CyclesBackground m_cq_background = new CyclesBackground();
-		/// <summary>
 		/// record light changes to push to cycles
 		/// </summary>
 		private readonly List<CyclesLight> m_cq_light_changes = new List<CyclesLight>();
@@ -285,8 +280,7 @@ namespace RhinoCycles
 				m_cq_new_updated_objects.Count > 0 || m_cq_deleted_objects.Count > 0 ||
 				m_cq_meshes_to_delete.Count > 0 ||
 				m_cq_object_transform.Count > 0 ||
-				m_cq_objects_shader_changes.Count > 0 ||
-				m_cq_background.modified;
+				m_cq_objects_shader_changes.Count > 0;
 		}
 
 		/// <summary>
@@ -342,11 +336,6 @@ namespace RhinoCycles
 		public void ClearShaders()
 		{
 			m_cq_shaders.Clear();
-		}
-
-		public void ClearBackground()
-		{
-			m_cq_background.Clear();
 		}
 
 		/// <summary>

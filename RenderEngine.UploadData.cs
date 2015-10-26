@@ -66,7 +66,6 @@ namespace RhinoCycles
 		private void ClearChanges()
 		{
 			ChangeQueue.ClearChanges();
-			ClearBackground();
 			ClearShaders();
 			ClearViewChanges();
 			ClearObjectsChanges();
@@ -131,7 +130,7 @@ namespace RhinoCycles
 
 		private void UploadEnvironmentChanges()
 		{
-			if(m_cq_background.modified)
+			if(ChangeQueue.BackgroundHasChanged)
 				RecreateBackgroundShader();
 		}
 
