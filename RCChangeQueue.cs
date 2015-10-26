@@ -532,9 +532,9 @@ namespace RhinoCycles
 			//System.Diagnostics.Debug.WriteLine("dyn changes...");
 		}
 
-		protected override bool NeedsBakingOnAnyChannel(RenderMaterial material)
+		protected override bool NeedsBakingOnAnyChannel(RhinoObject ob, RenderMaterial material)
 		{
-			return true;
+			return ob.Attributes.Decals.Any();
 		}
 	}
 }
