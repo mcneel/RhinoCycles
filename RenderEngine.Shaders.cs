@@ -133,14 +133,13 @@ namespace RhinoCycles
 			return rhinobg.GetShader();
 		}
 
-		private RhinoShader m_current_background_shader;
 		internal void RecreateBackgroundShader()
 		{
 			var bg = Session.Scene.Background.Shader;
 			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Client, Database.m_cq_background, bg);
 			rhinobg.Reset();
 			Session.Scene.Background.Shader = rhinobg.GetShader();
-			m_current_background_shader = rhinobg;
+			Database.m_current_background_shader = rhinobg;
 		}
 
 		internal Shader CreateSimpleEmissionShader(CyclesLight light)

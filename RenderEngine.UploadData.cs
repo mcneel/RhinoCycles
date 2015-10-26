@@ -15,7 +15,6 @@ limitations under the License.
 **/
 
 using System;
-using System.Drawing;
 using System.Linq;
 using ccl;
 using Object = ccl.Object;
@@ -30,10 +29,10 @@ namespace RhinoCycles
 		private void UploadData()
 		{
 			// linear workflow changes
-			UploadLinearWorkflowChanges();
+			Database.UploadLinearWorkflowChanges();
 
 			// gamma changes
-			UploadGammaChanges();
+			Database.UploadGammaChanges();
 
 			// environment changes
 			UploadEnvironmentChanges();
@@ -42,7 +41,7 @@ namespace RhinoCycles
 			UploadDynamicObjectTransforms();
 
 			// viewport changes
-			UploadCameraChanges();
+			Database.UploadCameraChanges();
 
 			// new shaders we've got
 			UploadShaderChanges();
@@ -67,7 +66,6 @@ namespace RhinoCycles
 		{
 			Database.ClearChanges();
 			ClearShaders();
-			ClearViewChanges();
 			ClearObjectsChanges();
 			ClearMeshes();
 			ClearLights();
@@ -75,58 +73,6 @@ namespace RhinoCycles
 			ClearObjectShaderChanges();
 		}
 
-		private void UploadLinearWorkflowChanges()
-		{
-			if (Database.LinearWorkflowHasChanged)
-			{
-				if (Database.LinearWorkflow.Active)
-				{
-					Database.Gamma = Database.LinearWorkflow.Gamma;
-				}
-				else
-				{
-					Database.Gamma = 1.0f;
-				}
-			}
-		}
-
-		private void UploadGammaChanges()
-		{
-			if (Database.GammaHasChanged)
-			{
-				Plugin.ApplyGammaToTextures(Database.Gamma);
-
-
-				if (m_current_background_shader != null)
-				{
-					m_current_background_shader.Reset();
-					Session.Scene.Background.Shader = m_current_background_shader.GetShader();
-				}
-
-				foreach (var tup in m_all_shaders)
-				{
-					var matsh = tup.Item1 as CyclesShader;
-					if (matsh != null)
-					{
-						matsh.Gamma = Database.Gamma;
-						RecreateMaterialShader(matsh, tup.Item2);
-						tup.Item2.Tag();
-					}
-
-					var lgsh = tup.Item1 as CyclesLight;
-					if (lgsh != null)
-					{
-						lgsh.Gamma = Database.Gamma;
-						ReCreateSimpleEmissionShader(tup.Item2, lgsh);
-						tup.Item2.Tag();
-					}
-
-				}
-
-				Session.Scene.Film.Exposure = Database.Gamma;
-				Session.Scene.Film.Update();
-			}
-		}
 
 		private void UploadEnvironmentChanges()
 		{
@@ -178,7 +124,7 @@ namespace RhinoCycles
 				// create a cycles shader
 				var sh = CreateMaterialShader(shader);
 				m_rh_ccl_shaders.Add(shader.Id, sh);
-				m_all_shaders.Add(new Tuple<object, Shader>(shader, sh));
+				Database.m_all_shaders.Add(new Tuple<object, Shader>(shader, sh));
 				// add the new shader to scene
 				var scshid = Client.Scene.AddShader(sh);
 				m_rh_ccl_scene_shader_ids.Add(shader.Id, scshid);
@@ -336,17 +282,6 @@ namespace RhinoCycles
 		}
 
 		/// <summary>
-		/// Upload camera (viewport) changes to Cycles.
-		/// </summary>
-		private void UploadCameraChanges()
-		{
-			if (m_cq_view_changes.Count <= 0) return;
-
-			var view = m_cq_view_changes.Last();
-			UploadCamera(view);
-		}
-
-		/// <summary>
 		/// Upload all light changes to the Cycles render engine
 		/// </summary>
 		private void UploadLightChanges()
@@ -365,7 +300,7 @@ namespace RhinoCycles
 
 				var lgsh = CreateSimpleEmissionShader(l);
 				Client.Scene.AddShader(lgsh);
-				m_all_shaders.Add(new Tuple<object, Shader>(l, lgsh));
+				Database.m_all_shaders.Add(new Tuple<object, Shader>(l, lgsh));
 
 				if (CancelRender) return;
 
@@ -468,33 +403,6 @@ namespace RhinoCycles
 			return true;
 		}
 
-		/// <summary>
-		/// Set the camera based on CyclesView
-		/// </summary>
-		/// <param name="view"></param>
-		private void UploadCamera(CyclesView view)
-		{
-			var scene = Session.Scene;
-			RenderDimension = new Size(view.Width, view.Height);
-			var size = RenderDimension;
-			UnsetRenderSize();
-
-			var ha = size.Width > size.Height ? view.Horizontal: view.Vertical;
-
-			var angle = (float) Math.Atan(Math.Tan(ha)/view.ViewAspectRatio) * 2.0f;
-
-			//System.Diagnostics.Debug.WriteLine("size: {0}, matrix: {1}, angle: {2}, Sensorsize: {3}x{4}", size, view.Transform, angle, Settings.SensorHeight, Settings.SensorWidth);
-
-			scene.Camera.Size = size;
-			scene.Camera.Matrix = view.Transform;
-			scene.Camera.Type = view.Projection;
-			scene.Camera.Fov = angle;
-			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
-			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
-			scene.Camera.SensorHeight = Settings.SensorHeight;
-			scene.Camera.SensorWidth = Settings.SensorWidth;
-			scene.Camera.Update();
-		}
 
 	}
 }

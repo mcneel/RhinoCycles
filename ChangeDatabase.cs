@@ -15,12 +15,14 @@ limitations under the License.
 **/
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using ccl;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
+using RhinoCycles.Shaders;
 using sdd = System.Diagnostics.Debug;
 using CQMaterial = Rhino.Render.ChangeQueue.Material;
 using CQMesh = Rhino.Render.ChangeQueue.Mesh;
@@ -33,6 +35,11 @@ namespace RhinoCycles
 {
 	public class ChangeDatabase : ChangeQueue
 	{
+		/// <summary>
+		/// RhinoCycles shaders and Cycles shaders relations
+		/// </summary>
+		public readonly List<Tuple<object, Shader>> m_all_shaders = new List<Tuple<object, Shader>>();
+
 		/// <summary>
 		/// Reference to the Cycles render engine C# level implementation.
 		/// </summary>
@@ -64,16 +71,71 @@ namespace RhinoCycles
 			RenderEngine = engine;
 		}
 
+		public void UploadLinearWorkflowChanges()
+		{
+			if (LinearWorkflowHasChanged)
+			{
+				if (LinearWorkflow.Active)
+				{
+					Gamma = LinearWorkflow.Gamma;
+				}
+				else
+				{
+					Gamma = 1.0f;
+				}
+			}
+		}
+
+		public void UploadGammaChanges()
+		{
+			if (GammaHasChanged)
+			{
+				Plugin.ApplyGammaToTextures(Gamma);
+
+
+				if (m_current_background_shader != null)
+				{
+					m_current_background_shader.Reset();
+					RenderEngine.Session.Scene.Background.Shader = m_current_background_shader.GetShader();
+				}
+
+				foreach (var tup in m_all_shaders)
+				{
+					var matsh = tup.Item1 as CyclesShader;
+					if (matsh != null)
+					{
+						matsh.Gamma = Gamma;
+						RenderEngine.RecreateMaterialShader(matsh, tup.Item2);
+						tup.Item2.Tag();
+					}
+
+					var lgsh = tup.Item1 as CyclesLight;
+					if (lgsh != null)
+					{
+						lgsh.Gamma = Gamma;
+						RenderEngine.ReCreateSimpleEmissionShader(tup.Item2, lgsh);
+						tup.Item2.Tag();
+					}
+
+				}
+
+				RenderEngine.Session.Scene.Film.Exposure = Gamma;
+				RenderEngine.Session.Scene.Film.Update();
+			}
+		}
+
 		public void ClearChanges()
 		{
 			ClearGamma();
 			ClearLinearWorkflow();
 			ClearBackground();
+			ClearViewChanges();
 		}
 
 		public bool HasChanges()
 		{
 			return
+				m_cq_view_changes.Any() ||
 				LinearWorkflowHasChanged ||
 				GammaHasChanged;
 		}
@@ -157,6 +219,67 @@ namespace RhinoCycles
 		{
 			LinearWorkflow = new LinearWorkflow(lw);
 			sdd.WriteLine(string.Format("LinearWorkflow {0} {1} {2}", lw.Active, lw.Gamma, lw.GammaReciprocal));
+		}
+
+		/// <summary>
+		/// record view changes to push to cycles
+		/// </summary>
+		private readonly List<CyclesView> m_cq_view_changes = new List<CyclesView>();
+
+		/// <summary>
+		/// Clear view change queue
+		/// </summary>
+		private void ClearViewChanges()
+		{
+			m_cq_view_changes.Clear();
+		}
+
+		/// <summary>
+		/// Record view change
+		/// </summary>
+		/// <param name="t">view info</param>
+		private void ChangeView(CyclesView t)
+		{
+			m_cq_view_changes.Add(t);
+		}
+
+		/// <summary>
+		/// Upload camera (viewport) changes to Cycles.
+		/// </summary>
+		public void UploadCameraChanges()
+		{
+			if (m_cq_view_changes.Count <= 0) return;
+
+			var view = m_cq_view_changes.Last();
+			UploadCamera(view);
+		}
+
+		/// <summary>
+		/// Set the camera based on CyclesView
+		/// </summary>
+		/// <param name="view"></param>
+		private void UploadCamera(CyclesView view)
+		{
+			var scene = RenderEngine.Session.Scene;
+			RenderEngine.RenderDimension = new Size(view.Width, view.Height);
+			var size = RenderEngine.RenderDimension;
+			RenderEngine.UnsetRenderSize();
+
+			var ha = size.Width > size.Height ? view.Horizontal: view.Vertical;
+
+			var angle = (float) Math.Atan(Math.Tan(ha)/view.ViewAspectRatio) * 2.0f;
+
+			//System.Diagnostics.Debug.WriteLine("size: {0}, matrix: {1}, angle: {2}, Sensorsize: {3}x{4}", size, view.Transform, angle, Settings.SensorHeight, Settings.SensorWidth);
+
+			scene.Camera.Size = size;
+			scene.Camera.Matrix = view.Transform;
+			scene.Camera.Type = view.Projection;
+			scene.Camera.Fov = angle;
+			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
+			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
+			scene.Camera.SensorHeight = RenderEngine.Settings.SensorHeight;
+			scene.Camera.SensorWidth = RenderEngine.Settings.SensorWidth;
+			scene.Camera.Update();
 		}
 
 		/// <summary>
@@ -247,7 +370,7 @@ namespace RhinoCycles
 				Width = w,
 				Height = h,
 			};
-			RenderEngine.ChangeView(cyclesview);
+			ChangeView(cyclesview);
 		}
 
 		/// <summary>
@@ -545,6 +668,7 @@ namespace RhinoCycles
 		/// note that we have only one object that gets updated when necessary.
 		/// </summary>
 		public CyclesBackground m_cq_background = new CyclesBackground();
+		public RhinoShader m_current_background_shader;
 
 		public bool BackgroundHasChanged
 		{

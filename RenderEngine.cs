@@ -177,11 +177,6 @@ namespace RhinoCycles
 
 
 		/// <summary>
-		/// record view changes to push to cycles
-		/// </summary>
-		private readonly List<CyclesView> m_cq_view_changes = new List<CyclesView>();
-
-		/// <summary>
 		/// record light changes to push to cycles
 		/// </summary>
 		private readonly List<CyclesLight> m_cq_light_changes = new List<CyclesLight>();
@@ -238,7 +233,6 @@ namespace RhinoCycles
 		/// record shader changes to push to cycles
 		/// </summary>
 		private readonly List<CyclesShader> m_cq_shaders = new List<CyclesShader>();
-		private readonly List<Tuple<object, Shader>> m_all_shaders = new List<Tuple<object, Shader>>();
 		/// <summary>
 		/// record RenderMaterial CRC and Shader relationship. Key is RenderHash, Value is Shader.
 		/// </summary>
@@ -276,7 +270,7 @@ namespace RhinoCycles
 		private bool HasSceneChanges()
 		{
 			return Database.HasChanges() ||
-				m_cq_view_changes.Count > 0 || m_cq_shaders.Count > 0 ||
+				m_cq_shaders.Count > 0 ||
 				m_cq_light_changes.Count > 0 || m_cq_mesh_changes.Count > 0 ||
 				m_cq_new_updated_objects.Count > 0 || m_cq_deleted_objects.Count > 0 ||
 				m_cq_meshes_to_delete.Count > 0 ||
@@ -683,23 +677,6 @@ namespace RhinoCycles
 		}
 
 		/// <summary>
-		/// Clear view change queue
-		/// </summary>
-		public void ClearViewChanges()
-		{
-			m_cq_view_changes.Clear();
-		}
-
-		/// <summary>
-		/// Record view change
-		/// </summary>
-		/// <param name="t">view info</param>
-		public void ChangeView(CyclesView t)
-		{
-			m_cq_view_changes.Add(t);
-		}
-
-		/// <summary>
 		/// Construct a new render engine
 		/// </summary>
 		/// <param name="doc"></param>
@@ -734,7 +711,6 @@ namespace RhinoCycles
 			RenderThread = null;
 			ClearMeshes();
 			ClearShaders();
-			ClearViewChanges();
 			Client = new Client();
 			State = State.Rendering;
 
@@ -761,7 +737,6 @@ namespace RhinoCycles
 			RenderThread = null;
 			ClearMeshes();
 			ClearShaders();
-			ClearViewChanges();
 			Client = new Client();
 			State = State.Rendering;
 
