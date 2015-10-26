@@ -13,13 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Net.Sockets;
 using ccl;
-using RhinoCycles.Shaders;
+using Object = ccl.Object;
 
 namespace RhinoCycles
 {
@@ -324,7 +323,7 @@ namespace RhinoCycles
 				// new object, so lets create it and record necessary stuff about it
 				if (newcob)
 				{
-					cob = new ccl.Object(Client);
+					cob = new Object(Client);
 					RecordObjectRelation(ob.obid, cob);
 					RecordObjectIdMeshIdRelation(ob.obid, ob.meshid);
 				}
