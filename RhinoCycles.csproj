@@ -55,6 +55,7 @@
       <Link>Properties\version.cs</Link>
     </Compile>
     <Compile Include="BitmapImage.cs" />
+    <Compile Include="ChangeDatabase.cs" />
     <Compile Include="Commands\ShowInfo.cs" />
     <Compile Include="Commands\ShowPaths.cs" />
     <Compile Include="Commands\SelectDevice.cs" />
@@ -87,7 +88,6 @@
     <Compile Include="Plugin.BitmapConversion.cs" />
     <Compile Include="Plugin.Settings.cs" />
     <Compile Include="Plugin.ShaderConversion.cs" />
-    <Compile Include="RCChangeQueue.cs" />
     <Compile Include="RenderEngine.Modal.cs" />
     <Compile Include="RenderEngine.Preview.cs" />
     <Compile Include="RenderEngine.Viewport.cs" />

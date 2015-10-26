@@ -172,7 +172,7 @@ namespace RhinoCycles
 		/// data. The ChangeQueue mechanism will push data to us when we ask it
 		/// if data changes have occurred.
 		/// </summary>
-		public RCChangeQueue ChangeQueue { get; set; }
+		public ChangeDatabase ChangeQueue { get; set; }
 
 
 		/// <summary>
@@ -728,7 +728,7 @@ namespace RhinoCycles
 			m_view = view;
 			if (doc != null)
 			{
-				ChangeQueue = new RCChangeQueue(pluginId, this, m_doc_serialnumber, view);
+				ChangeQueue = new ChangeDatabase(pluginId, this, m_doc_serialnumber, view);
 			}
 			RenderThread = null;
 			ClearMeshes();
@@ -756,7 +756,7 @@ namespace RhinoCycles
 		public RenderEngine(CreatePreviewEventArgs createPreviewEventArgs, Guid pluginId)
 		{
 			m_preview_event_args = createPreviewEventArgs;
-			ChangeQueue = new RCChangeQueue(pluginId, this, createPreviewEventArgs);
+			ChangeQueue = new ChangeDatabase(pluginId, this, createPreviewEventArgs);
 			RenderThread = null;
 			ClearMeshes();
 			ClearShaders();

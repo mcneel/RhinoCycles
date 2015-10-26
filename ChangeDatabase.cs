@@ -31,7 +31,7 @@ using CQLinearWorkflow = Rhino.Render.ChangeQueue.LinearWorkflow;
 
 namespace RhinoCycles
 {
-	public class RCChangeQueue : ChangeQueue
+	public class ChangeDatabase : ChangeQueue
 	{
 		/// <summary>
 		/// Reference to the Cycles render engine C# level implementation.
@@ -47,7 +47,7 @@ namespace RhinoCycles
 		/// <param name="engine">Reference to our render engine</param>
 		/// <param name="doc">Document runtime serial number</param>
 		/// <param name="view">Reference to the RhinoView for which this queue is created.</param>
-		internal RCChangeQueue(Guid pluginId, RenderEngine engine, uint doc, RhinoView view) : base(pluginId, doc, view)
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, RhinoView view) : base(pluginId, doc, view)
 		{
 			RenderEngine = engine;
 		}
@@ -59,7 +59,7 @@ namespace RhinoCycles
 		/// <param name="pluginId">Id of the plugin instantiating the render change queue</param>
 		/// <param name="engine">Reference to our render engine</param>
 		/// <param name="createPreviewEventArgs">preview event arguments</param>
-		internal RCChangeQueue(Guid pluginId, RenderEngine engine, CreatePreviewEventArgs createPreviewEventArgs) : base(pluginId, createPreviewEventArgs)
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, CreatePreviewEventArgs createPreviewEventArgs) : base(pluginId, createPreviewEventArgs)
 		{
 			RenderEngine = engine;
 		}
@@ -169,7 +169,7 @@ namespace RhinoCycles
 
 			m_current_view_info = viewInfo;
 
-			//System.Diagnostics.Debug.WriteLine(String.Format("RCChangeQueue ApplyViewChange on view {0}", viewInfo.Name));
+			//System.Diagnostics.Debug.WriteLine(String.Format("ChangeDatabase ApplyViewChange on view {0}", viewInfo.Name));
 
 			var vp = viewInfo.Viewport;
 
@@ -257,7 +257,7 @@ namespace RhinoCycles
 		/// <param name="added"></param>
 		protected override void ApplyMeshChanges(Guid[] deleted, List<CQMesh> added)
 		{
-			//System.Diagnostics.Debug.WriteLine("RCChangeQueue ApplyMeshChanges, deleted {0}, added {1}", deleted.Length, added.Count);
+			//System.Diagnostics.Debug.WriteLine("ChangeDatabase ApplyMeshChanges, deleted {0}, added {1}", deleted.Length, added.Count);
 
 			foreach (var guid in deleted)
 			{
