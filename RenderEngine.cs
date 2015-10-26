@@ -169,10 +169,11 @@ namespace RhinoCycles
 
 		/// <summary>
 		/// Our instance of the change queue. This is our access point for all
-		/// data. The ChangeQueue mechanism will push data to us when we ask it
-		/// if data changes have occurred.
+		/// data. The ChangeQueue mechanism will push data to it, record it
+		/// with all necessary book keeping to track the data relations between
+		/// Rhino and Cycles.
 		/// </summary>
-		public ChangeDatabase ChangeQueue { get; set; }
+		public ChangeDatabase Database { get; set; }
 
 
 		/// <summary>
@@ -274,7 +275,7 @@ namespace RhinoCycles
 		/// <returns>true if any changes have been received.</returns>
 		private bool HasSceneChanges()
 		{
-			return ChangeQueue.HasChanges() ||
+			return Database.HasChanges() ||
 				m_cq_view_changes.Count > 0 || m_cq_shaders.Count > 0 ||
 				m_cq_light_changes.Count > 0 || m_cq_mesh_changes.Count > 0 ||
 				m_cq_new_updated_objects.Count > 0 || m_cq_deleted_objects.Count > 0 ||
@@ -291,7 +292,7 @@ namespace RhinoCycles
 		private void CheckFlushQueue()
 		{
 			// not rendering, nor flush needed, bail
-			if (State != State.Rendering || ChangeQueue == null || !Flush) return;
+			if (State != State.Rendering || Database == null || !Flush) return;
 
 			// We've been told we need to flush, so cancel current render
 			//State = State.Halted;
@@ -299,7 +300,7 @@ namespace RhinoCycles
 			lock (m_flushlock)
 			{
 				// flush the queue
-				ChangeQueue.Flush();
+				Database.Flush();
 
 				// reset flush flag directly, since we already have lock.
 				m_flush = false;
@@ -728,7 +729,7 @@ namespace RhinoCycles
 			m_view = view;
 			if (doc != null)
 			{
-				ChangeQueue = new ChangeDatabase(pluginId, this, m_doc_serialnumber, view);
+				Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, view);
 			}
 			RenderThread = null;
 			ClearMeshes();
@@ -756,7 +757,7 @@ namespace RhinoCycles
 		public RenderEngine(CreatePreviewEventArgs createPreviewEventArgs, Guid pluginId)
 		{
 			m_preview_event_args = createPreviewEventArgs;
-			ChangeQueue = new ChangeDatabase(pluginId, this, createPreviewEventArgs);
+			Database = new ChangeDatabase(pluginId, this, createPreviewEventArgs);
 			RenderThread = null;
 			ClearMeshes();
 			ClearShaders();
@@ -779,7 +780,7 @@ namespace RhinoCycles
 		/// </summary>
 		public void CreateWorld()
 		{
-			ChangeQueue.CreateWorld();
+			Database.CreateWorld();
 		}
 
 		/// <summary>
@@ -788,7 +789,7 @@ namespace RhinoCycles
 		/// <returns></returns>
 		public bool IsPreview()
 		{
-			return ChangeQueue.IsPreview;
+			return Database.IsPreview;
 		}
 
 		/// <summary>
@@ -796,7 +797,7 @@ namespace RhinoCycles
 		/// </summary>
 		public void FlushIt()
 		{
-			ChangeQueue.Flush();
+			Database.Flush();
 		}
 
 		public void TestCancel(uint sid)
@@ -1004,8 +1005,8 @@ namespace RhinoCycles
 			CancelRender = true;
 
 			// get rid of our change queue
-			ChangeQueue.Dispose();
-			ChangeQueue = null;
+			Database.Dispose();
+			Database = null;
 
 			// set state to stopped
 			State = State.Stopped;

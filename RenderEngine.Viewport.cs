@@ -119,7 +119,7 @@ namespace RhinoCycles
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
-			cycles_engine.ChangeQueue.Flush();
+			cycles_engine.Database.Flush();
 			cycles_engine.State = State.Uploading;
 			while (cycles_engine.State != State.Stopped)
 			{

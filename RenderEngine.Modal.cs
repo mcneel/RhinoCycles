@@ -79,7 +79,7 @@ namespace RhinoCycles
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
-			cycles_engine.ChangeQueue.OneShot();
+			cycles_engine.Database.OneShot();
 			cycles_engine.m_flush = false;
 			cycles_engine.UploadData();
 

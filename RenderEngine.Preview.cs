@@ -75,7 +75,7 @@ namespace RhinoCycles
 			cycles_engine.SetCallbacks();
 
 			// main render loop, including restarts
-			cycles_engine.ChangeQueue.OneShot();
+			cycles_engine.Database.OneShot();
 			cycles_engine.m_flush = false;
 			cycles_engine.UploadData();
 

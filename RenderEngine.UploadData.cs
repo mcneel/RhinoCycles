@@ -65,7 +65,7 @@ namespace RhinoCycles
 
 		private void ClearChanges()
 		{
-			ChangeQueue.ClearChanges();
+			Database.ClearChanges();
 			ClearShaders();
 			ClearViewChanges();
 			ClearObjectsChanges();
@@ -77,24 +77,24 @@ namespace RhinoCycles
 
 		private void UploadLinearWorkflowChanges()
 		{
-			if (ChangeQueue.LinearWorkflowHasChanged)
+			if (Database.LinearWorkflowHasChanged)
 			{
-				if (ChangeQueue.LinearWorkflow.Active)
+				if (Database.LinearWorkflow.Active)
 				{
-					ChangeQueue.Gamma = ChangeQueue.LinearWorkflow.Gamma;
+					Database.Gamma = Database.LinearWorkflow.Gamma;
 				}
 				else
 				{
-					ChangeQueue.Gamma = 1.0f;
+					Database.Gamma = 1.0f;
 				}
 			}
 		}
 
 		private void UploadGammaChanges()
 		{
-			if (ChangeQueue.GammaHasChanged)
+			if (Database.GammaHasChanged)
 			{
-				Plugin.ApplyGammaToTextures(ChangeQueue.Gamma);
+				Plugin.ApplyGammaToTextures(Database.Gamma);
 
 
 				if (m_current_background_shader != null)
@@ -108,7 +108,7 @@ namespace RhinoCycles
 					var matsh = tup.Item1 as CyclesShader;
 					if (matsh != null)
 					{
-						matsh.Gamma = ChangeQueue.Gamma;
+						matsh.Gamma = Database.Gamma;
 						RecreateMaterialShader(matsh, tup.Item2);
 						tup.Item2.Tag();
 					}
@@ -116,21 +116,21 @@ namespace RhinoCycles
 					var lgsh = tup.Item1 as CyclesLight;
 					if (lgsh != null)
 					{
-						lgsh.Gamma = ChangeQueue.Gamma;
+						lgsh.Gamma = Database.Gamma;
 						ReCreateSimpleEmissionShader(tup.Item2, lgsh);
 						tup.Item2.Tag();
 					}
 
 				}
 
-				Session.Scene.Film.Exposure = ChangeQueue.Gamma;
+				Session.Scene.Film.Exposure = Database.Gamma;
 				Session.Scene.Film.Update();
 			}
 		}
 
 		private void UploadEnvironmentChanges()
 		{
-			if(ChangeQueue.BackgroundHasChanged)
+			if(Database.BackgroundHasChanged)
 				RecreateBackgroundShader();
 		}
 
