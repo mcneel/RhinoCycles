@@ -25,7 +25,7 @@ using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
-using Rhino.Render.ChangeQueue;
+using CQ = Rhino.Render.ChangeQueue;
 using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;
 using CclObject = ccl.Object;
@@ -173,64 +173,8 @@ namespace RhinoCycles
 		/// data. The ChangeQueue mechanism will push data to us when we ask it
 		/// if data changes have occurred.
 		/// </summary>
-		private ChangeQueue ChangeQueue { get; set; }
+		public RCChangeQueue ChangeQueue { get; set; }
 
-		private float m_gamma = 1.0f;
-		private bool m_gamma_modified;
-
-		public float Gamma
-		{
-			set
-			{
-				m_gamma_modified = false;
-
-				if (Math.Abs(m_gamma - value) > float.Epsilon)
-				{
-					m_gamma = value;
-					m_gamma_modified = true;
-				}
-			}
-			get
-			{
-				return m_gamma;
-			}
-		}
-
-		private LinearWorkflow m_lwf;
-		private bool m_lwf_modified;
-
-		public LinearWorkflow LinearWorkflow
-		{
-			set
-			{
-				if (m_lwf == null)
-				{
-					m_lwf = value;
-					m_lwf_modified = true;
-				}
-				else
-				{
-					m_lwf_modified = !m_lwf.Equals(value);
-					if (m_lwf_modified)
-					{
-						m_lwf = value;
-					}
-				}
-
-				if (m_lwf.Active)
-				{
-					Gamma = m_lwf.Gamma;
-				}
-				else
-				{
-					Gamma = 1.0f;
-				}
-			}
-			get
-			{
-				return m_lwf;
-			}
-		}
 
 		/// <summary>
 		/// record view changes to push to cycles
@@ -336,14 +280,13 @@ namespace RhinoCycles
 		/// <returns>true if any changes have been received.</returns>
 		private bool HasSceneChanges()
 		{
-			return
+			return ChangeQueue.HasChanges() ||
 				m_cq_view_changes.Count > 0 || m_cq_shaders.Count > 0 ||
 				m_cq_light_changes.Count > 0 || m_cq_mesh_changes.Count > 0 ||
 				m_cq_new_updated_objects.Count > 0 || m_cq_deleted_objects.Count > 0 ||
 				m_cq_meshes_to_delete.Count > 0 ||
 				m_cq_object_transform.Count > 0 ||
 				m_cq_objects_shader_changes.Count > 0 ||
-				m_gamma_modified ||
 				m_cq_background.modified;
 		}
 
@@ -400,16 +343,6 @@ namespace RhinoCycles
 		public void ClearShaders()
 		{
 			m_cq_shaders.Clear();
-		}
-
-		public void ClearGamma()
-		{
-			m_gamma_modified = false;
-		}
-
-		public void ClearLinearWorkflow()
-		{
-			m_lwf_modified = false;
 		}
 
 		public void ClearBackground()

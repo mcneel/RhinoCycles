@@ -66,8 +66,7 @@ namespace RhinoCycles
 
 		private void ClearChanges()
 		{
-			ClearGamma();
-			ClearLinearWorkflow();
+			ChangeQueue.ClearChanges();
 			ClearBackground();
 			ClearShaders();
 			ClearViewChanges();
@@ -80,24 +79,24 @@ namespace RhinoCycles
 
 		private void UploadLinearWorkflowChanges()
 		{
-			if (m_lwf_modified)
+			if (ChangeQueue.LinearWorkflowHasChanged)
 			{
-				if (LinearWorkflow.Active)
+				if (ChangeQueue.LinearWorkflow.Active)
 				{
-					Gamma = LinearWorkflow.Gamma;
+					ChangeQueue.Gamma = ChangeQueue.LinearWorkflow.Gamma;
 				}
 				else
 				{
-					Gamma = 1.0f;
+					ChangeQueue.Gamma = 1.0f;
 				}
 			}
 		}
 
 		private void UploadGammaChanges()
 		{
-			if (m_gamma_modified)
+			if (ChangeQueue.GammaHasChanged)
 			{
-				Plugin.ApplyGammaToTextures(Gamma);
+				Plugin.ApplyGammaToTextures(ChangeQueue.Gamma);
 
 
 				if (m_current_background_shader != null)
@@ -111,7 +110,7 @@ namespace RhinoCycles
 					var matsh = tup.Item1 as CyclesShader;
 					if (matsh != null)
 					{
-						matsh.Gamma = Gamma;
+						matsh.Gamma = ChangeQueue.Gamma;
 						RecreateMaterialShader(matsh, tup.Item2);
 						tup.Item2.Tag();
 					}
@@ -119,14 +118,14 @@ namespace RhinoCycles
 					var lgsh = tup.Item1 as CyclesLight;
 					if (lgsh != null)
 					{
-						lgsh.Gamma = Gamma;
+						lgsh.Gamma = ChangeQueue.Gamma;
 						ReCreateSimpleEmissionShader(tup.Item2, lgsh);
 						tup.Item2.Tag();
 					}
 
 				}
 
-				Session.Scene.Film.Exposure = Gamma;
+				Session.Scene.Film.Exposure = ChangeQueue.Gamma;
 				Session.Scene.Film.Update();
 			}
 		}

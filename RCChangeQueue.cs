@@ -64,14 +64,97 @@ namespace RhinoCycles
 			RenderEngine = engine;
 		}
 
+		public void ClearChanges()
+		{
+			ClearGamma();
+			ClearLinearWorkflow();
+		}
+
+		public bool HasChanges()
+		{
+			return
+				LinearWorkflowHasChanged ||
+				GammaHasChanged;
+		}
+
+		private float m_gamma = 1.0f;
+
+		public bool GammaHasChanged { get; private set; }
+
+		public float Gamma
+		{
+			set
+			{
+				GammaHasChanged = false;
+
+				if (Math.Abs(m_gamma - value) > float.Epsilon)
+				{
+					m_gamma = value;
+					GammaHasChanged = true;
+				}
+			}
+			get
+			{
+				return m_gamma;
+			}
+		}
+
+
+		public void ClearGamma()
+		{
+			GammaHasChanged = false;
+		}
+
 		protected override void ApplyGammaChanges(double dGamma)
 		{
-			RenderEngine.Gamma= (float) dGamma;
+			Gamma= (float) dGamma;
+		}
+
+		private LinearWorkflow m_lwf;
+
+		public bool LinearWorkflowHasChanged { get; private set; }
+
+		public LinearWorkflow LinearWorkflow
+		{
+			set
+			{
+				if (m_lwf == null)
+				{
+					m_lwf = value;
+					LinearWorkflowHasChanged = true;
+				}
+				else
+				{
+					LinearWorkflowHasChanged = !m_lwf.Equals(value);
+					if (LinearWorkflowHasChanged)
+					{
+						m_lwf = value;
+					}
+				}
+
+				if (m_lwf.Active)
+				{
+					Gamma = m_lwf.Gamma;
+				}
+				else
+				{
+					Gamma = 1.0f;
+				}
+			}
+			get
+			{
+				return m_lwf;
+			}
+		}
+
+		public void ClearLinearWorkflow()
+		{
+			LinearWorkflowHasChanged = false;
 		}
 
 		protected override void ApplyLinearWorkflowChanges(CQLinearWorkflow lw)
 		{
-			RenderEngine.LinearWorkflow = new LinearWorkflow(lw);
+			LinearWorkflow = new LinearWorkflow(lw);
 			sdd.WriteLine(string.Format("LinearWorkflow {0} {1} {2}", lw.Active, lw.Gamma, lw.GammaReciprocal));
 		}
 
@@ -317,7 +400,7 @@ namespace RhinoCycles
 			if (RenderEngine.HasShader(mat.RenderHash)) return;
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = Plugin.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, RenderEngine.Gamma);
+			var sh = Plugin.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, Gamma);
 			RenderEngine.AddShader(sh);
 		}
 
@@ -426,7 +509,7 @@ namespace RhinoCycles
 			foreach (var light in lightChanges)
 			{
 
-				var cl = Plugin.ConvertLight(this, light, m_current_view_info, RenderEngine.Gamma);
+				var cl = Plugin.ConvertLight(this, light, m_current_view_info, Gamma);
 
 				//System.Diagnostics.Debug.WriteLine("light {0} == {1} == {2} ({3})", light.Id, cl.Id, lg.Id, light.ChangeType);
 
@@ -438,7 +521,7 @@ namespace RhinoCycles
 		{
 			foreach (var light in dynamicLightChanges)
 			{
-				var cl = Plugin.ConvertLight(light, RenderEngine.Gamma);
+				var cl = Plugin.ConvertLight(light, Gamma);
 				//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
 				RenderEngine.AddLight(cl);
 			}
@@ -450,7 +533,7 @@ namespace RhinoCycles
 		/// <param name="sun"></param>
 		protected override void ApplySunChanges(Rhino.Geometry.Light sun)
 		{
-			var cl = Plugin.ConvertLight(sun, RenderEngine.Gamma);
+			var cl = Plugin.ConvertLight(sun, Gamma);
 			cl.Id = RenderEngine.SunId;
 			RenderEngine.AddLight(cl);
 			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
@@ -464,7 +547,7 @@ namespace RhinoCycles
 		{
 			//System.Diagnostics.Debug.WriteLine("{0}", skylight);
 			RenderEngine.m_cq_background.skylight_enabled =  skylight.Enabled;
-			RenderEngine.m_cq_background.gamma = RenderEngine.Gamma;
+			RenderEngine.m_cq_background.gamma = Gamma;
 			RenderEngine.m_cq_background.modified = true;
 		}
 
@@ -476,7 +559,7 @@ namespace RhinoCycles
 				RenderEngine.m_cq_background.background_fill = rs.BackgroundStyle;
 				RenderEngine.m_cq_background.color1 = rs.BackgroundColorTop;
 				RenderEngine.m_cq_background.color2 = rs.BackgroundColorBottom;
-				RenderEngine.m_cq_background.gamma = RenderEngine.Gamma;
+				RenderEngine.m_cq_background.gamma = Gamma;
 				RenderEngine.m_cq_background.modified = true;
 			}
 		}
@@ -501,7 +584,7 @@ namespace RhinoCycles
 					RenderEngine.m_cq_background.reflection_environment = env;
 					break;
 			}
-			RenderEngine.m_cq_background.gamma = RenderEngine.Gamma;
+			RenderEngine.m_cq_background.gamma = Gamma;
 
 			RenderEngine.m_cq_background.HandleEnvironments();
 

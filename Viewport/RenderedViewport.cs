@@ -126,7 +126,7 @@ namespace RhinoCycles
 			m_cycles.RenderDimension = renderSize;
 
 			m_cycles.Settings.Verbose = true;
-			SetGamma(m_cycles.Gamma);
+			SetGamma(m_cycles.ChangeQueue.Gamma);
 			SetApplyGammaCorrection(true);
 
 			m_maxsamples = m_cycles.Settings.Samples;
@@ -203,7 +203,7 @@ namespace RhinoCycles
 		{
 			ssd.WriteLine("RestartRender {0}", m_serial);
 			m_cycles.SetRenderSize(width, height);
-			SetGamma(m_cycles.Gamma);
+			SetGamma(m_cycles.ChangeQueue.Gamma);
 			m_starttime = GeCurrentTimeStamp();
 
 			m_prev_samples = 0;
@@ -234,7 +234,7 @@ namespace RhinoCycles
 		public override bool IsRenderframeAvailable()
 		{
 			//ssd.WriteLine("IsRenderframeAvailable {0}: {1}", m_serial, m_available);
-			SetGamma(m_cycles.Gamma);
+			SetGamma(m_cycles.ChangeQueue.Gamma);
 			//if(m_started) m_cycles.Session.Draw();
 			return m_available;
 		}
