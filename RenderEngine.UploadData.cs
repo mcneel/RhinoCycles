@@ -47,7 +47,7 @@ namespace RhinoCycles
 			UploadShaderChanges();
 
 			// light changes
-			UploadLightChanges();
+			Database.UploadLightChanges();
 
 			// mesh changes (new ones, updated ones)
 			UploadMeshChanges();
@@ -68,7 +68,6 @@ namespace RhinoCycles
 			ClearShaders();
 			ClearObjectsChanges();
 			ClearMeshes();
-			ClearLights();
 			ClearDynamicObjectTransforms();
 			ClearObjectShaderChanges();
 		}
@@ -275,97 +274,6 @@ namespace RhinoCycles
 			}
 		}
 
-		/// <summary>
-		/// Upload all light changes to the Cycles render engine
-		/// </summary>
-		private void UploadLightChanges()
-		{
-			var light_ids = (from light in m_cq_light_changes select light.Id).ToList();
-			var add_ids = from lightkey in light_ids where !m_rh_ccl_lights.ContainsKey(lightkey) select lightkey;
-			var update_ids = from lightkey in light_ids where m_rh_ccl_lights.ContainsKey(lightkey) select lightkey;
-
-			var add_lights = (from aid in add_ids from ll in m_cq_light_changes where aid == ll.Id select ll).ToList();
-			var update_lights = (from uid in update_ids from ll in m_cq_light_changes where uid == ll.Id select ll).ToList();
-
-			/* new light shaders and lights. */
-			foreach (var l in add_lights)
-			{
-				if (CancelRender) return;
-
-				var lgsh = CreateSimpleEmissionShader(l);
-				Client.Scene.AddShader(lgsh);
-				Database.m_all_shaders.Add(new Tuple<object, Shader>(l, lgsh));
-
-				if (CancelRender) return;
-
-				var light = new Light(Client, Client.Scene, lgsh)
-				{
-					Type = l.Type,
-					Size = l.Size,
-					Location = l.Co,
-					Direction = l.Dir,
-					UseMis = l.UseMis,
-					CastShadow = l.CastShadow,
-					Samples = 1,
-					MaxBounces = 1024,
-					SizeU = l.SizeU,
-					SizeV = l.SizeV,
-					AxisU = l.AxisU,
-					AxisV = l.AxisV,
-				};
-
-				switch (l.Type)
-				{
-					case LightType.Area:
-						break;
-					case LightType.Point:
-						break;
-					case LightType.Spot:
-						light.SpotAngle = l.SpotAngle;
-						light.SpotSmooth = l.SpotSmooth;
-						break;
-					case LightType.Distant:
-						break;
-				}
-
-				light.TagUpdate();
-				RecordLightRelation(l.Id, light);
-			}
-
-			// update existing ones
-			foreach (var l in update_lights)
-			{
-				var existing_l = m_rh_ccl_lights[l.Id];
-				ReCreateSimpleEmissionShader(existing_l.Shader, l);
-				existing_l.Type = l.Type;
-				existing_l.Size = l.Size;
-				existing_l.Location = l.Co;
-				existing_l.Direction = l.Dir;
-				existing_l.UseMis = l.UseMis;
-				existing_l.CastShadow = l.CastShadow;
-				existing_l.Samples = 1;
-				existing_l.MaxBounces = 1024;
-				existing_l.SizeU = l.SizeU;
-				existing_l.SizeV = l.SizeV;
-				existing_l.AxisU = l.AxisU;
-				existing_l.AxisV = l.AxisV;
-
-				switch (l.Type)
-				{
-					case LightType.Area:
-						break;
-					case LightType.Point:
-						break;
-					case LightType.Spot:
-						existing_l.SpotAngle = l.SpotAngle;
-						existing_l.SpotSmooth = l.SpotSmooth;
-						break;
-					case LightType.Distant:
-						break;
-				}
-				existing_l.TagUpdate();
-			}
-		}
 
 		/// <summary>
 		/// Upload mesh data, return false if cancel render is signalled.

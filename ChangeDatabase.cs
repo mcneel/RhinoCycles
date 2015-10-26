@@ -30,6 +30,7 @@ using GroundPlane = Rhino.Render.ChangeQueue.GroundPlane;
 using Light = Rhino.Render.ChangeQueue.Light;
 using Skylight = Rhino.Render.ChangeQueue.Skylight;
 using CQLinearWorkflow = Rhino.Render.ChangeQueue.LinearWorkflow;
+using CclLight = ccl.Light;
 
 namespace RhinoCycles
 {
@@ -130,12 +131,14 @@ namespace RhinoCycles
 			ClearLinearWorkflow();
 			ClearBackground();
 			ClearViewChanges();
+			ClearLights();
 		}
 
 		public bool HasChanges()
 		{
 			return
 				m_cq_view_changes.Any() ||
+				m_cq_light_changes.Any() || 
 				LinearWorkflowHasChanged ||
 				GammaHasChanged;
 		}
@@ -624,6 +627,136 @@ namespace RhinoCycles
 			}
 		}
 
+		#region LIGHT & SUN
+
+		/// <summary>
+		/// record light changes to push to cycles
+		/// </summary>
+		private readonly List<CyclesLight> m_cq_light_changes = new List<CyclesLight>();
+		/// <summary>
+		/// record what Guid corresponds to what light in cycles
+		/// </summary>
+		private readonly Dictionary<Guid, CclLight> m_rh_ccl_lights = new Dictionary<Guid, CclLight>();
+
+		/// <summary>
+		/// Clear out list of light changes.
+		/// </summary>
+		public void ClearLights()
+		{
+			m_cq_light_changes.Clear();
+		}
+
+		/// <summary>
+		/// Record light changes
+		/// </summary>
+		/// <param name="light"></param>
+		public void AddLight(CyclesLight light)
+		{
+			m_cq_light_changes.Add(light);
+		}
+
+		/// <summary>
+		/// Record Cycles lights that correspond to specific Rhino light ID
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="cLight"></param>
+		public void RecordLightRelation(Guid id, CclLight cLight)
+		{
+			m_rh_ccl_lights[id] = cLight;
+		}
+
+		/// <summary>
+		/// Upload all light changes to the Cycles render engine
+		/// </summary>
+		public void UploadLightChanges()
+		{
+			var light_ids = (from light in m_cq_light_changes select light.Id).ToList();
+			var add_ids = from lightkey in light_ids where !m_rh_ccl_lights.ContainsKey(lightkey) select lightkey;
+			var update_ids = from lightkey in light_ids where m_rh_ccl_lights.ContainsKey(lightkey) select lightkey;
+
+			var add_lights = (from aid in add_ids from ll in m_cq_light_changes where aid == ll.Id select ll).ToList();
+			var update_lights = (from uid in update_ids from ll in m_cq_light_changes where uid == ll.Id select ll).ToList();
+
+			/* new light shaders and lights. */
+			foreach (var l in add_lights)
+			{
+				if (RenderEngine.CancelRender) return;
+
+				var lgsh = RenderEngine.CreateSimpleEmissionShader(l);
+				RenderEngine.Client.Scene.AddShader(lgsh);
+				m_all_shaders.Add(new Tuple<object, Shader>(l, lgsh));
+
+				if (RenderEngine.CancelRender) return;
+
+				var light = new CclLight(RenderEngine.Client, RenderEngine.Client.Scene, lgsh)
+				{
+					Type = l.Type,
+					Size = l.Size,
+					Location = l.Co,
+					Direction = l.Dir,
+					UseMis = l.UseMis,
+					CastShadow = l.CastShadow,
+					Samples = 1,
+					MaxBounces = 1024,
+					SizeU = l.SizeU,
+					SizeV = l.SizeV,
+					AxisU = l.AxisU,
+					AxisV = l.AxisV,
+				};
+
+				switch (l.Type)
+				{
+					case LightType.Area:
+						break;
+					case LightType.Point:
+						break;
+					case LightType.Spot:
+						light.SpotAngle = l.SpotAngle;
+						light.SpotSmooth = l.SpotSmooth;
+						break;
+					case LightType.Distant:
+						break;
+				}
+
+				light.TagUpdate();
+				RecordLightRelation(l.Id, light);
+			}
+
+			// update existing ones
+			foreach (var l in update_lights)
+			{
+				var existing_l = m_rh_ccl_lights[l.Id];
+				RenderEngine.ReCreateSimpleEmissionShader(existing_l.Shader, l);
+				existing_l.Type = l.Type;
+				existing_l.Size = l.Size;
+				existing_l.Location = l.Co;
+				existing_l.Direction = l.Dir;
+				existing_l.UseMis = l.UseMis;
+				existing_l.CastShadow = l.CastShadow;
+				existing_l.Samples = 1;
+				existing_l.MaxBounces = 1024;
+				existing_l.SizeU = l.SizeU;
+				existing_l.SizeV = l.SizeV;
+				existing_l.AxisU = l.AxisU;
+				existing_l.AxisV = l.AxisV;
+
+				switch (l.Type)
+				{
+					case LightType.Area:
+						break;
+					case LightType.Point:
+						break;
+					case LightType.Spot:
+						existing_l.SpotAngle = l.SpotAngle;
+						existing_l.SpotSmooth = l.SpotSmooth;
+						break;
+					case LightType.Distant:
+						break;
+				}
+				existing_l.TagUpdate();
+			}
+		}
+
 		/// <summary>
 		/// Handle light changes
 		/// </summary>
@@ -637,7 +770,7 @@ namespace RhinoCycles
 
 				//System.Diagnostics.Debug.WriteLine("light {0} == {1} == {2} ({3})", light.Id, cl.Id, lg.Id, light.ChangeType);
 
-				RenderEngine.AddLight(cl);
+				AddLight(cl);
 			}
 		}
 
@@ -647,7 +780,7 @@ namespace RhinoCycles
 			{
 				var cl = Plugin.ConvertLight(light, Gamma);
 				//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
-				RenderEngine.AddLight(cl);
+				AddLight(cl);
 			}
 		}
 
@@ -659,9 +792,11 @@ namespace RhinoCycles
 		{
 			var cl = Plugin.ConvertLight(sun, Gamma);
 			cl.Id = RenderEngine.SunId;
-			RenderEngine.AddLight(cl);
+			AddLight(cl);
 			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
 		}
+
+		#endregion
 
 		/// <summary>
 		/// record background shader changes to push to cycles

@@ -176,15 +176,6 @@ namespace RhinoCycles
 		public ChangeDatabase Database { get; set; }
 
 
-		/// <summary>
-		/// record light changes to push to cycles
-		/// </summary>
-		private readonly List<CyclesLight> m_cq_light_changes = new List<CyclesLight>();
-		/// <summary>
-		/// record what Guid corresponds to what light in cycles
-		/// </summary>
-		private readonly Dictionary<Guid, CclLight> m_rh_ccl_lights = new Dictionary<Guid, CclLight>();
-
 		#region lists for meshes
 		/// <summary>
 		/// record changes to push to cycles (new meshes, changes to existing ones)
@@ -271,7 +262,7 @@ namespace RhinoCycles
 		{
 			return Database.HasChanges() ||
 				m_cq_shaders.Count > 0 ||
-				m_cq_light_changes.Count > 0 || m_cq_mesh_changes.Count > 0 ||
+				m_cq_mesh_changes.Count > 0 ||
 				m_cq_new_updated_objects.Count > 0 || m_cq_deleted_objects.Count > 0 ||
 				m_cq_meshes_to_delete.Count > 0 ||
 				m_cq_object_transform.Count > 0 ||
@@ -539,14 +530,6 @@ namespace RhinoCycles
 		}
 
 		/// <summary>
-		/// Clear out list of light changes.
-		/// </summary>
-		public void ClearLights()
-		{
-			m_cq_light_changes.Clear();
-		}
-
-		/// <summary>
 		/// Clear out the list of object changes that need to be committed to Cycles.
 		/// </summary>
 		public void ClearObjectsChanges()
@@ -613,16 +596,6 @@ namespace RhinoCycles
 		}
 
 		/// <summary>
-		/// Record Cycles lights that correspond to specific Rhino light ID
-		/// </summary>
-		/// <param name="id"></param>
-		/// <param name="cLight"></param>
-		public void RecordLightRelation(Guid id, CclLight cLight)
-		{
-			m_rh_ccl_lights[id] = cLight;
-		}
-
-		/// <summary>
 		/// Record Cycles objects that belong to one Rhino object.
 		/// </summary>
 		/// <param name="obid">uint of Rhino Object</param>
@@ -666,15 +639,6 @@ namespace RhinoCycles
 
 			return null;
 		} 
-
-		/// <summary>
-		/// Record light changes
-		/// </summary>
-		/// <param name="light"></param>
-		public void AddLight(CyclesLight light)
-		{
-			m_cq_light_changes.Add(light);
-		}
 
 		/// <summary>
 		/// Construct a new render engine
