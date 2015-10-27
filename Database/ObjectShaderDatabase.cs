@@ -44,7 +44,7 @@ namespace RhinoCycles.Database
 		private readonly Dictionary<uint, List<uint>> m_rh_renderhash_objects = new Dictionary<uint, List<uint>>();
 		#endregion
 
-		private readonly ObjectDatabase objects;
+		private readonly ObjectDatabase m_objects;
 		/// <summary>
 		/// Construct a ObjectShaderDatabase that has access to shaders and objects.
 		/// </summary>
@@ -52,7 +52,7 @@ namespace RhinoCycles.Database
 		/// <param name="_objects"></param>
 		public ObjectShaderDatabase(ObjectDatabase _objects)
 		{
-			objects = _objects;
+			m_objects = _objects;
 		}
 
 
@@ -107,7 +107,7 @@ namespace RhinoCycles.Database
 		{
 			if(oldShader!=uint.MaxValue) RemoveRenderHashMeshInstanceId(oldShader, oid);
 
-			var meshid = objects.FindMeshIdOnObjectId(oid);
+			var meshid = m_objects.FindMeshIdOnObjectId(oid);
 			RecordRenderHashRelation(newShader, meshid, oid);
 		}
 
@@ -122,7 +122,7 @@ namespace RhinoCycles.Database
 			if (m_rh_renderhash_objects.ContainsKey(hash)) m_rh_renderhash_objects[hash].RemoveAll(x => x.Equals(meshInstanceId));
 			if (m_rh_meshinstance_renderhashes.ContainsKey(meshInstanceId)) m_rh_meshinstance_renderhashes.Remove(meshInstanceId);
 
-			var meshid = objects.FindMeshIdOnObjectId(meshInstanceId);
+			var meshid = m_objects.FindMeshIdOnObjectId(meshInstanceId);
 
 			if (m_rh_renderhash_meshids.ContainsKey(hash)) m_rh_renderhash_meshids[hash].RemoveAll(x => x.Equals(meshid));
 			if (m_rh_meshid_renderhash.ContainsKey(meshid)) m_rh_meshid_renderhash.Remove(meshid);
