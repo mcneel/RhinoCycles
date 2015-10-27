@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -22,12 +23,13 @@ using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
+using RhinoCycles.Database;
 using RhinoCycles.Shaders;
 using sdd = System.Diagnostics.Debug;
 using CQMaterial = Rhino.Render.ChangeQueue.Material;
 using CQMesh = Rhino.Render.ChangeQueue.Mesh;
 using GroundPlane = Rhino.Render.ChangeQueue.GroundPlane;
-using Light = Rhino.Render.ChangeQueue.Light;
+using CqLight = Rhino.Render.ChangeQueue.Light;
 using Skylight = Rhino.Render.ChangeQueue.Skylight;
 using CQLinearWorkflow = Rhino.Render.ChangeQueue.LinearWorkflow;
 using CclLight = ccl.Light;
@@ -131,14 +133,14 @@ namespace RhinoCycles
 			ClearLinearWorkflow();
 			ClearBackground();
 			ClearViewChanges();
-			ClearLights();
+			LightDb.ClearLights();
 		}
 
 		public bool HasChanges()
 		{
 			return
 				m_cq_view_changes.Any() ||
-				m_cq_light_changes.Any() || 
+				LightDb.HasChanges() || 
 				LinearWorkflowHasChanged ||
 				GammaHasChanged;
 		}
@@ -630,55 +632,19 @@ namespace RhinoCycles
 		#region LIGHT & SUN
 
 		/// <summary>
-		/// record light changes to push to cycles
+		/// The database responsible for keeping track of light changes and the relations between Rhino
+		/// and Cycles lights and their shaders.
 		/// </summary>
-		private readonly List<CyclesLight> m_cq_light_changes = new List<CyclesLight>();
-		/// <summary>
-		/// record what Guid corresponds to what light in cycles
-		/// </summary>
-		private readonly Dictionary<Guid, CclLight> m_rh_ccl_lights = new Dictionary<Guid, CclLight>();
-
-		/// <summary>
-		/// Clear out list of light changes.
-		/// </summary>
-		public void ClearLights()
-		{
-			m_cq_light_changes.Clear();
-		}
-
-		/// <summary>
-		/// Record light changes
-		/// </summary>
-		/// <param name="light"></param>
-		public void AddLight(CyclesLight light)
-		{
-			m_cq_light_changes.Add(light);
-		}
-
-		/// <summary>
-		/// Record Cycles lights that correspond to specific Rhino light ID
-		/// </summary>
-		/// <param name="id"></param>
-		/// <param name="cLight"></param>
-		public void RecordLightRelation(Guid id, CclLight cLight)
-		{
-			m_rh_ccl_lights[id] = cLight;
-		}
+		private readonly LightDatabase LightDb = new LightDatabase();
 
 		/// <summary>
 		/// Upload all light changes to the Cycles render engine
 		/// </summary>
 		public void UploadLightChanges()
 		{
-			var light_ids = (from light in m_cq_light_changes select light.Id).ToList();
-			var add_ids = from lightkey in light_ids where !m_rh_ccl_lights.ContainsKey(lightkey) select lightkey;
-			var update_ids = from lightkey in light_ids where m_rh_ccl_lights.ContainsKey(lightkey) select lightkey;
-
-			var add_lights = (from aid in add_ids from ll in m_cq_light_changes where aid == ll.Id select ll).ToList();
-			var update_lights = (from uid in update_ids from ll in m_cq_light_changes where uid == ll.Id select ll).ToList();
 
 			/* new light shaders and lights. */
-			foreach (var l in add_lights)
+			foreach (var l in LightDb.AddLights)
 			{
 				if (RenderEngine.CancelRender) return;
 
@@ -719,13 +685,13 @@ namespace RhinoCycles
 				}
 
 				light.TagUpdate();
-				RecordLightRelation(l.Id, light);
+				LightDb.RecordLightRelation(l.Id, light);
 			}
 
 			// update existing ones
-			foreach (var l in update_lights)
+			foreach (var l in LightDb.UpdateLights)
 			{
-				var existing_l = m_rh_ccl_lights[l.Id];
+				var existing_l = LightDb.ExistingLight(l.Id);
 				RenderEngine.ReCreateSimpleEmissionShader(existing_l.Shader, l);
 				existing_l.Type = l.Type;
 				existing_l.Size = l.Size;
@@ -761,16 +727,15 @@ namespace RhinoCycles
 		/// Handle light changes
 		/// </summary>
 		/// <param name="lightChanges"></param>
-		protected override void ApplyLightChanges(List<Light> lightChanges)
+		protected override void ApplyLightChanges(List<CqLight> lightChanges)
 		{
 			foreach (var light in lightChanges)
 			{
-
 				var cl = Plugin.ConvertLight(this, light, m_current_view_info, Gamma);
 
 				//System.Diagnostics.Debug.WriteLine("light {0} == {1} == {2} ({3})", light.Id, cl.Id, lg.Id, light.ChangeType);
 
-				AddLight(cl);
+				LightDb.AddLight(cl);
 			}
 		}
 
@@ -780,7 +745,7 @@ namespace RhinoCycles
 			{
 				var cl = Plugin.ConvertLight(light, Gamma);
 				//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
-				AddLight(cl);
+				LightDb.AddLight(cl);
 			}
 		}
 
@@ -792,7 +757,7 @@ namespace RhinoCycles
 		{
 			var cl = Plugin.ConvertLight(sun, Gamma);
 			cl.Id = RenderEngine.SunId;
-			AddLight(cl);
+			LightDb.AddLight(cl);
 			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
 		}
 

@@ -13,9 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
 using System;
 using ccl;
-using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Geometry;
@@ -23,7 +23,7 @@ using Rhino.Render;
 using Rhino.Render.ChangeQueue;
 using RhinoCycles.Materials;
 using Light = Rhino.Render.ChangeQueue.Light;
-
+using Material = Rhino.DocObjects.Material;
 using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCycles
@@ -160,7 +160,7 @@ namespace RhinoCycles
 						Roughness = (float) m.Reflectivity, // TODO: expose roughness...
 						Reflectivity = (float) m.Reflectivity,
 						Transparency = (float) m.Transparency,
-						Shine = (float) (m.Shine/Rhino.DocObjects.Material.MaxShine)*2.0f,
+						Shine = (float) (m.Shine/Material.MaxShine)*2.0f,
 
 						IsCyclesMaterial = false,
 
@@ -220,7 +220,7 @@ namespace RhinoCycles
 		/// </summary>
 		/// <param name="light"></param>
 		/// <returns></returns>
-		internal static CyclesLight ConvertLight(ChangeQueue changequeue, Rhino.Render.ChangeQueue.Light light, ViewInfo view, float gamma)
+		internal static CyclesLight ConvertLight(ChangeQueue changequeue, Light light, ViewInfo view, float gamma)
 		{
 			if (changequeue != null && view != null)
 			{

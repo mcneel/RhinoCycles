@@ -13,9 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
-using ccl;
+
 using System;
-using Rhino.DocObjects.Tables;
+using ccl;
 using Light = Rhino.Render.ChangeQueue.Light;
 
 namespace RhinoCycles
@@ -74,6 +74,9 @@ namespace RhinoCycles
 		/// </summary>
 		public bool UseMis { get; set; }
 
+		/// <summary>
+		/// Light ID set to the RhinoObject Id it represents
+		/// </summary>
 		public Guid Id { get; set; }
 
 		public float Gamma { get; set; }
