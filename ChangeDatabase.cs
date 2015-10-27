@@ -60,7 +60,7 @@ namespace RhinoCycles
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, RhinoView view) : base(pluginId, doc, view)
 		{
 			RenderEngine = engine;
-			ObjectShaderDb = new ObjectShaderDatabase(ShaderDb, ObjectDb);
+			ObjectShaderDb = new ObjectShaderDatabase(ObjectDb);
 		}
 
 
@@ -73,7 +73,7 @@ namespace RhinoCycles
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, CreatePreviewEventArgs createPreviewEventArgs) : base(pluginId, createPreviewEventArgs)
 		{
 			RenderEngine = engine;
-			ObjectShaderDb = new ObjectShaderDatabase(ShaderDb, ObjectDb);
+			ObjectShaderDb = new ObjectShaderDatabase(ObjectDb);
 		}
 
 		public void UploadLinearWorkflowChanges()
@@ -91,9 +91,36 @@ namespace RhinoCycles
 			}
 		}
 
+		/// <summary>
+		/// Change shaders on objects and their meshes
+		/// </summary>
 		public void UploadObjectShaderChanges()
 		{
-			ObjectShaderDb.UploadObjectShaderChanges();
+			foreach (var obshad in ShaderDb.ObjectShaderChanges)
+			{
+
+				var cob = ObjectDb.FindObjectRelation(obshad.Id);
+
+				//if(mesh!=null) mesh.ReplaceShader(new_shader);
+
+				if(cob!=null)
+				{
+					// get shaders
+					var new_shader = ShaderDb.GetShaderFromHash(obshad.NewShaderHash);
+					var old_shader = ShaderDb.GetShaderFromHash(obshad.OldShaderHash);
+					if (new_shader != null)
+					{
+						if (cob.Mesh != null) cob.Mesh.ReplaceShader(new_shader);
+						new_shader.Tag();
+					}
+					if (old_shader != null)
+					{
+						old_shader.Tag();
+					}
+					cob.TagUpdate();
+				}
+				ObjectShaderDb.ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
+			}
 		}
 
 		public void UploadGammaChanges()
@@ -665,7 +692,7 @@ namespace RhinoCycles
 
 		#region SHADERS
 
-		private readonly ShaderDatabase ShaderDb;
+		private readonly ShaderDatabase ShaderDb = new ShaderDatabase();
 
 		/// <summary>
 		/// Handle RenderMaterial - will queue new shader if necessary
@@ -740,7 +767,7 @@ namespace RhinoCycles
 		#endregion SHADERS
 
 
-		private readonly ObjectDatabase ObjectDb;
+		private readonly ObjectDatabase ObjectDb = new ObjectDatabase();
 		/// <summary>
 		/// Handle ground plane changes.
 		/// </summary>

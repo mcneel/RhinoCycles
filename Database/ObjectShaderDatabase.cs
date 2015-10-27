@@ -44,51 +44,17 @@ namespace RhinoCycles.Database
 		private readonly Dictionary<uint, List<uint>> m_rh_renderhash_objects = new Dictionary<uint, List<uint>>();
 		#endregion
 
-		private IReadShaderDatabase shaders;
-		private ObjectDatabase objects;
-
+		private readonly ObjectDatabase objects;
 		/// <summary>
 		/// Construct a ObjectShaderDatabase that has access to shaders and objects.
 		/// </summary>
 		/// <param name="_shaders"></param>
 		/// <param name="_objects"></param>
-		public ObjectShaderDatabase(IReadWriteShaderDatabase _shaders, ObjectDatabase _objects)
+		public ObjectShaderDatabase(ObjectDatabase _objects)
 		{
-			shaders = _shaders;
 			objects = _objects;
 		}
 
-		/// <summary>
-		/// Change shaders on objects and their meshes
-		/// </summary>
-		public void UploadObjectShaderChanges()
-		{
-			foreach (var obshad in shaders.ObjectShaderChanges)
-			{
-
-				var cob = objects.FindObjectRelation(obshad.Id);
-
-				//if(mesh!=null) mesh.ReplaceShader(new_shader);
-
-				if(cob!=null)
-				{
-					// get shaders
-					var new_shader = shaders.GetShaderFromHash(obshad.NewShaderHash);
-					var old_shader = shaders.GetShaderFromHash(obshad.OldShaderHash);
-					if (new_shader != null)
-					{
-						if (cob.Mesh != null) cob.Mesh.ReplaceShader(new_shader);
-						new_shader.Tag();
-					}
-					if (old_shader != null)
-					{
-						old_shader.Tag();
-					}
-					cob.TagUpdate();
-				}
-				ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
-			}
-		}
 
 		/// <summary>
 		/// Record meshid and meshinstanceid (object id) for renderhash.
