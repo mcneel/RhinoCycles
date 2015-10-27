@@ -98,40 +98,6 @@ namespace RhinoCycles
 		private readonly CSycles.RenderTileCallback m_write_render_tile_callback;
 		private readonly CSycles.TestCancelCallback m_test_cancel_callback;
 
-		/// <summary>
-		/// Record Guid of our groundplane object.
-		/// </summary>
-		private readonly Tuple<Guid, int> m_groundplane_guid = new Tuple<Guid, int>(new Guid("306690EC-6E86-4676-B55B-1A50066D7432"), 0);
-
-		private const uint GROUNDPLANE_MESHINSTANCEID = 1;
-
-		/// <summary>
-		/// Get the ground plane object ID
-		/// </summary>
-		public Tuple<Guid, int> GroundPlaneId
-		{
-			get
-			{
-				return m_groundplane_guid;
-			}
-		}
-
-		/// <summary>
-		/// Get the mesh instance id for ground plane
-		/// </summary>
-		public uint GroundPlaneMeshInstanceId
-		{
-			get
-			{
-				return GROUNDPLANE_MESHINSTANCEID;
-			}
-		}
-
-		/// <summary>
-		/// True if ground plane has been initialised
-		/// </summary>
-		public bool GroundPlaneInitialised { get; set; }
-
 		private readonly Guid m_sun_guid = new Guid("82FE2C29-9632-473D-982B-9121E150E1D2");
 
 		/// <summary>
@@ -176,79 +142,7 @@ namespace RhinoCycles
 		public ChangeDatabase Database { get; set; }
 
 
-		#region lists for meshes
-		/// <summary>
-		/// record changes to push to cycles (new meshes, changes to existing ones)
-		/// </summary>
-		private readonly Dictionary<Tuple<Guid, int>, CyclesMesh> m_cq_mesh_changes = new Dictionary<Tuple<Guid, int>, CyclesMesh>();
-		/// <summary>
-		/// record mesh removes from cycles
-		/// </summary>
-		private readonly List<Guid> m_cq_meshes_to_delete = new List<Guid>();
-		/// <summary>
-		/// record what meshid tuple corresponds to what cycles mesh
-		/// </summary>
-		private readonly Dictionary<Tuple<Guid, int>, CclMesh> m_rh_ccl_meshes = new Dictionary<Tuple<Guid, int>, CclMesh>(); 
-		/// <summary>
-		/// Record what meshinstanceid (objectid) points to what meshid
-		/// </summary>
-		private readonly Dictionary<uint, Tuple<Guid, int>> m_rh_objectid_meshid = new Dictionary<uint, Tuple<Guid, int>>();
-		#endregion
 
-		#region lists for objects (rhino <-> cycles)
-		/// <summary>
-		/// record what uint corresponds to what object id in cycles
-		/// Key is InstanceAncestry.Id
-		/// </summary>
-		private readonly Dictionary<uint, CclObject> m_rh_ccl_objects = new Dictionary<uint, CclObject>(); 
-		/// <summary>
-		/// record objects to push to cycles
-		/// </summary>
-		private readonly List<CyclesObject> m_cq_new_updated_objects = new List<CyclesObject>();
-		/// <summary>
-		/// record objects to remove/hide in cycles
-		/// </summary>
-		private readonly List<CyclesObject> m_cq_deleted_objects = new List<CyclesObject>(); 
-		/// <summary>
-		/// record dynamic object transformations
-		/// </summary>
-		private readonly List<CyclesObjectTransform> m_cq_object_transform =  new List<CyclesObjectTransform>();
-		#endregion
-
-		#region lists for shaders
-		/// <summary>
-		/// record material changes for objects
-		/// </summary>
-		private readonly List<CyclesObjectShader> m_cq_objects_shader_changes = new List<CyclesObjectShader>(); 
-		/// <summary>
-		/// record shader changes to push to cycles
-		/// </summary>
-		private readonly List<CyclesShader> m_cq_shaders = new List<CyclesShader>();
-		/// <summary>
-		/// record RenderMaterial CRC and Shader relationship. Key is RenderHash, Value is Shader.
-		/// </summary>
-		private readonly Dictionary<uint, Shader> m_rh_ccl_shaders = new Dictionary<uint, Shader>(); 
-		/// <summary>
-		/// record shader in scene relationship. Key is RenderMaterial.RenderHash, Value is shader id in scene.
-		/// </summary>
-		private readonly Dictionary<uint, uint> m_rh_ccl_scene_shader_ids = new Dictionary<uint, uint>(); 
-		/// <summary>
-		/// Record meshids that use a renderhash
-		/// </summary>
-		private readonly Dictionary<uint, List<Tuple<Guid, int>>> m_rh_renderhash_meshids = new Dictionary<uint, List<Tuple<Guid, int>>>();
-		/// <summary>
-		/// Record renderhash for meshid
-		/// </summary>
-		private readonly Dictionary<Tuple<Guid, int>, uint> m_rh_meshid_renderhash = new Dictionary<Tuple<Guid, int>, uint>();
-		/// <summary>
-		/// Record renderhash used object id (meshinstanceid)
-		/// </summary>
-		private readonly Dictionary<uint, uint> m_rh_meshinstance_renderhashes = new Dictionary<uint, uint>(); 
-		/// <summary>
-		/// Record object ids (meshinstanceid) on renderhash
-		/// </summary>
-		private readonly Dictionary<uint, List<uint>> m_rh_renderhash_objects = new Dictionary<uint, List<uint>>();
-		#endregion
 		/// <summary>
 		/// a approx avg measurement device.
 		/// </summary>
@@ -260,13 +154,7 @@ namespace RhinoCycles
 		/// <returns>true if any changes have been received.</returns>
 		private bool HasSceneChanges()
 		{
-			return Database.HasChanges() ||
-				m_cq_shaders.Count > 0 ||
-				m_cq_mesh_changes.Count > 0 ||
-				m_cq_new_updated_objects.Count > 0 || m_cq_deleted_objects.Count > 0 ||
-				m_cq_meshes_to_delete.Count > 0 ||
-				m_cq_object_transform.Count > 0 ||
-				m_cq_objects_shader_changes.Count > 0;
+			return Database.HasChanges();
 		}
 
 		/// <summary>
@@ -304,341 +192,6 @@ namespace RhinoCycles
 			}
 		}
 
-		public void AddObjectMaterialChange(CyclesObjectShader o)
-		{
-			if(!m_cq_objects_shader_changes.Contains(o)) m_cq_objects_shader_changes.Add(o);
-		}
-		/// <summary>
-		/// Clear queue of object shader changes
-		/// </summary>
-		public void ClearObjectShaderChanges()
-		{
-			m_cq_objects_shader_changes.Clear();
-		}
-
-		/// <summary>
-		/// Clear queue of shader changes.
-		/// </summary>
-		public void ClearShaders()
-		{
-			m_cq_shaders.Clear();
-		}
-
-		/// <summary>
-		/// Check if a shader for a certain RenderHash already exists.
-		/// </summary>
-		/// <param name="shaderId"></param>
-		/// <returns></returns>
-		public bool HasShader(uint shaderId)
-		{
-			return m_rh_ccl_shaders.ContainsKey(shaderId);
-		}
-
-		/// <summary>
-		/// Get Shader for hash, or null if not found
-		/// </summary>
-		/// <param name="shaderId">Render hash</param>
-		/// <returns>Shader if found, null otherwise</returns>
-		public Shader GetShaderFromHash(uint shaderId)
-		{
-			return HasShader(shaderId) ? m_rh_ccl_shaders[shaderId] : null;
-		}
-
-		/// <summary>
-		/// Get RenderHash for a <c>Shader</c>
-		/// </summary>
-		/// <param name="shader">Shader to search for</param>
-		/// <returns>RenderHash for <c>shader</c></returns>
-		public uint GetHashFromShader(Shader shader)
-		{
-			var hash = uint.MaxValue;
-			foreach (var hash_shader in m_rh_ccl_shaders)
-			{
-				if (hash_shader.Value.Id == shader.Id) hash = hash_shader.Key;
-			}
-
-			return hash;
-		}
-
-		/// <summary>
-		/// Add a CyclesShader to the list of shaders that will have to be committed to Cycles.
-		/// </summary>
-		/// <param name="shader"></param>
-		public void AddShader(CyclesShader shader)
-		{
-			if (!m_rh_ccl_shaders.ContainsKey(shader.Id) && !m_cq_shaders.Contains(shader))
-			{
-				m_cq_shaders.Add(shader);
-				//m_all_shaders.Add(shader);
-			}
-		}
-
-		/// <summary>
-		/// Record meshid and meshinstanceid (object id) for renderhash.
-		/// </summary>
-		/// <param name="hash"></param>
-		/// <param name="meshId"></param>
-		/// <param name="meshInstanceId"></param>
-		public void RecordRenderHashRelation(uint hash, Tuple<Guid, int> meshId, uint meshInstanceId)
-		{
-			RecordRenderHashMeshId(hash, meshId);
-			RecordRenderHashMeshInstanceId(hash, meshInstanceId);
-		}
-
-		/// <summary>
-		/// Record relationship for renderhash -- meshinstanceid (object id)
-		/// </summary>
-		/// <param name="hash"></param>
-		/// <param name="meshInstanceId"></param>
-		private void RecordRenderHashMeshInstanceId(uint hash, uint meshInstanceId)
-		{
-			// save meshinstanceid (object id) for render hash
-			if (!m_rh_renderhash_objects.ContainsKey(hash)) m_rh_renderhash_objects.Add(hash, new List<uint>());
-			if (!m_rh_renderhash_objects[hash].Contains(meshInstanceId)) m_rh_renderhash_objects[hash].Add(meshInstanceId);
-
-			// save render hash for meshinstanceId (object id)
-			m_rh_meshinstance_renderhashes[meshInstanceId] = hash;
-		}
-
-		/// <summary>
-		/// Remove renderhash--meshinstanceid
-		/// </summary>
-		/// <param name="hash"></param>
-		/// <param name="meshInstanceId"></param>
-		private void RemoveRenderHashMeshInstanceId(uint hash, uint meshInstanceId)
-		{
-			//if(m_objects_on_shader.ContainsKey(oldShader)) m_objects_on_shader[oldShader].RemoveAll(x => x.Equals(oid));
-			if (m_rh_renderhash_objects.ContainsKey(hash)) m_rh_renderhash_objects[hash].RemoveAll(x => x.Equals(meshInstanceId));
-			if (m_rh_meshinstance_renderhashes.ContainsKey(meshInstanceId)) m_rh_meshinstance_renderhashes.Remove(meshInstanceId);
-
-			var meshid = m_rh_objectid_meshid[meshInstanceId];
-
-			if (m_rh_renderhash_meshids.ContainsKey(hash)) m_rh_renderhash_meshids[hash].RemoveAll(x => x.Equals(meshid));
-			if (m_rh_meshid_renderhash.ContainsKey(meshid)) m_rh_meshid_renderhash.Remove(meshid);
-		}
-
-		/// <summary>
-		/// record relationship for renderhash -- meshid (tuple of guid and int)
-		/// </summary>
-		/// <param name="hash"></param>
-		/// <param name="meshId"></param>
-		private void RecordRenderHashMeshId(uint hash, Tuple<Guid, int> meshId)
-		{
-			// save meshid into list for render hash
-			if (!m_rh_renderhash_meshids.ContainsKey(hash)) m_rh_renderhash_meshids.Add(hash, new List<Tuple<Guid, int>>());
-			if (!m_rh_renderhash_meshids[hash].Contains(meshId)) m_rh_renderhash_meshids[hash].Add(meshId);
-			// save render hash for meshid
-			m_rh_meshid_renderhash[meshId] = hash;
-		}
-
-		/// <summary>
-		/// Find RenderHash for mesh
-		/// </summary>
-		/// <param name="meshId"></param>
-		/// <returns></returns>
-		public uint FindRenderHashForMeshId(Tuple<Guid, int> meshId)
-		{
-			if (m_rh_meshid_renderhash.ContainsKey(meshId)) return m_rh_meshid_renderhash[meshId];
-
-			return uint.MaxValue;
-		}
-
-		/// <summary>
-		/// Find renderhash used by object id (meshinstanceid)
-		/// </summary>
-		/// <param name="objectid"></param>
-		/// <returns></returns>
-		public uint FindRenderHashForObjectId(uint objectid)
-		{
-			if (m_rh_meshinstance_renderhashes.ContainsKey(objectid)) return m_rh_meshinstance_renderhashes[objectid];
-			return uint.MaxValue;
-		}
-
-		/// <summary>
-		/// Find meshids that use RenderHash
-		/// </summary>
-		/// <param name="hash"></param>
-		/// <returns></returns>
-		public List<Tuple<Guid, int>> FindMeshIdsForRenderHash(uint hash)
-		{
-			if (m_rh_renderhash_meshids.ContainsKey(hash)) return m_rh_renderhash_meshids[hash];
-			return new List<Tuple<Guid, int>>();
-		}
-
-		/// <summary>
-		/// Find all cycles objects for meshes that have meshid containing Guid id
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns></returns>
-		public List<CclObject> GetCyclesObjectsForGuid(Guid id)
-		{
-			var cclobs = new List<CclObject>();
-			var obids = new List<uint>();
-			foreach (var x in m_rh_objectid_meshid.Where(x => x.Value.Item1.Equals(id) && !obids.Contains(x.Key)))
-			{
-				obids.Add(x.Key);
-			}
-
-			foreach(var obid in obids)
-			{
-				var cclob = FindObjectRelation(obid);
-				if(!cclobs.Contains(cclob)) cclobs.Add(cclob);
-			}
-
-			return cclobs;
-		} 
-
-		/// <summary>
-		/// Update shader object relation so <c>oid</c> uses new <c>shader</c>
-		/// </summary>
-		/// <param name="oldShader">old shader renderhash</param>
-		/// <param name="newShader">new shader renderhash</param>
-		/// <param name="oid">object id (meshinstanceid)</param>
-		public void ReplaceShaderRelation(uint oldShader, uint newShader, uint oid)
-		{
-			if(oldShader!=uint.MaxValue) RemoveRenderHashMeshInstanceId(oldShader, oid);
-
-			var meshid = m_rh_objectid_meshid[oid];
-			RecordRenderHashRelation(newShader, meshid, oid);
-		}
-
-		/// <summary>
-		/// Add a new dynamic object transformation
-		/// </summary>
-		/// <param name="cot"></param>
-		public void AddDynamicObjectTransform(CyclesObjectTransform cot)
-		{
-			m_cq_object_transform.RemoveAll(x => x.Equals(cot));
-			m_cq_object_transform.Add(cot);
-		}
-
-		/// <summary>
-		/// Clear out the dynamic object transforms
-		/// </summary>
-		public void ClearDynamicObjectTransforms()
-		{
-			m_cq_object_transform.Clear();
-		}
-
-		/// <summary>
-		/// Clear out lists and dictionary related to mesh changes that need to be committed to Cycles.
-		/// </summary>
-		public void ClearMeshes()
-		{
-			m_cq_meshes_to_delete.Clear();
-			m_cq_mesh_changes.Clear();
-		}
-
-		/// <summary>
-		/// Clear out the list of object changes that need to be committed to Cycles.
-		/// </summary>
-		public void ClearObjectsChanges()
-		{
-			m_cq_new_updated_objects.Clear();
-			m_cq_deleted_objects.Clear();
-		}
-
-		/// <summary>
-		/// Add an object change.
-		/// </summary>
-		/// <param name="ob"></param>
-		public void AddNewOrUpdateObject(CyclesObject ob)
-		{
-			if(!m_cq_new_updated_objects.Contains(ob)) m_cq_new_updated_objects.Add(ob);
-		}
-
-		/// <summary>
-		/// Add info to delete (hide) object from cycles
-		/// </summary>
-		/// <param name="ob"></param>
-		public void AddObjectDelete(CyclesObject ob)
-		{
-			if(!m_cq_deleted_objects.Contains(ob)) m_cq_deleted_objects.Add(ob);
-		}
-
-		/// <summary>
-		/// Record which object meshes to delete (hide)
-		/// </summary>
-		/// <param name="id">Object id</param>
-		public void DeleteMesh(Guid id)
-		{
-			m_cq_meshes_to_delete.Add(id);
-		}
-
-		/// <summary>
-		/// Record CyclesMesh as new mesh data to commit to Cycles.
-		/// </summary>
-		/// <param name="me"></param>
-		public void AddMesh(CyclesMesh me) {
-			m_cq_mesh_changes[me.MeshId] = me;
-		}
-
-		/// <summary>
-		/// Record to what Rhino object Guid a Cycles mesh belongs.
-		/// </summary>
-		/// <param name="id"></param>
-		/// <param name="mid"></param>
-		public void RecordObjectMeshRelation(Tuple<Guid, int> id, CclMesh mid)
-		{
-			m_rh_ccl_meshes[id] = mid;
-		}
-
-		/// <summary>
-		/// Find all Cycles meshes for a Rhino object Guid
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns>List of meshes</returns>
-		public CclMesh FindMeshRelation(Tuple<Guid, int> id)
-		{
-			if (m_rh_ccl_meshes.ContainsKey(id)) return m_rh_ccl_meshes[id];
-
-			return null;
-		}
-
-		/// <summary>
-		/// Record Cycles objects that belong to one Rhino object.
-		/// </summary>
-		/// <param name="obid">uint of Rhino Object</param>
-		/// <param name="mid"></param>
-		public void RecordObjectRelation(uint obid, CclObject mid)
-		{
-			m_rh_ccl_objects[obid] = mid;
-		}
-
-		/// <summary>
-		/// record meshid for obid
-		/// </summary>
-		/// <param name="obid"></param>
-		/// <param name="meshid"></param>
-		public void RecordObjectIdMeshIdRelation(uint obid, Tuple<Guid, int> meshid)
-		{
-			m_rh_objectid_meshid[obid] = meshid;
-		}
-
-		/// <summary>
-		/// Find meshid based on obid
-		/// </summary>
-		/// <param name="obid"></param>
-		/// <returns></returns>
-		public Tuple<Guid, int> FindMeshIdOnObjectId(uint obid)
-		{
-			if (m_rh_objectid_meshid.ContainsKey(obid)) return m_rh_objectid_meshid[obid];
-
-			return null;
-		}
-
-		/// <summary>
-		/// Find CclObjects based on obid.
-		/// This will find all submeshes as well.
-		/// </summary>
-		/// <param name="obid"></param>
-		/// <returns></returns>
-		public CclObject FindObjectRelation(uint obid)
-		{
-			if (m_rh_ccl_objects.ContainsKey(obid)) return m_rh_ccl_objects[obid];
-
-			return null;
-		} 
 
 		/// <summary>
 		/// Construct a new render engine
@@ -673,8 +226,6 @@ namespace RhinoCycles
 				Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, view);
 			}
 			RenderThread = null;
-			ClearMeshes();
-			ClearShaders();
 			Client = new Client();
 			State = State.Rendering;
 
@@ -699,8 +250,6 @@ namespace RhinoCycles
 			m_preview_event_args = createPreviewEventArgs;
 			Database = new ChangeDatabase(pluginId, this, createPreviewEventArgs);
 			RenderThread = null;
-			ClearMeshes();
-			ClearShaders();
 			Client = new Client();
 			State = State.Rendering;
 
@@ -967,7 +516,7 @@ namespace RhinoCycles
 		/// <param name="rw"></param>
 		/// <param name="msg"></param>
 		/// <param name="progress"></param>
-		protected void SetProgress(RenderWindow rw, string msg, float progress)
+		public void SetProgress(RenderWindow rw, string msg, float progress)
 		{
 			if (null != rw) rw.SetProgress(msg, progress);
 		}

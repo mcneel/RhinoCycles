@@ -20,8 +20,6 @@ using ccl.ShaderNodes;
 using Rhino;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
-using CqGroundPlane = Rhino.Render.ChangeQueue.GroundPlane;
-using GroundPlane = Rhino.Render.GroundPlane;
 
 namespace RhinoCycles
 {
@@ -111,55 +109,6 @@ namespace RhinoCycles
 			#endregion
 
 			return scene;
-		}
-		public void InitialiseGroundPlane(CqGroundPlane gp)
-		{
-			GroundPlaneInitialised = true;
-			var gpid = GroundPlaneId;
-			var altitude = (float)(gp.Enabled ? gp.Altitude : 0.0);
-			var vertices = new[]
-			{
-				 10000.0f, -10000.0f, 0.0f,
-				 10000.0f,  10000.0f, 0.0f,
-				-10000.0f,  10000.0f, 0.0f,
-				-10000.0f, -10000.0f, 0.0f 
-			};
-			var findices = new[]
-			{
-				0, 1, 2,
-				0, 2, 3
-			};
-			var cmuv = new[]
-			{
-				1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-				1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f
-			};
-
-			var cycles_mesh = new CyclesMesh
-				{
-					MeshId = gpid,
-					verts = vertices,
-					faces = findices,
-					uvs = cmuv,
-					vertex_normals = null,
-					matid = gp.MaterialId
-				};
-
-			var t = Transform.Translate(0.0f, 0.0f, altitude);
-			var cycles_object = new CyclesObject
-			{
-				matid = gp.MaterialId,
-				obid = GroundPlaneMeshInstanceId,
-				meshid = gpid,
-				Transform = t,
-				Visible = gp.Enabled
-			};
-
-			AddMesh(cycles_mesh);
-			RecordRenderHashRelation(gp.MaterialId, gpid, GroundPlaneMeshInstanceId);
-			RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
-			AddNewOrUpdateObject(cycles_object);
-
 		}
 
 		static public float4 CreateFloat4(double x, double y, double z) { return new float4((float)x, (float)y, (float)z, 0.0f); }

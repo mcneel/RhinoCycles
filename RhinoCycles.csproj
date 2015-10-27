@@ -73,6 +73,9 @@
     <Compile Include="CyclesTextureImage.cs" />
     <Compile Include="CyclesView.cs" />
     <Compile Include="Database\LightDatabase.cs" />
+    <Compile Include="Database\ObjectDatabase.cs" />
+    <Compile Include="Database\ObjectShaderDatabase.cs" />
+    <Compile Include="Database\ShaderDatabase.cs" />
     <Compile Include="Environments\SimpleNoiseEnvironment.cs" />
     <Compile Include="LinearWorkflow.cs" />
     <Compile Include="Materials\DiffuseMaterial.cs" />
