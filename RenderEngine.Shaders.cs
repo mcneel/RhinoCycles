@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using System;
-using ccl;
+using CclShader = ccl.Shader;
 using ccl.ShaderNodes;
 using RhinoCycles.Shaders;
 
@@ -22,9 +22,9 @@ namespace RhinoCycles
 {
 	partial class RenderEngine
 	{
-		internal Shader CreateMaterialShader(CyclesShader shader)
+		internal CclShader CreateMaterialShader(CyclesShader shader)
 		{
-			Shader sh;
+			CclShader sh;
 			switch (shader.CyclesMaterialType)
 			{
 				case CyclesShader.CyclesMaterial.No:
@@ -38,9 +38,9 @@ namespace RhinoCycles
 			return sh;
 		}
 
-		internal Shader RecreateMaterialShader(CyclesShader shader, Shader existing)
+		internal CclShader RecreateMaterialShader(CyclesShader shader, CclShader existing)
 		{
-			Shader sh;
+			CclShader sh;
 			switch (shader.CyclesMaterialType)
 			{
 				case CyclesShader.CyclesMaterial.No:
@@ -54,9 +54,9 @@ namespace RhinoCycles
 			return sh;
 		}
 
-		internal Shader CreateCyclesShaderFromXml(CyclesShader shader)
+		internal CclShader CreateCyclesShaderFromXml(CyclesShader shader)
 		{
-			var sh = new Shader(Client, Shader.ShaderType.Material)
+			var sh = new CclShader(Client, CclShader.ShaderType.Material)
 			{
 				UseMis = true,
 				UseTransparentShadow = true,
@@ -64,15 +64,15 @@ namespace RhinoCycles
 				Name = shader.Name ?? String.Format("V6 Basic Material {0}", shader.Id)
 			};
 
-			Shader.ShaderFromXml(ref sh, shader.Crm.MaterialXml);
+			CclShader.ShaderFromXml(ref sh, shader.Crm.MaterialXml);
 
 			return sh;
 		}
 
-		internal Shader RecreateCyclesShaderFromXml(CyclesShader shader, Shader existing)
+		internal CclShader RecreateCyclesShaderFromXml(CyclesShader shader, CclShader existing)
 		{
 			existing.Recreate();
-			Shader.ShaderFromXml(ref existing, shader.Crm.MaterialXml);
+			CclShader.ShaderFromXml(ref existing, shader.Crm.MaterialXml);
 
 			return existing;
 		}
@@ -113,21 +113,21 @@ namespace RhinoCycles
 			}
 		}
 
-		internal Shader CreateCyclesShaderFromRhinoV6BasicMat(CyclesShader shader)
+		internal CclShader CreateCyclesShaderFromRhinoV6BasicMat(CyclesShader shader)
 		{
 			var v6 = RhinoShader.CreateRhinoMaterialShader(Client, shader);
 
 			return v6.GetShader();
 		}
 
-		internal Shader RecreateCyclesShaderFromRhinoV6BasicMat(CyclesShader shader, Shader existing)
+		internal CclShader RecreateCyclesShaderFromRhinoV6BasicMat(CyclesShader shader, CclShader existing)
 		{
 			var v6 = RhinoShader.RecreateRhinoMaterialShader(Client, shader, existing);
 
 			return v6.GetShader();
 		}
 
-		internal Shader CreateBackgroundShader(CyclesShader shader)
+		internal CclShader CreateBackgroundShader(CyclesShader shader)
 		{
 			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Client, Database.m_cq_background, null);
 			return rhinobg.GetShader();
@@ -142,14 +142,14 @@ namespace RhinoCycles
 			Database.m_current_background_shader = rhinobg;
 		}
 
-		internal Shader CreateSimpleEmissionShader(CyclesLight light)
+		internal CclShader CreateSimpleEmissionShader(CyclesLight light)
 		{
 			var rhinolight = RhinoShader.CreateRhinoLightShader(Client, light, null);
 
 			return rhinolight.GetShader();
 		}
 
-		internal Shader ReCreateSimpleEmissionShader(Shader emission_shader, CyclesLight light)
+		internal CclShader ReCreateSimpleEmissionShader(CclShader emission_shader, CyclesLight light)
 		{
 			var rhinolight = RhinoShader.CreateRhinoLightShader(Client, light, emission_shader);
 
