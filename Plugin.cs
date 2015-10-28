@@ -13,23 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
+using System;
+using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using ccl;
 using Rhino;
-using Rhino.Render;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
+using Rhino.Commands;
+using Rhino.Display;
 using Rhino.PlugIns;
-using Transform = ccl.Transform;
+using Rhino.Render;
 
 namespace RhinoCycles
 {
-	public partial class Plugin : Rhino.PlugIns.RenderPlugIn
+	public partial class Plugin : RenderPlugIn
 	{
 		#region helper functions to get relative path between two paths
 		private const int FILE_ATTRIBUTE_DIRECTORY = 0x10;
@@ -88,7 +88,7 @@ namespace RhinoCycles
 			}
 		}
 
-		protected override Rhino.PlugIns.LoadReturnCode OnLoad(ref string errorMessage)
+		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			RhinoApp.WriteLine("RhinoCycles uses open source libraries that are available at www.rhino3d.com/opensource");
 
@@ -103,11 +103,11 @@ namespace RhinoCycles
 			EngineSettings = new EngineSettings();
 			EngineSettings.DefaultSettings();
 
-			var path = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? "";
+			var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
 			PluginPath = path;
 			var kernel_path = Path.Combine(path, "RhinoCycles");
 			KernelPath = kernel_path;
-			var app_path = Path.GetDirectoryName(System.Reflection.Assembly.GetCallingAssembly().Location);
+			var app_path = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
 			AppPath = app_path;
 			kernel_path = GetRelativePath(app_path, kernel_path);
 			KernelPathRelative = kernel_path;
@@ -121,7 +121,7 @@ namespace RhinoCycles
 
 			Initialised = false;
 
-			return Rhino.PlugIns.LoadReturnCode.Success;
+			return LoadReturnCode.Success;
 		}
 
 		/// <summary>
@@ -156,14 +156,14 @@ namespace RhinoCycles
 			return true;
 		}
 
-		protected override Rhino.Commands.Result RenderWindow(RhinoDoc doc, Rhino.Commands.RunMode modes, bool fastPreview, Rhino.Display.RhinoView view, Rectangle rect, bool inWindow)
+		protected override Result RenderWindow(RhinoDoc doc, RunMode modes, bool fastPreview, RhinoView view, Rectangle rect, bool inWindow)
 		{
-			return Rhino.Commands.Result.Failure;
+			return Result.Failure;
 		}
 
-		protected override Rhino.Commands.Result RenderQuiet(RhinoDoc doc, Rhino.Commands.RunMode mode, bool fastPreview)
+		protected override Result RenderQuiet(RhinoDoc doc, RunMode mode, bool fastPreview)
 		{
-			return Rhino.Commands.Result.Failure;
+			return Result.Failure;
 		}
 
 		/// <summary>
@@ -175,12 +175,12 @@ namespace RhinoCycles
 		/// <param name="mode">mode</param>
 		/// <param name="fastPreview">True for fast preview.</param>
 		/// <returns></returns>
-		protected override Rhino.Commands.Result Render(RhinoDoc doc, Rhino.Commands.RunMode mode, bool fastPreview)
+		protected override Result Render(RhinoDoc doc, RunMode mode, bool fastPreview)
 		{
 			return RenderInternal(doc, mode, fastPreview, false);
 		}
 
-		public Rhino.Commands.Result RenderInternal(RhinoDoc doc, Rhino.Commands.RunMode mode, bool fastPreview, bool inViewport)
+		public Result RenderInternal(RhinoDoc doc, RunMode mode, bool fastPreview, bool inViewport)
 		{
 			InitialiseCSycles();
 			AsyncRenderContext a_rc = new RenderEngine(doc, Id);
@@ -228,10 +228,10 @@ namespace RhinoCycles
 			if (Rhino.Render.RenderPipeline.RenderReturnCode.Ok != rc)
 			{
 				RhinoApp.WriteLine("Rendering failed:" + rc.ToString());
-				return Rhino.Commands.Result.Failure;
+				return Result.Failure;
 			}
 
-			return Rhino.Commands.Result.Success;
+			return Result.Success;
 			
 		}
 

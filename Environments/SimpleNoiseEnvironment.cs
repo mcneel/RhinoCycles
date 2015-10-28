@@ -13,9 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
 using System.Runtime.InteropServices;
-using Rhino.Display;
 using Rhino.Render;
+using Utilities = ccl.Utilities;
 
 namespace RhinoCycles.Materials
 {
@@ -53,7 +54,7 @@ namespace RhinoCycles.Materials
 				Fields.TryGetValue("distortion", out distortion);
 				Fields.TryGetValue("strength", out strength);
 
-				var nodegraph = string.Format(ccl.Utilities.Instance.NumberFormatInfo,
+				var nodegraph = string.Format(Utilities.Instance.NumberFormatInfo,
 					"<noise_texture name=\"nt\" scale=\"{0}\" detail=\"{1}\" distortion=\"{2}\" />" +
 					"<background name=\"bg\" strength=\"{3}\" />" +
 					"<connect from=\"nt color\" to=\"bg color\" />" +

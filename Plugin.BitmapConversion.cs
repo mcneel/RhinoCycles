@@ -13,12 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Rhino.Display;
 using Rhino.Geometry;
 using Rhino.Render;
+using Transform = ccl.Transform;
 
 namespace RhinoCycles
 {
@@ -79,7 +80,7 @@ namespace RhinoCycles
 				pwidth = 1024;
 			}
 
-			ccl.Transform t = new ccl.Transform(
+			Transform t = new Transform(
 				rhinotfm.ToFloatArray(true)
 				);
 
@@ -196,7 +197,7 @@ namespace RhinoCycles
 				teximg.TexHeight = teximg.TexWidth = 1024;
 			}
 
-			ccl.Transform t = new ccl.Transform(
+			Transform t = new Transform(
 				rhinotfm.ToFloatArray(true)
 				);
 

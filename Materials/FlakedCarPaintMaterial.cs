@@ -13,14 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
-using System;
-using ccl;
+
+using System.Runtime.InteropServices;
 using Rhino.Display;
+using Rhino.DocObjects;
 using Rhino.Render;
+using Utilities = ccl.Utilities;
 
 namespace RhinoCycles.Materials
 {
-	[System.Runtime.InteropServices.Guid("5C717BA9-C033-48D1-A03A-CC2E8A49E540")]
+	[Guid("5C717BA9-C033-48D1-A03A-CC2E8A49E540")]
 	public class FlakedCarPaintMaterial : RenderMaterial, ICyclesMaterial
 	{
 		public override string TypeName { get { return "Cycles Flaked Car Paint Material (DEV)"; } }
@@ -48,7 +50,7 @@ namespace RhinoCycles.Materials
 			AddAutomaticUserInterfaceSection("Parameters", 0);
 		}
 
-		public override void SimulateMaterial(ref Rhino.DocObjects.Material simulatedMaterial, bool forDataOnly)
+		public override void SimulateMaterial(ref Material simulatedMaterial, bool forDataOnly)
 		{
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
 
@@ -59,7 +61,7 @@ namespace RhinoCycles.Materials
 				simulatedMaterial.ReflectionColor = color.AsSystemColor();
 		}
 
-		public override Rhino.DocObjects.Material SimulateMaterial(bool isForDataOnly)
+		public override Material SimulateMaterial(bool isForDataOnly)
 		{
 			var m = base.SimulateMaterial(isForDataOnly);
 
@@ -118,7 +120,7 @@ namespace RhinoCycles.Materials
 
 				flakesize = 1000.0f - 900.0f*flakesize;
 
-				var nodegraph = string.Format(ccl.Utilities.Instance.NumberFormatInfo,
+				var nodegraph = string.Format(Utilities.Instance.NumberFormatInfo,
 					"<voronoi_texture name=\"voronoi\" coloring=\"Cells\" scale=\"{0}\" />" +
 					"<layer_weight name=\"layer1\" blend=\"0.5\" />" +
 					"<layer_weight name=\"layer2\" blend=\"0.5\" />" +

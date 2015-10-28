@@ -13,10 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
 using System.Runtime.InteropServices;
 using Rhino.Display;
+using Rhino.DocObjects;
 using Rhino.Render;
-using Rhino.Render.Fields;
 
 namespace RhinoCycles.Materials
 {
@@ -40,7 +41,7 @@ namespace RhinoCycles.Materials
 			AddAutomaticUserInterfaceSection("Parameters", 0);
 		}
 
-		public override void SimulateMaterial(ref Rhino.DocObjects.Material simulatedMaterial, bool forDataOnly)
+		public override void SimulateMaterial(ref Material simulatedMaterial, bool forDataOnly)
 		{
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
 
@@ -51,7 +52,7 @@ namespace RhinoCycles.Materials
 				simulatedMaterial.SpecularColor = color.AsSystemColor();
 		}
 
-		public override Rhino.DocObjects.Material SimulateMaterial(bool isForDataOnly)
+		public override Material SimulateMaterial(bool isForDataOnly)
 		{
 			var m = base.SimulateMaterial(isForDataOnly);
 
