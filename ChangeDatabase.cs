@@ -310,6 +310,10 @@ namespace RhinoCycles
 			return true;
 		}
 
+		/// <summary>
+		/// Reset changequeue lists and dictionaries. Generally this is done once all changes
+		/// have been handled, and thus no longer needed.
+		/// </summary>
 		public void ClearChanges()
 		{
 			ClearGamma();
@@ -319,11 +323,16 @@ namespace RhinoCycles
 			m_light_db.ResetLightChangeQueue();
 			m_shader_db.ClearShaders();
 			m_shader_db.ClearObjectShaderChanges();
-			m_object_db.ClearObjectsChanges();
-			m_object_db.ClearMeshes();
-			m_object_db.ClearDynamicObjectTransforms();
+			m_object_db.ResetObjectsChangeQueue();
+			m_object_db.ResetMeshChangeQueue();
+			m_object_db.ResetDynamicObjectTransformChangeQueue();
 		}
 
+		/// <summary>
+		/// Tell if any changes have been recorded by the ChangeQueue mechanism since
+		/// the last flush.
+		/// </summary>
+		/// <returns>True if changes where recorded, false otherwise.</returns>
 		public bool HasChanges()
 		{
 			return
@@ -677,7 +686,7 @@ namespace RhinoCycles
 			{
 				var cob = m_object_db.FindObjectRelation(d);
 				var delob = new CyclesObject {cob = cob};
-				m_object_db.AddObjectDelete(delob);
+				m_object_db.DeleteObject(delob);
 				//System.Diagnostics.Debug.WriteLine("Deleted MI {0}", d);
 			}
 			foreach (var a in addedOrChanged)
@@ -706,7 +715,7 @@ namespace RhinoCycles
 
 				m_object_shader_db.RecordRenderHashRelation(a.MaterialId, meshid, a.InstanceId);
 				m_object_db.RecordObjectIdMeshIdRelation(a.InstanceId, meshid);
-				m_object_db.AddNewOrUpdateObject(ob);
+				m_object_db.AddOrUpdateObject(ob);
 			}
 		}
 
@@ -867,7 +876,7 @@ namespace RhinoCycles
 			m_object_db.AddMesh(cycles_mesh);
 			m_object_shader_db.RecordRenderHashRelation(gp.MaterialId, gpid, GroundPlaneMeshInstanceId);
 			m_object_db.RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
-			m_object_db.AddNewOrUpdateObject(cycles_object);
+			m_object_db.AddOrUpdateObject(cycles_object);
 		}
 		/// <summary>
 		/// Handle ground plane changes.
@@ -888,7 +897,7 @@ namespace RhinoCycles
 				Transform = t,
 				Visible = gp.Enabled
 			};
-			m_object_db.AddNewOrUpdateObject(cycles_object);
+			m_object_db.AddOrUpdateObject(cycles_object);
 
 			var mat = MaterialFromId(gp.MaterialId);
 			HandleRenderMaterial(mat);

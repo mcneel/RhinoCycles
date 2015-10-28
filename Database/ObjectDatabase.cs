@@ -17,7 +17,6 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ccl;
 using CclObject = ccl.Object;
 using CclMesh = ccl.Mesh;
 
@@ -63,6 +62,10 @@ namespace RhinoCycles.Database
 		private readonly List<CyclesObjectTransform> m_cq_object_transform =  new List<CyclesObjectTransform>();
 		#endregion
 
+		/// <summary>
+		/// True if ChangeQueue recorded changes for objects or meshes.
+		/// </summary>
+		/// <returns>True if there were changes</returns>
 		public bool HasChanges()
 		{
 				return
@@ -73,6 +76,9 @@ namespace RhinoCycles.Database
 					m_cq_object_transform.Any();
 		}
 
+		/// <summary>
+		/// Get list of object transforms
+		/// </summary>
 		public List<CyclesObjectTransform> ObjectTransforms
 		{
 			get
@@ -81,14 +87,9 @@ namespace RhinoCycles.Database
 			}
 		}
 
-		public Dictionary<uint, Tuple<Guid, int>> ObjectMeshDictionary
-		{
-			get
-			{
-				return m_rh_objectid_meshid;
-			}
-		}
-
+		/// <summary>
+		/// Get list of deleted objects.
+		/// </summary>
 		public List<CyclesObject> DeletedObjects
 		{
 			get
@@ -97,6 +98,9 @@ namespace RhinoCycles.Database
 			}
 		}
 
+		/// <summary>
+		/// Get list of objects that are added or have been changed.
+		/// </summary>
 		public List<CyclesObject> NewOrUpdatedObjects
 		{
 			get
@@ -105,6 +109,9 @@ namespace RhinoCycles.Database
 			}
 		}
 
+		/// <summary>
+		/// Get mapping of object and mesh changes.
+		/// </summary>
 		public Dictionary<Tuple<Guid, int>, CyclesMesh> MeshChanges
 		{
 			get
@@ -113,6 +120,9 @@ namespace RhinoCycles.Database
 			}
 		}
 
+		/// <summary>
+		/// Get list of meshes to delete.
+		/// </summary>
 		public List<Guid> MeshesToDelete
 		{
 			get
@@ -149,7 +159,7 @@ namespace RhinoCycles.Database
 		/// Add an object change.
 		/// </summary>
 		/// <param name="ob"></param>
-		public void AddNewOrUpdateObject(CyclesObject ob)
+		public void AddOrUpdateObject(CyclesObject ob)
 		{
 			if(!m_cq_new_updated_objects.Contains(ob)) m_cq_new_updated_objects.Add(ob);
 		}
@@ -158,7 +168,7 @@ namespace RhinoCycles.Database
 		/// Add info to delete (hide) object from cycles
 		/// </summary>
 		/// <param name="ob"></param>
-		public void AddObjectDelete(CyclesObject ob)
+		public void DeleteObject(CyclesObject ob)
 		{
 			if(!m_cq_deleted_objects.Contains(ob)) m_cq_deleted_objects.Add(ob);
 		}
@@ -236,7 +246,7 @@ namespace RhinoCycles.Database
 		/// <summary>
 		/// Clear out the dynamic object transforms
 		/// </summary>
-		public void ClearDynamicObjectTransforms()
+		public void ResetDynamicObjectTransformChangeQueue()
 		{
 			m_cq_object_transform.Clear();
 		}
@@ -244,7 +254,7 @@ namespace RhinoCycles.Database
 		/// <summary>
 		/// Clear out lists and dictionary related to mesh changes that need to be committed to Cycles.
 		/// </summary>
-		public void ClearMeshes()
+		public void ResetMeshChangeQueue()
 		{
 			m_cq_meshes_to_delete.Clear();
 			m_cq_mesh_changes.Clear();
@@ -253,7 +263,7 @@ namespace RhinoCycles.Database
 		/// <summary>
 		/// Clear out the list of object changes that need to be committed to Cycles.
 		/// </summary>
-		public void ClearObjectsChanges()
+		public void ResetObjectsChangeQueue()
 		{
 			m_cq_new_updated_objects.Clear();
 			m_cq_deleted_objects.Clear();
@@ -268,7 +278,7 @@ namespace RhinoCycles.Database
 		{
 			var cclobs = new List<CclObject>();
 			var obids = new List<uint>();
-			foreach (var x in ObjectMeshDictionary.Where(x => x.Value.Item1.Equals(id) && !obids.Contains(x.Key)))
+			foreach (var x in m_rh_objectid_meshid.Where(x => x.Value.Item1.Equals(id) && !obids.Contains(x.Key)))
 			{
 				obids.Add(x.Key);
 			}
