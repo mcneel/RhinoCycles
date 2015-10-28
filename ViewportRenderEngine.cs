@@ -13,11 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
 using System;
 using System.Drawing;
 using System.Threading;
 using ccl;
-using ccl.ShaderNodes;
+using Rhino;
+using Rhino.Display;
 using Rhino.Render;
 using sdd = System.Diagnostics.Debug;
 
@@ -25,8 +27,32 @@ namespace RhinoCycles
 {
 	public delegate void RenderSizeUnsetHandler(object sender, EventArgs e);
 
-	public partial class RenderEngine
+	public class ViewportRenderEngine : RenderEngine
 	{
+		public ViewportRenderEngine(RhinoDoc doc, Guid pluginId, RhinoView view)
+		{
+			m_plugin_id = pluginId;
+			m_doc_serialnumber = doc.RuntimeSerialNumber;
+			m_view = view;
+			if (doc != null)
+			{
+				Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, view);
+			}
+			RenderThread = null;
+			Client = new Client();
+			State = State.Rendering;
+
+#region create callbacks for Cycles
+			m_update_callback = UpdateCallback;
+			m_update_render_tile_callback = UpdateRenderTileCallback;
+			m_write_render_tile_callback = WriteRenderTileCallback;
+			m_test_cancel_callback = null;
+
+			CSycles.log_to_stdout(false);
+#endregion
+			
+		}
+
 
 		private bool m_size_set;
 
@@ -67,9 +93,9 @@ namespace RhinoCycles
 		/// Entry point for viewport interactive rendering
 		/// </summary>
 		/// <param name="oPipe"></param>
-		public static void ViewportRenderer(object oPipe)
+		public static void Renderer(object oPipe)
 		{
-			var cycles_engine = (RenderEngine)oPipe;
+			var cycles_engine = (ViewportRenderEngine)oPipe;
 
 			var client = cycles_engine.Client;
 			var rw = cycles_engine.RenderWindow;

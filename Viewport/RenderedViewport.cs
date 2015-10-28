@@ -67,7 +67,7 @@ namespace RhinoCycles
 		private bool m_available;
 		private bool m_need_rendersize_set;
 
-		private RenderEngine m_cycles;
+		private ViewportRenderEngine m_cycles;
 		private RhinoView m_view;
 
 		private long m_starttime;
@@ -109,8 +109,8 @@ namespace RhinoCycles
 			m_available = true;
 			m_view = rhinoView;
 
-			AsyncRenderContext a_rc = new RenderEngine(doc, Plugin.IdFromName("RhinoCycles"), rhinoView);
-			m_cycles = (RenderEngine)a_rc;
+			AsyncRenderContext a_rc = new ViewportRenderEngine(doc, Plugin.IdFromName("RhinoCycles"), rhinoView);
+			m_cycles = (ViewportRenderEngine)a_rc;
 
 			m_cycles.RenderSizeUnset += m_cycles_RenderSizeUnset;
 			m_cycles.StatusTextEvent += m_cycles_StatusTextEvent;
@@ -140,7 +140,7 @@ namespace RhinoCycles
 
 			m_cycles.UnsetRenderSize();
 
-			m_cycles.RenderThread = new Thread(RenderEngine.ViewportRenderer)
+			m_cycles.RenderThread = new Thread(ViewportRenderEngine.Renderer)
 			{
 				Name = "A cool Cycles viewport rendering thread"
 			};

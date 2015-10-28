@@ -467,7 +467,12 @@ namespace RhinoCycles
 			var scene = m_render_engine.Session.Scene;
 			m_render_engine.RenderDimension = new Size(view.Width, view.Height);
 			var size = m_render_engine.RenderDimension;
-			m_render_engine.UnsetRenderSize();
+
+			var viewportRenderEngine = m_render_engine as ViewportRenderEngine;
+			if (viewportRenderEngine != null)
+			{
+				viewportRenderEngine.UnsetRenderSize();
+			}
 
 			var ha = size.Width > size.Height ? view.Horizontal: view.Vertical;
 

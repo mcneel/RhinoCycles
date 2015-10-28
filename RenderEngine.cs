@@ -208,30 +208,6 @@ namespace RhinoCycles
 
 		public RenderEngine() { }
 
-		public RenderEngine(RhinoDoc doc, Guid pluginId, RhinoView view)
-		{
-			m_plugin_id = pluginId;
-			m_doc_serialnumber = doc.RuntimeSerialNumber;
-			m_view = view;
-			if (doc != null)
-			{
-				Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, view);
-			}
-			RenderThread = null;
-			Client = new Client();
-			State = State.Rendering;
-
-#region create callbacks for Cycles
-			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = UpdateRenderTileCallback;
-			m_write_render_tile_callback = WriteRenderTileCallback;
-			m_test_cancel_callback = null;
-
-			CSycles.log_to_stdout(false);
-#endregion
-			
-		}
-
 #endregion
 
 		/// <summary>
