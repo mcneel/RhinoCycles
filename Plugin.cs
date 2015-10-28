@@ -29,7 +29,7 @@ using Rhino.Render;
 
 namespace RhinoCycles
 {
-	public partial class Plugin : RenderPlugIn
+	public class Plugin : RenderPlugIn
 	{
 		#region helper functions to get relative path between two paths
 		private const int FILE_ATTRIBUTE_DIRECTORY = 0x10;
@@ -71,10 +71,11 @@ namespace RhinoCycles
 		/// </summary>
 		public static string KernelPathRelative { get; private set; }
 
-
 		public static string PluginPath { get; private set; }
 
 		public static string AppPath { get; private set; }
+
+		public static EngineSettings EngineSettings { get; set; }
 
 		/// <summary>
 		/// Make sure we load AtStartup so that our view mode is

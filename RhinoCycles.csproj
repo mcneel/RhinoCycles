@@ -93,7 +93,6 @@
     <Compile Include="Materials\TranslucentMaterial.cs" />
     <Compile Include="Materials\TestMaterial.cs" />
     <Compile Include="Measurement.cs" />
-    <Compile Include="Plugin.Settings.cs" />
     <Compile Include="RenderEngines\ModalRenderEngine.cs" />
     <Compile Include="RenderEngines\PreviewRenderEngine.cs" />
     <Compile Include="RenderEngines\ViewportRenderEngine.cs" />
