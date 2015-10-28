@@ -316,7 +316,7 @@ namespace RhinoCycles
 			ClearLinearWorkflow();
 			ClearBackground();
 			ClearViewChanges();
-			m_light_db.ClearLights();
+			m_light_db.ResetLightChangeQueue();
 			m_shader_db.ClearShaders();
 			m_shader_db.ClearObjectShaderChanges();
 			m_object_db.ClearObjectsChanges();
@@ -923,7 +923,7 @@ namespace RhinoCycles
 		{
 
 			/* new light shaders and lights. */
-			foreach (var l in m_light_db.AddLights)
+			foreach (var l in m_light_db.LightsToAdd)
 			{
 				if (m_render_engine.CancelRender) return;
 
@@ -968,7 +968,7 @@ namespace RhinoCycles
 			}
 
 			// update existing ones
-			foreach (var l in m_light_db.UpdateLights)
+			foreach (var l in m_light_db.LightsToUpdate)
 			{
 				var existing_l = m_light_db.ExistingLight(l.Id);
 				m_render_engine.ReCreateSimpleEmissionShader(existing_l.Shader, l);

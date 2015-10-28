@@ -48,7 +48,7 @@ namespace RhinoCycles.Database
 		/// <summary>
 		/// Clear out list of light changes.
 		/// </summary>
-		public void ClearLights()
+		public void ResetLightChangeQueue()
 		{
 			m_cq_light_changes.Clear();
 		}
@@ -87,7 +87,7 @@ namespace RhinoCycles.Database
 		/// <summary>
 		/// Get list of CyclesLights that need to be added
 		/// </summary>
-		public List<CyclesLight> AddLights
+		public List<CyclesLight> LightsToAdd
 		{
 			get
 			{
@@ -102,7 +102,7 @@ namespace RhinoCycles.Database
 		/// <summary>
 		/// Get list of CyclesLights that need to be updated
 		/// </summary>
-		public List<CyclesLight> UpdateLights
+		public List<CyclesLight> LightsToUpdate
 		{
 			get
 			{
