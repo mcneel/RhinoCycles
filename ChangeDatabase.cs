@@ -26,11 +26,11 @@ using Rhino.Render.ChangeQueue;
 using RhinoCycles.Database;
 using RhinoCycles.Shaders;
 using sdd = System.Diagnostics.Debug;
-using CQMaterial = Rhino.Render.ChangeQueue.Material;
-using CQMesh = Rhino.Render.ChangeQueue.Mesh;
+using CqMaterial = Rhino.Render.ChangeQueue.Material;
+using CqMesh = Rhino.Render.ChangeQueue.Mesh;
 using CqGroundPlane = Rhino.Render.ChangeQueue.GroundPlane;
 using CqLight = Rhino.Render.ChangeQueue.Light;
-using Skylight = Rhino.Render.ChangeQueue.Skylight;
+using CqSkylight = Rhino.Render.ChangeQueue.Skylight;
 using CQLinearWorkflow = Rhino.Render.ChangeQueue.LinearWorkflow;
 using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;
@@ -40,15 +40,39 @@ namespace RhinoCycles
 {
 	public class ChangeDatabase : ChangeQueue
 	{
-
 		/// <summary>
 		/// Reference to the Cycles render engine C# level implementation.
 		/// </summary>
-		RenderEngine RenderEngine { get; set; }
+		private readonly RenderEngine m_render_engine;
 
 		private ViewInfo m_current_view_info;
 
-		private readonly ObjectShaderDatabase ObjectShaderDb;
+		#region DATABASES
+
+		/// <summary>
+		/// Database responsible for keeping track of objects/meshes and their shaders.
+		/// </summary>
+		private readonly ObjectShaderDatabase m_object_shader_db;
+
+		/// <summary>
+		/// Database responsible for all material shaders
+		/// </summary>
+		private readonly ShaderDatabase m_shader_db = new ShaderDatabase();
+
+		/// <summary>
+		/// Database responsible for keeping track of objects and meshes and their relations between
+		/// Rhino and Cycles.
+		/// </summary>
+		private readonly ObjectDatabase m_object_db = new ObjectDatabase();
+
+		/// <summary>
+		/// The database responsible for keeping track of light changes and the relations between Rhino
+		/// and Cycles lights and their shaders.
+		/// </summary>
+		private readonly LightDatabase m_light_db = new LightDatabase();
+
+		#endregion
+
 
 		/// <summary>
 		/// Constructor for our changequeue implementation
@@ -59,8 +83,8 @@ namespace RhinoCycles
 		/// <param name="view">Reference to the RhinoView for which this queue is created.</param>
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, RhinoView view) : base(pluginId, doc, view)
 		{
-			RenderEngine = engine;
-			ObjectShaderDb = new ObjectShaderDatabase(ObjectDb);
+			m_render_engine = engine;
+			m_object_shader_db = new ObjectShaderDatabase(m_object_db);
 		}
 
 
@@ -72,8 +96,8 @@ namespace RhinoCycles
 		/// <param name="createPreviewEventArgs">preview event arguments</param>
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, CreatePreviewEventArgs createPreviewEventArgs) : base(pluginId, createPreviewEventArgs)
 		{
-			RenderEngine = engine;
-			ObjectShaderDb = new ObjectShaderDatabase(ObjectDb);
+			m_render_engine = engine;
+			m_object_shader_db = new ObjectShaderDatabase(m_object_db);
 		}
 
 		public void UploadLinearWorkflowChanges()
@@ -96,18 +120,15 @@ namespace RhinoCycles
 		/// </summary>
 		public void UploadObjectShaderChanges()
 		{
-			foreach (var obshad in ShaderDb.ObjectShaderChanges)
+			foreach (var obshad in m_shader_db.ObjectShaderChanges)
 			{
 
-				var cob = ObjectDb.FindObjectRelation(obshad.Id);
-
-				//if(mesh!=null) mesh.ReplaceShader(new_shader);
-
+				var cob = m_object_db.FindObjectRelation(obshad.Id);
 				if(cob!=null)
 				{
 					// get shaders
-					var new_shader = ShaderDb.GetShaderFromHash(obshad.NewShaderHash);
-					var old_shader = ShaderDb.GetShaderFromHash(obshad.OldShaderHash);
+					var new_shader = m_shader_db.GetShaderFromHash(obshad.NewShaderHash);
+					var old_shader = m_shader_db.GetShaderFromHash(obshad.OldShaderHash);
 					if (new_shader != null)
 					{
 						if (cob.Mesh != null) cob.Mesh.ReplaceShader(new_shader);
@@ -119,7 +140,7 @@ namespace RhinoCycles
 					}
 					cob.TagUpdate();
 				}
-				ObjectShaderDb.ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
+				m_object_shader_db.ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
 			}
 		}
 
@@ -129,20 +150,19 @@ namespace RhinoCycles
 			{
 				Plugin.ApplyGammaToTextures(Gamma);
 
-
 				if (m_current_background_shader != null)
 				{
 					m_current_background_shader.Reset();
-					RenderEngine.Session.Scene.Background.Shader = m_current_background_shader.GetShader();
+					m_render_engine.Session.Scene.Background.Shader = m_current_background_shader.GetShader();
 				}
 
-				foreach (var tup in ShaderDb.AllShaders)
+				foreach (var tup in m_shader_db.AllShaders)
 				{
 					var matsh = tup.Item1 as CyclesShader;
 					if (matsh != null)
 					{
 						matsh.Gamma = Gamma;
-						RenderEngine.RecreateMaterialShader(matsh, tup.Item2);
+						m_render_engine.RecreateMaterialShader(matsh, tup.Item2);
 						tup.Item2.Tag();
 					}
 
@@ -150,14 +170,14 @@ namespace RhinoCycles
 					if (lgsh != null)
 					{
 						lgsh.Gamma = Gamma;
-						RenderEngine.ReCreateSimpleEmissionShader(tup.Item2, lgsh);
+						m_render_engine.ReCreateSimpleEmissionShader(tup.Item2, lgsh);
 						tup.Item2.Tag();
 					}
 
 				}
 
-				RenderEngine.Session.Scene.Film.Exposure = Gamma;
-				RenderEngine.Session.Scene.Film.Update();
+				m_render_engine.Session.Scene.Film.Exposure = Gamma;
+				m_render_engine.Session.Scene.Film.Update();
 			}
 		}
 
@@ -166,9 +186,9 @@ namespace RhinoCycles
 		/// </summary>
 		public void UploadDynamicObjectTransforms()
 		{
-			foreach (var cot in ObjectDb.ObjectTransforms)
+			foreach (var cot in m_object_db.ObjectTransforms)
 			{
-				var cob = ObjectDb.FindObjectRelation(cot.Id);
+				var cob = m_object_db.FindObjectRelation(cot.Id);
 				if (cob == null) continue;
 
 				cob.Transform = cot.Transform;
@@ -183,9 +203,9 @@ namespace RhinoCycles
 		public void UploadMeshChanges()
 		{
 			// handle mesh deletes first
-			foreach (var mesh_delete in ObjectDb.MeshesToDelete)
+			foreach (var mesh_delete in m_object_db.MeshesToDelete)
 			{
-				var cobs = ObjectDb.GetCyclesObjectsForGuid(mesh_delete);
+				var cobs = m_object_db.GetCyclesObjectsForGuid(mesh_delete);
 
 				foreach (var cob in cobs)
 				{
@@ -199,38 +219,38 @@ namespace RhinoCycles
 			}
 
 			var curmesh = 0;
-			var totalmeshes = ObjectDb.MeshChanges.Count;
-			foreach (var mesh_change in ObjectDb.MeshChanges)
+			var totalmeshes = m_object_db.MeshChanges.Count;
+			foreach (var mesh_change in m_object_db.MeshChanges)
 			{
 				var cycles_mesh = mesh_change.Value;
 				var mid = mesh_change.Key;
 
-				var me = ObjectDb.FindMeshRelation(mid);
+				var me = m_object_db.FindMeshRelation(mid);
 
 				// newme true if we have to upload new mesh data
 				var newme = me == null;
 
-				if (RenderEngine.CancelRender) return;
+				if (m_render_engine.CancelRender) return;
 
 				// lets find the shader for this, or use 0 if none found.
 				uint shid;
-				var matid = ObjectShaderDb.FindRenderHashForMeshId(cycles_mesh.MeshId);
+				var matid = m_object_shader_db.FindRenderHashForMeshId(cycles_mesh.MeshId);
 				try
 				{
 					// @todo check this is correct naming and dictionary to query from
-					shid = ShaderDb.GetShaderIdForMatId(matid);
+					shid = m_shader_db.GetShaderIdForMatId(matid);
 				}
 				catch (Exception)
 				{
 					shid = 0;
 				}
 
-				var shader = RenderEngine.Client.Scene.ShaderFromSceneId(shid);
+				var shader = m_render_engine.Client.Scene.ShaderFromSceneId(shid);
 
 				// creat a new mesh to upload mesh data to
 				if (newme)
 				{
-					me = new CclMesh(RenderEngine.Client, shader);
+					me = new CclMesh(m_render_engine.Client, shader);
 				}
 				else
 				{
@@ -243,7 +263,7 @@ namespace RhinoCycles
 					cycles_mesh.verts.Length, cycles_mesh.faces.Length, shid);
 
 				// set progress, but without rendering percentage (hence the -1.0f)
-				RenderEngine.SetProgress(RenderEngine.RenderWindow, stat, -1.0f);
+				m_render_engine.SetProgress(m_render_engine.RenderWindow, stat, -1.0f);
 
 				// upload, if we get false back we were signalled to stop rendering by user
 				if (!UploadMeshData(me, cycles_mesh)) return;
@@ -253,7 +273,7 @@ namespace RhinoCycles
 				if (!newme) me.ReplaceShader(shader);
 
 				// don't forget to record this new mesh
-				if(newme) ObjectDb.RecordObjectMeshRelation(cycles_mesh.MeshId, me);
+				if(newme) m_object_db.RecordObjectMeshRelation(cycles_mesh.MeshId, me);
 				//RecordShaderRelation(shader, cycles_mesh.MeshId);
 
 				curmesh++;
@@ -270,16 +290,16 @@ namespace RhinoCycles
 		{
 			// set raw vertex data
 			me.SetVerts(ref cyclesMesh.verts);
-			if (RenderEngine.CancelRender) return false;
+			if (m_render_engine.CancelRender) return false;
 			// set the triangles
 			me.SetVertTris(ref cyclesMesh.faces, cyclesMesh.vertex_normals != null);
-			if (RenderEngine.CancelRender) return false;
+			if (m_render_engine.CancelRender) return false;
 			// set vertex normals
 			if (cyclesMesh.vertex_normals != null)
 			{
 				me.SetVertNormals(ref cyclesMesh.vertex_normals);
 			}
-			if (RenderEngine.CancelRender) return false;
+			if (m_render_engine.CancelRender) return false;
 			// set uvs
 			if (cyclesMesh.uvs != null)
 			{
@@ -296,21 +316,21 @@ namespace RhinoCycles
 			ClearLinearWorkflow();
 			ClearBackground();
 			ClearViewChanges();
-			LightDb.ClearLights();
-			ShaderDb.ClearShaders();
-			ShaderDb.ClearObjectShaderChanges();
-			ObjectDb.ClearObjectsChanges();
-			ObjectDb.ClearMeshes();
-			ObjectDb.ClearDynamicObjectTransforms();
+			m_light_db.ClearLights();
+			m_shader_db.ClearShaders();
+			m_shader_db.ClearObjectShaderChanges();
+			m_object_db.ClearObjectsChanges();
+			m_object_db.ClearMeshes();
+			m_object_db.ClearDynamicObjectTransforms();
 		}
 
 		public bool HasChanges()
 		{
 			return
 				m_cq_view_changes.Any() ||
-				LightDb.HasChanges() || 
-				ShaderDb.HasChanges() ||
-				ObjectDb.HasChanges() ||
+				m_light_db.HasChanges() || 
+				m_shader_db.HasChanges() ||
+				m_object_db.HasChanges() ||
 				LinearWorkflowHasChanged ||
 				GammaHasChanged;
 		}
@@ -435,10 +455,10 @@ namespace RhinoCycles
 		/// <param name="view"></param>
 		private void UploadCamera(CyclesView view)
 		{
-			var scene = RenderEngine.Session.Scene;
-			RenderEngine.RenderDimension = new Size(view.Width, view.Height);
-			var size = RenderEngine.RenderDimension;
-			RenderEngine.UnsetRenderSize();
+			var scene = m_render_engine.Session.Scene;
+			m_render_engine.RenderDimension = new Size(view.Width, view.Height);
+			var size = m_render_engine.RenderDimension;
+			m_render_engine.UnsetRenderSize();
 
 			var ha = size.Width > size.Height ? view.Horizontal: view.Vertical;
 
@@ -452,8 +472,8 @@ namespace RhinoCycles
 			scene.Camera.Fov = angle;
 			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
 			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
-			scene.Camera.SensorHeight = RenderEngine.Settings.SensorHeight;
-			scene.Camera.SensorWidth = RenderEngine.Settings.SensorWidth;
+			scene.Camera.SensorHeight = m_render_engine.Settings.SensorHeight;
+			scene.Camera.SensorWidth = m_render_engine.Settings.SensorWidth;
 			scene.Camera.Update();
 		}
 
@@ -553,7 +573,7 @@ namespace RhinoCycles
 		/// </summary>
 		/// <param name="deleted"></param>
 		/// <param name="added"></param>
-		protected override void ApplyMeshChanges(Guid[] deleted, List<CQMesh> added)
+		protected override void ApplyMeshChanges(Guid[] deleted, List<CqMesh> added)
 		{
 			//System.Diagnostics.Debug.WriteLine("ChangeDatabase ApplyMeshChanges, deleted {0}, added {1}", deleted.Length, added.Count);
 
@@ -563,7 +583,7 @@ namespace RhinoCycles
 				if (!(from mesh in added where mesh.Id() == guid select mesh).Any())
 				{
 					//System.Diagnostics.Debug.WriteLine("Deleting {0}", guid);
-					ObjectDb.DeleteMesh(guid);
+					m_object_db.DeleteMesh(guid);
 				}
 			}
 
@@ -610,7 +630,7 @@ namespace RhinoCycles
 
 					var meshid = new Tuple<Guid, int>(meshguid, mesh_index);
 
-					var crc = ObjectShaderDb.FindRenderHashForMeshId(meshid);
+					var crc = m_object_shader_db.FindRenderHashForMeshId(meshid);
 					if (crc == uint.MaxValue) crc = 0;
 
 					// now we have everything we need
@@ -626,7 +646,7 @@ namespace RhinoCycles
 						matid = crc
 					};
 					mesh_index++;
-					ObjectDb.AddMesh(cycles_mesh);
+					m_object_db.AddMesh(cycles_mesh);
 				}
 			}
 		}
@@ -655,9 +675,9 @@ namespace RhinoCycles
 
 			foreach (var d in deleted)
 			{
-				var cob = ObjectDb.FindObjectRelation(d);
+				var cob = m_object_db.FindObjectRelation(d);
 				var delob = new CyclesObject {cob = cob};
-				ObjectDb.AddObjectDelete(delob);
+				m_object_db.AddObjectDelete(delob);
 				//System.Diagnostics.Debug.WriteLine("Deleted MI {0}", d);
 			}
 			foreach (var a in addedOrChanged)
@@ -682,17 +702,15 @@ namespace RhinoCycles
 					NewShaderHash = a.MaterialId
 				};
 
-				ShaderDb.AddObjectMaterialChange(shaderchange);
+				m_shader_db.AddObjectMaterialChange(shaderchange);
 
-				ObjectShaderDb.RecordRenderHashRelation(a.MaterialId, meshid, a.InstanceId);
-				ObjectDb.RecordObjectIdMeshIdRelation(a.InstanceId, meshid);
-				ObjectDb.AddNewOrUpdateObject(ob);
+				m_object_shader_db.RecordRenderHashRelation(a.MaterialId, meshid, a.InstanceId);
+				m_object_db.RecordObjectIdMeshIdRelation(a.InstanceId, meshid);
+				m_object_db.AddNewOrUpdateObject(ob);
 			}
 		}
 
 		#region SHADERS
-
-		private readonly ShaderDatabase ShaderDb = new ShaderDatabase();
 
 		/// <summary>
 		/// Handle RenderMaterial - will queue new shader if necessary
@@ -700,18 +718,37 @@ namespace RhinoCycles
 		/// <param name="mat"></param>
 		private void HandleRenderMaterial(RenderMaterial mat)
 		{
-			if (ShaderDb.HasShader(mat.RenderHash)) return;
+			if (m_shader_db.HasShader(mat.RenderHash)) return;
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
 			var sh = Plugin.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, Gamma);
-			ShaderDb.AddShader(sh);
+			m_shader_db.AddShader(sh);
 		}
+
+		private void HandleMaterialChangeOnObject(RenderMaterial mat, uint obid)
+		{
+			var oldhash = m_object_shader_db.FindRenderHashForObjectId(obid);
+			// skip if no change in renderhash
+			if (oldhash != mat.RenderHash)
+			{
+				var o = new CyclesObjectShader(obid)
+				{
+					NewShaderHash = mat.RenderHash,
+					OldShaderHash = oldhash
+				};
+
+				//System.Diagnostics.Debug.WriteLine("CQMat.Id: {0} meshinstanceid: {1}", mat.Id, obid);
+
+				m_shader_db.AddObjectMaterialChange(o);
+			}
+		}
+
 
 		/// <summary>
 		/// Handle changes in materials to create (or re-use) shaders.
 		/// </summary>
 		/// <param name="mats">List of <c>CQMaterial</c></param>
-		protected override void ApplyMaterialChanges(List<CQMaterial> mats)
+		protected override void ApplyMaterialChanges(List<CqMaterial> mats)
 		{
 			// list of material hashes
 			var distinct_mats = new List<uint>();
@@ -733,7 +770,7 @@ namespace RhinoCycles
 			// list over material hashes, check if they exist. Create if new
 			foreach (var distinct in distinct_mats)
 			{
-				var existing = ShaderDb.GetShaderFromHash(distinct);
+				var existing = m_shader_db.GetShaderFromHash(distinct);
 				if (existing == null)
 				{
 					var rm = MaterialFromId(distinct);
@@ -748,17 +785,17 @@ namespace RhinoCycles
 		public void UploadShaderChanges()
 		{
 			// map shaders. key is RenderHash
-			foreach (var shader in ShaderDb.ShaderChanges)//m_cq_shaders)
+			foreach (var shader in m_shader_db.ShaderChanges)//m_cq_shaders)
 			{
-				//if (CancelRender) return;
+				if (m_render_engine.CancelRender) return;
 
 				// create a cycles shader
-				var sh = RenderEngine.CreateMaterialShader(shader);
-				ShaderDb.RecordRhCclShaderRelation(shader.Id, sh);
-				ShaderDb.Add(shader, sh);
+				var sh = m_render_engine.CreateMaterialShader(shader);
+				m_shader_db.RecordRhCclShaderRelation(shader.Id, sh);
+				m_shader_db.Add(shader, sh);
 				// add the new shader to scene
-				var scshid = RenderEngine.Client.Scene.AddShader(sh);
-				ShaderDb.RecordCclShaderSceneId(shader.Id, scshid);
+				var scshid = m_render_engine.Client.Scene.AddShader(sh);
+				m_shader_db.RecordCclShaderSceneId(shader.Id, scshid);
 
 				sh.Tag();
 			}
@@ -766,356 +803,7 @@ namespace RhinoCycles
 
 		#endregion SHADERS
 
-
-		private readonly ObjectDatabase ObjectDb = new ObjectDatabase();
-		/// <summary>
-		/// Handle ground plane changes.
-		/// </summary>
-		/// <param name="gp"></param>
-		protected override void ApplyGroundPlaneChanges(CqGroundPlane gp)
-		{
-			//System.Diagnostics.Debug.WriteLine("groundplane");
-			if(!GroundPlaneInitialised) InitialiseGroundPlane(gp);
-			// find groundplane
-			var altitude = (float)gp.Altitude;
-			var t = Transform.Translate(0.0f, 0.0f, altitude);
-			var cycles_object = new CyclesObject
-			{
-				meshid = GroundPlaneId,
-				obid = GroundPlaneMeshInstanceId,
-				matid = gp.MaterialId,
-				Transform = t,
-				Visible = gp.Enabled
-			};
-			ObjectDb.AddNewOrUpdateObject(cycles_object);
-
-			var mat = MaterialFromId(gp.MaterialId);
-			HandleRenderMaterial(mat);
-
-			var obid = GroundPlaneMeshInstanceId;
-
-			HandleMaterialChangeOnObject(mat, obid);
-		}
-
-		private void HandleMaterialChangeOnObject(RenderMaterial mat, uint obid)
-		{
-			var oldhash = ObjectShaderDb.FindRenderHashForObjectId(obid);
-			// skip if no change in renderhash
-			if (oldhash != mat.RenderHash)
-			{
-				var o = new CyclesObjectShader(obid)
-				{
-					NewShaderHash = mat.RenderHash,
-					OldShaderHash = oldhash
-				};
-
-				//System.Diagnostics.Debug.WriteLine("CQMat.Id: {0} meshinstanceid: {1}", mat.Id, obid);
-
-				ShaderDb.AddObjectMaterialChange(o);
-			}
-		}
-
-		/// <summary>
-		/// Handle dynamic object transforms
-		/// </summary>
-		/// <param name="dynamicObjectTransforms">List of DynamicObject transforms</param>
-		protected override void ApplyDynamicObjectTransforms(List<DynamicObjectTransform> dynamicObjectTransforms)
-		{
-			foreach (var dot in dynamicObjectTransforms)
-			{
-				//System.Diagnostics.Debug.WriteLine("DynObXform {0}", dot.MeshInstanceId);
-				var cot = new CyclesObjectTransform(dot.MeshInstanceId, CclXformFromRhinoXform(dot.Transform));
-				ObjectDb.AddDynamicObjectTransform(cot);
-			}
-		}
-
-		#region LIGHT & SUN
-
-		/// <summary>
-		/// The database responsible for keeping track of light changes and the relations between Rhino
-		/// and Cycles lights and their shaders.
-		/// </summary>
-		private readonly LightDatabase LightDb = new LightDatabase();
-
-		/// <summary>
-		/// Upload all light changes to the Cycles render engine
-		/// </summary>
-		public void UploadLightChanges()
-		{
-
-			/* new light shaders and lights. */
-			foreach (var l in LightDb.AddLights)
-			{
-				if (RenderEngine.CancelRender) return;
-
-				var lgsh = RenderEngine.CreateSimpleEmissionShader(l);
-				RenderEngine.Client.Scene.AddShader(lgsh);
-				ShaderDb.Add(l, lgsh);
-
-				if (RenderEngine.CancelRender) return;
-
-				var light = new CclLight(RenderEngine.Client, RenderEngine.Client.Scene, lgsh)
-				{
-					Type = l.Type,
-					Size = l.Size,
-					Location = l.Co,
-					Direction = l.Dir,
-					UseMis = l.UseMis,
-					CastShadow = l.CastShadow,
-					Samples = 1,
-					MaxBounces = 1024,
-					SizeU = l.SizeU,
-					SizeV = l.SizeV,
-					AxisU = l.AxisU,
-					AxisV = l.AxisV,
-				};
-
-				switch (l.Type)
-				{
-					case LightType.Area:
-						break;
-					case LightType.Point:
-						break;
-					case LightType.Spot:
-						light.SpotAngle = l.SpotAngle;
-						light.SpotSmooth = l.SpotSmooth;
-						break;
-					case LightType.Distant:
-						break;
-				}
-
-				light.TagUpdate();
-				LightDb.RecordLightRelation(l.Id, light);
-			}
-
-			// update existing ones
-			foreach (var l in LightDb.UpdateLights)
-			{
-				var existing_l = LightDb.ExistingLight(l.Id);
-				RenderEngine.ReCreateSimpleEmissionShader(existing_l.Shader, l);
-				existing_l.Type = l.Type;
-				existing_l.Size = l.Size;
-				existing_l.Location = l.Co;
-				existing_l.Direction = l.Dir;
-				existing_l.UseMis = l.UseMis;
-				existing_l.CastShadow = l.CastShadow;
-				existing_l.Samples = 1;
-				existing_l.MaxBounces = 1024;
-				existing_l.SizeU = l.SizeU;
-				existing_l.SizeV = l.SizeV;
-				existing_l.AxisU = l.AxisU;
-				existing_l.AxisV = l.AxisV;
-
-				switch (l.Type)
-				{
-					case LightType.Area:
-						break;
-					case LightType.Point:
-						break;
-					case LightType.Spot:
-						existing_l.SpotAngle = l.SpotAngle;
-						existing_l.SpotSmooth = l.SpotSmooth;
-						break;
-					case LightType.Distant:
-						break;
-				}
-				existing_l.TagUpdate();
-			}
-		}
-
-		/// <summary>
-		/// Handle light changes
-		/// </summary>
-		/// <param name="lightChanges"></param>
-		protected override void ApplyLightChanges(List<CqLight> lightChanges)
-		{
-			foreach (var light in lightChanges)
-			{
-				var cl = Plugin.ConvertLight(this, light, m_current_view_info, Gamma);
-
-				//System.Diagnostics.Debug.WriteLine("light {0} == {1} == {2} ({3})", light.Id, cl.Id, lg.Id, light.ChangeType);
-
-				LightDb.AddLight(cl);
-			}
-		}
-
-		protected override void ApplyDynamicLightChanges(List<Rhino.Geometry.Light> dynamicLightChanges)
-		{
-			foreach (var light in dynamicLightChanges)
-			{
-				var cl = Plugin.ConvertLight(light, Gamma);
-				//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
-				LightDb.AddLight(cl);
-			}
-		}
-
-		/// <summary>
-		/// Handle sun changes
-		/// </summary>
-		/// <param name="sun"></param>
-		protected override void ApplySunChanges(Rhino.Geometry.Light sun)
-		{
-			var cl = Plugin.ConvertLight(sun, Gamma);
-			cl.Id = RenderEngine.SunId;
-			LightDb.AddLight(cl);
-			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
-		}
-
-		#endregion
-
-		/// <summary>
-		/// record background shader changes to push to cycles
-		/// note that we have only one object that gets updated when necessary.
-		/// </summary>
-		public CyclesBackground m_cq_background = new CyclesBackground();
-		public RhinoShader m_current_background_shader;
-
-		public bool BackgroundHasChanged
-		{
-			get { return m_cq_background.modified; }
-		}
-
-		private void ClearBackground()
-		{
-			m_cq_background.Clear();
-		}
-
-		public void UploadEnvironmentChanges()
-		{
-			if(BackgroundHasChanged)
-				RenderEngine.RecreateBackgroundShader();
-		}
-
-		/// <summary>
-		/// Upload object changes
-		/// </summary>
-		public void UploadObjectChanges()
-		{
-			// first delete objects
-			foreach (var ob in ObjectDb.DeletedObjects)
-			{
-				if (ob.cob != null)
-				{
-					var cob = ob.cob;
-					// deleting we do (for now?) by marking object as hidden.
-					// we *don't* clear mesh data here, since that very mesh
-					// may be used elsewhere.
-					cob.Visibility = PathRay.Hidden;
-					cob.TagUpdate();
-				}
-			}
-
-			// now combine objects and meshes, creating new objects when necessary
-			foreach (var ob in ObjectDb.NewOrUpdatedObjects)
-			{
-				// mesh for this object id
-				var mesh = ObjectDb.FindMeshRelation(ob.meshid);
-
-				// hmm, no mesh. Oh well, lets get on with the next
-				if (mesh == null) continue;
-
-				// see if we already have an object here.
-				// update it, otherwise create new one
-				var cob = ObjectDb.FindObjectRelation(ob.obid);
-
-				var newcob = cob == null;
-
-				// new object, so lets create it and record necessary stuff about it
-				if (newcob)
-				{
-					cob = new CclObject(RenderEngine.Client);
-					ObjectDb.RecordObjectRelation(ob.obid, cob);
-					ObjectDb.RecordObjectIdMeshIdRelation(ob.obid, ob.meshid);
-				}
-
-				// set mesh reference and other stuff
-				cob.Mesh = mesh;
-				cob.Transform = ob.Transform;
-				cob.Visibility = ob.Visible ? PathRay.AllVisibility : PathRay.Hidden;
-				cob.TagUpdate();
-			}
-		}
-
-		/// <summary>
-		/// Handle skylight changes
-		/// </summary>
-		/// <param name="skylight">New skylight information</param>
-		protected override void ApplySkylightChanges(Skylight skylight)
-		{
-			//System.Diagnostics.Debug.WriteLine("{0}", skylight);
-			m_cq_background.skylight_enabled =  skylight.Enabled;
-			m_cq_background.gamma = Gamma;
-			m_cq_background.modified = true;
-		}
-
-		protected override void ApplyBackgroundChanges(RenderSettings rs)
-		{
-			if (rs != null)
-			{
-				//System.Diagnostics.Debug.WriteLine("ApplyBackgroundChanges: fillstyle {0} color1 {1} color2 {2}", rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
-				m_cq_background.background_fill = rs.BackgroundStyle;
-				m_cq_background.color1 = rs.BackgroundColorTop;
-				m_cq_background.color2 = rs.BackgroundColorBottom;
-				m_cq_background.gamma = Gamma;
-				m_cq_background.modified = true;
-			}
-		}
-
-		/// <summary>
-		/// Handle environment changes
-		/// </summary>
-		/// <param name="usage"></param>
-		protected override void ApplyEnvironmentChanges(RenderEnvironment.Usage usage)
-		{
-			var env_id = EnvironmentIdForUsage(usage);
-			var env = EnvironmentForid(env_id);
-			switch (usage)
-			{
-				case RenderEnvironment.Usage.Background:
-					m_cq_background.background_environment = env;
-					break;
-				case RenderEnvironment.Usage.Skylighting:
-					m_cq_background.skylight_environment = env;
-					break;
-				case RenderEnvironment.Usage.ReflectionAndRefraction:
-					m_cq_background.reflection_environment = env;
-					break;
-			}
-			m_cq_background.gamma = Gamma;
-
-			m_cq_background.HandleEnvironments();
-
-			m_cq_background.modified = true;
-
-			//System.Diagnostics.Debug.WriteLine("{0}, env {1}", usage, env);
-		}
-
-		/// <summary>
-		/// We get notified of (dynamic?) changes.
-		/// </summary>
-		protected override void NotifyBeginUpdates()
-		{
-			// nothing
-		}
-
-		/// <summary>
-		/// Changes have been signalled.
-		/// </summary>
-		protected override void NotifyEndUpdates()
-		{
-			RenderEngine.Flush = true;
-		}
-
-		protected override void NotifyDynamicUpdatesAreAvailable()
-		{
-			// nothing
-			//System.Diagnostics.Debug.WriteLine("dyn changes...");
-		}
-
-		protected override BakingFunctions BakeFor()
-		{
-			return BakingFunctions.Decals | BakingFunctions.ProceduralTextures | BakingFunctions.MultipleMappingChannels;
-		}
+		#region GROUNDPLANE
 
 		/// <summary>
 		/// Record Guid of our groundplane object.
@@ -1194,10 +882,344 @@ namespace RhinoCycles
 				Visible = gp.Enabled
 			};
 
-			ObjectDb.AddMesh(cycles_mesh);
-			ObjectShaderDb.RecordRenderHashRelation(gp.MaterialId, gpid, GroundPlaneMeshInstanceId);
-			ObjectDb.RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
-			ObjectDb.AddNewOrUpdateObject(cycles_object);
+			m_object_db.AddMesh(cycles_mesh);
+			m_object_shader_db.RecordRenderHashRelation(gp.MaterialId, gpid, GroundPlaneMeshInstanceId);
+			m_object_db.RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
+			m_object_db.AddNewOrUpdateObject(cycles_object);
 		}
+		/// <summary>
+		/// Handle ground plane changes.
+		/// </summary>
+		/// <param name="gp"></param>
+		protected override void ApplyGroundPlaneChanges(CqGroundPlane gp)
+		{
+			//System.Diagnostics.Debug.WriteLine("groundplane");
+			if(!GroundPlaneInitialised) InitialiseGroundPlane(gp);
+			// find groundplane
+			var altitude = (float)gp.Altitude;
+			var t = Transform.Translate(0.0f, 0.0f, altitude);
+			var cycles_object = new CyclesObject
+			{
+				meshid = GroundPlaneId,
+				obid = GroundPlaneMeshInstanceId,
+				matid = gp.MaterialId,
+				Transform = t,
+				Visible = gp.Enabled
+			};
+			m_object_db.AddNewOrUpdateObject(cycles_object);
+
+			var mat = MaterialFromId(gp.MaterialId);
+			HandleRenderMaterial(mat);
+
+			var obid = GroundPlaneMeshInstanceId;
+
+			HandleMaterialChangeOnObject(mat, obid);
+		}
+
+		#endregion
+
+		/// <summary>
+		/// Handle dynamic object transforms
+		/// </summary>
+		/// <param name="dynamicObjectTransforms">List of DynamicObject transforms</param>
+		protected override void ApplyDynamicObjectTransforms(List<DynamicObjectTransform> dynamicObjectTransforms)
+		{
+			foreach (var dot in dynamicObjectTransforms)
+			{
+				//System.Diagnostics.Debug.WriteLine("DynObXform {0}", dot.MeshInstanceId);
+				var cot = new CyclesObjectTransform(dot.MeshInstanceId, CclXformFromRhinoXform(dot.Transform));
+				m_object_db.AddDynamicObjectTransform(cot);
+			}
+		}
+
+		#region LIGHT & SUN
+
+		/// <summary>
+		/// Upload all light changes to the Cycles render engine
+		/// </summary>
+		public void UploadLightChanges()
+		{
+
+			/* new light shaders and lights. */
+			foreach (var l in m_light_db.AddLights)
+			{
+				if (m_render_engine.CancelRender) return;
+
+				var lgsh = m_render_engine.CreateSimpleEmissionShader(l);
+				m_render_engine.Client.Scene.AddShader(lgsh);
+				m_shader_db.Add(l, lgsh);
+
+				if (m_render_engine.CancelRender) return;
+
+				var light = new CclLight(m_render_engine.Client, m_render_engine.Client.Scene, lgsh)
+				{
+					Type = l.Type,
+					Size = l.Size,
+					Location = l.Co,
+					Direction = l.Dir,
+					UseMis = l.UseMis,
+					CastShadow = l.CastShadow,
+					Samples = 1,
+					MaxBounces = 1024,
+					SizeU = l.SizeU,
+					SizeV = l.SizeV,
+					AxisU = l.AxisU,
+					AxisV = l.AxisV,
+				};
+
+				switch (l.Type)
+				{
+					case LightType.Area:
+						break;
+					case LightType.Point:
+						break;
+					case LightType.Spot:
+						light.SpotAngle = l.SpotAngle;
+						light.SpotSmooth = l.SpotSmooth;
+						break;
+					case LightType.Distant:
+						break;
+				}
+
+				light.TagUpdate();
+				m_light_db.RecordLightRelation(l.Id, light);
+			}
+
+			// update existing ones
+			foreach (var l in m_light_db.UpdateLights)
+			{
+				var existing_l = m_light_db.ExistingLight(l.Id);
+				m_render_engine.ReCreateSimpleEmissionShader(existing_l.Shader, l);
+				existing_l.Type = l.Type;
+				existing_l.Size = l.Size;
+				existing_l.Location = l.Co;
+				existing_l.Direction = l.Dir;
+				existing_l.UseMis = l.UseMis;
+				existing_l.CastShadow = l.CastShadow;
+				existing_l.Samples = 1;
+				existing_l.MaxBounces = 1024;
+				existing_l.SizeU = l.SizeU;
+				existing_l.SizeV = l.SizeV;
+				existing_l.AxisU = l.AxisU;
+				existing_l.AxisV = l.AxisV;
+
+				switch (l.Type)
+				{
+					case LightType.Area:
+						break;
+					case LightType.Point:
+						break;
+					case LightType.Spot:
+						existing_l.SpotAngle = l.SpotAngle;
+						existing_l.SpotSmooth = l.SpotSmooth;
+						break;
+					case LightType.Distant:
+						break;
+				}
+				existing_l.TagUpdate();
+			}
+		}
+
+		/// <summary>
+		/// Handle light changes
+		/// </summary>
+		/// <param name="lightChanges"></param>
+		protected override void ApplyLightChanges(List<CqLight> lightChanges)
+		{
+			foreach (var light in lightChanges)
+			{
+				var cl = Plugin.ConvertLight(this, light, m_current_view_info, Gamma);
+
+				//System.Diagnostics.Debug.WriteLine("light {0} == {1} == {2} ({3})", light.Id, cl.Id, lg.Id, light.ChangeType);
+
+				m_light_db.AddLight(cl);
+			}
+		}
+
+		protected override void ApplyDynamicLightChanges(List<Rhino.Geometry.Light> dynamicLightChanges)
+		{
+			foreach (var light in dynamicLightChanges)
+			{
+				var cl = Plugin.ConvertLight(light, Gamma);
+				//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
+				m_light_db.AddLight(cl);
+			}
+		}
+
+		/// <summary>
+		/// Handle sun changes
+		/// </summary>
+		/// <param name="sun"></param>
+		protected override void ApplySunChanges(Rhino.Geometry.Light sun)
+		{
+			var cl = Plugin.ConvertLight(sun, Gamma);
+			cl.Id = m_render_engine.SunId;
+			m_light_db.AddLight(cl);
+			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
+		}
+
+		#endregion
+
+		/// <summary>
+		/// record background shader changes to push to cycles
+		/// note that we have only one object that gets updated when necessary.
+		/// </summary>
+		public CyclesBackground m_cq_background = new CyclesBackground();
+		public RhinoShader m_current_background_shader;
+
+		public bool BackgroundHasChanged
+		{
+			get { return m_cq_background.modified; }
+		}
+
+		private void ClearBackground()
+		{
+			m_cq_background.Clear();
+		}
+
+		public void UploadEnvironmentChanges()
+		{
+			if(BackgroundHasChanged)
+				m_render_engine.RecreateBackgroundShader();
+		}
+
+		/// <summary>
+		/// Upload object changes
+		/// </summary>
+		public void UploadObjectChanges()
+		{
+			// first delete objects
+			foreach (var ob in m_object_db.DeletedObjects)
+			{
+				if (ob.cob != null)
+				{
+					var cob = ob.cob;
+					// deleting we do (for now?) by marking object as hidden.
+					// we *don't* clear mesh data here, since that very mesh
+					// may be used elsewhere.
+					cob.Visibility = PathRay.Hidden;
+					cob.TagUpdate();
+				}
+			}
+
+			// now combine objects and meshes, creating new objects when necessary
+			foreach (var ob in m_object_db.NewOrUpdatedObjects)
+			{
+				// mesh for this object id
+				var mesh = m_object_db.FindMeshRelation(ob.meshid);
+
+				// hmm, no mesh. Oh well, lets get on with the next
+				if (mesh == null) continue;
+
+				// see if we already have an object here.
+				// update it, otherwise create new one
+				var cob = m_object_db.FindObjectRelation(ob.obid);
+
+				var newcob = cob == null;
+
+				// new object, so lets create it and record necessary stuff about it
+				if (newcob)
+				{
+					cob = new CclObject(m_render_engine.Client);
+					m_object_db.RecordObjectRelation(ob.obid, cob);
+					m_object_db.RecordObjectIdMeshIdRelation(ob.obid, ob.meshid);
+				}
+
+				// set mesh reference and other stuff
+				cob.Mesh = mesh;
+				cob.Transform = ob.Transform;
+				cob.Visibility = ob.Visible ? PathRay.AllVisibility : PathRay.Hidden;
+				cob.TagUpdate();
+			}
+		}
+
+		/// <summary>
+		/// Handle skylight changes
+		/// </summary>
+		/// <param name="skylight">New skylight information</param>
+		protected override void ApplySkylightChanges(CqSkylight skylight)
+		{
+			//System.Diagnostics.Debug.WriteLine("{0}", skylight);
+			m_cq_background.skylight_enabled =  skylight.Enabled;
+			m_cq_background.gamma = Gamma;
+			m_cq_background.modified = true;
+		}
+
+		protected override void ApplyBackgroundChanges(RenderSettings rs)
+		{
+			if (rs != null)
+			{
+				//System.Diagnostics.Debug.WriteLine("ApplyBackgroundChanges: fillstyle {0} color1 {1} color2 {2}", rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
+				m_cq_background.background_fill = rs.BackgroundStyle;
+				m_cq_background.color1 = rs.BackgroundColorTop;
+				m_cq_background.color2 = rs.BackgroundColorBottom;
+				m_cq_background.gamma = Gamma;
+				m_cq_background.modified = true;
+			}
+		}
+
+		/// <summary>
+		/// Handle environment changes
+		/// </summary>
+		/// <param name="usage"></param>
+		protected override void ApplyEnvironmentChanges(RenderEnvironment.Usage usage)
+		{
+			var env_id = EnvironmentIdForUsage(usage);
+			var env = EnvironmentForid(env_id);
+			switch (usage)
+			{
+				case RenderEnvironment.Usage.Background:
+					m_cq_background.background_environment = env;
+					break;
+				case RenderEnvironment.Usage.Skylighting:
+					m_cq_background.skylight_environment = env;
+					break;
+				case RenderEnvironment.Usage.ReflectionAndRefraction:
+					m_cq_background.reflection_environment = env;
+					break;
+			}
+			m_cq_background.gamma = Gamma;
+
+			m_cq_background.HandleEnvironments();
+
+			m_cq_background.modified = true;
+
+			//System.Diagnostics.Debug.WriteLine("{0}, env {1}", usage, env);
+		}
+
+		/// <summary>
+		/// We get notified of (dynamic?) changes.
+		/// </summary>
+		protected override void NotifyBeginUpdates()
+		{
+			// nothing
+		}
+
+		/// <summary>
+		/// Changes have been signalled.
+		/// </summary>
+		protected override void NotifyEndUpdates()
+		{
+			m_render_engine.Flush = true;
+		}
+
+		protected override void NotifyDynamicUpdatesAreAvailable()
+		{
+			// nothing
+			//System.Diagnostics.Debug.WriteLine("dyn changes...");
+		}
+
+		/// <summary>
+		/// Tell ChangeQueue we want baking for
+		/// - Decals
+		/// - ProceduralTextures
+		/// - MultipleMappingChannels
+		/// </summary>
+		/// <returns></returns>
+		protected override BakingFunctions BakeFor()
+		{
+			return BakingFunctions.Decals | BakingFunctions.ProceduralTextures | BakingFunctions.MultipleMappingChannels;
+		}
+
 	}
 }
