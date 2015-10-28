@@ -13,25 +13,32 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
 using System.Drawing;
-using ccl;
 
 namespace RhinoCycles
 {
 	partial class RenderEngine
 	{
+		/// <summary>
+		/// Get or set the resolution for rendering.
+		/// </summary>
 		public Size RenderDimension { get; set; }
 
+		/// <summary>
+		/// Hold instance specific EngineSettings.
+		/// </summary>
 		private EngineSettings m_settings;
 
+		/// <summary>
+		/// Get or set EngineSettings for this instance. If you set
+		/// EngineSettings a deep-copy will be made.
+		/// </summary>
 		public EngineSettings Settings
 		{
-			get {
-				if (m_settings == null)
-				{
-					m_settings = new EngineSettings();
-				}
-				return m_settings;
+			get
+			{
+				return m_settings ?? (m_settings = new EngineSettings());
 			}
 			set
 			{
