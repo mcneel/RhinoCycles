@@ -128,10 +128,10 @@ namespace RhinoCycles.Database
 		}
 
 		/// <summary>
-		/// Find RenderHash for mesh
+		/// Find Rhino material RenderHash for mesh.
 		/// </summary>
 		/// <param name="meshId"></param>
-		/// <returns></returns>
+		/// <returns>The RenderHash for the Rhino material that is used on this mesh.</returns>
 		public uint FindRenderHashForMeshId(Tuple<Guid, int> meshId)
 		{
 			if (m_rh_meshid_renderhash.ContainsKey(meshId)) return m_rh_meshid_renderhash[meshId];
