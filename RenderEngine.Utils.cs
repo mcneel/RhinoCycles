@@ -31,7 +31,7 @@ namespace RhinoCycles
 		/// <param name="render_device">Render device to use</param>
 		/// <param name="cycles_engine">Engine instance to create for</param>
 		/// <returns></returns>
-		private static Scene CreateScene(Client client, Device render_device,
+		protected static Scene CreateScene(Client client, Device render_device,
 			RenderEngine cycles_engine)
 		{
 			#region set up scene parameters

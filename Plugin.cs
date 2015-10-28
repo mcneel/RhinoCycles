@@ -183,8 +183,8 @@ namespace RhinoCycles
 		public Result RenderInternal(RhinoDoc doc, RunMode mode, bool fastPreview, bool inViewport)
 		{
 			InitialiseCSycles();
-			AsyncRenderContext a_rc = new RenderEngine(doc, Id);
-			var engine = (RenderEngine)a_rc;
+			AsyncRenderContext a_rc = new ModalRenderEngine(doc, Id);
+			var engine = (ModalRenderEngine)a_rc;
 
 			//engine.Background = CreateCyclesBackgroundShader(doc.RenderSettings);
 

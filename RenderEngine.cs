@@ -37,6 +37,7 @@ namespace RhinoCycles
 		Rendering,
 		Stopped
 	}
+
 	/// <summary>
 	/// The actual render engine, ready for asynchronous work in Rhino.
 	/// </summary>
@@ -46,7 +47,7 @@ namespace RhinoCycles
 
 		private readonly CreatePreviewEventArgs m_preview_event_args;
 
-		private Guid m_plugin_id = Guid.Empty;
+		protected Guid m_plugin_id = Guid.Empty;
 
 		/// <summary>
 		/// Reference to the client representation of this render engine instance.
@@ -91,10 +92,10 @@ namespace RhinoCycles
 
 		public string TimeString;
 
-		private readonly CSycles.UpdateCallback m_update_callback;
-		private readonly CSycles.RenderTileCallback m_update_render_tile_callback;
-		private readonly CSycles.RenderTileCallback m_write_render_tile_callback;
-		private readonly CSycles.TestCancelCallback m_test_cancel_callback;
+		protected CSycles.UpdateCallback m_update_callback;
+		protected CSycles.RenderTileCallback m_update_render_tile_callback;
+		protected CSycles.RenderTileCallback m_write_render_tile_callback;
+		protected CSycles.TestCancelCallback m_test_cancel_callback;
 
 		private readonly Guid m_sun_guid = new Guid("82FE2C29-9632-473D-982B-9121E150E1D2");
 
@@ -110,7 +111,7 @@ namespace RhinoCycles
 			}
 		}
 
-		private bool m_flush;
+		protected bool m_flush;
 		/// <summary>
 		/// Flag set to true when a flush on the changequeue is needed.
 		///
@@ -144,7 +145,7 @@ namespace RhinoCycles
 		/// <summary>
 		/// a approx avg measurement device.
 		/// </summary>
-		private readonly Measurement m_measurements = new Measurement();
+		protected readonly Measurement m_measurements = new Measurement();
 
 		/// <summary>
 		/// Return true if any change has been received through the changequeue
@@ -190,8 +191,8 @@ namespace RhinoCycles
 			}
 		}
 
-		private uint m_doc_serialnumber;
-		private RhinoView m_view;
+		protected uint m_doc_serialnumber;
+		protected RhinoView m_view;
 
 		public RhinoDoc Doc
 		{
@@ -205,19 +206,11 @@ namespace RhinoCycles
 
 #region CONSTRUCTORS
 
-		/// <summary>
-		/// Construct a new render engine
-		/// </summary>
-		/// <param name="doc"></param>
-		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
-		public RenderEngine(RhinoDoc doc, Guid pluginId) : this(doc, pluginId, doc.Views.ActiveView)
-		{
-		}
+		public RenderEngine() { }
 
 		public RenderEngine(RhinoDoc doc, Guid pluginId, RhinoView view)
 		{
 			m_plugin_id = pluginId;
-			m_preview_event_args = null;
 			m_doc_serialnumber = doc.RuntimeSerialNumber;
 			m_view = view;
 			if (doc != null)
@@ -525,7 +518,7 @@ namespace RhinoCycles
 		/// <summary>
 		/// Register the callbacks to the render engine session
 		/// </summary>
-		private void SetCallbacks()
+		protected void SetCallbacks()
 		{
 			#region register callbacks with Cycles session
 

@@ -17,20 +17,50 @@ limitations under the License.
 using System;
 using System.Drawing;
 using ccl;
+using Rhino;
 using Rhino.Render;
 using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCycles
 {
-	public partial class RenderEngine
+	public class ModalRenderEngine : RenderEngine
 	{
+
+		/// <summary>
+		/// Construct a new render engine
+		/// </summary>
+		/// <param name="doc"></param>
+		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId) //: this(doc, pluginId, doc.Views.ActiveView)
+		{
+			m_plugin_id = pluginId;
+			m_doc_serialnumber = doc.RuntimeSerialNumber;
+			m_view = doc.Views.ActiveView;
+			if (doc != null)
+			{
+				Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, m_view);
+			}
+			RenderThread = null;
+			Client = new Client();
+			State = State.Rendering;
+
+#region create callbacks for Cycles
+			m_update_callback = UpdateCallback;
+			m_update_render_tile_callback = UpdateRenderTileCallback;
+			m_write_render_tile_callback = WriteRenderTileCallback;
+			m_test_cancel_callback = null;
+
+			CSycles.log_to_stdout(false);
+#endregion
+		}
+
 		/// <summary>
 		/// Entry point for a new render process. This is to be done in a separate thread.
 		/// </summary>
 		/// <param name="oPipe"></param>
-		public static void ModalRenderer(object oPipe)
+		public static void Renderer(object oPipe)
 		{
-			var cycles_engine = (RenderEngine)oPipe;
+			var cycles_engine = (ModalRenderEngine)oPipe;
 
 			var client = cycles_engine.Client;
 			var rw = cycles_engine.RenderWindow;
@@ -105,6 +135,7 @@ namespace RhinoCycles
 			// signal the render window we're done.
 			rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 		}
+		
 	}
 
 }

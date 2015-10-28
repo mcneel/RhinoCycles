@@ -21,7 +21,7 @@ namespace RhinoCycles
 		/// <summary>
 		/// Main entry point for uploading data to Cycles.
 		/// </summary>
-		private void UploadData()
+		protected void UploadData()
 		{
 			// linear workflow changes
 			Database.UploadLinearWorkflowChanges();

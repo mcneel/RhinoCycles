@@ -49,7 +49,7 @@ namespace RhinoCycles
 		protected override bool OnRenderBegin()
 		{
 			m_bStopFlag = false;
-			cyclesEngine.RenderThread = new Thread(RenderEngine.ModalRenderer)
+			cyclesEngine.RenderThread = new Thread(ModalRenderEngine.Renderer)
 			{
 				Name = "A cool Cycles rendering thread"
 			};
@@ -60,7 +60,7 @@ namespace RhinoCycles
 		protected override bool OnRenderBeginQuiet(Size imageSize)
 		{
 			m_bStopFlag = false;
-			cyclesEngine.RenderThread = new Thread(RenderEngine.ModalRenderer)
+			cyclesEngine.RenderThread = new Thread(ModalRenderEngine.Renderer)
 			{
 				Name = "A quiet, cool Cycles rendering thread"
 			};

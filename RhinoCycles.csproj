@@ -89,10 +89,10 @@
     <Compile Include="Materials\TranslucentMaterial.cs" />
     <Compile Include="Materials\TestMaterial.cs" />
     <Compile Include="Measurement.cs" />
+    <Compile Include="ModalRenderEngine.cs" />
     <Compile Include="Plugin.BitmapConversion.cs" />
     <Compile Include="Plugin.Settings.cs" />
     <Compile Include="Plugin.ShaderConversion.cs" />
-    <Compile Include="RenderEngine.Modal.cs" />
     <Compile Include="RenderEngine.Preview.cs" />
     <Compile Include="RenderEngine.Viewport.cs" />
     <Compile Include="Viewport\RenderedViewport.cs">
