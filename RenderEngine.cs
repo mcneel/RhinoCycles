@@ -97,20 +97,6 @@ namespace RhinoCycles
 		protected CSycles.RenderTileCallback m_write_render_tile_callback;
 		protected CSycles.TestCancelCallback m_test_cancel_callback;
 
-		private readonly Guid m_sun_guid = new Guid("82FE2C29-9632-473D-982B-9121E150E1D2");
-
-		/// <summary>
-		/// Get the Sun ID
-		/// </summary>
-		public Guid SunId
-		{
-			get
-			{
-				return m_sun_guid;
-				
-			}
-		}
-
 		protected bool m_flush;
 		/// <summary>
 		/// Flag set to true when a flush on the changequeue is needed.

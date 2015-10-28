@@ -1043,13 +1043,18 @@ namespace RhinoCycles
 		}
 
 		/// <summary>
+		/// Sun ID
+		/// </summary>
+		private readonly Guid m_sun_guid = new Guid("82FE2C29-9632-473D-982B-9121E150E1D2");
+
+		/// <summary>
 		/// Handle sun changes
 		/// </summary>
 		/// <param name="sun"></param>
 		protected override void ApplySunChanges(Rhino.Geometry.Light sun)
 		{
 			var cl = Plugin.ConvertLight(sun, Gamma);
-			cl.Id = m_render_engine.SunId;
+			cl.Id = m_sun_guid;
 			m_light_db.AddLight(cl);
 			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
 		}
