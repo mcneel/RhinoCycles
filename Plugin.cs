@@ -177,11 +177,6 @@ namespace RhinoCycles
 		/// <returns></returns>
 		protected override Result Render(RhinoDoc doc, RunMode mode, bool fastPreview)
 		{
-			return RenderInternal(doc, mode, fastPreview, false);
-		}
-
-		public Result RenderInternal(RhinoDoc doc, RunMode mode, bool fastPreview, bool inViewport)
-		{
 			InitialiseCSycles();
 			AsyncRenderContext a_rc = new ModalRenderEngine(doc, Id);
 			var engine = (ModalRenderEngine)a_rc;
@@ -203,16 +198,9 @@ namespace RhinoCycles
 
 			var pipe = new RenderPipeline(doc, mode, this, ref a_rc);
 
-			if (inViewport)
-			{
-				engine.RenderBitmap = new Bitmap(renderSize.Width, renderSize.Height);
-			}
-			else
-			{
-				engine.RenderWindow = pipe.GetRenderWindow();
-				engine.RenderWindow.AddWireframeChannel(engine.Doc, engine.ViewportInfo, renderSize, new Rectangle(0, 0, renderSize.Width, renderSize.Height));
-				engine.RenderWindow.SetSize(renderSize);
-			}
+			engine.RenderWindow = pipe.GetRenderWindow();
+			engine.RenderWindow.AddWireframeChannel(engine.Doc, engine.ViewportInfo, renderSize, new Rectangle(0, 0, renderSize.Width, renderSize.Height));
+			engine.RenderWindow.SetSize(renderSize);
 			engine.RenderDimension = renderSize;
 
 			engine.Settings.Verbose = true;
@@ -232,7 +220,6 @@ namespace RhinoCycles
 			}
 
 			return Result.Success;
-			
 		}
 
 		/// <summary>
