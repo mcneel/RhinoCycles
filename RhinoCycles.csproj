@@ -72,6 +72,7 @@
     <Compile Include="CyclesShader.cs" />
     <Compile Include="CyclesTextureImage.cs" />
     <Compile Include="CyclesView.cs" />
+    <Compile Include="Database\CameraDatabase.cs" />
     <Compile Include="Database\EnvironmentDatabase.cs" />
     <Compile Include="Database\LightDatabase.cs" />
     <Compile Include="Database\ObjectDatabase.cs" />

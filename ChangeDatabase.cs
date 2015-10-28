@@ -77,6 +77,11 @@ namespace RhinoCycles
 		/// </summary>
 		private readonly EnvironmentDatabase m_env_db = new EnvironmentDatabase();
 
+		/// <summary>
+		/// Database responsible for managing camera transforms from Rhino to Cycles.
+		/// </summary>
+		private readonly CameraDatabase m_camera_db = new CameraDatabase();
+
 		#endregion
 
 
@@ -325,7 +330,7 @@ namespace RhinoCycles
 			ClearGamma();
 			ClearLinearWorkflow();
 			m_env_db.ResetBackgroundChangeQueue();
-			ClearViewChanges();
+			m_camera_db.ResetViewChangeQueue();
 			m_light_db.ResetLightChangeQueue();
 			m_shader_db.ClearShaders();
 			m_shader_db.ClearObjectShaderChanges();
@@ -342,7 +347,7 @@ namespace RhinoCycles
 		public bool HasChanges()
 		{
 			return
-				m_cq_view_changes.Any() ||
+				m_camera_db.HasChanges() ||
 				m_env_db.BackgroundHasChanged ||
 				m_light_db.HasChanges() || 
 				m_shader_db.HasChanges() ||
@@ -433,35 +438,13 @@ namespace RhinoCycles
 		}
 
 		/// <summary>
-		/// record view changes to push to cycles
-		/// </summary>
-		private readonly List<CyclesView> m_cq_view_changes = new List<CyclesView>();
-
-		/// <summary>
-		/// Clear view change queue
-		/// </summary>
-		private void ClearViewChanges()
-		{
-			m_cq_view_changes.Clear();
-		}
-
-		/// <summary>
-		/// Record view change
-		/// </summary>
-		/// <param name="t">view info</param>
-		private void ChangeView(CyclesView t)
-		{
-			m_cq_view_changes.Add(t);
-		}
-
-		/// <summary>
 		/// Upload camera (viewport) changes to Cycles.
 		/// </summary>
 		public void UploadCameraChanges()
 		{
-			if (m_cq_view_changes.Count <= 0) return;
+			if (!m_camera_db.HasChanges()) return;
 
-			var view = m_cq_view_changes.Last();
+			var view = m_camera_db.LatestView();
 			UploadCamera(view);
 		}
 
@@ -586,7 +569,7 @@ namespace RhinoCycles
 				Width = w,
 				Height = h,
 			};
-			ChangeView(cyclesview);
+			m_camera_db.AddViewChange(cyclesview);
 		}
 
 		/// <summary>
