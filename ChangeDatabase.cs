@@ -806,43 +806,25 @@ namespace RhinoCycles
 		#region GROUNDPLANE
 
 		/// <summary>
-		/// Record Guid of our groundplane object.
+		/// Guid of our groundplane object.
 		/// </summary>
 		private readonly Tuple<Guid, int> m_groundplane_guid = new Tuple<Guid, int>(new Guid("306690EC-6E86-4676-B55B-1A50066D7432"), 0);
 
-		private const uint GROUNDPLANE_MESHINSTANCEID = 1;
 
 		/// <summary>
-		/// Get the ground plane object ID
+		/// The mesh instance id for ground plane
 		/// </summary>
-		public Tuple<Guid, int> GroundPlaneId
-		{
-			get
-			{
-				return m_groundplane_guid;
-			}
-		}
-
-		/// <summary>
-		/// Get the mesh instance id for ground plane
-		/// </summary>
-		public uint GroundPlaneMeshInstanceId
-		{
-			get
-			{
-				return GROUNDPLANE_MESHINSTANCEID;
-			}
-		}
+		private const uint GroundPlaneMeshInstanceId = 1;
 
 		/// <summary>
 		/// True if ground plane has been initialised
 		/// </summary>
-		public bool GroundPlaneInitialised { get; set; }
+		private bool m_groundplane_initialised;
 
-		public void InitialiseGroundPlane(CqGroundPlane gp)
+		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
-			GroundPlaneInitialised = true;
-			var gpid = GroundPlaneId;
+			m_groundplane_initialised = true;
+			var gpid = m_groundplane_guid;
 			var altitude = (float)(gp.Enabled ? gp.Altitude : 0.0);
 			var vertices = new[]
 			{
@@ -894,13 +876,13 @@ namespace RhinoCycles
 		protected override void ApplyGroundPlaneChanges(CqGroundPlane gp)
 		{
 			//System.Diagnostics.Debug.WriteLine("groundplane");
-			if(!GroundPlaneInitialised) InitialiseGroundPlane(gp);
+			if(!m_groundplane_initialised) InitialiseGroundPlane(gp);
 			// find groundplane
 			var altitude = (float)gp.Altitude;
 			var t = Transform.Translate(0.0f, 0.0f, altitude);
 			var cycles_object = new CyclesObject
 			{
-				meshid = GroundPlaneId,
+				meshid = m_groundplane_guid,
 				obid = GroundPlaneMeshInstanceId,
 				matid = gp.MaterialId,
 				Transform = t,
