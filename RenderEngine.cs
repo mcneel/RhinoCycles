@@ -190,16 +190,6 @@ namespace RhinoCycles
 			}
 		}
 
-
-		/// <summary>
-		/// Construct a new render engine
-		/// </summary>
-		/// <param name="doc"></param>
-		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
-		public RenderEngine(RhinoDoc doc, Guid pluginId) : this(doc, pluginId, doc.Views.ActiveView)
-		{
-		}
-
 		private uint m_doc_serialnumber;
 		private RhinoView m_view;
 
@@ -211,6 +201,17 @@ namespace RhinoCycles
 		public ViewportInfo ViewportInfo
 		{
 			get { return new ViewportInfo(m_view.ActiveViewport); }
+		}
+
+#region CONSTRUCTORS
+
+		/// <summary>
+		/// Construct a new render engine
+		/// </summary>
+		/// <param name="doc"></param>
+		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
+		public RenderEngine(RhinoDoc doc, Guid pluginId) : this(doc, pluginId, doc.Views.ActiveView)
+		{
 		}
 
 		public RenderEngine(RhinoDoc doc, Guid pluginId, RhinoView view)
@@ -260,6 +261,8 @@ namespace RhinoCycles
 			CSycles.log_to_stdout(false);
 #endregion
 		}
+
+#endregion
 
 		/// <summary>
 		/// Tell our changequeue instance to initialise world.
