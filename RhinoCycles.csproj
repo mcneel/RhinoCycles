@@ -89,12 +89,12 @@
     <Compile Include="Materials\TranslucentMaterial.cs" />
     <Compile Include="Materials\TestMaterial.cs" />
     <Compile Include="Measurement.cs" />
-    <Compile Include="ModalRenderEngine.cs" />
     <Compile Include="Plugin.BitmapConversion.cs" />
     <Compile Include="Plugin.Settings.cs" />
     <Compile Include="Plugin.ShaderConversion.cs" />
-    <Compile Include="PreviewRenderEngine.cs" />
-    <Compile Include="ViewportRenderEngine.cs" />
+    <Compile Include="RenderEngines\ModalRenderEngine.cs" />
+    <Compile Include="RenderEngines\PreviewRenderEngine.cs" />
+    <Compile Include="RenderEngines\ViewportRenderEngine.cs" />
     <Compile Include="Viewport\RenderedViewport.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -156,6 +156,7 @@
       <Name>csycles</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>Copy /Y "$(TargetPath)" "$(TargetDir)$(ProjectName).rhp"
