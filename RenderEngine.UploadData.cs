@@ -54,19 +54,7 @@ namespace RhinoCycles
 			Database.UploadObjectChanges();
 
 			// done, now clear out our change queue stuff so we're ready for the next time around :)
-			ClearChanges();
+			Database.ResetChangeQueue();
 		}
-
-		private void ClearChanges()
-		{
-			Database.ClearChanges();
-		}
-
-
-
-
-
-
-
 	}
 }

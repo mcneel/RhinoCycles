@@ -314,7 +314,7 @@ namespace RhinoCycles
 		/// Reset changequeue lists and dictionaries. Generally this is done once all changes
 		/// have been handled, and thus no longer needed.
 		/// </summary>
-		public void ClearChanges()
+		public void ResetChangeQueue()
 		{
 			ClearGamma();
 			ClearLinearWorkflow();
