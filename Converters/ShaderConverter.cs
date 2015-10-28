@@ -28,8 +28,14 @@ using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCycles
 {
-	public partial class Plugin
+	public class ShaderConverter
 	{
+		private readonly EngineSettings m_engine_settings;
+		public ShaderConverter(EngineSettings engineSettings)
+		{
+			m_engine_settings = engineSettings;
+		}
+
 		private static bool IsCyclesMaterial(RenderMaterial rm)
 		{
 			var isit = rm is SimpleBrickMaterial
@@ -50,7 +56,7 @@ namespace RhinoCycles
 		/// </summary>
 		/// <param name="m">Material to convert to CyclesShader</param>
 		/// <returns>The CyclesShader</returns>
-		internal static CyclesShader CreateCyclesShader(RenderMaterial rm, float gamma)
+		internal CyclesShader CreateCyclesShader(RenderMaterial rm, float gamma)
 		{
 			var is_cycles_material = IsCyclesMaterial(rm);
 			var mid = rm.RenderHash;
@@ -136,7 +142,7 @@ namespace RhinoCycles
 					var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
 					var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
 
-					var polish = (float) m.ReflectionGlossiness*EngineSettings.PolishFactor;
+					var polish = (float) m.ReflectionGlossiness*m_engine_settings.PolishFactor;
 					shader = new CyclesShader
 					{
 						Id = mid,
@@ -220,7 +226,7 @@ namespace RhinoCycles
 		/// </summary>
 		/// <param name="light"></param>
 		/// <returns></returns>
-		internal static CyclesLight ConvertLight(ChangeQueue changequeue, Light light, ViewInfo view, float gamma)
+		internal CyclesLight ConvertLight(ChangeQueue changequeue, Light light, ViewInfo view, float gamma)
 		{
 			if (changequeue != null && view != null)
 			{
@@ -245,14 +251,14 @@ namespace RhinoCycles
 		/// </summary>
 		/// <param name="lg">The Rhino light to convert</param>
 		/// <returns><c>CyclesLight</c></returns>
-		internal static CyclesLight ConvertLight(Rhino.Geometry.Light lg, float gamma)
+		internal CyclesLight ConvertLight(Rhino.Geometry.Light lg, float gamma)
 		{
 			var enabled = lg.IsEnabled ? 1.0 : 0.0;
 
 			var spotangle = 0.0;
 			var smooth = 0.0;
 			var size = 0.0f;
-			var strength = (float)(lg.Intensity * EngineSettings.PointlightFactor * enabled);
+			var strength = (float)(lg.Intensity * m_engine_settings.PointlightFactor * enabled);
 			var axisu = new float4(0.0f);
 			var axisv = new float4(0.0f);
 			var use_mis = false;
@@ -267,7 +273,7 @@ namespace RhinoCycles
 			if (lg.IsDirectionalLight)
 			{
 				lt = LightType.Distant;
-				strength = (float)(lg.Intensity * EngineSettings.SunlightFactor * enabled);
+				strength = (float)(lg.Intensity * m_engine_settings.SunlightFactor * enabled);
 				//size = 0.01f;
 			}
 			else if (lg.IsSpotLight)
@@ -275,13 +281,13 @@ namespace RhinoCycles
 				lt = LightType.Spot;
 				spotangle = lg.SpotAngleRadians * 2;
 				smooth = 1.0 / Math.Max(lg.HotSpot, 0.001f) - 1.0;
-				strength = (float)(lg.Intensity * EngineSettings.SpotlightFactor * enabled);
+				strength = (float)(lg.Intensity * m_engine_settings.SpotlightFactor * enabled);
 			}
 			else if (lg.IsRectangularLight)
 			{
 				lt = LightType.Area;
 
-				strength = (float)(lg.Intensity * EngineSettings.ArealightFactor * enabled);
+				strength = (float)(lg.Intensity * m_engine_settings.ArealightFactor * enabled);
 
 				var width = lg.Width;
 				var length = lg.Length;

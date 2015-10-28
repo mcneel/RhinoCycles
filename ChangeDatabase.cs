@@ -24,7 +24,6 @@ using Rhino.DocObjects;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
 using RhinoCycles.Database;
-using RhinoCycles.Shaders;
 using sdd = System.Diagnostics.Debug;
 using CqMaterial = Rhino.Render.ChangeQueue.Material;
 using CqMesh = Rhino.Render.ChangeQueue.Mesh;
@@ -35,6 +34,7 @@ using CQLinearWorkflow = Rhino.Render.ChangeQueue.LinearWorkflow;
 using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;
 using CclObject = ccl.Object;
+using Light = Rhino.Geometry.Light;
 
 namespace RhinoCycles
 {
@@ -84,6 +84,7 @@ namespace RhinoCycles
 
 		#endregion
 
+		private readonly ShaderConverter m_shader_converter;
 
 		/// <summary>
 		/// Constructor for our changequeue implementation
@@ -96,6 +97,7 @@ namespace RhinoCycles
 		{
 			m_render_engine = engine;
 			m_object_shader_db = new ObjectShaderDatabase(m_object_db);
+			m_shader_converter = new ShaderConverter(engine.Settings);
 		}
 
 
@@ -109,6 +111,7 @@ namespace RhinoCycles
 		{
 			m_render_engine = engine;
 			m_object_shader_db = new ObjectShaderDatabase(m_object_db);
+			m_shader_converter = new ShaderConverter(engine.Settings);
 		}
 
 		public void UploadLinearWorkflowChanges()
@@ -725,7 +728,7 @@ namespace RhinoCycles
 			if (m_shader_db.HasShader(mat.RenderHash)) return;
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = Plugin.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, Gamma);
+			var sh = m_shader_converter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, Gamma);
 			m_shader_db.AddShader(sh);
 		}
 
@@ -1014,7 +1017,7 @@ namespace RhinoCycles
 		{
 			foreach (var light in lightChanges)
 			{
-				var cl = Plugin.ConvertLight(this, light, m_current_view_info, Gamma);
+				var cl = m_shader_converter.ConvertLight(this, light, m_current_view_info, Gamma);
 
 				//System.Diagnostics.Debug.WriteLine("light {0} == {1} == {2} ({3})", light.Id, cl.Id, lg.Id, light.ChangeType);
 
@@ -1022,11 +1025,11 @@ namespace RhinoCycles
 			}
 		}
 
-		protected override void ApplyDynamicLightChanges(List<Rhino.Geometry.Light> dynamicLightChanges)
+		protected override void ApplyDynamicLightChanges(List<Light> dynamicLightChanges)
 		{
 			foreach (var light in dynamicLightChanges)
 			{
-				var cl = Plugin.ConvertLight(light, Gamma);
+				var cl = m_shader_converter.ConvertLight(light, Gamma);
 				//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
 				m_light_db.AddLight(cl);
 			}
@@ -1041,9 +1044,9 @@ namespace RhinoCycles
 		/// Handle sun changes
 		/// </summary>
 		/// <param name="sun"></param>
-		protected override void ApplySunChanges(Rhino.Geometry.Light sun)
+		protected override void ApplySunChanges(Light sun)
 		{
-			var cl = Plugin.ConvertLight(sun, Gamma);
+			var cl = m_shader_converter.ConvertLight(sun, Gamma);
 			cl.Id = m_sun_guid;
 			m_light_db.AddLight(cl);
 			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
