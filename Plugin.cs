@@ -255,8 +255,8 @@ namespace RhinoCycles
 				return;
 			}
 
-			AsyncRenderContext a_rc = new RenderEngine(scene, Id);
-			var engine = (RenderEngine)a_rc;
+			AsyncRenderContext a_rc = new PreviewRenderEngine(scene, Id);
+			var engine = (PreviewRenderEngine)a_rc;
 			engine.Settings = EngineSettings;
 			engine.Settings.SetQuality(scene.Quality);
 
@@ -269,7 +269,7 @@ namespace RhinoCycles
 			engine.CreateWorld();
 
 			/* render the preview scene */
-			RenderEngine.PreviewRenderer(engine);
+			PreviewRenderEngine.Renderer(engine);
 
 			/* set final preview bitmap, or null if cancelled */
 			scene.PreviewImage = scene.Cancel ? null : engine.RenderBitmap;

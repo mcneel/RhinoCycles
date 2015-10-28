@@ -18,18 +18,42 @@ using System;
 using System.Drawing;
 using ccl;
 using sdd = System.Diagnostics.Debug;
+using Rhino.Render;
 
 namespace RhinoCycles
 {
-	public partial class RenderEngine
+	public class PreviewRenderEngine : RenderEngine
 	{
+
+		/// <summary>
+		/// Construct a render engine for preview rendering
+		/// </summary>
+		/// <param name="createPreviewEventArgs"></param>
+		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
+		public PreviewRenderEngine(CreatePreviewEventArgs createPreviewEventArgs, Guid pluginId)
+		{
+			m_preview_event_args = createPreviewEventArgs;
+			Database = new ChangeDatabase(pluginId, this, createPreviewEventArgs);
+			RenderThread = null;
+			Client = new Client();
+			State = State.Rendering;
+
+#region create callbacks for Cycles
+			m_update_callback = UpdateCallback;
+			m_update_render_tile_callback = UpdateRenderTileCallback;
+			m_write_render_tile_callback = WriteRenderTileCallback;
+			m_test_cancel_callback = TestCancel;
+
+			CSycles.log_to_stdout(false);
+#endregion
+		}
 		/// <summary>
 		/// Renderer entry point for preview rendering
 		/// </summary>
 		/// <param name="oPipe"></param>
-		public static void PreviewRenderer(object oPipe)
+		public static void Renderer(object oPipe)
 		{
-			var cycles_engine = (RenderEngine)oPipe;
+			var cycles_engine = (PreviewRenderEngine)oPipe;
 
 			var client = cycles_engine.Client;
 

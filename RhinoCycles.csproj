@@ -93,7 +93,7 @@
     <Compile Include="Plugin.BitmapConversion.cs" />
     <Compile Include="Plugin.Settings.cs" />
     <Compile Include="Plugin.ShaderConversion.cs" />
-    <Compile Include="RenderEngine.Preview.cs" />
+    <Compile Include="PreviewRenderEngine.cs" />
     <Compile Include="RenderEngine.Viewport.cs" />
     <Compile Include="Viewport\RenderedViewport.cs">
       <SubType>Component</SubType>
