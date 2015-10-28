@@ -46,13 +46,12 @@ namespace RhinoCycles.Database
 		/// </summary>
 		private readonly ObjectDatabase m_objects;
 		/// <summary>
-		/// Construct a ObjectShaderDatabase that has access to shaders and objects.
+		/// Construct a ObjectShaderDatabase that has access to objects.
 		/// </summary>
-		/// <param name="_shaders"></param>
-		/// <param name="_objects"></param>
-		public ObjectShaderDatabase(ObjectDatabase _objects)
+		/// <param name="objects"></param>
+		public ObjectShaderDatabase(ObjectDatabase objects)
 		{
-			m_objects = _objects;
+			m_objects = objects;
 		}
 
 
