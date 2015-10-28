@@ -102,7 +102,6 @@ namespace RhinoCycles
 			RenderContent.ContentFieldChanged += RenderContentOnContentFieldChanged;
 
 			EngineSettings = new EngineSettings();
-			EngineSettings.DefaultSettings();
 
 			var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
 			PluginPath = path;
