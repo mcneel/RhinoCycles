@@ -161,7 +161,7 @@ namespace RhinoCycles
 		/// <summary>
 		/// Reset modified flag.
 		/// </summary>
-		public void Clear()
+		public void Reset()
 		{
 			modified = false;
 		}

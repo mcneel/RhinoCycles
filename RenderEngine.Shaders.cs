@@ -127,19 +127,12 @@ namespace RhinoCycles
 			return v6.GetShader();
 		}
 
-		internal CclShader CreateBackgroundShader(CyclesShader shader)
-		{
-			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Client, Database.m_cq_background, null);
-			return rhinobg.GetShader();
-		}
-
-		internal void RecreateBackgroundShader()
+		internal void RecreateBackgroundShader(CyclesBackground background, out RhinoShader currentShader)
 		{
 			var bg = Session.Scene.Background.Shader;
-			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Client, Database.m_cq_background, bg);
-			rhinobg.Reset();
+			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Client, background, bg);
 			Session.Scene.Background.Shader = rhinobg.GetShader();
-			Database.m_current_background_shader = rhinobg;
+			currentShader = rhinobg;
 		}
 
 		internal CclShader CreateSimpleEmissionShader(CyclesLight light)

@@ -71,6 +71,12 @@ namespace RhinoCycles
 		/// </summary>
 		private readonly LightDatabase m_light_db = new LightDatabase();
 
+		/// <summary>
+		/// Database responsible for keeping track of background and environment changes and their
+		/// relations between Rhino and Cycles.
+		/// </summary>
+		private readonly EnvironmentDatabase m_env_db = new EnvironmentDatabase();
+
 		#endregion
 
 
@@ -150,10 +156,10 @@ namespace RhinoCycles
 			{
 				Plugin.ApplyGammaToTextures(Gamma);
 
-				if (m_current_background_shader != null)
+				if (m_env_db.CurrentBackgroundShader != null)
 				{
-					m_current_background_shader.Reset();
-					m_render_engine.Session.Scene.Background.Shader = m_current_background_shader.GetShader();
+					m_env_db.CurrentBackgroundShader.Reset();
+					m_render_engine.Session.Scene.Background.Shader = m_env_db.CurrentBackgroundShader.GetShader();
 				}
 
 				foreach (var tup in m_shader_db.AllShaders)
@@ -318,7 +324,7 @@ namespace RhinoCycles
 		{
 			ClearGamma();
 			ClearLinearWorkflow();
-			ClearBackground();
+			m_env_db.ResetBackgroundChangeQueue();
 			ClearViewChanges();
 			m_light_db.ResetLightChangeQueue();
 			m_shader_db.ClearShaders();
@@ -337,6 +343,7 @@ namespace RhinoCycles
 		{
 			return
 				m_cq_view_changes.Any() ||
+				m_env_db.BackgroundHasChanged ||
 				m_light_db.HasChanges() || 
 				m_shader_db.HasChanges() ||
 				m_object_db.HasChanges() ||
@@ -1061,27 +1068,13 @@ namespace RhinoCycles
 
 		#endregion
 
-		/// <summary>
-		/// record background shader changes to push to cycles
-		/// note that we have only one object that gets updated when necessary.
-		/// </summary>
-		public CyclesBackground m_cq_background = new CyclesBackground();
-		public RhinoShader m_current_background_shader;
-
-		public bool BackgroundHasChanged
-		{
-			get { return m_cq_background.modified; }
-		}
-
-		private void ClearBackground()
-		{
-			m_cq_background.Clear();
-		}
-
 		public void UploadEnvironmentChanges()
 		{
-			if(BackgroundHasChanged)
-				m_render_engine.RecreateBackgroundShader();
+			if (m_env_db.BackgroundHasChanged)
+			{
+				var curbg = m_env_db.CurrentBackgroundShader;
+				m_render_engine.RecreateBackgroundShader(m_env_db.CyclesShader, out curbg);
+			}
 		}
 
 		/// <summary>
@@ -1141,9 +1134,8 @@ namespace RhinoCycles
 		protected override void ApplySkylightChanges(CqSkylight skylight)
 		{
 			//System.Diagnostics.Debug.WriteLine("{0}", skylight);
-			m_cq_background.skylight_enabled =  skylight.Enabled;
-			m_cq_background.gamma = Gamma;
-			m_cq_background.modified = true;
+			m_env_db.SetSkylightEnabled(skylight.Enabled);
+			m_env_db.SetGamma(Gamma);
 		}
 
 		protected override void ApplyBackgroundChanges(RenderSettings rs)
@@ -1151,11 +1143,8 @@ namespace RhinoCycles
 			if (rs != null)
 			{
 				//System.Diagnostics.Debug.WriteLine("ApplyBackgroundChanges: fillstyle {0} color1 {1} color2 {2}", rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
-				m_cq_background.background_fill = rs.BackgroundStyle;
-				m_cq_background.color1 = rs.BackgroundColorTop;
-				m_cq_background.color2 = rs.BackgroundColorBottom;
-				m_cq_background.gamma = Gamma;
-				m_cq_background.modified = true;
+				m_env_db.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
+				m_env_db.SetGamma(Gamma);
 			}
 		}
 
@@ -1167,23 +1156,8 @@ namespace RhinoCycles
 		{
 			var env_id = EnvironmentIdForUsage(usage);
 			var env = EnvironmentForid(env_id);
-			switch (usage)
-			{
-				case RenderEnvironment.Usage.Background:
-					m_cq_background.background_environment = env;
-					break;
-				case RenderEnvironment.Usage.Skylighting:
-					m_cq_background.skylight_environment = env;
-					break;
-				case RenderEnvironment.Usage.ReflectionAndRefraction:
-					m_cq_background.reflection_environment = env;
-					break;
-			}
-			m_cq_background.gamma = Gamma;
-
-			m_cq_background.HandleEnvironments();
-
-			m_cq_background.modified = true;
+			m_env_db.SetBackground(env, usage);
+			m_env_db.SetGamma(Gamma);
 
 			//System.Diagnostics.Debug.WriteLine("{0}, env {1}", usage, env);
 		}
