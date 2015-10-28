@@ -23,7 +23,7 @@ using Transform = ccl.Transform;
 
 namespace RhinoCycles
 {
-	public partial class Plugin
+	public class BitmapConverter
 	{
 		static readonly internal Dictionary<uint, ByteBitmap> byte_images_new = new Dictionary<uint, ByteBitmap>();
 		static readonly internal Dictionary<uint, FloatBitmap> float_images_new = new Dictionary<uint, FloatBitmap>();
@@ -49,7 +49,7 @@ namespace RhinoCycles
 		/// <param name="renderTexture"></param>
 		/// <param name="channelName"></param>
 		/// <param name="textureType"></param>
-		private static void MaterialBitmapFromEvaluator(ref CyclesShader shader, RenderMaterial rm, RenderTexture renderTexture, string channelName, RenderMaterial.StandardChildSlots textureType)
+		internal static void MaterialBitmapFromEvaluator(ref CyclesShader shader, RenderMaterial rm, RenderTexture renderTexture, string channelName, RenderMaterial.StandardChildSlots textureType)
 		{
 			if (renderTexture == null || !rm.ChildSlotOn(channelName)) return;
 

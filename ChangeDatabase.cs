@@ -159,7 +159,7 @@ namespace RhinoCycles
 		{
 			if (GammaHasChanged)
 			{
-				Plugin.ApplyGammaToTextures(Gamma);
+				BitmapConverter.ApplyGammaToTextures(Gamma);
 
 				if (m_env_db.CurrentBackgroundShader != null)
 				{

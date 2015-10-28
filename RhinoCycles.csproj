@@ -63,6 +63,7 @@
     <Compile Include="Commands\SetDebugOptions.cs" />
     <Compile Include="Commands\SetThreads.cs" />
     <Compile Include="Commands\ToggleShaders.cs" />
+    <Compile Include="Converters\BitmapConverter.cs" />
     <Compile Include="CyclesBackground.cs" />
     <Compile Include="CyclesLight.cs" />
     <Compile Include="CyclesMesh.cs" />
@@ -91,7 +92,6 @@
     <Compile Include="Materials\TranslucentMaterial.cs" />
     <Compile Include="Materials\TestMaterial.cs" />
     <Compile Include="Measurement.cs" />
-    <Compile Include="Plugin.BitmapConversion.cs" />
     <Compile Include="Plugin.Settings.cs" />
     <Compile Include="Plugin.ShaderConversion.cs" />
     <Compile Include="RenderEngines\ModalRenderEngine.cs" />

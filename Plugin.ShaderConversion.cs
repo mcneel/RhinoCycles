@@ -173,7 +173,7 @@ namespace RhinoCycles
 					{
 						var diffchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Diffuse);
 						var difftex = rm.FindChild(diffchan) as RenderTexture;
-						MaterialBitmapFromEvaluator(ref shader, rm, difftex, diffchan, RenderMaterial.StandardChildSlots.Diffuse);
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, difftex, diffchan, RenderMaterial.StandardChildSlots.Diffuse);
 						if (shader.HasDiffuseTexture)
 						{
 							shader.DiffuseTexture.UseAlpha = difftex_alpha;
@@ -182,7 +182,7 @@ namespace RhinoCycles
 
 						var bumpchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Bump);
 						var bumptex = rm.FindChild(bumpchan) as RenderTexture;
-						MaterialBitmapFromEvaluator(ref shader, rm, bumptex, bumpchan, RenderMaterial.StandardChildSlots.Bump);
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, bumptex, bumpchan, RenderMaterial.StandardChildSlots.Bump);
 						if (shader.HasBumpTexture)
 						{
 							shader.BumpTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(bumpchan)/100.0f, 1.0f);
@@ -190,7 +190,7 @@ namespace RhinoCycles
 
 						var transchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Transparency);
 						var transtex = rm.FindChild(transchan) as RenderTexture;
-						MaterialBitmapFromEvaluator(ref shader, rm, transtex, transchan, RenderMaterial.StandardChildSlots.Transparency);
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, transtex, transchan, RenderMaterial.StandardChildSlots.Transparency);
 						if (shader.HasTransparencyTexture)
 						{
 							shader.TransparencyTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(transchan)/100.0f, 1.0f);

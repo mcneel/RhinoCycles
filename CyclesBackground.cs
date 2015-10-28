@@ -125,7 +125,7 @@ namespace RhinoCycles
 				bg_color = Color.Empty;
 				bg.Clear();
 			}
-			Plugin.EnvironmentBitmapFromEvaluator(background_environment, bg);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg);
 
 			if (skylight_environment != null)
 			{
@@ -140,7 +140,7 @@ namespace RhinoCycles
 				sky_color = Color.Empty;
 				sky.Clear();
 			}
-			Plugin.EnvironmentBitmapFromEvaluator(skylight_environment, sky);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky);
 
 			if (reflection_environment != null)
 			{
@@ -155,7 +155,7 @@ namespace RhinoCycles
 				refl_color = Color.Empty;
 				refl.Clear();
 			}
-			Plugin.EnvironmentBitmapFromEvaluator(reflection_environment, refl);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl);
 		}
 
 		/// <summary>
