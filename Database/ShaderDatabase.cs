@@ -67,11 +67,18 @@ namespace RhinoCycles.Database
 		/// </summary>
 		private readonly Dictionary<uint, uint> m_rh_ccl_scene_shader_ids = new Dictionary<uint, uint>();
 
+		/// <summary>
+		/// Return true if any shader or object shader changes were recorded by the ChangeQueue mechanism.
+		/// </summary>
+		/// <returns>True when changes where recorded, false otherwise.</returns>
 		public bool HasChanges()
 		{
 			return m_cq_shaders.Any() || m_cq_objects_shader_changes.Any();
 		}
 
+		/// <summary>
+		/// Get a list of object shader changes.
+		/// </summary>
 		public List<CyclesObjectShader> ObjectShaderChanges
 		{
 			get
@@ -80,6 +87,9 @@ namespace RhinoCycles.Database
 			}
 		}
 
+		/// <summary>
+		/// Get a list of shader changes.
+		/// </summary>
 		public List<CyclesShader> ShaderChanges
 		{
 			get
@@ -89,7 +99,7 @@ namespace RhinoCycles.Database
 		} 
 
 		/// <summary>
-		/// Get all shaders
+		/// Get a list of all shaders.
 		/// </summary>
 		public List<Tuple<object, CclShader>> AllShaders
 		{
@@ -99,17 +109,32 @@ namespace RhinoCycles.Database
 			}
 		}
 
+		/// <summary>
+		/// Record the CclShader for given id.
+		/// </summary>
+		/// <param name="id">RenderHash of the Rhino material</param>
+		/// <param name="shader">ccl.Shader</param>
 		public void RecordRhCclShaderRelation(uint id, CclShader shader)
 		{
 				m_rh_ccl_shaders.Add(id, shader);
 		}
 
+		/// <summary>
+		/// Record the Cycles shader id in scene for RenderHash
+		/// </summary>
+		/// <param name="shaderId">Rhino material RenderHash</param>
+		/// <param name="shaderSceneId">Cycles shader scene id</param>
 		public void RecordCclShaderSceneId(uint shaderId, uint shaderSceneId)
 		{
 				m_rh_ccl_scene_shader_ids.Add(shaderId, shaderSceneId);
 		}
 
-		// @todo check this is correct naming and dictionary to query from
+		/// <summary>
+		/// Get Cycles shader scene id for Rhino material RenderHash.
+		/// @todo check this is correct naming and dictionary to query from
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns>Cycles shader scene id</returns>
 		public uint GetShaderIdForMatId(uint id)
 		{
 			return m_rh_ccl_scene_shader_ids[id];
