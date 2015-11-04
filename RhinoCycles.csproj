@@ -96,9 +96,7 @@
     <Compile Include="RenderEngines\ModalRenderEngine.cs" />
     <Compile Include="RenderEngines\PreviewRenderEngine.cs" />
     <Compile Include="RenderEngines\ViewportRenderEngine.cs" />
-    <Compile Include="Viewport\RenderedViewport.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Viewport\RenderedViewport.cs" />
     <Compile Include="RenderEngine.Settings.cs" />
     <Compile Include="RenderEngine.Shaders.cs" />
     <Compile Include="RenderEngine.Utils.cs" />

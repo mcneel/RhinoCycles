@@ -27,35 +27,6 @@ using Timer = System.Timers.Timer;
 
 namespace RhinoCycles
 {
-	public class FireOnMainThreadTimer : Timer
-	{
-		private SynchronizationContext synchronization_context;
-		public FireOnMainThreadTimer(double interval) : base(interval)
-		{
-			synchronization_context = SynchronizationContext.Current;
-			Elapsed += m_timer_Elapsed;
-		}
-
-		public event EventHandler Fired;
-
-		private void OnFire()
-		{
-			synchronization_context.Send(
-				state =>
-				{
-					if (Fired != null)
-					{
-						Fired(this, EventArgs.Empty);
-					}
-				}, null);
-		}
-
-		void m_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-		{
-			OnFire();
-		}
-
-	}
 	[Guid("78B47310-A84B-445D-9991-A90625AC8837")]
 	[RenderedDisplaymodeClassInfo("78B47310-A84B-445D-9991-A90625AC8837", "Cycles Rendered View", "A Cycles Rendered View")]
 	public class RenderedViewport : RenderedDisplayMode
@@ -79,7 +50,6 @@ namespace RhinoCycles
 		private uint coltex;
 		private uint fbo;
 
-		private FireOnMainThreadTimer m_timer;
 		private int m_prev_samples;
 
 		private SynchronizationContext synchronization_context;
@@ -90,8 +60,6 @@ namespace RhinoCycles
 			m_serial = g_running_serial;
 			ssd.WriteLine("Initialising a RenderedViewport {0}", m_serial);
 			Plugin.InitialiseCSycles();
-			m_timer = new FireOnMainThreadTimer(25) {Enabled = false};
-			m_timer.Stop();
 			m_available = true;
 			synchronization_context = SynchronizationContext.Current;
 		}
@@ -131,11 +99,6 @@ namespace RhinoCycles
 
 			m_maxsamples = m_cycles.Settings.Samples;
 
-			m_timer.AutoReset = true;
-			m_timer.Enabled = true;
-			m_timer.Fired += m_timer_Fired;
-			m_timer.Start();
-
 			m_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
 			m_cycles.UnsetRenderSize();
@@ -153,11 +116,6 @@ namespace RhinoCycles
 
 			m_starttime = GeCurrentTimeStamp();
 
-			m_timer.AutoReset = true;
-			m_timer.Enabled = true;
-			m_timer.Elapsed += m_timer_Fired;
-			m_timer.Start();
-
 			return true;
 		}
 
@@ -172,7 +130,7 @@ namespace RhinoCycles
 			return (long) span.TotalSeconds;
 		}
 
-		void m_timer_Fired(object sender, EventArgs e)
+		public override void UiUpdate()
 		{
 			if (m_started)
 			{
@@ -214,8 +172,6 @@ namespace RhinoCycles
 		{
 			m_available = false;
 			m_started = false;
-			m_timer.Stop();
-			m_timer.Enabled = false;
 			m_prev_samples = 0;
 			//gl.GL.DeleteBuffers(1, ref coltex);
 			ssd.WriteLine("!!! === ShutdownRender {0} === !!!", m_serial);
