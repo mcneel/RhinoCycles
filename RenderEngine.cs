@@ -170,10 +170,6 @@ namespace RhinoCycles
 					State = State.Uploading;
 					if (Session != null) Session.Cancel("Scene changes detected.\n");
 				}
-				else
-				{
-					State = State.Rendering;
-				}
 			}
 		}
 

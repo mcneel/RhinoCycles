@@ -103,7 +103,7 @@ namespace RhinoCycles
 			if (rw == null) return;
 
 			var size = cycles_engine.RenderDimension;
-			var samples = ushort.MaxValue;
+			var samples = cycles_engine.Settings.Samples;
 
 			cycles_engine.m_measurements.Reset();
 
@@ -149,15 +149,24 @@ namespace RhinoCycles
 			cycles_engine.State = State.Uploading;
 			while (cycles_engine.State != State.Stopped)
 			{
+				if (cycles_engine.State == State.Waiting)
+				{
+					Thread.Sleep(5);
+					if(cycles_engine.Flush && cycles_engine.Database!=null) cycles_engine.Database.Flush();
+					if(cycles_engine.Database!=null && cycles_engine.Database.HasChanges()) cycles_engine.State = State.Uploading;
+				}
+
 				cycles_engine.RenderedSamples = 0;
 				cycles_engine.TimeString = "";
 				// engine is ready to upload, do so
 				if (cycles_engine.State == State.Uploading)
 				{
 					cycles_engine.UploadData();
-					// uploading done, rendering again
 					cycles_engine.State = State.Rendering;
+					// uploading done, rendering again
 				}
+
+				if (cycles_engine.State != State.Rendering) continue;
 
 				while (!cycles_engine.IsRenderSizeSet)
 				{
@@ -176,18 +185,17 @@ namespace RhinoCycles
 				cycles_engine.Session.Start();
 				// ... aaaaand we wait
 				cycles_engine.Session.Wait();
+
+				if (cycles_engine.State != State.Uploading)
+				{
+					cycles_engine.State = State.Waiting;
+				}
 			}
 
 			#endregion
 
 			// we're done now, so lets clean up our session.
 			cycles_engine.Session.Destroy();
-
-			// set final status string and progress to 1.0f to signal completed render
-			cycles_engine.SetProgress(rw, String.Format("Render ready {0} samples, duration {1}", cycles_engine.RenderedSamples, cycles_engine.TimeString), 1.0f);
-
-			if (rw != null)
-				rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 		}
 	}
 

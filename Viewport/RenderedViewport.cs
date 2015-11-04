@@ -87,7 +87,7 @@ namespace RhinoCycles
 			m_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
 
 			// for now when using interactive renderer render indefinitely
-			if(m_cycles.Settings.UseInteractiveRenderer) m_cycles.Settings.Samples = ushort.MaxValue;
+			//if(m_cycles.Settings.UseInteractiveRenderer) m_cycles.Settings.Samples = ushort.MaxValue;
 			var renderSize = Rhino.Render.RenderPipeline.RenderSize(doc);
 
 			m_cycles.RenderWindow = renderWindow;
