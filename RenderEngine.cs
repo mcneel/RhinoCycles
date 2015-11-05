@@ -249,6 +249,18 @@ namespace RhinoCycles
 		public event StatusTextHandler StatusTextEvent;
 
 		/// <summary>
+		/// Tell engine to fire StatusTextEvent with given arguments
+		/// </summary>
+		/// <param name="e"></param>
+		public void UpdateStatusText(StatusTextEventArgs e)
+		{
+			if (StatusTextEvent != null)
+			{
+				StatusTextEvent(this, e);
+			}
+		}
+
+		/// <summary>
 		/// Handle status updates
 		/// </summary>
 		/// <param name="sid"></param>
