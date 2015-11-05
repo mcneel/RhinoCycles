@@ -208,7 +208,7 @@ namespace RhinoCycles
 
 		public override bool HudRendererPaused()
 		{
-			return false;
+			return m_status.Equals("Idle");
 		}
 
 		public override bool HudRendererLocked()
