@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using System;
 using ccl;
 using ccl.ShaderNodes;
 using Rhino.Display;
@@ -97,15 +98,15 @@ namespace RhinoCycles.Shaders
 				Gradient = GradientTextureNode.GradientType.Linear
 			};
 
-			// Add color ramp. Color stop on 1.0 is top color,
-			// color stop on 0.0 is bottom color
+			// Add color ramp. Color stop on 1.0 is bottom color,
+			// color stop on 0.0 is top color
 			var colorramp = new ColorRampNode();
 			// just simple linear gradient
 			colorramp.ColorBand.Interpolation = ColorBand.Interpolations.Linear;
-			// top color on 1.0f
-			colorramp.ColorBand.InsertColorStop(color1, 1.0f);
-			// bottom color on 0.0f
-			colorramp.ColorBand.InsertColorStop(color2, 0.0f);
+			// bottom color on 1.0f
+			colorramp.ColorBand.InsertColorStop(color2, 1.0f);
+			// top color on 0.0f
+			colorramp.ColorBand.InsertColorStop(color1, 0.0f);
 
 			#endregion
 
@@ -187,6 +188,7 @@ namespace RhinoCycles.Shaders
 				texture_coordinates.outs.Window.Connect(mapping.ins.Vector);
 				// rotate those coords into gradient
 				mapping.outs.Vector.Connect(gradient.ins.Vector);
+
 				// and finally into our color ramp
 				gradient.outs.Fac.Connect(colorramp.ins.Fac);
 				// now use that as background input
