@@ -47,13 +47,6 @@ namespace RhinoCycles
 		private float m_progress;
 		private string m_status;
 
-		private uint coltex;
-		private uint fbo;
-
-		private int m_prev_samples;
-
-		private SynchronizationContext synchronization_context;
-
 		public RenderedViewport()
 		{
 			g_running_serial ++;
@@ -61,7 +54,6 @@ namespace RhinoCycles
 			ssd.WriteLine("Initialising a RenderedViewport {0}", m_serial);
 			Plugin.InitialiseCSycles();
 			m_available = true;
-			synchronization_context = SynchronizationContext.Current;
 		}
 
 		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo)
@@ -164,7 +156,6 @@ namespace RhinoCycles
 			SetGamma(m_cycles.Database.Gamma);
 			m_starttime = GeCurrentTimeStamp();
 
-			m_prev_samples = 0;
 			return true;
 		}
 
@@ -172,7 +163,6 @@ namespace RhinoCycles
 		{
 			m_available = false;
 			m_started = false;
-			m_prev_samples = 0;
 			//gl.GL.DeleteBuffers(1, ref coltex);
 			ssd.WriteLine("!!! === ShutdownRender {0} === !!!", m_serial);
 			if (m_cycles != null)
