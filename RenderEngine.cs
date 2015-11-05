@@ -421,15 +421,15 @@ namespace RhinoCycles
 			// signal that we should stop rendering.
 			CancelRender = true;
 
-			// get rid of our change queue
-			Database.Dispose();
-			Database = null;
-
 			// set state to stopped
 			State = State.Stopped;
 
 			// signal our cycles session to stop rendering.
 			if (Session != null) Session.Cancel("Render stop called.\n");
+
+			// get rid of our change queue
+			Database.Dispose();
+			Database = null;
 
 			// let's get back into the thread.
 			if (RenderThread != null)
