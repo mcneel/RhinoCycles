@@ -146,14 +146,22 @@ namespace RhinoCycles
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
 			cycles_engine.Database.Flush();
-			cycles_engine.State = State.Uploading;
+			cycles_engine.State = State.Waiting;
 			while (cycles_engine.State != State.Stopped)
 			{
 				if (cycles_engine.State == State.Waiting)
 				{
+					// we've managed to render requested amount of samples, so nothing much to do
+					// except waiting for new changes to our scene. Instead of doing a busy loop
+					// lets sleep a bit, then check for changes.
 					Thread.Sleep(5);
-					if(cycles_engine.Flush && cycles_engine.Database!=null) cycles_engine.Database.Flush();
-					if(cycles_engine.Database!=null && cycles_engine.Database.HasChanges()) cycles_engine.State = State.Uploading;
+					if (cycles_engine.Database != null)
+					{
+						// changequeue told us it has something for us!
+						if (cycles_engine.Flush) cycles_engine.Database.Flush();
+						// and we've changes, lets get ready to upload.
+						if (cycles_engine.Database.HasChanges()) cycles_engine.State = State.Uploading;
+					}
 				}
 
 				cycles_engine.RenderedSamples = 0;
@@ -162,19 +170,26 @@ namespace RhinoCycles
 				if (cycles_engine.State == State.Uploading)
 				{
 					cycles_engine.UploadData();
-					cycles_engine.State = State.Rendering;
 					// uploading done, rendering again
+					cycles_engine.State = State.Rendering;
 				}
+
 
 				if (cycles_engine.State != State.Rendering) continue;
 
+				// get sample count since this could change
+				samples = cycles_engine.Settings.Samples;
+
+				// just before entering renderer again make sure we're
+				// ready and possible viewport size changes have been
+				// actually completed.
 				while (!cycles_engine.IsRenderSizeSet)
 				{
-					Thread.Sleep(10);
+					Thread.Sleep(5);
 				}
 
+				// now we know our correct render resolution
 				size = cycles_engine.RenderDimension;
-				//cycles_engine.RenderWindow.SetSize(size);
 
 				// lets first reset session
 				cycles_engine.Session.Reset((uint)size.Width, (uint)size.Height, (uint)samples);
@@ -188,9 +203,10 @@ namespace RhinoCycles
 
 				if (cycles_engine.State != State.Uploading)
 				{
+					cycles_engine.UpdateStatusText(new StatusTextEventArgs("Idle", 1.0f, samples));
 					cycles_engine.State = State.Waiting;
 				}
-			}
+			} // while !State.Stopped
 
 			#endregion
 
