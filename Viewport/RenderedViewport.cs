@@ -178,7 +178,7 @@ namespace RhinoCycles
 			//ssd.WriteLine("IsRenderframeAvailable {0}: {1}", m_serial, m_available);
 			SetGamma(m_cycles.Database.Gamma);
 			//if(m_started) m_cycles.Session.Draw();
-			return m_available;
+			return m_available && (m_cycles.State==State.Rendering || m_cycles.State==State.Waiting);
 		}
 
 		public override void UpdateFramebuffer()
