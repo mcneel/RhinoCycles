@@ -203,7 +203,7 @@ namespace RhinoCycles
 
 				if (cycles_engine.State != State.Uploading)
 				{
-					cycles_engine.UpdateStatusText(new StatusTextEventArgs("Idle", 1.0f, samples));
+					cycles_engine.UpdateStatusText(new StatusTextEventArgs("Idle", 1.0f, samples-1));
 					cycles_engine.State = State.Waiting;
 				}
 			} // while !State.Stopped
