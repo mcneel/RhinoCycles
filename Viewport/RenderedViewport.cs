@@ -148,7 +148,6 @@ namespace RhinoCycles
 		public override bool RestartRender(bool tiled, int width, int height)
 		{
 			ssd.WriteLine("RestartRender {0}", m_serial);
-			m_cycles.SetRenderSize(width, height);
 			SetGamma(m_cycles.Database.Gamma);
 			m_starttime = GeCurrentTimeStamp();
 
