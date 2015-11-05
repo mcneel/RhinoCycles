@@ -45,7 +45,7 @@ namespace RhinoCycles
 		private int m_samples;
 		private int m_maxsamples;
 		private float m_progress;
-		private string m_status;
+		private string m_status = "";
 
 		public RenderedViewport()
 		{
