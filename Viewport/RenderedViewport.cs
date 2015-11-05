@@ -102,10 +102,6 @@ namespace RhinoCycles
 			m_cycles.RenderThread.Start(m_cycles);
 			m_cycles.SetRenderSize(renderSize.Width, renderSize.Height);
 
-			DateTime now = DateTime.Now;
-
-			TimeSpan span = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0,DateTimeKind.Utc));
-
 			m_starttime = GeCurrentTimeStamp();
 
 			return true;
