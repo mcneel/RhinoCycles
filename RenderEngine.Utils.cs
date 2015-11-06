@@ -141,6 +141,7 @@ namespace RhinoCycles
 			{
 				Transform = texture.Transform
 			};
+			shader.AddNode(tfm);
 
 			image_node.Projection = TextureNode.TextureProjection.Flat;
 
@@ -148,26 +149,22 @@ namespace RhinoCycles
 			{
 				texture_coordinates.UseTransform = true;
 				texture_coordinates.outs.WcsBox.Connect(tfm.ins.Vector);
-				shader.AddNode(tfm);
 				tfm.outs.Vector.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.Wcs)
 			{
 				texture_coordinates.UseTransform = true;
 				texture_coordinates.outs.Object.Connect(tfm.ins.Vector);
-				shader.AddNode(tfm);
 				tfm.outs.Vector.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.Screen)
 			{
 				texture_coordinates.outs.Window.Connect(tfm.ins.Vector);
-				shader.AddNode(tfm);
 				tfm.outs.Vector.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.View)
 			{
 				texture_coordinates.outs.Camera.Connect(tfm.ins.Vector);
-				shader.AddNode(tfm);
 				tfm.outs.Vector.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.EnvironmentMap)
@@ -206,7 +203,6 @@ namespace RhinoCycles
 			}
 			else
 			{
-				shader.AddNode(tfm);
 				texture_coordinates.outs.UV.Connect(tfm.ins.Vector);
 				tfm.outs.Vector.Connect(image_node.ins.Vector);
 			}
