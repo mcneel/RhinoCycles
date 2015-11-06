@@ -159,7 +159,25 @@ namespace RhinoCycles
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.Screen)
 			{
-				texture_coordinates.outs.Window.Connect(tfm.ins.Vector);
+				SeparateXyzNode sepvec = new SeparateXyzNode();
+				CombineXyzNode combvec = new CombineXyzNode();
+				MathNode inverty = new MathNode {Operation = MathNode.Operations.Subtract};
+				inverty.ins.Value1.Value = 1.0f;
+				shader.AddNode(sepvec);
+				shader.AddNode(combvec);
+				shader.AddNode(inverty);
+
+				texture_coordinates.outs.Window.Connect(sepvec.ins.Vector);
+
+				sepvec.outs.Y.Connect(inverty.ins.Value2);
+
+				sepvec.outs.X.Connect(combvec.ins.X);
+				inverty.outs.Value.Connect(combvec.ins.Y);
+				sepvec.outs.Z.Connect(combvec.ins.Z);
+
+				combvec.outs.Vector.Connect(tfm.ins.Vector);
+
+				tfm.Transform = tfm.Transform;
 				tfm.outs.Vector.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.View)
