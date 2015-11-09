@@ -190,7 +190,7 @@ namespace RhinoCycles
 						TransmissionSamples = 3;
 						break;
 					case AntialiasLevel.High:
-						Samples = ushort.MaxValue;
+						Samples = 2000;
 						DiffuseSamples = 4;
 						GlossySamples = 4;
 						TransmissionSamples = 4;
