@@ -180,10 +180,15 @@ namespace RhinoCycles
 			return m_available && (m_cycles.State==State.Rendering || m_cycles.State==State.Waiting);
 		}
 
-		public override void UpdateFramebuffer()
+
+		public override void RenderEngineDraw()
 		{
-			//ssd.WriteLine("UpdateFramebuffer {0}", m_serial);
+			if (m_cycles != null && m_cycles.Session != null)
+			{
+				m_cycles.Session.Draw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
+			}
 		}
+
 
 		public override string HudProductName()
 		{

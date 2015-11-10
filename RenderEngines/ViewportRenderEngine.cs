@@ -127,7 +127,8 @@ namespace RhinoCycles
 				TileSize = render_device.IsCuda ? new Size(256, 256) : new Size(32, 32),
 				Threads = (uint)(render_device.IsCuda ? 0 : cycles_engine.Settings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
-				Background = true,
+				StartResolution = 128,
+				Background = false,
 				ProgressiveRefine = true, //rw != null,
 				Progressive = true, //rw != null,
 			};
