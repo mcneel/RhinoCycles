@@ -167,7 +167,6 @@ namespace RhinoCycles
 		{
 			m_available = false;
 			m_started = false;
-			//gl.GL.DeleteBuffers(1, ref coltex);
 			ssd.WriteLine("!!! === ShutdownRender {0} === !!!", m_serial);
 			if (m_cycles != null)
 			{
