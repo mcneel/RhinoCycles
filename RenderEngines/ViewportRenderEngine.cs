@@ -148,73 +148,37 @@ namespace RhinoCycles
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
-			cycles_engine.Database.Flush();
-			cycles_engine.State = State.Waiting;
-			while (cycles_engine.State != State.Stopped)
-			{
-				if (cycles_engine.State == State.Waiting)
-				{
-					// we've managed to render requested amount of samples, so nothing much to do
-					// except waiting for new changes to our scene. Instead of doing a busy loop
-					// lets sleep a bit, then check for changes.
-					Thread.Sleep(5);
-					if (cycles_engine.Database != null)
-					{
-						// changequeue told us it has something for us!
-						if (cycles_engine.Flush) cycles_engine.Database.Flush();
-						// and we've changes, lets get ready to upload.
-						if (cycles_engine.Database.HasChanges()) cycles_engine.State = State.Uploading;
-					}
-				}
-
-				cycles_engine.RenderedSamples = 0;
-				cycles_engine.TimeString = "";
-				// engine is ready to upload, do so
-				if (cycles_engine.State == State.Uploading)
-				{
-					cycles_engine.UploadData();
-					// uploading done, rendering again
-					cycles_engine.State = State.Rendering;
-				}
-
-
-				if (cycles_engine.State != State.Rendering) continue;
-
-				// get sample count since this could change
-				samples = cycles_engine.Settings.Samples;
-
-				// just before entering renderer again make sure we're
-				// ready and possible viewport size changes have been
-				// actually completed.
-				while (!cycles_engine.IsRenderSizeSet)
-				{
-					Thread.Sleep(5);
-				}
-
-				// now we know our correct render resolution
-				size = cycles_engine.RenderDimension;
-
-				// lets first reset session
-				cycles_engine.Session.Reset((uint)size.Width, (uint)size.Height, (uint)samples);
-				// then reset scene
-				cycles_engine.Session.Scene.Reset();
-				// and actually start
-				// we're rendering again
-				cycles_engine.Session.Start();
-				// ... aaaaand we wait
-				cycles_engine.Session.Wait();
-
-				if (cycles_engine.State != State.Uploading)
-				{
-					cycles_engine.UpdateStatusText(new StatusTextEventArgs("Idle", 1.0f, samples-1));
-					cycles_engine.State = State.Waiting;
-				}
-			} // while !State.Stopped
+			cycles_engine.CheckFlushQueue();
+			cycles_engine.Synchronize();
+			cycles_engine.Session.Start();
 
 			#endregion
 
-			// we're done now, so lets clean up our session.
-			cycles_engine.Session.Destroy();
+		}
+
+		public void Synchronize()
+		{
+
+			if (State == State.Uploading)
+			{
+				Session.SetPause(true);
+				UploadData();
+				/*while (!IsRenderSizeSet)
+				{
+					Thread.Sleep(5);
+				}*/
+				State = State.Rendering;
+				var size = RenderDimension;
+
+				// lets first reset session
+				Session.Reset((uint)size.Width, (uint)size.Height, (uint)Settings.Samples);
+				// then reset scene
+				Session.Scene.Reset();
+				// unpause
+				Session.SetPause(false);
+				// and actually start
+				// we're rendering again
+			}
 		}
 	}
 

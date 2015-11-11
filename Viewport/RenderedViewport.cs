@@ -122,12 +122,21 @@ namespace RhinoCycles
 		{
 			if (m_started)
 			{
-				SignalRedraw();
-				if (m_need_rendersize_set)
+				if (m_cycles.Flush)
 				{
-					var s = m_cycles.RenderDimension;
-					m_cycles.SetRenderSize(s.Width, s.Height);
-					m_need_rendersize_set = false;
+					m_cycles.CheckFlushQueue();
+					m_cycles.Synchronize();
+					m_starttime = GeCurrentTimeStamp();
+				}
+				else
+				{
+					SignalRedraw();
+					if (m_need_rendersize_set)
+					{
+						var s = m_cycles.RenderDimension;
+						m_cycles.SetRenderSize(s.Width, s.Height);
+						m_need_rendersize_set = false;
+					}
 				}
 			}
 		}
@@ -164,6 +173,8 @@ namespace RhinoCycles
 			{
 				m_cycles.StopRendering();
 			}
+			// we're done now, so lets clean up our session.
+			m_cycles.Session.Destroy();
 		}
 
 		public override bool IsRendererStarted()
