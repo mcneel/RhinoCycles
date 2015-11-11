@@ -303,7 +303,7 @@ namespace RhinoCycles
 				StatusTextEvent(this, new StatusTextEventArgs(status, progress, RenderedSamples));
 			}
 
-			CheckFlushQueue();
+			if(!m_interactive) CheckFlushQueue();
 		}
 
 		/// <summary>
