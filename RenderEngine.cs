@@ -147,7 +147,7 @@ namespace RhinoCycles
 		/// has notified us of any changes Flush will be true. If we're rendering
 		/// then move to State.Halted and cancel our current render progress.
 		/// </summary>
-		private void CheckFlushQueue()
+		public void CheckFlushQueue()
 		{
 			// not rendering, nor flush needed, bail
 			if (State != State.Rendering || Database == null || !Flush) return;
