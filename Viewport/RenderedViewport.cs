@@ -196,7 +196,7 @@ namespace RhinoCycles
 		{
 			if (m_cycles != null && m_cycles.Session != null)
 			{
-				m_cycles.Session.Draw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
+				m_cycles.Session.RhinoDraw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
 			}
 		}
 
