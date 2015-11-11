@@ -140,6 +140,8 @@ namespace RhinoCycles
 			cycles_engine.Session = new Session(client, session_params, scene);
 			#endregion
 
+			cycles_engine.m_write_render_tile_callback = null;
+			cycles_engine.m_update_render_tile_callback = null;
 			// register callbacks before starting any rendering
 			cycles_engine.SetCallbacks();
 
