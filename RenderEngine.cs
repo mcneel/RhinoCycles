@@ -168,7 +168,7 @@ namespace RhinoCycles
 				if (HasSceneChanges())
 				{
 					State = State.Uploading;
-					if (Session != null) Session.Cancel("Scene changes detected.\n");
+					if (!m_interactive && Session != null) Session.Cancel("Scene changes detected.\n");
 				}
 			}
 		}
