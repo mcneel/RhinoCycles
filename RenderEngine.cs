@@ -188,7 +188,13 @@ namespace RhinoCycles
 
 #region CONSTRUCTORS
 
-		public RenderEngine() { }
+		public RenderEngine() : this(false) { }
+
+		private readonly bool m_interactive;
+		public RenderEngine(bool interactive)
+		{
+			m_interactive = interactive;
+		}
 
 #endregion
 

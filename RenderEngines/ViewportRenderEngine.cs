@@ -29,7 +29,7 @@ namespace RhinoCycles
 
 	public class ViewportRenderEngine : RenderEngine
 	{
-		public ViewportRenderEngine(RhinoDoc doc, Guid pluginId, RhinoView view)
+		public ViewportRenderEngine(RhinoDoc doc, Guid pluginId, RhinoView view) : base(true)
 		{
 			m_plugin_id = pluginId;
 			m_doc_serialnumber = doc.RuntimeSerialNumber;

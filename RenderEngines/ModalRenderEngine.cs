@@ -31,7 +31,7 @@ namespace RhinoCycles
 		/// </summary>
 		/// <param name="doc"></param>
 		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
-		public ModalRenderEngine(RhinoDoc doc, Guid pluginId) //: this(doc, pluginId, doc.Views.ActiveView)
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId) : base(false)
 		{
 			m_plugin_id = pluginId;
 			m_doc_serialnumber = doc.RuntimeSerialNumber;
