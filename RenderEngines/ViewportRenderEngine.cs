@@ -163,10 +163,6 @@ namespace RhinoCycles
 			{
 				Session.SetPause(true);
 				UploadData();
-				/*while (!IsRenderSizeSet)
-				{
-					Thread.Sleep(5);
-				}*/
 				State = State.Rendering;
 				var size = RenderDimension;
 
@@ -176,8 +172,6 @@ namespace RhinoCycles
 				Session.Scene.Reset();
 				// unpause
 				Session.SetPause(false);
-				// and actually start
-				// we're rendering again
 			}
 		}
 	}
