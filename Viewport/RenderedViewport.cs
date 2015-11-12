@@ -94,15 +94,15 @@ namespace RhinoCycles
 			m_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
 			m_cycles.UnsetRenderSize();
+			m_cycles.SetRenderSize(renderSize.Width, renderSize.Height);
+			m_starttime = GeCurrentTimeStamp();
 
 			m_cycles.RenderThread = new Thread(ViewportRenderEngine.Renderer)
 			{
 				Name = "A cool Cycles viewport rendering thread"
 			};
 			m_cycles.RenderThread.Start(m_cycles);
-			m_cycles.SetRenderSize(renderSize.Width, renderSize.Height);
 
-			m_starttime = GeCurrentTimeStamp();
 
 			return true;
 		}
@@ -130,13 +130,13 @@ namespace RhinoCycles
 				}
 				else
 				{
-					SignalRedraw();
 					if (m_need_rendersize_set)
 					{
 						var s = m_cycles.RenderDimension;
 						m_cycles.SetRenderSize(s.Width, s.Height);
 						m_need_rendersize_set = false;
 					}
+					SignalRedraw();
 				}
 			}
 		}
@@ -187,13 +187,13 @@ namespace RhinoCycles
 			//ssd.WriteLine("IsRenderframeAvailable {0}: {1}", m_serial, m_available);
 			SetGamma(m_cycles.Database.Gamma);
 			//if(m_started) m_cycles.Session.Draw();
-			return m_available && (m_cycles.State==State.Rendering || m_cycles.State==State.Waiting);
+			return m_available && m_cycles.State==State.Rendering;
 		}
 
 
 		public override bool RenderEngineDraw()
 		{
-			if (m_cycles != null && m_cycles.Session != null)
+			if (m_cycles != null && m_cycles.Session != null && m_cycles.State == State.Rendering)
 			{
 				m_cycles.Session.RhinoDraw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
 			}
