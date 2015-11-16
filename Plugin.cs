@@ -20,6 +20,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using ccl;
 using Rhino;
 using Rhino.Commands;
@@ -120,8 +121,16 @@ namespace RhinoCycles
 			CSycles.path_init(KernelPath, DataUserPath);
 
 			Initialised = false;
+			AsyncInitialise();
 
 			return LoadReturnCode.Success;
+		}
+
+		private static object m_initialise_lock = new System.Object();
+		private void AsyncInitialise()
+		{
+			var t = new Thread(InitialiseCSycles);
+			t.Start();
 		}
 
 		/// <summary>
@@ -129,10 +138,13 @@ namespace RhinoCycles
 		/// </summary>
 		public static void InitialiseCSycles()
 		{
-			if (!Initialised)
+			lock (m_initialise_lock)
 			{
-				CSycles.initialise();
-				Initialised = true;
+				if (!Initialised)
+				{
+					CSycles.initialise();
+					Initialised = true;
+				}
 			}
 		}
 
