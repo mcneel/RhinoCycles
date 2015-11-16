@@ -42,8 +42,8 @@ namespace RhinoCycles
 
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = UpdateRenderTileCallback;
-			m_write_render_tile_callback = WriteRenderTileCallback;
+			m_update_render_tile_callback = null;
+			m_write_render_tile_callback = null;
 			m_test_cancel_callback = null;
 
 			CSycles.log_to_stdout(false);
@@ -138,8 +138,6 @@ namespace RhinoCycles
 			cycles_engine.Session = new Session(client, session_params, scene);
 			#endregion
 
-			cycles_engine.m_write_render_tile_callback = null;
-			cycles_engine.m_update_render_tile_callback = null;
 			// register callbacks before starting any rendering
 			cycles_engine.SetCallbacks();
 
