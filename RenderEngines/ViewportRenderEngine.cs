@@ -16,11 +16,9 @@ limitations under the License.
 
 using System;
 using System.Drawing;
-using System.Threading;
 using ccl;
 using Rhino;
 using Rhino.Display;
-using Rhino.Render;
 using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCycles
