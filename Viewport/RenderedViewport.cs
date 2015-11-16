@@ -62,15 +62,16 @@ namespace RhinoCycles
 		public override bool StartRender(uint w, uint h, RhinoDoc doc, RhinoView rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
 			ssd.WriteLine("StartRender {0}", m_serial);
-			m_started = true;
+			m_started = false; // the renderer hasn't started yet. It'll tell us when it has.
 			m_available = true;
 			m_view = rhinoView;
 
 			AsyncRenderContext a_rc = new ViewportRenderEngine(doc, Plugin.IdFromName("RhinoCycles"), rhinoView);
 			m_cycles = (ViewportRenderEngine)a_rc;
 
-			m_cycles.RenderSizeUnset += m_cycles_RenderSizeUnset;
-			m_cycles.StatusTextEvent += m_cycles_StatusTextEvent;
+			m_cycles.RenderSizeUnset += m_cycles_RenderSizeUnset; // for viewport changes need to listen to sizes.
+			m_cycles.StatusTextEvent += m_cycles_StatusTextEvent; // render engine tells us status texts for the hud
+			m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
 
 			m_cycles.Settings = Plugin.EngineSettings;
 			m_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
@@ -100,6 +101,11 @@ namespace RhinoCycles
 
 
 			return true;
+		}
+
+		void m_cycles_RenderStarted(object sender, EventArgs e)
+		{
+			m_started = true;
 		}
 
 		void m_cycles_RenderSizeUnset(object sender, EventArgs e)

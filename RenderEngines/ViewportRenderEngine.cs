@@ -25,6 +25,13 @@ namespace RhinoCycles
 {
 	public delegate void RenderSizeUnsetHandler(object sender, EventArgs e);
 
+	/// <summary>
+	/// Delegate for signaling the renderer has started.
+	/// </summary>
+	/// <param name="sender"></param>
+	/// <param name="e"></param>
+	public delegate void RenderStartedHandler(object sender, EventArgs e);
+
 	public class ViewportRenderEngine : RenderEngine
 	{
 		public ViewportRenderEngine(RhinoDoc doc, Guid pluginId, RhinoView view) : base(true)
@@ -87,6 +94,12 @@ namespace RhinoCycles
 				RenderSizeUnset(this, new EventArgs());
 			}
 		}
+
+		/// <summary>
+		/// Event gets fired when the renderer has started.
+		/// </summary>
+		public event RenderStartedHandler RenderStarted;
+
 		/// <summary>
 		/// Entry point for viewport interactive rendering
 		/// </summary>
@@ -148,6 +161,12 @@ namespace RhinoCycles
 			cycles_engine.Session.Start();
 
 			#endregion
+
+			// We've got Cycles rendering now, notify anyone who cares
+			if (cycles_engine.RenderStarted != null)
+			{
+				cycles_engine.RenderStarted(cycles_engine, EventArgs.Empty);
+			}
 
 		}
 
