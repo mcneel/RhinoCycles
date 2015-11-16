@@ -100,7 +100,6 @@ namespace RhinoCycles
 
 			if (rw == null) return;
 
-			var size = cycles_engine.RenderDimension;
 			var samples = cycles_engine.Settings.Samples;
 
 			cycles_engine.m_measurements.Reset();
