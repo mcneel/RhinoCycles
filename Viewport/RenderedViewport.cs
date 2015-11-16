@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -21,9 +22,6 @@ using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
 using ssd = System.Diagnostics.Debug;
-using Timer = System.Timers.Timer;
-
-//using gl = OpenTK.Graphics.OpenGL;
 
 namespace RhinoCycles
 {
@@ -63,7 +61,6 @@ namespace RhinoCycles
 
 		public override bool StartRender(uint w, uint h, RhinoDoc doc, RhinoView rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
-			//gl.GL.GenTextures(1, out coltex);
 			ssd.WriteLine("StartRender {0}", m_serial);
 			m_started = true;
 			m_available = true;
@@ -78,8 +75,6 @@ namespace RhinoCycles
 			m_cycles.Settings = Plugin.EngineSettings;
 			m_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
 
-			// for now when using interactive renderer render indefinitely
-			//if(m_cycles.Settings.UseInteractiveRenderer) m_cycles.Settings.Samples = ushort.MaxValue;
 			var renderSize = Rhino.Render.RenderPipeline.RenderSize(doc);
 
 			m_cycles.RenderWindow = renderWindow;
@@ -186,7 +181,6 @@ namespace RhinoCycles
 		{
 			//ssd.WriteLine("IsRenderframeAvailable {0}: {1}", m_serial, m_available);
 			SetGamma(m_cycles.Database.Gamma);
-			//if(m_started) m_cycles.Session.Draw();
 			return m_available && m_cycles.State==State.Rendering;
 		}
 
