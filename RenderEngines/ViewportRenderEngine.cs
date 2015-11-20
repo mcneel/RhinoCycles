@@ -25,13 +25,6 @@ namespace RhinoCycles
 {
 	public delegate void RenderSizeUnsetHandler(object sender, EventArgs e);
 
-	/// <summary>
-	/// Delegate for signaling the renderer has started.
-	/// </summary>
-	/// <param name="sender"></param>
-	/// <param name="e"></param>
-	public delegate void RenderStartedHandler(object sender, EventArgs e);
-
 	public class ViewportRenderEngine : RenderEngine
 	{
 		public ViewportRenderEngine(RhinoDoc doc, Guid pluginId, RhinoView view) : base(true)
@@ -98,7 +91,7 @@ namespace RhinoCycles
 		/// <summary>
 		/// Event gets fired when the renderer has started.
 		/// </summary>
-		public event RenderStartedHandler RenderStarted;
+		public event EventHandler RenderStarted;
 
 		/// <summary>
 		/// Entry point for viewport interactive rendering
