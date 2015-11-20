@@ -190,7 +190,6 @@ namespace RhinoCycles
 
 				}
 
-				m_render_engine.Session.Scene.Film.Exposure = Gamma;
 				m_render_engine.Session.Scene.Film.Update();
 			}
 		}
