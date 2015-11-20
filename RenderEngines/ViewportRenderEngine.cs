@@ -25,15 +25,8 @@ namespace RhinoCycles
 {
 	public class ViewportRenderEngine : RenderEngine
 	{
-		public ViewportRenderEngine(RhinoDoc doc, Guid pluginId, RhinoView view) : base(true)
+		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, RhinoView view) : base(pluginId, docRuntimeSerialNumber, view, true)
 		{
-			m_plugin_id = pluginId;
-			m_doc_serialnumber = doc.RuntimeSerialNumber;
-			m_view = view;
-			if (doc != null)
-			{
-				Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, view);
-			}
 			RenderThread = null;
 			Client = new Client();
 			State = State.Rendering;

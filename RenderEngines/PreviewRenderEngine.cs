@@ -30,10 +30,8 @@ namespace RhinoCycles
 		/// </summary>
 		/// <param name="createPreviewEventArgs"></param>
 		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
-		public PreviewRenderEngine(CreatePreviewEventArgs createPreviewEventArgs, Guid pluginId) : base (false)
+		public PreviewRenderEngine(CreatePreviewEventArgs createPreviewEventArgs, Guid pluginId) : base (pluginId, createPreviewEventArgs, false)
 		{
-			m_preview_event_args = createPreviewEventArgs;
-			Database = new ChangeDatabase(pluginId, this, createPreviewEventArgs);
 			RenderThread = null;
 			Client = new Client();
 			State = State.Rendering;

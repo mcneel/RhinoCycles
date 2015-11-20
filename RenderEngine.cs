@@ -173,8 +173,9 @@ namespace RhinoCycles
 			}
 		}
 
-		protected uint m_doc_serialnumber;
-		protected RhinoView m_view;
+		protected readonly uint m_doc_serialnumber;
+		protected readonly RhinoView m_view;
+		private readonly bool m_interactive;
 
 		public RhinoDoc Doc
 		{
@@ -187,13 +188,19 @@ namespace RhinoCycles
 		}
 
 #region CONSTRUCTORS
-
-		public RenderEngine() : this(false) { }
-
-		private readonly bool m_interactive;
-		public RenderEngine(bool interactive)
+		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, RhinoView view, bool interactive)
 		{
+			m_plugin_id = pluginId;
+			m_doc_serialnumber = docRuntimeSerialnumber;
+			m_view = view;
 			m_interactive = interactive;
+			Database = new ChangeDatabase(m_plugin_id, this, m_doc_serialnumber, m_view);
+		}
+
+		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive)
+		{
+			m_preview_event_args = previewEventArgs;
+			Database = new ChangeDatabase(pluginId, this, m_preview_event_args);
 		}
 
 #endregion
