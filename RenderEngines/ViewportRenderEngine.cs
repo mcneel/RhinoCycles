@@ -155,10 +155,11 @@ namespace RhinoCycles
 
 			#endregion
 
+			var handler = cycles_engine.RenderStarted;
 			// We've got Cycles rendering now, notify anyone who cares
-			if (cycles_engine.RenderStarted != null)
+			if (handler != null)
 			{
-				cycles_engine.RenderStarted(cycles_engine, EventArgs.Empty);
+				handler(cycles_engine, EventArgs.Empty);
 			}
 
 		}
