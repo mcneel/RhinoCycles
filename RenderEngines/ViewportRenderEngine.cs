@@ -23,8 +23,6 @@ using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCycles
 {
-	public delegate void RenderSizeUnsetHandler(object sender, EventArgs e);
-
 	public class ViewportRenderEngine : RenderEngine
 	{
 		public ViewportRenderEngine(RhinoDoc doc, Guid pluginId, RhinoView view) : base(true)
@@ -76,8 +74,7 @@ namespace RhinoCycles
 			}
 		}
 
-		public event RenderSizeUnsetHandler RenderSizeUnset;
-
+		public event EventHandler RenderSizeUnset;
 
 		public void UnsetRenderSize()
 		{
