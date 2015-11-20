@@ -79,9 +79,10 @@ namespace RhinoCycles
 		public void UnsetRenderSize()
 		{
 			m_size_set = false;
-			if (RenderSizeUnset != null)
+			var handler = RenderSizeUnset;
+			if (handler != null)
 			{
-				RenderSizeUnset(this, new EventArgs());
+				handler(this, new EventArgs());
 			}
 		}
 
