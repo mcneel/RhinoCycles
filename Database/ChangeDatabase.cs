@@ -1006,7 +1006,8 @@ namespace RhinoCycles.Database
 			foreach (var l in m_light_db.LightsToUpdate)
 			{
 				var existing_l = m_light_db.ExistingLight(l.Id);
-				m_render_engine.ReCreateSimpleEmissionShader(existing_l.Shader, l);
+				TriggerLightShaderChanged(l, existing_l.Shader);
+
 				existing_l.Type = l.Type;
 				existing_l.Size = l.Size;
 				existing_l.Location = l.Co;
