@@ -160,7 +160,8 @@ namespace RhinoCycles.Database
 
 		public event EventHandler<LinearWorkflowChangedEventArgs> LinearWorkflowChanged;
 		public event EventHandler<MaterialShaderUpdatedEventArgs> MaterialShaderChanged;
-		public event EventHandler<LightShaderUpdatedEventArgs> LightShaderChanged; 
+		public event EventHandler<LightShaderUpdatedEventArgs> LightShaderChanged;
+		public event EventHandler FilmUpdateTagged;
 
 		public void UploadGammaChanges()
 		{
@@ -192,7 +193,16 @@ namespace RhinoCycles.Database
 
 				}
 
-				m_render_engine.Session.Scene.Film.Update();
+				TriggerFilmUpdateTagged();
+			}
+		}
+
+		internal void TriggerFilmUpdateTagged()
+		{
+			var handler = FilmUpdateTagged;
+			if (handler != null)
+			{
+				handler(this, EventArgs.Empty);
 			}
 		}
 
