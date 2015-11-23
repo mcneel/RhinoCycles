@@ -22,6 +22,7 @@ using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
+using RhinoCycles.Database;
 using sdd = System.Diagnostics.Debug;
 using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;

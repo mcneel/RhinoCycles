@@ -21,6 +21,7 @@ using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
+using RhinoCycles.Database;
 using ssd = System.Diagnostics.Debug;
 
 namespace RhinoCycles

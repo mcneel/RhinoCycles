@@ -36,7 +36,7 @@ using CclMesh = ccl.Mesh;
 using CclObject = ccl.Object;
 using Light = Rhino.Geometry.Light;
 
-namespace RhinoCycles
+namespace RhinoCycles.Database
 {
 	public class LinearWorkflowUploadedEventArgs : EventArgs
 	{
