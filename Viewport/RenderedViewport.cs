@@ -82,8 +82,6 @@ namespace RhinoCycles
 			m_cycles.RenderDimension = renderSize;
 
 			m_cycles.Settings.Verbose = true;
-			SetGamma(m_cycles.Database.Gamma);
-			SetApplyGammaCorrection(true);
 
 			m_maxsamples = m_cycles.Settings.Samples;
 
