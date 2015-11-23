@@ -72,6 +72,7 @@ namespace RhinoCycles
 			m_cycles.RenderSizeUnset += m_cycles_RenderSizeUnset; // for viewport changes need to listen to sizes.
 			m_cycles.StatusTextEvent += m_cycles_StatusTextEvent; // render engine tells us status texts for the hud
 			m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
+			m_cycles.Database.LinearWorkflowUploaded += DatabaseLinearWorkflowUploaded;
 
 			m_cycles.Settings = Plugin.EngineSettings;
 			m_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
@@ -101,6 +102,12 @@ namespace RhinoCycles
 
 
 			return true;
+		}
+
+		void DatabaseLinearWorkflowUploaded(object sender, LinearWorkflowUploadedEventArgs e)
+		{
+			SetGamma(e.Gamma);
+			SetApplyGammaCorrection(e.Lwf.Active);
 		}
 
 		void m_cycles_RenderStarted(object sender, EventArgs e)

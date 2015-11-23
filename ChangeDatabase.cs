@@ -38,11 +38,14 @@ using Light = Rhino.Geometry.Light;
 
 namespace RhinoCycles
 {
-	public class GammaUploadedEventArgs : EventArgs
+	public class LinearWorkflowUploadedEventArgs : EventArgs
 	{
 		public float Gamma { get; private set; }
-		public GammaUploadedEventArgs(float gamma)
+		public LinearWorkflow Lwf { get; private set; }
+		
+		public LinearWorkflowUploadedEventArgs(LinearWorkflow lwf, float gamma)
 		{
+			Lwf = lwf;
 			Gamma = gamma;
 		}
 	}
@@ -166,7 +169,7 @@ namespace RhinoCycles
 			}
 		}
 
-		public event EventHandler<GammaUploadedEventArgs> GammaUploaded; 
+		public event EventHandler<LinearWorkflowUploadedEventArgs> LinearWorkflowUploaded; 
 
 		public void UploadGammaChanges()
 		{
@@ -177,10 +180,10 @@ namespace RhinoCycles
 				if (m_env_db.CurrentBackgroundShader != null)
 				{
 					m_env_db.CurrentBackgroundShader.Reset();
-					var handler = GammaUploaded;
+					var handler = LinearWorkflowUploaded;
 					if (handler != null)
 					{
-						handler(this, new GammaUploadedEventArgs(Gamma));
+						handler(this, new LinearWorkflowUploadedEventArgs(new RhinoCycles.LinearWorkflow(LinearWorkflow), Gamma));
 						//m_render_engine.Session.Scene.Background.Shader = m_env_db.CurrentBackgroundShader.GetShader();
 					}
 				}
