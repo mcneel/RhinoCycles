@@ -184,7 +184,6 @@ namespace RhinoCycles
 					if (handler != null)
 					{
 						handler(this, new LinearWorkflowUploadedEventArgs(new RhinoCycles.LinearWorkflow(LinearWorkflow), Gamma));
-						//m_render_engine.Session.Scene.Background.Shader = m_env_db.CurrentBackgroundShader.GetShader();
 					}
 				}
 
