@@ -29,6 +29,13 @@ namespace RhinoCycles
 			GammaReciprocal = lwf.GammaReciprocal;
 		}
 
+		public LinearWorkflow(bool active, float gamma)
+		{
+			Active = active;
+			Gamma = gamma;
+			GammaReciprocal = 1.0f/gamma;
+		}
+
 		public LinearWorkflow(LinearWorkflow old)
 		{
 			Active = old.Active;
