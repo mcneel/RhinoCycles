@@ -55,7 +55,6 @@
       <Link>Properties\version.cs</Link>
     </Compile>
     <Compile Include="BitmapImage.cs" />
-    <Compile Include="ChangeDatabase.cs" />
     <Compile Include="Commands\ShowInfo.cs" />
     <Compile Include="Commands\ShowPaths.cs" />
     <Compile Include="Commands\SelectDevice.cs" />
@@ -75,6 +74,7 @@
     <Compile Include="CyclesTextureImage.cs" />
     <Compile Include="CyclesView.cs" />
     <Compile Include="Database\CameraDatabase.cs" />
+    <Compile Include="Database\ChangeDatabase.cs" />
     <Compile Include="Database\EnvironmentDatabase.cs" />
     <Compile Include="Database\LightDatabase.cs" />
     <Compile Include="Database\ObjectDatabase.cs" />
