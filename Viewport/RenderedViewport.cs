@@ -103,8 +103,9 @@ namespace RhinoCycles
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
 		{
+			ssd.WriteLine("Setting Gamma {0} and ApplyGammaCorrection {1}", e.Gamma, e.Lwf.Active);
 			SetGamma(e.Gamma);
-			SetApplyGammaCorrection(e.Lwf.Active);
+			SetUseLinearWorkflowGamma(e.Lwf.Active);
 		}
 
 		void m_cycles_RenderStarted(object sender, EventArgs e)

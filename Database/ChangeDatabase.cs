@@ -117,14 +117,7 @@ namespace RhinoCycles.Database
 		{
 			if (LinearWorkflowHasChanged)
 			{
-				if (LinearWorkflow.Active)
-				{
-					Gamma = LinearWorkflow.Gamma;
-				}
-				else
-				{
-					Gamma = 1.0f;
-				}
+				Gamma = LinearWorkflow.Gamma;
 				TriggerLinearWorkflowUploaded();
 			}
 		}
@@ -165,9 +158,9 @@ namespace RhinoCycles.Database
 
 		public void UploadGammaChanges()
 		{
-			if (GammaHasChanged)
+			if (GammaHasChanged || LinearWorkflowHasChanged)
 			{
-				BitmapConverter.ApplyGammaToTextures(Gamma);
+				BitmapConverter.ApplyGammaToTextures(GammaLinearWorkflow);
 
 				if (m_env_db.CurrentBackgroundShader != null)
 				{
@@ -405,17 +398,25 @@ namespace RhinoCycles.Database
 		{
 			set
 			{
-				GammaHasChanged = false;
-
-				if (Math.Abs(m_gamma - value) > float.Epsilon)
-				{
-					m_gamma = value;
-					GammaHasChanged = true;
-				}
+				m_gamma = value;
+				GammaHasChanged = true;
 			}
 			get
 			{
 				return m_gamma;
+			}
+		}
+
+		public float GammaLinearWorkflow
+		{
+			get
+			{
+				if (LinearWorkflow != null)
+				{
+					return LinearWorkflow.Active ? Gamma : 1.0f;
+				}
+
+				return 1.0f;
 			}
 		}
 
@@ -430,7 +431,7 @@ namespace RhinoCycles.Database
 			Gamma= (float) dGamma;
 		}
 
-		private LinearWorkflow m_lwf;
+		private LinearWorkflow m_lwf = new LinearWorkflow(false, 1.0f);
 
 		public bool LinearWorkflowHasChanged { get; private set; }
 
@@ -452,14 +453,7 @@ namespace RhinoCycles.Database
 					}
 				}
 
-				if (m_lwf.Active)
-				{
-					Gamma = m_lwf.Gamma;
-				}
-				else
-				{
-					Gamma = 1.0f;
-				}
+				Gamma = m_lwf.Gamma;
 			}
 			get
 			{
@@ -764,7 +758,7 @@ namespace RhinoCycles.Database
 			if (m_shader_db.HasShader(mat.RenderHash)) return;
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = m_shader_converter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, Gamma);
+			var sh = m_shader_converter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, GammaLinearWorkflow);
 			m_shader_db.AddShader(sh);
 		}
 
@@ -1054,7 +1048,7 @@ namespace RhinoCycles.Database
 		{
 			foreach (var light in lightChanges)
 			{
-				var cl = m_shader_converter.ConvertLight(this, light, m_current_view_info, Gamma);
+				var cl = m_shader_converter.ConvertLight(this, light, m_current_view_info, GammaLinearWorkflow);
 
 				//System.Diagnostics.Debug.WriteLine("light {0} == {1} == {2} ({3})", light.Id, cl.Id, lg.Id, light.ChangeType);
 
@@ -1066,7 +1060,7 @@ namespace RhinoCycles.Database
 		{
 			foreach (var light in dynamicLightChanges)
 			{
-				var cl = m_shader_converter.ConvertLight(light, Gamma);
+				var cl = m_shader_converter.ConvertLight(light, GammaLinearWorkflow);
 				//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
 				m_light_db.AddLight(cl);
 			}
@@ -1083,7 +1077,7 @@ namespace RhinoCycles.Database
 		/// <param name="sun"></param>
 		protected override void ApplySunChanges(RGLight sun)
 		{
-			var cl = m_shader_converter.ConvertLight(sun, Gamma);
+			var cl = m_shader_converter.ConvertLight(sun, GammaLinearWorkflow);
 			cl.Id = m_sun_guid;
 			m_light_db.AddLight(cl);
 			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
@@ -1158,7 +1152,7 @@ namespace RhinoCycles.Database
 		{
 			//System.Diagnostics.Debug.WriteLine("{0}", skylight);
 			m_env_db.SetSkylightEnabled(skylight.Enabled);
-			m_env_db.SetGamma(Gamma);
+			m_env_db.SetGamma(GammaLinearWorkflow);
 		}
 
 		protected override void ApplyBackgroundChanges(RenderSettings rs)
@@ -1167,7 +1161,7 @@ namespace RhinoCycles.Database
 			{
 				//System.Diagnostics.Debug.WriteLine("ApplyBackgroundChanges: fillstyle {0} color1 {1} color2 {2}", rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
 				m_env_db.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
-				m_env_db.SetGamma(Gamma);
+				m_env_db.SetGamma(GammaLinearWorkflow);
 				m_render_engine.Settings.SetQuality(rs.AntialiasLevel);
 			}
 		}
@@ -1181,7 +1175,7 @@ namespace RhinoCycles.Database
 			var env_id = EnvironmentIdForUsage(usage);
 			var env = EnvironmentForid(env_id);
 			m_env_db.SetBackground(env, usage);
-			m_env_db.SetGamma(Gamma);
+			m_env_db.SetGamma(GammaLinearWorkflow);
 
 			//System.Diagnostics.Debug.WriteLine("{0}, env {1}", usage, env);
 		}
