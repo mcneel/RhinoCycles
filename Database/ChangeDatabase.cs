@@ -625,9 +625,7 @@ namespace RhinoCycles.Database
 			foreach (var cqm in added)
 			{
 				var meshes = cqm.GetMeshes();
-				var count = meshes.Length;
 				var meshguid = cqm.Id();
-				//System.Diagnostics.Debug.WriteLine("ChangeQueueMesh {0} has {1} sub-meshes", meshguid, count);
 
 				var mesh_index = 0;
 
