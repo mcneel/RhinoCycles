@@ -23,7 +23,6 @@ using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
-using RhinoCycles.Database;
 using sdd = System.Diagnostics.Debug;
 using CqMaterial = Rhino.Render.ChangeQueue.Material;
 using CqMesh = Rhino.Render.ChangeQueue.Mesh;
