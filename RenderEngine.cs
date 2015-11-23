@@ -189,6 +189,13 @@ namespace RhinoCycles
 		}
 
 #region CONSTRUCTORS
+
+		private void RegisterEventHandler()
+		{
+			Database.MaterialShaderChanged += Database_MaterialShaderChanged;
+			Database.LightShaderChanged += Database_LightShaderChanged;
+			Database.FilmUpdateTagged += Database_FilmUpdateTagged;
+		}
 		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, RhinoView view, bool interactive)
 		{
 			m_plugin_id = pluginId;
@@ -196,12 +203,16 @@ namespace RhinoCycles
 			m_view = view;
 			m_interactive = interactive;
 			Database = new ChangeDatabase(m_plugin_id, this, m_doc_serialnumber, m_view);
+
+			RegisterEventHandler();
 		}
 
 		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive)
 		{
 			m_preview_event_args = previewEventArgs;
 			Database = new ChangeDatabase(pluginId, this, m_preview_event_args);
+
+			RegisterEventHandler();
 		}
 
 #endregion
@@ -503,6 +514,11 @@ namespace RhinoCycles
 		{
 			ReCreateSimpleEmissionShader(e.CclShader, e.RcLightShader);
 			e.CclShader.Tag();
+		}
+
+		protected void Database_FilmUpdateTagged(object sender, EventArgs e)
+		{
+			Session.Scene.Film.Update();
 		}
 	}
 
