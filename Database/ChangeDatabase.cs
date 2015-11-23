@@ -188,8 +188,6 @@ namespace RhinoCycles.Database
 					{
 						lgsh.Gamma = Gamma;
 						TriggerLightShaderChanged(lgsh, tup.Item2);
-						m_render_engine.ReCreateSimpleEmissionShader(tup.Item2, lgsh);
-						tup.Item2.Tag();
 					}
 
 				}
