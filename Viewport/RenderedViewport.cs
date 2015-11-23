@@ -38,7 +38,6 @@ namespace RhinoCycles
 		private bool m_need_rendersize_set;
 
 		private ViewportRenderEngine m_cycles;
-		private RhinoView m_view;
 
 		private long m_starttime;
 		private int m_samples;
@@ -65,7 +64,6 @@ namespace RhinoCycles
 			ssd.WriteLine("StartRender {0}", m_serial);
 			m_started = true;
 			m_available = false; // the renderer hasn't started yet. It'll tell us when it has.
-			m_view = rhinoView;
 
 			AsyncRenderContext a_rc = new ViewportRenderEngine(doc.RuntimeSerialNumber, Plugin.IdFromName("RhinoCycles"), rhinoView);
 			m_cycles = (ViewportRenderEngine)a_rc;
