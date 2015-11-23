@@ -29,6 +29,13 @@ namespace RhinoCycles
 			GammaReciprocal = lwf.GammaReciprocal;
 		}
 
+		public LinearWorkflow(LinearWorkflow old)
+		{
+			Active = old.Active;
+			Gamma = old.Gamma;
+			GammaReciprocal = old.GammaReciprocal;
+		}
+
 		public override bool Equals(object obj)
 		{
 			LinearWorkflow lwf = obj as LinearWorkflow;
