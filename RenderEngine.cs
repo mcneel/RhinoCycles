@@ -512,13 +512,17 @@ namespace RhinoCycles
 		// handle light shader updates
 		protected void Database_LightShaderChanged(object sender, LightShaderUpdatedEventArgs e)
 		{
-			ReCreateSimpleEmissionShader(e.CclShader, e.RcLightShader);
+			ReCreateSimpleEmissionShader(e.RcLightShader, e.CclShader);
 			e.CclShader.Tag();
 		}
 
 		protected void Database_FilmUpdateTagged(object sender, EventArgs e)
 		{
 			Session.Scene.Film.Update();
+		}
+
+		protected void Database_LinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
+		{
 		}
 	}
 

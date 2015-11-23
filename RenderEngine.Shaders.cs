@@ -142,7 +142,7 @@ namespace RhinoCycles
 			return rhinolight.GetShader();
 		}
 
-		internal CclShader ReCreateSimpleEmissionShader(CclShader emission_shader, CyclesLight light)
+		internal CclShader ReCreateSimpleEmissionShader(CyclesLight light, CclShader emission_shader)
 		{
 			var rhinolight = RhinoShader.CreateRhinoLightShader(Client, light, emission_shader);
 
