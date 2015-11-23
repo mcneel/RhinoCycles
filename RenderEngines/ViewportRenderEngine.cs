@@ -31,6 +31,8 @@ namespace RhinoCycles
 			Client = new Client();
 			State = State.Rendering;
 
+			Database.MaterialShaderChanged += Database_MaterialShaderChanged;
+
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = null;
@@ -42,19 +44,7 @@ namespace RhinoCycles
 			
 		}
 
-
 		private bool m_size_set;
-
-		private bool IsRenderSizeSet
-		{
-			get
-			{
-				lock (size_setter_lock)
-				{
-					return m_size_set;
-				}
-			}
-		}
 
 		private readonly object size_setter_lock = new object();
 		public void SetRenderSize(int w, int h)

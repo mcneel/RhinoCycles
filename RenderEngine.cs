@@ -490,6 +490,13 @@ namespace RhinoCycles
 
 			#endregion
 		}
+
+		// handle material shader updates
+		protected void Database_MaterialShaderChanged(object sender, MaterialShaderUpdatedEventArgs e)
+		{
+			RecreateMaterialShader(e.RcShader, e.CclShader);
+			e.CclShader.Tag();
+		}
 	}
 
 }

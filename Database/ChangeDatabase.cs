@@ -159,6 +159,7 @@ namespace RhinoCycles.Database
 		}
 
 		public event EventHandler<LinearWorkflowChangedEventArgs> LinearWorkflowChanged;
+		public event EventHandler<MaterialShaderUpdatedEventArgs> MaterialShaderChanged;
 
 		public void UploadGammaChanges()
 		{
@@ -178,8 +179,7 @@ namespace RhinoCycles.Database
 					if (matsh != null)
 					{
 						matsh.Gamma = Gamma;
-						m_render_engine.RecreateMaterialShader(matsh, tup.Item2);
-						tup.Item2.Tag();
+						TriggerMaterialShaderChanged(matsh, tup.Item2);
 					}
 
 					var lgsh = tup.Item1 as CyclesLight;
@@ -193,6 +193,15 @@ namespace RhinoCycles.Database
 				}
 
 				m_render_engine.Session.Scene.Film.Update();
+			}
+		}
+
+		internal void TriggerMaterialShaderChanged(CyclesShader rcShader, Shader cclShader)
+		{
+			var handler = MaterialShaderChanged;
+			if (handler != null)
+			{
+				handler(this, new MaterialShaderUpdatedEventArgs(rcShader, cclShader));
 			}
 		}
 

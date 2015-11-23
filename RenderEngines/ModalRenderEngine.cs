@@ -43,6 +43,8 @@ namespace RhinoCycles
 			m_write_render_tile_callback = WriteRenderTileCallback;
 			m_test_cancel_callback = null;
 
+			Database.MaterialShaderChanged += Database_MaterialShaderChanged;
+
 			CSycles.log_to_stdout(false);
 #endregion
 		}

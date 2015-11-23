@@ -36,6 +36,8 @@ namespace RhinoCycles
 			Client = new Client();
 			State = State.Rendering;
 
+			Database.MaterialShaderChanged += Database_MaterialShaderChanged;
+
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = UpdateRenderTileCallback;
