@@ -18,12 +18,12 @@ using System;
 
 namespace RhinoCycles.Database
 {
-	public class LinearWorkflowUploadedEventArgs: EventArgs
+	public class LinearWorkflowChangedEventArgs: EventArgs
 	{
 		public float Gamma { get; private set; }
 		public LinearWorkflow Lwf { get; private set; }
 		
-		public LinearWorkflowUploadedEventArgs(LinearWorkflow lwf, float gamma)
+		public LinearWorkflowChangedEventArgs(LinearWorkflow lwf, float gamma)
 		{
 			Lwf = lwf;
 			Gamma = gamma;

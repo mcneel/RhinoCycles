@@ -158,7 +158,7 @@ namespace RhinoCycles.Database
 			}
 		}
 
-		public event EventHandler<LinearWorkflowUploadedEventArgs> LinearWorkflowUploaded; 
+		public event EventHandler<LinearWorkflowChangedEventArgs> LinearWorkflowChanged;
 
 		public void UploadGammaChanges()
 		{
@@ -198,10 +198,10 @@ namespace RhinoCycles.Database
 
 		internal void TriggerLinearWorkflowUploaded()
 		{
-			var handler = LinearWorkflowUploaded;
+			var handler = LinearWorkflowChanged;
 			if (handler != null)
 			{
-				handler(this, new LinearWorkflowUploadedEventArgs(new LinearWorkflow(LinearWorkflow), Gamma));
+				handler(this, new LinearWorkflowChangedEventArgs(new LinearWorkflow(LinearWorkflow), Gamma));
 			}
 		}
 

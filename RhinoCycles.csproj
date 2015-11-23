@@ -76,7 +76,7 @@
     <Compile Include="Database\CameraDatabase.cs" />
     <Compile Include="Database\ChangeDatabase.cs" />
     <Compile Include="Database\EnvironmentDatabase.cs" />
-    <Compile Include="Database\LinearWorkflowUploadedEventArgs.cs" />
+    <Compile Include="Database\LinearWorkflowChangedEventArgs.cs" />
     <Compile Include="Database\LightDatabase.cs" />
     <Compile Include="Database\ObjectDatabase.cs" />
     <Compile Include="Database\ObjectShaderDatabase.cs" />
