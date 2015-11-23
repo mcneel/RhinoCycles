@@ -160,6 +160,7 @@ namespace RhinoCycles.Database
 
 		public event EventHandler<LinearWorkflowChangedEventArgs> LinearWorkflowChanged;
 		public event EventHandler<MaterialShaderUpdatedEventArgs> MaterialShaderChanged;
+		public event EventHandler<LightShaderUpdatedEventArgs> LightShaderChanged; 
 
 		public void UploadGammaChanges()
 		{
@@ -186,6 +187,7 @@ namespace RhinoCycles.Database
 					if (lgsh != null)
 					{
 						lgsh.Gamma = Gamma;
+						TriggerLightShaderChanged(lgsh, tup.Item2);
 						m_render_engine.ReCreateSimpleEmissionShader(tup.Item2, lgsh);
 						tup.Item2.Tag();
 					}
@@ -202,6 +204,15 @@ namespace RhinoCycles.Database
 			if (handler != null)
 			{
 				handler(this, new MaterialShaderUpdatedEventArgs(rcShader, cclShader));
+			}
+		}
+
+		internal void TriggerLightShaderChanged(CyclesLight rcLightShader, Shader cclShader)
+		{
+			var handler = LightShaderChanged;
+			if (handler != null)
+			{
+				handler(this, new LightShaderUpdatedEventArgs(rcLightShader, cclShader));
 			}
 		}
 

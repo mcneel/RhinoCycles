@@ -32,6 +32,7 @@ namespace RhinoCycles
 			State = State.Rendering;
 
 			Database.MaterialShaderChanged += Database_MaterialShaderChanged;
+			Database.LightShaderChanged += Database_LightShaderChanged;
 
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;

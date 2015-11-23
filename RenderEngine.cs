@@ -497,6 +497,13 @@ namespace RhinoCycles
 			RecreateMaterialShader(e.RcShader, e.CclShader);
 			e.CclShader.Tag();
 		}
+
+		// handle light shader updates
+		protected void Database_LightShaderChanged(object sender, LightShaderUpdatedEventArgs e)
+		{
+			ReCreateSimpleEmissionShader(e.CclShader, e.RcLightShader);
+			e.CclShader.Tag();
+		}
 	}
 
 }

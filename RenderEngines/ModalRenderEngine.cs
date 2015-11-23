@@ -44,6 +44,7 @@ namespace RhinoCycles
 			m_test_cancel_callback = null;
 
 			Database.MaterialShaderChanged += Database_MaterialShaderChanged;
+			Database.LightShaderChanged += Database_LightShaderChanged;
 
 			CSycles.log_to_stdout(false);
 #endregion
