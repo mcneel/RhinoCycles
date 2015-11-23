@@ -126,6 +126,7 @@ namespace RhinoCycles.Database
 				{
 					Gamma = 1.0f;
 				}
+				TriggerLinearWorkflowUploaded();
 			}
 		}
 
@@ -169,11 +170,7 @@ namespace RhinoCycles.Database
 				if (m_env_db.CurrentBackgroundShader != null)
 				{
 					m_env_db.CurrentBackgroundShader.Reset();
-					var handler = LinearWorkflowUploaded;
-					if (handler != null)
-					{
-						handler(this, new LinearWorkflowUploadedEventArgs(new RhinoCycles.LinearWorkflow(LinearWorkflow), Gamma));
-					}
+					TriggerLinearWorkflowUploaded();
 				}
 
 				foreach (var tup in m_shader_db.AllShaders)
@@ -197,6 +194,15 @@ namespace RhinoCycles.Database
 				}
 
 				m_render_engine.Session.Scene.Film.Update();
+			}
+		}
+
+		internal void TriggerLinearWorkflowUploaded()
+		{
+			var handler = LinearWorkflowUploaded;
+			if (handler != null)
+			{
+				handler(this, new LinearWorkflowUploadedEventArgs(new LinearWorkflow(LinearWorkflow), Gamma));
 			}
 		}
 
