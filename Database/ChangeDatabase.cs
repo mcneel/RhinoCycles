@@ -34,7 +34,7 @@ using CQLinearWorkflow = Rhino.Render.ChangeQueue.LinearWorkflow;
 using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;
 using CclObject = ccl.Object;
-using Light = Rhino.Geometry.Light;
+using RGLight = Rhino.Geometry.Light;
 
 namespace RhinoCycles.Database
 {
@@ -1030,7 +1030,7 @@ namespace RhinoCycles.Database
 			}
 		}
 
-		protected override void ApplyDynamicLightChanges(List<Light> dynamicLightChanges)
+		protected override void ApplyDynamicLightChanges(List<RGLight> dynamicLightChanges)
 		{
 			foreach (var light in dynamicLightChanges)
 			{
@@ -1049,7 +1049,7 @@ namespace RhinoCycles.Database
 		/// Handle sun changes
 		/// </summary>
 		/// <param name="sun"></param>
-		protected override void ApplySunChanges(Light sun)
+		protected override void ApplySunChanges(RGLight sun)
 		{
 			var cl = m_shader_converter.ConvertLight(sun, Gamma);
 			cl.Id = m_sun_guid;
