@@ -38,17 +38,6 @@ using Light = Rhino.Geometry.Light;
 
 namespace RhinoCycles.Database
 {
-	public class LinearWorkflowUploadedEventArgs : EventArgs
-	{
-		public float Gamma { get; private set; }
-		public LinearWorkflow Lwf { get; private set; }
-		
-		public LinearWorkflowUploadedEventArgs(LinearWorkflow lwf, float gamma)
-		{
-			Lwf = lwf;
-			Gamma = gamma;
-		}
-	}
 	public class ChangeDatabase : ChangeQueue
 	{
 		/// <summary>
