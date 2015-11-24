@@ -23,6 +23,8 @@ namespace RhinoCycles
 		/// </summary>
 		protected void UploadData()
 		{
+			Session.Scene.Lock();
+
 			// linear workflow changes
 			Database.UploadLinearWorkflowChanges();
 
@@ -55,6 +57,8 @@ namespace RhinoCycles
 
 			// done, now clear out our change queue stuff so we're ready for the next time around :)
 			Database.ResetChangeQueue();
+
+			Session.Scene.Unlock();
 		}
 	}
 }
