@@ -36,6 +36,7 @@ namespace RhinoCycles
 		private bool m_started;
 		private bool m_available;
 		private bool m_need_rendersize_set;
+		private bool m_last_frame_drawn;
 
 		private ViewportRenderEngine m_cycles;
 
@@ -63,6 +64,7 @@ namespace RhinoCycles
 			ssd.WriteLine("StartRender {0}", m_serial);
 			m_started = true;
 			m_available = false; // the renderer hasn't started yet. It'll tell us when it has.
+			m_last_frame_drawn = false;
 
 			AsyncRenderContext a_rc = new ViewportRenderEngine(doc.RuntimeSerialNumber, Plugin.IdFromName("RhinoCycles"), rhinoView);
 			m_cycles = (ViewportRenderEngine)a_rc;
@@ -95,7 +97,6 @@ namespace RhinoCycles
 				Name = "A cool Cycles viewport rendering thread"
 			};
 			m_cycles.RenderThread.Start(m_cycles);
-
 
 			return true;
 		}
@@ -141,7 +142,12 @@ namespace RhinoCycles
 						m_cycles.SetRenderSize(s.Width, s.Height);
 						m_need_rendersize_set = false;
 					}
-					SignalRedraw();
+
+					if (!m_last_frame_drawn)
+					{
+						SignalRedraw();
+						m_last_frame_drawn = m_status.StartsWith("Done");
+					}
 				}
 			}
 		}
