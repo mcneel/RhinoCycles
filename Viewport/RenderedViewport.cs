@@ -42,7 +42,6 @@ namespace RhinoCycles
 		private long m_starttime;
 		private int m_samples;
 		private int m_maxsamples;
-		private float m_progress;
 		private string m_status = "";
 
 		public RenderedViewport()
@@ -150,7 +149,6 @@ namespace RhinoCycles
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
 		{
 			m_status = e.StatusText;
-			m_progress = e.Progress;
 			m_samples = e.Samples;
 		}
 
