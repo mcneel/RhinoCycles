@@ -42,16 +42,12 @@ namespace RhinoCycles
 			
 		}
 
-		private bool m_size_set;
-
 		private readonly object size_setter_lock = new object();
 		public void SetRenderSize(int w, int h)
 		{
 			lock (size_setter_lock)
 			{
-				m_size_set = false;
 				RenderWindow.SetSize(new Size(w, h));
-				m_size_set = true;
 			}
 		}
 
@@ -59,7 +55,6 @@ namespace RhinoCycles
 
 		public void UnsetRenderSize()
 		{
-			m_size_set = false;
 			var handler = RenderSizeUnset;
 			if (handler != null)
 			{
