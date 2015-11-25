@@ -69,7 +69,7 @@ namespace RhinoCycles
 			m_cycles = (ViewportRenderEngine)a_rc;
 
 			m_cycles.RenderSizeUnset += m_cycles_RenderSizeUnset; // for viewport changes need to listen to sizes.
-			m_cycles.StatusTextEvent += m_cycles_StatusTextEvent; // render engine tells us status texts for the hud
+			m_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
 			m_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 
@@ -147,7 +147,7 @@ namespace RhinoCycles
 			}
 		}
 
-		void m_cycles_StatusTextEvent(object sender, RenderEngine.StatusTextEventArgs e)
+		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
 		{
 			m_status = e.StatusText;
 			m_progress = e.Progress;

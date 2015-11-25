@@ -270,18 +270,18 @@ namespace RhinoCycles
 			public int Samples { get; private set; }
 		}
 
-		public delegate void StatusTextHandler(object sender, StatusTextEventArgs e);
-		public event StatusTextHandler StatusTextEvent;
+		public event EventHandler<StatusTextEventArgs> StatusTextUpdated;
 
 		/// <summary>
 		/// Tell engine to fire StatusTextEvent with given arguments
 		/// </summary>
 		/// <param name="e"></param>
-		public void UpdateStatusText(StatusTextEventArgs e)
+		public void TriggerStatusTextUpdated(StatusTextEventArgs e)
 		{
-			if (StatusTextEvent != null)
+			var handler = StatusTextUpdated;
+			if (handler != null)
 			{
-				StatusTextEvent(this, e);
+				handler(this, e);
 			}
 		}
 
@@ -317,10 +317,7 @@ namespace RhinoCycles
 			if (Settings.Samples == ushort.MaxValue) progress = -1.0f;
 			if (null != RenderWindow) RenderWindow.SetProgress(status, progress);
 
-			if (StatusTextEvent != null)
-			{
-				StatusTextEvent(this, new StatusTextEventArgs(status, progress, RenderedSamples));
-			}
+			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples));
 
 			if(!m_interactive) CheckFlushQueue();
 		}
