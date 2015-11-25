@@ -72,6 +72,7 @@ namespace RhinoCycles
 			m_cycles.RenderSizeUnset += m_cycles_RenderSizeUnset; // for viewport changes need to listen to sizes.
 			m_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
+			m_cycles.Synchronized += m_cycles_Synchronized;
 			m_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 
 			m_cycles.Settings = Plugin.EngineSettings;
@@ -99,6 +100,13 @@ namespace RhinoCycles
 			m_cycles.RenderThread.Start(m_cycles);
 
 			return true;
+		}
+
+		void m_cycles_Synchronized(object sender, EventArgs e)
+		{
+			m_starttime = GeCurrentTimeStamp();
+			m_samples = 0;
+			m_last_frame_drawn = false;
 		}
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
@@ -132,10 +140,16 @@ namespace RhinoCycles
 				{
 					m_cycles.CheckFlushQueue();
 					m_cycles.Synchronize();
-					m_starttime = GeCurrentTimeStamp();
 				}
 				else
 				{
+					// synchronizing data may have bailed out early
+					// if lock acquisition failed, so try again.
+					if (m_cycles.State == State.Uploading)
+					{
+						m_cycles.Synchronize();
+					}
+
 					if (m_need_rendersize_set)
 					{
 						var s = m_cycles.RenderDimension;

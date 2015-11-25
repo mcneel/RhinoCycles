@@ -21,9 +21,9 @@ namespace RhinoCycles
 		/// <summary>
 		/// Main entry point for uploading data to Cycles.
 		/// </summary>
-		protected void UploadData()
+		protected bool UploadData()
 		{
-			Session.Scene.Lock();
+			if (!Session.Scene.TryLock()) return false;
 
 			// linear workflow changes
 			Database.UploadLinearWorkflowChanges();
@@ -59,6 +59,8 @@ namespace RhinoCycles
 			Database.ResetChangeQueue();
 
 			Session.Scene.Unlock();
+
+			return true;
 		}
 	}
 }

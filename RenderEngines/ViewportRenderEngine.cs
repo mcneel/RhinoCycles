@@ -138,20 +138,34 @@ namespace RhinoCycles
 
 		}
 
+		public event EventHandler Synchronized;
+
+		public void TriggerSynchronized()
+		{
+			var handler = Synchronized;
+			if (handler != null)
+			{
+				handler(this, EventArgs.Empty);
+			}
+		}
+
 		public void Synchronize()
 		{
-
 			if (State == State.Uploading)
 			{
 				Session.SetPause(true);
-				UploadData();
-				State = State.Rendering;
-				var size = RenderDimension;
+				if (UploadData())
+				{
+					State = State.Rendering;
+					var size = RenderDimension;
 
-				// lets first reset session
-				Session.Reset((uint)size.Width, (uint)size.Height, (uint)Settings.Samples);
-				// then reset scene
-				Session.Scene.Reset();
+					// lets first reset session
+					Session.Reset((uint) size.Width, (uint) size.Height, (uint) Settings.Samples);
+					// then reset scene
+					Session.Scene.Reset();
+
+					TriggerSynchronized();
+				}
 				// unpause
 				Session.SetPause(false);
 			}
