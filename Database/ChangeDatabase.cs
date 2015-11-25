@@ -439,19 +439,8 @@ namespace RhinoCycles.Database
 		{
 			set
 			{
-				if (m_lwf == null)
-				{
-					m_lwf = value;
-					LinearWorkflowHasChanged = true;
-				}
-				else
-				{
-					LinearWorkflowHasChanged = !m_lwf.Equals(value);
-					if (LinearWorkflowHasChanged)
-					{
-						m_lwf = value;
-					}
-				}
+				m_lwf = value;
+				LinearWorkflowHasChanged = true;
 
 				Gamma = m_lwf.Gamma;
 			}
