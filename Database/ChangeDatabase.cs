@@ -160,12 +160,12 @@ namespace RhinoCycles.Database
 		{
 			if (GammaHasChanged || LinearWorkflowHasChanged)
 			{
+				TriggerLinearWorkflowUploaded();
 				BitmapConverter.ApplyGammaToTextures(GammaLinearWorkflow);
 
 				if (m_env_db.CurrentBackgroundShader != null)
 				{
 					m_env_db.CurrentBackgroundShader.Reset();
-					TriggerLinearWorkflowUploaded();
 				}
 
 				foreach (var tup in m_shader_db.AllShaders)
