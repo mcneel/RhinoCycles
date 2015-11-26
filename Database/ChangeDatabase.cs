@@ -815,6 +815,8 @@ namespace RhinoCycles.Database
 			{
 				if (m_render_engine.CancelRender) return;
 
+				shader.Gamma = GammaLinearWorkflow;
+
 				// create a cycles shader
 				var sh = m_render_engine.CreateMaterialShader(shader);
 				m_shader_db.RecordRhCclShaderRelation(shader.Id, sh);
@@ -952,6 +954,8 @@ namespace RhinoCycles.Database
 			foreach (var l in m_light_db.LightsToAdd)
 			{
 				if (m_render_engine.CancelRender) return;
+
+				l.Gamma = GammaLinearWorkflow;
 
 				var lgsh = m_render_engine.CreateSimpleEmissionShader(l);
 				m_render_engine.Client.Scene.AddShader(lgsh);
