@@ -173,14 +173,14 @@ namespace RhinoCycles.Database
 					var matsh = tup.Item1 as CyclesShader;
 					if (matsh != null)
 					{
-						matsh.Gamma = Gamma;
+						matsh.Gamma = GammaLinearWorkflow;
 						TriggerMaterialShaderChanged(matsh, tup.Item2);
 					}
 
 					var lgsh = tup.Item1 as CyclesLight;
 					if (lgsh != null)
 					{
-						lgsh.Gamma = Gamma;
+						lgsh.Gamma = GammaLinearWorkflow;
 						TriggerLightShaderChanged(lgsh, tup.Item2);
 					}
 
