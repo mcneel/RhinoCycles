@@ -17,7 +17,6 @@ limitations under the License.
 using System;
 using System.Drawing;
 using ccl;
-using Rhino;
 using Rhino.Display;
 using sdd = System.Diagnostics.Debug;
 
