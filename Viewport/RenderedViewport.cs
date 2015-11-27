@@ -126,6 +126,16 @@ namespace RhinoCycles
 			m_need_rendersize_set = true;
 		}
 
+		public void ChangeSamples(int samples)
+		{
+			if (m_maxsamples < samples)
+			{
+				m_last_frame_drawn = false;
+			}
+			m_maxsamples = samples;
+			m_cycles.ChangeSamples(samples);
+		}
+
 		static private long GeCurrentTimeStamp()
 		{
 			TimeSpan span = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0,DateTimeKind.Utc));

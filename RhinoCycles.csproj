@@ -55,6 +55,7 @@
       <Link>Properties\version.cs</Link>
     </Compile>
     <Compile Include="BitmapImage.cs" />
+    <Compile Include="Commands\ChangeSamples.cs" />
     <Compile Include="Commands\ShowInfo.cs" />
     <Compile Include="Commands\ShowPaths.cs" />
     <Compile Include="Commands\SelectDevice.cs" />

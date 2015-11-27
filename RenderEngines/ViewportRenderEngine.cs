@@ -169,6 +169,13 @@ namespace RhinoCycles
 				Session.SetPause(false);
 			}
 		}
+
+		public void ChangeSamples(int samples)
+		{
+			Settings.Samples = samples;
+			Session.SetSamples(samples);
+			Session.SetPause(false);
+		}
 	}
 
 }
