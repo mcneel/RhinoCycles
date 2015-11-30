@@ -65,7 +65,9 @@ namespace RhinoCycles.Materials
 				Fields.TryGetValue("diffuse_color", out color);
 				color = Color4f.ApplyGamma(color, Gamma);
 
-				return string.Format("<diffuse_bsdf color=\"{0} {1} {2}\" name=\"diff\" />" +
+				return string.Format(
+					ccl.Utilities.Instance.NumberFormatInfo,
+					"<diffuse_bsdf color=\"{0} {1} {2}\" name=\"diff\" />" +
 					"<translucent_bsdf color=\"{0} {1} {2}\" name=\"translucent\" />" +
 					"<mix_closure name=\"mix\" fac=\"0.5\" />" +
 					"<connect from=\"diff bsdf\" to=\"mix closure1\" />" +

@@ -120,7 +120,8 @@ namespace RhinoCycles.Materials
 
 				flakesize = 1000.0f - 900.0f*flakesize;
 
-				var nodegraph = string.Format(Utilities.Instance.NumberFormatInfo,
+				var nodegraph = string.Format(
+					Utilities.Instance.NumberFormatInfo,
 					"<voronoi_texture name=\"voronoi\" coloring=\"Cells\" scale=\"{0}\" />" +
 					"<layer_weight name=\"layer1\" blend=\"0.5\" />" +
 					"<layer_weight name=\"layer2\" blend=\"0.5\" />" +

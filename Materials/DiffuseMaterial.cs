@@ -75,6 +75,7 @@ namespace RhinoCycles.Materials
 				color = Color4f.ApplyGamma(color, Gamma);
 
 				return string.Format(
+					ccl.Utilities.Instance.NumberFormatInfo,
 					"<diffuse_bsdf color=\"{0} {1} {2}\" name=\"diff\"/>" +
 					"<connect from=\"diff bsdf\" to=\"output surface\" />" +
 					"",

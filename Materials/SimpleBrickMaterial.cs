@@ -83,7 +83,8 @@ namespace RhinoCycles.Materials
 				float offset;
 				Fields.TryGetValue("offset", out offset);
 
-				var nodegraph = string.Format(ccl.Utilities.Instance.NumberFormatInfo,
+				var nodegraph = string.Format(
+					ccl.Utilities.Instance.NumberFormatInfo,
 					"<texture_coordinate name=\"texcoord\" />"+
 					"<brick_texture name=\"{0}\" " +
 					"color1=\"{1} {2} {3}\" " +

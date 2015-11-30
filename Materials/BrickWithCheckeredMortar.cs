@@ -55,7 +55,8 @@ namespace RhinoCycles.Materials
 			get
 			{
 
-				var nodegraph = string.Format(ccl.Utilities.Instance.NumberFormatInfo,
+				var nodegraph = string.Format(
+					ccl.Utilities.Instance.NumberFormatInfo,
 					"<texture_coordinate name=\"texcoord\" />"+
 					"<brick_texture name=\"brick\" " +
 					"color1=\"0.8 0.8 0.8\" " +

@@ -107,7 +107,8 @@ namespace RhinoCycles.Materials
 
 				color = Color4f.ApplyGamma(color, Gamma);
 
-				return string.Format("" +
+				return string.Format(
+					ccl.Utilities.Instance.NumberFormatInfo,
 					"<transparent_bsdf color=\"{0} {1} {2}\" name=\"transp\" />" +
 					"<glass_bsdf color=\"{0} {1} {2}\" roughness=\"{3}\" ior=\"{4}\" name=\"glass\" />" +
 					"<light_path name=\"lp\" />" +

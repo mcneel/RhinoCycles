@@ -106,6 +106,7 @@ namespace RhinoCycles.Materials
 				polish_amount = 1.0f - polish_amount;
 
 				return string.Format(
+					ccl.Utilities.Instance.NumberFormatInfo,
 					"<glossy_bsdf name=\"base_glossy\" color=\"{0} {1} {2}\" roughness=\"{4}\" />" +
 					"<diffuse_bsdf name=\"base_diffuse\" color=\"{0} {1} {2}\" />" +
 					"<glossy_bsdf name=\"coat_glossy\" color=\"1 1 1\" roughness=\"{4}\"/>" +
