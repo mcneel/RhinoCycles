@@ -23,7 +23,11 @@ namespace RhinoCycles
 		/// </summary>
 		protected bool UploadData()
 		{
-			if (!Session.Scene.TryLock()) return false;
+			// adding the locking guard makes viewport updates
+			// on changes much blockier. For now disabling, even
+			// though http://mcneel.myjetbrains.com/youtrack/issue/RH-31968
+			// may happen. @todo figure out a better way to solve
+			//if (!Session.Scene.TryLock()) return false;
 
 			// linear workflow changes
 			Database.UploadLinearWorkflowChanges();
@@ -58,7 +62,7 @@ namespace RhinoCycles
 			// done, now clear out our change queue stuff so we're ready for the next time around :)
 			Database.ResetChangeQueue();
 
-			Session.Scene.Unlock();
+			//Session.Scene.Unlock();
 
 			return true;
 		}
