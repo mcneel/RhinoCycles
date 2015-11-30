@@ -36,19 +36,6 @@ namespace RhinoCycles
 			m_engine_settings = engineSettings;
 		}
 
-		private static bool IsCyclesMaterial(RenderMaterial rm)
-		{
-			var isit = rm is SimpleBrickMaterial
-				|| rm is BrickWithCheckeredMortarMaterial
-				|| rm is TranslucentMaterial
-				|| rm is FlakedCarPaintMaterial
-				|| rm is GlassMaterial
-				|| rm is SimplePlasticMaterial
-				|| rm is DiffuseMaterial;
-
-			return isit;
-		}
-
 		/// <summary>
 		/// Create a CyclesShader based on given Material m
 		/// </summary>
@@ -56,12 +43,10 @@ namespace RhinoCycles
 		/// <returns>The CyclesShader</returns>
 		internal CyclesShader CreateCyclesShader(RenderMaterial rm, float gamma)
 		{
-			var is_cycles_material = IsCyclesMaterial(rm);
 			var mid = rm.RenderHash;
 			CyclesShader shader = null;
-			ICyclesMaterial crm;
 
-			crm = rm as ICyclesMaterial;
+			var crm = rm as ICyclesMaterial;
 
 			if (crm == null)
 			{
