@@ -92,10 +92,8 @@
     <Compile Include="Materials\FlakedCarPaintMaterial.cs" />
     <Compile Include="Materials\BrickWithCheckeredMortar.cs" />
     <Compile Include="Materials\SimpleBrickMaterial.cs" />
-    <Compile Include="Materials\PhongTestMaterial.cs" />
     <Compile Include="Materials\SimplePlasticMaterial.cs" />
     <Compile Include="Materials\TranslucentMaterial.cs" />
-    <Compile Include="Materials\TestMaterial.cs" />
     <Compile Include="Measurement.cs" />
     <Compile Include="RenderEngines\ModalRenderEngine.cs" />
     <Compile Include="RenderEngines\PreviewRenderEngine.cs" />
