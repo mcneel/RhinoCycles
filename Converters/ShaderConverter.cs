@@ -40,9 +40,7 @@ namespace RhinoCycles
 		{
 			var isit = rm is SimpleBrickMaterial
 				|| rm is BrickWithCheckeredMortarMaterial
-				|| rm is TestMaterial
 				|| rm is TranslucentMaterial
-				|| rm is PhongTestMaterial
 				|| rm is FlakedCarPaintMaterial
 				|| rm is GlassMaterial
 				|| rm is SimplePlasticMaterial
