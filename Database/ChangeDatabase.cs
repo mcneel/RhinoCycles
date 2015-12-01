@@ -844,22 +844,20 @@ namespace RhinoCycles.Database
 		/// </summary>
 		private const uint GroundPlaneMeshInstanceId = 1;
 
-		/// <summary>
-		/// True if ground plane has been initialised
-		/// </summary>
-		private bool m_groundplane_initialised;
-
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
-			m_groundplane_initialised = true;
 			var gpid = m_groundplane_guid;
+			var bb = GetQueueSceneBoundingBox();
+			var edgefactor = bb.IsValid ? (int)((float) bb.GetEdges()[0].Length/2) / 100 : 1;
+			edgefactor = edgefactor < 1 ? 1 : edgefactor > 100 ? 100 : edgefactor;
 			var altitude = (float)(gp.Enabled ? gp.Altitude : 0.0);
+			var l = 1000.0f*edgefactor;
 			var vertices = new[]
 			{
-				 10000.0f, -10000.0f, 0.0f,
-				 10000.0f,  10000.0f, 0.0f,
-				-10000.0f,  10000.0f, 0.0f,
-				-10000.0f, -10000.0f, 0.0f 
+				 l, -l, 0.0f,
+				 l,  l, 0.0f,
+				-l,  l, 0.0f,
+				-l, -l, 0.0f 
 			};
 			var findices = new[]
 			{
@@ -871,13 +869,46 @@ namespace RhinoCycles.Database
 				1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
 				1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f
 			};
+			var texscale = gp.TextureScale;
+			texscale /= l;
+			var texoffset = gp.TextureOffset;
+			var texrot = (float)gp.TextureRotation * Math.PI / 180.0f;
+
+			var s = (float)Math.Sin(texrot);
+			var c = (float)Math.Cos(texrot);
+
+			var cmuvxfm = new float[12];
+
+			for (int i = 0; i < 6; i++)
+			{
+				var cos = cmuv.Skip(i*2).Take(2);
+				var x = cos.First();
+				var y = cos.Last();
+
+				// apply scale
+				x /= (float)texscale.X;
+				y /= (float)texscale.Y;
+
+				// we need to double up now, since we're looking at half edge length.
+				var magicnumber = 2.0f;
+				x *= magicnumber;
+				y *= magicnumber;
+
+				// apply offset
+				x += (float)texoffset.X;
+				y += (float)texoffset.Y;
+
+				// rotate and assign
+				cmuvxfm[i*2] = x * c - y * s;
+				cmuvxfm[i*2 + 1] = x * s + y * c;
+			}
 
 			var cycles_mesh = new CyclesMesh
 				{
 					MeshId = gpid,
 					verts = vertices,
 					faces = findices,
-					uvs = cmuv,
+					uvs = cmuvxfm,
 					vertex_normals = null,
 					matid = gp.MaterialId
 				};
@@ -904,7 +935,7 @@ namespace RhinoCycles.Database
 		protected override void ApplyGroundPlaneChanges(CqGroundPlane gp)
 		{
 			//System.Diagnostics.Debug.WriteLine("groundplane");
-			if(!m_groundplane_initialised) InitialiseGroundPlane(gp);
+			InitialiseGroundPlane(gp);
 			// find groundplane
 			var altitude = (float)gp.Altitude;
 			var t = Transform.Translate(0.0f, 0.0f, altitude);
