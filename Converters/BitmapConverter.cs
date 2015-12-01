@@ -164,7 +164,7 @@ namespace RhinoCycles
 		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg)
 		{
 			RenderTexture render_texture = null;
-			
+
 			if(rm!=null)
 				render_texture = rm.FindChild("texture") as RenderTexture;
 
