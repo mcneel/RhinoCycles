@@ -126,7 +126,7 @@ namespace RhinoCycles
 			return LoadReturnCode.Success;
 		}
 
-		private static object m_initialise_lock = new System.Object();
+		private static readonly object m_initialise_lock = new System.Object();
 		private void AsyncInitialise()
 		{
 			var t = new Thread(InitialiseCSycles);
