@@ -92,15 +92,15 @@ namespace RhinoCycles
 				switch (textureType)
 				{
 					case RenderMaterial.StandardChildSlots.Diffuse:
-						shader.DiffuseTexture.TexFloat = img;
+						shader.DiffuseTexture.TexFloat = img.Data;
 						shader.DiffuseTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Bump:
-						shader.BumpTexture.TexFloat = img;
+						shader.BumpTexture.TexFloat = img.Data;
 						shader.BumpTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Transparency:
-						shader.TransparencyTexture.TexFloat = img;
+						shader.TransparencyTexture.TexFloat = img.Data;
 						shader.TransparencyTexture.TexByte = null;
 						break;
 				}
@@ -112,15 +112,15 @@ namespace RhinoCycles
 				{
 					case RenderMaterial.StandardChildSlots.Diffuse:
 						shader.DiffuseTexture.TexFloat = null;
-						shader.DiffuseTexture.TexByte = img;
+						shader.DiffuseTexture.TexByte = img.Data;
 						break;
 					case RenderMaterial.StandardChildSlots.Bump:
 						shader.BumpTexture.TexFloat = null;
-						shader.BumpTexture.TexByte = img;
+						shader.BumpTexture.TexByte = img.Data;
 						break;
 					case RenderMaterial.StandardChildSlots.Transparency:
 						shader.TransparencyTexture.TexFloat = null;
-						shader.TransparencyTexture.TexByte = img;
+						shader.TransparencyTexture.TexByte = img.Data;
 						break;
 				}
 			}
@@ -207,12 +207,14 @@ namespace RhinoCycles
 
 			if (is_float)
 			{
-				teximg.TexFloat = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
+				var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
+				teximg.TexFloat = img.Data;
 				teximg.TexByte = null;
 			}
 			else
 			{
-				teximg.TexByte = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
+				var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
+				teximg.TexByte = img.Data;
 				teximg.TexFloat = null;
 			}
 			teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
@@ -279,7 +281,7 @@ namespace RhinoCycles
 			return fpixel;
 		}
 
-		private static byte[] RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator texture_evaluator, bool isEnv)
+		private static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator texture_evaluator, bool isEnv)
 		{
 			var read = byte_images_new.ContainsKey(rId);
 			var img = read ? byte_images_new[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, texture_evaluator, isEnv), pwidth, pheight);
@@ -288,10 +290,10 @@ namespace RhinoCycles
 				byte_images_new[rId] = img;
 			}
 
-			return img.Data;
+			return img;
 		}
 
-		private static float[] RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator texture_evaluator, bool isEnv)
+		private static FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator texture_evaluator, bool isEnv)
 		{
 			var read = float_images_new.ContainsKey(rId);
 			var img = read ? float_images_new[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, texture_evaluator, isEnv), pwidth, pheight);
@@ -300,7 +302,7 @@ namespace RhinoCycles
 				float_images_new[rId] = img;
 			}
 
-			return img.Data;
+			return img;
 		}
 
 	}
