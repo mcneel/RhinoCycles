@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -253,22 +254,22 @@ namespace RhinoCycles
 
 			InitialiseCSycles();
 
-			if (scene.Quality == PreviewSceneQuality.RealtimeQuick)
+			/*if (scene.Quality == PreviewSceneQuality.RealtimeQuick)
 			{
 				scene.PreviewImage = null;
 				return;
-			}
+			}*/
 
 			AsyncRenderContext a_rc = new PreviewRenderEngine(scene, Id);
 			var engine = (PreviewRenderEngine)a_rc;
 			engine.Settings = EngineSettings;
-			engine.Settings.SetQuality(scene.Quality);
+			engine.Settings.SetQuality(PreviewSceneQuality.RefineThirdPass);
 
 			engine.RenderDimension = scene.PreviewImageSize;
-			engine.RenderWindow = null;
+			engine.RenderWindow = Rhino.Render.RenderWindow.Create(scene.PreviewImageSize);
 
 			// New preview bitmap
-			engine.RenderBitmap = new Bitmap(scene.PreviewImageSize.Width, scene.PreviewImageSize.Height);
+			//engine.RenderBitmap = new Bitmap(scene.PreviewImageSize.Width, scene.PreviewImageSize.Height);
 
 			engine.CreateWorld();
 
@@ -276,7 +277,12 @@ namespace RhinoCycles
 			PreviewRenderEngine.Renderer(engine);
 
 			/* set final preview bitmap, or null if cancelled */
-			scene.PreviewImage = scene.Cancel ? null : engine.RenderBitmap;
+			scene.PreviewImage = /*scene.Cancel ? null : */ engine.RenderWindow.GetBitmap();
+
+#if DEBUG
+			var prev = string.Format("{0}\\{1}.jpg", System.Environment.GetEnvironmentVariable("TEMP"), "previmg");
+			scene.PreviewImage.Save(prev, ImageFormat.Jpeg);
+#endif
 		}
 	}
 }
