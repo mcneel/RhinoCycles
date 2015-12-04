@@ -15,6 +15,8 @@ limitations under the License.
 **/
 
 using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 
 namespace RhinoCycles
@@ -24,13 +26,25 @@ namespace RhinoCycles
 		internal T[] original;
 		internal T[] corrected;
 
+		protected int w;
+		protected int h;
+
 		public uint Id { get; private set; }
 
-		internal BitmapImage() { } 
+		internal BitmapImage() { }
 
-		public BitmapImage(uint id, T[] data)
+		protected static int ColorClamp(int ch)
+		{
+			if (ch < 0) return 0;
+			return ch > 255 ? 255 : ch;
+		}
+
+		public BitmapImage(uint id, T[] data, int _w, int _h)
 		{
 			Id = id;
+
+			w = _w;
+			h = _h;
 
 			var l = data.Length;
 			original = new T[l];
@@ -49,7 +63,7 @@ namespace RhinoCycles
 	public class ByteBitmap : BitmapImage<byte>
 	{
 
-		public ByteBitmap(uint id, byte[] data) : base(id, data)
+		public ByteBitmap(uint id, byte[] data, int w, int h) : base(id, data, w, h)
 		{ }
 
 		override public void ApplyGamma(float gamma)
@@ -69,7 +83,7 @@ namespace RhinoCycles
 
 	public class FloatBitmap : BitmapImage<float>
 	{
-		public FloatBitmap(uint id, float[] data) : base(id, data)
+		public FloatBitmap(uint id, float[] data, int w, int h) : base(id, data, w, h)
 		{ }
 
 		override public void ApplyGamma(float gamma)

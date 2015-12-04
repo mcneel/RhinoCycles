@@ -282,7 +282,7 @@ namespace RhinoCycles
 		private static byte[] RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator texture_evaluator, bool isEnv)
 		{
 			var read = byte_images_new.ContainsKey(rId);
-			var img = read ? byte_images_new[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, texture_evaluator, isEnv));
+			var img = read ? byte_images_new[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, texture_evaluator, isEnv), pwidth, pheight);
 			if (!read)
 			{
 				byte_images_new[rId] = img;
@@ -294,7 +294,7 @@ namespace RhinoCycles
 		private static float[] RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator texture_evaluator, bool isEnv)
 		{
 			var read = float_images_new.ContainsKey(rId);
-			var img = read ? float_images_new[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, texture_evaluator, isEnv));
+			var img = read ? float_images_new[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, texture_evaluator, isEnv), pwidth, pheight);
 			if (!read)
 			{
 				float_images_new[rId] = img;
