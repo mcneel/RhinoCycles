@@ -58,6 +58,14 @@ namespace RhinoCycles
 		}
 
 		public T[] Data { get { return corrected; } }
+
+		public void SaveBitmaps()
+		{
+			SavePixels(original, string.Format("{0}_original", Id));
+			SavePixels(corrected, string.Format("{0}_corrected", Id));
+		}
+
+		protected virtual void SavePixels(T[] pixels, string name) {}
 	}
 
 	public class ByteBitmap : BitmapImage<byte>
@@ -79,6 +87,24 @@ namespace RhinoCycles
 			}
 		}
 
+		override protected void SavePixels(byte[] pixels, string name)
+		{
+			var bm = new Bitmap(w, h);
+			for (var x = 0; x < w; x++)
+			{
+				for (var y = 0; y < h; y++)
+				{
+					var i = y * w * 4 + x * 4;
+					var r = ColorClamp(pixels[i]);
+					var g = ColorClamp(pixels[i + 1]);
+					var b = ColorClamp(pixels[i + 2]);
+					var a = ColorClamp(pixels[i + 3]);
+					bm.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+				}
+			}
+			var tmpf = string.Format("{0}\\byte_{1}.png", Environment.GetEnvironmentVariable("TEMP"), name);
+			bm.Save(tmpf,  ImageFormat.Png);
+		}
 	}
 
 	public class FloatBitmap : BitmapImage<float>
@@ -97,6 +123,24 @@ namespace RhinoCycles
 			{
 				original.CopyTo(corrected, 0);
 			}
+		}
+
+		override protected void SavePixels(float[] pixels, string name)
+		{
+			var bm = new Bitmap(w, h);
+			for (var x = 0; x < w; x++)
+			{
+				for (var y = 0; y < h; y++)
+				{
+					var i = y * w * 4 + x * 4;
+					var r = ColorClamp((int)(pixels[i] * 255.0f));
+					var g = ColorClamp((int)(pixels[i + 1] * 255.0f));
+					var b = ColorClamp((int)(pixels[i + 2] * 255.0f));
+					var a = ColorClamp((int)(pixels[i + 3] * 255.0f));
+					bm.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+				}
+			}
+			bm.Save(string.Format("{0}\\float_{1}.png", Environment.GetEnvironmentVariable("TEMP"), name),  ImageFormat.Png);
 		}
 		
 	}
