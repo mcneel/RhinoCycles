@@ -150,17 +150,17 @@ namespace RhinoCycles
 				switch (quality)
 				{
 					case PreviewSceneQuality.RefineFirstPass:
-						Samples = 5;
+						Samples = 5000;
 						GlossySamples = 2;
 						TransmissionSamples = 2;
 						break;
 					case PreviewSceneQuality.RefineSecondPass:
-						Samples = 100;
+						Samples = 5000;
 						GlossySamples = 2;
 						TransmissionSamples = 2;
 						break;
 					case PreviewSceneQuality.RefineThirdPass:
-						Samples = 1000;
+						Samples = 5000;
 						TransmissionSamples = 3;
 						GlossySamples = 3;
 						break;
