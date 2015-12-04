@@ -38,12 +38,26 @@ namespace RhinoCycles
 
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = UpdateRenderTileCallback;
-			m_write_render_tile_callback = WriteRenderTileCallback;
+			m_update_render_tile_callback = PreviewRendererUpdateRenderTileCallback;
+			m_write_render_tile_callback = PreviewRendererWriteRenderTileCallback;
 			m_test_cancel_callback = TestCancel;
 
 			CSycles.log_to_stdout(false);
 #endregion
+		}
+
+		public void PreviewRendererUpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth)
+		{
+			if (State == State.Stopped) return;
+			DisplayBuffer(sessionId, x, y, w, h);
+			m_preview_event_args.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
+		}
+
+		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth)
+		{
+			if (State == State.Stopped) return;
+			DisplayBuffer(sessionId, x, y, w, h);
+			m_preview_event_args.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
 		/// <summary>
 		/// Renderer entry point for preview rendering
