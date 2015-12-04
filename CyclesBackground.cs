@@ -125,7 +125,7 @@ namespace RhinoCycles
 				bg_color = Color.Empty;
 				bg.Clear();
 			}
-			BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg, gamma);
 
 			bool resampled = false;
 			if (skylight_environment != null)
@@ -146,7 +146,7 @@ namespace RhinoCycles
 				{
 					sky_color = simenv.BackgroundColor;
 				}
-				BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky);
+				BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, gamma);
 				resampled = true;
 
 				render_texture.Dispose();
@@ -159,7 +159,7 @@ namespace RhinoCycles
 				sky.Clear();
 			}
 			if(!resampled)
-				BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky);
+				BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky, gamma);
 
 			if (reflection_environment != null)
 			{
@@ -174,7 +174,7 @@ namespace RhinoCycles
 				refl_color = Color.Empty;
 				refl.Clear();
 			}
-			BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl, gamma);
 		}
 
 		/// <summary>

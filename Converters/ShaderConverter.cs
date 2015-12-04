@@ -155,6 +155,8 @@ namespace RhinoCycles
 
 						FresnelReflections = m.FresnelReflections,
 
+						Gamma = gamma,
+
 						Name = m.Name ?? ""
 					};
 

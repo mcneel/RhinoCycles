@@ -89,6 +89,7 @@ namespace RhinoCycles
 			if (is_float)
 			{
 				var img = RetrieveFloatsImg(rId, pwidth, pheight, texture_evaluator, false);
+				img.ApplyGamma(shader.Gamma);
 				switch (textureType)
 				{
 					case RenderMaterial.StandardChildSlots.Diffuse:
@@ -108,6 +109,7 @@ namespace RhinoCycles
 			else
 			{
 				var img = RetrieveBytesImg(rId, pwidth, pheight, texture_evaluator, false);
+				img.ApplyGamma(shader.Gamma);
 				switch (textureType)
 				{
 					case RenderMaterial.StandardChildSlots.Diffuse:
@@ -161,7 +163,8 @@ namespace RhinoCycles
 		/// </summary>
 		/// <param name="rm"></param>
 		/// <param name="teximg"></param>
-		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg)
+		/// <param name="gamma"></param>
+		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma)
 		{
 			RenderTexture render_texture = null;
 
@@ -208,12 +211,14 @@ namespace RhinoCycles
 			if (is_float)
 			{
 				var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
+				img.ApplyGamma(gamma);
 				teximg.TexFloat = img.Data;
 				teximg.TexByte = null;
 			}
 			else
 			{
 				var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
+				img.ApplyGamma(gamma);
 				teximg.TexByte = img.Data;
 				teximg.TexFloat = null;
 			}
