@@ -178,6 +178,11 @@ namespace RhinoCycles
 			return Result.Failure;
 		}
 
+		protected override PreviewRenderTypes PreviewRenderType()
+		{
+			return PreviewRenderTypes.Progressive;
+		}
+
 		/// <summary>
 		/// Implement the render entry point.
 		/// 
