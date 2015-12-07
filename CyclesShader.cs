@@ -33,6 +33,7 @@ namespace RhinoCycles
 			DiffuseTexture = new CyclesTextureImage();
 			BumpTexture = new CyclesTextureImage();
 			TransparencyTexture = new CyclesTextureImage();
+			EnvironmentTexture = new CyclesTextureImage();
 			GiEnvTexture = new CyclesTextureImage();
 			BgEnvTexture = new CyclesTextureImage();
 			ReflRefrEnvTexture = new CyclesTextureImage();
@@ -194,6 +195,8 @@ namespace RhinoCycles
 		public bool HasBumpTexture { get { return BumpTexture.HasTextureImage; } }
 		public CyclesTextureImage TransparencyTexture { get; set; }
 		public bool HasTransparencyTexture { get { return TransparencyTexture.HasTextureImage; } }
+		public CyclesTextureImage EnvironmentTexture { get; set; }
+		public bool HasEnvironmentTexture { get { return EnvironmentTexture.HasTextureImage; } }
 
 		public CyclesTextureImage GiEnvTexture { get; set; }
 		public bool HasGiEnvTexture { get { return GiEnvTexture.HasTextureImage; } }
