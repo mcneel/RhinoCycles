@@ -70,7 +70,7 @@ namespace RhinoCycles
 			var client = cycles_engine.Client;
 
 			var size = cycles_engine.RenderDimension;
-			var samples = 500; //cycles_engine.Settings.Samples;
+			var samples = cycles_engine.Settings.Samples;
 
 			cycles_engine.m_measurements.Reset();
 
