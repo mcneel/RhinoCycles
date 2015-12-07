@@ -254,11 +254,11 @@ namespace RhinoCycles
 
 			InitialiseCSycles();
 
-			/*if (scene.Quality == PreviewSceneQuality.RealtimeQuick)
+			if (scene.Quality == PreviewSceneQuality.RealtimeQuick)
 			{
 				scene.PreviewImage = null;
 				return;
-			}*/
+			}
 
 			AsyncRenderContext a_rc = new PreviewRenderEngine(scene, Id);
 			var engine = (PreviewRenderEngine)a_rc;
