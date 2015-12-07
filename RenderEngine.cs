@@ -416,7 +416,7 @@ namespace RhinoCycles
 		/// <param name="w"></param>
 		/// <param name="h"></param>
 		/// <param name="depth"></param>
-		public void WriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth)
+		public void WriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
 		{
 			if (State == State.Stopped) return;
 			DisplayBuffer(sessionId, x, y, w, h);
@@ -431,7 +431,7 @@ namespace RhinoCycles
 		/// <param name="w"></param>
 		/// <param name="h"></param>
 		/// <param name="depth"></param>
-		public void UpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth)
+		public void UpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
 		{
 			if (State == State.Stopped) return;
 			DisplayBuffer(sessionId, x, y, w, h);

@@ -46,14 +46,14 @@ namespace RhinoCycles
 #endregion
 		}
 
-		public void PreviewRendererUpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth)
+		public void PreviewRendererUpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
 		{
 			if (State == State.Stopped) return;
 			DisplayBuffer(sessionId, x, y, w, h);
 			m_preview_event_args.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
 
-		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth)
+		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
 		{
 			if (State == State.Stopped) return;
 			DisplayBuffer(sessionId, x, y, w, h);
