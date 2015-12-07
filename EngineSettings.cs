@@ -145,27 +145,9 @@ namespace RhinoCycles
 
 		public void SetQuality(PreviewSceneQuality quality)
 		{
-			if (!UseCustomQualitySettings)
-			{
-				switch (quality)
-				{
-					case PreviewSceneQuality.RefineFirstPass:
-						Samples = 5000;
-						GlossySamples = 2;
-						TransmissionSamples = 2;
-						break;
-					case PreviewSceneQuality.RefineSecondPass:
-						Samples = 5000;
-						GlossySamples = 2;
-						TransmissionSamples = 2;
-						break;
-					case PreviewSceneQuality.RefineThirdPass:
-						Samples = 5000;
-						TransmissionSamples = 3;
-						GlossySamples = 3;
-						break;
-				}
-			}
+			Samples = 500;
+			GlossySamples = 2;
+			TransmissionSamples = 2;
 		}
 
 		public void SetQuality(AntialiasLevel quality)
