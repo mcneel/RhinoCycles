@@ -263,6 +263,7 @@ namespace RhinoCycles
 			AsyncRenderContext a_rc = new PreviewRenderEngine(scene, Id);
 			var engine = (PreviewRenderEngine)a_rc;
 			engine.Settings = EngineSettings;
+			engine.Settings.IgnoreQualityChanges = true;
 			engine.Settings.SetQuality(PreviewSceneQuality.RefineThirdPass);
 
 			engine.RenderDimension = scene.PreviewImageSize;
