@@ -26,6 +26,8 @@ namespace RhinoCycles
 			DefaultSettings();
 		}
 
+		public bool IgnoreQualityChanges { get; set; }
+
 		public EngineSettings(EngineSettings es)
 		{
 			Verbose = es.Verbose;
@@ -152,32 +154,33 @@ namespace RhinoCycles
 
 		public void SetQuality(AntialiasLevel quality)
 		{
-			if (!UseCustomQualitySettings)
+			if (IgnoreQualityChanges) return;
+
+			if (UseCustomQualitySettings) return;
+
+			switch (quality)
 			{
-				switch (quality)
-				{
-					case AntialiasLevel.None:
-						Samples = 50;
-						break;
-					case AntialiasLevel.Draft:
-						Samples = 200;
-						DiffuseSamples = 2;
-						GlossySamples = 2;
-						TransmissionSamples = 2;
-						break;
-					case AntialiasLevel.Good:
-						Samples = 500;
-						DiffuseSamples = 3;
-						GlossySamples = 3;
-						TransmissionSamples = 3;
-						break;
-					case AntialiasLevel.High:
-						Samples = 2000;
-						DiffuseSamples = 4;
-						GlossySamples = 4;
-						TransmissionSamples = 4;
-						break;
-				}
+				case AntialiasLevel.None:
+					Samples = 50;
+					break;
+				case AntialiasLevel.Draft:
+					Samples = 200;
+					DiffuseSamples = 2;
+					GlossySamples = 2;
+					TransmissionSamples = 2;
+					break;
+				case AntialiasLevel.Good:
+					Samples = 500;
+					DiffuseSamples = 3;
+					GlossySamples = 3;
+					TransmissionSamples = 3;
+					break;
+				case AntialiasLevel.High:
+					Samples = 2000;
+					DiffuseSamples = 4;
+					GlossySamples = 4;
+					TransmissionSamples = 4;
+					break;
 			}
 		}
 
