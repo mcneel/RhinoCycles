@@ -199,8 +199,6 @@ namespace RhinoCycles
 			AsyncRenderContext a_rc = new ModalRenderEngine(doc, Id);
 			var engine = (ModalRenderEngine)a_rc;
 
-			//engine.Background = CreateCyclesBackgroundShader(doc.RenderSettings);
-
 			engine.Settings = EngineSettings;
 			engine.Settings.UseInteractiveRenderer = false;
 			engine.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
@@ -267,10 +265,8 @@ namespace RhinoCycles
 			engine.Settings.SetQuality(PreviewSceneQuality.RefineThirdPass);
 
 			engine.RenderDimension = scene.PreviewImageSize;
+			/* create a window-less, non-document controlled render window */
 			engine.RenderWindow = Rhino.Render.RenderWindow.Create(scene.PreviewImageSize);
-
-			// New preview bitmap
-			//engine.RenderBitmap = new Bitmap(scene.PreviewImageSize.Width, scene.PreviewImageSize.Height);
 
 			engine.CreateWorld();
 
@@ -278,9 +274,9 @@ namespace RhinoCycles
 			PreviewRenderEngine.Renderer(engine);
 
 			/* set final preview bitmap, or null if cancelled */
-			scene.PreviewImage = /*scene.Cancel ? null : */ engine.RenderWindow.GetBitmap();
+			scene.PreviewImage = engine.RenderWindow.GetBitmap();
 
-#if DEBUG
+#if DEBUGX
 			var prev = string.Format("{0}\\{1}.jpg", System.Environment.GetEnvironmentVariable("TEMP"), "previmg");
 			scene.PreviewImage.Save(prev, ImageFormat.Jpeg);
 #endif
