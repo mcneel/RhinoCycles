@@ -56,7 +56,7 @@ namespace RhinoCycles
 					Color4f c;
 					if (rm.Fields.TryGetValue("diffuse", out c))
 					{
-						plaster.Fields.Set("diffuse", c);
+						plaster.Fields.Set("diffuse", c, RenderContent.ChangeContexts.Ignore);
 					}
 					crm = plaster;
 				}
@@ -68,15 +68,15 @@ namespace RhinoCycles
 					double ior;
 					if (rm.Fields.TryGetValue("transparency-color", out c))
 					{
-						glass.Fields.Set("glass_color", c);
+						glass.Fields.Set("glass_color", c, RenderContent.ChangeContexts.Ignore);
 					}
 					if (rm.Fields.TryGetValue("frost-amount", out frost))
 					{
-						glass.Fields.Set("frost-amount", (float) frost);
+						glass.Fields.Set("frost-amount", (float) frost, RenderContent.ChangeContexts.Ignore);
 					}
 					if (rm.Fields.TryGetValue("ior", out ior))
 					{
-						glass.Fields.Set("ior", (float) ior);
+						glass.Fields.Set("ior", (float) ior, RenderContent.ChangeContexts.Ignore);
 					}
 					crm = glass;
 				}
@@ -87,23 +87,23 @@ namespace RhinoCycles
 					double f;
 					if (rm.Fields.TryGetValue("diffuse", out c))
 					{
-						plastic.Fields.Set("diffuse", c);
+						plastic.Fields.Set("diffuse", c, RenderContent.ChangeContexts.Ignore);
 					}
 					if (rm.Fields.TryGetValue("frost-amount", out f))
 					{
-						plastic.Fields.Set("frost-amount", (float) f);
+						plastic.Fields.Set("frost-amount", (float) f, RenderContent.ChangeContexts.Ignore);
 					}
 					if (rm.Fields.TryGetValue("polish-amount", out f))
 					{
-						plastic.Fields.Set("polish-amount", (float) f);
+						plastic.Fields.Set("polish-amount", (float) f, RenderContent.ChangeContexts.Ignore);
 					}
 					if (rm.Fields.TryGetValue("reflectivity", out f))
 					{
-						plastic.Fields.Set("reflectivity", (float) f);
+						plastic.Fields.Set("reflectivity", (float) f, RenderContent.ChangeContexts.Ignore);
 					}
 					if (rm.Fields.TryGetValue("transparency", out f))
 					{
-						plastic.Fields.Set("transparency", (float) f);
+						plastic.Fields.Set("transparency", (float) f, RenderContent.ChangeContexts.Ignore);
 					}
 					crm = plastic;
 				}
