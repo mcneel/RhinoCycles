@@ -1238,5 +1238,9 @@ namespace RhinoCycles.Database
 			return BakingFunctions.Decals | BakingFunctions.ProceduralTextures | BakingFunctions.MultipleMappingChannels;
 		}
 
+		protected override bool ProvideOriginalObject()
+		{
+			return true;
+		}
 	}
 }

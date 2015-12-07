@@ -105,10 +105,10 @@ namespace RhinoCycles.Shaders
 
 			// just simple linear gradient
 			m_colorramp.ColorBand.Interpolation = ColorBand.Interpolations.Linear;
-			// bottom color on 1.0f
-			m_colorramp.ColorBand.InsertColorStop(color2, 1.0f);
-			// top color on 0.0f
-			m_colorramp.ColorBand.InsertColorStop(color1, 0.0f);
+			// bottom color on 0.0f
+			m_colorramp.ColorBand.InsertColorStop(color2, 0.0f);
+			// top color on 1.0f
+			m_colorramp.ColorBand.InsertColorStop(color1, 1.0f);
 
 			#endregion
 
