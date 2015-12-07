@@ -48,14 +48,14 @@ namespace RhinoCycles
 
 		public void PreviewRendererUpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
 		{
-			if (State == State.Stopped) return;
+			if (State == State.Stopped || sample < 5 || (Session.Scene.Device.IsCpu && sample % 10 != 0)) return;
 			DisplayBuffer(sessionId, x, y, w, h);
 			m_preview_event_args.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
 
 		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
 		{
-			if (State == State.Stopped) return;
+			if (State == State.Stopped || sample < 5 || (Session.Scene.Device.IsCpu && sample % 10 != 0)) return;
 			DisplayBuffer(sessionId, x, y, w, h);
 			m_preview_event_args.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
