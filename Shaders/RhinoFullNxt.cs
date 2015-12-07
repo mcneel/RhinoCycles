@@ -235,6 +235,15 @@ namespace RhinoCycles.Shaders
 		private readonly ImageTextureNode m_bump_texture = new ImageTextureNode("Bump texture");
 		#endregion
 
+		#region environment slot
+
+		private  readonly ImageTextureNode m_environment_slot_texture = new ImageTextureNode("Environment slot");
+
+		private readonly EmissionNode m_environment_slot_shadeless = new EmissionNode("Environment slot shadeless");
+
+		private readonly MixClosureNode m_environment_slot_mix = new MixClosureNode("Environment slot mixin");
+		#endregion
+
 		#region shader adders
 
 		/// <summary>
@@ -348,6 +357,11 @@ namespace RhinoCycles.Shaders
 			m_shader.AddNode(m_bump_normal);
 			m_shader.AddNode(m_bump_bw);
 			m_shader.AddNode(m_bump_texture);
+
+			// Add environment slot nodes
+			m_shader.AddNode(m_environment_slot_texture);
+			m_shader.AddNode(m_environment_slot_shadeless);
+			m_shader.AddNode(m_environment_slot_mix);
 
 			// Add nodes for adding shader components
 			m_shader.AddNode(m_diffuse_and_reflection);
@@ -576,10 +590,28 @@ namespace RhinoCycles.Shaders
 			}
 #endregion
 
+#region configure and connect environment slot nodes
+
+			if (m_original.HasEnvironmentTexture)
+			{
+				RenderEngine.SetTextureImage(m_environment_slot_texture, m_original.EnvironmentTexture);
+				RenderEngine.SetProjectionMode(m_shader, m_original.EnvironmentTexture, m_environment_slot_texture, m_texture_coordinate);
+
+				m_environment_slot_shadeless.ins.Strength.Value = 1.0f;
+
+				m_environment_slot_texture.outs.Color.Connect(m_environment_slot_shadeless.ins.Color);
+
+				m_environment_slot_shadeless.outs.Emission.Connect(m_environment_slot_mix.ins.Closure2);
+				m_environment_slot_mix.ins.Fac.Value = m_original.EnvironmentTexture.Amount;
+			}
+
+#endregion
+
 #region connect up nodes for adding shader components
 			m_diffuse_and_reflection.outs.Closure.Connect(m_mix_lightpath.ins.Closure1);
 			m_diffuse_and_reflection_and_transparency.outs.Closure.Connect(m_diffuse_and_reflection_and_transparency_and_emission.ins.Closure1);
-			m_diffuse_and_reflection_and_transparency_and_emission.outs.Closure.Connect(m_diffuse_and_transparency_alpha.ins.Closure2);
+			m_diffuse_and_reflection_and_transparency_and_emission.outs.Closure.Connect(m_environment_slot_mix.ins.Closure1);
+			m_environment_slot_mix.outs.Closure.Connect(m_diffuse_and_transparency_alpha.ins.Closure2);
 #endregion
 
 			// connect final shader mixer to output
