@@ -186,6 +186,14 @@ namespace RhinoCycles
 						{
 							shader.TransparencyTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(transchan)/100.0f, 1.0f);
 						}
+
+						var envchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Environment);
+						var envtex = rm.FindChild(envchan) as RenderTexture;
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, envtex, envchan, RenderMaterial.StandardChildSlots.Environment);
+						if (shader.HasEnvironmentTexture)
+						{
+							shader.EnvironmentTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(envchan)/100.0f, 1.0f);
+						}
 					}
 				}
 			}

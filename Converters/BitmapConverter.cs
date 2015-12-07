@@ -104,6 +104,10 @@ namespace RhinoCycles
 						shader.TransparencyTexture.TexFloat = img.Data;
 						shader.TransparencyTexture.TexByte = null;
 						break;
+					case RenderMaterial.StandardChildSlots.Environment:
+						shader.EnvironmentTexture.TexFloat = img.Data;
+						shader.EnvironmentTexture.TexByte = null;
+						break;
 				}
 			}
 			else
@@ -123,6 +127,10 @@ namespace RhinoCycles
 					case RenderMaterial.StandardChildSlots.Transparency:
 						shader.TransparencyTexture.TexFloat = null;
 						shader.TransparencyTexture.TexByte = img.Data;
+						break;
+					case RenderMaterial.StandardChildSlots.Environment:
+						shader.EnvironmentTexture.TexFloat = null;
+						shader.EnvironmentTexture.TexByte = img.Data;
 						break;
 				}
 			}
@@ -154,6 +162,16 @@ namespace RhinoCycles
 					shader.TransparencyTexture.Transform = t;
 					shader.TransparencyTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
 					shader.TransparencyTexture.IsLinear = renderTexture.IsLinear();
+					break;
+				case RenderMaterial.StandardChildSlots.Environment:
+					shader.EnvironmentTexture.TexWidth = pwidth;
+					shader.EnvironmentTexture.TexHeight = pheight;
+					// special texture, always set to Environment/Emap
+					shader.EnvironmentTexture.ProjectionMode = TextureProjectionMode.EnvironmentMap;
+					shader.EnvironmentTexture.EnvProjectionMode = TextureEnvironmentMappingMode.EnvironmentMap;
+					shader.EnvironmentTexture.Transform = t;
+					shader.EnvironmentTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+					shader.EnvironmentTexture.IsLinear = renderTexture.IsLinear();
 					break;
 			}
 		}
