@@ -146,8 +146,8 @@ namespace RhinoCycles.Database
 						old_shader.Tag();
 					}
 					cob.TagUpdate();
+					m_object_shader_db.ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
 				}
-				m_object_shader_db.ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
 			}
 		}
 
