@@ -43,6 +43,11 @@ namespace RhinoCycles.Materials
 			Fields.Add("diffuse", Color4f.White, "Color");
 		}
 
+		protected override void OnAddUserInterfaceSections()
+		{
+			AddAutomaticUserInterfaceSection("Parameters", 0);
+		}
+
 		public override void SimulateMaterial(ref Material simulatedMaterial, bool forDataOnly)
 		{
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
