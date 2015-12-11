@@ -144,7 +144,7 @@ namespace RhinoCycles
 
 		public override void UiUpdate()
 		{
-			if (m_available)
+			if (m_available && m_cycles != null)
 			{
 				if (m_cycles.Flush)
 				{
