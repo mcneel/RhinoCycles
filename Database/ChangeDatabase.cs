@@ -1185,6 +1185,12 @@ namespace RhinoCycles.Database
 			{
 				//System.Diagnostics.Debug.WriteLine("ApplyBackgroundChanges: fillstyle {0} color1 {1} color2 {2}", rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
 				m_env_db.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
+				if (rs.BackgroundStyle == BackgroundStyle.Environment)
+				{
+					var env_id = EnvironmentIdForUsage(RenderEnvironment.Usage.Background);
+					var env = EnvironmentForid(env_id);
+					m_env_db.SetBackground(env, RenderEnvironment.Usage.Background);
+				}
 				m_env_db.SetGamma(GammaLinearWorkflow);
 				m_render_engine.Settings.SetQuality(rs.AntialiasLevel);
 			}
