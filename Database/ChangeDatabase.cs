@@ -1077,7 +1077,14 @@ namespace RhinoCycles.Database
 		{
 			foreach (var light in lightChanges)
 			{
-				var cl = m_shader_converter.ConvertLight(this, light, m_current_view_info, GammaLinearWorkflow);
+				// we don't necessarily get view changes prior to light changes, so
+				// the old m_current_view_info could be null - at the end of a Flush
+				// it would be thrown away. Hence we now ask the ChangeQueue for the
+				// proper view info. It will be given if one constructed the ChangeQueue
+				// with a view to force it to be a single-view only ChangeQueue.
+				// See #RH-32345 and #RH-32356
+				var v = GetQueueSingleView();
+				var cl = m_shader_converter.ConvertLight(this, light, v, GammaLinearWorkflow);
 
 				//System.Diagnostics.Debug.WriteLine("light {0} == {1} == {2} ({3})", light.Id, cl.Id, lg.Id, light.ChangeType);
 
