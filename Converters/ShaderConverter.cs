@@ -16,7 +16,6 @@ limitations under the License.
 
 using System;
 using ccl;
-using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using Rhino.Render;
@@ -30,10 +29,49 @@ namespace RhinoCycles
 {
 	public class ShaderConverter
 	{
+
 		private readonly EngineSettings m_engine_settings;
 		public ShaderConverter(EngineSettings engineSettings)
 		{
 			m_engine_settings = engineSettings;
+		}
+
+		private enum ProbableMaterial
+		{
+			Plaster,
+			Glass,
+			Gem,
+			Plastic,
+			Metal,
+			Custom
+		}
+
+		/// <summary>
+		/// Determine material type using smell, but also querying for
+		/// specific parameters on the RenderMaterial
+		/// </summary>
+		/// <param name="rm"></param>
+		/// <returns>ProbableMaterial</returns>
+		private ProbableMaterial GuessMaterialFromSmell(RenderMaterial rm)
+		{
+			if(rm.SmellsLikePlaster) return ProbableMaterial.Plaster;
+
+			if (rm.SmellsLikeGlass)
+			{
+				if (rm.GetParameter("type") != null)
+				{
+					return ProbableMaterial.Gem;
+				}
+
+				if(rm.GetParameter("ior") != null)
+				{
+					return ProbableMaterial.Glass;
+				}
+
+				return ProbableMaterial.Plastic;
+			}
+
+			return ProbableMaterial.Custom;
 		}
 
 		/// <summary>
@@ -50,151 +88,124 @@ namespace RhinoCycles
 
 			if (crm == null)
 			{
-				if (rm.SmellsLikePlaster)
+				// figure out what type of material we are.
+				var probemat = GuessMaterialFromSmell(rm);
+				// always simulate material, need to know now myself
+				// what to read out from the simulated material to
+				// populate my own material descriptions.
+				var m = rm.SimulateMaterial(true);
+				switch (probemat)
 				{
-					var plaster = new DiffuseMaterial();
-					Color4f c;
-					if (rm.Fields.TryGetValue("diffuse", out c))
-					{
-						plaster.Fields.Set("diffuse", c, RenderContent.ChangeContexts.Ignore);
-					}
-					crm = plaster;
-				}
-				else if (rm.SmellsLikeGlass)
-				{
-					var glass = new GlassMaterial();
-					Color4f c;
-					double frost;
-					double ior;
-					if (rm.Fields.TryGetValue("transparency-color", out c))
-					{
-						glass.Fields.Set("glass_color", c, RenderContent.ChangeContexts.Ignore);
-					}
-					if (rm.Fields.TryGetValue("frost-amount", out frost))
-					{
-						glass.Fields.Set("frost-amount", (float) frost, RenderContent.ChangeContexts.Ignore);
-					}
-					if (rm.Fields.TryGetValue("ior", out ior))
-					{
-						glass.Fields.Set("ior", (float) ior, RenderContent.ChangeContexts.Ignore);
-					}
-					crm = glass;
-				}
-				else if (rm.SmellsLikePlastic)
-				{
-					var plastic = new SimplePlasticMaterial();
-					Color4f c;
-					double f;
-					if (rm.Fields.TryGetValue("diffuse", out c))
-					{
-						plastic.Fields.Set("diffuse", c, RenderContent.ChangeContexts.Ignore);
-					}
-					if (rm.Fields.TryGetValue("frost-amount", out f))
-					{
-						plastic.Fields.Set("frost-amount", (float) f, RenderContent.ChangeContexts.Ignore);
-					}
-					if (rm.Fields.TryGetValue("polish-amount", out f))
-					{
-						plastic.Fields.Set("polish-amount", (float) f, RenderContent.ChangeContexts.Ignore);
-					}
-					if (rm.Fields.TryGetValue("reflectivity", out f))
-					{
-						plastic.Fields.Set("reflectivity", (float) f, RenderContent.ChangeContexts.Ignore);
-					}
-					if (rm.Fields.TryGetValue("transparency", out f))
-					{
-						plastic.Fields.Set("transparency", (float) f, RenderContent.ChangeContexts.Ignore);
-					}
-					crm = plastic;
-				}
-				else
-				{
-					var m = rm.SimulateMaterial(true);
-					var dcl = m.DiffuseColor;
-					var scl = m.SpecularColor;
-					var rcl = m.ReflectionColor;
-					var rfcl = m.TransparentColor;
-					var emcl = m.EmissionColor;
+					case ProbableMaterial.Plaster:
+						var plaster = new DiffuseMaterial();
+						plaster.SetParameter("diffuse", m.DiffuseColor, RenderContent.ChangeContexts.Ignore);
+						crm = plaster;
+						break;
+					case ProbableMaterial.Glass:
+					case ProbableMaterial.Gem:
+						var glass = new GlassMaterial { Name = m.Name };
+						glass.SetParameter("glass_color", m.TransparentColor, RenderContent.ChangeContexts.Ignore);
+						glass.SetParameter("frost-amount", (float)m.ReflectionGlossiness, RenderContent.ChangeContexts.Ignore);
+						glass.SetParameter("ior", (float)m.IndexOfRefraction, RenderContent.ChangeContexts.Ignore);
+						crm = glass;
+						break;
+					case ProbableMaterial.Plastic:
+						var plastic = new SimplePlasticMaterial();
+						plastic.SetParameter("diffuse", m.DiffuseColor, RenderContent.ChangeContexts.Ignore);
+						plastic.SetParameter("frost-amount", (float) m.RefractionGlossiness, RenderContent.ChangeContexts.Ignore);
+						plastic.SetParameter("polish-amount", (float) m.ReflectionGlossiness, RenderContent.ChangeContexts.Ignore);
+						plastic.SetParameter("reflectivity", (float) m.Reflectivity, RenderContent.ChangeContexts.Ignore);
+						plastic.SetParameter("transparency", (float) m.Transparency, RenderContent.ChangeContexts.Ignore);
+						crm = plastic;
+						break;
+					default:
+						var dcl = m.DiffuseColor;
+						var scl = m.SpecularColor;
+						var rcl = m.ReflectionColor;
+						var rfcl = m.TransparentColor;
+						var emcl = m.EmissionColor;
 
-					var difftex_alpha = m.AlphaTransparency;
+						var difftex_alpha = m.AlphaTransparency;
 
-					var col = RenderEngine.CreateFloat4(dcl.R, dcl.G, dcl.B, 255);
-					var spec = RenderEngine.CreateFloat4(scl.R, scl.G, scl.B, 255);
-					var refl = RenderEngine.CreateFloat4(rcl.R, rcl.G, rcl.B, 255);
-					var transp = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
-					var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
-					var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
+						var col = RenderEngine.CreateFloat4(dcl.R, dcl.G, dcl.B, 255);
+						var spec = RenderEngine.CreateFloat4(scl.R, scl.G, scl.B, 255);
+						var refl = RenderEngine.CreateFloat4(rcl.R, rcl.G, rcl.B, 255);
+						var transp = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
+						var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
+						var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
 
-					var polish = (float) m.ReflectionGlossiness*m_engine_settings.PolishFactor;
-					shader = new CyclesShader
-					{
-						Id = mid,
-						Type = CyclesShader.Shader.Diffuse,
-						CyclesMaterialType = CyclesShader.CyclesMaterial.No,
-
-						Shadeless = m.DisableLighting,
-
-						DiffuseColor = col,
-						SpecularColor = spec,
-						ReflectionColor = refl,
-						ReflectionRoughness = polish,
-						RefractionColor = refr,
-						RefractionRoughness = (float) m.RefractionGlossiness,
-						TransparencyColor = transp,
-						EmissionColor = emis,
-
-
-						FresnelIOR = (float) m.FresnelIndexOfRefraction,
-						IOR = (float) m.IndexOfRefraction,
-						Roughness = (float) m.Reflectivity, // TODO: expose roughness...
-						Reflectivity = (float) m.Reflectivity,
-						Transparency = (float) m.Transparency,
-						Shine = (float) (m.Shine/Material.MaxShine)*2.0f,
-
-						IsCyclesMaterial = false,
-
-						FresnelReflections = m.FresnelReflections,
-
-						Gamma = gamma,
-
-						Name = m.Name ?? ""
-					};
-
-					if (rm != null)
-					{
-						var diffchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Diffuse);
-						var difftex = rm.FindChild(diffchan) as RenderTexture;
-						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, difftex, diffchan, RenderMaterial.StandardChildSlots.Diffuse);
-						if (shader.HasDiffuseTexture)
+						var polish = (float) m.ReflectionGlossiness*m_engine_settings.PolishFactor;
+						shader = new CyclesShader
 						{
-							shader.DiffuseTexture.UseAlpha = difftex_alpha;
-							shader.DiffuseTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(diffchan)/100.0f, 1.0f);
-						}
+							Id = mid,
+							Type = CyclesShader.Shader.Diffuse,
+							CyclesMaterialType = CyclesShader.CyclesMaterial.No,
 
-						var bumpchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Bump);
-						var bumptex = rm.FindChild(bumpchan) as RenderTexture;
-						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, bumptex, bumpchan, RenderMaterial.StandardChildSlots.Bump);
-						if (shader.HasBumpTexture)
-						{
-							shader.BumpTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(bumpchan)/100.0f, 1.0f);
-						}
+							Shadeless = m.DisableLighting,
 
-						var transchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Transparency);
-						var transtex = rm.FindChild(transchan) as RenderTexture;
-						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, transtex, transchan, RenderMaterial.StandardChildSlots.Transparency);
-						if (shader.HasTransparencyTexture)
-						{
-							shader.TransparencyTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(transchan)/100.0f, 1.0f);
-						}
+							DiffuseColor = col,
+							SpecularColor = spec,
+							ReflectionColor = refl,
+							ReflectionRoughness = polish,
+							RefractionColor = refr,
+							RefractionRoughness = (float) m.RefractionGlossiness,
+							TransparencyColor = transp,
+							EmissionColor = emis,
 
-						var envchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Environment);
-						var envtex = rm.FindChild(envchan) as RenderTexture;
-						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, envtex, envchan, RenderMaterial.StandardChildSlots.Environment);
-						if (shader.HasEnvironmentTexture)
+
+							FresnelIOR = (float) m.FresnelIndexOfRefraction,
+							IOR = (float) m.IndexOfRefraction,
+							Roughness = (float) m.Reflectivity, // TODO: expose roughness...
+							Reflectivity = (float) m.Reflectivity,
+							Transparency = (float) m.Transparency,
+							Shine = (float) (m.Shine/Material.MaxShine)*2.0f,
+
+							IsCyclesMaterial = false,
+
+							FresnelReflections = m.FresnelReflections,
+
+							Gamma = gamma,
+
+							Name = m.Name ?? ""
+						};
+
+						if (rm != null)
 						{
-							shader.EnvironmentTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(envchan)/100.0f, 1.0f);
+							var diffchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Diffuse);
+							var difftex = rm.FindChild(diffchan) as RenderTexture;
+							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, difftex, diffchan, RenderMaterial.StandardChildSlots.Diffuse);
+							if (shader.HasDiffuseTexture)
+							{
+								shader.DiffuseTexture.UseAlpha = difftex_alpha;
+								shader.DiffuseTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(diffchan)/100.0f, 1.0f);
+							}
+
+							var bumpchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Bump);
+							var bumptex = rm.FindChild(bumpchan) as RenderTexture;
+							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, bumptex, bumpchan, RenderMaterial.StandardChildSlots.Bump);
+							if (shader.HasBumpTexture)
+							{
+								shader.BumpTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(bumpchan)/100.0f, 1.0f);
+							}
+
+							var transchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Transparency);
+							var transtex = rm.FindChild(transchan) as RenderTexture;
+							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, transtex, transchan, RenderMaterial.StandardChildSlots.Transparency);
+							if (shader.HasTransparencyTexture)
+							{
+								shader.TransparencyTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(transchan)/100.0f, 1.0f);
+							}
+
+							var envchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Environment);
+							var envtex = rm.FindChild(envchan) as RenderTexture;
+							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, envtex, envchan, RenderMaterial.StandardChildSlots.Environment);
+							if (shader.HasEnvironmentTexture)
+							{
+								shader.EnvironmentTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(envchan)/100.0f, 1.0f);
+							}
 						}
-					}
+						break;
+
 				}
 			}
 			if (crm != null)
