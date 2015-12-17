@@ -44,6 +44,10 @@ namespace RhinoCycles.Database
 		/// </summary>
 		private readonly RenderEngine m_render_engine;
 
+		/// <summary>
+		/// Note that this ViewInfo is valid only during the Apply* function calls
+		/// for the ongoing Flush. At the end this should be set to null.
+		/// </summary>
 		private ViewInfo m_current_view_info;
 
 		#region DATABASES
@@ -361,6 +365,7 @@ namespace RhinoCycles.Database
 		/// </summary>
 		public void ResetChangeQueue()
 		{
+			m_current_view_info = null;
 			ClearGamma();
 			ClearLinearWorkflow();
 			m_env_db.ResetBackgroundChangeQueue();
