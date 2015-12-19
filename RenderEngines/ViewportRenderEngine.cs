@@ -105,6 +105,7 @@ namespace RhinoCycles
 				Threads = (uint)(render_device.IsCuda ? 0 : cycles_engine.Settings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				StartResolution = 128,
+				SkipLinearToSrgbConversion = true,
 				Background = false,
 				ProgressiveRefine = true, //rw != null,
 				Progressive = true, //rw != null,
