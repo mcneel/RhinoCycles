@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using ccl;
 using Rhino.Display;
 using sdd = System.Diagnostics.Debug;
@@ -176,6 +177,16 @@ namespace RhinoCycles
 			Session.SetSamples(samples);
 			Session.SetPause(false);
 		}
+
+#if DEBUG
+		public void SaveRenderedBuffer()
+		{
+			var bmp = RenderWindow.GetBitmap();
+			var tmpf = string.Format("{0}\\RC_viewport_renderer.png", Environment.GetEnvironmentVariable("TEMP"));
+			bmp.Save(tmpf, ImageFormat.Png);
+
+		}
+#endif
 	}
 
 }

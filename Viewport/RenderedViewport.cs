@@ -171,6 +171,12 @@ namespace RhinoCycles
 					{
 						SignalRedraw();
 						m_last_frame_drawn = m_status.StartsWith("Done");
+#if DEBUG
+						if (m_last_frame_drawn)
+						{
+							m_cycles.SaveRenderedBuffer();
+						}
+#endif
 					}
 				}
 			}

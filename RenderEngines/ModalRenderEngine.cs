@@ -119,6 +119,10 @@ namespace RhinoCycles
 			cycles_engine.CancelRender = true;
 			#endregion
 
+#if DEBUG
+			SaveRenderedBufferAsImage(client, cycles_engine, size, "RC_modal_renderer");
+#endif
+
 			// we're done now, so lets clean up our session.
 			cycles_engine.Session.Destroy();
 
@@ -128,7 +132,7 @@ namespace RhinoCycles
 			// signal the render window we're done.
 			rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 		}
-		
+
 	}
 
 }
