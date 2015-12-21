@@ -1083,7 +1083,7 @@ namespace RhinoCycles.Database
 				// proper view info. It will be given if one constructed the ChangeQueue
 				// with a view to force it to be a single-view only ChangeQueue.
 				// See #RH-32345 and #RH-32356
-				var v = GetQueueSingleView();
+				var v = GetQueueView();
 				var cl = m_shader_converter.ConvertLight(this, light, v, GammaLinearWorkflow);
 
 				//System.Diagnostics.Debug.WriteLine("light {0} == {1} == {2} ({3})", light.Id, cl.Id, lg.Id, light.ChangeType);
