@@ -522,6 +522,8 @@ namespace RhinoCycles.Database
 
 			//System.Diagnostics.Debug.WriteLine(String.Format("ChangeDatabase ApplyViewChange on view {0}", viewInfo.Name));
 
+			m_env_db.BackgroundWallpaper(viewInfo);
+
 			var vp = viewInfo.Viewport;
 
 			// camera transform, camera to world conversion
@@ -1202,6 +1204,21 @@ namespace RhinoCycles.Database
 					var env_id = EnvironmentIdForUsage(RenderEnvironment.Usage.Background);
 					var env = EnvironmentForid(env_id);
 					m_env_db.SetBackground(env, RenderEnvironment.Usage.Background);
+				}
+				else if (rs.BackgroundStyle == BackgroundStyle.WallpaperImage)
+				{
+					var view = GetQueueSingleView();
+					var y = string.IsNullOrEmpty(view.WallpaperFilename);
+					sdd.WriteLine(string.Format("view has {0} wallpaper {1} {2} {3} {4} {5} {6}",
+						y ? "no" : "",
+						y ? "" : "with filename ",
+						y ? "" :  view.WallpaperFilename,
+						y ? "" : "its grayscale bool",
+						y ? "" : string.Format("{0}", view.ShowWallpaperInGrayScale),
+						y ? "" : "its hidden bool",
+						y ? "" : string.Format("{0}", view.WallpaperHidden)
+						));
+					m_env_db.BackgroundWallpaper(view);
 				}
 				m_env_db.SetGamma(GammaLinearWorkflow);
 				m_render_engine.Settings.SetQuality(rs.AntialiasLevel);

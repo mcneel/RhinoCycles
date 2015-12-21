@@ -114,7 +114,11 @@ namespace RhinoCycles.Shaders
 
 			#region nodes for environment textures on bg/refl/skylight
 
-			if (m_original_background.bg.HasTextureImage)
+			if (m_original_background.wallpaper.HasTextureImage)
+			{
+				RenderEngine.SetTextureImage(m_bg_env_texture, m_original_background.wallpaper);
+			}
+			else if (m_original_background.bg.HasTextureImage)
 			{
 				RenderEngine.SetTextureImage(m_bg_env_texture, m_original_background.bg);
 			}
@@ -190,6 +194,11 @@ namespace RhinoCycles.Shaders
 				m_gradient.outs.Fac.Connect(m_colorramp.ins.Fac);
 				// now use that as background input
 				m_colorramp.outs.Color.Connect(m_background.ins.Color);
+			}
+			else if (m_original_background.background_fill == BackgroundStyle.WallpaperImage)
+			{
+				m_bg_env_texture.outs.Color.Connect(m_background.ins.Color);
+				m_bg_env_texture.Projection = TextureNode.EnvironmentProjection.Wallpaper;
 			}
 
 			// connect refl env texture if texture exists

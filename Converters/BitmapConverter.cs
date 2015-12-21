@@ -20,6 +20,7 @@ using System.Globalization;
 using Rhino.Geometry;
 using Rhino.Render;
 using Transform = ccl.Transform;
+using System.Drawing;
 
 namespace RhinoCycles
 {
@@ -243,6 +244,25 @@ namespace RhinoCycles
 			teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
 
 			teximg.Transform = t;
+		}
+
+		public static byte[] ReadByteBitmapFromBitmap(int pwidth, int pheight, Bitmap bm)
+		{
+			var upixel = new byte[pwidth * pheight * 4];
+
+			for (var x = 0; x < pwidth; x++)
+			{
+				for (var y = 0; y < pheight; y++)
+				{
+					Color px = bm.GetPixel(x, y);
+					var offset = x * 4 + pwidth * y * 4;
+					upixel[offset] = px.R;
+					upixel[offset + 1] = px.G;
+					upixel[offset + 2] = px.B;
+					upixel[offset + 3] = px.A;
+				}
+			}
+			return upixel;
 		}
 
 		private static byte[] ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment)

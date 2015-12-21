@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using Rhino.Display;
+using Rhino.DocObjects;
 using Rhino.Render;
 using RhinoCycles.Shaders;
 using sd = System.Drawing;
@@ -92,6 +93,11 @@ namespace RhinoCycles.Database
 			m_cq_background.color2 = color2;
 
 			m_cq_background.modified |= mod;
+		}
+
+		public void BackgroundWallpaper(ViewInfo view)
+		{
+			m_cq_background.HandleWallpaper(view);
 		}
 
 		/// <summary>

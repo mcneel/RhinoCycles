@@ -13,8 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
+using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Security.Policy;
 using Rhino.Display;
+using Rhino.DocObjects;
 using Rhino.Render;
 
 namespace RhinoCycles
@@ -103,6 +109,110 @@ namespace RhinoCycles
 		public bool HasRefl
 		{
 			get { return refl.HasTextureImage || refl_color != Color.Empty; }
+		}
+
+		/// <summary>
+		/// Hold texture data for wallpaper
+		/// </summary>
+		public CyclesTextureImage wallpaper = new CyclesTextureImage();
+		/// <summary>
+		/// Solid bg color to show outside of wallpaper when not set to Stretch to Fit
+		/// </summary>
+		public Color wallpaper_solid = Color.Empty;
+
+		public void HandleWallpaper(ViewInfo view)
+		{
+			if (string.IsNullOrEmpty(view.WallpaperFilename) || view.WallpaperHidden) return;
+
+			try
+			{
+				int near, far;
+				var screenport = view.Viewport.GetScreenPort(out near, out far);
+				var bottom = screenport.Bottom;
+				var top = screenport.Top;
+				var left = screenport.Left;
+				var right = screenport.Right;
+
+				ColorMatrix cm = new ColorMatrix(
+					new[]{
+						new[] { 0.3f, 0.3f, 0.3f, 0.0f, 0.0f},
+						new[] { .59f, .59f, .59f, 0.0f, 0.0f},
+						new[] { .11f, .11f, .11f, 0.0f, 0.0f},
+						new[] { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f},
+						new[] { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}
+					}
+				);
+				ImageAttributes attr = new ImageAttributes();
+				attr.SetColorMatrix(cm);
+
+				var w = Math.Abs(right - left);
+				var h = Math.Abs(bottom - top);
+				Bitmap bm = new Bitmap(view.WallpaperFilename);
+				var ar = (float) bm.Size.Width/bm.Size.Height;
+				int nw = 0;
+				int nh = 0;
+				if (ar < 1.0f)
+				{
+					var fac = (h/(float)bm.Size.Height);
+					nw = (int)(w * fac);
+					nh = h;
+				}
+				else if (ar > 1.0f)
+				{
+					var fac = (w/(float)bm.Size.Width);
+					nh = (int) (h * fac);
+					nw = w;
+				}
+				else
+				{
+					nw = w;
+					nh = h;
+				}
+				bool doublesize = false;
+				int x = 0;
+				int y = 0;
+				if (w < 1025 && h < 1025)
+				{
+					w *= 3;
+					h *= 3;
+					nw *= 3;
+					nh *= 3;
+					doublesize = true;
+				}
+				Bitmap newBitmap = new Bitmap(w, h);
+
+				x = (w - nw)/2;
+				y = (h - nh)/2;
+
+				var col = Color.Aqua;
+				if (color1 != Color.Empty)
+					col = color1;
+				var brush = new SolidBrush(col);
+				var p = new Point(x, y);
+				var bmsize=  new Size(nw,nh);
+				using (Graphics g = Graphics.FromImage(newBitmap))
+				{
+					g.FillRectangle(brush, new Rectangle(Point.Empty, newBitmap.Size));
+					g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+					if (view.ShowWallpaperInGrayScale)
+					{
+						g.DrawImage(bm, new Rectangle(p, bmsize), 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, attr);
+					}
+					else
+					{
+						g.DrawImage(bm, new Rectangle(p, bmsize));
+					}
+				}
+				var tmpf = string.Format("{0}\\{1}.png", Environment.GetEnvironmentVariable("TEMP"), "RC_wallpaper");
+				newBitmap.Save(tmpf, ImageFormat.Png);
+				wallpaper.TexByte = BitmapConverter.ReadByteBitmapFromBitmap(newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
+				wallpaper.TexWidth = newBitmap.Width;
+				wallpaper.TexHeight = newBitmap.Height;
+				wallpaper.Name = view.WallpaperFilename;
+			}
+			catch (Exception e)
+			{
+			}
 		}
 
 		/// <summary>
