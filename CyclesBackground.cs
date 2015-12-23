@@ -171,14 +171,6 @@ namespace RhinoCycles
 				bool doublesize = false;
 				int x = 0;
 				int y = 0;
-				if (w < 1025 && h < 1025)
-				{
-					w *= 3;
-					h *= 3;
-					nw *= 3;
-					nh *= 3;
-					doublesize = true;
-				}
 				Bitmap newBitmap = new Bitmap(w, h);
 
 				x = (w - nw)/2;
