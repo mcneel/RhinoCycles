@@ -388,6 +388,7 @@ namespace RhinoCycles.Shaders
 			RenderEngine.SetTextureImage(m_diffuse_texture, m_original.DiffuseTexture);
 			RenderEngine.SetProjectionMode(m_shader, m_original.DiffuseTexture, m_diffuse_texture, m_texture_coordinate);
 			m_diffuse_texture.ColorSpace = TextureNode.TextureColorSpace.None;
+			m_diffuse_texture.IsLinear = false;
 			// connect diffuse texture to diffuse color strength mixer
 			if (m_original.HasDiffuseTexture)
 			{
@@ -485,6 +486,7 @@ namespace RhinoCycles.Shaders
 			RenderEngine.SetTextureImage(m_transparency_texture, m_original.TransparencyTexture);
 			RenderEngine.SetProjectionMode(m_shader, m_original.TransparencyTexture, m_transparency_texture, m_texture_coordinate);
 			m_transparency_texture.ColorSpace = TextureNode.TextureColorSpace.None;
+			m_transparency_texture.IsLinear = false;
 
 			// convert transparency texture input to luminance
 			m_transparency_texture.outs.Color.Connect(m_transparency_to_luminance.ins.Color);
@@ -577,6 +579,7 @@ namespace RhinoCycles.Shaders
 				RenderEngine.SetProjectionMode(m_shader, m_original.BumpTexture, m_bump_texture, m_texture_coordinate);
 
 				m_bump_texture.ColorSpace = TextureNode.TextureColorSpace.None;
+				m_bump_texture.IsLinear = false;
 
 				m_bump_texture.outs.Color.Connect(m_bump_bw.ins.Color);
 				m_bump_bw.outs.Val.Connect(m_bump_normal.ins.Height);
@@ -596,6 +599,9 @@ namespace RhinoCycles.Shaders
 			{
 				RenderEngine.SetTextureImage(m_environment_slot_texture, m_original.EnvironmentTexture);
 				RenderEngine.SetProjectionMode(m_shader, m_original.EnvironmentTexture, m_environment_slot_texture, m_texture_coordinate);
+
+				m_environment_slot_texture.ColorSpace = TextureNode.TextureColorSpace.None;
+				m_environment_slot_texture.IsLinear = false;
 
 				m_environment_slot_shadeless.ins.Strength.Value = 1.0f;
 
