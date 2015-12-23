@@ -1207,7 +1207,7 @@ namespace RhinoCycles.Database
 				}
 				else if (rs.BackgroundStyle == BackgroundStyle.WallpaperImage)
 				{
-					var view = GetQueueSingleView();
+					var view = GetQueueView();
 					var y = string.IsNullOrEmpty(view.WallpaperFilename);
 					sdd.WriteLine(string.Format("view has {0} wallpaper {1} {2} {3} {4} {5} {6}",
 						y ? "no" : "",
