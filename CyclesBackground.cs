@@ -197,8 +197,10 @@ namespace RhinoCycles
 						g.DrawImage(bm, new Rectangle(p, bmsize));
 					}
 				}
+#if DEBUG
 				var tmpf = string.Format("{0}\\{1}.png", Environment.GetEnvironmentVariable("TEMP"), "RC_wallpaper");
 				newBitmap.Save(tmpf, ImageFormat.Png);
+#endif
 				wallpaper.TexByte = BitmapConverter.ReadByteBitmapFromBitmap(newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaper.TexWidth = newBitmap.Width;
 				wallpaper.TexHeight = newBitmap.Height;
