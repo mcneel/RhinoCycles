@@ -114,7 +114,7 @@ namespace RhinoCycles.Shaders
 
 			#region nodes for environment textures on bg/refl/skylight
 
-			if (m_original_background.wallpaper.HasTextureImage)
+			if (m_original_background.wallpaper.HasTextureImage && m_original_background.background_fill == BackgroundStyle.WallpaperImage)
 			{
 				RenderEngine.SetTextureImage(m_bg_env_texture, m_original_background.wallpaper);
 			}
