@@ -174,13 +174,9 @@ namespace RhinoCycles
 					nw = w;
 					nh = h;
 				}
-				bool doublesize = false;
-				int x = 0;
-				int y = 0;
+				int x = (w - nw)/2;
+				int y = (h - nh)/2;
 				Bitmap newBitmap = new Bitmap(w, h);
-
-				x = (w - nw)/2;
-				y = (h - nh)/2;
 
 				var col = Color.Aqua;
 				if (color1 != Color.Empty)
