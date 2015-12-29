@@ -123,7 +123,7 @@ namespace RhinoCycles
 
 		public void HandleWallpaper(ViewInfo view)
 		{
-			if (string.IsNullOrEmpty(view.WallpaperFilename) || view.WallpaperHidden || !File.Exists(view.WallpaperFilename))
+			if (string.IsNullOrEmpty(view.WallpaperFilename) || !File.Exists(view.WallpaperFilename))
 			{
 				wallpaper.Clear();
 				return;
@@ -181,13 +181,16 @@ namespace RhinoCycles
 				{
 					g.FillRectangle(brush, new Rectangle(Point.Empty, newBitmap.Size));
 					g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-					if (view.ShowWallpaperInGrayScale)
+					if (!view.WallpaperHidden)
 					{
-						g.DrawImage(bm, new Rectangle(p, bmsize), 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, attr);
-					}
-					else
-					{
-						g.DrawImage(bm, new Rectangle(p, bmsize));
+						if (view.ShowWallpaperInGrayScale)
+						{
+							g.DrawImage(bm, new Rectangle(p, bmsize), 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, attr);
+						}
+						else
+						{
+							g.DrawImage(bm, new Rectangle(p, bmsize));
+						}
 					}
 				}
 #if DEBUG
