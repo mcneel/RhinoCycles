@@ -18,6 +18,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Security.Policy;
 using Rhino.Display;
 using Rhino.DocObjects;
@@ -122,7 +123,11 @@ namespace RhinoCycles
 
 		public void HandleWallpaper(ViewInfo view)
 		{
-			if (string.IsNullOrEmpty(view.WallpaperFilename) || view.WallpaperHidden) return;
+			if (string.IsNullOrEmpty(view.WallpaperFilename) || view.WallpaperHidden || !File.Exists(view.WallpaperFilename))
+			{
+				wallpaper.Clear();
+				return;
+			}
 
 			try
 			{
@@ -133,6 +138,7 @@ namespace RhinoCycles
 				var left = screenport.Left;
 				var right = screenport.Right;
 
+				// color matrix used for conversion to gray scale
 				ColorMatrix cm = new ColorMatrix(
 					new[]{
 						new[] { 0.3f, 0.3f, 0.3f, 0.0f, 0.0f},
