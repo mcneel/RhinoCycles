@@ -121,8 +121,14 @@ namespace RhinoCycles
 		/// </summary>
 		public Color wallpaper_solid = Color.Empty;
 
+		private bool m_old_hidden;
+		private bool m_old_grayscale;
+
 		public void HandleWallpaper(ViewInfo view)
 		{
+			modified |= m_old_hidden != view.WallpaperHidden | m_old_grayscale != view.ShowWallpaperInGrayScale;
+			m_old_hidden = view.WallpaperHidden;
+			m_old_grayscale = view.ShowWallpaperInGrayScale;
 			if (string.IsNullOrEmpty(view.WallpaperFilename) || !File.Exists(view.WallpaperFilename))
 			{
 				wallpaper.Clear();
@@ -167,12 +173,16 @@ namespace RhinoCycles
 
 				int nw = (int)(bm.Width * fac);
 				int nh = (int)(bm.Height * fac);
+
 				int x = (w - nw)/2;
 				int y = (h - nh)/2;
 				Bitmap newBitmap = new Bitmap(w, h);
 
 				var col = Color.Aqua;
 				if (color1 != Color.Empty)
+#if DEBUG
+					if(!view.ShowWallpaperInGrayScale)
+#endif
 					col = color1;
 				var brush = new SolidBrush(col);
 				var p = new Point(x, y);
@@ -204,6 +214,7 @@ namespace RhinoCycles
 			}
 			catch (Exception e)
 			{
+				wallpaper.Clear();
 			}
 		}
 
