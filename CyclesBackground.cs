@@ -19,7 +19,6 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Security.Policy;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
@@ -121,6 +120,7 @@ namespace RhinoCycles
 		/// </summary>
 		public Color wallpaper_solid = Color.Empty;
 
+		private Guid id = Guid.NewGuid();
 		private bool m_old_hidden;
 		private bool m_old_grayscale;
 
@@ -210,7 +210,7 @@ namespace RhinoCycles
 				wallpaper.TexByte = BitmapConverter.ReadByteBitmapFromBitmap(newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaper.TexWidth = newBitmap.Width;
 				wallpaper.TexHeight = newBitmap.Height;
-				wallpaper.Name = view.WallpaperFilename;
+				wallpaper.Name = string.Format("{0}_{1}x{2}_{3}_{4}_{5}", view.WallpaperFilename, newBitmap.Width, newBitmap.Height, view.WallpaperHidden, view.ShowWallpaperInGrayScale, id);
 			}
 			catch (Exception e)
 			{
