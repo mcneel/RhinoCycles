@@ -154,26 +154,19 @@ namespace RhinoCycles
 				var w = Math.Abs(right - left);
 				var h = Math.Abs(bottom - top);
 				Bitmap bm = new Bitmap(view.WallpaperFilename);
-				var ar = (float) bm.Size.Width/bm.Size.Height;
-				int nw = 0;
-				int nh = 0;
+				var ar = (float) bm.Width/bm.Height;
+				var fac = 1.0f;
 				if (ar < 1.0f)
 				{
-					var fac = (h/(float)bm.Size.Height);
-					nw = (int)(w * fac);
-					nh = h;
+					fac = (h/(float)bm.Height);
 				}
 				else if (ar > 1.0f)
 				{
-					var fac = (w/(float)bm.Size.Width);
-					nh = (int) (h * fac);
-					nw = w;
+					fac = (w/(float)bm.Width);
 				}
-				else
-				{
-					nw = w;
-					nh = h;
-				}
+
+				int nw = (int)(bm.Width * fac);
+				int nh = (int)(bm.Height * fac);
 				int x = (w - nw)/2;
 				int y = (h - nh)/2;
 				Bitmap newBitmap = new Bitmap(w, h);
