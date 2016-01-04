@@ -212,7 +212,7 @@ namespace RhinoCycles
 				wallpaper.TexHeight = newBitmap.Height;
 				wallpaper.Name = string.Format("{0}_{1}x{2}_{3}_{4}_{5}", view.WallpaperFilename, newBitmap.Width, newBitmap.Height, view.WallpaperHidden, view.ShowWallpaperInGrayScale, id);
 			}
-			catch (Exception e)
+			catch (Exception)
 			{
 				wallpaper.Clear();
 			}
