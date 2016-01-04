@@ -62,6 +62,8 @@ namespace RhinoCycles.Commands
 				}
 			}
 
+			RhinoApp.WriteLine("Active view isn't rendering with Cycles");
+
 			return Result.Nothing;
 		}
 	}
