@@ -203,47 +203,50 @@ namespace RhinoCycles
 
 			var rhinotfm = render_texture.LocalMappingTransform;
 
-			var texture_evaluator = render_texture.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping);
-			try
+			using (
+				var texture_evaluator = render_texture.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
 			{
-				teximg.TexHeight = Convert.ToInt32(render_texture.GetParameter("pixel-height"));
-				teximg.TexWidth = Convert.ToInt32(render_texture.GetParameter("pixel-width"));
+				try
+				{
+					teximg.TexHeight = Convert.ToInt32(render_texture.GetParameter("pixel-height"));
+					teximg.TexWidth = Convert.ToInt32(render_texture.GetParameter("pixel-width"));
+				}
+				catch (Exception)
+				{
+					teximg.TexHeight = teximg.TexWidth = 1024;
+				}
+
+				if (teximg.TexHeight == 0 || teximg.TexWidth == 0)
+				{
+					teximg.TexHeight = teximg.TexWidth = 1024;
+				}
+
+				Transform t = new Transform(
+					rhinotfm.ToFloatArray(true)
+					);
+
+				var is_float = render_texture.IsHdrCapable();
+
+				teximg.IsLinear = render_texture.IsLinear();
+
+				if (is_float)
+				{
+					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
+					img.ApplyGamma(gamma);
+					teximg.TexFloat = img.Data;
+					teximg.TexByte = null;
+				}
+				else
+				{
+					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
+					img.ApplyGamma(gamma);
+					teximg.TexByte = img.Data;
+					teximg.TexFloat = null;
+				}
+				teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
+
+				teximg.Transform = t;
 			}
-			catch (Exception)
-			{
-				teximg.TexHeight = teximg.TexWidth = 1024;
-			}
-
-			if (teximg.TexHeight == 0 || teximg.TexWidth == 0)
-			{
-				teximg.TexHeight = teximg.TexWidth = 1024;
-			}
-
-			Transform t = new Transform(
-				rhinotfm.ToFloatArray(true)
-				);
-
-			var is_float = render_texture.IsHdrCapable();
-
-			teximg.IsLinear = render_texture.IsLinear();
-
-			if (is_float)
-			{
-				var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
-				img.ApplyGamma(gamma);
-				teximg.TexFloat = img.Data;
-				teximg.TexByte = null;
-			}
-			else
-			{
-				var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
-				img.ApplyGamma(gamma);
-				teximg.TexByte = img.Data;
-				teximg.TexFloat = null;
-			}
-			teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
-
-			teximg.Transform = t;
 		}
 
 		public static byte[] ReadByteBitmapFromBitmap(int pwidth, int pheight, Bitmap bm)
