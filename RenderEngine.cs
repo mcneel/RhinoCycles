@@ -378,10 +378,6 @@ namespace RhinoCycles
 						var b = pixels[i + 2];
 						var a = pixels[i + 3];
 
-						if (float.IsNaN(r)) r = 0.0f;
-						if (float.IsNaN(g)) g = 0.0f;
-						if (float.IsNaN(b)) b = 0.0f;
-						if (float.IsNaN(a)) a = 0.0f;
 						r = Math.Min(Math.Abs(r), 1.0f);
 						g = Math.Min(Math.Abs(g), 1.0f);
 						b = Math.Min(Math.Abs(b), 1.0f);
