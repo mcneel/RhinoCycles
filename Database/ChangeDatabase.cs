@@ -1201,9 +1201,7 @@ namespace RhinoCycles.Database
 				m_env_db.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
 				if (rs.BackgroundStyle == BackgroundStyle.Environment)
 				{
-					var env_id = EnvironmentIdForUsage(RenderEnvironment.Usage.Background);
-					var env = EnvironmentForid(env_id);
-					m_env_db.SetBackground(env, RenderEnvironment.Usage.Background);
+					UpdateAllEnvironments();
 				}
 				else if (rs.BackgroundStyle == BackgroundStyle.WallpaperImage)
 				{
@@ -1231,12 +1229,29 @@ namespace RhinoCycles.Database
 		/// <param name="usage"></param>
 		protected override void ApplyEnvironmentChanges(RenderEnvironment.Usage usage)
 		{
-			var env_id = EnvironmentIdForUsage(usage);
-			var env = EnvironmentForid(env_id);
-			m_env_db.SetBackground(env, usage);
+			/* instead of just reading the one environment we have to read everything.
+			 * 
+			 * The earlier assumption that non-changing EnvironmentIdForUsage meant non-changing
+			 * environment instance is wrong. See http://mcneel.myjetbrains.com/youtrack/issue/RH-32418
+			 */
+			UpdateAllEnvironments();
 			m_env_db.SetGamma(GammaLinearWorkflow);
 
 			//System.Diagnostics.Debug.WriteLine("{0}, env {1}", usage, env);
+		}
+
+		private void UpdateAllEnvironments()
+		{
+			var bgenvId = EnvironmentIdForUsage(RenderEnvironment.Usage.Background);
+			var skyenvId = EnvironmentIdForUsage(RenderEnvironment.Usage.Skylighting);
+			var reflenvId = EnvironmentIdForUsage(RenderEnvironment.Usage.ReflectionAndRefraction);
+			var bgenv = EnvironmentForid(bgenvId);
+			var skyenv = EnvironmentForid(skyenvId);
+			var reflenv = EnvironmentForid(reflenvId);
+
+			m_env_db.SetBackground(bgenv, RenderEnvironment.Usage.Background);
+			m_env_db.SetBackground(skyenv, RenderEnvironment.Usage.Skylighting);
+			m_env_db.SetBackground(reflenv, RenderEnvironment.Usage.ReflectionAndRefraction);
 		}
 
 		/// <summary>
