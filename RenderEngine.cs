@@ -202,7 +202,7 @@ namespace RhinoCycles
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			m_view = view;
 			m_interactive = interactive;
-			Database = new ChangeDatabase(m_plugin_id, this, m_doc_serialnumber, m_view);
+			Database = new ChangeDatabase(m_plugin_id, this, m_doc_serialnumber, m_view, !m_interactive);
 
 			RegisterEventHandler();
 		}

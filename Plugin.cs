@@ -218,6 +218,7 @@ namespace RhinoCycles
 			engine.RenderWindow.AddWireframeChannel(engine.Doc, engine.ViewportInfo, renderSize, new Rectangle(0, 0, renderSize.Width, renderSize.Height));
 			engine.RenderWindow.SetSize(renderSize);
 			engine.RenderDimension = renderSize;
+			engine.Database.RenderDimension = renderSize;
 
 			engine.Settings.Verbose = true;
 
@@ -267,6 +268,7 @@ namespace RhinoCycles
 			engine.RenderDimension = scene.PreviewImageSize;
 			/* create a window-less, non-document controlled render window */
 			engine.RenderWindow = Rhino.Render.RenderWindow.Create(scene.PreviewImageSize);
+			engine.Database.RenderDimension = engine.RenderDimension;
 
 			engine.CreateWorld();
 

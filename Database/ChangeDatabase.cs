@@ -89,6 +89,8 @@ namespace RhinoCycles.Database
 
 		private readonly ShaderConverter m_shader_converter;
 
+		private readonly bool m_modal_renderer;
+
 		/// <summary>
 		/// Constructor for our changequeue implementation
 		/// </summary>
@@ -96,11 +98,13 @@ namespace RhinoCycles.Database
 		/// <param name="engine">Reference to our render engine</param>
 		/// <param name="doc">Document runtime serial number</param>
 		/// <param name="view">Reference to the RhinoView for which this queue is created.</param>
-		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, RhinoView view) : base(pluginId, doc, view)
+		/// <param name="modal">Set to true if rendering modal</param>
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, RhinoView view, bool modal) : base(pluginId, doc, view)
 		{
 			m_render_engine = engine;
 			m_object_shader_db = new ObjectShaderDatabase(m_object_db);
 			m_shader_converter = new ShaderConverter(engine.Settings);
+			m_modal_renderer = modal;
 		}
 
 
@@ -113,6 +117,7 @@ namespace RhinoCycles.Database
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, CreatePreviewEventArgs createPreviewEventArgs) : base(pluginId, createPreviewEventArgs)
 		{
 			m_render_engine = engine;
+			m_modal_renderer = true;
 			m_object_shader_db = new ObjectShaderDatabase(m_object_db);
 			m_shader_converter = new ShaderConverter(engine.Settings);
 		}
@@ -510,6 +515,8 @@ namespace RhinoCycles.Database
 			scene.Camera.Update();
 		}
 
+		public Size RenderDimension { get; set; }
+
 		/// <summary>
 		/// Handle view changes.
 		/// </summary>
@@ -538,8 +545,8 @@ namespace RhinoCycles.Database
 			double frt, frb, frr, frl, frf, frn;
 			vp.GetFrustum(out frl, out frr, out frb, out frt, out frn, out frf);
 
-			//System.Diagnostics.Debug.WriteLine(String.Format(
-			//	"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
+			sdd.WriteLine(String.Format(
+				"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
 
 			// distance between top and bottom of frustum
 			var dist = frt - frb;
@@ -557,12 +564,12 @@ namespace RhinoCycles.Database
 			var parallel = vp.IsParallelProjection;
 			var viewscale = vp.ViewScale;
 
-			/*System.Diagnostics.Debug.WriteLine(String.Format(
+			sdd.WriteLine(String.Format(
 				"Camera projection type {0}, lens length {1}, scale {2}x{3}, two-point {4}, dist {5}, disthalf {6}", parallel ? "ORTHOGRAPHIC" : "PERSPECTIVE",
 				lenslength, viewscale.Width, viewscale.Height, twopoint, dist, disthalf));
 
-			System.Diagnostics.Debug.WriteLine(String.Format(
-				"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));*/
+			sdd.WriteLine(String.Format(
+				"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
 
 			int near, far;
 			var screenport = vp.GetScreenPort(out near, out far);
@@ -571,8 +578,23 @@ namespace RhinoCycles.Database
 			var left = screenport.Left;
 			var right = screenport.Right;
 
-			var w = Math.Abs(right - left);
-			var h = Math.Abs(bottom - top);
+			int w = 0;
+			int h = 0;
+
+			// We shouldn't be taking render dimensions from the viewport when
+			// rendering into render window, since this can be completely
+			// different (for instance Rendering panel, custom render size)
+			// see http://mcneel.myjetbrains.com/youtrack/issue/RH-32533
+			if (!m_modal_renderer)
+			{
+				w = Math.Abs(right - left);
+				h = Math.Abs(bottom - top);
+			}
+			else
+			{
+				w = RenderDimension.Width;
+				h = RenderDimension.Height;
+			}
 			var portrait = w < h;
 			var view_aspectratio = portrait ? h/(float)w : w/(float)h;
 
