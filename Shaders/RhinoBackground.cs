@@ -85,12 +85,14 @@ namespace RhinoCycles.Shaders
 
 			var color1 = m_original_background.color1.IsEmpty ? tst : RenderEngine.CreateFloat4(m_original_background.color1);
 			var color2 = m_original_background.color2.IsEmpty ? tst : RenderEngine.CreateFloat4(m_original_background.color2);
+			var bgcolor = m_original_background.bg_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.bg_color);
 			var skycolor = m_original_background.sky_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.sky_color);
 			var reflcolor = m_original_background.refl_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.refl_color);
 
 			// our main background shader. With just this, and some color != black set we should get skylighting
+			// use the bgcolor from the background (360deg) environment if it is specified, instead.
 			m_background.ins.Strength.Value = 1.0f;
-			m_background.ins.Color.Value = color1;
+			m_background.ins.Color.Value = m_original_background.background_environment != null ? bgcolor : color1;
 
 			#region skylight disabler/enabler nodes
 
