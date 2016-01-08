@@ -29,38 +29,62 @@ namespace RhinoCycles
 			// may happen. @todo figure out a better way to solve
 			//if (!Session.Scene.TryLock()) return false;
 
+			if (CancelRender) return false;
+
 			// linear workflow changes
 			Database.UploadLinearWorkflowChanges();
+
+			if (CancelRender) return false;
 
 			// gamma changes
 			Database.UploadGammaChanges();
 
+			if (CancelRender) return false;
+
 			// environment changes
 			Database.UploadEnvironmentChanges();
+
+			if (CancelRender) return false;
 
 			// transforms on objects, no geometry changes
 			Database.UploadDynamicObjectTransforms();
 
+			if (CancelRender) return false;
+
 			// viewport changes
 			Database.UploadCameraChanges();
+
+			if (CancelRender) return false;
 
 			// new shaders we've got
 			Database.UploadShaderChanges();
 
+			if (CancelRender) return false;
+
 			// light changes
 			Database.UploadLightChanges();
+
+			if (CancelRender) return false;
 
 			// mesh changes (new ones, updated ones)
 			Database.UploadMeshChanges();
 
+			if (CancelRender) return false;
+
 			// shader changes on objects (replacement)
 			Database.UploadObjectShaderChanges();
+
+			if (CancelRender) return false;
 
 			// object changes (new ones, deleted ones)
 			Database.UploadObjectChanges();
 
+			if (CancelRender) return false;
+
 			// done, now clear out our change queue stuff so we're ready for the next time around :)
 			Database.ResetChangeQueue();
+
+			if (CancelRender) return false;
 
 			//Session.Scene.Unlock();
 

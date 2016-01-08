@@ -167,6 +167,11 @@ namespace RhinoCycles
 
 					TriggerSynchronized();
 				}
+
+				if (CancelRender)
+				{
+					State = State.Stopped;
+				}
 				// unpause
 				Session.SetPause(false);
 			}

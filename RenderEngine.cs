@@ -452,6 +452,10 @@ namespace RhinoCycles
 			CancelRender = true;
 
 			// set state to stopped
+			while (State == State.Uploading)
+			{
+				Thread.Sleep(10);
+			}
 			State = State.Stopped;
 
 			// signal our cycles session to stop rendering.
