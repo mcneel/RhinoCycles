@@ -19,6 +19,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using ccl;
 using Rhino.Display;
+using Rhino.Render;
 using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCycles
@@ -36,10 +37,52 @@ namespace RhinoCycles
 			m_update_render_tile_callback = null;
 			m_write_render_tile_callback = null;
 			m_test_cancel_callback = null;
+			m_display_update_callback = DisplayUpdateHandler;
 
 			CSycles.log_to_stdout(false);
 #endregion
 			
+		}
+
+		public class PassRenderedEventArgs : EventArgs
+		{
+			public PassRenderedEventArgs(int sample)
+			{
+				Sample = sample;
+			}
+
+			public int Sample { get; private set; }
+		}
+		public event EventHandler<PassRenderedEventArgs> PassRendered;
+
+		public void DisplayUpdateHandler(uint sessionId, int sample)
+		{
+			if (CancelRender) return;
+			if (m_setting_size) return;
+			lock (size_setter_lock)
+			{
+				// copy display buffer data into ccycles pixel buffer
+				Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
+				// copy stuff into renderwindow dib
+				using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
+				{
+					if (channel != null)
+					{
+						var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
+						var size = RenderDimension;
+						var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
+						channel.SetValues(rect, size, pixelbuffer);
+					}
+				}
+				SaveRenderedBuffer(sample);
+				sdd.WriteLine(string.Format("display update, sample {0}", sample));
+				// now signal whoever is interested
+				var handler = PassRendered;
+				if (handler != null)
+				{
+					handler(this, new PassRenderedEventArgs(sample));
+				}
+			}
 		}
 
 		private readonly object size_setter_lock = new object();
@@ -48,17 +91,22 @@ namespace RhinoCycles
 			lock (size_setter_lock)
 			{
 				RenderWindow.SetSize(new Size(w, h));
+				m_setting_size = false;
 			}
 		}
 
+		private bool m_setting_size = false;
 		public event EventHandler RenderSizeUnset;
-
 		public void UnsetRenderSize()
 		{
-			var handler = RenderSizeUnset;
-			if (handler != null)
+			lock (size_setter_lock)
 			{
-				handler(this, new EventArgs());
+				m_setting_size = true;
+				var handler = RenderSizeUnset;
+				if (handler != null)
+				{
+					handler(this, EventArgs.Empty);
+				}
 			}
 		}
 
@@ -101,8 +149,8 @@ namespace RhinoCycles
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = render_device.IsCuda ? new Size(256, 256) : new Size(32, 32),
-				Threads = (uint)(render_device.IsCuda ? 0 : cycles_engine.Settings.Threads),
+				TileSize = render_device.IsCpu? new Size(32, 32) : new Size(256, 256),
+				Threads = (uint)(render_device.IsCpu ?  cycles_engine.Settings.Threads : 0),
 				ShadingSystem = ShadingSystem.SVM,
 				StartResolution = 128,
 				SkipLinearToSrgbConversion = true,
@@ -150,6 +198,8 @@ namespace RhinoCycles
 			}
 		}
 
+		public uint ViewCrc { get; set; }
+
 		public void Synchronize()
 		{
 			if (State == State.Uploading)
@@ -184,15 +234,13 @@ namespace RhinoCycles
 			Session.SetPause(false);
 		}
 
-#if DEBUG
-		public void SaveRenderedBuffer()
+		public void SaveRenderedBuffer(int sample)
 		{
-			var bmp = RenderWindow.GetBitmap();
-			var tmpf = string.Format("{0}\\RC_viewport_renderer.png", Environment.GetEnvironmentVariable("TEMP"));
-			bmp.Save(tmpf, ImageFormat.Png);
-
+			var tmpf = string.Format("{0}\\RC_viewport_renderer_{1}.png", Environment.GetEnvironmentVariable("TEMP"), sample.ToString("D5"));
+			RenderWindow.SaveDibAsBitmap(tmpf);
+			/*var bmp = RenderWindow.GetBitmap();
+			bmp.Save(tmpf, ImageFormat.Png);*/
 		}
-#endif
 	}
 
 }

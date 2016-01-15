@@ -73,6 +73,7 @@ namespace RhinoCycles
 			m_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
 			m_cycles.Synchronized += m_cycles_Synchronized;
+			m_cycles.PassRendered += m_cycles_PassRendered;
 			m_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 
 			m_cycles.Settings = Plugin.EngineSettings;
@@ -102,6 +103,12 @@ namespace RhinoCycles
 			return true;
 		}
 
+		void m_cycles_PassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
+		{
+			SetCRC(m_cycles.ViewCrc);
+			SignalRedraw();
+		}
+
 		void m_cycles_Synchronized(object sender, EventArgs e)
 		{
 			m_starttime = GeCurrentTimeStamp();
@@ -112,8 +119,11 @@ namespace RhinoCycles
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
 		{
 			ssd.WriteLine("Setting Gamma {0} and ApplyGammaCorrection {1}", e.Gamma, e.Lwf.Active);
-			SetGamma(e.Gamma);
 			SetUseLinearWorkflowGamma(e.Lwf.Active);
+			SetGamma(e.Gamma);
+			var imageadjust = m_cycles.RenderWindow.GetAdjust();
+			imageadjust.Gamma = e.Gamma;
+			m_cycles.RenderWindow.SetAdjust(imageadjust);
 		}
 
 		void m_cycles_RenderStarted(object sender, EventArgs e)
@@ -169,12 +179,14 @@ namespace RhinoCycles
 
 					if (!m_last_frame_drawn)
 					{
-						SignalRedraw();
+						if (m_cycles != null && m_cycles.Session != null && m_cycles.State == State.Rendering)
+							m_cycles.Session.Draw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
+						//SignalRedraw();
 						m_last_frame_drawn = m_status.StartsWith("Done");
 #if DEBUG
 						if (m_last_frame_drawn)
 						{
-							m_cycles.SaveRenderedBuffer();
+							m_cycles.SaveRenderedBuffer(m_samples);
 						}
 #endif
 					}
@@ -234,10 +246,14 @@ namespace RhinoCycles
 		{
 			if (m_cycles != null && m_cycles.Session != null && m_cycles.State == State.Rendering)
 			{
-				m_cycles.Session.RhinoDraw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
+				// need to force tonemap still
+				// but since we've added DisplayUpdateCallback the draw won't actually draw, just ensure
+				// the tonemapping is done. We do it here (mainthread), since we need to ensure for GPU rendering
+				// we can access the buffers.
+				m_cycles.Session.Draw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
 			}
 
-			return true;
+			return false;
 		}
 
 

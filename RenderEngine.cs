@@ -97,6 +97,7 @@ namespace RhinoCycles
 		protected CSycles.RenderTileCallback m_update_render_tile_callback;
 		protected CSycles.RenderTileCallback m_write_render_tile_callback;
 		protected CSycles.TestCancelCallback m_test_cancel_callback;
+		protected CSycles.DisplayUpdateCallback m_display_update_callback;
 
 		protected bool m_flush;
 		/// <summary>
@@ -495,6 +496,7 @@ namespace RhinoCycles
 			Session.UpdateTileCallback = m_update_render_tile_callback;
 			Session.WriteTileCallback = m_write_render_tile_callback;
 			Session.TestCancelCallback = m_test_cancel_callback;
+			Session.DisplayUpdateCallback = m_display_update_callback;
 
 			#endregion
 		}

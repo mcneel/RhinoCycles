@@ -495,6 +495,7 @@ namespace RhinoCycles.Database
 			var viewportRenderEngine = m_render_engine as ViewportRenderEngine;
 			if (viewportRenderEngine != null)
 			{
+				viewportRenderEngine.ViewCrc = view.Crc;
 				viewportRenderEngine.UnsetRenderSize();
 			}
 
@@ -621,6 +622,7 @@ namespace RhinoCycles.Database
 				TwoPoint = twopoint,
 				Width = w,
 				Height = h,
+				Crc = RenderedDisplayMode.ComputeViewportCRC(viewInfo),
 			};
 			m_camera_db.AddViewChange(cyclesview);
 		}
