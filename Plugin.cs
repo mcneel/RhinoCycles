@@ -31,7 +31,7 @@ using Rhino.Render;
 
 namespace RhinoCycles
 {
-	public class Plugin : RenderPlugIn
+	public class Plugin : PlugIn
 	{
 		#region helper functions to get relative path between two paths
 		private const int FILE_ATTRIBUTE_DIRECTORY = 0x10;
@@ -161,6 +161,7 @@ namespace RhinoCycles
 			base.OnShutdown();
 		}
 
+#if CYCLESUTILITY
 		protected override bool SupportsFeature(RenderFeature feature)
 		{
 			if (feature == RenderFeature.CustomDecalProperties)
@@ -195,7 +196,7 @@ namespace RhinoCycles
 		/// <param name="mode">mode</param>
 		/// <param name="fastPreview">True for fast preview.</param>
 		/// <returns></returns>
-		protected override Result Render(RhinoDoc doc, RunMode mode, bool fastPreview)
+		public Result Render(RhinoDoc doc, RunMode mode, bool fastPreview)
 		{
 			InitialiseCSycles();
 			AsyncRenderContext a_rc = new ModalRenderEngine(doc, Id);
@@ -285,5 +286,6 @@ namespace RhinoCycles
 			scene.PreviewImage.Save(prev, ImageFormat.Jpeg);
 #endif
 		}
+#endif // CYCLESUTILITY
 	}
 }
