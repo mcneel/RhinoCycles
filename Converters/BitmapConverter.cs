@@ -66,8 +66,10 @@ namespace RhinoCycles
 			int pwidth;
 			try
 			{
-				pheight = Convert.ToInt32(renderTexture.GetParameter("pixel-height"));
-				pwidth = Convert.ToInt32(renderTexture.GetParameter("pixel-width"));
+				int u, v, w;
+				renderTexture.PixelSize(out u, out v, out w);
+				pheight = u;
+				pwidth = v;
 			}
 			catch (Exception)
 			{
@@ -208,8 +210,10 @@ namespace RhinoCycles
 			{
 				try
 				{
-					teximg.TexHeight = Convert.ToInt32(render_texture.GetParameter("pixel-height"));
-					teximg.TexWidth = Convert.ToInt32(render_texture.GetParameter("pixel-width"));
+					int u, v, w;
+					render_texture.PixelSize(out u, out v, out w);
+					teximg.TexHeight = u;
+					teximg.TexWidth = v;
 				}
 				catch (Exception)
 				{
