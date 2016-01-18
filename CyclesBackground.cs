@@ -258,12 +258,12 @@ namespace RhinoCycles
 						var resampler = RenderContentType.NewContentFromTypeId(new System.Guid("71D5FEEF-4144-4133-8C38-1EEF2BC851F1"));
 						resampler.Name = "RESAMPLER"; // give name so we can see in debug if it doesn't get freed properly.
 						var render_texture = original_render_texture.MakeCopy() as RenderTexture;
-						resampler.SetParameter("u-division-count", 64, RenderContent.ChangeContexts.Program);
-						resampler.SetParameter("v-division-count", 64, RenderContent.ChangeContexts.Program);
-						resampler.SetParameter("blur-on", true, RenderContent.ChangeContexts.Program);
-						resampler.SetParameter("blur-radius", 0.2, RenderContent.ChangeContexts.Program);
-						resampler.SetChild(render_texture, "texture", RenderContent.ChangeContexts.Program);
-						skylight_copy.SetChild(resampler, "texture", RenderContent.ChangeContexts.Program);
+						resampler.SetParameter("u-division-count", 64, RenderContent.ChangeContexts.Ignore);
+                        resampler.SetParameter("v-division-count", 64, RenderContent.ChangeContexts.Ignore);
+                        resampler.SetParameter("blur-on", true, RenderContent.ChangeContexts.Ignore);
+                        resampler.SetParameter("blur-radius", 0.2, RenderContent.ChangeContexts.Ignore);
+                        resampler.SetChild(render_texture, "texture", RenderContent.ChangeContexts.Ignore);
+                        skylight_copy.SetChild(resampler, "texture", RenderContent.ChangeContexts.Ignore);
 
 
 						BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, gamma);
