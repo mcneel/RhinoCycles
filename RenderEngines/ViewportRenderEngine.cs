@@ -59,6 +59,7 @@ namespace RhinoCycles
 		{
 			if (CancelRender) return;
 			if (m_setting_size) return;
+			if (Flush) return;
 			lock (size_setter_lock)
 			{
 				// copy display buffer data into ccycles pixel buffer
