@@ -482,8 +482,17 @@ namespace RhinoCycles.Database
 			UploadCamera(view);
 		}
 
+		/// <summary>
+		/// Event arguments for ViewChanged event.
+		/// </summary>
 		public class ViewChangedEventArgs: EventArgs
 		{
+			/// <summary>
+			/// Construct ViewChangedEventArgs
+			/// </summary>
+			/// <param name="crc">The new CRC for the view</param>
+			/// <param name="sizeChanged">true if the render size has changed</param>
+			/// <param name="newSize">The render size</param>
 			public ViewChangedEventArgs(uint crc, bool sizeChanged, Size newSize)
 			{
 				Crc = crc;
@@ -496,7 +505,7 @@ namespace RhinoCycles.Database
 			/// </summary>
 			public uint Crc { get; private set; }
 			/// <summary>
-			/// True if the rendering dimension has changed
+			/// True if the render size has changed
 			/// </summary>
 			public bool SizeChanged { get; private set; }
 			/// <summary>
@@ -505,6 +514,11 @@ namespace RhinoCycles.Database
 			public Size NewSize { get; private set; }
 		}
 
+		/// <summary>
+		/// Event that gets fired when the Rhino viewport has changed. This
+		/// event gives the new CRC for the view, true if the render
+		/// size has changed and the new render size
+		/// </summary>
 		public event EventHandler<ViewChangedEventArgs> ViewChanged;
 
 		private void TriggerViewChanged(uint crc, bool sizeChanged, Size newSize)
@@ -528,14 +542,6 @@ namespace RhinoCycles.Database
 			m_render_engine.RenderDimension = newSize;
 
 			TriggerViewChanged(view.Crc, oldSize!=newSize, newSize);
-
-			/*var viewportRenderEngine = m_render_engine as ViewportRenderEngine;
-			if (viewportRenderEngine != null)
-			{
-				viewportRenderEngine.ViewCrc = view.Crc;
-				viewportRenderEngine.UnsetRenderSize();
-			}
-			*/
 
 			var ha = newSize.Width > newSize.Height ? view.Horizontal: view.Vertical;
 

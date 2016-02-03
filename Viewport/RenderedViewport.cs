@@ -35,7 +35,6 @@ namespace RhinoCycles
 
 		private bool m_started;
 		private bool m_available;
-		private bool m_need_rendersize_set;
 		private bool m_last_frame_drawn;
 
 		private bool m_synchronizing;
@@ -71,7 +70,6 @@ namespace RhinoCycles
 			AsyncRenderContext a_rc = new ViewportRenderEngine(doc.RuntimeSerialNumber, Plugin.IdFromName("RhinoCycles"), rhinoView);
 			m_cycles = (ViewportRenderEngine)a_rc;
 
-			//m_cycles.RenderSizeUnset += m_cycles_RenderSizeUnset; // for viewport changes need to listen to sizes.
 			m_cycles.ViewChanged += m_cycles_ViewChanged;
 			m_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
@@ -94,8 +92,6 @@ namespace RhinoCycles
 
 			m_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
-			//m_cycles.UnsetRenderSize();
-			//m_cycles.SetRenderSize(renderSize.Width, renderSize.Height);
 			m_starttime = GeCurrentTimeStamp();
 
 			m_cycles.RenderThread = new Thread(ViewportRenderEngine.Renderer)
@@ -149,11 +145,6 @@ namespace RhinoCycles
 			m_available = true;
 		}
 
-		/*void m_cycles_RenderSizeUnset(object sender, EventArgs e)
-		{
-			m_need_rendersize_set = true;
-		}*/
-
 		public void ChangeSamples(int samples)
 		{
 			if (m_maxsamples < samples)
@@ -181,13 +172,6 @@ namespace RhinoCycles
 				}
 				else
 				{
-					if (m_need_rendersize_set)
-					{
-						var s = m_cycles.RenderDimension;
-						m_cycles.SetRenderSize(s.Width, s.Height);
-						m_need_rendersize_set = false;
-					}
-
 					if (!m_last_frame_drawn)
 					{
 						if (m_cycles != null && m_cycles.Session != null && m_cycles.State == State.Rendering)
