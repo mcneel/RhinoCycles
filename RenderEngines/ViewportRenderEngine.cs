@@ -20,6 +20,7 @@ using System.Drawing.Imaging;
 using ccl;
 using Rhino.Display;
 using Rhino.Render;
+using RhinoCycles.Database;
 using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCycles
@@ -32,6 +33,8 @@ namespace RhinoCycles
 			Client = new Client();
 			State = State.Rendering;
 
+			Database.ViewChanged += Database_ViewChanged;
+
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = null;
@@ -42,6 +45,18 @@ namespace RhinoCycles
 			CSycles.log_to_stdout(false);
 #endregion
 			
+		}
+
+		public event EventHandler<ChangeDatabase.ViewChangedEventArgs> ViewChanged;
+
+		void Database_ViewChanged(object sender, Database.ChangeDatabase.ViewChangedEventArgs e)
+		{
+			ViewCrc = e.Crc;
+			var handler = ViewChanged;
+			if (handler != null)
+			{
+				handler(this, e);
+			}
 		}
 
 		public class PassRenderedEventArgs : EventArgs
@@ -58,7 +73,7 @@ namespace RhinoCycles
 		public void DisplayUpdateHandler(uint sessionId, int sample)
 		{
 			if (CancelRender) return;
-			if (m_setting_size) return;
+			//if (m_setting_size) return;
 			if (Flush) return;
 			lock (size_setter_lock)
 			{
@@ -87,18 +102,23 @@ namespace RhinoCycles
 		}
 
 		private readonly object size_setter_lock = new object();
+		/// <summary>
+		/// Set new size for the internal RenderWindow object.
+		/// </summary>
+		/// <param name="w">Width in pixels</param>
+		/// <param name="h">Height in pixels</param>
 		public void SetRenderSize(int w, int h)
 		{
 			lock (size_setter_lock)
 			{
 				RenderWindow.SetSize(new Size(w, h));
-				m_setting_size = false;
+				//m_setting_size = false;
 			}
 		}
 
-		private bool m_setting_size = false;
-		public event EventHandler RenderSizeUnset;
-		public void UnsetRenderSize()
+		//private bool m_setting_size = false;
+		//public event EventHandler RenderSizeUnset;
+		/*public void UnsetRenderSize()
 		{
 			lock (size_setter_lock)
 			{
@@ -109,7 +129,7 @@ namespace RhinoCycles
 					handler(this, EventArgs.Empty);
 				}
 			}
-		}
+		}*/
 
 		/// <summary>
 		/// Event gets fired when the renderer has started.
@@ -199,12 +219,24 @@ namespace RhinoCycles
 			}
 		}
 
+		public event EventHandler StartSynchronizing;
+
+		public void TriggerStartSynchronizing()
+		{
+			var handler = StartSynchronizing;
+			if (handler != null)
+			{
+				handler(this, EventArgs.Empty);
+			}
+		}
+
 		public uint ViewCrc { get; set; }
 
 		public void Synchronize()
 		{
 			if (State == State.Uploading)
 			{
+				TriggerStartSynchronizing();
 				Session.SetPause(true);
 				if (UploadData())
 				{

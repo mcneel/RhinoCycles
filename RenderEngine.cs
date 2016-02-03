@@ -162,16 +162,16 @@ namespace RhinoCycles
 				// flush the queue
 				Database.Flush();
 
-				// reset flush flag directly, since we already have lock.
-				m_flush = false;
-
 				// if we've got actually changes we care about
-				// lets upload that
+				// change state to signal need for uploading
 				if (HasSceneChanges())
 				{
 					State = State.Uploading;
 					if (!m_interactive && Session != null) Session.Cancel("Scene changes detected.\n");
 				}
+
+				// reset flush flag directly, since we already have lock.
+				m_flush = false;
 			}
 		}
 

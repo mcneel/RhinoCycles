@@ -38,6 +38,8 @@ namespace RhinoCycles
 		private bool m_need_rendersize_set;
 		private bool m_last_frame_drawn;
 
+		private bool m_synchronizing;
+
 		private ViewportRenderEngine m_cycles;
 
 		private long m_starttime;
@@ -69,9 +71,11 @@ namespace RhinoCycles
 			AsyncRenderContext a_rc = new ViewportRenderEngine(doc.RuntimeSerialNumber, Plugin.IdFromName("RhinoCycles"), rhinoView);
 			m_cycles = (ViewportRenderEngine)a_rc;
 
-			m_cycles.RenderSizeUnset += m_cycles_RenderSizeUnset; // for viewport changes need to listen to sizes.
+			//m_cycles.RenderSizeUnset += m_cycles_RenderSizeUnset; // for viewport changes need to listen to sizes.
+			m_cycles.ViewChanged += m_cycles_ViewChanged;
 			m_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
+			m_cycles.StartSynchronizing += m_cycles_StartSynchronizing;
 			m_cycles.Synchronized += m_cycles_Synchronized;
 			m_cycles.PassRendered += m_cycles_PassRendered;
 			m_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
@@ -90,8 +94,8 @@ namespace RhinoCycles
 
 			m_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
-			m_cycles.UnsetRenderSize();
-			m_cycles.SetRenderSize(renderSize.Width, renderSize.Height);
+			//m_cycles.UnsetRenderSize();
+			//m_cycles.SetRenderSize(renderSize.Width, renderSize.Height);
 			m_starttime = GeCurrentTimeStamp();
 
 			m_cycles.RenderThread = new Thread(ViewportRenderEngine.Renderer)
@@ -103,10 +107,23 @@ namespace RhinoCycles
 			return true;
 		}
 
+		void m_cycles_ViewChanged(object sender, ChangeDatabase.ViewChangedEventArgs e)
+		{
+			if (e.SizeChanged)
+			{
+				m_cycles.SetRenderSize(e.NewSize.Width, e.NewSize.Height);
+			}
+		}
+
 		void m_cycles_PassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
 			SetCRC(m_cycles.ViewCrc);
 			SignalRedraw();
+		}
+
+		void m_cycles_StartSynchronizing(object sender, EventArgs e)
+		{
+			m_synchronizing = true;
 		}
 
 		void m_cycles_Synchronized(object sender, EventArgs e)
@@ -114,6 +131,7 @@ namespace RhinoCycles
 			m_starttime = GeCurrentTimeStamp();
 			m_samples = 0;
 			m_last_frame_drawn = false;
+			m_synchronizing = false;
 		}
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
@@ -131,10 +149,10 @@ namespace RhinoCycles
 			m_available = true;
 		}
 
-		void m_cycles_RenderSizeUnset(object sender, EventArgs e)
+		/*void m_cycles_RenderSizeUnset(object sender, EventArgs e)
 		{
 			m_need_rendersize_set = true;
-		}
+		}*/
 
 		public void ChangeSamples(int samples)
 		{
@@ -154,7 +172,7 @@ namespace RhinoCycles
 
 		public override void UiUpdate()
 		{
-			if (m_available && m_cycles != null)
+			if (m_available && !m_synchronizing && m_cycles != null)
 			{
 				if (m_cycles.Flush)
 				{
@@ -163,13 +181,6 @@ namespace RhinoCycles
 				}
 				else
 				{
-					// synchronizing data may have bailed out early
-					// if lock acquisition failed, so try again.
-					if (m_cycles.State == State.Uploading)
-					{
-						m_cycles.Synchronize();
-					}
-
 					if (m_need_rendersize_set)
 					{
 						var s = m_cycles.RenderDimension;

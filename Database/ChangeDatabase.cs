@@ -482,6 +482,40 @@ namespace RhinoCycles.Database
 			UploadCamera(view);
 		}
 
+		public class ViewChangedEventArgs: EventArgs
+		{
+			public ViewChangedEventArgs(uint crc, bool sizeChanged, Size newSize)
+			{
+				Crc = crc;
+				SizeChanged = sizeChanged;
+				NewSize = newSize;
+			}
+
+			/// <summary>
+			/// View CRC
+			/// </summary>
+			public uint Crc { get; private set; }
+			/// <summary>
+			/// True if the rendering dimension has changed
+			/// </summary>
+			public bool SizeChanged { get; private set; }
+			/// <summary>
+			/// The new rendering dimension
+			/// </summary>
+			public Size NewSize { get; private set; }
+		}
+
+		public event EventHandler<ViewChangedEventArgs> ViewChanged;
+
+		private void TriggerViewChanged(uint crc, bool sizeChanged, Size newSize)
+		{
+			var handler = ViewChanged;
+			if (handler != null)
+			{
+				handler(this, new ViewChangedEventArgs(crc, sizeChanged, newSize));
+			}
+		}
+
 		/// <summary>
 		/// Set the camera based on CyclesView
 		/// </summary>
@@ -489,23 +523,27 @@ namespace RhinoCycles.Database
 		private void UploadCamera(CyclesView view)
 		{
 			var scene = m_render_engine.Session.Scene;
-			m_render_engine.RenderDimension = new Size(view.Width, view.Height);
-			var size = m_render_engine.RenderDimension;
+			var oldSize = m_render_engine.RenderDimension;
+			var newSize = new Size(view.Width, view.Height);
+			m_render_engine.RenderDimension = newSize;
 
-			var viewportRenderEngine = m_render_engine as ViewportRenderEngine;
+			TriggerViewChanged(view.Crc, oldSize!=newSize, newSize);
+
+			/*var viewportRenderEngine = m_render_engine as ViewportRenderEngine;
 			if (viewportRenderEngine != null)
 			{
 				viewportRenderEngine.ViewCrc = view.Crc;
 				viewportRenderEngine.UnsetRenderSize();
 			}
+			*/
 
-			var ha = size.Width > size.Height ? view.Horizontal: view.Vertical;
+			var ha = newSize.Width > newSize.Height ? view.Horizontal: view.Vertical;
 
 			var angle = (float) Math.Atan(Math.Tan(ha)/view.ViewAspectRatio) * 2.0f;
 
 			//System.Diagnostics.Debug.WriteLine("size: {0}, matrix: {1}, angle: {2}, Sensorsize: {3}x{4}", size, view.Transform, angle, Settings.SensorHeight, Settings.SensorWidth);
 
-			scene.Camera.Size = size;
+			scene.Camera.Size = newSize;
 			scene.Camera.Matrix = view.Transform;
 			scene.Camera.Type = view.Projection;
 			scene.Camera.Fov = angle;
