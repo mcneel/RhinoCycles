@@ -51,6 +51,10 @@ namespace RhinoCycles
 
 		void Database_ViewChanged(object sender, Database.ChangeDatabase.ViewChangedEventArgs e)
 		{
+			lock (size_setter_lock)
+			{
+				if (e.SizeChanged) m_setting_size = true;
+			}
 			ViewCrc = e.Crc;
 			var handler = ViewChanged;
 			if (handler != null)
@@ -59,6 +63,10 @@ namespace RhinoCycles
 			}
 		}
 
+		/// <summary>
+		/// Event argument for PassRendered. It holds the sample (pass)
+		/// that has been completed.
+		/// </summary>
 		public class PassRenderedEventArgs : EventArgs
 		{
 			public PassRenderedEventArgs(int sample)
@@ -66,14 +74,23 @@ namespace RhinoCycles
 				Sample = sample;
 			}
 
+			/// <summary>
+			/// The completed sample (pass).
+			/// </summary>
 			public int Sample { get; private set; }
 		}
+		/// <summary>
+		/// Event that gets fired when the render engine completes handling one
+		/// pass (sample) from Cycles.
+		/// </summary>
 		public event EventHandler<PassRenderedEventArgs> PassRendered;
+
+		private bool m_setting_size;
 
 		public void DisplayUpdateHandler(uint sessionId, int sample)
 		{
 			if (CancelRender) return;
-			//if (m_setting_size) return;
+			if (m_setting_size) return;
 			if (Flush) return;
 			lock (size_setter_lock)
 			{
@@ -112,24 +129,9 @@ namespace RhinoCycles
 			lock (size_setter_lock)
 			{
 				RenderWindow.SetSize(new Size(w, h));
-				//m_setting_size = false;
+				m_setting_size = false;
 			}
 		}
-
-		//private bool m_setting_size = false;
-		//public event EventHandler RenderSizeUnset;
-		/*public void UnsetRenderSize()
-		{
-			lock (size_setter_lock)
-			{
-				m_setting_size = true;
-				var handler = RenderSizeUnset;
-				if (handler != null)
-				{
-					handler(this, EventArgs.Empty);
-				}
-			}
-		}*/
 
 		/// <summary>
 		/// Event gets fired when the renderer has started.
