@@ -104,7 +104,11 @@ namespace RhinoCycles
 		/// </summary>
 		public enum CyclesMaterial
 		{
+			/// <summary>
+			/// No is used when the material isn't a Cycles material
+			/// </summary>
 			No,
+
 			Brick,
 			Test,
 			FlakedCarPaint,
@@ -115,6 +119,7 @@ namespace RhinoCycles
 			Glass,
 			Diffuse,
 			SimplePlastic,
+			SimpleMetal,
 
 			SimpleNoiseEnvironment,
 		}

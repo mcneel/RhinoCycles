@@ -56,6 +56,8 @@ namespace RhinoCycles
 		{
 			if(rm.SmellsLikePlaster) return ProbableMaterial.Plaster;
 
+			if(rm.SmellsLikeMetal) return ProbableMaterial.Metal;
+
 			if (rm.SmellsLikeGlass)
 			{
 				if (rm.GetParameter("type") != null)
@@ -117,6 +119,12 @@ namespace RhinoCycles
 						plastic.SetParameter("reflectivity", (float) m.Reflectivity, RenderContent.ChangeContexts.Ignore);
 						plastic.SetParameter("transparency", (float) m.Transparency, RenderContent.ChangeContexts.Ignore);
 						crm = plastic;
+						break;
+					case ProbableMaterial.Metal:
+						var metal = new SimpleMetalMaterial();
+						metal.SetParameter("metal-color", m.ReflectionColor, RenderContent.ChangeContexts.Ignore);
+						metal.SetParameter("metal-polish", m.ReflectionGlossiness, RenderContent.ChangeContexts.Ignore);
+						crm = metal;
 						break;
 					default:
 						var dcl = m.DiffuseColor;

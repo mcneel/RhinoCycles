@@ -87,6 +87,7 @@
     <Compile Include="Environments\SimpleNoiseEnvironment.cs" />
     <Compile Include="LinearWorkflow.cs" />
     <Compile Include="Materials\DiffuseMaterial.cs" />
+    <Compile Include="Materials\SimpleMetalMaterial.cs" />
     <Compile Include="Materials\GlassMaterial.cs" />
     <Compile Include="Materials\ICyclesMaterial.cs" />
     <Compile Include="Materials\FlakedCarPaintMaterial.cs" />
