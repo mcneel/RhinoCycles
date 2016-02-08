@@ -114,7 +114,9 @@ namespace RhinoCycles
 						channel.SetValues(rect, size, pixelbuffer);
 					}
 				}
+#if DEBUG
 				SaveRenderedBuffer(sample);
+#endif
 				sdd.WriteLine(string.Format("display update, sample {0}", sample));
 				// now signal whoever is interested
 				var handler = PassRendered;
