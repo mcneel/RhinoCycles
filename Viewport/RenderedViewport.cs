@@ -46,6 +46,8 @@ namespace RhinoCycles
 		private int m_maxsamples;
 		private string m_status = "";
 
+		private readonly object m_display_lock = new object();
+
 		public RenderedViewport()
 		{
 			g_running_serial ++;
@@ -161,30 +163,52 @@ namespace RhinoCycles
 			return (long) span.TotalSeconds;
 		}
 
+		private bool acquired_display_lock = false;
+
 		public override void UiUpdate()
 		{
-			if (m_available && !m_synchronizing && m_cycles != null)
+			// try to get a lock, but don't be too fussed if we don't get it at the first try,
+			// just try the next time.
+			try
 			{
-				if (m_cycles.Flush)
+				Monitor.TryEnter(m_display_lock, ref acquired_display_lock);
+				if (acquired_display_lock)
 				{
-					m_cycles.CheckFlushQueue();
-					m_cycles.Synchronize();
-				}
-				else
-				{
-					if (!m_last_frame_drawn)
+					if (m_available && !m_synchronizing && m_cycles != null)
 					{
-						if (m_cycles != null && m_cycles.Session != null && m_cycles.State == State.Rendering)
-							m_cycles.Session.Draw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
-						//SignalRedraw();
-						m_last_frame_drawn = m_status.StartsWith("Done");
-#if DEBUG
-						if (m_last_frame_drawn)
+						if (m_cycles.Flush)
 						{
-							m_cycles.SaveRenderedBuffer(m_samples);
+							m_cycles.CheckFlushQueue();
+							m_cycles.Synchronize();
 						}
+						else
+						{
+							if (!m_last_frame_drawn)
+							{
+								if (m_cycles != null && m_cycles.Session != null && m_cycles.State == State.Rendering)
+									// On GPU we need to tonemap still
+									if (m_cycles.Session.Scene.Device.IsGpu)
+									{
+										m_cycles.Session.Draw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
+									}
+							}
+							m_last_frame_drawn = m_status.StartsWith("Done");
+#if DEBUG
+							if (m_last_frame_drawn)
+							{
+								m_cycles.SaveRenderedBuffer(m_samples);
+							}
 #endif
+						}
 					}
+				}
+			}
+			finally
+			{
+				if (acquired_display_lock)
+				{
+					acquired_display_lock = false;
+					Monitor.Exit(m_display_lock);
 				}
 			}
 		}
@@ -212,15 +236,20 @@ namespace RhinoCycles
 
 		public override void ShutdownRender()
 		{
-			m_available = false;
-			m_started = false;
-			ssd.WriteLine("!!! === ShutdownRender {0} === !!!", m_serial);
-			if (m_cycles != null)
+			// get exclusive lock, we want this always to succeed, so we
+			// wait here
+			lock (m_display_lock)
 			{
-				m_cycles.StopRendering();
+				m_available = false;
+				m_started = false;
+				ssd.WriteLine("!!! === ShutdownRender {0} === !!!", m_serial);
+				if (m_cycles != null)
+				{
+					m_cycles.StopRendering();
+				}
+				// we're done now, so lets clean up our session.
+				m_cycles.Session.Destroy();
 			}
-			// we're done now, so lets clean up our session.
-			m_cycles.Session.Destroy();
 		}
 
 		public override bool IsRendererStarted()
@@ -239,15 +268,6 @@ namespace RhinoCycles
 
 		public override bool RenderEngineDraw()
 		{
-			if (m_cycles != null && m_cycles.Session != null && m_cycles.State == State.Rendering)
-			{
-				// need to force tonemap still
-				// but since we've added DisplayUpdateCallback the draw won't actually draw, just ensure
-				// the tonemapping is done. We do it here (mainthread), since we need to ensure for GPU rendering
-				// we can access the buffers.
-				m_cycles.Session.Draw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
-			}
-
 			return false;
 		}
 

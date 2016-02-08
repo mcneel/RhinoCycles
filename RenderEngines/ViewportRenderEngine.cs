@@ -53,7 +53,10 @@ namespace RhinoCycles
 		{
 			lock (size_setter_lock)
 			{
-				if (e.SizeChanged) m_setting_size = true;
+				if (e.SizeChanged)
+				{
+					m_setting_size = true;
+				}
 			}
 			ViewCrc = e.Crc;
 			var handler = ViewChanged;
@@ -92,6 +95,7 @@ namespace RhinoCycles
 			if (CancelRender) return;
 			if (m_setting_size) return;
 			if (Flush) return;
+			if (State != State.Rendering) return;
 			lock (size_setter_lock)
 			{
 				// copy display buffer data into ccycles pixel buffer
@@ -99,11 +103,14 @@ namespace RhinoCycles
 				// copy stuff into renderwindow dib
 				using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
 				{
+					if (CancelRender) return;
 					if (channel != null)
 					{
+						if (CancelRender) return;
 						var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
 						var size = RenderDimension;
 						var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
+						if (CancelRender) return;
 						channel.SetValues(rect, size, pixelbuffer);
 					}
 				}
