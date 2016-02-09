@@ -46,8 +46,6 @@ namespace RhinoCycles
 		private int m_maxsamples;
 		private string m_status = "";
 
-		private readonly object m_display_lock = new object();
-
 		public RenderedViewport()
 		{
 			g_running_serial ++;
@@ -142,7 +140,7 @@ namespace RhinoCycles
 			m_cycles.RenderWindow.SetAdjust(imageadjust);
 		}
 
-		void m_cycles_RenderStarted(object sender, EventArgs e)
+		void m_cycles_RenderStarted(object sender, ViewportRenderEngine.RenderStartedEventArgs e)
 		{
 			m_available = true;
 		}
@@ -164,17 +162,17 @@ namespace RhinoCycles
 		}
 
 		private bool acquired_display_lock = false;
-
 		public override void UiUpdate()
 		{
+			if (m_cycles == null) return;
 			// try to get a lock, but don't be too fussed if we don't get it at the first try,
 			// just try the next time.
 			try
 			{
-				Monitor.TryEnter(m_display_lock, ref acquired_display_lock);
+				Monitor.TryEnter(m_cycles.m_display_lock, ref acquired_display_lock);
 				if (acquired_display_lock)
 				{
-					if (m_available && !m_synchronizing && m_cycles != null)
+					if (m_available && !m_synchronizing)
 					{
 						if (m_cycles.Flush)
 						{
@@ -185,7 +183,7 @@ namespace RhinoCycles
 						{
 							if (!m_last_frame_drawn)
 							{
-								if (m_cycles != null && m_cycles.Session != null && m_cycles.State == State.Rendering)
+								if (m_cycles.Session != null && m_cycles.State == State.Rendering)
 									// On GPU we need to tonemap still
 									if (m_cycles.Session.Scene.Device.IsGpu)
 									{
@@ -208,7 +206,7 @@ namespace RhinoCycles
 				if (acquired_display_lock)
 				{
 					acquired_display_lock = false;
-					Monitor.Exit(m_display_lock);
+					Monitor.Exit(m_cycles.m_display_lock);
 				}
 			}
 		}
@@ -238,7 +236,7 @@ namespace RhinoCycles
 		{
 			// get exclusive lock, we want this always to succeed, so we
 			// wait here
-			lock (m_display_lock)
+			lock (m_cycles.m_display_lock)
 			{
 				m_available = false;
 				m_started = false;

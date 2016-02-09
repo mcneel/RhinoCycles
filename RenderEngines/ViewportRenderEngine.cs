@@ -90,39 +90,59 @@ namespace RhinoCycles
 
 		private bool m_setting_size;
 
+		internal readonly object m_display_lock = new object();
+		private bool acquired_display_lock = false;
+
 		public void DisplayUpdateHandler(uint sessionId, int sample)
 		{
-			if (CancelRender) return;
-			if (m_setting_size) return;
-			if (Flush) return;
-			if (State != State.Rendering) return;
-			lock (size_setter_lock)
+			// try to get a lock, but don't be too fussed if we don't get it at the first try,
+			// just try the next time.
+			try
 			{
-				// copy display buffer data into ccycles pixel buffer
-				Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
-				// copy stuff into renderwindow dib
-				using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
+				System.Threading.Monitor.TryEnter(m_display_lock, ref acquired_display_lock);
+				if (acquired_display_lock)
 				{
+
 					if (CancelRender) return;
-					if (channel != null)
+					if (m_setting_size) return;
+					if (Flush) return;
+					if (State != State.Rendering) return;
+					lock (size_setter_lock)
 					{
-						if (CancelRender) return;
-						var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
-						var size = RenderDimension;
-						var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
-						if (CancelRender) return;
-						channel.SetValues(rect, size, pixelbuffer);
+						// copy display buffer data into ccycles pixel buffer
+						Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
+						// copy stuff into renderwindow dib
+						using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
+						{
+							if (CancelRender) return;
+							if (channel != null)
+							{
+								if (CancelRender) return;
+								var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
+								var size = RenderDimension;
+								var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
+								if (CancelRender) return;
+								channel.SetValues(rect, size, pixelbuffer);
+							}
+						}
+#if DEBUG
+						SaveRenderedBuffer(sample);
+#endif
+						sdd.WriteLine(string.Format("display update, sample {0}", sample));
+						// now signal whoever is interested
+						var handler = PassRendered;
+						if (handler != null)
+						{
+							handler(this, new PassRenderedEventArgs(sample));
+						}
 					}
 				}
-#if DEBUG
-				SaveRenderedBuffer(sample);
-#endif
-				sdd.WriteLine(string.Format("display update, sample {0}", sample));
-				// now signal whoever is interested
-				var handler = PassRendered;
-				if (handler != null)
+			} finally
+			{
+				if (acquired_display_lock)
 				{
-					handler(this, new PassRenderedEventArgs(sample));
+					acquired_display_lock = false;
+					System.Threading.Monitor.Exit(m_display_lock);
 				}
 			}
 		}
@@ -142,10 +162,20 @@ namespace RhinoCycles
 			}
 		}
 
+		public class RenderStartedEventArgs : EventArgs
+		{
+			public bool Success { get; private set; }
+
+			public RenderStartedEventArgs(bool success)
+			{
+				Success = success;
+			}
+		}
+
 		/// <summary>
 		/// Event gets fired when the renderer has started.
 		/// </summary>
-		public event EventHandler RenderStarted;
+		public event EventHandler<RenderStartedEventArgs> RenderStarted;
 
 		/// <summary>
 		/// Entry point for viewport interactive rendering
@@ -205,8 +235,14 @@ namespace RhinoCycles
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
 			cycles_engine.CheckFlushQueue();
-			cycles_engine.Synchronize();
-			cycles_engine.Session.Start();
+			if (!cycles_engine.CancelRender)
+			{
+				cycles_engine.Synchronize();
+			}
+			if (!cycles_engine.CancelRender)
+			{
+				cycles_engine.Session.Start();
+			}
 
 			#endregion
 
@@ -214,7 +250,7 @@ namespace RhinoCycles
 			// We've got Cycles rendering now, notify anyone who cares
 			if (handler != null)
 			{
-				handler(cycles_engine, EventArgs.Empty);
+				handler(cycles_engine, new RenderStartedEventArgs(!cycles_engine.CancelRender));
 			}
 
 		}
