@@ -123,7 +123,7 @@ namespace RhinoCycles
 					case ProbableMaterial.Metal:
 						var metal = new SimpleMetalMaterial();
 						metal.SetParameter("metal-color", m.ReflectionColor, RenderContent.ChangeContexts.Ignore);
-						metal.SetParameter("metal-polish", m.ReflectionGlossiness, RenderContent.ChangeContexts.Ignore);
+						metal.SetParameter("metal-polish", (float)m.ReflectionGlossiness, RenderContent.ChangeContexts.Ignore);
 						crm = metal;
 						break;
 					default:
