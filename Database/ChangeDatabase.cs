@@ -995,7 +995,8 @@ namespace RhinoCycles.Database
 				obid = GroundPlaneMeshInstanceId,
 				meshid = gpid,
 				Transform = t,
-				Visible = gp.Enabled
+				Visible = gp.Enabled,
+				IsShadowCatcher = gp.IsShadowOnly
 			};
 
 			m_object_db.AddMesh(cycles_mesh);
@@ -1011,18 +1012,6 @@ namespace RhinoCycles.Database
 		{
 			//System.Diagnostics.Debug.WriteLine("groundplane");
 			InitialiseGroundPlane(gp);
-			// find groundplane
-			var altitude = (float)gp.Altitude;
-			var t = Transform.Translate(0.0f, 0.0f, altitude);
-			var cycles_object = new CyclesObject
-			{
-				meshid = m_groundplane_guid,
-				obid = GroundPlaneMeshInstanceId,
-				matid = gp.MaterialId,
-				Transform = t,
-				Visible = gp.Enabled
-			};
-			m_object_db.AddOrUpdateObject(cycles_object);
 
 			var mat = MaterialFromId(gp.MaterialId);
 			HandleRenderMaterial(mat);
@@ -1246,6 +1235,7 @@ namespace RhinoCycles.Database
 				cob.Mesh = mesh;
 				cob.Transform = ob.Transform;
 				cob.Visibility = ob.Visible ? PathRay.AllVisibility : PathRay.Hidden;
+				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				cob.TagUpdate();
 			}
 		}

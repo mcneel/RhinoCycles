@@ -54,5 +54,10 @@ namespace RhinoCycles
 		/// Visibility toggle.
 		/// </summary>
 		public bool Visible { get; set; }
+
+		/// <summary>
+		/// Shadow-only toggle.
+		/// </summary>
+		public bool IsShadowCatcher { get; set; }
 	}
 }
