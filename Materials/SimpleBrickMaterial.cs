@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ limitations under the License.
 
 using Rhino.Render;
 
-namespace RhinoCycles.Materials
+namespace RhinoCyclesCore.Materials
 {
 	[System.Runtime.InteropServices.Guid("4D4E8BF5-E4DD-4AC4-A1F3-4801A923FE32")]
 	public class SimpleBrickMaterial : RenderMaterial, ICyclesMaterial

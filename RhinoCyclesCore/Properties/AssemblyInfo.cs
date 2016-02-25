@@ -15,15 +15,15 @@ limitations under the License.
 **/
 
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Rhino.PlugIns;
 
-// Plug-In title and Guid are extracted from the following two attributes
-[assembly: AssemblyTitle("RhinoCycles")]
-[assembly: Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97")]
+// General Information about an assembly is controlled through the following 
+// set of attributes. Change these attribute values to modify the information
+// associated with an assembly.
+[assembly: AssemblyTitle("RhinoCyclesCore")]
+[assembly: Guid("509fc709-9478-43ff-b669-a1a4e3ba8b4a")]
 
-// Plug-in Description Attributes - all of these are optional
 [assembly: PlugInDescription(DescriptionType.Address, "-")]
 [assembly: PlugInDescription(DescriptionType.Country, "Finland")]
 [assembly: PlugInDescription(DescriptionType.Email, "nathan@mcneel.com")]
@@ -33,14 +33,11 @@ using Rhino.PlugIns;
 [assembly: PlugInDescription(DescriptionType.UpdateUrl, "http://www.rhino3d.com/download")]
 [assembly: PlugInDescription(DescriptionType.WebSite, "http://www.rhino3d.com")]
 
-// General Information about an assembly is controlled through the following 
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[assembly: AssemblyDescription("RhinoCycles")]
+[assembly: AssemblyDescription("RhinoCycles Core")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("RhinoCycles")]
-[assembly: AssemblyCopyright("Copyright ©  2014-2016")]
+[assembly: AssemblyProduct("RhinoCyclesCore")]
+[assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -48,3 +45,5 @@ using Rhino.PlugIns;
 // to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
+
+// The following GUID is for the ID of the typelib if this project is exposed to COM

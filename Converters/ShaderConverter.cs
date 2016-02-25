@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ using Rhino.DocObjects;
 using Rhino.Geometry;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
-using RhinoCycles.Materials;
+using RhinoCyclesCore.Materials;
 using Light = Rhino.Render.ChangeQueue.Light;
 using Material = Rhino.DocObjects.Material;
 using sdd = System.Diagnostics.Debug;
 
-namespace RhinoCycles
+namespace RhinoCyclesCore
 {
 	public class ShaderConverter
 	{

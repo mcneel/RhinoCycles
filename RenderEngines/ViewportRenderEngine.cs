@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,9 +18,10 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using ccl;
+using RhinoCyclesCore;
 using Rhino.Display;
 using Rhino.Render;
-using RhinoCycles.Database;
+using RhinoCyclesCore.Database;
 using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCycles
@@ -49,7 +50,7 @@ namespace RhinoCycles
 
 		public event EventHandler<ChangeDatabase.ViewChangedEventArgs> ViewChanged;
 
-		void Database_ViewChanged(object sender, Database.ChangeDatabase.ViewChangedEventArgs e)
+		void Database_ViewChanged(object sender, ChangeDatabase.ViewChangedEventArgs e)
 		{
 			lock (size_setter_lock)
 			{
@@ -90,7 +91,7 @@ namespace RhinoCycles
 
 		private bool m_setting_size;
 
-		internal readonly object m_display_lock = new object();
+		public readonly object m_display_lock = new object();
 		private bool acquired_display_lock = false;
 
 		public void DisplayUpdateHandler(uint sessionId, int sample)

@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ using ccl;
 using Rhino;
 using Rhino.Render;
 
-namespace RhinoCycles
+namespace RhinoCyclesCore
 {
 	public class EngineSettings
 	{

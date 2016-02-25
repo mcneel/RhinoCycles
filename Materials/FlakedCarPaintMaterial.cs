@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ using Rhino.DocObjects;
 using Rhino.Render;
 using Utilities = ccl.Utilities;
 
-namespace RhinoCycles.Materials
+namespace RhinoCyclesCore.Materials
 {
 	[Guid("5C717BA9-C033-48D1-A03A-CC2E8A49E540")]
 	public class FlakedCarPaintMaterial : RenderMaterial, ICyclesMaterial

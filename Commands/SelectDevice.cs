@@ -18,6 +18,7 @@ using System;
 using Rhino;
 using Rhino.Commands;
 using ccl;
+using RhinoCyclesCore;
 using Rhino.Input;
 using Rhino.Input.Custom;
 
@@ -49,7 +50,7 @@ namespace RhinoCycles
 			var get_number = new GetInteger();
 			get_number.SetLowerLimit(-1, false);
 			get_number.SetUpperLimit((int)(Device.Count-1), true);
-			get_number.SetDefaultInteger(Plugin.EngineSettings.SelectedDevice);
+			get_number.SetDefaultInteger(RcCore.It.EngineSettings.SelectedDevice);
 			get_number.SetCommandPrompt(String.Format("Select device to render on (-1 for default, 0-{0})", Device.Count-1));
 			var get_rc = get_number.Get();
 			if (get_number.CommandResult() != Result.Success) return get_number.CommandResult();
@@ -66,7 +67,7 @@ namespace RhinoCycles
 					dev = Device.FirstCuda;
 				}
 				RhinoApp.WriteLine(String.Format("User selected device {0}: {1}", idx, dev));
-				Plugin.EngineSettings.SelectedDevice = idx;
+				RcCore.It.EngineSettings.SelectedDevice = idx;
 				return Result.Success;
 			}
 

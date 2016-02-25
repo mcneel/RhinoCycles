@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using RhinoCyclesCore;
 using Rhino;
 using Rhino.Commands;
 using Rhino.Input;
@@ -47,7 +48,7 @@ namespace RhinoCycles.Commands
 			var get_number = new GetInteger();
 			get_number.SetLowerLimit(0, false);
 			get_number.SetUpperLimit(Environment.ProcessorCount, false);
-			get_number.SetDefaultInteger(Plugin.EngineSettings.Threads);
+			get_number.SetDefaultInteger(RcCore.It.EngineSettings.Threads);
 			get_number.SetCommandPrompt(String.Format("Set CPU render threads (max {0}, 0 for automatic)", Environment.ProcessorCount));
 			var get_rc = get_number.Get();
 			if (get_number.CommandResult() != Result.Success) return get_number.CommandResult();
@@ -55,7 +56,7 @@ namespace RhinoCycles.Commands
 			{
 				var nr = get_number.Number();
 				RhinoApp.WriteLine(String.Format("User wants {0} CPU thread{1}", nr, nr > 0 ? "s" : ""));
-				Plugin.EngineSettings.Threads = nr;
+				RcCore.It.EngineSettings.Threads = nr;
 				return Result.Success;
 			}
 

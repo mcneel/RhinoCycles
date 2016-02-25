@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CclLight = ccl.Light;
 
-namespace RhinoCycles.Database
+namespace RhinoCyclesCore.Database
 {
 	/// <summary>
 	/// Class responsible for recording changes from the ChangeQueue. Also record relation

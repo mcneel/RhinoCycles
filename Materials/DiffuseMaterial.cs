@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
 
-namespace RhinoCycles.Materials
+namespace RhinoCyclesCore.Materials
 {
 	[Guid("F4C85EC1-C1CB-4633-A712-1BA2F020B954")]
 	public class DiffuseMaterial : RenderMaterial, ICyclesMaterial

@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
 
-namespace RhinoCycles
+namespace RhinoCyclesCore
 {
 	/// <summary>
 	/// Helper class to hold background/world shader related data and state

@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ using Rhino.Render;
 using System.Drawing.Imaging;
 #endif
 
-namespace RhinoCycles
+namespace RhinoCyclesCore
 {
 	partial class RenderEngine
 	{
-		internal static void SaveRenderedBufferAsImage(Client client, RenderEngine cycles_engine, Size size, string name)
+		public static void SaveRenderedBufferAsImage(Client client, RenderEngine cycles_engine, Size size, string name)
 		{
 #if DEBUG
 			uint bufsize;

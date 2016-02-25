@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 using Rhino.Display;
 using Rhino.Render;
 
-namespace RhinoCycles.Materials
+namespace RhinoCyclesCore.Materials
 {
 	[Guid("E64050E9-521F-44F3-BFDA-EFEAFA73625E")]
 	public class TranslucentMaterial : RenderMaterial, ICyclesMaterial

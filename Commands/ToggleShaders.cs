@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using RhinoCyclesCore;
 using Rhino;
 using Rhino.Commands;
 
@@ -36,8 +37,8 @@ namespace RhinoCycles
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			Plugin.EngineSettings.UseSimpleShaders = !Plugin.EngineSettings.UseSimpleShaders;
-			RhinoApp.WriteLine("UseSimpleShaders set to {0}", Plugin.EngineSettings.UseSimpleShaders);
+			RcCore.It.EngineSettings.UseSimpleShaders = !RcCore.It.EngineSettings.UseSimpleShaders;
+			RhinoApp.WriteLine("UseSimpleShaders set to {0}", RcCore.It.EngineSettings.UseSimpleShaders);
 			return Result.Success;
 		}
 	}

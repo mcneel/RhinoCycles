@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ limitations under the License.
 using System.Drawing;
 using Rhino.Render;
 
-namespace RhinoCycles.Materials
+namespace RhinoCyclesCore.Materials
 {
 	[System.Runtime.InteropServices.Guid("67C5F9EC-7929-4FF8-9BF6-2FB8DF49AF78")]
 	public class BrickWithCheckeredMortarMaterial : RenderMaterial, ICyclesMaterial

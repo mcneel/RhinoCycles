@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using ccl;
+using RhinoCyclesCore;
 using Rhino;
 using Rhino.Commands;
 using Rhino.Input;
@@ -44,42 +45,42 @@ namespace RhinoCycles
 			var get_number = new GetNumber();
 			get_number.SetLowerLimit(2.0, false);
 			get_number.SetUpperLimit(100000.0, false);
-			get_number.SetDefaultInteger(Plugin.EngineSettings.Samples);
+			get_number.SetDefaultInteger(RcCore.It.EngineSettings.Samples);
 			get_number.SetCommandPrompt("Set render samples");
 
-			var use_custom_settings = new OptionToggle(Plugin.EngineSettings.UseCustomQualitySettings, "No", "Yes");
+			var use_custom_settings = new OptionToggle(RcCore.It.EngineSettings.UseCustomQualitySettings, "No", "Yes");
 
-			var min_bounce = new OptionInteger(Plugin.EngineSettings.MinBounce, 0, 500);
-			var max_bounce = new OptionInteger(Plugin.EngineSettings.MaxBounce, 0, 500);
+			var min_bounce = new OptionInteger(RcCore.It.EngineSettings.MinBounce, 0, 500);
+			var max_bounce = new OptionInteger(RcCore.It.EngineSettings.MaxBounce, 0, 500);
 
-			var max_diffuse_bounce = new OptionInteger(Plugin.EngineSettings.MaxDiffuseBounce, 0, 200);
-			var max_glossy_bounce = new OptionInteger(Plugin.EngineSettings.MaxGlossyBounce, 0, 200);
-			var max_transmission_bounce = new OptionInteger(Plugin.EngineSettings.MaxTransmissionBounce, 0, 200);
-			var max_volume_bounce = new OptionInteger(Plugin.EngineSettings.MaxVolumeBounce, 0, 200);
+			var max_diffuse_bounce = new OptionInteger(RcCore.It.EngineSettings.MaxDiffuseBounce, 0, 200);
+			var max_glossy_bounce = new OptionInteger(RcCore.It.EngineSettings.MaxGlossyBounce, 0, 200);
+			var max_transmission_bounce = new OptionInteger(RcCore.It.EngineSettings.MaxTransmissionBounce, 0, 200);
+			var max_volume_bounce = new OptionInteger(RcCore.It.EngineSettings.MaxVolumeBounce, 0, 200);
 
-			var no_caustics = new OptionToggle(Plugin.EngineSettings.NoCaustics, "Caustics", "NoCaustics");
+			var no_caustics = new OptionToggle(RcCore.It.EngineSettings.NoCaustics, "Caustics", "NoCaustics");
 
-			var aa_samples = new OptionInteger(Plugin.EngineSettings.AaSamples, 1, 100);
-			var diff_samples = new OptionInteger(Plugin.EngineSettings.DiffuseSamples, 1, 100);
-			var glossy_samples = new OptionInteger(Plugin.EngineSettings.GlossySamples, 1, 100);
+			var aa_samples = new OptionInteger(RcCore.It.EngineSettings.AaSamples, 1, 100);
+			var diff_samples = new OptionInteger(RcCore.It.EngineSettings.DiffuseSamples, 1, 100);
+			var glossy_samples = new OptionInteger(RcCore.It.EngineSettings.GlossySamples, 1, 100);
 
-			var seed = new OptionInteger(Plugin.EngineSettings.Seed, 0, int.MaxValue);
+			var seed = new OptionInteger(RcCore.It.EngineSettings.Seed, 0, int.MaxValue);
 
-			var sensor_width = new OptionDouble(Plugin.EngineSettings.SensorWidth, 10.0, 100.0);
-			var sensor_height = new OptionDouble(Plugin.EngineSettings.SensorHeight, 10.0, 100.0);
+			var sensor_width = new OptionDouble(RcCore.It.EngineSettings.SensorWidth, 10.0, 100.0);
+			var sensor_height = new OptionDouble(RcCore.It.EngineSettings.SensorHeight, 10.0, 100.0);
 
-			var transparent_min_bounce = new OptionInteger(Plugin.EngineSettings.TransparentMinBounce, 0, 200);
-			var transparent_max_bounce = new OptionInteger(Plugin.EngineSettings.TransparentMaxBounce, 0, 200);
-			var transparent_shadows = new OptionToggle(Plugin.EngineSettings.TransparentShadows, "NoTransparentShadows", "TransparentShadows");
+			var transparent_min_bounce = new OptionInteger(RcCore.It.EngineSettings.TransparentMinBounce, 0, 200);
+			var transparent_max_bounce = new OptionInteger(RcCore.It.EngineSettings.TransparentMaxBounce, 0, 200);
+			var transparent_shadows = new OptionToggle(RcCore.It.EngineSettings.TransparentShadows, "NoTransparentShadows", "TransparentShadows");
 
-			var branched = new OptionToggle(Plugin.EngineSettings.IntegratorMethod==IntegratorMethod.BranchedPath, "Path", "BranchedPath");
+			var branched = new OptionToggle(RcCore.It.EngineSettings.IntegratorMethod==IntegratorMethod.BranchedPath, "Path", "BranchedPath");
 
-			var sampling_pattern = new OptionToggle(Plugin.EngineSettings.SamplingPattern == SamplingPattern.CMJ, "Sobol", "CMJ");
-			var filter_glossy = new OptionDouble(Plugin.EngineSettings.FilterGlossy, 0.0, 100.0);
-			var sample_clamp_direct = new OptionDouble(Plugin.EngineSettings.SampleClampDirect, 0.0, 100.0);
-			var sample_clamp_indirect = new OptionDouble(Plugin.EngineSettings.SampleClampIndirect, 0.0, 100.0);
-			var sample_all_lights = new OptionToggle(Plugin.EngineSettings.SampleAllLights, "no", "yes");
-			var sample_all_lights_indirect = new OptionToggle(Plugin.EngineSettings.SampleAllLightsIndirect, "no", "yes");
+			var sampling_pattern = new OptionToggle(RcCore.It.EngineSettings.SamplingPattern == SamplingPattern.CMJ, "Sobol", "CMJ");
+			var filter_glossy = new OptionDouble(RcCore.It.EngineSettings.FilterGlossy, 0.0, 100.0);
+			var sample_clamp_direct = new OptionDouble(RcCore.It.EngineSettings.SampleClampDirect, 0.0, 100.0);
+			var sample_clamp_indirect = new OptionDouble(RcCore.It.EngineSettings.SampleClampIndirect, 0.0, 100.0);
+			var sample_all_lights = new OptionToggle(RcCore.It.EngineSettings.SampleAllLights, "no", "yes");
+			var sample_all_lights_indirect = new OptionToggle(RcCore.It.EngineSettings.SampleAllLightsIndirect, "no", "yes");
 
 			get_number.AddOptionToggle("use_custom_quality_settings", ref use_custom_settings);
 
@@ -122,31 +123,31 @@ namespace RhinoCycles
 				{
 					case GetResult.Number:
 						RhinoApp.WriteLine(String.Format("We got: {0}, {1}, {2}", get_number.Number(), min_bounce.CurrentValue, max_bounce.CurrentValue));
-						Plugin.EngineSettings.Samples = (int)get_number.Number();
-						Plugin.EngineSettings.UseCustomQualitySettings = use_custom_settings.CurrentValue;
-						Plugin.EngineSettings.Seed = seed.CurrentValue;
-						Plugin.EngineSettings.MaxBounce = max_bounce.CurrentValue;
-						Plugin.EngineSettings.MinBounce = min_bounce.CurrentValue;
-						Plugin.EngineSettings.NoCaustics = no_caustics.CurrentValue;
-						Plugin.EngineSettings.MaxDiffuseBounce = max_diffuse_bounce.CurrentValue;
-						Plugin.EngineSettings.MaxGlossyBounce = max_glossy_bounce.CurrentValue;
-						Plugin.EngineSettings.MaxTransmissionBounce = max_transmission_bounce.CurrentValue;
-						Plugin.EngineSettings.MaxVolumeBounce = max_volume_bounce.CurrentValue;
-						Plugin.EngineSettings.TransparentMinBounce = transparent_min_bounce.CurrentValue;
-						Plugin.EngineSettings.TransparentMaxBounce = transparent_max_bounce.CurrentValue;
-						Plugin.EngineSettings.TransparentShadows = transparent_shadows.CurrentValue;
-						Plugin.EngineSettings.AaSamples = aa_samples.CurrentValue;
-						Plugin.EngineSettings.DiffuseSamples = diff_samples.CurrentValue;
-						Plugin.EngineSettings.GlossySamples = glossy_samples.CurrentValue;
-						Plugin.EngineSettings.SensorWidth = (float)sensor_width.CurrentValue;
-						Plugin.EngineSettings.SensorHeight = (float)sensor_height.CurrentValue;
-						Plugin.EngineSettings.IntegratorMethod = branched.CurrentValue ? IntegratorMethod.BranchedPath : IntegratorMethod.Path;
-						Plugin.EngineSettings.SamplingPattern = SamplingPattern.Sobol;
-						Plugin.EngineSettings.FilterGlossy = 0.0f;
-						Plugin.EngineSettings.SampleClampDirect = 0.0f;
-						Plugin.EngineSettings.SampleClampIndirect = 0.0f;
-						Plugin.EngineSettings.SampleAllLights = true;
-						Plugin.EngineSettings.SampleAllLightsIndirect = true;
+						RcCore.It.EngineSettings.Samples = (int)get_number.Number();
+						RcCore.It.EngineSettings.UseCustomQualitySettings = use_custom_settings.CurrentValue;
+						RcCore.It.EngineSettings.Seed = seed.CurrentValue;
+						RcCore.It.EngineSettings.MaxBounce = max_bounce.CurrentValue;
+						RcCore.It.EngineSettings.MinBounce = min_bounce.CurrentValue;
+						RcCore.It.EngineSettings.NoCaustics = no_caustics.CurrentValue;
+						RcCore.It.EngineSettings.MaxDiffuseBounce = max_diffuse_bounce.CurrentValue;
+						RcCore.It.EngineSettings.MaxGlossyBounce = max_glossy_bounce.CurrentValue;
+						RcCore.It.EngineSettings.MaxTransmissionBounce = max_transmission_bounce.CurrentValue;
+						RcCore.It.EngineSettings.MaxVolumeBounce = max_volume_bounce.CurrentValue;
+						RcCore.It.EngineSettings.TransparentMinBounce = transparent_min_bounce.CurrentValue;
+						RcCore.It.EngineSettings.TransparentMaxBounce = transparent_max_bounce.CurrentValue;
+						RcCore.It.EngineSettings.TransparentShadows = transparent_shadows.CurrentValue;
+						RcCore.It.EngineSettings.AaSamples = aa_samples.CurrentValue;
+						RcCore.It.EngineSettings.DiffuseSamples = diff_samples.CurrentValue;
+						RcCore.It.EngineSettings.GlossySamples = glossy_samples.CurrentValue;
+						RcCore.It.EngineSettings.SensorWidth = (float)sensor_width.CurrentValue;
+						RcCore.It.EngineSettings.SensorHeight = (float)sensor_height.CurrentValue;
+						RcCore.It.EngineSettings.IntegratorMethod = branched.CurrentValue ? IntegratorMethod.BranchedPath : IntegratorMethod.Path;
+						RcCore.It.EngineSettings.SamplingPattern = SamplingPattern.Sobol;
+						RcCore.It.EngineSettings.FilterGlossy = 0.0f;
+						RcCore.It.EngineSettings.SampleClampDirect = 0.0f;
+						RcCore.It.EngineSettings.SampleClampIndirect = 0.0f;
+						RcCore.It.EngineSettings.SampleAllLights = true;
+						RcCore.It.EngineSettings.SampleAllLightsIndirect = true;
 						break;
 					case GetResult.Option:
 						continue;

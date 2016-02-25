@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System.Runtime.InteropServices;
+using RhinoCyclesCore;
 using Rhino;
 using Rhino.Commands;
 
@@ -45,11 +46,11 @@ namespace RhinoCycles
 			Plugin.InitialiseCSycles();
 
 			RhinoApp.WriteLine("----------");
-			RhinoApp.WriteLine("Absolute path {0}", Plugin.KernelPath);
-			RhinoApp.WriteLine("Relative path {0}", Plugin.KernelPathRelative);
-			RhinoApp.WriteLine("Plug-in path {0}", Plugin.PluginPath);
-			RhinoApp.WriteLine("App path {0}", Plugin.AppPath);
-			RhinoApp.WriteLine("User data path {0}", Plugin.DataUserPath);
+			RhinoApp.WriteLine("Absolute path {0}", RcCore.It.KernelPath);
+			RhinoApp.WriteLine("Relative path {0}", RcCore.It.KernelPathRelative);
+			RhinoApp.WriteLine("Plug-in path {0}", RcCore.It.PluginPath);
+			RhinoApp.WriteLine("App path {0}", RcCore.It.AppPath);
+			RhinoApp.WriteLine("User data path {0}", RcCore.It.DataUserPath);
 			RhinoApp.WriteLine("----------");
 			return Result.Success;
 		}

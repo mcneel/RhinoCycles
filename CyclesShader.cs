@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@ limitations under the License.
 **/
 using System;
 using ccl;
-using RhinoCycles.Materials;
+using RhinoCyclesCore.Materials;
 
-namespace RhinoCycles
+namespace RhinoCyclesCore
 {
 	/// <summary>
 	/// Intermediate class to convert various Rhino shader types

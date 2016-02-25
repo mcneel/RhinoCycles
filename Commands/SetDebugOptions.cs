@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using RhinoCyclesCore;
 using Rhino;
 using Rhino.Commands;
 using Rhino.Input;
@@ -41,17 +42,17 @@ namespace RhinoCycles
 			var get_number = new GetInteger();
 			get_number.SetLowerLimit(2, false);
 			get_number.SetUpperLimit(10000000, false);
-			get_number.SetDefaultInteger(Plugin.EngineSettings.Samples);
+			get_number.SetDefaultInteger(RcCore.It.EngineSettings.Samples);
 			get_number.SetCommandPrompt("Set Debug Options");
 
-			var toggle_verbose = new OptionToggle(Plugin.EngineSettings.Verbose, "No", "Yes");
-			var toggle_interactive = new OptionToggle(Plugin.EngineSettings.UseInteractiveRenderer, "No", "Yes");
+			var toggle_verbose = new OptionToggle(RcCore.It.EngineSettings.Verbose, "No", "Yes");
+			var toggle_interactive = new OptionToggle(RcCore.It.EngineSettings.UseInteractiveRenderer, "No", "Yes");
 
-			var spotlight_factor = new OptionDouble(Plugin.EngineSettings.SpotlightFactor, 0.0, 1000000.0);
-			var pointlight_factor = new OptionDouble(Plugin.EngineSettings.PointlightFactor, 0.0, 1000000.0);
-			var sunlight_factor = new OptionDouble(Plugin.EngineSettings.SunlightFactor, 0.0, 1000000.0);
-			var arealight_factor = new OptionDouble(Plugin.EngineSettings.ArealightFactor, 0.0, 1000000.0);
-			var polish_factor = new OptionDouble(Plugin.EngineSettings.PolishFactor, 0.0, 1000000.0);
+			var spotlight_factor = new OptionDouble(RcCore.It.EngineSettings.SpotlightFactor, 0.0, 1000000.0);
+			var pointlight_factor = new OptionDouble(RcCore.It.EngineSettings.PointlightFactor, 0.0, 1000000.0);
+			var sunlight_factor = new OptionDouble(RcCore.It.EngineSettings.SunlightFactor, 0.0, 1000000.0);
+			var arealight_factor = new OptionDouble(RcCore.It.EngineSettings.ArealightFactor, 0.0, 1000000.0);
+			var polish_factor = new OptionDouble(RcCore.It.EngineSettings.PolishFactor, 0.0, 1000000.0);
 
 			get_number.AddOptionToggle("verbose", ref toggle_verbose);
 			get_number.AddOptionToggle("use_interactive_renderer", ref toggle_interactive);
@@ -71,7 +72,7 @@ namespace RhinoCycles
 				{
 					case GetResult.Nothing:
 					case GetResult.Number:
-						Plugin.EngineSettings.Samples = get_number.Number();
+						RcCore.It.EngineSettings.Samples = get_number.Number();
 						ReadOptions(toggle_verbose, toggle_interactive, spotlight_factor, pointlight_factor, sunlight_factor, arealight_factor, polish_factor);
 						break;
 					case GetResult.Option:
@@ -90,13 +91,13 @@ namespace RhinoCycles
 			OptionDouble spotlight_factor, OptionDouble pointlight_factor, OptionDouble sunlight_factor,
 			OptionDouble arealight_factor, OptionDouble polish_factor)
 		{
-			Plugin.EngineSettings.Verbose = toggle_verbose.CurrentValue;
-			Plugin.EngineSettings.UseInteractiveRenderer = toggle_interactive.CurrentValue;
-			Plugin.EngineSettings.SpotlightFactor = (float) spotlight_factor.CurrentValue;
-			Plugin.EngineSettings.PointlightFactor = (float) pointlight_factor.CurrentValue;
-			Plugin.EngineSettings.SunlightFactor = (float) sunlight_factor.CurrentValue;
-			Plugin.EngineSettings.ArealightFactor = (float) arealight_factor.CurrentValue;
-			Plugin.EngineSettings.PolishFactor = (float) polish_factor.CurrentValue;
+			RcCore.It.EngineSettings.Verbose = toggle_verbose.CurrentValue;
+			RcCore.It.EngineSettings.UseInteractiveRenderer = toggle_interactive.CurrentValue;
+			RcCore.It.EngineSettings.SpotlightFactor = (float) spotlight_factor.CurrentValue;
+			RcCore.It.EngineSettings.PointlightFactor = (float) pointlight_factor.CurrentValue;
+			RcCore.It.EngineSettings.SunlightFactor = (float) sunlight_factor.CurrentValue;
+			RcCore.It.EngineSettings.ArealightFactor = (float) arealight_factor.CurrentValue;
+			RcCore.It.EngineSettings.PolishFactor = (float) polish_factor.CurrentValue;
 		}
 	}
 }

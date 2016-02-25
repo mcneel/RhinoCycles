@@ -17,11 +17,13 @@ limitations under the License.
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using RhinoCyclesCore;
 using Rhino;
+using Rhino.PlugIns;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
-using RhinoCycles.Database;
+using RhinoCyclesCore.Database;
 using ssd = System.Diagnostics.Debug;
 
 namespace RhinoCycles
@@ -67,7 +69,7 @@ namespace RhinoCycles
 			m_available = false; // the renderer hasn't started yet. It'll tell us when it has.
 			m_last_frame_drawn = false;
 
-			AsyncRenderContext a_rc = new ViewportRenderEngine(doc.RuntimeSerialNumber, Plugin.IdFromName("RhinoCycles"), rhinoView);
+			AsyncRenderContext a_rc = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
 			m_cycles = (ViewportRenderEngine)a_rc;
 
 			m_cycles.ViewChanged += m_cycles_ViewChanged;
@@ -78,7 +80,7 @@ namespace RhinoCycles
 			m_cycles.PassRendered += m_cycles_PassRendered;
 			m_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 
-			m_cycles.Settings = Plugin.EngineSettings;
+			m_cycles.Settings = RcCore.It.EngineSettings;
 			m_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
 
 			var renderSize = Rhino.Render.RenderPipeline.RenderSize(doc);

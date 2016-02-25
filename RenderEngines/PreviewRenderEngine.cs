@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Drawing;
 using ccl;
+using RhinoCyclesCore;
 using sdd = System.Diagnostics.Debug;
 using Rhino.Render;
 
