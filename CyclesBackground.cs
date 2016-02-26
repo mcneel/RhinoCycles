@@ -123,10 +123,12 @@ namespace RhinoCyclesCore
 		private Guid id = Guid.NewGuid();
 		private bool m_old_hidden;
 		private bool m_old_grayscale;
+		private string m_old_wallpaper = "";
 
 		public void HandleWallpaper(ViewInfo view)
 		{
 			modified |= m_old_hidden != view.WallpaperHidden | m_old_grayscale != view.ShowWallpaperInGrayScale;
+			modified |= !m_old_wallpaper.Equals(view.WallpaperFilename);
 			m_old_hidden = view.WallpaperHidden;
 			m_old_grayscale = view.ShowWallpaperInGrayScale;
 			if (string.IsNullOrEmpty(view.WallpaperFilename) || !File.Exists(view.WallpaperFilename))
@@ -134,6 +136,8 @@ namespace RhinoCyclesCore
 				wallpaper.Clear();
 				return;
 			}
+
+			m_old_wallpaper = view.WallpaperFilename != null ? view.WallpaperFilename : "";
 
 			try
 			{
