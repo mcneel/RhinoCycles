@@ -25,6 +25,7 @@ using Rhino.DocObjects;
 using Rhino.Render;
 using RhinoCyclesCore.Database;
 using ssd = System.Diagnostics.Debug;
+using System.Drawing;
 
 namespace RhinoCycles
 {
@@ -38,10 +39,12 @@ namespace RhinoCycles
 		private bool m_started;
 		private bool m_available;
 		private bool m_last_frame_drawn;
+		private bool m_frame_available;
 
 		private bool m_synchronizing;
 
 		private ViewportRenderEngine m_cycles;
+		private ModalRenderEngine m_modal;
 
 		private long m_starttime;
 		private int m_samples;
@@ -64,6 +67,34 @@ namespace RhinoCycles
 
 		public override bool StartRender(uint w, uint h, RhinoDoc doc, RhinoView rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
+			if(forCapture)
+			{
+				ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"));
+				m_cycles = null;
+				m_modal = mre;
+
+				mre.Settings = RcCore.It.EngineSettings;
+				mre.Settings.UseInteractiveRenderer = false;
+				mre.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
+
+				var rs = new Size((int)w, (int)h);
+
+				mre.RenderWindow = renderWindow;
+
+				mre.RenderWindow.AddWireframeChannel(mre.Doc, mre.ViewportInfo, rs, new Rectangle(0, 0, rs.Width, rs.Height));
+				mre.RenderWindow.SetSize(rs);
+				mre.RenderDimension = rs;
+				mre.Database.RenderDimension = rs;
+
+				mre.Settings.Verbose = true;
+
+				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
+				ModalRenderEngine.Renderer(mre);
+				SetCRC(mre.ViewCrc);
+				mre.SaveRenderedBuffer(0);
+				return true;
+			}
+
 			ssd.WriteLine("StartRender {0}", m_serial);
 			m_started = true;
 			m_available = false; // the renderer hasn't started yet. It'll tell us when it has.
@@ -116,6 +147,7 @@ namespace RhinoCycles
 		void m_cycles_PassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
 			SetCRC(m_cycles.ViewCrc);
+			m_frame_available = true;
 			SignalRedraw();
 		}
 
@@ -193,7 +225,7 @@ namespace RhinoCycles
 									}
 							}
 							m_last_frame_drawn = m_status.StartsWith("Done");
-#if DEBUG
+#if DEBUGxx
 							if (m_last_frame_drawn)
 							{
 								m_cycles.SaveRenderedBuffer(m_samples);
@@ -221,8 +253,15 @@ namespace RhinoCycles
 
 		public override void GetRenderSize(out int width, out int height)
 		{
-			width = m_cycles.RenderDimension.Width;
-			height = m_cycles.RenderDimension.Height;
+			if (m_cycles != null)
+			{
+				width = m_cycles.RenderDimension.Width;
+				height = m_cycles.RenderDimension.Height;
+			} else
+			{
+				width = m_modal.RenderDimension.Width;
+				height = m_modal.RenderDimension.Height;
+			}
 		}
 
 		public override bool RestartRender(bool tiled, int width, int height)
@@ -236,6 +275,7 @@ namespace RhinoCycles
 
 		public override void ShutdownRender()
 		{
+			if (m_cycles == null) return; // we're probably capturing for clipboard/file
 			// get exclusive lock, we want this always to succeed, so we
 			// wait here
 			lock (m_cycles.m_display_lock)
@@ -262,7 +302,13 @@ namespace RhinoCycles
 		{
 			//ssd.WriteLine("IsRenderframeAvailable {0}: {1}", m_serial, m_available);
 			SetGamma(m_cycles.Database.Gamma);
-			return m_available && m_cycles.State==State.Rendering;
+			bool fa = false;
+			if (m_frame_available)
+			{
+				fa = true;
+				m_frame_available = false;
+			}
+			return m_available && m_cycles.State==State.Rendering && fa;
 		}
 
 

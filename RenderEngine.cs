@@ -189,6 +189,16 @@ namespace RhinoCyclesCore
 			get { return new ViewportInfo(m_view.ActiveViewport); }
 		}
 
+		/// <summary>
+		/// Render engine implementations that need to keep track of view CRC
+		/// for instance to signal when a frame is ready for that particular
+		/// view.
+		/// 
+		/// Generally such engines want to register an event handler to
+		/// Database.ViewChanged to record the new ViewCrc here.
+		/// </summary>
+		public uint ViewCrc { get; set; }
+
 #region CONSTRUCTORS
 
 		private void RegisterEventHandler()

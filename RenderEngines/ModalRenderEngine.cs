@@ -38,6 +38,8 @@ namespace RhinoCycles
 			Client = new Client();
 			State = State.Rendering;
 
+			Database.ViewChanged += MRE_Database_ViewChanged;
+
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = UpdateRenderTileCallback;
@@ -46,6 +48,11 @@ namespace RhinoCycles
 
 			CSycles.log_to_stdout(false);
 #endregion
+		}
+
+		private void MRE_Database_ViewChanged(object sender, RhinoCyclesCore.Database.ChangeDatabase.ViewChangedEventArgs e)
+		{
+			ViewCrc = e.Crc;
 		}
 
 		/// <summary>
@@ -128,7 +135,8 @@ namespace RhinoCycles
 			cycles_engine.Session.Destroy();
 
 			// set final status string and progress to 1.0f to signal completed render
-			cycles_engine.SetProgress(rw, String.Format("Render ready {0} samples, duration {1}", cycles_engine.RenderedSamples, cycles_engine.TimeString), 1.0f);
+			cycles_engine.SetProgress(rw, String.Format("Render ready {0} samples, duration {1}", cycles_engine.RenderedSamples+1, cycles_engine.TimeString), 1.0f);
+			cycles_engine.CancelRender = true;
 
 			// signal the render window we're done.
 			rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);

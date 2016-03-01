@@ -126,7 +126,7 @@ namespace RhinoCycles
 								channel.SetValues(rect, size, pixelbuffer);
 							}
 						}
-#if DEBUG
+#if DEBUGxx
 						SaveRenderedBuffer(sample);
 #endif
 						sdd.WriteLine(string.Format("display update, sample {0}", sample));
@@ -278,8 +278,6 @@ namespace RhinoCycles
 			}
 		}
 
-		public uint ViewCrc { get; set; }
-
 		public void Synchronize()
 		{
 			if (State == State.Uploading)
@@ -315,13 +313,6 @@ namespace RhinoCycles
 			Session.SetPause(false);
 		}
 
-		public void SaveRenderedBuffer(int sample)
-		{
-			var tmpf = string.Format("{0}\\RC_viewport_renderer_{1}.png", Environment.GetEnvironmentVariable("TEMP"), sample.ToString("D5"));
-			RenderWindow.SaveDibAsBitmap(tmpf);
-			/*var bmp = RenderWindow.GetBitmap();
-			bmp.Save(tmpf, ImageFormat.Png);*/
-		}
 	}
 
 }
