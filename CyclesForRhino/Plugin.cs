@@ -73,7 +73,7 @@ namespace CyclesForRhino
 		protected override Result Render(RhinoDoc doc, RunMode mode, bool fastPreview)
 		{
 			//RcCore.It.InitialiseCSycles();
-			AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id);
+			AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id, doc.Views.ActiveView.ActiveViewport.View, null);
 			var engine = (RhinoCycles.ModalRenderEngine)a_rc;
 
 			engine.Settings = RcCore.It.EngineSettings;

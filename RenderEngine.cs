@@ -176,7 +176,7 @@ namespace RhinoCyclesCore
 		}
 
 		protected readonly uint m_doc_serialnumber;
-		protected readonly RhinoView m_view;
+		protected readonly ViewInfo m_view;
 		private readonly bool m_interactive;
 
 		public RhinoDoc Doc
@@ -184,9 +184,14 @@ namespace RhinoCyclesCore
 			get { return RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber); }
 		}
 
+		private readonly ViewportInfo m_vp;
 		public ViewportInfo ViewportInfo
 		{
-			get { return new ViewportInfo(m_view.ActiveViewport); }
+			get
+			{
+				if (m_vp != null) return m_vp;
+				return m_view.Viewport;
+			}
 		}
 
 		/// <summary>
@@ -207,11 +212,12 @@ namespace RhinoCyclesCore
 			Database.LightShaderChanged += Database_LightShaderChanged;
 			Database.FilmUpdateTagged += Database_FilmUpdateTagged;
 		}
-		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, RhinoView view, bool interactive)
+		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, ViewInfo view, ViewportInfo vp, bool interactive)
 		{
 			m_plugin_id = pluginId;
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			m_view = view;
+			m_vp = vp;
 			m_interactive = interactive;
 			Database = new ChangeDatabase(m_plugin_id, this, m_doc_serialnumber, m_view, !m_interactive);
 

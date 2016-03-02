@@ -28,7 +28,7 @@ namespace RhinoCycles
 {
 	public class ViewportRenderEngine : RenderEngine
 	{
-		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, RhinoView view) : base(pluginId, docRuntimeSerialNumber, view, true)
+		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, Rhino.DocObjects.ViewInfo view) : base(pluginId, docRuntimeSerialNumber, view, null, true)
 		{
 			RenderThread = null;
 			Client = new Client();

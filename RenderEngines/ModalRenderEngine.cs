@@ -32,7 +32,7 @@ namespace RhinoCycles
 		/// </summary>
 		/// <param name="doc"></param>
 		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
-		public ModalRenderEngine(RhinoDoc doc, Guid pluginId) : base(pluginId, doc.RuntimeSerialNumber, doc.Views.ActiveView, false)
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, Rhino.DocObjects.ViewInfo view, Rhino.DocObjects.ViewportInfo vp) : base(pluginId, doc.RuntimeSerialNumber, view, vp, false)
 		{
 			RenderThread = null;
 			Client = new Client();

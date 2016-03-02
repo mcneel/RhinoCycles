@@ -65,11 +65,11 @@ namespace RhinoCycles
 			ssd.WriteLine("CreateWorld {0}", m_serial);
 		}
 
-		public override bool StartRender(uint w, uint h, RhinoDoc doc, RhinoView rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
+		public override bool StartRender(uint w, uint h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
 			if(forCapture)
 			{
-				ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"));
+				ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo);
 				m_cycles = null;
 				m_modal = mre;
 
@@ -88,10 +88,15 @@ namespace RhinoCycles
 
 				mre.Settings.Verbose = true;
 
+				mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
+
 				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 				ModalRenderEngine.Renderer(mre);
 				SetCRC(mre.ViewCrc);
 				mre.SaveRenderedBuffer(0);
+				m_started = true; // we started (and are also ready, though)
+				m_available = true;
+				m_frame_available = true;
 				return true;
 			}
 
@@ -169,9 +174,17 @@ namespace RhinoCycles
 			ssd.WriteLine("Setting Gamma {0} and ApplyGammaCorrection {1}", e.Gamma, e.Lwf.Active);
 			SetUseLinearWorkflowGamma(e.Lwf.Active);
 			SetGamma(e.Gamma);
-			var imageadjust = m_cycles.RenderWindow.GetAdjust();
-			imageadjust.Gamma = e.Gamma;
-			m_cycles.RenderWindow.SetAdjust(imageadjust);
+			if (m_cycles != null)
+			{
+				var imageadjust = m_cycles.RenderWindow.GetAdjust();
+				imageadjust.Gamma = e.Gamma;
+				m_cycles.RenderWindow.SetAdjust(imageadjust);
+			} else if(m_modal!= null)
+			{
+				var imageadjust = m_modal.RenderWindow.GetAdjust();
+				imageadjust.Gamma = e.Gamma;
+				m_modal.RenderWindow.SetAdjust(imageadjust);
+			}
 		}
 
 		void m_cycles_RenderStarted(object sender, ViewportRenderEngine.RenderStartedEventArgs e)
