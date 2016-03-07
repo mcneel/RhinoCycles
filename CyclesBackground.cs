@@ -123,14 +123,26 @@ namespace RhinoCyclesCore
 		private Guid id = Guid.NewGuid();
 		private bool m_old_hidden;
 		private bool m_old_grayscale;
+		private bool m_old_scaletofit;
 		private string m_old_wallpaper = "";
 
+		/// <summary>
+		/// Same as <see cref="HandleWallpaper(ViewInfo, bool)"/>, but re-use old scaletofit setting
+		/// </summary>
+		/// <param name="view"></param>
 		public void HandleWallpaper(ViewInfo view)
 		{
+			HandleWallpaper(view, m_old_scaletofit);
+		}
+
+		public void HandleWallpaper(ViewInfo view, bool scaleToFit)
+		{
 			modified |= m_old_hidden != view.WallpaperHidden | m_old_grayscale != view.ShowWallpaperInGrayScale;
+			modified |= m_old_scaletofit != scaleToFit;
 			modified |= !m_old_wallpaper.Equals(view.WallpaperFilename);
 			m_old_hidden = view.WallpaperHidden;
 			m_old_grayscale = view.ShowWallpaperInGrayScale;
+			m_old_scaletofit = scaleToFit;
 			if (string.IsNullOrEmpty(view.WallpaperFilename) || !File.Exists(view.WallpaperFilename))
 			{
 				wallpaper.Clear();
@@ -184,13 +196,18 @@ namespace RhinoCyclesCore
 
 				var col = Color.Aqua;
 				if (color1 != Color.Empty)
-#if DEBUG
+#if DEBUGxxx
 					if(!view.ShowWallpaperInGrayScale)
 #endif
 					col = color1;
 				var brush = new SolidBrush(col);
 				var p = new Point(x, y);
 				var bmsize=  new Size(nw,nh);
+				if (scaleToFit)
+				{
+					bmsize = new Size(w, h);
+					p = new Point(0, 0);
+				}
 				using (Graphics g = Graphics.FromImage(newBitmap))
 				{
 					g.FillRectangle(brush, new Rectangle(Point.Empty, newBitmap.Size));
@@ -207,14 +224,17 @@ namespace RhinoCyclesCore
 						}
 					}
 				}
-#if DEBUG
+#if DEBUGxxx
 				var tmpf = string.Format("{0}\\{1}.png", Environment.GetEnvironmentVariable("TEMP"), "RC_wallpaper");
 				newBitmap.Save(tmpf, ImageFormat.Png);
 #endif
 				wallpaper.TexByte = BitmapConverter.ReadByteBitmapFromBitmap(newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaper.TexWidth = newBitmap.Width;
 				wallpaper.TexHeight = newBitmap.Height;
-				wallpaper.Name = string.Format("{0}_{1}x{2}_{3}_{4}_{5}", view.WallpaperFilename, newBitmap.Width, newBitmap.Height, view.WallpaperHidden, view.ShowWallpaperInGrayScale, id);
+				wallpaper.Name = string.Format("{0}_{1}x{2}_{3}_{4}_{5}_{6}",
+					view.WallpaperFilename, newBitmap.Width, newBitmap.Height,
+					view.WallpaperHidden, view.ShowWallpaperInGrayScale,
+					scaleToFit, id);
 			}
 			catch (Exception)
 			{

@@ -95,6 +95,11 @@ namespace RhinoCyclesCore.Database
 			m_cq_background.modified |= mod;
 		}
 
+		public void BackgroundWallpaper(ViewInfo view, bool scaleToFit)
+		{
+			m_cq_background.HandleWallpaper(view, scaleToFit);
+		}
+
 		public void BackgroundWallpaper(ViewInfo view)
 		{
 			m_cq_background.HandleWallpaper(view);

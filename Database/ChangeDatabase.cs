@@ -1274,7 +1274,7 @@ namespace RhinoCyclesCore.Database
 						y ? "" : "its hidden bool",
 						y ? "" : string.Format("{0}", view.WallpaperHidden)
 						));
-					m_env_db.BackgroundWallpaper(view);
+					m_env_db.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
 				}
 				m_env_db.SetGamma(GammaLinearWorkflow);
 				m_render_engine.Settings.SetQuality(rs.AntialiasLevel);
