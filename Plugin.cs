@@ -48,8 +48,6 @@ namespace RhinoCycles
 
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
-			RhinoApp.WriteLine("RhinoCycles uses open source libraries that are available at www.rhino3d.com/opensource");
-
 			RenderContent.RegisterContent(this);
 			// code got moved to separate DLL so use that to register from.
 			var rccoreass = typeof(RhinoCyclesCore.RcCore).Assembly;
@@ -58,11 +56,7 @@ namespace RhinoCycles
 			RenderedDisplayMode.RegisterDisplayModes(rccoreass, Id);
 			RenderedDisplayMode.InstallCyclesDisplayAttributes();
 
-			RhinoApp.WriteLine("RhinoCycles {0}", RhinoBuildConstants.VERSION_STRING);
-
 			RenderContent.ContentFieldChanged += RenderContentOnContentFieldChanged;
-
-			//EngineSettings = new EngineSettings();
 
 			var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
 			RcCore.It.PluginPath = path;
