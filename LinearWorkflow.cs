@@ -17,11 +17,19 @@ using System;
 using LwFlow = Rhino.Render.ChangeQueue.LinearWorkflow;
 namespace RhinoCyclesCore
 {
+	/// <summary>
+	/// Intermediate class to convey linear workflow settings:
+	/// gamma, reciprocal gamma, active.
+	/// </summary>
 	public class LinearWorkflow
 	{
 		public bool Active { get; set; }
 		public float Gamma { get; set; }
 		public float GammaReciprocal { get; set; }
+		/// <summary>
+		/// Copy constructor from <see cref="Rhino.Render.ChangeQueue.LinearWorkflow"/>
+		/// </summary>
+		/// <param name="lwf"><see cref="Rhino.Render.ChangeQueue.LinearWorkflow"/></param>
 		public LinearWorkflow(LwFlow lwf)
 		{
 			Active = lwf.Active;
@@ -29,6 +37,11 @@ namespace RhinoCyclesCore
 			GammaReciprocal = lwf.GammaReciprocal;
 		}
 
+		/// <summary>
+		/// Default constructor
+		/// </summary>
+		/// <param name="active"></param>
+		/// <param name="gamma"></param>
 		public LinearWorkflow(bool active, float gamma)
 		{
 			Active = active;
@@ -36,6 +49,10 @@ namespace RhinoCyclesCore
 			GammaReciprocal = 1.0f/gamma;
 		}
 
+		/// <summary>
+		/// Copy constructor from <see cref="LinearWorkflow"/>
+		/// </summary>
+		/// <param name="old"><see cref="LinearWorkflow"/></param>
 		public LinearWorkflow(LinearWorkflow old)
 		{
 			Active = old.Active;
@@ -50,6 +67,11 @@ namespace RhinoCyclesCore
 			if (lwf == null) return false;
 
 			return Active == lwf.Active && Math.Abs(Gamma-lwf.Gamma) < float.Epsilon && Math.Abs(GammaReciprocal - lwf.GammaReciprocal) < float.Epsilon;
+		}
+
+		public override int GetHashCode()
+		{
+			return base.GetHashCode();
 		}
 	}
 }
