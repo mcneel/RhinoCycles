@@ -553,6 +553,7 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.Matrix = view.Transform;
 			scene.Camera.Type = view.Projection;
 			scene.Camera.Fov = angle;
+			scene.Camera.FarClip = gp_max_val;
 			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
 			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
 			scene.Camera.SensorHeight = m_render_engine.Settings.SensorHeight;
@@ -919,14 +920,17 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		private const uint GroundPlaneMeshInstanceId = 1;
 
+		private readonly float gp_max_val = float.MaxValue / 2.0f;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
 			var gpid = m_groundplane_guid;
 			var bb = GetQueueSceneBoundingBox();
-			var edgefactor = bb.IsValid ? (int)((float) bb.GetEdges()[0].Length/2) / 100 : 1;
-			edgefactor = edgefactor < 1 ? 1 : edgefactor > 100 ? 100 : edgefactor;
+
+			var longest_edge = bb.IsValid ? bb.GetEdges().Max(edge => edge.Length) : -100.0;
+			var edgefactor = (int)((float)longest_edge / 2) / 100;
+			edgefactor = edgefactor < 1 ? 10 : edgefactor;
 			var altitude = (float)(gp.Enabled ? gp.Altitude : 0.0);
-			var l = 1000.0f*edgefactor;
+			var l = (float)Math.Min(100000.0*edgefactor, gp_max_val);
 			var vertices = new[]
 			{
 				 l, -l, 0.0f,

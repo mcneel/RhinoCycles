@@ -129,7 +129,7 @@ namespace RhinoCycles
 #if DEBUGxx
 						SaveRenderedBuffer(sample);
 #endif
-						sdd.WriteLine(string.Format("display update, sample {0}", sample));
+						//sdd.WriteLine(string.Format("display update, sample {0}", sample));
 						// now signal whoever is interested
 						var handler = PassRendered;
 						if (handler != null)
