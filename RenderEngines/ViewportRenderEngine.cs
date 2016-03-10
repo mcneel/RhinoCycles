@@ -96,6 +96,8 @@ namespace RhinoCycles
 
 		public void DisplayUpdateHandler(uint sessionId, int sample)
 		{
+			// after first 10 frames have been rendered only update every third.
+			if (sample > 10 && sample % 3 != 0) return;
 			// try to get a lock, but don't be too fussed if we don't get it at the first try,
 			// just try the next time.
 			try
@@ -103,7 +105,6 @@ namespace RhinoCycles
 				System.Threading.Monitor.TryEnter(m_display_lock, ref acquired_display_lock);
 				if (acquired_display_lock)
 				{
-
 					if (CancelRender) return;
 					if (m_setting_size) return;
 					if (Flush) return;
