@@ -228,15 +228,6 @@ namespace RhinoCycles
 						}
 						else
 						{
-							if (!m_last_frame_drawn)
-							{
-								if (m_cycles.Session != null && m_cycles.State == State.Rendering)
-									// On GPU we need to tonemap still
-									if (m_cycles.Session.Scene.Device.IsGpu)
-									{
-										m_cycles.Session.Draw(m_cycles.RenderDimension.Width, m_cycles.RenderDimension.Height);
-									}
-							}
 							m_last_frame_drawn = m_status.StartsWith("Done");
 #if DEBUGxx
 							if (m_last_frame_drawn)
