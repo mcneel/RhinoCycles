@@ -40,8 +40,6 @@ namespace CyclesForRhino
 		{
 			if (feature == RenderFeature.CustomDecalProperties)
 				return false;
-			if (feature == RenderFeature.ShadowOnlyGroundPlane)
-				return false;
 
 			return true;
 		}
