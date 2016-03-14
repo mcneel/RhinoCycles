@@ -185,7 +185,7 @@ namespace RhinoCyclesCore
 		/// <param name="rm"></param>
 		/// <param name="teximg"></param>
 		/// <param name="gamma"></param>
-		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma)
+		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma, bool floatAsByte)
 		{
 			RenderTexture render_texture = null;
 
@@ -233,7 +233,7 @@ namespace RhinoCyclesCore
 
 				teximg.IsLinear = render_texture.IsLinear();
 
-				if (is_float)
+				if (is_float && !floatAsByte)
 				{
 					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
 					img.ApplyGamma(gamma);

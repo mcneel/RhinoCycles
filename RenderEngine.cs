@@ -128,6 +128,14 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public ChangeDatabase Database { get; set; }
 
+		/// <summary>
+		/// OpenCL doesn't properly support HDRi textures in the environment,
+		/// so read them as byte textures instead.
+		/// </summary>
+		public void SetFloatTextureAsByteTexture(bool floatAsByte)
+		{
+			Database.SetFloatTextureAsByteTexture(floatAsByte);
+		}
 
 
 		/// <summary>

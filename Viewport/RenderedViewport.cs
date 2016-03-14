@@ -90,6 +90,8 @@ namespace RhinoCycles
 
 				mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 
+				mre.SetFloatTextureAsByteTexture(mre.Settings.RenderDeviceIsOpenCL);
+
 				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 				ModalRenderEngine.Renderer(mre);
 				SetCRC(mre.ViewCrc);
@@ -127,6 +129,8 @@ namespace RhinoCycles
 			m_cycles.Settings.Verbose = true;
 
 			m_maxsamples = m_cycles.Settings.Samples;
+
+			m_cycles.SetFloatTextureAsByteTexture(m_cycles.Settings.RenderDeviceIsOpenCL);
 
 			m_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 

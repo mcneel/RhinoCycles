@@ -184,6 +184,33 @@ namespace RhinoCyclesCore
 			}
 		}
 
+		public bool RenderDeviceIsCuda
+		{
+			get
+			{
+				return RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
+			}
+		}
+
+		public bool RenderDeviceIsOpenCL
+		{
+			get
+			{
+				return RenderDevice.IsMultiOpenCL || RenderDevice.IsOpenCl;
+			}
+		}
+
+		public Device RenderDevice
+		{
+			get
+			{
+				var render_device = SelectedDevice == -1
+					? Device.FirstCuda
+					: Device.GetDevice(SelectedDevice);
+				return render_device;
+			}
+		}
+
 		/// <summary>
 		/// Set to true if rhino shader conversion should be skipped.
 		/// </summary>

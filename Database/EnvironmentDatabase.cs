@@ -30,6 +30,15 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		private readonly CyclesBackground m_cq_background = new CyclesBackground();
 
+		/// <summary>
+		/// OpenCL doesn't properly support HDRi textures in the environment,
+		/// so read them as byte textures instead.
+		/// </summary>
+		public void SetFloatTextureAsByteTexture(bool floatAsByte)
+		{
+			m_cq_background.m_float_as_byte = floatAsByte;
+		}
+
 		public CyclesBackground CyclesShader
 		{
 			get

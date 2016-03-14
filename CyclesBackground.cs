@@ -31,6 +31,12 @@ namespace RhinoCyclesCore
 	public class CyclesBackground
 	{
 		/// <summary>
+		/// OpenCL doesn't properly support HDRi textures in the environment,
+		/// so read them as byte textures instead.
+		/// </summary>
+		public bool m_float_as_byte;
+
+		/// <summary>
 		/// True if ChangeQueue modified the background
 		/// </summary>
 		public bool modified;
@@ -262,7 +268,7 @@ namespace RhinoCyclesCore
 				bg_color = Color.Empty;
 				bg.Clear();
 			}
-			BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg, gamma);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg, gamma, m_float_as_byte);
 
 			bool resampled = false;
 			if (skylight_environment != null)
@@ -298,7 +304,7 @@ namespace RhinoCyclesCore
 
 
 
-            BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, gamma);
+            BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, gamma, m_float_as_byte);
 						resampled = true;
 
 						render_texture.Dispose();
@@ -313,7 +319,7 @@ namespace RhinoCyclesCore
 				sky.Clear();
 			}
 			if(!resampled)
-				BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky, gamma);
+				BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky, gamma, m_float_as_byte);
 
 			if (reflection_environment != null)
 			{
@@ -328,7 +334,7 @@ namespace RhinoCyclesCore
 				refl_color = Color.Empty;
 				refl.Clear();
 			}
-			BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl, gamma);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl, gamma, m_float_as_byte);
 		}
 
 		/// <summary>
