@@ -96,34 +96,37 @@ namespace RhinoCyclesCore
 				// what to read out from the simulated material to
 				// populate my own material descriptions.
 				var m = rm.SimulateMaterial(true);
+
+        rm.BeginChange(RenderContent.ChangeContexts.Ignore);
+
 				switch (probemat)
 				{
 					case ProbableMaterial.Plaster:
 						var plaster = new DiffuseMaterial();
-						plaster.SetParameter("diffuse", m.DiffuseColor, RenderContent.ChangeContexts.Ignore);
+						plaster.SetParameter("diffuse", m.DiffuseColor);
 						crm = plaster;
 						break;
 					case ProbableMaterial.Glass:
 					case ProbableMaterial.Gem:
 						var glass = new GlassMaterial { Name = m.Name };
-						glass.SetParameter("glass_color", m.TransparentColor, RenderContent.ChangeContexts.Ignore);
-						glass.SetParameter("frost-amount", (float)m.ReflectionGlossiness, RenderContent.ChangeContexts.Ignore);
-						glass.SetParameter("ior", (float)m.IndexOfRefraction, RenderContent.ChangeContexts.Ignore);
+						glass.SetParameter("glass_color", m.TransparentColor);
+						glass.SetParameter("frost-amount", (float)m.ReflectionGlossiness);
+						glass.SetParameter("ior", (float)m.IndexOfRefraction);
 						crm = glass;
 						break;
 					case ProbableMaterial.Plastic:
 						var plastic = new SimplePlasticMaterial();
-						plastic.SetParameter("diffuse", m.DiffuseColor, RenderContent.ChangeContexts.Ignore);
-						plastic.SetParameter("frost-amount", (float) m.RefractionGlossiness, RenderContent.ChangeContexts.Ignore);
-						plastic.SetParameter("polish-amount", (float) m.ReflectionGlossiness, RenderContent.ChangeContexts.Ignore);
-						plastic.SetParameter("reflectivity", (float) m.Reflectivity, RenderContent.ChangeContexts.Ignore);
-						plastic.SetParameter("transparency", (float) m.Transparency, RenderContent.ChangeContexts.Ignore);
+						plastic.SetParameter("diffuse", m.DiffuseColor);
+						plastic.SetParameter("frost-amount", (float) m.RefractionGlossiness);
+						plastic.SetParameter("polish-amount", (float) m.ReflectionGlossiness);
+						plastic.SetParameter("reflectivity", (float) m.Reflectivity);
+						plastic.SetParameter("transparency", (float) m.Transparency);
 						crm = plastic;
 						break;
 					case ProbableMaterial.Metal:
 						var metal = new SimpleMetalMaterial();
-						metal.SetParameter("metal-color", m.ReflectionColor, RenderContent.ChangeContexts.Ignore);
-						metal.SetParameter("metal-polish", (float)m.ReflectionGlossiness, RenderContent.ChangeContexts.Ignore);
+						metal.SetParameter("metal-color", m.ReflectionColor);
+						metal.SetParameter("metal-polish", (float)m.ReflectionGlossiness);
 						crm = metal;
 						break;
 					default:
@@ -215,6 +218,9 @@ namespace RhinoCyclesCore
 						break;
 
 				}
+
+        rm.EndChange();
+
 			}
 			if (crm != null)
 			{
