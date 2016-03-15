@@ -288,10 +288,10 @@ namespace RhinoCyclesCore
 					// remember z can be !0.0 for volumetrics
 					var col4_f = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), zerovector, zerovector);
 					var offset = x * 4 + pwidth * y * 4;
-					upixel[offset] = (byte)(col4_f.R * 255.0f);
-					upixel[offset + 1] = (byte)(col4_f.G * 255.0f);
-					upixel[offset + 2] = (byte)(col4_f.B * 255.0f);
-					upixel[offset + 3] = (byte)(col4_f.A * 255.0f);
+					upixel[offset] = (byte)(Math.Min(col4_f.R, 1.0f) * 255.0f);
+					upixel[offset + 1] = (byte)(Math.Min(col4_f.G, 1.0f) * 255.0f);
+					upixel[offset + 2] = (byte)(Math.Min(col4_f.B, 1.0f) * 255.0f);
+					upixel[offset + 3] = (byte)(Math.Min(col4_f.A, 1.0f) * 255.0f);
 				}
 			}
 			return upixel;
