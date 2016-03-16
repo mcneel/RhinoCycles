@@ -115,7 +115,7 @@ namespace RhinoCyclesCore
 
 			NoCaustics = false;
 
-			MaxDiffuseBounce = 0;
+			MaxDiffuseBounce = 2;
 			MaxGlossyBounce = 4;
 			MaxTransmissionBounce = 8;
 			MaxVolumeBounce = 2;
