@@ -94,6 +94,7 @@ namespace RhinoCycles
 				Experimental = false,
 				Samples = samples,
 				TileSize = render_device.IsCuda ? new Size(256, 256) : new Size(32, 32),
+				TileOrder = TileOrder.HilbertSpiral,
 				Threads = (uint)(render_device.IsCuda ? 0 : cycles_engine.Settings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				Background = true,

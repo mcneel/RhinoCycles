@@ -213,8 +213,9 @@ namespace RhinoCycles
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = render_device.IsCpu? new Size(32, 32) : new Size(256, 256),
-				Threads = (uint)(render_device.IsCpu ?  cycles_engine.Settings.Threads : 0),
+				TileSize = render_device.IsCpu ? new Size(32, 32) : new Size(256, 256),
+				TileOrder = TileOrder.HilbertSpiral,
+				Threads = (uint)(render_device.IsCpu ? cycles_engine.Settings.Threads : 0),
 				ShadingSystem = ShadingSystem.SVM,
 				StartResolution = 128,
 				SkipLinearToSrgbConversion = true,
