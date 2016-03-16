@@ -217,7 +217,7 @@ namespace RhinoCycles
 				TileOrder = TileOrder.HilbertSpiral,
 				Threads = (uint)(render_device.IsCpu ? cycles_engine.Settings.Threads : 0),
 				ShadingSystem = ShadingSystem.SVM,
-				StartResolution = 128,
+				StartResolution = render_device.IsCpu ? 16 : 64,
 				SkipLinearToSrgbConversion = true,
 				Background = false,
 				ProgressiveRefine = true, //rw != null,
