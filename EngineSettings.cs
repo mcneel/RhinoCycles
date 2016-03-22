@@ -205,7 +205,7 @@ namespace RhinoCyclesCore
 			get
 			{
 				var render_device = SelectedDevice == -1
-					? Device.FirstCuda
+					? Device.FirstGpu
 					: Device.GetDevice(SelectedDevice);
 				return render_device;
 			}
