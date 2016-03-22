@@ -192,11 +192,11 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public bool RenderDeviceIsOpenCL
+		public bool RenderDeviceIsOpenCl
 		{
 			get
 			{
-				return RenderDevice.IsMultiOpenCL || RenderDevice.IsOpenCl;
+				return RenderDevice.IsMultiOpenCl || RenderDevice.IsOpenCl;
 			}
 		}
 
