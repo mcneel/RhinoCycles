@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System.Drawing;
+using System;
 using System.Runtime.InteropServices;
 using Rhino.Display;
 using Rhino.DocObjects;
@@ -104,6 +105,8 @@ namespace RhinoCyclesCore.Materials
 				Fields.TryGetValue("glass_color", out color);
 				Fields.TryGetValue("frost-amount", out frost);
 				Fields.TryGetValue("ior", out IOR);
+
+				frost = (float)Math.Pow(frost, 2);
 
 				color = Color4f.ApplyGamma(color, Gamma);
 

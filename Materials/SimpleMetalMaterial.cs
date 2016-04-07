@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using Rhino.Display;
@@ -94,6 +95,8 @@ namespace RhinoCyclesCore.Materials
 
 				Fields.TryGetValue("metal-color", out color);
 				Fields.TryGetValue("metal-polish", out polish);
+
+				polish = (float)Math.Pow(polish, 2);
 
 				color = Color4f.ApplyGamma(color, Gamma);
 
