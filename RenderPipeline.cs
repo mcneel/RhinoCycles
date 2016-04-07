@@ -65,7 +65,7 @@ namespace RhinoCycles
 
 		protected override void OnRenderEnd(RenderEndEventArgs e)
 		{
-			// unused
+			cyclesEngine.StopRendering();
 		}
 
 		protected override bool ContinueModal()
