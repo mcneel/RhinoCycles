@@ -76,7 +76,7 @@ namespace RhinoCycles
 			#region pick a render device
 
 			var render_device = cycles_engine.Settings.SelectedDevice == -1
-				? Device.FirstCuda
+				? Device.FirstGpu
 				: Device.GetDevice(cycles_engine.Settings.SelectedDevice);
 
 			if (cycles_engine.Settings.Verbose) sdd.WriteLine(String.Format("Using device {0}", render_device.Name + " " + render_device.Description));
@@ -89,9 +89,9 @@ namespace RhinoCycles
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = render_device.IsCuda ? new Size(256, 256) : new Size(32, 32),
+				TileSize = render_device.IsGpu ? new Size(256, 256) : new Size(32, 32),
 				TileOrder = TileOrder.HilbertSpiral,
-				Threads = (uint)(render_device.IsCuda ? 0 : cycles_engine.Settings.Threads),
+				Threads = (uint)(render_device.IsGpu ? 0 : cycles_engine.Settings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				Background = true,
 				ProgressiveRefine = true,
