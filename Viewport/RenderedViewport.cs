@@ -272,7 +272,7 @@ namespace RhinoCycles
 			}
 		}
 
-		public override bool RestartRender(bool tiled, int width, int height)
+		public override bool RestartRender(int width, int height)
 		{
 			ssd.WriteLine("RestartRender {0}", m_serial);
 			SetGamma(m_cycles.Database.Gamma);
@@ -320,10 +320,10 @@ namespace RhinoCycles
 		}
 
 
-		public override bool RenderEngineDraw()
+		/*public override bool RenderEngineDraw()
 		{
 			return false;
-		}
+		}*/
 
 
 		public override string HudProductName()
