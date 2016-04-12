@@ -93,30 +93,32 @@ namespace RhinoCycles
 			if (State != State.Rendering) return;
 			lock (size_setter_lock)
 			{
-				Session.Scene.Lock();
-				// copy display buffer data into ccycles pixel buffer
-				Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
-				// copy stuff into renderwindow dib
-				using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
+				if (Session.Scene.TryLock())
 				{
-					if (CancelRender) return;
-					if (channel != null)
+					// copy display buffer data into ccycles pixel buffer
+					Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
+					// copy stuff into renderwindow dib
+					using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
 					{
 						if (CancelRender) return;
-						var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
-						var size = RenderDimension;
-						var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
-						if (CancelRender) return;
-						channel.SetValues(rect, size, pixelbuffer);
+						if (channel != null)
+						{
+							if (CancelRender) return;
+							var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
+							var size = RenderDimension;
+							var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
+							if (CancelRender) return;
+							channel.SetValues(rect, size, pixelbuffer);
+						}
 					}
-				}
 #if DEBUGxx
 						SaveRenderedBuffer(sample);
 #endif
-				Session.Scene.Unlock();
-				//sdd.WriteLine(string.Format("display update, sample {0}", sample));
-				// now signal whoever is interested
-				PassRendered?.Invoke(this, new PassRenderedEventArgs(sample));
+					Session.Scene.Unlock();
+					//sdd.WriteLine(string.Format("display update, sample {0}", sample));
+					// now signal whoever is interested
+					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample));
+				}
 			}
 		}
 
