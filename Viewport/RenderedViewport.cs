@@ -34,7 +34,7 @@ namespace RhinoCycles
 	/*[Guid("78B47310-A84B-445D-9991-A90625AC8837")]
 	[RenderedDisplaymodeClassInfo("78B47310-A84B-445D-9991-A90625AC8837", "Cycles Rendered View", "A Cycles Rendered View")]*/
 	[Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181")]
-	[RenderedDisplaymodeClassInfo("69E0C7A5-1C6A-46C8-B98B-8779686CD181", "Cycles Rendered View", "A Cycles Rendered View")]
+	[RenderedDisplaymodeClassInfo("69E0C7A5-1C6A-46C8-B98B-8779686CD181", "Raytraced", "Raytraced")]
 	public class RenderedViewport : RenderedDisplayMode
 	{
 		private static int g_running_serial;
