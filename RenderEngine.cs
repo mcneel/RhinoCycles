@@ -99,6 +99,13 @@ namespace RhinoCyclesCore
 		protected CSycles.TestCancelCallback m_test_cancel_callback;
 		protected CSycles.DisplayUpdateCallback m_display_update_callback;
 
+
+		public event EventHandler ChangesReady;
+		public void TriggerChangesReady()
+		{
+			ChangesReady?.Invoke(this, EventArgs.Empty);
+		}
+
 		protected bool m_flush;
 		/// <summary>
 		/// Flag set to true when a flush on the changequeue is needed.
@@ -117,6 +124,7 @@ namespace RhinoCyclesCore
 				{
 					m_flush = value;
 				}
+				TriggerChangesReady();
 			}
 		}
 

@@ -36,6 +36,8 @@ namespace RhinoCycles
 
 			Database.ViewChanged += Database_ViewChanged;
 
+			this.ChangesReady += ViewportRenderEngine_ChangesReady;
+
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = null;
@@ -46,6 +48,12 @@ namespace RhinoCycles
 			CSycles.log_to_stdout(false);
 #endregion
 			
+		}
+
+		private void ViewportRenderEngine_ChangesReady(object sender, EventArgs e)
+		{
+			CheckFlushQueue();
+			Synchronize();
 		}
 
 		public event EventHandler<ChangeDatabase.ViewChangedEventArgs> ViewChanged;
@@ -111,6 +119,7 @@ namespace RhinoCycles
 					if (State != State.Rendering) return;
 					lock (size_setter_lock)
 					{
+						Session.Scene.Lock();
 						// copy display buffer data into ccycles pixel buffer
 						Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
 						// copy stuff into renderwindow dib
@@ -130,6 +139,7 @@ namespace RhinoCycles
 #if DEBUGxx
 						SaveRenderedBuffer(sample);
 #endif
+						Session.Scene.Unlock();
 						//sdd.WriteLine(string.Format("display update, sample {0}", sample));
 						// now signal whoever is interested
 						var handler = PassRendered;
@@ -282,14 +292,16 @@ namespace RhinoCycles
 
 		public void Synchronize()
 		{
-			if (State == State.Uploading)
+			if (Session != null && State == State.Uploading)
 			{
 				TriggerStartSynchronizing();
 				Session.SetPause(true);
+				Session.Scene.Lock();
 				if (UploadData())
 				{
 					State = State.Rendering;
 					var size = RenderDimension;
+					Session.Scene.Unlock();
 
 					// lets first reset session
 					Session.Reset((uint) size.Width, (uint) size.Height, (uint) Settings.Samples);
@@ -297,6 +309,9 @@ namespace RhinoCycles
 					Session.Scene.Reset();
 
 					TriggerSynchronized();
+				} else
+				{
+					Session.Scene.Unlock();
 				}
 
 				if (CancelRender)
