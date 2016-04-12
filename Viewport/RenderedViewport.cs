@@ -114,7 +114,6 @@ namespace RhinoCycles
 			AsyncRenderContext a_rc = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
 			m_cycles = (ViewportRenderEngine)a_rc;
 
-			m_cycles.ViewChanged += m_cycles_ViewChanged;
 			m_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
 			m_cycles.StartSynchronizing += m_cycles_StartSynchronizing;
@@ -138,7 +137,7 @@ namespace RhinoCycles
 
 			m_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
-			m_starttime = GeCurrentTimeStamp();
+			m_starttime = GetCurrentTimeStamp();
 
 			m_cycles.RenderThread = new Thread(ViewportRenderEngine.Renderer)
 			{
@@ -147,14 +146,6 @@ namespace RhinoCycles
 			m_cycles.RenderThread.Start(m_cycles);
 
 			return true;
-		}
-
-		void m_cycles_ViewChanged(object sender, ChangeDatabase.ViewChangedEventArgs e)
-		{
-			if (e.SizeChanged)
-			{
-				m_cycles.SetRenderSize(e.NewSize.Width, e.NewSize.Height);
-			}
 		}
 
 		void m_cycles_PassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
@@ -171,7 +162,7 @@ namespace RhinoCycles
 
 		void m_cycles_Synchronized(object sender, EventArgs e)
 		{
-			m_starttime = GeCurrentTimeStamp();
+			m_starttime = GetCurrentTimeStamp();
 			m_samples = 0;
 			m_last_frame_drawn = false;
 			m_synchronizing = false;
@@ -210,51 +201,10 @@ namespace RhinoCycles
 			m_cycles.ChangeSamples(samples);
 		}
 
-		static private long GeCurrentTimeStamp()
+		static private long GetCurrentTimeStamp()
 		{
 			TimeSpan span = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0,DateTimeKind.Utc));
 			return (long) span.TotalSeconds;
-		}
-
-		private bool acquired_display_lock = false;
-		public override void UiUpdate()
-		{
-			if (m_cycles == null) return;
-			// try to get a lock, but don't be too fussed if we don't get it at the first try,
-			// just try the next time.
-			try
-			{
-				Monitor.TryEnter(m_cycles.m_display_lock, ref acquired_display_lock);
-				if (acquired_display_lock)
-				{
-					if (m_available && !m_synchronizing)
-					{
-						if (m_cycles.Flush)
-						{
-							m_cycles.CheckFlushQueue();
-							m_cycles.Synchronize();
-						}
-						else
-						{
-							m_last_frame_drawn = m_status.StartsWith("Done");
-#if DEBUGxx
-							if (m_last_frame_drawn)
-							{
-								m_cycles.SaveRenderedBuffer(m_samples);
-							}
-#endif
-						}
-					}
-				}
-			}
-			finally
-			{
-				if (acquired_display_lock)
-				{
-					acquired_display_lock = false;
-					Monitor.Exit(m_cycles.m_display_lock);
-				}
-			}
 		}
 
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
@@ -280,28 +230,19 @@ namespace RhinoCycles
 		{
 			ssd.WriteLine("RestartRender {0}", m_serial);
 			SetGamma(m_cycles.Database.Gamma);
-			m_starttime = GeCurrentTimeStamp();
+			m_starttime = GetCurrentTimeStamp();
 
 			return true;
 		}
 
 		public override void ShutdownRender()
 		{
-			if (m_cycles == null) return; // we're probably capturing for clipboard/file
-			// get exclusive lock, we want this always to succeed, so we
-			// wait here
-			lock (m_cycles.m_display_lock)
-			{
-				m_available = false;
-				m_started = false;
-				ssd.WriteLine("!!! === ShutdownRender {0} === !!!", m_serial);
-				if (m_cycles != null)
-				{
-					m_cycles.StopRendering();
-				}
-				// we're done now, so lets clean up our session.
-				m_cycles.Session.Destroy();
-			}
+			m_available = false;
+			m_started = false;
+			ssd.WriteLine("!!! === ShutdownRender {0} === !!!", m_serial);
+			m_cycles?.StopRendering();
+			m_cycles?.Session?.Destroy();
+			// we're done now, so lets clean up our session.
 		}
 
 		public override bool IsRendererStarted()
@@ -323,16 +264,9 @@ namespace RhinoCycles
 			return m_available && m_cycles.State==State.Rendering && fa;
 		}
 
-
-		/*public override bool RenderEngineDraw()
-		{
-			return false;
-		}*/
-
-
 		public override string HudProductName()
 		{
-			return "RhinoCycles";
+			return "Raytraced";
 		}
 
 		public override string HudStatusText()

@@ -56,23 +56,10 @@ namespace RhinoCycles
 			Synchronize();
 		}
 
-		public event EventHandler<ChangeDatabase.ViewChangedEventArgs> ViewChanged;
-
 		void Database_ViewChanged(object sender, ChangeDatabase.ViewChangedEventArgs e)
 		{
-			lock (size_setter_lock)
-			{
-				if (e.SizeChanged)
-				{
-					m_setting_size = true;
-				}
-			}
+			if (e.SizeChanged) SetRenderSize(e.NewSize.Width, e.NewSize.Height);
 			ViewCrc = e.Crc;
-			var handler = ViewChanged;
-			if (handler != null)
-			{
-				handler(this, e);
-			}
 		}
 
 		/// <summary>
@@ -97,65 +84,39 @@ namespace RhinoCycles
 		/// </summary>
 		public event EventHandler<PassRenderedEventArgs> PassRendered;
 
-		private bool m_setting_size;
-
-		public readonly object m_display_lock = new object();
-		private bool acquired_display_lock = false;
-
 		public void DisplayUpdateHandler(uint sessionId, int sample)
 		{
 			// after first 10 frames have been rendered only update every third.
 			if (sample > 10 && sample % 3 != 0) return;
-			// try to get a lock, but don't be too fussed if we don't get it at the first try,
-			// just try the next time.
-			try
+			if (CancelRender) return;
+			if (Flush) return;
+			if (State != State.Rendering) return;
+			lock (size_setter_lock)
 			{
-				System.Threading.Monitor.TryEnter(m_display_lock, ref acquired_display_lock);
-				if (acquired_display_lock)
+				Session.Scene.Lock();
+				// copy display buffer data into ccycles pixel buffer
+				Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
+				// copy stuff into renderwindow dib
+				using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
 				{
 					if (CancelRender) return;
-					if (m_setting_size) return;
-					if (Flush) return;
-					if (State != State.Rendering) return;
-					lock (size_setter_lock)
+					if (channel != null)
 					{
-						Session.Scene.Lock();
-						// copy display buffer data into ccycles pixel buffer
-						Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
-						// copy stuff into renderwindow dib
-						using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
-						{
-							if (CancelRender) return;
-							if (channel != null)
-							{
-								if (CancelRender) return;
-								var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
-								var size = RenderDimension;
-								var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
-								if (CancelRender) return;
-								channel.SetValues(rect, size, pixelbuffer);
-							}
-						}
+						if (CancelRender) return;
+						var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
+						var size = RenderDimension;
+						var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
+						if (CancelRender) return;
+						channel.SetValues(rect, size, pixelbuffer);
+					}
+				}
 #if DEBUGxx
 						SaveRenderedBuffer(sample);
 #endif
-						Session.Scene.Unlock();
-						//sdd.WriteLine(string.Format("display update, sample {0}", sample));
-						// now signal whoever is interested
-						var handler = PassRendered;
-						if (handler != null)
-						{
-							handler(this, new PassRenderedEventArgs(sample));
-						}
-					}
-				}
-			} finally
-			{
-				if (acquired_display_lock)
-				{
-					acquired_display_lock = false;
-					System.Threading.Monitor.Exit(m_display_lock);
-				}
+				Session.Scene.Unlock();
+				//sdd.WriteLine(string.Format("display update, sample {0}", sample));
+				// now signal whoever is interested
+				PassRendered?.Invoke(this, new PassRenderedEventArgs(sample));
 			}
 		}
 
@@ -170,7 +131,6 @@ namespace RhinoCycles
 			lock (size_setter_lock)
 			{
 				RenderWindow.SetSize(new Size(w, h));
-				m_setting_size = false;
 			}
 		}
 
@@ -230,8 +190,8 @@ namespace RhinoCycles
 				StartResolution = render_device.IsCpu ? 16 : 64,
 				SkipLinearToSrgbConversion = true,
 				Background = false,
-				ProgressiveRefine = true, //rw != null,
-				Progressive = true, //rw != null,
+				ProgressiveRefine = true,
+				Progressive = true,
 			};
 			#endregion
 
@@ -272,22 +232,14 @@ namespace RhinoCycles
 
 		public void TriggerSynchronized()
 		{
-			var handler = Synchronized;
-			if (handler != null)
-			{
-				handler(this, EventArgs.Empty);
-			}
+			Synchronized?.Invoke(this, EventArgs.Empty);
 		}
 
 		public event EventHandler StartSynchronizing;
 
 		public void TriggerStartSynchronizing()
 		{
-			var handler = StartSynchronizing;
-			if (handler != null)
-			{
-				handler(this, EventArgs.Empty);
-			}
+			StartSynchronizing?.Invoke(this, EventArgs.Empty);
 		}
 
 		public void Synchronize()
