@@ -59,14 +59,14 @@ namespace RhinoCycles
 		{
 			g_running_serial ++;
 			m_serial = g_running_serial;
-			ssd.WriteLine("Initialising a RenderedViewport {0}", m_serial);
+			ssd.WriteLine($"Initialising a RenderedViewport {m_serial}");
 			Plugin.InitialiseCSycles();
 			m_available = true;
 		}
 
 		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo)
 		{
-			ssd.WriteLine("CreateWorld {0}", m_serial);
+			ssd.WriteLine($"CreateWorld {m_serial}");
 		}
 
 		public override bool StartRender(uint w, uint h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
@@ -106,7 +106,7 @@ namespace RhinoCycles
 				return true;
 			}
 
-			ssd.WriteLine("StartRender {0}", m_serial);
+			ssd.WriteLine($"StartRender {m_serial}");
 			m_started = true;
 			m_available = false; // the renderer hasn't started yet. It'll tell us when it has.
 			m_last_frame_drawn = false;
@@ -170,7 +170,7 @@ namespace RhinoCycles
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
 		{
-			ssd.WriteLine("Setting Gamma {0} and ApplyGammaCorrection {1}", e.Gamma, e.Lwf.Active);
+			ssd.WriteLine($"Setting Gamma {e.Gamma} and ApplyGammaCorrection {e.Lwf.Active}");
 			SetUseLinearWorkflowGamma(e.Lwf.Active);
 			SetGamma(e.Gamma);
 			if (m_cycles != null)
@@ -228,7 +228,7 @@ namespace RhinoCycles
 
 		public override bool RestartRender(int width, int height)
 		{
-			ssd.WriteLine("RestartRender {0}", m_serial);
+			ssd.WriteLine($"RestartRender {m_serial}");
 			SetGamma(m_cycles.Database.Gamma);
 			m_starttime = GetCurrentTimeStamp();
 
@@ -239,7 +239,7 @@ namespace RhinoCycles
 		{
 			m_available = false;
 			m_started = false;
-			ssd.WriteLine("!!! === ShutdownRender {0} === !!!", m_serial);
+			ssd.WriteLine($"!!! === ShutdownRender {m_serial} === !!!");
 			m_cycles?.StopRendering();
 			m_cycles?.Session?.Destroy();
 			// we're done now, so lets clean up our session.
