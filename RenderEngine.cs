@@ -145,12 +145,6 @@ namespace RhinoCyclesCore
 			Database.SetFloatTextureAsByteTexture(floatAsByte);
 		}
 
-
-		/// <summary>
-		/// a approx avg measurement device.
-		/// </summary>
-		protected readonly Measurement m_measurements = new Measurement();
-
 		/// <summary>
 		/// Return true if any change has been received through the changequeue
 		/// </summary>
@@ -422,7 +416,6 @@ namespace RhinoCyclesCore
 				}
 			}
 			var diff = (DateTime.Now - start).TotalMilliseconds;
-			m_measurements.Add(diff);
 		}
 
 		/// <summary>

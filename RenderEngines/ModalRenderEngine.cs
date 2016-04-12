@@ -71,8 +71,6 @@ namespace RhinoCycles
 			var size = cycles_engine.RenderDimension;
 			var samples = cycles_engine.Settings.Samples;
 
-			cycles_engine.m_measurements.Reset();
-
 			#region pick a render device
 
 			var render_device = cycles_engine.Settings.SelectedDevice == -1
