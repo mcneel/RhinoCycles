@@ -602,8 +602,8 @@ namespace RhinoCyclesCore.Database
 			double frt, frb, frr, frl, frf, frn;
 			vp.GetFrustum(out frl, out frr, out frb, out frt, out frn, out frf);
 
-			sdd.WriteLine(String.Format(
-				"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
+			//sdd.WriteLine(String.Format(
+			//	"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
 
 			// distance between top and bottom of frustum
 			var dist = frt - frb;
@@ -621,12 +621,13 @@ namespace RhinoCyclesCore.Database
 			var parallel = vp.IsParallelProjection;
 			var viewscale = vp.ViewScale;
 
-			sdd.WriteLine(String.Format(
+			/*sdd.WriteLine(String.Format(
 				"Camera projection type {0}, lens length {1}, scale {2}x{3}, two-point {4}, dist {5}, disthalf {6}", parallel ? "ORTHOGRAPHIC" : "PERSPECTIVE",
 				lenslength, viewscale.Width, viewscale.Height, twopoint, dist, disthalf));
 
 			sdd.WriteLine(String.Format(
 				"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
+				*/
 
 			int near, far;
 			var screenport = vp.GetScreenPort(out near, out far);
