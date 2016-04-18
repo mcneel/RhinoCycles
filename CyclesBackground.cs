@@ -92,6 +92,8 @@ namespace RhinoCyclesCore
 
 		public float gamma = 1.0f;
 
+		public string Xml = "";
+
 		/// <summary>
 		/// True if skylight is used.
 		/// </summary>

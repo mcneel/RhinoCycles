@@ -31,7 +31,7 @@ namespace RhinoCyclesCore.Materials
 		public XmlEnvironment()
 		{
 			var xml = "<background color=\"0 1 0\" name=\"bg\" strength=\"1\" />" +
-								"<connect from=\"bg bsdf\" to=\"output surface\" />";
+								"<connect from=\"bg background\" to=\"output surface\" />";
 			Fields.Add("xml", xml, "XML definition");
 		}
 

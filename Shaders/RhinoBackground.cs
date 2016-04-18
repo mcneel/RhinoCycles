@@ -81,16 +81,9 @@ namespace RhinoCyclesCore.Shaders
 
 		public override Shader GetShader()
 		{
-			if ((m_original_background.background_environment?.TypeName.Equals("Cycles XML Environment") ?? false) ||
-					(m_original_background.reflection_environment?.TypeName.Equals("Cycles XML Environment") ?? false) ||
-					(m_original_background.skylight_environment?.TypeName.Equals("Cycles XML Environment") ?? false))
+			if (!string.IsNullOrEmpty(m_original_background.Xml))
 			{
-				var env = m_original_background.background_environment as XmlEnvironment;
-				if (env == null) env = m_original_background.reflection_environment as XmlEnvironment;
-				if (env == null) env = m_original_background.skylight_environment as XmlEnvironment;
-
-				var xml = env.MaterialXml;
-
+				var xml = m_original_background.Xml;
 				ccl.Shader.ShaderFromXml(ref m_shader, xml);
 			}
 			else

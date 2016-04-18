@@ -124,6 +124,12 @@ namespace RhinoCyclesCore.Database
 			switch (usage)
 			{
 				case RenderEnvironment.Usage.Background:
+					m_cq_background.Xml = "";
+					var xmlenv = (environment?.TopLevelParent as Materials.ICyclesMaterial);
+					if(xmlenv?.MaterialType == RhinoCyclesCore.CyclesShader.CyclesMaterial.XmlEnvironment)
+					{
+						m_cq_background.Xml = xmlenv.MaterialXml;
+					}
 					m_cq_background.background_environment = environment;
 					break;
 				case RenderEnvironment.Usage.Skylighting:
