@@ -279,6 +279,10 @@ namespace RhinoCycles
 			return m_maxsamples;
 		}
 
+		public override int LastRenderedPass()
+		{
+			return m_samples;
+		}
 		public override int HudLastRenderedPass()
 		{
 			return m_samples;
