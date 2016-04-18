@@ -109,6 +109,8 @@ namespace RhinoCyclesCore
 			/// </summary>
 			No,
 
+			Xml,
+
 			Brick,
 			Test,
 			FlakedCarPaint,
@@ -122,6 +124,7 @@ namespace RhinoCyclesCore
 			SimpleMetal,
 
 			SimpleNoiseEnvironment,
+			XmlEnvironment,
 		}
 
 		public Shader Type { get; set; }

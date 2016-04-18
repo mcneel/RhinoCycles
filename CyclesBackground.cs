@@ -208,7 +208,7 @@ namespace RhinoCyclesCore
 					col = color1;
 				var brush = new SolidBrush(col);
 				var p = new Point(x, y);
-				var bmsize=  new Size(nw,nh);
+				var bmsize=	new Size(nw,nh);
 				if (scaleToFit)
 				{
 					bmsize = new Size(w, h);
@@ -289,22 +289,22 @@ namespace RhinoCyclesCore
 						resampler.Name = "RESAMPLER"; // give name so we can see in debug if it doesn't get freed properly.
 						var render_texture = original_render_texture.MakeCopy() as RenderTexture;
 
-            resampler.BeginChange(RenderContent.ChangeContexts.Ignore);
+						resampler.BeginChange(RenderContent.ChangeContexts.Ignore);
 						resampler.SetParameter("u-division-count", 64);
-            resampler.SetParameter("v-division-count", 64);
-            resampler.SetParameter("blur-on", true);
-            resampler.SetParameter("blur-radius", 0.2);
-            resampler.SetChild(render_texture, "texture");
-            resampler.EndChange();
+						resampler.SetParameter("v-division-count", 64);
+						resampler.SetParameter("blur-on", true);
+						resampler.SetParameter("blur-radius", 0.2);
+						resampler.SetChild(render_texture, "texture");
+						resampler.EndChange();
 
-            skylight_copy.BeginChange(RenderContent.ChangeContexts.Ignore);
-            skylight_copy.SetChild(resampler, "texture");
-            skylight_copy.EndChange();
-
-
+						skylight_copy.BeginChange(RenderContent.ChangeContexts.Ignore);
+						skylight_copy.SetChild(resampler, "texture");
+						skylight_copy.EndChange();
 
 
-            BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, gamma, m_float_as_byte);
+
+
+						BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, gamma, m_float_as_byte);
 						resampled = true;
 
 						render_texture.Dispose();
