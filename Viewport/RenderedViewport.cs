@@ -98,7 +98,7 @@ namespace RhinoCycles
 
 				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 				ModalRenderEngine.Renderer(mre);
-				SetCRC(mre.ViewCrc);
+				//SetCRC(mre.ViewCrc);
 				mre.SaveRenderedBuffer(0);
 				m_started = true; // we started (and are also ready, though)
 				m_available = true;
@@ -150,7 +150,6 @@ namespace RhinoCycles
 
 		void m_cycles_PassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
-			SetCRC(m_cycles.ViewCrc);
 			m_frame_available = true;
 			SignalRedraw();
 		}

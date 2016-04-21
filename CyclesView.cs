@@ -32,6 +32,5 @@ namespace RhinoCyclesCore
 
 		public ViewPlane Viewplane { get; set; }
 		public bool TwoPoint { get; set; }
-		public uint Crc { get; set; }
 	}
 }

@@ -52,7 +52,7 @@ namespace RhinoCycles
 
 		private void MRE_Database_ViewChanged(object sender, RhinoCyclesCore.Database.ChangeDatabase.ViewChangedEventArgs e)
 		{
-			ViewCrc = e.Crc;
+			//ViewCrc = e.Crc;
 		}
 
 		/// <summary>

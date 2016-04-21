@@ -205,14 +205,14 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
-		/// Render engine implementations that need to keep track of view CRC
+		/// Render engine implementations that need to keep track of views
 		/// for instance to signal when a frame is ready for that particular
 		/// view.
 		/// 
 		/// Generally such engines want to register an event handler to
-		/// Database.ViewChanged to record the new ViewCrc here.
+		/// Database.ViewChanged to record the new ViewInfo here.
 		/// </summary>
-		public uint ViewCrc { get; set; }
+		public ViewInfo View { get; set; }
 
 #region CONSTRUCTORS
 

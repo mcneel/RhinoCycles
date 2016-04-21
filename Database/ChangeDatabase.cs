@@ -504,9 +504,9 @@ namespace RhinoCyclesCore.Database
 			/// <param name="crc">The new CRC for the view</param>
 			/// <param name="sizeChanged">true if the render size has changed</param>
 			/// <param name="newSize">The render size</param>
-			public ViewChangedEventArgs(uint crc, bool sizeChanged, Size newSize)
+			public ViewChangedEventArgs(ViewInfo view, bool sizeChanged, Size newSize)
 			{
-				Crc = crc;
+				View = view;
 				SizeChanged = sizeChanged;
 				NewSize = newSize;
 			}
@@ -514,7 +514,7 @@ namespace RhinoCyclesCore.Database
 			/// <summary>
 			/// View CRC
 			/// </summary>
-			public uint Crc { get; private set; }
+			public ViewInfo View { get; private set; }
 			/// <summary>
 			/// True if the render size has changed
 			/// </summary>
@@ -532,13 +532,9 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public event EventHandler<ViewChangedEventArgs> ViewChanged;
 
-		private void TriggerViewChanged(uint crc, bool sizeChanged, Size newSize)
+		private void TriggerViewChanged(ViewInfo view, bool sizeChanged, Size newSize)
 		{
-			var handler = ViewChanged;
-			if (handler != null)
-			{
-				handler(this, new ViewChangedEventArgs(crc, sizeChanged, newSize));
-			}
+			ViewChanged?.Invoke(this, new ViewChangedEventArgs(view, sizeChanged, newSize));
 		}
 
 		/// <summary>
@@ -552,7 +548,7 @@ namespace RhinoCyclesCore.Database
 			var newSize = new Size(view.Width, view.Height);
 			m_render_engine.RenderDimension = newSize;
 
-			TriggerViewChanged(view.Crc, oldSize!=newSize, newSize);
+			TriggerViewChanged(view.View, oldSize!=newSize, newSize);
 
 			var ha = newSize.Width > newSize.Height ? view.Horizontal: view.Vertical;
 
@@ -679,7 +675,7 @@ namespace RhinoCyclesCore.Database
 				TwoPoint = twopoint,
 				Width = w,
 				Height = h,
-				Crc = RenderedDisplayMode.ComputeViewportCRC(viewInfo),
+				View = GetQueueView() // use GetQueueView to ensure we have a valid ViewInfo even after Flush
 			};
 			m_camera_db.AddViewChange(cyclesview);
 		}

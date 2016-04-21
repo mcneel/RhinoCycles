@@ -59,7 +59,6 @@ namespace RhinoCycles
 		void Database_ViewChanged(object sender, ChangeDatabase.ViewChangedEventArgs e)
 		{
 			if (e.SizeChanged) SetRenderSize(e.NewSize.Width, e.NewSize.Height);
-			ViewCrc = e.Crc;
 		}
 
 		/// <summary>
