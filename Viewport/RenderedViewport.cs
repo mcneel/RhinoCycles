@@ -214,8 +214,16 @@ namespace RhinoCycles
 
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
 		{
-			m_status = e.StatusText;
 			m_samples = e.Samples;
+
+			if (m_samples < 0)
+			{
+				m_status = "Updating Engine";
+			}
+			else
+			{
+				m_status = e.Samples.ToString();
+			}
 		}
 
 		public override void GetRenderSize(out int width, out int height)

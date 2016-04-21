@@ -336,7 +336,7 @@ namespace RhinoCyclesCore
 			status = String.Format("{0} {1}", status, TimeString);
 
 			// don't set full 100% progress here yet, because that signals the renderwindow the end of async render
-			if (progress >= 0.9999f) progress = 0.9999f;
+			if (progress >= 0.9999f) progress = 1.0f;
 			if (Settings.Samples == ushort.MaxValue) progress = -1.0f;
 			if (null != RenderWindow) RenderWindow.SetProgress(status, progress);
 
