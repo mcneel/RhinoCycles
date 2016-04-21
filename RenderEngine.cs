@@ -305,11 +305,7 @@ namespace RhinoCyclesCore
 		/// <param name="e"></param>
 		public void TriggerStatusTextUpdated(StatusTextEventArgs e)
 		{
-			var handler = StatusTextUpdated;
-			if (handler != null)
-			{
-				handler(this, e);
-			}
+			StatusTextUpdated?.Invoke(this, e);
 		}
 
 		/// <summary>
