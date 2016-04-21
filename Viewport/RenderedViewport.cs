@@ -148,9 +148,15 @@ namespace RhinoCycles
 			return true;
 		}
 
+		public override bool IsFrameBufferAvailable(ViewInfo view)
+		{
+			return m_cycles.Database.AreViewsEqual(GetView(), view);
+		}
+
 		void m_cycles_PassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
 			m_frame_available = true;
+			if(e.Sample <=1) SetView(e.View);
 			SignalRedraw();
 		}
 

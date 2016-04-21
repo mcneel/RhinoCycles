@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using ccl;
+using Rhino.DocObjects;
 
 namespace RhinoCyclesCore
 {
@@ -30,6 +31,7 @@ namespace RhinoCyclesCore
 		public int Width { get; set; }
 		public int Height { get; set; }
 
+		public ViewInfo View { get; set; }
 		public ViewPlane Viewplane { get; set; }
 		public bool TwoPoint { get; set; }
 	}

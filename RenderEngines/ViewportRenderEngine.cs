@@ -23,6 +23,7 @@ using Rhino.Display;
 using Rhino.Render;
 using RhinoCyclesCore.Database;
 using sdd = System.Diagnostics.Debug;
+using Rhino.DocObjects;
 
 namespace RhinoCycles
 {
@@ -59,6 +60,7 @@ namespace RhinoCycles
 		void Database_ViewChanged(object sender, ChangeDatabase.ViewChangedEventArgs e)
 		{
 			if (e.SizeChanged) SetRenderSize(e.NewSize.Width, e.NewSize.Height);
+			View = e.View;
 		}
 
 		/// <summary>
@@ -67,15 +69,18 @@ namespace RhinoCycles
 		/// </summary>
 		public class PassRenderedEventArgs : EventArgs
 		{
-			public PassRenderedEventArgs(int sample)
+			public PassRenderedEventArgs(int sample, ViewInfo view)
 			{
 				Sample = sample;
+				View = view;
 			}
 
 			/// <summary>
 			/// The completed sample (pass).
 			/// </summary>
 			public int Sample { get; private set; }
+
+			public ViewInfo View { get; private set; }
 		}
 		/// <summary>
 		/// Event that gets fired when the render engine completes handling one
@@ -116,7 +121,7 @@ namespace RhinoCycles
 					Session.Scene.Unlock();
 					//sdd.WriteLine(string.Format("display update, sample {0}", sample));
 					// now signal whoever is interested
-					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample));
+					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
 				}
 			}
 		}
