@@ -53,8 +53,6 @@ namespace RhinoCycles
 			var rccoreass = typeof(RhinoCyclesCore.RcCore).Assembly;
 			RenderContent.RegisterContent(rccoreass, Id);
 			RenderedDisplayMode.RegisterDisplayModes(this);
-			RenderedDisplayMode.RegisterDisplayModes(rccoreass, Id);
-			RenderedDisplayMode.InstallCyclesDisplayAttributes();
 
 			RenderContent.ContentFieldChanged += RenderContentOnContentFieldChanged;
 
