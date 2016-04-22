@@ -1263,7 +1263,7 @@ namespace RhinoCyclesCore.Database
 			m_env_db.SetGamma(GammaLinearWorkflow);
 		}
 
-		protected override void ApplyBackgroundChanges(RenderSettings rs)
+		protected override void ApplyRenderSettingsChanges(RenderSettings rs)
 		{
 			if (rs != null)
 			{
