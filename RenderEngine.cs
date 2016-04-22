@@ -340,7 +340,7 @@ namespace RhinoCyclesCore
 			if (Settings.Samples == ushort.MaxValue) progress = -1.0f;
 			if (null != RenderWindow) RenderWindow.SetProgress(status, progress);
 
-			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples));
+			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples>0 ? (RenderedSamples+1) : RenderedSamples));
 
 			if(!m_interactive) CheckFlushQueue();
 		}
