@@ -1,4 +1,7 @@
-﻿/**
+﻿
+
+using Rhino.Render;
+/**
 Copyright 2014-2016 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +16,53 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
-
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RhinoCyclesCore.Database
 {
+	public class FocalBlur
+	{
+		public FocalBlur(RenderSettings rs)
+		{
+			UseFocalBlur = rs.FocalBlurMode == RenderSettings.FocalBlurModes.Manual;
+			FocalDistance = (float)rs.FocalBlurDistance;
+			FocalAperture = (float)rs.FocalBlurAperture;
+
+			if (!UseFocalBlur)
+			{
+				FocalAperture = 0.0f;
+				FocalDistance = 10.0f;
+			}
+		}
+
+		public FocalBlur()
+		{
+			UseFocalBlur = false;
+			FocalDistance = 10.0f;
+			FocalAperture = 0.0f;
+		}
+
+		public bool UseFocalBlur { get; set; }
+		public float FocalDistance { get; set; }
+		public float FocalAperture { get; set; }
+
+		public override bool Equals(object obj)
+		{
+			var fb = obj as FocalBlur;
+			if (fb == null) return false;
+
+			return fb.UseFocalBlur == UseFocalBlur &&
+					fb.FocalAperture == FocalAperture &&
+					fb.FocalDistance == FocalDistance;
+		}
+
+		public override int GetHashCode()
+		{
+			return base.GetHashCode();
+		}
+	}
+
 	public class CameraDatabase
 	{
 		/// <summary>
@@ -32,7 +76,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		public bool HasChanges()
 		{
-			return m_cq_view_changes.Any();
+			return m_cq_view_changes.Any() || m_fb_modified;
 		}
 
 		/// <summary>
@@ -41,6 +85,7 @@ namespace RhinoCyclesCore.Database
 		public void ResetViewChangeQueue()
 		{
 			m_cq_view_changes.Clear();
+			m_fb_modified = false;
 		}
 
 		/// <summary>
@@ -58,7 +103,26 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		public CyclesView LatestView()
 		{
-			return m_cq_view_changes.Last();
+			return m_cq_view_changes.LastOrDefault();
+		}
+
+		public FocalBlur GetBlur()
+		{
+			return m_fb;
+		}
+
+		private FocalBlur m_fb = new FocalBlur();
+		private bool m_fb_modified = false;
+
+		public void HandleBlur(RenderSettings rs)
+		{
+			var fb = new FocalBlur(rs);
+
+			if(m_fb!=fb)
+			{
+				m_fb = fb;
+				m_fb_modified = true;
+			}
 		}
 	}
 }

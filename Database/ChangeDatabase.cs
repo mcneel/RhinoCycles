@@ -490,7 +490,12 @@ namespace RhinoCyclesCore.Database
 			if (!m_camera_db.HasChanges()) return;
 
 			var view = m_camera_db.LatestView();
-			UploadCamera(view);
+			if(view!=null)
+			{
+				UploadCamera(view);
+			}
+			var fb = m_camera_db.GetBlur();
+			UploadFocalBlur(fb);
 		}
 
 		/// <summary>
@@ -537,6 +542,14 @@ namespace RhinoCyclesCore.Database
 			ViewChanged?.Invoke(this, new ViewChangedEventArgs(view, sizeChanged, newSize));
 		}
 
+		private void UploadFocalBlur(FocalBlur fb)
+		{
+			var scene = m_render_engine.Session.Scene;
+			scene.Camera.FocalDistance = fb.FocalDistance;
+			scene.Camera.ApertureSize = fb.FocalAperture;
+
+		}
+
 		/// <summary>
 		/// Set the camera based on CyclesView
 		/// </summary>
@@ -563,6 +576,7 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.FarClip = gp_max_val;
 			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
 			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
+
 			scene.Camera.SensorHeight = m_render_engine.Settings.SensorHeight;
 			scene.Camera.SensorWidth = m_render_engine.Settings.SensorWidth;
 			scene.Camera.Update();
@@ -1267,7 +1281,7 @@ namespace RhinoCyclesCore.Database
 		{
 			if (rs != null)
 			{
-				//System.Diagnostics.Debug.WriteLine("ApplyBackgroundChanges: fillstyle {0} color1 {1} color2 {2}", rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
+				m_camera_db.HandleBlur(rs);
 				m_env_db.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
 				if (rs.BackgroundStyle == BackgroundStyle.Environment)
 				{
