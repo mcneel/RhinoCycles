@@ -39,7 +39,7 @@ namespace RhinoCycles
 		private bool m_started;
 		private bool m_available;
 		private bool m_last_frame_drawn;
-		private bool m_frame_available;
+		private bool m_frame_available = false;
 
 		private bool m_synchronizing;
 
@@ -64,6 +64,8 @@ namespace RhinoCycles
 		{
 			ssd.WriteLine($"CreateWorld {m_serial}");
 		}
+
+		private Thread ModalThread;
 
 		public override bool StartRender(uint w, uint h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
@@ -93,12 +95,13 @@ namespace RhinoCycles
 				mre.SetFloatTextureAsByteTexture(mre.Settings.RenderDeviceIsOpenCl);
 
 				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
-				ModalRenderEngine.Renderer(mre);
-				//SetCRC(mre.ViewCrc);
-				mre.SaveRenderedBuffer(0);
-				m_started = true; // we started (and are also ready, though)
-				m_available = true;
-				m_frame_available = true;
+
+				ModalThread = new Thread(this.RenderOffscreen)
+				{
+					Name = "Cycles offscreen viewport rendering with ModalRenderEngine"
+				};
+				ModalThread.Start(mre);
+
 				return true;
 			}
 
@@ -144,9 +147,32 @@ namespace RhinoCycles
 			return true;
 		}
 
+		public void RenderOffscreen(object o)
+		{
+			var mre = o as ModalRenderEngine;
+			if (mre != null)
+			{
+				ModalRenderEngine.Renderer(mre);
+				//SetCRC(mre.ViewCrc);
+				mre.SaveRenderedBuffer(0);
+				m_started = true; // we started (and are also ready, though)
+				m_available = true;
+				m_frame_available = true;
+			}
+		}
+
 		public override bool IsFrameBufferAvailable(ViewInfo view)
 		{
-			return m_cycles.Database.AreViewsEqual(GetView(), view);
+			if (m_cycles != null)
+			{
+				return m_cycles.Database.AreViewsEqual(GetView(), view);
+			}
+			else if (m_modal != null)
+			{
+				return m_frame_available;
+			}
+
+			return false;
 		}
 
 		void m_cycles_PassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
