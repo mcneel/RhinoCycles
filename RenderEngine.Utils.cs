@@ -29,10 +29,10 @@ namespace RhinoCyclesCore
 	{
 		public void SaveRenderedBuffer(int sample)
 		{
+#if DEBUG
 			var tmpf = string.Format("{0}\\RC_{1}.png", Environment.GetEnvironmentVariable("TEMP"), sample.ToString("D5"));
 			RenderWindow.SaveDibAsBitmap(tmpf);
-			/*var bmp = RenderWindow.GetBitmap();
-			bmp.Save(tmpf, ImageFormat.Png);*/
+#endif
 		}
 
 		public static void SaveRenderedBufferAsImage(Client client, RenderEngine cycles_engine, Size size, string name)
