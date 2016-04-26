@@ -276,8 +276,6 @@ namespace RhinoCycles
 			m_started = false;
 			ssd.WriteLine($"!!! === ShutdownRender {m_serial} === !!!");
 			m_cycles?.StopRendering();
-			m_cycles?.Session?.Destroy();
-			// we're done now, so lets clean up our session.
 		}
 
 		public override bool IsRendererStarted()

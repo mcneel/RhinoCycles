@@ -95,7 +95,7 @@ namespace RhinoCycles
 			if (CancelRender) return;
 			if (Flush) return;
 			if (State != State.Rendering) return;
-			lock (size_setter_lock)
+			lock (display_lock)
 			{
 				if (Session.Scene.TryLock())
 				{
@@ -118,15 +118,14 @@ namespace RhinoCycles
 #if DEBUGxx
 						SaveRenderedBuffer(sample);
 #endif
+					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
 					Session.Scene.Unlock();
 					//sdd.WriteLine(string.Format("display update, sample {0}", sample));
 					// now signal whoever is interested
-					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
 				}
 			}
 		}
 
-		private readonly object size_setter_lock = new object();
 		/// <summary>
 		/// Set new size for the internal RenderWindow object.
 		/// </summary>
@@ -134,7 +133,7 @@ namespace RhinoCycles
 		/// <param name="h">Height in pixels</param>
 		public void SetRenderSize(int w, int h)
 		{
-			lock (size_setter_lock)
+			lock (display_lock)
 			{
 				RenderWindow.SetSize(new Size(w, h));
 			}

@@ -46,6 +46,11 @@ namespace RhinoCyclesCore
 	{
 		private readonly object m_flushlock = new object();
 
+		/// <summary>
+		/// Lock object to protect buffer access.
+		/// </summary>
+		public readonly object display_lock = new object();
+
 		protected CreatePreviewEventArgs m_preview_event_args;
 
 		protected Guid m_plugin_id = Guid.Empty;
@@ -462,7 +467,12 @@ namespace RhinoCyclesCore
 		{
 			if (RenderThread == null) return;
 
-			StopTheRenderer();
+			lock (display_lock)
+			{
+
+				StopTheRenderer();
+				Session?.Destroy();
+			}
 
 			// done, let everybody know it
 			if(Settings.Verbose) sdd.WriteLine("Rendering stopped. The render window can be closed safely.");
@@ -481,18 +491,15 @@ namespace RhinoCyclesCore
 			State = State.Stopped;
 
 			// signal our cycles session to stop rendering.
-			if (Session != null) Session.Cancel("Render stop called.\n");
+			//if (Session != null) Session.Cancel("Render stop called.\n");
+			Session?.Cancel("Render stop called.\n");
 
 			// get rid of our change queue
-			Database.Dispose();
+			Database?.Dispose();
 			Database = null;
 
-			// let's get back into the thread.
-			if (RenderThread != null)
-			{
-				RenderThread.Join();
-				RenderThread = null;
-			}
+			RenderThread?.Join();
+			RenderThread = null;
 		}
 
 		/// <summary>
