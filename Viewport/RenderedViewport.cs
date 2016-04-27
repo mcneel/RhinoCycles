@@ -90,6 +90,8 @@ namespace RhinoCycles
 
 				mre.Settings.Verbose = true;
 
+				mre.StatusTextUpdated += Mre_StatusTextUpdated;
+
 				mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 
 				mre.SetFloatTextureAsByteTexture(mre.Settings.RenderDeviceIsOpenCl);
@@ -145,6 +147,12 @@ namespace RhinoCycles
 			m_cycles.RenderThread.Start(m_cycles);
 
 			return true;
+		}
+
+		private double m_progress = 0.0;
+		private void Mre_StatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
+		{
+			m_progress = e.Progress;
 		}
 
 		public void RenderOffscreen(object o)
@@ -246,6 +254,16 @@ namespace RhinoCycles
 			{
 				m_status = e.Samples.ToString();
 			}
+		}
+
+		public override bool ShowCaptureProgress()
+		{
+			return true;
+		}
+
+		public override double CaptureProgress()
+		{
+			return m_progress;
 		}
 
 		public override void GetRenderSize(out int width, out int height)
