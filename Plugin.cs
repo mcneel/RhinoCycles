@@ -52,7 +52,7 @@ namespace RhinoCycles
 			// code got moved to separate DLL so use that to register from.
 			var rccoreass = typeof(RhinoCyclesCore.RcCore).Assembly;
 			RenderContent.RegisterContent(rccoreass, Id);
-			RenderedDisplayMode.RegisterDisplayModes(this);
+			RealtimeDisplayMode.RegisterDisplayModes(this);
 
 			RenderContent.ContentFieldChanged += RenderContentOnContentFieldChanged;
 
