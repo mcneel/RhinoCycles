@@ -30,7 +30,7 @@ using System.Drawing;
 namespace RhinoCycles
 {
 	[Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181")]
-	[RealtimeDisplayMode("69E0C7A5-1C6A-46C8-B98B-8779686CD181", "Raytraced", "Raytraced")]
+	[RealtimeDisplayModeClassInfo("69E0C7A5-1C6A-46C8-B98B-8779686CD181", "Raytraced", "Raytraced")]
 	public class RenderedViewport : RealtimeDisplayMode
 	{
 		private static int g_running_serial;
