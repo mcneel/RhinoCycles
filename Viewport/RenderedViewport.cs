@@ -304,15 +304,8 @@ namespace RhinoCycles
 
 		public override bool IsRenderframeAvailable()
 		{
-			//ssd.WriteLine("IsRenderframeAvailable {0}: {1}", m_serial, m_available);
 			SetGamma(m_cycles.Database.Gamma);
-			bool fa = false;
-			if (m_frame_available)
-			{
-				fa = true;
-				m_frame_available = false;
-			}
-			return m_available && m_cycles.State==State.Rendering && fa;
+			return m_available && m_cycles.State == State.Rendering && m_frame_available;
 		}
 
 		public override string HudProductName()
