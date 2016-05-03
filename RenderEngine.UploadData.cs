@@ -26,11 +26,6 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			Database.UploadRenderSettingsChanges();
-			// adding the locking guard makes viewport updates
-			// on changes much blockier. For now disabling, even
-			// though http://mcneel.myjetbrains.com/youtrack/issue/RH-31968
-			// may happen. @todo figure out a better way to solve
-			//if (!Session.Scene.TryLock()) return false;
 
 			if (CancelRender) return false;
 
@@ -88,8 +83,6 @@ namespace RhinoCyclesCore
 			Database.ResetChangeQueue();
 
 			if (CancelRender) return false;
-
-			//Session.Scene.Unlock();
 
 			return true;
 		}
