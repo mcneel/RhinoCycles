@@ -49,11 +49,6 @@ namespace CyclesForRhino
 			return Result.Failure;
 		}
 
-		protected override Result RenderQuiet(RhinoDoc doc, RunMode mode, bool fastPreview)
-		{
-			return Result.Failure;
-		}
-
 		protected override PreviewRenderTypes PreviewRenderType()
 		{
 			return PreviewRenderTypes.Progressive;
@@ -68,9 +63,11 @@ namespace CyclesForRhino
 		/// <param name="mode">mode</param>
 		/// <param name="fastPreview">True for fast preview.</param>
 		/// <returns></returns>
-		protected override Result Render(RhinoDoc doc, RunMode mode, bool fastPreview)
+		protected override Result Render(RhinoDoc doc, RunMode mode, RenderOptions option)
 		{
-			//RcCore.It.InitialiseCSycles();
+			if (option == RenderOptions.Quietly)
+				return Result.Failure;
+
 			AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id, doc.Views.ActiveView.ActiveViewport.View, null);
 			var engine = (RhinoCycles.ModalRenderEngine)a_rc;
 
@@ -79,7 +76,7 @@ namespace CyclesForRhino
 			engine.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
 
 			/* render only 3 samples if we are told to generate a fast preview. */
-			if (fastPreview)
+			if (option == RenderOptions.FastPreview)
 			{
 				engine.Settings.Samples = 3;
 			}
