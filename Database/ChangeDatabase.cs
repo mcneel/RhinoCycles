@@ -85,6 +85,11 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		private readonly CameraDatabase m_camera_db = new CameraDatabase();
 
+		/// <summary>
+		/// Database responsible for managing render settings.
+		/// </summary>
+		private readonly RenderSettingsDatabase m_rendersettings_db = new RenderSettingsDatabase();
+
 		#endregion
 
 		private readonly ShaderConverter m_shader_converter;
@@ -140,6 +145,15 @@ namespace RhinoCyclesCore.Database
 				Gamma = LinearWorkflow.Gamma;
 				TriggerLinearWorkflowUploaded();
 			}
+		}
+
+		/// <summary>
+		/// Notify interested clients of i.e. sample count changes.
+		/// </summary>
+		public void UploadRenderSettingsChanges()
+		{
+			if (m_rendersettings_db.HasChanged)
+				m_render_engine.TriggerSamplesChanged(m_render_engine.Settings.Samples);
 		}
 
 		/// <summary>
@@ -1277,6 +1291,7 @@ namespace RhinoCyclesCore.Database
 			m_env_db.SetGamma(GammaLinearWorkflow);
 		}
 
+
 		protected override void ApplyRenderSettingsChanges(RenderSettings rs)
 		{
 			if (rs != null)
@@ -1303,6 +1318,7 @@ namespace RhinoCyclesCore.Database
 					m_env_db.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
 				}
 				m_env_db.SetGamma(GammaLinearWorkflow);
+				m_rendersettings_db.SetQuality(rs.AntialiasLevel);
 				m_render_engine.Settings.SetQuality(rs.AntialiasLevel);
 			}
 		}

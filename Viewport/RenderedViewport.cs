@@ -121,6 +121,7 @@ namespace RhinoCycles
 			m_cycles.Synchronized += m_cycles_Synchronized;
 			m_cycles.PassRendered += m_cycles_PassRendered;
 			m_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
+			m_cycles.SamplesChanged += M_cycles_SamplesChanged;
 
 			m_cycles.Settings = RcCore.It.EngineSettings;
 			m_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
@@ -147,6 +148,11 @@ namespace RhinoCycles
 			m_cycles.RenderThread.Start(m_cycles);
 
 			return true;
+		}
+
+		private void M_cycles_SamplesChanged(object sender, RenderEngine.SamplesChangedEventArgs e)
+		{
+			ChangeSamples(e.Count);
 		}
 
 		private double m_progress = 0.0;
@@ -232,6 +238,7 @@ namespace RhinoCycles
 			{
 				m_last_frame_drawn = false;
 			}
+			m_starttime = GetCurrentTimeStamp();
 			m_maxsamples = samples;
 			m_cycles.ChangeSamples(samples);
 		}

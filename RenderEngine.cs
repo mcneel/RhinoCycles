@@ -104,6 +104,22 @@ namespace RhinoCyclesCore
 		protected CSycles.TestCancelCallback m_test_cancel_callback;
 		protected CSycles.DisplayUpdateCallback m_display_update_callback;
 
+		public class SamplesChangedEventArgs : EventArgs
+		{
+			public int Count { get; private set; }
+
+			public SamplesChangedEventArgs(int count)
+			{
+				Count = count;
+			}
+		}
+
+		public event EventHandler<SamplesChangedEventArgs> SamplesChanged;
+		public void TriggerSamplesChanged(int samples)
+		{
+			SamplesChanged?.Invoke(this, new SamplesChangedEventArgs(samples));
+		}
+
 
 		public event EventHandler ChangesReady;
 		public void TriggerChangesReady()

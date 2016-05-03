@@ -46,6 +46,7 @@
       <Link>Properties\version.cs</Link>
     </Compile>
     <Compile Include="BitmapImage.cs" />
+    <Compile Include="Database\RenderSettingsDatabase.cs" />
     <Compile Include="EngineSettings.cs" />
     <Compile Include="Environments\XmlEnvironment.cs" />
     <Compile Include="Materials\XmlMaterial.cs" />

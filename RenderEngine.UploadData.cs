@@ -23,6 +23,9 @@ namespace RhinoCyclesCore
 		/// </summary>
 		protected bool UploadData()
 		{
+			if (CancelRender) return false;
+
+			Database.UploadRenderSettingsChanges();
 			// adding the locking guard makes viewport updates
 			// on changes much blockier. For now disabling, even
 			// though http://mcneel.myjetbrains.com/youtrack/issue/RH-31968
