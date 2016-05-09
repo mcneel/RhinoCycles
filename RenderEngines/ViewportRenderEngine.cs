@@ -263,6 +263,7 @@ namespace RhinoCycles
 					// then reset scene
 					Session.Scene.Reset();
 
+					m_flush = false;
 					TriggerSynchronized();
 				} else
 				{
