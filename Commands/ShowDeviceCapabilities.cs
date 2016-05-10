@@ -44,7 +44,7 @@ namespace RhinoCycles
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			var capabilities = Device.Capabilities;
-			RhinoApp.WriteLine(String.Format("The following capabilities have been found by Cycles:\n----------\n{0}\n\n----------", capabilities));
+			RhinoApp.WriteLine($"The following capabilities have been found by Cycles:\n----------\n{capabilities}\n\n----------");
 			return Result.Success;
 		}
 	}

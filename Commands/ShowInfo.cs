@@ -50,8 +50,8 @@ namespace RhinoCycles
 			var csycles_fvi = FileVersionInfo.GetVersionInfo(csycles_ass.Location);
 
 			RhinoApp.WriteLine("----------");
-			RhinoApp.WriteLine("RhinoCycles {0} @ {1}", RhinoBuildConstants.VERSION_STRING, rhcycles_ass.Location);
-			RhinoApp.WriteLine("CCSycles {0} @ {1}", csycles_fvi.FileVersion, csycles_ass.Location);
+			RhinoApp.WriteLine($"RhinoCycles {RhinoBuildConstants.VERSION_STRING} @ {rhcycles_ass.Location}");
+			RhinoApp.WriteLine($"CCSycles {csycles_fvi.FileVersion} @ {csycles_ass.Location}");
 			RhinoApp.WriteLine("----------");
 			return Result.Success;
 		}

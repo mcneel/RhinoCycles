@@ -46,14 +46,12 @@ namespace RhinoCycles
 			Plugin.InitialiseCSycles();
 
 			var num_devices = Device.Count;
-			RhinoApp.WriteLine(String.Format("We have {0} device{1}", num_devices, num_devices != 1 ? "s" : ""));
+			var end_s = num_devices != 1 ? "s" : "";
+			RhinoApp.WriteLine($"We have {num_devices} device{end_s}");
 			RhinoApp.WriteLine("----------");
 			foreach (var dev in Device.Devices)
 			{
-				RhinoApp.WriteLine(String.Format("	Device {0}: {1} > {2} > {3} | {4} | {5} | {6} | {7}", dev.Id,
-					dev.Name, dev.Description, dev.Num,
-					dev.DisplayDevice, dev.AdvancedShading,
-					dev.PackImages, dev.Type));
+				RhinoApp.WriteLine($"	Device {dev.Id}: {dev.Name} > {dev.Description} > {dev.Num} | {dev.DisplayDevice} | {dev.AdvancedShading} | {dev.PackImages} | {dev.Type}");
 			}
 			RhinoApp.WriteLine("----------");
 			return Result.Success;

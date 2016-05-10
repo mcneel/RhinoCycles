@@ -38,7 +38,7 @@ namespace RhinoCycles
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			RcCore.It.EngineSettings.UseSimpleShaders = !RcCore.It.EngineSettings.UseSimpleShaders;
-			RhinoApp.WriteLine("UseSimpleShaders set to {0}", RcCore.It.EngineSettings.UseSimpleShaders);
+			RhinoApp.WriteLine($"UseSimpleShaders set to {RcCore.It.EngineSettings.UseSimpleShaders}");
 			return Result.Success;
 		}
 	}

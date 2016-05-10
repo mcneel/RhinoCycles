@@ -49,13 +49,14 @@ namespace RhinoCycles.Commands
 			get_number.SetLowerLimit(0, false);
 			get_number.SetUpperLimit(Environment.ProcessorCount, false);
 			get_number.SetDefaultInteger(RcCore.It.EngineSettings.Threads);
-			get_number.SetCommandPrompt(String.Format("Set CPU render threads (max {0}, 0 for automatic)", Environment.ProcessorCount));
+			get_number.SetCommandPrompt($"Set CPU render threads (max {Environment.ProcessorCount}, 0 for automatic)");
 			var get_rc = get_number.Get();
 			if (get_number.CommandResult() != Result.Success) return get_number.CommandResult();
 			if (get_rc == GetResult.Number)
 			{
 				var nr = get_number.Number();
-				RhinoApp.WriteLine(String.Format("User wants {0} CPU thread{1}", nr, nr > 0 ? "s" : ""));
+				var end_s = nr != 1 ? "s" : "";
+				RhinoApp.WriteLine($"User wants {nr} CPU thread{end_s}");
 				RcCore.It.EngineSettings.Threads = nr;
 				return Result.Success;
 			}

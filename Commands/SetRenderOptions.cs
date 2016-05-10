@@ -122,7 +122,7 @@ namespace RhinoCycles
 				switch (get_rc)
 				{
 					case GetResult.Number:
-						RhinoApp.WriteLine(String.Format("We got: {0}, {1}, {2}", get_number.Number(), min_bounce.CurrentValue, max_bounce.CurrentValue));
+						RhinoApp.WriteLine($"We got: {get_number.Number()}, {min_bounce.CurrentValue}, {max_bounce.CurrentValue}");
 						RcCore.It.EngineSettings.Samples = (int)get_number.Number();
 						RcCore.It.EngineSettings.UseCustomQualitySettings = use_custom_settings.CurrentValue;
 						RcCore.It.EngineSettings.Seed = seed.CurrentValue;

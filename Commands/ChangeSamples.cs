@@ -55,7 +55,7 @@ namespace RhinoCycles.Commands
 					if (get_rc == GetResult.Number)
 					{
 						var nr = get_number.Number();
-						RhinoApp.WriteLine(string.Format("User changes samples to {0}", nr));
+						RhinoApp.WriteLine($"User changes samples to {nr}");
 						rvp.ChangeSamples(nr);
 						return Result.Success;
 					}

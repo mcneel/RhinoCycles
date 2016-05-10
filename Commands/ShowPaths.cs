@@ -46,11 +46,11 @@ namespace RhinoCycles
 			Plugin.InitialiseCSycles();
 
 			RhinoApp.WriteLine("----------");
-			RhinoApp.WriteLine("Absolute path {0}", RcCore.It.KernelPath);
-			RhinoApp.WriteLine("Relative path {0}", RcCore.It.KernelPathRelative);
-			RhinoApp.WriteLine("Plug-in path {0}", RcCore.It.PluginPath);
-			RhinoApp.WriteLine("App path {0}", RcCore.It.AppPath);
-			RhinoApp.WriteLine("User data path {0}", RcCore.It.DataUserPath);
+			RhinoApp.WriteLine($"Absolute path {RcCore.It.KernelPath}");
+			RhinoApp.WriteLine($"Relative path {RcCore.It.KernelPathRelative}");
+			RhinoApp.WriteLine($"Plug-in path {RcCore.It.PluginPath}");
+			RhinoApp.WriteLine($"App path {RcCore.It.AppPath}");
+			RhinoApp.WriteLine($"User data path {RcCore.It.DataUserPath}");
 			RhinoApp.WriteLine("----------");
 			return Result.Success;
 		}
