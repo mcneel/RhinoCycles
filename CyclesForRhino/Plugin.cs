@@ -68,7 +68,7 @@ namespace CyclesForRhino
 			if (option == RenderOptions.Quietly)
 				return Result.Failure;
 
-			AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id, doc.Views.ActiveView.ActiveViewport.View, null);
+			AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id, new Rhino.DocObjects.ViewInfo(doc.Views.ActiveView.ActiveViewport), null);
 			var engine = (RhinoCycles.ModalRenderEngine)a_rc;
 
 			engine.Settings = RcCore.It.EngineSettings;
