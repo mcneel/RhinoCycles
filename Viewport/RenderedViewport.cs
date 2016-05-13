@@ -83,7 +83,6 @@ namespace RhinoCycles
 
 				mre.RenderWindow = renderWindow;
 
-				mre.RenderWindow.AddWireframeChannel(mre.Doc, mre.ViewportInfo, rs, new Rectangle(0, 0, rs.Width, rs.Height));
 				mre.RenderWindow.SetSize(rs);
 				mre.RenderDimension = rs;
 				mre.Database.RenderDimension = rs;
