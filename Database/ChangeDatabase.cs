@@ -34,6 +34,7 @@ using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;
 using CclObject = ccl.Object;
 using RGLight = Rhino.Geometry.Light;
+using Rhino.Geometry;
 
 namespace RhinoCyclesCore.Database
 {
@@ -587,7 +588,7 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.Matrix = view.Transform;
 			scene.Camera.Type = view.Projection;
 			scene.Camera.Fov = angle;
-			scene.Camera.FarClip = gp_max_val;
+			scene.Camera.FarClip = 1.0E+14f; // gp_side_extension;
 			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
 			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
 
@@ -687,7 +688,7 @@ namespace RhinoCyclesCore.Database
 			// convert rhino transform to ccsycles transform
 			var t = CclXformFromRhinoXform(rhinocam);
 			// then convert to Cycles orientation
-			t = t * Transform.RhinoToCyclesCam;
+			t = t * ccl.Transform.RhinoToCyclesCam;
 
 			// ready, lets push our data
 			var cyclesview = new CyclesView
@@ -736,57 +737,62 @@ namespace RhinoCyclesCore.Database
 
 				foreach(var meshdata in meshes)
 				{
-					// Get face indices flattened to an
-					// integer array.
-					var findices = meshdata.Faces.ToIntArray(true);
-
-					// Get texture coordinates and
-					// flattens to a float array.
-					var tc = meshdata.TextureCoordinates;
-					var rhuv = tc.ToFloatArray();
-
-					// Get rhino vertex normals and
-					// flatten to a float array.
-					var vn = meshdata.Normals;
-					var rhvn = vn.ToFloatArray();
-
-					// now convert UVs: from vertex indexed array to per face per vertex
-					var cmuv = rhuv.Length > 0 ? new float[findices.Length * 2] : null;
-					if (cmuv != null)
-					{
-						for (var fi = 0; fi < findices.Length; fi++)
-						{
-							var fioffs = fi * 2;
-							var findex = findices[fi];
-							var findex2 = findex * 2;
-							var rhuvit = rhuv[findex2];
-							var rhuvit1 = rhuv[findex2 + 1];
-							cmuv[fioffs] = rhuvit;
-							cmuv[fioffs + 1] = rhuvit1;
-						}
-					}
-
-					var meshid = new Tuple<Guid, int>(meshguid, mesh_index);
-
-					var crc = m_object_shader_db.FindRenderHashForMeshId(meshid);
-					if (crc == uint.MaxValue) crc = 0;
-
-					// now we have everything we need
-					// so we can create a CyclesMesh that the
-					// RenderEngine can eventually commit to Cycles
-					var cycles_mesh = new CyclesMesh
-					{
-						MeshId = meshid,
-						verts = meshdata.Vertices.ToFloatArray(),
-						faces = findices,
-						uvs = cmuv,
-						vertex_normals = rhvn,
-						matid = crc
-					};
+					HandleMeshData(meshguid, mesh_index, meshdata);
 					mesh_index++;
-					m_object_db.AddMesh(cycles_mesh);
 				}
 			}
+		}
+
+		public void HandleMeshData(Guid meshguid, int mesh_index, Rhino.Geometry.Mesh meshdata)
+		{
+			// Get face indices flattened to an
+			// integer array.
+			var findices = meshdata.Faces.ToIntArray(true);
+
+			// Get texture coordinates and
+			// flattens to a float array.
+			var tc = meshdata.TextureCoordinates;
+			var rhuv = tc.ToFloatArray();
+
+			// Get rhino vertex normals and
+			// flatten to a float array.
+			var vn = meshdata.Normals;
+			var rhvn = vn.ToFloatArray();
+
+			// now convert UVs: from vertex indexed array to per face per vertex
+			var cmuv = rhuv.Length > 0 ? new float[findices.Length * 2] : null;
+			if (cmuv != null)
+			{
+				for (var fi = 0; fi < findices.Length; fi++)
+				{
+					var fioffs = fi * 2;
+					var findex = findices[fi];
+					var findex2 = findex * 2;
+					var rhuvit = rhuv[findex2];
+					var rhuvit1 = rhuv[findex2 + 1];
+					cmuv[fioffs] = rhuvit;
+					cmuv[fioffs + 1] = rhuvit1;
+				}
+			}
+
+			var meshid = new Tuple<Guid, int>(meshguid, mesh_index);
+
+			var crc = m_object_shader_db.FindRenderHashForMeshId(meshid);
+			if (crc == uint.MaxValue) crc = 0;
+
+			// now we have everything we need
+			// so we can create a CyclesMesh that the
+			// RenderEngine can eventually commit to Cycles
+			var cycles_mesh = new CyclesMesh
+			{
+				MeshId = meshid,
+				verts = meshdata.Vertices.ToFloatArray(),
+				faces = findices,
+				uvs = cmuv,
+				vertex_normals = rhvn,
+				matid = crc
+			};
+			m_object_db.AddMesh(cycles_mesh);
 		}
 
 		/// <summary>
@@ -794,9 +800,9 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		/// <param name="rt">Rhino.Geometry.Transform</param>
 		/// <returns>ccl.Transform</returns>
-		static Transform CclXformFromRhinoXform(Rhino.Geometry.Transform rt)
+		static ccl.Transform CclXformFromRhinoXform(Rhino.Geometry.Transform rt)
 		{
-			var t = new Transform(
+			var t = new ccl.Transform(
 				(float) rt.M00, (float) rt.M01, (float) rt.M02, (float) rt.M03,
 				(float) rt.M10, (float) rt.M11, (float) rt.M12, (float) rt.M13,
 				(float) rt.M20, (float) rt.M21, (float) rt.M22, (float) rt.M23,
@@ -956,79 +962,54 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		private const uint GroundPlaneMeshInstanceId = 1;
 
-		private readonly float gp_max_val = float.MaxValue / 2.0f;
+		private readonly float gp_side_extension = 1.0E+5f;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
 			var gpid = m_groundplane_guid;
-			var bb = GetQueueSceneBoundingBox();
-
-			var longest_edge = bb.IsValid ? bb.GetEdges().Max(edge => edge.Length) : -100.0;
-			var edgefactor = (int)((float)longest_edge / 2) / 100;
-			edgefactor = edgefactor < 1 ? 10 : edgefactor;
 			var altitude = (float)(gp.Enabled ? gp.Altitude : 0.0);
-			var l = (float)Math.Min(100000.0*edgefactor, gp_max_val);
-			var vertices = new[]
-			{
-				 l, -l, 0.0f,
-				 l,  l, 0.0f,
-				-l,  l, 0.0f,
-				-l, -l, 0.0f 
-			};
-			var findices = new[]
-			{
-				0, 1, 2,
-				0, 2, 3
-			};
-			var cmuv = new[]
-			{
-				1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f,
-				1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f
-			};
+			var bb = GetQueueSceneBoundingBox();
+			var longest_edge = bb.IsValid ? bb.GetEdges().Max(edge => edge.Length) : -100.0;
+			var min = bb.Min;
+			min.Z = 0;
+			var max = bb.Max;
+			max.Z = 0;
+			var orig = bb.Center;
+			orig.Z = 0;
+
+			Plane p = new Plane(orig, Vector3d.ZAxis);
+			Plane pmap = new Plane(Point3d.Origin, Vector3d.ZAxis);
+			var xext = new Interval(min.X-gp_side_extension, max.X + gp_side_extension);
+			var yext = new Interval(min.Y-gp_side_extension, max.Y + gp_side_extension);
+			var smext = new Interval(0.0, 1.0);
+			Rhino.Geometry.PlaneSurface ps = new PlaneSurface(p, xext, yext);
+			var mp = new MeshingParameters();
+			mp.GridMinCount = 512;
+			mp.GridMaxCount = 1024;
+			mp.SimplePlanes = false;
+			var meshes = Rhino.Geometry.Mesh.CreateFromBrep(ps.ToBrep(), mp);
+			Rhino.Geometry.Mesh m = new Rhino.Geometry.Mesh();
+			foreach (var mesh in meshes) m.Append(mesh);
+
+			Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
 			var texscale = gp.TextureScale;
-			texscale /= l;
-			var texoffset = gp.TextureOffset;
-			var texrot = (float)gp.TextureRotation * Math.PI / 180.0f;
-
-			var s = (float)Math.Sin(texrot);
-			var c = (float)Math.Cos(texrot);
-
-			var cmuvxfm = new float[12];
-
-			for (int i = 0; i < 6; i++)
+			var tscale = Rhino.Geometry.Transform.Scale(p, texscale.X, texscale.Y, 1.0);
+			tfm *= tscale;
+			var motion = new Rhino.Geometry.Vector3d(gp.TextureOffset.X, gp.TextureOffset.Y, 0.0);
+			var ttrans = Rhino.Geometry.Transform.Translation(motion);
+			tfm *= ttrans;
+			var trot = Rhino.Geometry.Transform.Rotation(gp.TextureRotation, Point3d.Origin);
+			tfm *= trot;
+			var texturemapping = TextureMapping.CreatePlaneMapping(pmap, smext, smext, smext);
+			if (texturemapping!=null)
 			{
-				var cos = cmuv.Skip(i*2).Take(2);
-				var x = cos.First();
-				var y = cos.Last();
-
-				// apply scale
-				x /= (float)texscale.X;
-				y /= (float)texscale.Y;
-
-				// we need to double up now, since we're looking at half edge length.
-				var magicnumber = 2.0f;
-				x *= magicnumber;
-				y *= magicnumber;
-
-				// apply offset
-				x += (float)texoffset.X;
-				y += (float)texoffset.Y;
-
-				// rotate and assign
-				cmuvxfm[i*2] = x * c - y * s;
-				cmuvxfm[i*2 + 1] = x * s + y * c;
+				m.SetTextureCoordinates(texturemapping, tfm, false);
+				m.SetCachedTextureCoordinates(texturemapping, ref tfm);
 			}
 
-			var cycles_mesh = new CyclesMesh
-				{
-					MeshId = gpid,
-					verts = vertices,
-					faces = findices,
-					uvs = cmuvxfm,
-					vertex_normals = null,
-					matid = gp.MaterialId
-				};
 
-			var t = Transform.Translate(0.0f, 0.0f, altitude);
+			HandleMeshData(m_groundplane_guid.Item1, m_groundplane_guid.Item2, m);
+
+			var t = ccl.Transform.Translate(0.0f, 0.0f, altitude);
 			var cycles_object = new CyclesObject
 			{
 				matid = gp.MaterialId,
@@ -1039,7 +1020,6 @@ namespace RhinoCyclesCore.Database
 				IsShadowCatcher = gp.IsShadowOnly
 			};
 
-			m_object_db.AddMesh(cycles_mesh);
 			m_object_shader_db.RecordRenderHashRelation(gp.MaterialId, gpid, GroundPlaneMeshInstanceId);
 			m_object_db.RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
 			m_object_db.AddOrUpdateObject(cycles_object);
