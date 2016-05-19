@@ -188,7 +188,7 @@ namespace RhinoCyclesCore.Shaders
 				m_max.outs.Value.Connect(m_mix_skylightswitch.ins.Fac);
 
 				// if there is a bg texture, put that in bg color
-				if (m_original_background.bg.HasTextureImage && m_original_background.background_fill == BackgroundStyle.Environment)
+				if (m_original_background.bg.HasTextureImage && m_original_background.background_fill == BackgroundStyle.Environment && !m_original_background.PlanarProjection)
 				{
 					m_bg_env_texture.outs.Color.Connect(m_background.ins.Color);
 				}
@@ -204,6 +204,12 @@ namespace RhinoCyclesCore.Shaders
 					m_gradient.outs.Fac.Connect(m_colorramp.ins.Fac);
 					// now use that as background input
 					m_colorramp.outs.Color.Connect(m_background.ins.Color);
+				}
+				else if(m_original_background.PlanarProjection)
+				{
+					m_mapping.outs.Vector.Connect(m_bg_env_texture.ins.Vector);
+					m_bg_env_texture.outs.Color.Connect(m_background.ins.Color);
+					m_bg_env_texture.Projection = TextureNode.EnvironmentProjection.Wallpaper;
 				}
 				else if (m_original_background.background_fill == BackgroundStyle.WallpaperImage)
 				{

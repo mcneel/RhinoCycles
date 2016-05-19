@@ -91,7 +91,7 @@ namespace RhinoCyclesCore
 
 			if (is_float)
 			{
-				var img = RetrieveFloatsImg(rId, pwidth, pheight, texture_evaluator, false);
+				var img = RetrieveFloatsImg(rId, pwidth, pheight, texture_evaluator, false, false);
 				img.ApplyGamma(shader.Gamma);
 				switch (textureType)
 				{
@@ -115,7 +115,7 @@ namespace RhinoCyclesCore
 			}
 			else
 			{
-				var img = RetrieveBytesImg(rId, pwidth, pheight, texture_evaluator, false);
+				var img = RetrieveBytesImg(rId, pwidth, pheight, texture_evaluator, false, false);
 				img.ApplyGamma(shader.Gamma);
 				switch (textureType)
 				{
@@ -185,7 +185,7 @@ namespace RhinoCyclesCore
 		/// <param name="rm"></param>
 		/// <param name="teximg"></param>
 		/// <param name="gamma"></param>
-		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma, bool floatAsByte)
+		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma, bool floatAsByte, bool planarProjection)
 		{
 			RenderTexture render_texture = null;
 
@@ -235,14 +235,14 @@ namespace RhinoCyclesCore
 
 				if (is_float && !floatAsByte)
 				{
-					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
+					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true, planarProjection);
 					img.ApplyGamma(gamma);
 					teximg.TexFloat = img.Data;
 					teximg.TexByte = null;
 				}
 				else
 				{
-					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true);
+					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, texture_evaluator, true, planarProjection);
 					img.ApplyGamma(gamma);
 					teximg.TexByte = img.Data;
 					teximg.TexFloat = null;
@@ -272,7 +272,7 @@ namespace RhinoCyclesCore
 			return upixel;
 		}
 
-		private static byte[] ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment)
+		private static byte[] ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment, bool planarProjection)
 		{
 			var upixel = new byte[pwidth * pheight * 4];
 			var zerovector = new Vector3d(0.0, 0.0, 0.0);
@@ -282,8 +282,9 @@ namespace RhinoCyclesCore
 				for (var y = 0; y < pheight; y++)
 				{
 					var fx = x / (float)pwidth;
-					if (isEnvironment) fx += 0.5f;
+					if (isEnvironment && !planarProjection) fx += 0.5f;
 					var fy = y / (float)pheight;
+					if (planarProjection) fy = 1.0f - fy;
 
 					// remember z can be !0.0 for volumetrics
 					var col4_f = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), zerovector, zerovector);
@@ -306,7 +307,7 @@ namespace RhinoCyclesCore
 		/// <param name="isEnvironment"></param>
 		/// <param name="gamma"></param>
 		/// <returns></returns>
-		private static float[] ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment)
+		private static float[] ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment, bool planarProjection)
 		{
 			var fpixel = new float[pwidth*pheight*4];
 			var zerovector = new Vector3d(0.0, 0.0, 0.0);
@@ -316,8 +317,9 @@ namespace RhinoCyclesCore
 				for (var y = 0; y < pheight; y++)
 				{
 					var fx = x/(float) pwidth;
-					if (isEnvironment) fx += 0.5f;
+					if (isEnvironment && !planarProjection) fx += 0.5f;
 					var fy = y/(float) pheight;
+					if (planarProjection) fy = 1.0f - fy;
 
 					// remember z can be !0.0 for volumetrics
 					var col4_f = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), zerovector, zerovector);
@@ -331,10 +333,10 @@ namespace RhinoCyclesCore
 			return fpixel;
 		}
 
-		private static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator texture_evaluator, bool isEnv)
+		private static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator texture_evaluator, bool isEnv, bool planarProjection)
 		{
 			var read = byte_images_new.ContainsKey(rId);
-			var img = read ? byte_images_new[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, texture_evaluator, isEnv), pwidth, pheight);
+			var img = read ? byte_images_new[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, texture_evaluator, isEnv, planarProjection), pwidth, pheight);
 			if (!read)
 			{
 				byte_images_new[rId] = img;
@@ -343,10 +345,10 @@ namespace RhinoCyclesCore
 			return img;
 		}
 
-		private static FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator texture_evaluator, bool isEnv)
+		private static FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator texture_evaluator, bool isEnv, bool planarProjection)
 		{
 			var read = float_images_new.ContainsKey(rId);
-			var img = read ? float_images_new[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, texture_evaluator, isEnv), pwidth, pheight);
+			var img = read ? float_images_new[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, texture_evaluator, isEnv, planarProjection), pwidth, pheight);
 			if (!read)
 			{
 				float_images_new[rId] = img;

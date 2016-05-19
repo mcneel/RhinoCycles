@@ -131,6 +131,9 @@ namespace RhinoCyclesCore.Database
 						m_cq_background.Xml = xmlenv.MaterialXml;
 					}
 					m_cq_background.background_environment = environment;
+					var s = environment.GetParameter("background-projection") as System.IConvertible;
+					var proj = System.Convert.ToString(s);
+					m_cq_background.PlanarProjection = proj.Equals("planar");
 					break;
 				case RenderEnvironment.Usage.Skylighting:
 					m_cq_background.skylight_environment = environment;

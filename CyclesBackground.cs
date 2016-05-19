@@ -94,6 +94,8 @@ namespace RhinoCyclesCore
 
 		public string Xml = "";
 
+		public bool PlanarProjection = false;
+
 		/// <summary>
 		/// True if skylight is used.
 		/// </summary>
@@ -270,7 +272,7 @@ namespace RhinoCyclesCore
 				bg_color = Color.Empty;
 				bg.Clear();
 			}
-			BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg, gamma, m_float_as_byte);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg, gamma, m_float_as_byte, PlanarProjection);
 
 			bool resampled = false;
 			if (skylight_environment != null)
@@ -306,7 +308,7 @@ namespace RhinoCyclesCore
 
 
 
-						BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, gamma, m_float_as_byte);
+						BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, gamma, m_float_as_byte, false);
 						resampled = true;
 
 						render_texture.Dispose();
@@ -321,7 +323,7 @@ namespace RhinoCyclesCore
 				sky.Clear();
 			}
 			if(!resampled)
-				BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky, gamma, m_float_as_byte);
+				BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky, gamma, m_float_as_byte, false);
 
 			if (reflection_environment != null)
 			{
@@ -336,7 +338,7 @@ namespace RhinoCyclesCore
 				refl_color = Color.Empty;
 				refl.Clear();
 			}
-			BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl, gamma, m_float_as_byte);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl, gamma, m_float_as_byte, false);
 		}
 
 		/// <summary>
