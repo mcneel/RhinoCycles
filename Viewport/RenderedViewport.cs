@@ -29,8 +29,46 @@ using System.Drawing;
 
 namespace RhinoCycles
 {
-	[Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181")]
-	[RealtimeDisplayModeClassInfo("69E0C7A5-1C6A-46C8-B98B-8779686CD181", "Raytraced", "Raytraced")]
+	/// <summary>
+	/// Our class information implementation with which we can register our
+	/// RealtimeDisplayMode implementation RenderedViewport with
+	/// RhinoCommon.
+	/// </summary>
+	public class RenderedViewportClassInfo : RealtimeDisplayModeClassInfo
+	{
+		public override string ClassName
+		{
+			get
+			{
+				return Rhino.UI.LOC.STR("Raytraced");
+			}
+		}
+
+		public override string FullName
+		{
+			get
+			{
+				return Rhino.UI.LOC.STR("Raytraced");
+			}
+		}
+
+		public override Guid GUID
+		{
+			get
+			{
+				return new Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181");
+			}
+		}
+
+		public override Type RealtimeDisplayModeType
+		{
+			get
+			{
+				return typeof(RenderedViewport);
+			}
+		}
+	}
+
 	public class RenderedViewport : RealtimeDisplayMode
 	{
 		private static int g_running_serial;
