@@ -68,7 +68,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			get
 			{
-				var name = Name.Replace(" ", "_");
+				var name = "brick";
 				Rhino.Display.Color4f color1;
 				Fields.TryGetValue("color1", out color1);
 				color1 = Rhino.Display.Color4f.ApplyGamma(color1, Gamma);
