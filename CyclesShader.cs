@@ -122,6 +122,7 @@ namespace RhinoCyclesCore
 			Diffuse,
 			SimplePlastic,
 			SimpleMetal,
+			Emissive,
 
 			SimpleNoiseEnvironment,
 			XmlEnvironment,
