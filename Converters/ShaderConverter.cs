@@ -97,7 +97,7 @@ namespace RhinoCyclesCore
 				// populate my own material descriptions.
 				var m = rm.SimulateMaterial(true);
 
-        rm.BeginChange(RenderContent.ChangeContexts.Ignore);
+				rm.BeginChange(RenderContent.ChangeContexts.Ignore);
 
 				switch (probemat)
 				{
@@ -219,7 +219,7 @@ namespace RhinoCyclesCore
 
 				}
 
-        rm.EndChange();
+				rm.EndChange();
 
 			}
 			if (crm != null)
