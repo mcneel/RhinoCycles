@@ -171,8 +171,6 @@ namespace RhinoCyclesCore
 							Transparency = (float) m.Transparency,
 							Shine = (float) (m.Shine/Material.MaxShine)*2.0f,
 
-							IsCyclesMaterial = false,
-
 							FresnelReflections = m.FresnelReflections,
 
 							Gamma = gamma,
@@ -228,7 +226,6 @@ namespace RhinoCyclesCore
 				{
 					Id = mid,
 					CyclesMaterialType = crm.MaterialType,
-					IsCyclesMaterial = true,
 					Gamma = gamma,
 					Crm = crm
 				};

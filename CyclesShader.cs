@@ -37,7 +37,6 @@ namespace RhinoCyclesCore
 			GiEnvTexture = new CyclesTextureImage();
 			BgEnvTexture = new CyclesTextureImage();
 			ReflRefrEnvTexture = new CyclesTextureImage();
-			IsCyclesMaterial = false;
 			CyclesMaterialType = CyclesMaterial.No;
 		}
 
@@ -65,13 +64,10 @@ namespace RhinoCyclesCore
 		public float ShadelessAsFloat { get { return Shadeless ? 1.0f : 0.0f; } }
 
 		/// <summary>
-		/// Set to true if shader is for a CyclesMaterial.
-		/// </summary>
-		public bool IsCyclesMaterial { get; set; }
-		/// <summary>
 		/// Set the CyclesMaterial type
 		/// </summary>
 		public CyclesMaterial CyclesMaterialType { get; set; }
+
 		/// <summary>
 		/// RenderHash of the RenderMaterial for which this intermediary is created.
 		/// </summary>
