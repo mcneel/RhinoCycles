@@ -39,7 +39,6 @@ namespace RhinoCyclesCore
 			ReflRefrEnvTexture = new CyclesTextureImage();
 			IsCyclesMaterial = false;
 			CyclesMaterialType = CyclesMaterial.No;
-			Xml = "";
 		}
 
 		public ICyclesMaterial Crm { get; set; }
@@ -73,12 +72,6 @@ namespace RhinoCyclesCore
 		/// Set the CyclesMaterial type
 		/// </summary>
 		public CyclesMaterial CyclesMaterialType { get; set; }
-		/// <summary>
-		/// XML representation to use for shadergraph creation
-		/// instead of the V6 basic material simulation graph.
-		/// Used when <c>IsCyclesMaterial</c> is true.
-		/// </summary>
-		public string Xml { get; set; }
 		/// <summary>
 		/// RenderHash of the RenderMaterial for which this intermediary is created.
 		/// </summary>
