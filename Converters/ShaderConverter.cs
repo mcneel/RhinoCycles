@@ -324,6 +324,10 @@ namespace RhinoCyclesCore
 
 				use_mis = true;
 			}
+			else if (lg.IsLinearLight)
+			{
+				throw new Exception("Linear light handled in wrong place. Contact developer nathan@mcneel.com");
+			}
 
 			var clight = new CyclesLight
 				{

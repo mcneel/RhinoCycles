@@ -869,15 +869,20 @@ namespace RhinoCyclesCore.Database
 			m_shader_db.AddShader(sh);
 		}
 
-		private void HandleMaterialChangeOnObject(RenderMaterial mat, uint obid)
+		/// <summary>
+		/// Change the material on given object
+		/// </summary>
+		/// <param name="matid">RenderHash of material</param>
+		/// <param name="obid">MeshInstanceId</param>
+		private void HandleMaterialChangeOnObject(uint matid, uint obid)
 		{
 			var oldhash = m_object_shader_db.FindRenderHashForObjectId(obid);
 			// skip if no change in renderhash
-			if (oldhash != mat.RenderHash)
+			if (oldhash != matid)
 			{
 				var o = new CyclesObjectShader(obid)
 				{
-					NewShaderHash = mat.RenderHash,
+					NewShaderHash = matid,
 					OldShaderHash = oldhash
 				};
 
@@ -908,7 +913,7 @@ namespace RhinoCyclesCore.Database
 
 				var obid = mat.MeshInstanceId;
 
-				HandleMaterialChangeOnObject(rm, obid);
+				HandleMaterialChangeOnObject(rm.RenderHash, obid);
 			}
 
 			// list over material hashes, check if they exist. Create if new
@@ -1038,7 +1043,7 @@ namespace RhinoCyclesCore.Database
 
 			var obid = GroundPlaneMeshInstanceId;
 
-			HandleMaterialChangeOnObject(mat, obid);
+			HandleMaterialChangeOnObject(mat.RenderHash, obid);
 		}
 
 		#endregion
@@ -1148,6 +1153,40 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
+		private uint LinearLightMaterialCRC(Rhino.Geometry.Light ll)
+		{
+			uint crc = 0xBABECAFE;
+
+			crc = Rhino.RhinoMath.CRC32(crc, ll.Diffuse.R);
+			crc = Rhino.RhinoMath.CRC32(crc, ll.Diffuse.G);
+			crc = Rhino.RhinoMath.CRC32(crc, ll.Diffuse.B);
+			crc = Rhino.RhinoMath.CRC32(crc, ll.Intensity);
+
+			return crc;
+		}
+
+		private void HandleLightMaterial(Rhino.Geometry.Light rgl)
+		{
+			var matid = LinearLightMaterialCRC(rgl);
+			if (m_shader_db.HasShader(matid)) return;
+
+			var emissive = new Materials.EmissiveMaterial();
+			Color4f color = new Color4f(rgl.Diffuse);
+			emissive.BeginChange(RenderContent.ChangeContexts.Ignore);
+			emissive.SetParameter("emission_color", color);
+			emissive.SetParameter("strength", (float)rgl.Intensity);
+			emissive.EndChange();
+			var shader = new CyclesShader
+			{
+				Name = rgl.Name,
+				Id = matid,
+				Crm = emissive,
+				CyclesMaterialType = CyclesShader.CyclesMaterial.Emissive
+			};
+
+			m_shader_db.AddShader(shader);
+		}
+
 		/// <summary>
 		/// Handle light changes
 		/// </summary>
@@ -1156,28 +1195,90 @@ namespace RhinoCyclesCore.Database
 		{
 			foreach (var light in lightChanges)
 			{
+				if (light.Data.IsLinearLight)
+				{
+					uint lightmeshinstanceid = light.IdCrc;
+					var ld = light.Data;
+					switch (light.ChangeType)
+					{
+						case CqLight.Event.Deleted:
+							var cob = m_object_db.FindObjectRelation(lightmeshinstanceid);
+							var delob = new CyclesObject {cob = cob};
+							m_object_db.DeleteObject(delob);
+							m_object_db.DeleteMesh(ld.Id);
+							break;
+						default:
+							HandleLinearLightAddOrModify(lightmeshinstanceid, ld);
+							break;
+					}
+				}
+				else
+				{
 				// we don't necessarily get view changes prior to light changes, so
 				// the old m_current_view_info could be null - at the end of a Flush
 				// it would be thrown away. Hence we now ask the ChangeQueue for the
 				// proper view info. It will be given if one constructed the ChangeQueue
 				// with a view to force it to be a single-view only ChangeQueue.
 				// See #RH-32345 and #RH-32356
-				var v = GetQueueView();
-				var cl = m_shader_converter.ConvertLight(this, light, v, GammaLinearWorkflow);
+					var v = GetQueueView();
+					var cl = m_shader_converter.ConvertLight(this, light, v, GammaLinearWorkflow);
 
-				//System.Diagnostics.Debug.WriteLine("light {0} == {1} == {2} ({3})", light.Id, cl.Id, lg.Id, light.ChangeType);
-
-				m_light_db.AddLight(cl);
+					m_light_db.AddLight(cl);
+				}
 			}
+		}
+
+		private void HandleLinearLightAddOrModify(uint lightmeshinstanceid, RGLight ld)
+		{
+			var brepf = ld.HasBrepForm;
+			var p = new Plane(ld.Location, ld.Direction);
+			var circle = new Circle(p, ld.Width.Length);
+			var c = new Rhino.Geometry.Cylinder(circle, ld.Direction.Length);
+			var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(true, true));
+			var mesh = new Rhino.Geometry.Mesh();
+			foreach (var im in m) mesh.Append(im);
+			var t = ccl.Transform.Identity();
+			//t.SetTranslate(ld.Location.X, ld.Location.Y, ld.Location.Z);
+
+			var ldid = new Tuple<Guid, int>(ld.Id, 0);
+
+			var matid = LinearLightMaterialCRC(ld);
+
+			HandleLightMaterial(ld);
+
+			HandleMeshData(ld.Id, 0, mesh);
+
+			var light_object = new CyclesObject
+			{
+				matid = matid,
+				obid = lightmeshinstanceid,
+				meshid = ldid,
+				Transform = t,
+				Visible = true,
+				IsShadowCatcher = false
+			};
+
+			m_object_shader_db.RecordRenderHashRelation(matid, ldid, lightmeshinstanceid);
+			m_object_db.RecordObjectIdMeshIdRelation(lightmeshinstanceid, ldid);
+			m_object_db.AddOrUpdateObject(light_object);
+			HandleMaterialChangeOnObject(matid, lightmeshinstanceid);
 		}
 
 		protected override void ApplyDynamicLightChanges(List<RGLight> dynamicLightChanges)
 		{
 			foreach (var light in dynamicLightChanges)
 			{
-				var cl = m_shader_converter.ConvertLight(light, GammaLinearWorkflow);
-				//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
-				m_light_db.AddLight(cl);
+				if (light.IsLinearLight)
+				{
+					uint lightmeshinstanceid = CrcFromGuid(light.Id);
+					HandleLinearLightAddOrModify(lightmeshinstanceid, light);
+				}
+				else
+				{
+					var cl = m_shader_converter.ConvertLight(light, GammaLinearWorkflow);
+					//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
+					m_light_db.AddLight(cl);
+				}
 			}
 		}
 
@@ -1198,7 +1299,7 @@ namespace RhinoCyclesCore.Database
 			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
 		}
 
-		#endregion
+#endregion
 
 		public void UploadEnvironmentChanges()
 		{
