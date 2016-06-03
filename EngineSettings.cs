@@ -111,17 +111,17 @@ namespace RhinoCyclesCore
 			Seed = 128;
 
 			MinBounce = 3;
-			MaxBounce = 8;
+			MaxBounce = 128;
 
 			NoCaustics = false;
 
 			MaxDiffuseBounce = 2;
-			MaxGlossyBounce = 4;
-			MaxTransmissionBounce = 8;
-			MaxVolumeBounce = 2;
+			MaxGlossyBounce = 32;
+			MaxTransmissionBounce = 32;
+			MaxVolumeBounce = 32;
 
 			TransparentMinBounce = 8;
-			TransparentMaxBounce = 8;
+			TransparentMaxBounce = 32;
 			TransparentShadows = true;
 
 			/* the following sample settings are used when branched path integrator is used. */
@@ -177,9 +177,9 @@ namespace RhinoCyclesCore
 					break;
 				case AntialiasLevel.High:
 					Samples = 2000;
-					DiffuseSamples = 4;
-					GlossySamples = 4;
-					TransmissionSamples = 4;
+					DiffuseSamples = 32;
+					GlossySamples = 32;
+					TransmissionSamples = 32;
 					break;
 			}
 		}
