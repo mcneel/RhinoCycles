@@ -65,9 +65,6 @@ namespace CyclesForRhino
 		/// <returns></returns>
 		protected override Result Render(RhinoDoc doc, RunMode mode, RenderOptions option)
 		{
-			if (option == RenderOptions.Quietly)
-				return Result.Failure;
-
 			AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id, new Rhino.DocObjects.ViewInfo(doc.Views.ActiveView.ActiveViewport), null);
 			var engine = (RhinoCycles.ModalRenderEngine)a_rc;
 
