@@ -212,8 +212,8 @@ namespace RhinoCyclesCore
 				{
 					int u, v, w;
 					render_texture.PixelSize(out u, out v, out w);
-					teximg.TexHeight = u;
-					teximg.TexWidth = v;
+					teximg.TexWidth = u;
+					teximg.TexHeight = v;
 				}
 				catch (Exception)
 				{
