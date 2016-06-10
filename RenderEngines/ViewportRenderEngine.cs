@@ -172,7 +172,7 @@ namespace RhinoCycles
 			#region pick a render device
 
 			var render_device = cycles_engine.Settings.SelectedDevice == -1
-				? Device.FirstCuda
+				? Device.FirstGpu
 				: Device.GetDevice(cycles_engine.Settings.SelectedDevice);
 
 			if (cycles_engine.Settings.Verbose) sdd.WriteLine($"Using device {render_device.Name} {render_device.Description}");
