@@ -104,8 +104,7 @@ namespace RhinoCyclesCore
 					SampleAllLightsIndirect = cycles_engine.Settings.SampleAllLightsIndirect,
 					SampleClampDirect = cycles_engine.Settings.SampleClampDirect,
 					SampleClampIndirect = cycles_engine.Settings.SampleClampIndirect,
-					/* TODO : make sure CMJ doesn't crash on CPU */
-					SamplingPattern = render_device.IsCpu ? SamplingPattern.Sobol : cycles_engine.Settings.SamplingPattern,
+					SamplingPattern = SamplingPattern.CMJ,
 					Seed = cycles_engine.Settings.Seed
 				}
 				#endregion
