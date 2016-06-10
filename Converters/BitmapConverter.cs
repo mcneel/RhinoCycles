@@ -275,19 +275,21 @@ namespace RhinoCyclesCore
 		private static byte[] ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment, bool planarProjection)
 		{
 			var upixel = new byte[pwidth * pheight * 4];
-			var zerovector = new Vector3d(0.0, 0.0, 0.0);
+			var halfpixelU = 0.5 / pwidth;
+			var halfpixelV = 0.5 / pheight;
+			var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
 
 			for (var x = 0; x < pwidth; x++)
 			{
 				for (var y = 0; y < pheight; y++)
 				{
-					var fx = x / (float)pwidth;
+					var fx = x / (float)pwidth + halfpixelU;
 					if (isEnvironment && !planarProjection) fx += 0.5f;
-					var fy = y / (float)pheight;
+					var fy = y / (float)pheight + halfpixelV;
 					if (planarProjection) fy = 1.0f - fy;
 
 					// remember z can be !0.0 for volumetrics
-					var col4_f = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), zerovector, zerovector);
+					var col4_f = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), duvw, duvw);
 					var offset = x * 4 + pwidth * y * 4;
 					upixel[offset] = (byte)(Math.Min(col4_f.R, 1.0f) * 255.0f);
 					upixel[offset + 1] = (byte)(Math.Min(col4_f.G, 1.0f) * 255.0f);
@@ -310,19 +312,21 @@ namespace RhinoCyclesCore
 		private static float[] ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment, bool planarProjection)
 		{
 			var fpixel = new float[pwidth*pheight*4];
-			var zerovector = new Vector3d(0.0, 0.0, 0.0);
+			var halfpixelU = 0.5 / pwidth;
+			var halfpixelV = 0.5 / pheight;
+			var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
 
 			for (var x = 0; x < pwidth; x++)
 			{
 				for (var y = 0; y < pheight; y++)
 				{
-					var fx = x/(float) pwidth;
+					var fx = x/(float) pwidth + halfpixelU;
 					if (isEnvironment && !planarProjection) fx += 0.5f;
-					var fy = y/(float) pheight;
+					var fy = y/(float) pheight + halfpixelV;
 					if (planarProjection) fy = 1.0f - fy;
 
 					// remember z can be !0.0 for volumetrics
-					var col4_f = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), zerovector, zerovector);
+					var col4_f = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), duvw, duvw);
 					var offset = x*4 + pwidth*y*4;
 					fpixel[offset] = col4_f.R;
 					fpixel[offset + 1] = col4_f.G;
