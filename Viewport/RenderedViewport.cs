@@ -131,7 +131,7 @@ namespace RhinoCycles
 
 				mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 
-				mre.SetFloatTextureAsByteTexture(mre.Settings.RenderDeviceIsOpenCl);
+				mre.SetFloatTextureAsByteTexture(false); // mre.Settings.RenderDeviceIsOpenCl);
 
 				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
@@ -172,7 +172,7 @@ namespace RhinoCycles
 
 			m_maxsamples = m_cycles.Settings.Samples;
 
-			m_cycles.SetFloatTextureAsByteTexture(m_cycles.Settings.RenderDeviceIsOpenCl);
+			m_cycles.SetFloatTextureAsByteTexture(false); // m_cycles.Settings.RenderDeviceIsOpenCl);
 
 			m_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
