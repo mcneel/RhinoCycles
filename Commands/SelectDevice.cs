@@ -49,7 +49,7 @@ namespace RhinoCycles
 			Plugin.InitialiseCSycles();
 			var get_number = new GetInteger();
 			get_number.SetLowerLimit(-1, false);
-			get_number.SetUpperLimit((int)(Device.Count-1), true);
+			get_number.SetUpperLimit((int)(Device.Count-1), false);
 			get_number.SetDefaultInteger(RcCore.It.EngineSettings.SelectedDevice);
 			get_number.SetCommandPrompt(String.Format("Select device to render on (-1 for default, 0-{0})", Device.Count-1));
 			var get_rc = get_number.Get();
