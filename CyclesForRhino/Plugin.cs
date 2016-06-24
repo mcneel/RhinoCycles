@@ -63,7 +63,7 @@ namespace CyclesForRhino
 		/// <param name="mode">mode</param>
 		/// <param name="fastPreview">True for fast preview.</param>
 		/// <returns></returns>
-		protected override Result Render(RhinoDoc doc, RunMode mode, RenderOptions option)
+		protected override Result Render(RhinoDoc doc, RunMode mode, bool fastPreview)
 		{
 			AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id, new Rhino.DocObjects.ViewInfo(doc.Views.ActiveView.ActiveViewport), null);
 			var engine = (RhinoCycles.ModalRenderEngine)a_rc;
@@ -73,7 +73,7 @@ namespace CyclesForRhino
 			engine.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
 
 			/* render only 3 samples if we are told to generate a fast preview. */
-			if (option == RenderOptions.FastPreview)
+			if (fastPreview)
 			{
 				engine.Settings.Samples = 3;
 			}
