@@ -84,7 +84,7 @@ namespace RhinoCycles
 		private ViewportRenderEngine m_cycles;
 		private ModalRenderEngine m_modal;
 
-		private long m_starttime;
+		private DateTime m_starttime;
 		private int m_samples;
 		private int m_maxsamples;
 		private string m_status = "";
@@ -176,7 +176,7 @@ namespace RhinoCycles
 
 			m_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
-			m_starttime = GetCurrentTimeStamp();
+			m_starttime = DateTime.UtcNow;
 
 			m_cycles.RenderThread = new Thread(ViewportRenderEngine.Renderer)
 			{
@@ -240,7 +240,7 @@ namespace RhinoCycles
 
 		void m_cycles_Synchronized(object sender, EventArgs e)
 		{
-			m_starttime = GetCurrentTimeStamp();
+			m_starttime = DateTime.UtcNow;
 			m_samples = 0;
 			m_last_frame_drawn = false;
 			m_synchronizing = false;
@@ -275,15 +275,9 @@ namespace RhinoCycles
 			{
 				m_last_frame_drawn = false;
 			}
-			m_starttime = GetCurrentTimeStamp();
+			m_starttime = DateTime.UtcNow; 
 			m_maxsamples = samples;
 			m_cycles.ChangeSamples(samples);
-		}
-
-		static private long GetCurrentTimeStamp()
-		{
-			TimeSpan span = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0,DateTimeKind.Utc));
-			return (long) span.TotalSeconds;
 		}
 
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
@@ -327,7 +321,7 @@ namespace RhinoCycles
 		{
 			ssd.WriteLine($"RestartRender {m_serial}");
 			SetGamma(m_cycles.Database.Gamma);
-			m_starttime = GetCurrentTimeStamp();
+			m_starttime = DateTime.UtcNow;
 
 			return true;
 		}
@@ -401,7 +395,7 @@ namespace RhinoCycles
 			return true;
 		}
 
-		public override long HudStartTime()
+		public override DateTime HudStartTime()
 		{
 			return m_starttime;
 		}
