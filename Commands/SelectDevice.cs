@@ -64,7 +64,7 @@ namespace RhinoCycles
 				}
 				else
 				{
-					dev = Device.FirstGpu;
+					dev = Device.FirstCuda;
 				}
 				RhinoApp.WriteLine(String.Format("User selected device {0}: {1}", idx, dev));
 				RcCore.It.EngineSettings.SelectedDevice = idx;
