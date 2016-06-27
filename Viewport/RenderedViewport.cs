@@ -89,6 +89,8 @@ namespace RhinoCycles
 		private int m_maxsamples;
 		private string m_status = "";
 
+		private DisplayPipelineAttributes m_displaypipelineattributes;
+
 		public RenderedViewport()
 		{
 			g_running_serial ++;
@@ -98,8 +100,9 @@ namespace RhinoCycles
 			m_available = true;
 		}
 
-		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo)
+		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo, DisplayPipelineAttributes displayPipelineAttributes)
 		{
+			m_displaypipelineattributes = displayPipelineAttributes;
 			ssd.WriteLine($"CreateWorld {m_serial}");
 		}
 
