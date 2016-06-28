@@ -76,7 +76,6 @@ namespace RhinoCycles
 
 		private bool m_started;
 		private bool m_available;
-		private bool m_last_frame_drawn;
 		private bool m_frame_available = false;
 
 		private bool m_synchronizing;
@@ -148,9 +147,8 @@ namespace RhinoCycles
 			}
 
 			ssd.WriteLine($"StartRender {m_serial}");
-			m_started = true;
 			m_available = false; // the renderer hasn't started yet. It'll tell us when it has.
-			m_last_frame_drawn = false;
+			m_frame_available = false;
 
 			AsyncRenderContext a_rc = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
 			m_cycles = (ViewportRenderEngine)a_rc;
@@ -232,6 +230,8 @@ namespace RhinoCycles
 		void m_cycles_PassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
 			m_frame_available = true;
+			m_available = true;
+			m_started = true;
 			if(e.Sample <=1) SetView(e.View);
 			SignalRedraw();
 		}
@@ -244,8 +244,8 @@ namespace RhinoCycles
 		void m_cycles_Synchronized(object sender, EventArgs e)
 		{
 			m_starttime = DateTime.UtcNow;
+			m_frame_available = false;
 			m_samples = 0;
-			m_last_frame_drawn = false;
 			m_synchronizing = false;
 		}
 
@@ -269,15 +269,11 @@ namespace RhinoCycles
 
 		void m_cycles_RenderStarted(object sender, ViewportRenderEngine.RenderStartedEventArgs e)
 		{
-			m_available = true;
+			m_available = false;
 		}
 
 		public void ChangeSamples(int samples)
 		{
-			if (m_maxsamples < samples)
-			{
-				m_last_frame_drawn = false;
-			}
 			m_starttime = DateTime.UtcNow; 
 			m_maxsamples = samples;
 			m_cycles.ChangeSamples(samples);
@@ -325,6 +321,7 @@ namespace RhinoCycles
 			ssd.WriteLine($"RestartRender {m_serial}");
 			SetGamma(m_cycles.Database.Gamma);
 			m_starttime = DateTime.UtcNow;
+			m_available = false;
 
 			return true;
 		}
@@ -339,14 +336,14 @@ namespace RhinoCycles
 
 		public override bool IsRendererStarted()
 		{
-			//ssd.WriteLine("IsRendererStarted {0}: {1}", m_serial, m_started);
 			return m_started;
 		}
 
 		public override bool IsRenderframeAvailable()
 		{
 			SetGamma(m_cycles.Database.Gamma);
-			return m_available && m_cycles.State == State.Rendering && m_frame_available;
+			var rc = m_available && m_cycles.State == State.Rendering && m_frame_available;
+			return rc;
 		}
 
 		public override string HudProductName()
