@@ -232,8 +232,11 @@ namespace RhinoCycles
 			m_frame_available = true;
 			m_available = true;
 			m_started = true;
-			if(e.Sample <=1) SetView(e.View);
-			SignalRedraw();
+			if (m_cycles?.IsRendering ?? false)
+			{
+				if (e.Sample <= 1) SetView(e.View);
+				SignalRedraw();
+			}
 		}
 
 		void m_cycles_StartSynchronizing(object sender, EventArgs e)

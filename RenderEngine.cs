@@ -61,6 +61,22 @@ namespace RhinoCyclesCore
 		public Client Client { get; set; }
 
 		/// <summary>
+		/// True when State.Rendering
+		/// </summary>
+		public bool IsRendering { get { return State == State.Rendering; } }
+		/// <summary>
+		/// True when State.Uploading
+		/// </summary>
+		public bool IsUploading { get { return State == State.Uploading; } }
+		/// <summary>
+		/// True when State.Waiting
+		/// </summary>
+		public bool IsWaiting { get { return State == State.Waiting; } }
+		/// <summary>
+		/// True when State.IsStopped
+		/// </summary>
+		public bool IsStopped {  get { return State == State.Stopped; } }
+		/// <summary>
 		/// Current render engine state.
 		/// </summary>
 		public State State { get; set; }
