@@ -107,7 +107,7 @@ namespace RhinoCycles
 
 		private Thread ModalThread;
 
-		public override bool StartRender(uint w, uint h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
+		public override bool StartRenderer(uint w, uint h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
 			if(forCapture)
 			{
@@ -319,7 +319,7 @@ namespace RhinoCycles
 			}
 		}
 
-		public override bool RestartRender(int width, int height)
+		public override bool OnRenderSizeChanged(int width, int height)
 		{
 			ssd.WriteLine($"RestartRender {m_serial}");
 			SetGamma(m_cycles.Database.Gamma);
@@ -329,7 +329,7 @@ namespace RhinoCycles
 			return true;
 		}
 
-		public override void ShutdownRender()
+		public override void ShutdownRenderer()
 		{
 			m_available = false;
 			m_started = false;
