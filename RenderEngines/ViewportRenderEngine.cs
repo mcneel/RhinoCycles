@@ -282,8 +282,8 @@ namespace RhinoCycles
 		public void ChangeSamples(int samples)
 		{
 			Settings.Samples = samples;
-			Session.SetSamples(samples);
-			Session.SetPause(false);
+			Session?.SetSamples(samples);
+			Session?.SetPause(false);
 		}
 
 	}
