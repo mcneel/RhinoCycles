@@ -279,7 +279,7 @@ namespace RhinoCycles
 		{
 			m_starttime = DateTime.UtcNow; 
 			m_maxsamples = samples;
-			m_cycles.ChangeSamples(samples);
+			m_cycles?.ChangeSamples(samples);
 		}
 
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
