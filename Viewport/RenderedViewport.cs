@@ -342,10 +342,10 @@ namespace RhinoCycles
 			return m_started;
 		}
 
-		public override bool IsRenderframeAvailable()
+		public override bool IsCompleted()
 		{
-			SetGamma(m_cycles.Database.Gamma);
-			var rc = m_available && m_cycles.State == State.Rendering && m_frame_available;
+			//SetGamma(m_cycles.Database.Gamma);
+			var rc = m_available && m_cycles.State == State.Rendering && m_frame_available && m_samples==m_maxsamples;
 			return rc;
 		}
 
