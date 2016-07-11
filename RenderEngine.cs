@@ -510,6 +510,18 @@ namespace RhinoCyclesCore
 			if(Settings.Verbose) sdd.WriteLine("Rendering stopped. The render window can be closed safely.");
 		}
 
+		public void PauseRendering()
+		{
+			State = State.Waiting;
+			Session?.SetPause(true);
+		}
+
+		public void ContinueRendering()
+		{
+			State = State.Rendering;
+			Session?.SetPause(false);
+		}
+
 		private void StopTheRenderer()
 		{
 			// signal that we should stop rendering.

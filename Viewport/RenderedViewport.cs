@@ -78,6 +78,8 @@ namespace RhinoCycles
 		private bool m_available;
 		private bool m_frame_available = false;
 
+		private bool m_locked = false;
+
 		private bool m_synchronizing;
 
 		private ViewportRenderEngine m_cycles;
@@ -97,6 +99,37 @@ namespace RhinoCycles
 			ssd.WriteLine($"Initialising a RenderedViewport {m_serial}");
 			Plugin.InitialiseCSycles();
 			m_available = true;
+
+			HudPlayButtonPressed += RenderedViewport_HudPlayButtonPressed;
+			HudPauseButtonPressed += RenderedViewport_HudPauseButtonPressed;
+			HudLockButtonPressed += RenderedViewport_HudLockButtonPressed;
+			HudUnlockButtonPressed += RenderedViewport_HudUnlockButtonPressed;
+			MaxPassesChanged += RenderedViewport_MaxPassesChanged;
+		}
+
+		private void RenderedViewport_MaxPassesChanged(object sender, HudMaxPassesChangedEventArgs e)
+		{
+			m_cycles?.ChangeSamples(e.MaxPasses);
+		}
+
+		private void RenderedViewport_HudUnlockButtonPressed(object sender, EventArgs e)
+		{
+			m_locked = false;
+		}
+
+		private void RenderedViewport_HudLockButtonPressed(object sender, EventArgs e)
+		{
+			m_locked = true;
+		}
+
+		private void RenderedViewport_HudPauseButtonPressed(object sender, EventArgs e)
+		{
+			m_cycles?.PauseRendering();
+		}
+
+		private void RenderedViewport_HudPlayButtonPressed(object sender, EventArgs e)
+		{
+			m_cycles?.ContinueRendering();
 		}
 
 		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo, DisplayPipelineAttributes displayPipelineAttributes)
@@ -375,12 +408,13 @@ namespace RhinoCycles
 
 		public override bool HudRendererPaused()
 		{
-			return m_status.Equals("Idle");
+			var st = m_cycles?.State ?? State.Stopped;
+			return st==State.Waiting || m_status.Equals("Idle");
 		}
 
 		public override bool HudRendererLocked()
 		{
-			return false;
+			return m_locked;
 		}
 
 		public override bool HudShowMaxPasses()
