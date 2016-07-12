@@ -198,6 +198,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public void CheckFlushQueue()
 		{
+			if (State == State.Waiting && Flush) ContinueRendering();
 			// not rendering, nor flush needed, bail
 			if (State != State.Rendering || Database == null || !Flush) return;
 
