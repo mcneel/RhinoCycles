@@ -502,6 +502,7 @@ namespace RhinoCyclesCore
 
 			lock (display_lock)
 			{
+				System.Diagnostics.Debug.Assert(Session != null);
 
 				StopTheRenderer();
 				Session?.Destroy();

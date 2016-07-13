@@ -86,7 +86,7 @@ namespace RhinoCycles
 		private ModalRenderEngine m_modal;
 
 		private DateTime m_starttime;
-		private int m_samples;
+		private int m_samples = -1;
 		private int m_maxsamples;
 		private string m_status = "";
 
@@ -281,7 +281,7 @@ namespace RhinoCycles
 		{
 			m_starttime = DateTime.UtcNow;
 			m_frame_available = false;
-			m_samples = 0;
+			m_samples = -1;
 			m_synchronizing = false;
 		}
 
@@ -325,7 +325,7 @@ namespace RhinoCycles
 			}
 			else
 			{
-				m_status = e.Samples.ToString();
+				m_status = "";
 			}
 		}
 
@@ -364,6 +364,7 @@ namespace RhinoCycles
 
 		public override void ShutdownRenderer()
 		{
+			System.Diagnostics.Debug.Assert(m_cycles != null);
 			m_available = false;
 			m_started = false;
 			ssd.WriteLine($"!!! === ShutdownRender {m_serial} === !!!");
@@ -424,7 +425,7 @@ namespace RhinoCycles
 
 		public override bool HudShowPasses()
 		{
-			return false;
+			return true;
 		}
 
 		public override bool HudShowStatusText()
