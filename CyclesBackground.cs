@@ -158,9 +158,8 @@ namespace RhinoCyclesCore
 				wallpaper.Clear();
 				return;
 			}
-
 			m_old_wallpaper = view.WallpaperFilename != null ? view.WallpaperFilename : "";
-
+			var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(m_old_wallpaper));
 			try
 			{
 				int near, far;
@@ -238,7 +237,10 @@ namespace RhinoCyclesCore
 				var tmpf = string.Format("{0}\\{1}.png", Environment.GetEnvironmentVariable("TEMP"), "RC_wallpaper");
 				newBitmap.Save(tmpf, ImageFormat.Png);
 #endif
-				wallpaper.TexByte = BitmapConverter.ReadByteBitmapFromBitmap(newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
+				var wallpaperbm = BitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
+				wallpaperbm.ApplyGamma(gamma);
+				wallpaper.TexByte = wallpaperbm.corrected;
+				wallpaperbm.SaveBitmaps();
 				wallpaper.TexWidth = newBitmap.Width;
 				wallpaper.TexHeight = newBitmap.Height;
 				wallpaper.Name = string.Format("{0}_{1}x{2}_{3}_{4}_{5}_{6}",

@@ -253,7 +253,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public static byte[] ReadByteBitmapFromBitmap(int pwidth, int pheight, Bitmap bm)
+		public static ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
 		{
 			var upixel = new byte[pwidth * pheight * 4];
 
@@ -269,7 +269,7 @@ namespace RhinoCyclesCore
 					upixel[offset + 3] = px.A;
 				}
 			}
-			return upixel;
+			return new ByteBitmap(id, upixel, pwidth, pheight);
 		}
 
 		private static byte[] ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment, bool planarProjection)
