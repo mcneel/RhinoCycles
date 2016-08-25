@@ -19,6 +19,7 @@ using System.Drawing;
 using ccl;
 using RhinoCyclesCore;
 using Rhino;
+using Rhino.DocObjects;
 using Rhino.Render;
 using sdd = System.Diagnostics.Debug;
 
@@ -27,27 +28,39 @@ namespace RhinoCycles
 	public class ModalRenderEngine : RenderEngine
 	{
 
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport)
+			: base(pluginId, doc.RuntimeSerialNumber, view, viewport, false)
+		{
+			ModalRenderEngineCommonConstruct();
+		}
+
 		/// <summary>
 		/// Construct a new render engine
 		/// </summary>
 		/// <param name="doc"></param>
 		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
-		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, Rhino.DocObjects.ViewInfo view, Rhino.DocObjects.ViewportInfo vp) : base(pluginId, doc.RuntimeSerialNumber, view, vp, false)
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId) : base(pluginId, doc.RuntimeSerialNumber, false)
 		{
-			RenderThread = null;
+			ModalRenderEngineCommonConstruct();
+		}
+
+		private void ModalRenderEngineCommonConstruct()
+		{
 			Client = new Client();
 			State = State.Rendering;
 
 			Database.ViewChanged += MRE_Database_ViewChanged;
 
-#region create callbacks for Cycles
+			#region create callbacks for Cycles
+
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = UpdateRenderTileCallback;
 			m_write_render_tile_callback = WriteRenderTileCallback;
 			m_test_cancel_callback = null;
 
 			CSycles.log_to_stdout(false);
-#endregion
+
+			#endregion
 		}
 
 		private void MRE_Database_ViewChanged(object sender, RhinoCyclesCore.Database.ChangeDatabase.ViewChangedEventArgs e)
@@ -58,10 +71,9 @@ namespace RhinoCycles
 		/// <summary>
 		/// Entry point for a new render process. This is to be done in a separate thread.
 		/// </summary>
-		/// <param name="oPipe"></param>
-		public static void Renderer(object oPipe)
+		public void Renderer()
 		{
-			var cycles_engine = (ModalRenderEngine)oPipe;
+			var cycles_engine = this;
 
 			var client = cycles_engine.Client;
 			var rw = cycles_engine.RenderWindow;

@@ -33,13 +33,13 @@ namespace RhinoCycles
 		/// <summary>
 		/// Context that contains the actual renderer instance
 		/// </summary>
-		readonly private RenderEngine cyclesEngine;
+		readonly private ModalRenderEngine cyclesEngine;
 
-		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, ref AsyncRenderContext aRC)
+		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, ModalRenderEngine aRC)
 			: base(doc, mode, plugin, RenderSize(doc),
-					"RhinoCycles", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false) //, ref aRC)
+					"RhinoCycles", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
 		{
-			cyclesEngine = (RenderEngine)aRC;
+			cyclesEngine = aRC;
 		}
 
 		public bool Cancel()
@@ -50,12 +50,7 @@ namespace RhinoCycles
 		protected override bool OnRenderBegin()
 		{
 			m_bStopFlag = false;
-			cyclesEngine.RenderThread = new Thread(ModalRenderEngine.Renderer)
-			{
-				Name = "A cool Cycles rendering thread"
-			};
-			cyclesEngine.RenderThread.Start(cyclesEngine);
-			return true;
+			return cyclesEngine.StartRenderThread(cyclesEngine.Renderer, "A cool Cycles modal rendering thread");
 		}
 
 		protected override bool OnRenderBeginQuiet(Size imageSize)

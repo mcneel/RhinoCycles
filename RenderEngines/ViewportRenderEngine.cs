@@ -31,7 +31,6 @@ namespace RhinoCycles
 	{
 		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, Rhino.DocObjects.ViewInfo view) : base(pluginId, docRuntimeSerialNumber, view, null, true)
 		{
-			RenderThread = null;
 			Client = new Client();
 			State = State.Rendering;
 
@@ -157,10 +156,9 @@ namespace RhinoCycles
 		/// <summary>
 		/// Entry point for viewport interactive rendering
 		/// </summary>
-		/// <param name="oPipe"></param>
-		public static void Renderer(object oPipe)
+		public void Renderer()
 		{
-			var cycles_engine = (ViewportRenderEngine)oPipe;
+			var cycles_engine = this;
 
 			var client = cycles_engine.Client;
 			var rw = cycles_engine.RenderWindow;

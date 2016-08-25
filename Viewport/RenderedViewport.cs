@@ -182,8 +182,7 @@ namespace RhinoCycles
 			m_available = false; // the renderer hasn't started yet. It'll tell us when it has.
 			m_frame_available = false;
 
-			AsyncRenderContext a_rc = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
-			m_cycles = (ViewportRenderEngine)a_rc;
+			m_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
 
 			m_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
@@ -211,11 +210,7 @@ namespace RhinoCycles
 
 			m_starttime = DateTime.UtcNow;
 
-			m_cycles.RenderThread = new Thread(ViewportRenderEngine.Renderer)
-			{
-				Name = "A cool Cycles viewport rendering thread"
-			};
-			m_cycles.RenderThread.Start(m_cycles);
+			m_cycles.StartRenderThread(m_cycles.Renderer, "A cool Cycles viewport rendering thread");
 
 			return true;
 		}
@@ -236,7 +231,7 @@ namespace RhinoCycles
 			var mre = o as ModalRenderEngine;
 			if (mre != null)
 			{
-				ModalRenderEngine.Renderer(mre);
+				mre.Renderer();
 				//SetCRC(mre.ViewCrc);
 				mre.SaveRenderedBuffer(0);
 				m_started = true; // we started (and are also ready, though)

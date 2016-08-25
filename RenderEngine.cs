@@ -492,6 +492,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		override public void StopRendering()
 		{
+			base.StopRendering();
 			if (RenderThread == null) return;
 
 			lock (display_lock)
@@ -538,8 +539,7 @@ namespace RhinoCyclesCore
 			Database?.Dispose();
 			Database = null;
 
-			RenderThread?.Join();
-			RenderThread = null;
+			JoinRenderThread();
 		}
 
 		/// <summary>
