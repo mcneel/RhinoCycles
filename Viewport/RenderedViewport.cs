@@ -156,7 +156,6 @@ namespace RhinoCycles
 
 				mre.RenderWindow = renderWindow;
 
-				mre.RenderWindow.SetSize(rs);
 				mre.RenderDimension = rs;
 				mre.Database.RenderDimension = rs;
 
