@@ -248,6 +248,12 @@ namespace RhinoCyclesCore
 			Database.LightShaderChanged += Database_LightShaderChanged;
 			Database.FilmUpdateTagged += Database_FilmUpdateTagged;
 		}
+
+		public RenderEngine(Guid pluginId, uint docRuntimeSerialNumber, bool interactive)
+			: this (pluginId, docRuntimeSerialNumber, new ViewInfo(docRuntimeSerialNumber), null, interactive)
+		{
+		}
+
 		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, ViewInfo view, ViewportInfo vp, bool interactive)
 		{
 			m_plugin_id = pluginId;

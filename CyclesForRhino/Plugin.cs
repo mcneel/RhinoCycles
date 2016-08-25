@@ -65,7 +65,7 @@ namespace CyclesForRhino
 		/// <returns></returns>
 		protected override Result Render(RhinoDoc doc, RunMode mode, bool fastPreview)
 		{
-			AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id, new Rhino.DocObjects.ViewInfo(doc.Views.ActiveView.ActiveViewport), null);
+			AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id);
 			var engine = (RhinoCycles.ModalRenderEngine)a_rc;
 
 			engine.Settings = RcCore.It.EngineSettings;
@@ -83,9 +83,7 @@ namespace CyclesForRhino
 
 			var pipe = new RhinoCycles.RenderPipeline(doc, mode, this, ref a_rc);
 
-			engine.RenderWindow = pipe.GetRenderWindow();
-			engine.RenderWindow.AddWireframeChannel(engine.Doc, engine.ViewportInfo, renderSize, new Rectangle(0, 0, renderSize.Width, renderSize.Height));
-			engine.RenderWindow.SetSize(renderSize);
+			engine.RenderWindow = pipe.GetRenderWindow(true);
 			engine.RenderDimension = renderSize;
 			engine.Database.RenderDimension = renderSize;
 
