@@ -87,18 +87,6 @@ namespace RhinoCyclesCore
 		public Session Session = null;
 
 		/// <summary>
-		/// Reference to the thread in which this render engine session lives.
-		/// </summary>
-		public Thread RenderThread { get; set; }
-
-		/// <summary>
-		/// Reference to the RenderWindow into which we're rendering.
-		/// 
-		/// Can be null, for instance in the case of material preview rendering
-		/// </summary>
-		public RenderWindow RenderWindow { get; set; }
-
-		/// <summary>
 		/// Reference to the bitmap we're rendering into.
 		/// 
 		/// This is used when rendering material previews.
