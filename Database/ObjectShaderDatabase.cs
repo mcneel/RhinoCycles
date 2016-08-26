@@ -20,7 +20,7 @@ using CclObject = ccl.Object;
 
 namespace RhinoCyclesCore.Database
 {
-	public class ObjectShaderDatabase
+	public class ObjectShaderDatabase : IDisposable
 	{
 		#region lists for shaders
 		/// <summary>
@@ -52,6 +52,14 @@ namespace RhinoCyclesCore.Database
 		public ObjectShaderDatabase(ObjectDatabase objects)
 		{
 			m_objects = objects;
+		}
+
+		public void Dispose()
+		{
+			m_rh_renderhash_meshids.Clear();
+			m_rh_meshid_renderhash.Clear();
+			m_rh_meshinstance_renderhashes.Clear();
+			m_rh_renderhash_objects.Clear();
 		}
 
 

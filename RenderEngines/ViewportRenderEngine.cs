@@ -50,6 +50,13 @@ namespace RhinoCycles
 			
 		}
 
+
+		protected override void Dispose(bool isDisposing)
+		{
+			Database?.Dispose();
+			base.Dispose(isDisposing);
+		}
+
 		private void ViewportRenderEngine_ChangesReady(object sender, EventArgs e)
 		{
 			CheckFlushQueue();

@@ -28,7 +28,7 @@ namespace RhinoCyclesCore
 	/// <summary>
 	/// Helper class to hold background/world shader related data and state
 	/// </summary>
-	public class CyclesBackground
+	public class CyclesBackground : IDisposable
 	{
 		/// <summary>
 		/// OpenCL doesn't properly support HDRi textures in the environment,
@@ -349,6 +349,14 @@ namespace RhinoCyclesCore
 		public void Reset()
 		{
 			modified = false;
+		}
+
+		public void Dispose()
+		{
+			refl.Clear();
+			bg.Clear();
+			sky.Clear();
+			wallpaper.Clear();
 		}
 	}
 }

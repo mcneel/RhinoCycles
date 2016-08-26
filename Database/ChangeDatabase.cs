@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Dynamic;
 using System.Linq;
 using ccl;
 using Rhino.Display;
@@ -137,6 +138,14 @@ namespace RhinoCyclesCore.Database
 			m_modal_renderer = true;
 			m_object_shader_db = new ObjectShaderDatabase(m_object_db);
 			m_shader_converter = new ShaderConverter(engine.Settings);
+		}
+
+		protected override void Dispose(bool isDisposing)
+		{
+			m_env_db?.Dispose();
+			m_object_shader_db?.Dispose();
+			m_object_db?.Dispose();
+			base.Dispose(isDisposing);
 		}
 
 		public void UploadLinearWorkflowChanges()

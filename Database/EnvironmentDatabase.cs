@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using System;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
@@ -22,13 +23,18 @@ using sd = System.Drawing;
 
 namespace RhinoCyclesCore.Database
 {
-	public class EnvironmentDatabase
+	public class EnvironmentDatabase : IDisposable
 	{
 		/// <summary>
 		/// record background shader changes to push to cycles
 		/// note that we have only one object that gets updated when necessary.
 		/// </summary>
 		private readonly CyclesBackground m_cq_background = new CyclesBackground();
+
+		public void Dispose()
+		{
+			m_cq_background.Dispose();
+		}
 
 		/// <summary>
 		/// OpenCL doesn't properly support HDRi textures in the environment,

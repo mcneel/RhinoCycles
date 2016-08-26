@@ -22,7 +22,7 @@ using CclMesh = ccl.Mesh;
 
 namespace RhinoCyclesCore.Database
 {
-	public class ObjectDatabase
+	public class ObjectDatabase : IDisposable
 	{
 		#region lists for meshes
 		/// <summary>
@@ -61,6 +61,18 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		private readonly List<CyclesObjectTransform> m_cq_object_transform =  new List<CyclesObjectTransform>();
 		#endregion
+
+		public void Dispose()
+		{
+			m_cq_mesh_changes.Clear();
+			m_cq_meshes_to_delete.Clear();
+			m_rh_ccl_meshes.Clear();
+			m_rh_objectid_meshid.Clear();
+			m_rh_ccl_objects.Clear();
+			m_cq_new_updated_objects.Clear();
+			m_cq_deleted_objects.Clear();
+			m_cq_object_transform.Clear();
+		}
 
 		/// <summary>
 		/// True if ChangeQueue recorded changes for objects or meshes.
