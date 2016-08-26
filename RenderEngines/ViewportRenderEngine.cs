@@ -89,6 +89,7 @@ namespace RhinoCycles
 
 		public void DisplayUpdateHandler(uint sessionId, int sample)
 		{
+			if (Session.IsPaused()) return;
 			// after first 10 frames have been rendered only update every third.
 			if (sample > 10 && sample < (Settings.Samples-2) && sample % 3 != 0) return;
 			if (CancelRender) return;
