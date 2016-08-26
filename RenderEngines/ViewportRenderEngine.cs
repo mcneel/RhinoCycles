@@ -255,12 +255,13 @@ namespace RhinoCycles
 				{
 					State = State.Rendering;
 					var size = RenderDimension;
-					Session.Scene.Unlock();
 
 					// lets first reset session
 					Session.Reset((uint) size.Width, (uint) size.Height, (uint) Settings.Samples);
 					// then reset scene
 					Session.Scene.Reset();
+
+					Session.Scene.Unlock();
 
 					m_flush = false;
 					TriggerSynchronized();
