@@ -21,8 +21,8 @@ namespace RhinoCyclesCore.Materials
 	[System.Runtime.InteropServices.Guid("4D4E8BF5-E4DD-4AC4-A1F3-4801A923FE32")]
 	public class SimpleBrickMaterial : RenderMaterial, ICyclesMaterial
 	{
-		public override string TypeName { get { return "Cycles Brick Material (DEV)"; } }
-		public override string TypeDescription { get { return "Cycles Brick Material (DEV)"; } }
+		public override string TypeName => "Cycles Brick Material (DEV)";
+		public override string TypeDescription => "Cycles Brick Material (DEV)";
 
 		public float Gamma { get; set; }
 
@@ -58,10 +58,7 @@ namespace RhinoCyclesCore.Materials
 		}
 
 
-		public CyclesShader.CyclesMaterial MaterialType
-		{
-			get { return CyclesShader.CyclesMaterial.Brick; }
-		}
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Brick;
 
 
 		public string MaterialXml

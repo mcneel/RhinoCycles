@@ -48,7 +48,7 @@ namespace RhinoCyclesCore.Shaders
 		/// <summary>
 		/// Texture coordinate input node for driving UV
 		/// </summary>
-		private TextureCoordinateNode texture_uv = new TextureCoordinateNode("texture_uv");
+		private readonly TextureCoordinateNode texture_uv = new TextureCoordinateNode("texture_uv");
 
 		/// <summary>
 		/// Create a new shader, using intermediate.Name as name

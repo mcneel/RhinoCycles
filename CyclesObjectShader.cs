@@ -33,7 +33,7 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Get the object Id
 		/// </summary>
-		public uint Id { get; private set; }
+		public uint Id { get; }
 
 		/// <summary>
 		/// Equality on Id

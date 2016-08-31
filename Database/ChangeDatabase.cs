@@ -182,13 +182,10 @@ namespace RhinoCyclesCore.Database
 					var old_shader = m_shader_db.GetShaderFromHash(obshad.OldShaderHash);
 					if (new_shader != null)
 					{
-						if (cob.Mesh != null) cob.Mesh.ReplaceShader(new_shader);
+						cob.Mesh?.ReplaceShader(new_shader);
 						new_shader.Tag();
 					}
-					if (old_shader != null)
-					{
-						old_shader.Tag();
-					}
+					old_shader?.Tag();
 					cob.TagUpdate();
 					m_object_shader_db.ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
 				}
@@ -207,10 +204,7 @@ namespace RhinoCyclesCore.Database
 				TriggerLinearWorkflowUploaded();
 				BitmapConverter.ApplyGammaToTextures(GammaLinearWorkflow);
 
-				if (m_env_db.CurrentBackgroundShader != null)
-				{
-					m_env_db.CurrentBackgroundShader.Reset();
-				}
+				m_env_db.CurrentBackgroundShader?.Reset();
 
 				foreach (var tup in m_shader_db.AllShaders)
 				{
@@ -236,38 +230,22 @@ namespace RhinoCyclesCore.Database
 
 		internal void TriggerFilmUpdateTagged()
 		{
-			var handler = FilmUpdateTagged;
-			if (handler != null)
-			{
-				handler(this, EventArgs.Empty);
-			}
+			FilmUpdateTagged?.Invoke(this, EventArgs.Empty);
 		}
 
 		internal void TriggerMaterialShaderChanged(CyclesShader rcShader, Shader cclShader)
 		{
-			var handler = MaterialShaderChanged;
-			if (handler != null)
-			{
-				handler(this, new MaterialShaderUpdatedEventArgs(rcShader, cclShader));
-			}
+			MaterialShaderChanged?.Invoke(this, new MaterialShaderUpdatedEventArgs(rcShader, cclShader));
 		}
 
 		internal void TriggerLightShaderChanged(CyclesLight rcLightShader, Shader cclShader)
 		{
-			var handler = LightShaderChanged;
-			if (handler != null)
-			{
-				handler(this, new LightShaderUpdatedEventArgs(rcLightShader, cclShader));
-			}
+			LightShaderChanged?.Invoke(this, new LightShaderUpdatedEventArgs(rcLightShader, cclShader));
 		}
 
 		internal void TriggerLinearWorkflowUploaded()
 		{
-			var handler = LinearWorkflowChanged;
-			if (handler != null)
-			{
-				handler(this, new LinearWorkflowChangedEventArgs(new LinearWorkflow(LinearWorkflow), Gamma));
-			}
+			LinearWorkflowChanged?.Invoke(this, new LinearWorkflowChangedEventArgs(new LinearWorkflow(LinearWorkflow), Gamma));
 		}
 
 		/// <summary>
@@ -348,8 +326,8 @@ namespace RhinoCyclesCore.Database
 				}
 
 				// update status bar of render window.
-				var stat = String.Format("Upload mesh {0}/{1} [v: {2}, t: {3} using shader {4}]", curmesh, totalmeshes,
-					cycles_mesh.verts.Length, cycles_mesh.faces.Length, shid);
+				var stat =
+					$"Upload mesh {curmesh}/{totalmeshes} [v: {cycles_mesh.verts.Length}, t: {cycles_mesh.faces.Length} using shader {shid}]";
 
 				// set progress, but without rendering percentage (hence the -1.0f)
 				m_render_engine.SetProgress(m_render_engine.RenderWindow, stat, -1.0f);
@@ -1396,15 +1374,8 @@ namespace RhinoCyclesCore.Database
 				{
 					var view = GetQueueView();
 					var y = string.IsNullOrEmpty(view.WallpaperFilename);
-					sdd.WriteLine(string.Format("view has {0} wallpaper {1} {2} {3} {4} {5} {6}",
-						y ? "no" : "",
-						y ? "" : "with filename ",
-						y ? "" :  view.WallpaperFilename,
-						y ? "" : "its grayscale bool",
-						y ? "" : string.Format("{0}", view.ShowWallpaperInGrayScale),
-						y ? "" : "its hidden bool",
-						y ? "" : string.Format("{0}", view.WallpaperHidden)
-						));
+					sdd.WriteLine(
+						$"view has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}");
 					m_env_db.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
 				}
 				m_env_db.SetGamma(GammaLinearWorkflow);

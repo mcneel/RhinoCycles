@@ -14,18 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using System;
+using System.Runtime.InteropServices;
 using ccl;
-using RhinoCyclesCore;
 using Rhino;
 using Rhino.Commands;
 using Rhino.Input;
 using Rhino.Input.Custom;
+using RhinoCyclesCore;
 
 namespace RhinoCycles
 {
 
-	[System.Runtime.InteropServices.Guid("3F09C94E-26BC-4CD5-8315-9F71F4F04DA1")]
+	[Guid("3F09C94E-26BC-4CD5-8315-9F71F4F04DA1")]
 	public class SetRenderOptions : Command
 	{
 		private static SetRenderOptions g_thecommand;
@@ -35,10 +35,7 @@ namespace RhinoCycles
 			g_thecommand = this;
 		}
 
-		public override string EnglishName
-		{
-			get { return "RhinoCycles_SetRenderOptions"; }
-		}
+		public override string EnglishName => "RhinoCycles_SetRenderOptions";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{

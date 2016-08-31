@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using System.Drawing;
 using System.Runtime.InteropServices;
-using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
 
@@ -24,19 +24,13 @@ namespace RhinoCyclesCore.Materials
 	[Guid("8B544B3E-D86F-4BCD-8494-FB660CF15E1C")]
 	public class XmlMaterial : RenderMaterial, ICyclesMaterial
 	{
-		public override string TypeName
-		{
-			get { return "Cycles Xml"; }
-		}
+		public override string TypeName => "Cycles Xml";
 
-		public override string TypeDescription
-		{
-			get { return "Cycles Xml (grasshopper)"; }
-		}
+		public override string TypeDescription => "Cycles Xml (grasshopper)";
 
 		public float Gamma { get; set; }
 
-		public CyclesShader.CyclesMaterial MaterialType { get { return CyclesShader.CyclesMaterial.Xml; } }
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Xml;
 
 		public XmlMaterial()
 		{
@@ -54,7 +48,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
 
-			simulatedMaterial.DiffuseColor = System.Drawing.Color.HotPink;
+			simulatedMaterial.DiffuseColor = Color.HotPink;
 
 			simulatedMaterial.Name = Name;
 		}

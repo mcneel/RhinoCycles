@@ -19,16 +19,16 @@ namespace RhinoCyclesCore
 {
 	public class CyclesTextureImage
 	{
-		public bool HasTextureImage { get { return TexByte != null || TexFloat != null; } }
-		public bool HasFloatImage { get { return TexFloat != null; } }
-		public bool HasByteImage { get { return TexByte != null; } }
+		public bool HasTextureImage => TexByte != null || TexFloat != null;
+		public bool HasFloatImage => TexFloat != null;
+		public bool HasByteImage => TexByte != null;
 		public byte[] TexByte { get; set; }
 		public float[] TexFloat { get; set; }
 		public int TexWidth;
 		public int TexHeight;
 		public string Name;
 		public bool UseAlpha;
-		public float UseAlphaAsFloat { get { return UseAlpha ? 1.0f : 0.0f; } }
+		public float UseAlphaAsFloat => UseAlpha ? 1.0f : 0.0f;
 		public float Amount { get; set; }
 
 		public bool IsLinear { get; set; }

@@ -16,20 +16,18 @@ limitations under the License.
 
 using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 using ccl;
-using RhinoCyclesCore;
-using Rhino.Display;
+using Rhino.DocObjects;
 using Rhino.Render;
+using RhinoCyclesCore;
 using RhinoCyclesCore.Database;
 using sdd = System.Diagnostics.Debug;
-using Rhino.DocObjects;
 
 namespace RhinoCycles
 {
 	public class ViewportRenderEngine : RenderEngine
 	{
-		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, Rhino.DocObjects.ViewInfo view) : base(pluginId, docRuntimeSerialNumber, view, null, true)
+		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, ViewInfo view) : base(pluginId, docRuntimeSerialNumber, view, null, true)
 		{
 			Client = new Client();
 			State = State.Rendering;
@@ -228,13 +226,8 @@ namespace RhinoCycles
 
 			#endregion
 
-			var handler = cycles_engine.RenderStarted;
 			// We've got Cycles rendering now, notify anyone who cares
-			if (handler != null)
-			{
-				handler(cycles_engine, new RenderStartedEventArgs(!cycles_engine.CancelRender));
-			}
-
+			cycles_engine.RenderStarted?.Invoke(cycles_engine, new RenderStartedEventArgs(!cycles_engine.CancelRender));
 		}
 
 		public event EventHandler Synchronized;

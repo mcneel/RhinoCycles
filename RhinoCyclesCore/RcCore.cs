@@ -77,12 +77,6 @@ namespace RhinoCyclesCore
 			EngineSettings = new EngineSettings();
 		}
 
-		public static RcCore It
-		{
-			get
-			{
-				return instance;
-			}
-		}
+		public static RcCore It => instance;
 	}
 }

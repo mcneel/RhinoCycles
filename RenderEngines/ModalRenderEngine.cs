@@ -89,7 +89,8 @@ namespace RhinoCycles
 				? Device.FirstGpu
 				: Device.GetDevice(cycles_engine.Settings.SelectedDevice);
 
-			if (cycles_engine.Settings.Verbose) sdd.WriteLine(String.Format("Using device {0}", render_device.Name + " " + render_device.Description));
+			if (cycles_engine.Settings.Verbose) sdd.WriteLine(
+				$"Using device {render_device.Name + " " + render_device.Description}");
 			#endregion
 
 			var scene = CreateScene(client, render_device, cycles_engine);
@@ -146,7 +147,8 @@ namespace RhinoCycles
 			cycles_engine.Session.Destroy();
 
 			// set final status string and progress to 1.0f to signal completed render
-			cycles_engine.SetProgress(rw, String.Format("Render ready {0} samples, duration {1}", cycles_engine.RenderedSamples+1, cycles_engine.TimeString), 1.0f);
+			cycles_engine.SetProgress(rw,
+				$"Render ready {cycles_engine.RenderedSamples + 1} samples, duration {cycles_engine.TimeString}", 1.0f);
 			cycles_engine.CancelRender = true;
 
 			// signal the render window we're done.

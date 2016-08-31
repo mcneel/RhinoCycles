@@ -23,8 +23,8 @@ namespace RhinoCyclesCore.Materials
 	[Guid("BFA4D96F-A1B5-40BB-9851-7A88D60E6F26")]
 	public class SimpleNoiseEnvironment: RenderEnvironment, ICyclesMaterial
 	{
-		public override string TypeName { get { return "Simple Noise Environment (DEV)"; } }
-		public override string TypeDescription { get { return "Simple Noise Environment (DEV)"; } }
+		public override string TypeName => "Simple Noise Environment (DEV)";
+		public override string TypeDescription => "Simple Noise Environment (DEV)";
 
 		public float Gamma { get; set; }
 
@@ -65,9 +65,6 @@ namespace RhinoCyclesCore.Materials
 			}
 		}
 
-		public CyclesShader.CyclesMaterial MaterialType
-		{
-			get { return CyclesShader.CyclesMaterial.SimpleNoiseEnvironment; }
-		}
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.SimpleNoiseEnvironment;
 	}
 }

@@ -15,17 +15,17 @@ limitations under the License.
 **/
 
 using System;
-using System.Runtime.InteropServices;
+using System.Drawing;
 using System.Threading;
-using RhinoCyclesCore;
 using Rhino;
-using Rhino.PlugIns;
 using Rhino.Display;
 using Rhino.DocObjects;
+using Rhino.PlugIns;
 using Rhino.Render;
+using Rhino.UI;
+using RhinoCyclesCore;
 using RhinoCyclesCore.Database;
 using ssd = System.Diagnostics.Debug;
-using System.Drawing;
 
 namespace RhinoCycles
 {
@@ -36,37 +36,13 @@ namespace RhinoCycles
 	/// </summary>
 	public class RenderedViewportClassInfo : RealtimeDisplayModeClassInfo
 	{
-		public override string ClassName
-		{
-			get
-			{
-				return Rhino.UI.LOC.STR("Raytraced");
-			}
-		}
+		public override string ClassName => LOC.STR("Raytraced");
 
-		public override string FullName
-		{
-			get
-			{
-				return Rhino.UI.LOC.STR("Raytraced");
-			}
-		}
+		public override string FullName => LOC.STR("Raytraced");
 
-		public override Guid GUID
-		{
-			get
-			{
-				return new Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181");
-			}
-		}
+		public override Guid GUID => new Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181");
 
-		public override Type RealtimeDisplayModeType
-		{
-			get
-			{
-				return typeof(RenderedViewport);
-			}
-		}
+		public override Type RealtimeDisplayModeType => typeof(RenderedViewport);
 	}
 
 	public class RenderedViewport : RealtimeDisplayMode
@@ -313,14 +289,7 @@ namespace RhinoCycles
 		{
 			m_samples = e.Samples;
 
-			if (m_samples < 0)
-			{
-				m_status = "Updating Engine";
-			}
-			else
-			{
-				m_status = "";
-			}
+			m_status = m_samples < 0 ? "Updating Engine" : "";
 		}
 
 		public override bool ShowCaptureProgress()
@@ -358,7 +327,7 @@ namespace RhinoCycles
 
 		public override void ShutdownRenderer()
 		{
-			System.Diagnostics.Debug.Assert(m_cycles != null);
+			ssd.Assert(m_cycles != null);
 			m_available = false;
 			m_started = false;
 			ssd.WriteLine($"!!! === ShutdownRender {m_serial} === !!!");

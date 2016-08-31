@@ -91,57 +91,27 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// Get list of object transforms
 		/// </summary>
-		public List<CyclesObjectTransform> ObjectTransforms
-		{
-			get
-			{
-				return m_cq_object_transform;
-			}
-		}
+		public List<CyclesObjectTransform> ObjectTransforms => m_cq_object_transform;
 
 		/// <summary>
 		/// Get list of deleted objects.
 		/// </summary>
-		public List<CyclesObject> DeletedObjects
-		{
-			get
-			{
-				return m_cq_deleted_objects;
-			}
-		}
+		public List<CyclesObject> DeletedObjects => m_cq_deleted_objects;
 
 		/// <summary>
 		/// Get list of objects that are added or have been changed.
 		/// </summary>
-		public List<CyclesObject> NewOrUpdatedObjects
-		{
-			get
-			{
-				return m_cq_new_updated_objects;
-			}
-		}
+		public List<CyclesObject> NewOrUpdatedObjects => m_cq_new_updated_objects;
 
 		/// <summary>
 		/// Get mapping of object and mesh changes.
 		/// </summary>
-		public Dictionary<Tuple<Guid, int>, CyclesMesh> MeshChanges
-		{
-			get
-			{
-				return m_cq_mesh_changes;
-			}
-		}
+		public Dictionary<Tuple<Guid, int>, CyclesMesh> MeshChanges => m_cq_mesh_changes;
 
 		/// <summary>
 		/// Get list of meshes to delete.
 		/// </summary>
-		public List<Guid> MeshesToDelete
-		{
-			get
-			{
-				return m_cq_meshes_to_delete;
-			}
-		} 
+		public List<Guid> MeshesToDelete => m_cq_meshes_to_delete;
 
 		/// <summary>
 		/// Find meshid based on obid

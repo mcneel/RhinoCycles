@@ -26,22 +26,13 @@ namespace RhinoCyclesCore.Materials
 	[Guid("3CEC0E39-8A13-4E73-8D0C-F1F1DF730C35")]
 	public class GlassMaterial : RenderMaterial, ICyclesMaterial
 	{
-		public override string TypeName
-		{
-			get { return "Cycles Glass"; }
-		}
+		public override string TypeName => "Cycles Glass";
 
-		public override string TypeDescription
-		{
-			get { return "Cycles Glass Material"; }
-		}
+		public override string TypeDescription => "Cycles Glass Material";
 
 		public float Gamma { get; set; }
 
-		public CyclesShader.CyclesMaterial MaterialType
-		{
-			get { return CyclesShader.CyclesMaterial.Glass; }
-		}
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Glass;
 
 		public GlassMaterial()
 		{

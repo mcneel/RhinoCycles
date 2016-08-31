@@ -24,156 +24,156 @@ namespace RhinoCyclesCore.Shaders
 		/// <summary>
 		/// Bump node to support bump textures
 		/// </summary>
-		private BumpNode bump_normals = new BumpNode("bump_normals");
+		private readonly BumpNode bump_normals = new BumpNode("bump_normals");
 		/// <summary>
 		/// Convert bump texture into value
 		/// </summary>
-		private RgbToBwNode bump_rgb_to_bw = new RgbToBwNode("bump_rgb_to_bw");
+		private readonly RgbToBwNode bump_rgb_to_bw = new RgbToBwNode("bump_rgb_to_bw");
 		/// <summary>
 		/// Image texture node holding bump texture
 		/// </summary>
-		private ImageTextureNode bump_texture = new ImageTextureNode("bump_texture");
+		private readonly ImageTextureNode bump_texture = new ImageTextureNode("bump_texture");
 
-		private AddClosureNode comp_diffuse = new AddClosureNode("comp_diffuse");
+		private readonly AddClosureNode comp_diffuse = new AddClosureNode("comp_diffuse");
 
-		private AddClosureNode comp_emission = new AddClosureNode("comp_emission");
+		private readonly AddClosureNode comp_emission = new AddClosureNode("comp_emission");
 
-		private AddClosureNode comp_reflection = new AddClosureNode("comp_reflection");
+		private readonly AddClosureNode comp_reflection = new AddClosureNode("comp_reflection");
 
-		private AddClosureNode comp_transparency = new AddClosureNode("comp_transparency");
+		private readonly AddClosureNode comp_transparency = new AddClosureNode("comp_transparency");
 
-		private MathNode diffuse_alpha_inv = new MathNode("diffuse_alpha_inv");
+		private readonly MathNode diffuse_alpha_inv = new MathNode("diffuse_alpha_inv");
 
-		private MathNode diffuse_alpha_mult = new MathNode("diffuse_alpha_mult");
+		private readonly MathNode diffuse_alpha_mult = new MathNode("diffuse_alpha_mult");
 
-		private DiffuseBsdfNode diffuse_bsdf = new DiffuseBsdfNode("diffuse_bsdf");
+		private readonly DiffuseBsdfNode diffuse_bsdf = new DiffuseBsdfNode("diffuse_bsdf");
 
-		private ColorNode diffuse_color = new ColorNode("diffuse_color");
+		private readonly ColorNode diffuse_color = new ColorNode("diffuse_color");
 
-		private MixNode diffuse_color_amount = new MixNode("diffuse_color_amount");
+		private readonly MixNode diffuse_color_amount = new MixNode("diffuse_color_amount");
 
-		private MixNode diffuse_effective_color = new MixNode("diffuse_effective_color") { BlendType=MixNode.BlendTypes.Add};
+		private readonly MixNode diffuse_effective_color = new MixNode("diffuse_effective_color") { BlendType=MixNode.BlendTypes.Add};
 
-		private LightPathNode diffuse_light_path_for_shadeless = new LightPathNode("diffuse_light_path_for_shadeless");
+		private readonly LightPathNode diffuse_light_path_for_shadeless = new LightPathNode("diffuse_light_path_for_shadeless");
 
-		private MixClosureNode diffuse_or_shadeless = new MixClosureNode("diffuse_or_shadeless");
+		private readonly MixClosureNode diffuse_or_shadeless = new MixClosureNode("diffuse_or_shadeless");
 
-		private EmissionNode diffuse_shadeless = new EmissionNode("diffuse_shadeless");
+		private readonly EmissionNode diffuse_shadeless = new EmissionNode("diffuse_shadeless");
 
 		/// <summary>
 		/// Transparent BSDF to help with lighting objects behind other objects with transp material
 		/// </summary>
-		private TransparentBsdfNode transparent_bsdf = new TransparentBsdfNode("transparent for light transport");
+		private readonly TransparentBsdfNode transparent_bsdf = new TransparentBsdfNode("transparent for light transport");
 
-		private MixClosureNode transparent_mix_closure_node = new MixClosureNode("mix transparency based on lightpaths");
+		private readonly MixClosureNode transparent_mix_closure_node = new MixClosureNode("mix transparency based on lightpaths");
 
 		/// <summary>
 		/// max(shadow,reflection)
 		/// </summary>
-		private MathNode transparent_lightpath_max = new MathNode("max(shadow,reflection)")
+		private readonly MathNode transparent_lightpath_max = new MathNode("max(shadow,reflection)")
 		{
 			Operation = MathNode.Operations.Maximum
 		};
 
-		private MathNode transparent_lightpath_fac = new MathNode("max * transp") {Operation=MathNode.Operations.Multiply};
+		private readonly MathNode transparent_lightpath_fac = new MathNode("max * transp") {Operation=MathNode.Operations.Multiply};
 
 		/// <summary>
 		/// Diffuse texture input
 		/// </summary>
-		private ImageTextureNode diffuse_texture = new ImageTextureNode("diffuse_texture");
+		private readonly ImageTextureNode diffuse_texture = new ImageTextureNode("diffuse_texture");
 
-		private TransparentBsdfNode diffuse_texture_alpha = new TransparentBsdfNode("diffuse_texture_alpha");
+		private readonly TransparentBsdfNode diffuse_texture_alpha = new TransparentBsdfNode("diffuse_texture_alpha");
 
-		private MixClosureNode diffuse_texture_alpha_mix = new MixClosureNode("diffuse_texture_alpha_mix");
+		private readonly MixClosureNode diffuse_texture_alpha_mix = new MixClosureNode("diffuse_texture_alpha_mix");
 
 		/// <summary>
 		/// Driven by diffuse_texture_fac mixes black and texture input color. 0.0f
 		/// means no texture color, 1.0f means full texture color
 		/// </summary>
-		private MixNode diffuse_texture_amount = new MixNode("diffuse_texture_amount");
+		private readonly MixNode diffuse_texture_amount = new MixNode("diffuse_texture_amount");
 
-		private MixNode diffuse_texture_or_color_blend = new MixNode("diffuse_texture_or_color_blend");
+		private readonly MixNode diffuse_texture_or_color_blend = new MixNode("diffuse_texture_or_color_blend");
 
 		/// <summary>
 		/// diffuse_texture_fac controls the amount of diffuse texture over diffuse color.
 		/// 
 		/// 0.0f means only diffuse color and 1.0f means only diffuse texture.
 		/// </summary>
-		private ValueNode diffuse_texture_fac = new ValueNode("diffuse_texture_fac");
+		private readonly ValueNode diffuse_texture_fac = new ValueNode("diffuse_texture_fac");
 
 		/// <summary>
 		/// Math node used to determine factor for diffuse color
 		/// </summary>
-		private MathNode diffuse_texture_fac_inv = new MathNode("diffuse_texture_fac_inv");
+		private readonly MathNode diffuse_texture_fac_inv = new MathNode("diffuse_texture_fac_inv");
 
-		private MathNode diffuse_transparency_add = new MathNode("diffuse_transparency_add");
+		private readonly MathNode diffuse_transparency_add = new MathNode("diffuse_transparency_add");
 
-		private MathNode diffuse_transparency_and_fresnel_final = new MathNode("diffuse_transparency_and_fresnel_final");
+		private readonly MathNode diffuse_transparency_and_fresnel_final = new MathNode("diffuse_transparency_and_fresnel_final");
 
-		private MathNode diffuse_transparency_effective = new MathNode("diffuse_transparency_effective");
+		private readonly MathNode diffuse_transparency_effective = new MathNode("diffuse_transparency_effective");
 
-		private MathNode diffuse_transparency_mult = new MathNode("diffuse_transparency_mult");
+		private readonly MathNode diffuse_transparency_mult = new MathNode("diffuse_transparency_mult");
 
-		private MathNode diffuse_transparency_sub = new MathNode("diffuse_transparency_sub");
+		private readonly MathNode diffuse_transparency_sub = new MathNode("diffuse_transparency_sub");
 
-		private MathNode diffuse_transparency_sub_not_zero = new MathNode("diffuse_transparency_sub_not_zero");
+		private readonly MathNode diffuse_transparency_sub_not_zero = new MathNode("diffuse_transparency_sub_not_zero");
 
-		private MathNode diffuse_use_alpha = new MathNode("diffuse_use_alpha");
+		private readonly MathNode diffuse_use_alpha = new MathNode("diffuse_use_alpha");
 
-		private EmissionNode emission_bsdf = new EmissionNode("emission_bsdf");
+		private readonly EmissionNode emission_bsdf = new EmissionNode("emission_bsdf");
 
-		private ColorNode emission_color = new ColorNode("emission_color");
+		private readonly ColorNode emission_color = new ColorNode("emission_color");
 
-		private ValueNode fresnel_input = new ValueNode("fresnel_input");
+		private readonly ValueNode fresnel_input = new ValueNode("fresnel_input");
 
-		private MathNode fresnel_reflections = new MathNode("fresnel_reflections");
+		private readonly MathNode fresnel_reflections = new MathNode("fresnel_reflections");
 
-		private FresnelNode fresnel_to_fac = new FresnelNode("fresnel_to_fac");
+		private readonly FresnelNode fresnel_to_fac = new FresnelNode("fresnel_to_fac");
 
-		private ValueNode reflection_amount = new ValueNode("reflection_amount");
+		private readonly ValueNode reflection_amount = new ValueNode("reflection_amount");
 
-		private GlossyBsdfNode reflection_bsdf = new GlossyBsdfNode("reflection_bsdf");
+		private readonly GlossyBsdfNode reflection_bsdf = new GlossyBsdfNode("reflection_bsdf");
 
-		private ColorNode reflection_color = new ColorNode("reflection_color");
+		private readonly ColorNode reflection_color = new ColorNode("reflection_color");
 
-		private MixNode reflection_effective_color = new MixNode("reflection_effective_color") {BlendType = MixNode.BlendTypes.Add};
+		private readonly MixNode reflection_effective_color = new MixNode("reflection_effective_color") {BlendType = MixNode.BlendTypes.Add};
 
-		private MathNode reflection_fresnel_inv = new MathNode("reflection_fresnel_inv");
+		private readonly MathNode reflection_fresnel_inv = new MathNode("reflection_fresnel_inv");
 
-		private MathNode reflection_fresnel_inv_mult = new MathNode("reflection_fresnel_inv_mult");
+		private readonly MathNode reflection_fresnel_inv_mult = new MathNode("reflection_fresnel_inv_mult");
 
-		private MixClosureNode reflection_fresnel_mod = new MixClosureNode("reflection_fresnel_mod");
+		private readonly MixClosureNode reflection_fresnel_mod = new MixClosureNode("reflection_fresnel_mod");
 
-		private MathNode shadeless = new MathNode("shadeless");
+		private readonly MathNode shadeless = new MathNode("shadeless");
 
 		/// <summary>
 		/// Texture coordinate input node for driving UV
 		/// </summary>
-		private TextureCoordinateNode diff_texture_coord = new TextureCoordinateNode("diffuse texture_uv");
-		private TextureCoordinateNode bump_texture_coord = new TextureCoordinateNode("bump texture_uv");
-		private TextureCoordinateNode transp_texture_coord = new TextureCoordinateNode("transp texture_uv");
+		private readonly TextureCoordinateNode diff_texture_coord = new TextureCoordinateNode("diffuse texture_uv");
+		private readonly TextureCoordinateNode bump_texture_coord = new TextureCoordinateNode("bump texture_uv");
+		private readonly TextureCoordinateNode transp_texture_coord = new TextureCoordinateNode("transp texture_uv");
 
-		private ValueNode transparency_amount = new ValueNode("transparency_amount");
+		private readonly ValueNode transparency_amount = new ValueNode("transparency_amount");
 
-		private ColorNode transparency_color = new ColorNode("transparency_color");
+		private readonly ColorNode transparency_color = new ColorNode("transparency_color");
 
-		private MathNode transparency_inv = new MathNode("transparency_inv");
+		private readonly MathNode transparency_inv = new MathNode("transparency_inv");
 
-		private RefractionBsdfNode transparency_refraction_bsdf = new RefractionBsdfNode("transparency_refraction_bsdf");
+		private readonly RefractionBsdfNode transparency_refraction_bsdf = new RefractionBsdfNode("transparency_refraction_bsdf");
 
-		private MixNode transparency_refraction_effective_color = new MixNode("transparency_refraction_effective_color");
+		private readonly MixNode transparency_refraction_effective_color = new MixNode("transparency_refraction_effective_color");
 
-		private MixClosureNode transparency_refraction_fresnel_mod = new MixClosureNode("transparency_refraction_fresnel_mod");
+		private readonly MixClosureNode transparency_refraction_fresnel_mod = new MixClosureNode("transparency_refraction_fresnel_mod");
 
-		private MathNode transparency_refraction_fresnel_toggle_mult = new MathNode("transparency_refraction_fresnel_toggle_mult");
+		private readonly MathNode transparency_refraction_fresnel_toggle_mult = new MathNode("transparency_refraction_fresnel_toggle_mult");
 
-		private ImageTextureNode transparency_texture = new ImageTextureNode("transparency texture");
+		private readonly ImageTextureNode transparency_texture = new ImageTextureNode("transparency texture");
 
-		private RgbToLuminanceNode transptex_to_bw = new RgbToLuminanceNode("transparency texture to luminance");
+		private readonly RgbToLuminanceNode transptex_to_bw = new RgbToLuminanceNode("transparency texture to luminance");
 
-		private MixClosureNode mix_transp_tex = new MixClosureNode("mix transp tex");
+		private readonly MixClosureNode mix_transp_tex = new MixClosureNode("mix transp tex");
 
-		private TransparentBsdfNode transptex_transparent_bsdf_node = new TransparentBsdfNode("transp for transptex");
+		private readonly TransparentBsdfNode transptex_transparent_bsdf_node = new TransparentBsdfNode("transp for transptex");
 
 
 		public RhinoFull(Client client, CyclesShader intermediate) : this(client, intermediate, intermediate.Name)
@@ -259,14 +259,7 @@ namespace RhinoCyclesCore.Shaders
 			reflection_amount.Value = m_original.Reflectivity;
 
 			reflection_bsdf.ins.Roughness.Value = m_original.ReflectionRoughness;
-			if (m_original.ReflectionRoughness > 0.0f)
-			{
-				reflection_bsdf.Distribution = GlossyBsdfNode.GlossyDistribution.GGX;
-			}
-			else
-			{
-				reflection_bsdf.Distribution = GlossyBsdfNode.GlossyDistribution.Sharp;
-			}
+			reflection_bsdf.Distribution = m_original.ReflectionRoughness > 0.0f ? GlossyBsdfNode.GlossyDistribution.GGX : GlossyBsdfNode.GlossyDistribution.Sharp;
 
 			reflection_color.Value = m_original.ReflectionColor;
 

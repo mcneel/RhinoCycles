@@ -17,7 +17,6 @@ limitations under the License.
 using ccl;
 using ccl.ShaderNodes;
 using Rhino.Display;
-using RhinoCyclesCore.Materials;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -84,7 +83,7 @@ namespace RhinoCyclesCore.Shaders
 			if (!string.IsNullOrEmpty(m_original_background.Xml))
 			{
 				var xml = m_original_background.Xml;
-				ccl.Shader.ShaderFromXml(ref m_shader, xml);
+				Shader.ShaderFromXml(ref m_shader, xml);
 			}
 			else
 			{

@@ -23,8 +23,8 @@ namespace RhinoCyclesCore.Materials
 	[Guid("E64050E9-521F-44F3-BFDA-EFEAFA73625E")]
 	public class TranslucentMaterial : RenderMaterial, ICyclesMaterial
 	{
-		public override string TypeName { get { return "Translucent Material (DEV)"; } }
-		public override string TypeDescription { get { return "Translucent Material (DEV)"; } }
+		public override string TypeName => "Translucent Material (DEV)";
+		public override string TypeDescription => "Translucent Material (DEV)";
 
 		public float Gamma { get; set; }
 
@@ -76,9 +76,6 @@ namespace RhinoCyclesCore.Materials
 			             " ", color.R, color.G, color.B); }
 		}
 
-		public CyclesShader.CyclesMaterial MaterialType
-		{
-			get { return CyclesShader.CyclesMaterial.Translucent; }
-		}
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Translucent;
 	}
 }

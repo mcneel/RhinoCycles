@@ -30,10 +30,7 @@ namespace RhinoCycles
 			g_thecommand = this;
 		}
 
-		public override string EnglishName
-		{
-			get { return "RhinoCycles_ToggleSimpleShaders"; }
-		}
+		public override string EnglishName => "RhinoCycles_ToggleSimpleShaders";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{

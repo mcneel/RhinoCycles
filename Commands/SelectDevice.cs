@@ -34,15 +34,9 @@ namespace RhinoCycles
 		}
 
 		///<summary>The only instance of the SelectDevice command.</summary>
-		public static SelectDevice Instance
-		{
-			get { return _instance; }
-		}
+		public static SelectDevice Instance => _instance;
 
-		public override string EnglishName
-		{
-			get { return "RhinoCycles_SelectDevice"; }
-		}
+		public override string EnglishName => "RhinoCycles_SelectDevice";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
@@ -51,22 +45,15 @@ namespace RhinoCycles
 			get_number.SetLowerLimit(-1, false);
 			get_number.SetUpperLimit((int)(Device.Count-1), false);
 			get_number.SetDefaultInteger(RcCore.It.EngineSettings.SelectedDevice);
-			get_number.SetCommandPrompt(String.Format("Select device to render on (-1 for default, 0-{0})", Device.Count-1));
+			get_number.SetCommandPrompt($"Select device to render on (-1 for default, 0-{Device.Count - 1})");
 			var get_rc = get_number.Get();
 			if (get_number.CommandResult() != Result.Success) return get_number.CommandResult();
 			if (get_rc == GetResult.Number)
 			{
 				var idx = get_number.Number();
 				Device dev = null;
-				if (idx > -1)
-				{
-					dev = Device.GetDevice(idx);
-				}
-				else
-				{
-					dev = Device.FirstCuda;
-				}
-				RhinoApp.WriteLine(String.Format("User selected device {0}: {1}", idx, dev));
+				dev = idx > -1 ? Device.GetDevice(idx) : Device.FirstCuda;
+				RhinoApp.WriteLine($"User selected device {idx}: {dev}");
 				RcCore.It.EngineSettings.SelectedDevice = idx;
 				return Result.Success;
 			}

@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using System;
+using System.Runtime.InteropServices;
+using ccl;
 using Rhino;
 using Rhino.Commands;
-using ccl;
 
 namespace RhinoCycles
 {
-	[System.Runtime.InteropServices.Guid("7413124D-31F8-4B15-B92A-B6A17A884320")]
+	[Guid("7413124D-31F8-4B15-B92A-B6A17A884320")]
 	public class ShowDeviceCapabilities : Command
 	{
 		static ShowDeviceCapabilities _instance;
@@ -31,15 +31,9 @@ namespace RhinoCycles
 		}
 
 		///<summary>The only instance of the ShowDeviceCapabilities command.</summary>
-		public static ShowDeviceCapabilities Instance
-		{
-			get { return _instance; }
-		}
+		public static ShowDeviceCapabilities Instance => _instance;
 
-		public override string EnglishName
-		{
-			get { return "RhinoCycles_ShowDeviceCapabilities"; }
-		}
+		public override string EnglishName => "RhinoCycles_ShowDeviceCapabilities";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{

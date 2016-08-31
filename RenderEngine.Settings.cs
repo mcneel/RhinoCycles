@@ -15,7 +15,6 @@ limitations under the License.
 **/
 
 using System.Drawing;
-using RhinoCyclesCore;
 
 namespace RhinoCyclesCore
 {

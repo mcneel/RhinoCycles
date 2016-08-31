@@ -79,35 +79,17 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// Get a list of object shader changes.
 		/// </summary>
-		public List<CyclesObjectShader> ObjectShaderChanges
-		{
-			get
-			{
-				return m_cq_objects_shader_changes;
-			}
-		}
+		public List<CyclesObjectShader> ObjectShaderChanges => m_cq_objects_shader_changes;
 
 		/// <summary>
 		/// Get a list of shader changes.
 		/// </summary>
-		public List<CyclesShader> ShaderChanges
-		{
-			get
-			{
-				return m_cq_shaders;
-			}
-		} 
+		public List<CyclesShader> ShaderChanges => m_cq_shaders;
 
 		/// <summary>
 		/// Get a list of all shaders.
 		/// </summary>
-		public List<Tuple<object, CclShader>> AllShaders
-		{
-			get
-			{
-				return m_all_shaders;
-			}
-		}
+		public List<Tuple<object, CclShader>> AllShaders => m_all_shaders;
 
 		/// <summary>
 		/// Record the CclShader for given id.

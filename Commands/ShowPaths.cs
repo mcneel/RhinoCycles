@@ -31,15 +31,9 @@ namespace RhinoCycles
 		}
 
 		///<summary>The only instance of the ShowPaths command.</summary>
-		public static ShowPaths Instance
-		{
-			get { return _instance; }
-		}
+		public static ShowPaths Instance => _instance;
 
-		public override string EnglishName
-		{
-			get { return "RhinoCycles_ShowPaths"; }
-		}
+		public override string EnglishName => "RhinoCycles_ShowPaths";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{

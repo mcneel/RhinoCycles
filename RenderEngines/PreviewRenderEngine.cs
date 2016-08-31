@@ -78,7 +78,8 @@ namespace RhinoCycles
 				? Device.FirstCuda
 				: Device.GetDevice(cycles_engine.Settings.SelectedDevice);
 
-			if (cycles_engine.Settings.Verbose) sdd.WriteLine(String.Format("Using device {0}", render_device.Name + " " + render_device.Description));
+			if (cycles_engine.Settings.Verbose) sdd.WriteLine(
+				$"Using device {render_device.Name + " " + render_device.Description}");
 #endregion
 
 			if (cycles_engine.CancelRender) return;

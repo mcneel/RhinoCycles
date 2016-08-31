@@ -24,19 +24,13 @@ namespace RhinoCyclesCore.Materials
 	[Guid("F4C85EC1-C1CB-4633-A712-1BA2F020B954")]
 	public class DiffuseMaterial : RenderMaterial, ICyclesMaterial
 	{
-		public override string TypeName
-		{
-			get { return "Cycles Diffuse"; }
-		}
+		public override string TypeName => "Cycles Diffuse";
 
-		public override string TypeDescription
-		{
-			get { return "Cycles Diffuse color only material (plaster)"; }
-		}
+		public override string TypeDescription => "Cycles Diffuse color only material (plaster)";
 
 		public float Gamma { get; set; }
 
-		public CyclesShader.CyclesMaterial MaterialType { get { return CyclesShader.CyclesMaterial.Diffuse; } }
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Diffuse;
 
 		public DiffuseMaterial()
 		{

@@ -23,13 +23,13 @@ namespace RhinoCyclesCore
 {
 	public class BitmapImage<T>
 	{
-		internal T[] original;
-		internal T[] corrected;
+		internal T[] Original;
+		internal T[] Corrected;
 
-		protected int w;
-		protected int h;
+		protected int W;
+		protected int H;
 
-		public uint Id { get; private set; }
+		public uint Id { get; }
 
 		internal BitmapImage() { }
 
@@ -39,30 +39,30 @@ namespace RhinoCyclesCore
 			return ch > 255 ? 255 : ch;
 		}
 
-		public BitmapImage(uint id, T[] data, int _w, int _h)
+		public BitmapImage(uint id, T[] data, int w, int h)
 		{
 			Id = id;
 
-			w = _w;
-			h = _h;
+			W = w;
+			H = h;
 
 			var l = data.Length;
-			original = new T[l];
-			corrected = new T[l];
-			data.CopyTo(original, 0);
-			data.CopyTo(corrected, 0);
+			Original = new T[l];
+			Corrected = new T[l];
+			data.CopyTo(Original, 0);
+			data.CopyTo(Corrected, 0);
 		}
 
 		virtual public void ApplyGamma(float gamma)
 		{
 		}
 
-		public T[] Data { get { return corrected; } }
+		public T[] Data => Corrected;
 
 		public void SaveBitmaps()
 		{
-			SavePixels(original, string.Format("{0}_original", Id));
-			SavePixels(corrected, string.Format("{0}_corrected", Id));
+			SavePixels(Original, $"{Id}_original");
+			SavePixels(Corrected, $"{Id}_corrected");
 		}
 
 		protected virtual void SavePixels(T[] pixels, string name) {}
@@ -78,23 +78,23 @@ namespace RhinoCyclesCore
 		{
 			if (Math.Abs(gamma - 1.0f) > float.Epsilon)
 			{
-				var conv = original.AsParallel().Select((b, i) => (i+1)%4 == 0 ? b : (byte) (Math.Pow(b/255.0f, gamma)*255.0f)).ToArray();
-				conv.CopyTo(corrected, 0);
+				var conv = Original.AsParallel().Select((b, i) => (i+1)%4 == 0 ? b : (byte) (Math.Pow(b/255.0f, gamma)*255.0f)).ToArray();
+				conv.CopyTo(Corrected, 0);
 			}
 			else
 			{
-				original.CopyTo(corrected, 0);
+				Original.CopyTo(Corrected, 0);
 			}
 		}
 
 		override protected void SavePixels(byte[] pixels, string name)
 		{
-			var bm = new Bitmap(w, h);
-			for (var x = 0; x < w; x++)
+			var bm = new Bitmap(W, H);
+			for (var x = 0; x < W; x++)
 			{
-				for (var y = 0; y < h; y++)
+				for (var y = 0; y < H; y++)
 				{
-					var i = y * w * 4 + x * 4;
+					var i = y * W * 4 + x * 4;
 					var r = ColorClamp(pixels[i]);
 					var g = ColorClamp(pixels[i + 1]);
 					var b = ColorClamp(pixels[i + 2]);
@@ -102,7 +102,7 @@ namespace RhinoCyclesCore
 					bm.SetPixel(x, y, Color.FromArgb(a, r, g, b));
 				}
 			}
-			var tmpf = string.Format("{0}\\byte_{1}.png", Environment.GetEnvironmentVariable("TEMP"), name);
+			var tmpf = $"{Environment.GetEnvironmentVariable("TEMP")}\\byte_{name}.png";
 			bm.Save(tmpf,  ImageFormat.Png);
 		}
 	}
@@ -116,23 +116,23 @@ namespace RhinoCyclesCore
 		{
 			if (Math.Abs(gamma - 1.0f) > float.Epsilon)
 			{
-				var conv = original.AsParallel().Select((f, i) => (i+1)%4==0 ? f : (float)Math.Pow(f, gamma)).ToArray();
-				conv.CopyTo(corrected, 0);
+				var conv = Original.AsParallel().Select((f, i) => (i+1)%4==0 ? f : (float)Math.Pow(f, gamma)).ToArray();
+				conv.CopyTo(Corrected, 0);
 			}
 			else
 			{
-				original.CopyTo(corrected, 0);
+				Original.CopyTo(Corrected, 0);
 			}
 		}
 
 		override protected void SavePixels(float[] pixels, string name)
 		{
-			var bm = new Bitmap(w, h);
-			for (var x = 0; x < w; x++)
+			var bm = new Bitmap(W, H);
+			for (var x = 0; x < W; x++)
 			{
-				for (var y = 0; y < h; y++)
+				for (var y = 0; y < H; y++)
 				{
-					var i = y * w * 4 + x * 4;
+					var i = y * W * 4 + x * 4;
 					var r = ColorClamp((int)(pixels[i] * 255.0f));
 					var g = ColorClamp((int)(pixels[i + 1] * 255.0f));
 					var b = ColorClamp((int)(pixels[i + 2] * 255.0f));
@@ -140,7 +140,7 @@ namespace RhinoCyclesCore
 					bm.SetPixel(x, y, Color.FromArgb(a, r, g, b));
 				}
 			}
-			bm.Save(string.Format("{0}\\float_{1}.png", Environment.GetEnvironmentVariable("TEMP"), name),  ImageFormat.Png);
+			bm.Save($"{Environment.GetEnvironmentVariable("TEMP")}\\float_{name}.png",  ImageFormat.Png);
 		}
 		
 	}

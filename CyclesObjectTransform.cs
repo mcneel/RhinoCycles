@@ -37,7 +37,7 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Get the object ID
 		/// </summary>
-		public uint Id { get; private set; }
+		public uint Id { get; }
 
 		/// <summary>
 		/// Get the transform
@@ -71,7 +71,7 @@ namespace RhinoCyclesCore
 		/// <returns></returns>
 		public override string ToString()
 		{
-			return String.Format("ccl.CyclesObjectTransform: {0}, {1}", Id, Transform);
+			return $"ccl.CyclesObjectTransform: {Id}, {Transform}";
 		}
 	}
 }

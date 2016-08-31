@@ -14,34 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using System.Drawing;
-using System;
 using System.Runtime.InteropServices;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
+using Utilities = ccl.Utilities;
 
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("A6B37849-F705-403A-AC3E-58E083BF3CD6")]
 	public class EmissiveMaterial : RenderMaterial, ICyclesMaterial
 	{
-		public override string TypeName
-		{
-			get { return "Cycles Emissive"; }
-		}
+		public override string TypeName => "Cycles Emissive";
 
-		public override string TypeDescription
-		{
-			get { return "Cycles Emissive Material (no falloff)"; }
-		}
+		public override string TypeDescription => "Cycles Emissive Material (no falloff)";
 
 		public float Gamma { get; set; }
 
-		public CyclesShader.CyclesMaterial MaterialType
-		{
-			get { return CyclesShader.CyclesMaterial.Emissive; }
-		}
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Emissive;
 
 		public EmissiveMaterial()
 		{
@@ -101,7 +91,7 @@ namespace RhinoCyclesCore.Materials
 				color = Color4f.ApplyGamma(color, Gamma);
 
 				return string.Format(
-					ccl.Utilities.Instance.NumberFormatInfo,
+					Utilities.Instance.NumberFormatInfo,
 					"<transparent_bsdf color=\"1 1 1\" name=\"transp\" />" +
 					"<emission color=\"{0} {1} {2}\" name=\"emission\" />" +
 					"<light_falloff name=\"lfo\" strength=\"{3}\"/>" +

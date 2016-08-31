@@ -61,7 +61,7 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Get <c>Shadeless</c> as a float value
 		/// </summary>
-		public float ShadelessAsFloat { get { return Shadeless ? 1.0f : 0.0f; } }
+		public float ShadelessAsFloat => Shadeless ? 1.0f : 0.0f;
 
 		/// <summary>
 		/// Set the CyclesMaterial type
@@ -121,62 +121,37 @@ namespace RhinoCyclesCore
 
 		public float4 DiffuseColor { get; set; }
 
-		public bool HasOnlyDiffuseColor
-		{
-			get
-			{
-				return !HasDiffuseTexture
-					&& !HasBumpTexture
-					&& !HasTransparencyTexture
-					&& !HasEmission
-					&& !Shadeless
-					&& NoTransparency
-					&& NoReflectivity;
-			}
-		}
+		public bool HasOnlyDiffuseColor => !HasDiffuseTexture
+		                                   && !HasBumpTexture
+		                                   && !HasTransparencyTexture
+		                                   && !HasEmission
+		                                   && !Shadeless
+		                                   && NoTransparency
+		                                   && NoReflectivity;
 
-		public bool HasOnlyDiffuseTexture
-		{
-			get
-			{
-				return HasDiffuseTexture
-					&& !HasBumpTexture
-					&& !HasTransparencyTexture
-					&& !HasEmission
-					&& !Shadeless
-					&& NoTransparency
-					&& NoReflectivity;
-			}
-		}
+		public bool HasOnlyDiffuseTexture => HasDiffuseTexture
+		                                     && !HasBumpTexture
+		                                     && !HasTransparencyTexture
+		                                     && !HasEmission
+		                                     && !Shadeless
+		                                     && NoTransparency
+		                                     && NoReflectivity;
 
-		public bool DiffuseAndBumpTexture
-		{
-			get
-			{
-				return HasDiffuseTexture
-					&& HasBumpTexture
-					&& !HasTransparencyTexture
-					&& !HasEmission
-					&& !Shadeless
-					&& NoTransparency
-					&& NoReflectivity;
-			}
-			
-		}
+		public bool DiffuseAndBumpTexture => HasDiffuseTexture
+		                                     && HasBumpTexture
+		                                     && !HasTransparencyTexture
+		                                     && !HasEmission
+		                                     && !Shadeless
+		                                     && NoTransparency
+		                                     && NoReflectivity;
 
-		public bool HasOnlyReflectionColor
-		{
-			get
-			{
-				return HasReflectivity
-					&& !HasDiffuseTexture
-					&& !HasEmission
-					&& !Shadeless
-					&& NoTransparency
-					&& !HasTransparency
-					&& !HasBumpTexture;
-			}
-		}
+		public bool HasOnlyReflectionColor => HasReflectivity
+		                                      && !HasDiffuseTexture
+		                                      && !HasEmission
+		                                      && !Shadeless
+		                                      && NoTransparency
+		                                      && !HasTransparency
+		                                      && !HasBumpTexture;
 
 		public float4 SpecularColor { get; set; }
 		public float4 ReflectionColor { get; set; }
@@ -185,40 +160,31 @@ namespace RhinoCyclesCore
 		public float RefractionRoughness { get; set; }
 		public float4 TransparencyColor { get; set; }
 		public float4 EmissionColor { get; set; }
-		public bool HasEmission { get { return !EmissionColor.IsZero(false); } }
+		public bool HasEmission => !EmissionColor.IsZero(false);
 
 		public CyclesTextureImage DiffuseTexture { get; set; }
-		public bool HasDiffuseTexture { get { return DiffuseTexture.HasTextureImage; } }
+		public bool HasDiffuseTexture => DiffuseTexture.HasTextureImage;
 		public CyclesTextureImage BumpTexture { get; set; }
-		public bool HasBumpTexture { get { return BumpTexture.HasTextureImage; } }
+		public bool HasBumpTexture => BumpTexture.HasTextureImage;
 		public CyclesTextureImage TransparencyTexture { get; set; }
-		public bool HasTransparencyTexture { get { return TransparencyTexture.HasTextureImage; } }
+		public bool HasTransparencyTexture => TransparencyTexture.HasTextureImage;
 		public CyclesTextureImage EnvironmentTexture { get; set; }
-		public bool HasEnvironmentTexture { get { return EnvironmentTexture.HasTextureImage; } }
+		public bool HasEnvironmentTexture => EnvironmentTexture.HasTextureImage;
 
 		public CyclesTextureImage GiEnvTexture { get; set; }
-		public bool HasGiEnvTexture { get { return GiEnvTexture.HasTextureImage; } }
+		public bool HasGiEnvTexture => GiEnvTexture.HasTextureImage;
 		public float4 GiEnvColor { get; set; }
-		public bool HasGiEnv
-		{
-			get { return HasGiEnvTexture || GiEnvColor != null; }
-		}
+		public bool HasGiEnv => HasGiEnvTexture || GiEnvColor != null;
 
 		public CyclesTextureImage BgEnvTexture { get; set; }
-		public bool HasBgEnvTexture { get { return BgEnvTexture.HasTextureImage; } }
+		public bool HasBgEnvTexture => BgEnvTexture.HasTextureImage;
 		public float4 BgEnvColor { get; set; }
-		public bool HasBgEnv
-		{
-			get { return HasBgEnvTexture || BgEnvColor != null;  }
-		}
+		public bool HasBgEnv => HasBgEnvTexture || BgEnvColor != null;
 
 		public CyclesTextureImage ReflRefrEnvTexture { get; set; }
-		public bool HasReflRefrEnvTexture { get { return ReflRefrEnvTexture.HasTextureImage; } }
+		public bool HasReflRefrEnvTexture => ReflRefrEnvTexture.HasTextureImage;
 		public float4 ReflRefrEnvColor { get; set; }
-		public bool HasReflRefrEnv
-		{
-			get { return HasReflRefrEnvTexture || ReflRefrEnvColor != null; }
-		}
+		public bool HasReflRefrEnv => HasReflRefrEnvTexture || ReflRefrEnvColor != null;
 
 		public bool HasUV { get; set; }
 
@@ -228,10 +194,10 @@ namespace RhinoCyclesCore
 		public float Reflectivity { get; set; }
 		public float Shine { get; set; }
 		public float Transparency { get; set; }
-		public bool NoTransparency { get { return Math.Abs(Transparency) < 0.00001f; } }
-		public bool HasTransparency { get { return !NoTransparency; } }
-		public bool NoReflectivity { get { return Math.Abs(Reflectivity) < 0.00001f; } }
-		public bool HasReflectivity { get { return !NoReflectivity; } }
+		public bool NoTransparency => Math.Abs(Transparency) < 0.00001f;
+		public bool HasTransparency => !NoTransparency;
+		public bool NoReflectivity => Math.Abs(Reflectivity) < 0.00001f;
+		public bool HasReflectivity => !NoReflectivity;
 
 		private float m_gamma;
 		public float Gamma

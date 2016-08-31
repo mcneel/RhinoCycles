@@ -14,21 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using ccl;
 using Rhino;
-using Rhino.Commands;
-using Rhino.Display;
 using Rhino.PlugIns;
 using Rhino.Render;
 using RhinoCyclesCore;
+using Object = System.Object;
 
 namespace RhinoCycles
 {
@@ -38,19 +32,13 @@ namespace RhinoCycles
 		/// Make sure we load AtStartup so that our view mode is
 		/// available even when RhinoCycles isn't the current renderer
 		/// </summary>
-		public override PlugInLoadTime LoadTime
-		{
-			get
-			{
-				return PlugInLoadTime.AtStartup;
-			}
-		}
+		public override PlugInLoadTime LoadTime => PlugInLoadTime.AtStartup;
 
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			RenderContent.RegisterContent(this);
 			// code got moved to separate DLL so use that to register from.
-			var rccoreass = typeof(RhinoCyclesCore.RcCore).Assembly;
+			var rccoreass = typeof(RcCore).Assembly;
 			RenderContent.RegisterContent(rccoreass, Id);
 			RealtimeDisplayMode.RegisterDisplayModes(this);
 
@@ -78,7 +66,7 @@ namespace RhinoCycles
 			return LoadReturnCode.Success;
 		}
 
-		private static readonly object m_initialise_lock = new System.Object();
+		private static readonly object m_initialise_lock = new Object();
 		private void AsyncInitialise()
 		{
 			var t = new Thread(InitialiseCSycles);

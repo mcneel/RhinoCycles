@@ -99,10 +99,7 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// True if skylight is used.
 		/// </summary>
-		public bool HasSky
-		{
-			get { return sky.HasTextureImage || sky_color != Color.Empty; }
-		}
+		public bool HasSky => sky.HasTextureImage || sky_color != Color.Empty;
 
 		/// <summary>
 		/// Hold texture data for reflection
@@ -116,10 +113,7 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// True if custom reflection env is used
 		/// </summary>
-		public bool HasRefl
-		{
-			get { return refl.HasTextureImage || refl_color != Color.Empty; }
-		}
+		public bool HasRefl => refl.HasTextureImage || refl_color != Color.Empty;
 
 		/// <summary>
 		/// Hold texture data for wallpaper
@@ -130,7 +124,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public Color wallpaper_solid = Color.Empty;
 
-		private Guid id = Guid.NewGuid();
+		private readonly Guid id = Guid.NewGuid();
 		private bool m_old_hidden;
 		private bool m_old_grayscale;
 		private bool m_old_scaletofit;
@@ -158,7 +152,7 @@ namespace RhinoCyclesCore
 				wallpaper.Clear();
 				return;
 			}
-			m_old_wallpaper = view.WallpaperFilename != null ? view.WallpaperFilename : "";
+			m_old_wallpaper = view.WallpaperFilename ?? "";
 			var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(m_old_wallpaper));
 			try
 			{
@@ -239,14 +233,12 @@ namespace RhinoCyclesCore
 #endif
 				var wallpaperbm = BitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaperbm.ApplyGamma(gamma);
-				wallpaper.TexByte = wallpaperbm.corrected;
+				wallpaper.TexByte = wallpaperbm.Corrected;
 				wallpaperbm.SaveBitmaps();
 				wallpaper.TexWidth = newBitmap.Width;
 				wallpaper.TexHeight = newBitmap.Height;
-				wallpaper.Name = string.Format("{0}_{1}x{2}_{3}_{4}_{5}_{6}",
-					view.WallpaperFilename, newBitmap.Width, newBitmap.Height,
-					view.WallpaperHidden, view.ShowWallpaperInGrayScale,
-					scaleToFit, id);
+				wallpaper.Name =
+					$"{view.WallpaperFilename}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
 			}
 			catch (Exception)
 			{

@@ -32,10 +32,7 @@ namespace RhinoCycles
 			g_thecommand = this;
 		}
 
-		public override string EnglishName
-		{
-			get { return "RhinoCycles_SetDebugOptions"; }
-		}
+		public override string EnglishName => "RhinoCycles_SetDebugOptions";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{

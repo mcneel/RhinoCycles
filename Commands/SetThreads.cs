@@ -33,15 +33,9 @@ namespace RhinoCycles.Commands
 		}
 
 		///<summary>The only instance of the SetThreads command.</summary>
-		public static SetThreads Instance
-		{
-			get { return _instance; }
-		}
+		public static SetThreads Instance => _instance;
 
-		public override string EnglishName
-		{
-			get { return "RhinoCycles_SetThreads"; }
-		}
+		public override string EnglishName => "RhinoCycles_SetThreads";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{

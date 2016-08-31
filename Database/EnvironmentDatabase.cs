@@ -45,27 +45,9 @@ namespace RhinoCyclesCore.Database
 			m_cq_background.m_float_as_byte = floatAsByte;
 		}
 
-		public CyclesBackground CyclesShader
-		{
-			get
-			{
-				return m_cq_background;
-			}
-		}
+		public CyclesBackground CyclesShader => m_cq_background;
 
-		private RhinoShader m_current_background_shader;
-
-		public RhinoShader CurrentBackgroundShader
-		{
-			get
-			{
-				return m_current_background_shader;
-			}
-			set
-			{
-				m_current_background_shader = value;
-			}
-		}
+		public RhinoShader CurrentBackgroundShader { get; set; }
 
 		/// <summary>
 		/// Set whether skylight is enabled or not. This will mark background as
@@ -163,10 +145,7 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// True if background has changed.
 		/// </summary>
-		public bool BackgroundHasChanged
-		{
-			get { return m_cq_background.modified; }
-		}
+		public bool BackgroundHasChanged => m_cq_background.modified;
 
 		/// <summary>
 		/// Reset background changes.

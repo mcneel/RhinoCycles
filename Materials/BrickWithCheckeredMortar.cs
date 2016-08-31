@@ -22,8 +22,8 @@ namespace RhinoCyclesCore.Materials
 	[System.Runtime.InteropServices.Guid("67C5F9EC-7929-4FF8-9BF6-2FB8DF49AF78")]
 	public class BrickWithCheckeredMortarMaterial : RenderMaterial, ICyclesMaterial
 	{
-		public override string TypeName { get { return "Cycles Brick with Checkered Mortar Material (DEV)"; } }
-		public override string TypeDescription { get { return "Cycles Brick Checkered Mortar Material (DEV)"; } }
+		public override string TypeName => "Cycles Brick with Checkered Mortar Material (DEV)";
+		public override string TypeDescription => "Cycles Brick Checkered Mortar Material (DEV)";
 
 		public float Gamma { get; set; }
 
@@ -44,10 +44,7 @@ namespace RhinoCyclesCore.Materials
 		}
 
 
-		public CyclesShader.CyclesMaterial MaterialType
-		{
-			get { return CyclesShader.CyclesMaterial.BrickCheckeredMortar; }
-		}
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.BrickCheckeredMortar;
 
 
 		public string MaterialXml

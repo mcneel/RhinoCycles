@@ -61,7 +61,7 @@ namespace RhinoCyclesCore
 				UseMis = true,
 				UseTransparentShadow = true,
 				HeterogeneousVolume = false,
-				Name = shader.Name ?? String.Format("V6 Basic Material {0}", shader.Id)
+				Name = shader.Name ?? $"V6 Basic Material {shader.Id}"
 			};
 
 			CclShader.ShaderFromXml(ref sh, shader.Crm.MaterialXml);

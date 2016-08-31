@@ -16,15 +16,14 @@ limitations under the License.
 
 using System.Runtime.InteropServices;
 using Rhino.Render;
-using Utilities = ccl.Utilities;
 
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("8D42AAEC-DB00-4EE3-81A1-54BBCD79E925")]
 	public class XmlEnvironment: RenderEnvironment, ICyclesMaterial
 	{
-		public override string TypeName { get { return "Cycles XML Environment"; } }
-		public override string TypeDescription { get { return "Grasshopper/XML environment"; } }
+		public override string TypeName => "Cycles XML Environment";
+		public override string TypeDescription => "Grasshopper/XML environment";
 
 		public float Gamma { get; set; }
 
@@ -43,7 +42,7 @@ namespace RhinoCyclesCore.Materials
 		public string MaterialXml
 		{
 			get {
-				string xml = "";
+				string xml;
 
 				Fields.TryGetValue("xml", out xml);
 
@@ -51,9 +50,6 @@ namespace RhinoCyclesCore.Materials
 			}
 		}
 
-		public CyclesShader.CyclesMaterial MaterialType
-		{
-			get { return CyclesShader.CyclesMaterial.XmlEnvironment; }
-		}
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.XmlEnvironment;
 	}
 }

@@ -30,7 +30,7 @@ namespace RhinoCyclesCore
 		public void SaveRenderedBuffer(int sample)
 		{
 #if DEBUG
-			var tmpf = string.Format("{0}\\RC_{1}.png", Environment.GetEnvironmentVariable("TEMP"), sample.ToString("D5"));
+			var tmpf = $"{Environment.GetEnvironmentVariable("TEMP")}\\RC_{sample.ToString("D5")}.png";
 			RenderWindow.SaveDibAsBitmap(tmpf);
 #endif
 		}
@@ -56,7 +56,7 @@ namespace RhinoCyclesCore
 					bmp.SetPixel(x, y, Color.FromArgb(a, r, g, b));
 				}
 			}
-			var tmpf = string.Format("{0}\\{1}.png", Environment.GetEnvironmentVariable("TEMP"), name);
+			var tmpf = $"{Environment.GetEnvironmentVariable("TEMP")}\\{name}.png";
 			bmp.Save(tmpf, ImageFormat.Png);
 #endif
 		}

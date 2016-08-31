@@ -25,8 +25,8 @@ namespace RhinoCyclesCore.Materials
 	[Guid("5C717BA9-C033-48D1-A03A-CC2E8A49E540")]
 	public class FlakedCarPaintMaterial : RenderMaterial, ICyclesMaterial
 	{
-		public override string TypeName { get { return "Cycles Flaked Car Paint Material (DEV)"; } }
-		public override string TypeDescription { get { return "Cycles Flaked Car Paint Material (DEV)"; } }
+		public override string TypeName => "Cycles Flaked Car Paint Material (DEV)";
+		public override string TypeDescription => "Cycles Flaked Car Paint Material (DEV)";
 
 		public float Gamma { get; set; }
 
@@ -83,10 +83,7 @@ namespace RhinoCyclesCore.Materials
 		}
 		*/
 
-		public CyclesShader.CyclesMaterial MaterialType
-		{
-			get { return CyclesShader.CyclesMaterial.FlakedCarPaint; }
-		}
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.FlakedCarPaint;
 
 
 		public string MaterialXml

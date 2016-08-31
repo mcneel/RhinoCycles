@@ -24,19 +24,13 @@ namespace RhinoCyclesCore.Materials
 	[Guid("2D2F02B1-FF94-4434-A0BD-E73B71761BA3")]
 	public class SimplePlasticMaterial : RenderMaterial, ICyclesMaterial
 	{
-		public override string TypeName
-		{
-			get { return "Cycles Simple Plastic"; }
-		}
+		public override string TypeName => "Cycles Simple Plastic";
 
-		public override string TypeDescription
-		{
-			get { return "Cycles Simple Plastic Material"; }
-		}
+		public override string TypeDescription => "Cycles Simple Plastic Material";
 
 		public float Gamma { get; set; }
 
-		public CyclesShader.CyclesMaterial MaterialType { get { return CyclesShader.CyclesMaterial.SimplePlastic; } }
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.SimplePlastic;
 
 		public SimplePlasticMaterial()
 		{

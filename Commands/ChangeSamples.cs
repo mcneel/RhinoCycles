@@ -32,10 +32,7 @@ namespace RhinoCycles.Commands
 			_instance = this;
 		}
 
-		public override string EnglishName
-		{
-			get { return "RhinoCycles_ChangeSamples"; }
-		}
+		public override string EnglishName => "RhinoCycles_ChangeSamples";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{

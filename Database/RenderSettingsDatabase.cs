@@ -38,6 +38,6 @@ namespace RhinoCyclesCore.Database
 			Old = New;
 		}
 
-		public bool HasChanged { get { return Old != New; } }
+		public bool HasChanged => Old != New;
 	}
 }

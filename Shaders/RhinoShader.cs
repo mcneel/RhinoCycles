@@ -46,10 +46,7 @@ namespace RhinoCyclesCore.Shaders
 
 		public void Reset()
 		{
-			if (m_shader != null)
-			{
-				m_shader.Recreate();
-			}
+			m_shader?.Recreate();
 		}
 
 		public static RhinoShader CreateRhinoMaterialShader(Client client, CyclesShader intermediate)

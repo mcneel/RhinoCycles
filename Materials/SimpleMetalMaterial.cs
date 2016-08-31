@@ -26,22 +26,13 @@ namespace RhinoCyclesCore.Materials
 	[Guid("0507F137-D483-4098-891A-DD58741C2C8D")]
 	public class SimpleMetalMaterial : RenderMaterial, ICyclesMaterial
 	{
-		public override string TypeName
-		{
-			get { return "Cycles Metal"; }
-		}
+		public override string TypeName => "Cycles Metal";
 
-		public override string TypeDescription
-		{
-			get { return "Cycles Metal Material"; }
-		}
+		public override string TypeDescription => "Cycles Metal Material";
 
 		public float Gamma { get; set; }
 
-		public CyclesShader.CyclesMaterial MaterialType
-		{
-			get { return CyclesShader.CyclesMaterial.SimpleMetal; }
-		}
+		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.SimpleMetal;
 
 		public SimpleMetalMaterial()
 		{

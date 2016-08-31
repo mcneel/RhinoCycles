@@ -184,21 +184,9 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public bool RenderDeviceIsCuda
-		{
-			get
-			{
-				return RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
-			}
-		}
+		public bool RenderDeviceIsCuda => RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
 
-		public bool RenderDeviceIsOpenCl
-		{
-			get
-			{
-				return RenderDevice.IsMultiOpenCl || RenderDevice.IsOpenCl;
-			}
-		}
+		public bool RenderDeviceIsOpenCl => RenderDevice.IsMultiOpenCl || RenderDevice.IsOpenCl;
 
 		public Device RenderDevice
 		{

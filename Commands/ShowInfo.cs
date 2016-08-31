@@ -31,15 +31,9 @@ namespace RhinoCycles
 		}
 
 		///<summary>The only instance of the ShowInfo command.</summary>
-		public static ShowInfo Instance
-		{
-			get { return _instance; }
-		}
+		public static ShowInfo Instance => _instance;
 
-		public override string EnglishName
-		{
-			get { return "RhinoCycles_ShowInfo"; }
-		}
+		public override string EnglishName => "RhinoCycles_ShowInfo";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{

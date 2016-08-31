@@ -24,9 +24,6 @@ using Rhino.DocObjects;
 using Rhino.Render;
 using RhinoCyclesCore.Database;
 using sdd = System.Diagnostics.Debug;
-using CclLight = ccl.Light;
-using CclMesh = ccl.Mesh;
-using CclObject = ccl.Object;
 
 namespace RhinoCyclesCore
 {
@@ -63,19 +60,23 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// True when State.Rendering
 		/// </summary>
-		public bool IsRendering { get { return State == State.Rendering; } }
+		public bool IsRendering => State == State.Rendering;
+
 		/// <summary>
 		/// True when State.Uploading
 		/// </summary>
-		public bool IsUploading { get { return State == State.Uploading; } }
+		public bool IsUploading => State == State.Uploading;
+
 		/// <summary>
 		/// True when State.Waiting
 		/// </summary>
-		public bool IsWaiting { get { return State == State.Waiting; } }
+		public bool IsWaiting => State == State.Waiting;
+
 		/// <summary>
 		/// True when State.IsStopped
 		/// </summary>
-		public bool IsStopped {  get { return State == State.Stopped; } }
+		public bool IsStopped => State == State.Stopped;
+
 		/// <summary>
 		/// Current render engine state.
 		/// </summary>
@@ -203,7 +204,7 @@ namespace RhinoCyclesCore
 				if (HasSceneChanges())
 				{
 					State = State.Uploading;
-					if (!m_interactive && Session != null) Session.Cancel("Scene changes detected.\n");
+					if (!m_interactive) Session?.Cancel("Scene changes detected.\n");
 				}
 
 				// reset flush flag directly, since we already have lock.
@@ -215,10 +216,7 @@ namespace RhinoCyclesCore
 		protected readonly ViewInfo m_view;
 		private readonly bool m_interactive;
 
-		public RhinoDoc Doc
-		{
-			get { return RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber); }
-		}
+		public RhinoDoc Doc => RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
 
 		private readonly ViewportInfo m_vp;
 		public ViewportInfo ViewportInfo
@@ -363,14 +361,14 @@ namespace RhinoCyclesCore
 
 			if (!substatus.Equals(string.Empty)) status = status + ": " + substatus;
 
-			TimeString = String.Format("{0}h {1}m {2}.{3}s", hr, min, sec, hun);
+			TimeString = $"{hr}h {min}m {sec}.{hun}s";
 
-			status = String.Format("{0} {1}", status, TimeString);
+			status = $"{status} {TimeString}";
 
 			// don't set full 100% progress here yet, because that signals the renderwindow the end of async render
 			if (progress >= 0.9999f) progress = 1.0f;
 			if (Settings.Samples == ushort.MaxValue) progress = -1.0f;
-			if (null != RenderWindow) RenderWindow.SetProgress(status, progress);
+			RenderWindow?.SetProgress(status, progress);
 
 			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples>0 ? (RenderedSamples+1) : RenderedSamples));
 
@@ -453,7 +451,7 @@ namespace RhinoCyclesCore
 		public static void LoggerCallback(string msg)
 		{
 #if DEBUG
-			sdd.WriteLine(String.Format("DBG: {0}", msg));
+			sdd.WriteLine($"DBG: {msg}");
 #endif
 		}
 
@@ -550,7 +548,7 @@ namespace RhinoCyclesCore
 		/// <param name="progress"></param>
 		public void SetProgress(RenderWindow rw, string msg, float progress)
 		{
-			if (null != rw) rw.SetProgress(msg, progress);
+			rw?.SetProgress(msg, progress);
 		}
 
 		/// <summary>
