@@ -332,7 +332,7 @@ namespace RhinoCycles
 			m_started = false;
 			ssd.WriteLine($"!!! === ShutdownRender {m_serial} === !!!");
 			m_cycles?.StopRendering();
-			m_cycles.Dispose();
+			m_cycles?.Dispose();
 		}
 
 		public override bool IsRendererStarted()
