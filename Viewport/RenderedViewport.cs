@@ -327,7 +327,6 @@ namespace RhinoCycles
 
 		public override void ShutdownRenderer()
 		{
-			ssd.Assert(m_cycles != null);
 			m_available = false;
 			m_started = false;
 			ssd.WriteLine($"!!! === ShutdownRender {m_serial} === !!!");
