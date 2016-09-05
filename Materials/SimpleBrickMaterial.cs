@@ -19,6 +19,7 @@ using Rhino.Render;
 namespace RhinoCyclesCore.Materials
 {
 	[System.Runtime.InteropServices.Guid("4D4E8BF5-E4DD-4AC4-A1F3-4801A923FE32")]
+	[CustomRenderContent(IsPrivate=true)]
 	public class SimpleBrickMaterial : RenderMaterial, ICyclesMaterial
 	{
 		public override string TypeName => "Cycles Brick Material (DEV)";

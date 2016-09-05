@@ -21,6 +21,7 @@ using Utilities = ccl.Utilities;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("BFA4D96F-A1B5-40BB-9851-7A88D60E6F26")]
+	[CustomRenderContent(IsPrivate=true)]
 	public class SimpleNoiseEnvironment: RenderEnvironment, ICyclesMaterial
 	{
 		public override string TypeName => "Simple Noise Environment (DEV)";

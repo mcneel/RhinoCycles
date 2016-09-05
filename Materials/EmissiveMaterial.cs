@@ -23,6 +23,7 @@ using Utilities = ccl.Utilities;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("A6B37849-F705-403A-AC3E-58E083BF3CD6")]
+	[CustomRenderContent(IsPrivate=true)]
 	public class EmissiveMaterial : RenderMaterial, ICyclesMaterial
 	{
 		public override string TypeName => "Cycles Emissive";

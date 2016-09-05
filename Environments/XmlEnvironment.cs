@@ -20,6 +20,7 @@ using Rhino.Render;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("8D42AAEC-DB00-4EE3-81A1-54BBCD79E925")]
+	[CustomRenderContent(IsPrivate=true)]
 	public class XmlEnvironment: RenderEnvironment, ICyclesMaterial
 	{
 		public override string TypeName => "Cycles XML Environment";

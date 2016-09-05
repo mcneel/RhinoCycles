@@ -22,6 +22,7 @@ using Rhino.Render;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("2D2F02B1-FF94-4434-A0BD-E73B71761BA3")]
+	[CustomRenderContent(IsPrivate=true)]
 	public class SimplePlasticMaterial : RenderMaterial, ICyclesMaterial
 	{
 		public override string TypeName => "Cycles Simple Plastic";

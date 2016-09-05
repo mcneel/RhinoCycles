@@ -22,6 +22,7 @@ using Rhino.Render;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("F4C85EC1-C1CB-4633-A712-1BA2F020B954")]
+	[CustomRenderContent(IsPrivate=true)]
 	public class DiffuseMaterial : RenderMaterial, ICyclesMaterial
 	{
 		public override string TypeName => "Cycles Diffuse";

@@ -24,6 +24,7 @@ using Rhino.Render;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("3CEC0E39-8A13-4E73-8D0C-F1F1DF730C35")]
+	[CustomRenderContent(IsPrivate=true)]
 	public class GlassMaterial : RenderMaterial, ICyclesMaterial
 	{
 		public override string TypeName => "Cycles Glass";

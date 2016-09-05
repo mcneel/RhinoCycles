@@ -21,6 +21,7 @@ using Rhino.Render;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("E64050E9-521F-44F3-BFDA-EFEAFA73625E")]
+	[CustomRenderContent(IsPrivate=true)]
 	public class TranslucentMaterial : RenderMaterial, ICyclesMaterial
 	{
 		public override string TypeName => "Translucent Material (DEV)";
