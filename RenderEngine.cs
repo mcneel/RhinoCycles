@@ -530,7 +530,6 @@ namespace RhinoCyclesCore
 			State = State.Stopped;
 
 			// signal our cycles session to stop rendering.
-			//if (Session != null) Session.Cancel("Render stop called.\n");
 			Session?.Cancel("Render stop called.\n");
 
 			// get rid of our change queue

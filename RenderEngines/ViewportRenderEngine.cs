@@ -52,12 +52,15 @@ namespace RhinoCycles
 		private bool _disposed;
 		protected override void Dispose(bool isDisposing)
 		{
-			if (_disposed) return;
+			lock (display_lock)
+			{
+				if (_disposed) return;
 
-			Database?.Dispose();
-			Client?.Dispose();
-			base.Dispose(isDisposing);
-			_disposed = true;
+				Database?.Dispose();
+				Client?.Dispose();
+				base.Dispose(isDisposing);
+				_disposed = true;
+			}
 		}
 
 		private void ViewportRenderEngine_ChangesReady(object sender, EventArgs e)
