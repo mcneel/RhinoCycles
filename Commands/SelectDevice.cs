@@ -14,15 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using System;
 using Rhino;
 using Rhino.Commands;
 using ccl;
-using RhinoCyclesCore;
+using RhinoCyclesCore.Core;
 using Rhino.Input;
 using Rhino.Input.Custom;
 
-namespace RhinoCycles
+namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("32D6D91A-779D-42D5-B76C-2974D5DBD7CA")]
 	public class SelectDevice : Command
@@ -30,7 +29,7 @@ namespace RhinoCycles
 		static SelectDevice _instance;
 		public SelectDevice()
 		{
-			_instance = this;
+			if(_instance==null) _instance = this;
 		}
 
 		///<summary>The only instance of the SelectDevice command.</summary>
@@ -41,18 +40,17 @@ namespace RhinoCycles
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			Plugin.InitialiseCSycles();
-			var get_number = new GetInteger();
-			get_number.SetLowerLimit(-1, false);
-			get_number.SetUpperLimit((int)(Device.Count-1), false);
-			get_number.SetDefaultInteger(RcCore.It.EngineSettings.SelectedDevice);
-			get_number.SetCommandPrompt($"Select device to render on (-1 for default, 0-{Device.Count - 1})");
-			var get_rc = get_number.Get();
-			if (get_number.CommandResult() != Result.Success) return get_number.CommandResult();
-			if (get_rc == GetResult.Number)
+			var getNumber = new GetInteger();
+			getNumber.SetLowerLimit(-1, false);
+			getNumber.SetUpperLimit((int)(Device.Count-1), false);
+			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.SelectedDevice);
+			getNumber.SetCommandPrompt($"Select device to render on (-1 for default, 0-{Device.Count - 1})");
+			var getRc = getNumber.Get();
+			if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
+			if (getRc == GetResult.Number)
 			{
-				var idx = get_number.Number();
-				Device dev = null;
-				dev = idx > -1 ? Device.GetDevice(idx) : Device.FirstCuda;
+				var idx = getNumber.Number();
+				Device dev = idx > -1 ? Device.GetDevice(idx) : Device.FirstCuda;
 				RhinoApp.WriteLine($"User selected device {idx}: {dev}");
 				RcCore.It.EngineSettings.SelectedDevice = idx;
 				return Result.Success;

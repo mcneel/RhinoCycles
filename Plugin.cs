@@ -21,8 +21,7 @@ using ccl;
 using Rhino;
 using Rhino.PlugIns;
 using Rhino.Render;
-using RhinoCyclesCore;
-using Object = System.Object;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCycles
 {
@@ -46,17 +45,17 @@ namespace RhinoCycles
 
 			var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
 			RcCore.It.PluginPath = path;
-			var kernel_path = Path.Combine(path, "RhinoCycles");
-			RcCore.It.KernelPath = kernel_path;
-			var app_path = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
-			RcCore.It.AppPath = app_path;
-			kernel_path = RcCore.GetRelativePath(app_path, kernel_path);
-			RcCore.It.KernelPathRelative = kernel_path;
+			var kernelPath = Path.Combine(path, "RhinoCycles");
+			RcCore.It.KernelPath = kernelPath;
+			var appPath = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
+			RcCore.It.AppPath = appPath;
+			kernelPath = RcCore.GetRelativePath(appPath, kernelPath);
+			RcCore.It.KernelPathRelative = kernelPath;
 
 			var dataPath = RhinoApp.GetDataDirectory(true, true);
-			var user_path = Path.Combine(dataPath, "RhinoCycles", "data");
+			var userPath = Path.Combine(dataPath, "RhinoCycles", "data");
 
-			RcCore.It.DataUserPath = user_path;
+			RcCore.It.DataUserPath = userPath;
 
 			CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
 
@@ -66,7 +65,7 @@ namespace RhinoCycles
 			return LoadReturnCode.Success;
 		}
 
-		private static readonly object m_initialise_lock = new Object();
+		private static readonly object InitialiseLock = new object();
 		private void AsyncInitialise()
 		{
 			var t = new Thread(InitialiseCSycles);
@@ -78,7 +77,7 @@ namespace RhinoCycles
 		/// </summary>
 		public static void InitialiseCSycles()
 		{
-			lock (m_initialise_lock)
+			lock (InitialiseLock)
 			{
 				if (!RcCore.It.Initialised)
 				{

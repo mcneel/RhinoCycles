@@ -22,6 +22,7 @@ using System.IO;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
+using RhinoCyclesCore.Converters;
 
 namespace RhinoCyclesCore
 {

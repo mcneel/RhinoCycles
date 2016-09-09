@@ -17,11 +17,10 @@ limitations under the License.
 using System;
 using System.Drawing;
 using ccl;
-using RhinoCyclesCore;
-using sdd = System.Diagnostics.Debug;
 using Rhino.Render;
+using sdd = System.Diagnostics.Debug;
 
-namespace RhinoCycles
+namespace RhinoCyclesCore.RenderEngines
 {
 	public class PreviewRenderEngine : RenderEngine
 	{
@@ -50,14 +49,14 @@ namespace RhinoCycles
 		{
 			if (State == State.Stopped || sample < 5 || (Session.Scene.Device.IsCpu && sample % 10 != 0)) return;
 			DisplayBuffer(sessionId, x, y, w, h);
-			m_preview_event_args.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
+			PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
 
 		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
 		{
 			if (State == State.Stopped || sample < 5 || (Session.Scene.Device.IsCpu && sample % 10 != 0)) return;
 			DisplayBuffer(sessionId, x, y, w, h);
-			m_preview_event_args.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
+			PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
 		/// <summary>
 		/// Renderer entry point for preview rendering
@@ -65,35 +64,35 @@ namespace RhinoCycles
 		/// <param name="oPipe"></param>
 		public static void Renderer(object oPipe)
 		{
-			var cycles_engine = (PreviewRenderEngine)oPipe;
+			var cyclesEngine = (PreviewRenderEngine)oPipe;
 
-			var client = cycles_engine.Client;
+			var client = cyclesEngine.Client;
 
-			var size = cycles_engine.RenderDimension;
-			var samples = cycles_engine.Settings.Samples;
+			var size = cyclesEngine.RenderDimension;
+			var samples = cyclesEngine.Settings.Samples;
 
 #region pick a render device
 
-			var render_device = cycles_engine.Settings.SelectedDevice == -1
+			var renderDevice = cyclesEngine.Settings.SelectedDevice == -1
 				? Device.FirstCuda
-				: Device.GetDevice(cycles_engine.Settings.SelectedDevice);
+				: Device.GetDevice(cyclesEngine.Settings.SelectedDevice);
 
-			if (cycles_engine.Settings.Verbose) sdd.WriteLine(
-				$"Using device {render_device.Name + " " + render_device.Description}");
+			if (cyclesEngine.Settings.Verbose) sdd.WriteLine(
+				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
 #endregion
 
-			if (cycles_engine.CancelRender) return;
+			if (cyclesEngine.CancelRender) return;
 
-			var scene = CreateScene(client, render_device, cycles_engine);
+			var scene = CreateScene(client, renderDevice, cyclesEngine);
 
 			#region set up session parameters
-			var session_params = new SessionParameters(client, render_device)
+			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = render_device.IsCuda ? new Size(256, 256) : new Size(32, 32),
+				TileSize = renderDevice.IsCuda ? new Size(256, 256) : new Size(32, 32),
 				TileOrder = TileOrder.HilbertSpiral,
-				Threads = (uint)(render_device.IsCuda ? 0 : cycles_engine.Settings.Threads),
+				Threads = (uint)(renderDevice.IsCuda ? 0 : cyclesEngine.Settings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				Background = true,
 				ProgressiveRefine = true,
@@ -101,34 +100,34 @@ namespace RhinoCycles
 			};
 #endregion
 
-			if (cycles_engine.CancelRender) return;
+			if (cyclesEngine.CancelRender) return;
 
 #region create session for scene
-			cycles_engine.Session = new Session(client, session_params, scene);
+			cyclesEngine.Session = new Session(client, sessionParams, scene);
 #endregion
 
 			// register callbacks before starting any rendering
-			cycles_engine.SetCallbacks();
+			cyclesEngine.SetCallbacks();
 
 			// main render loop, including restarts
-			cycles_engine.Database.OneShot();
-			cycles_engine.m_flush = false;
-			cycles_engine.UploadData();
+			cyclesEngine.Database.OneShot();
+			cyclesEngine.m_flush = false;
+			cyclesEngine.UploadData();
 
 			// lets first reset session
-			cycles_engine.Session.Reset((uint)size.Width, (uint)size.Height, (uint)samples);
+			cyclesEngine.Session.Reset((uint)size.Width, (uint)size.Height, (uint)samples);
 			// then reset scene
-			cycles_engine.Session.Scene.Reset();
+			cyclesEngine.Session.Scene.Reset();
 			// and actually start
 			// we're rendering again
-			cycles_engine.Session.Start();
+			cyclesEngine.Session.Start();
 			// ... aaaaand we wait
-			cycles_engine.Session.Wait();
+			cyclesEngine.Session.Wait();
 
-			cycles_engine.CancelRender = true;
+			cyclesEngine.CancelRender = true;
 
 			// we're done now, so lets clean up our session.
-			cycles_engine.Session.Destroy();
+			cyclesEngine.Session.Destroy();
 		}
 
 	}

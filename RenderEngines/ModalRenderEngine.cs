@@ -17,13 +17,12 @@ limitations under the License.
 using System;
 using System.Drawing;
 using ccl;
-using RhinoCyclesCore;
 using Rhino;
 using Rhino.DocObjects;
 using Rhino.Render;
 using sdd = System.Diagnostics.Debug;
 
-namespace RhinoCycles
+namespace RhinoCyclesCore.RenderEngines
 {
 	public class ModalRenderEngine : RenderEngine
 	{
@@ -63,7 +62,7 @@ namespace RhinoCycles
 			#endregion
 		}
 
-		private void MRE_Database_ViewChanged(object sender, RhinoCyclesCore.Database.ChangeDatabase.ViewChangedEventArgs e)
+		private void MRE_Database_ViewChanged(object sender, Database.ChangeDatabase.ViewChangedEventArgs e)
 		{
 			//ViewCrc = e.Crc;
 		}
@@ -73,36 +72,36 @@ namespace RhinoCycles
 		/// </summary>
 		public void Renderer()
 		{
-			var cycles_engine = this;
+			var cyclesEngine = this;
 
-			var client = cycles_engine.Client;
-			var rw = cycles_engine.RenderWindow;
+			var client = cyclesEngine.Client;
+			var rw = cyclesEngine.RenderWindow;
 
 			if (rw == null) return; // we don't have a window to write to...
 
-			var size = cycles_engine.RenderDimension;
-			var samples = cycles_engine.Settings.Samples;
+			var size = cyclesEngine.RenderDimension;
+			var samples = cyclesEngine.Settings.Samples;
 
 			#region pick a render device
 
-			var render_device = cycles_engine.Settings.SelectedDevice == -1
+			var renderDevice = cyclesEngine.Settings.SelectedDevice == -1
 				? Device.FirstGpu
-				: Device.GetDevice(cycles_engine.Settings.SelectedDevice);
+				: Device.GetDevice(cyclesEngine.Settings.SelectedDevice);
 
-			if (cycles_engine.Settings.Verbose) sdd.WriteLine(
-				$"Using device {render_device.Name + " " + render_device.Description}");
+			if (cyclesEngine.Settings.Verbose) sdd.WriteLine(
+				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
 			#endregion
 
-			var scene = CreateScene(client, render_device, cycles_engine);
+			var scene = CreateScene(client, renderDevice, cyclesEngine);
 
 			#region set up session parameters
-			var session_params = new SessionParameters(client, render_device)
+			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = render_device.IsGpu ? new Size(256, 256) : new Size(32, 32),
+				TileSize = renderDevice.IsGpu ? new Size(256, 256) : new Size(32, 32),
 				TileOrder = TileOrder.HilbertSpiral,
-				Threads = (uint)(render_device.IsGpu ? 0 : cycles_engine.Settings.Threads),
+				Threads = (uint)(renderDevice.IsGpu ? 0 : cyclesEngine.Settings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				Background = true,
 				ProgressiveRefine = true,
@@ -110,46 +109,46 @@ namespace RhinoCycles
 			};
 			#endregion
 
-			if (cycles_engine.CancelRender) return;
+			if (cyclesEngine.CancelRender) return;
 
 			#region create session for scene
-			cycles_engine.Session = new Session(client, session_params, scene);
+			cyclesEngine.Session = new Session(client, sessionParams, scene);
 			#endregion
 
 			// register callbacks before starting any rendering
-			cycles_engine.SetCallbacks();
+			cyclesEngine.SetCallbacks();
 
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
-			cycles_engine.Database.OneShot();
-			cycles_engine.m_flush = false;
-			cycles_engine.UploadData();
+			cyclesEngine.Database.OneShot();
+			cyclesEngine.m_flush = false;
+			cyclesEngine.UploadData();
 
 			// lets first reset session
-			cycles_engine.Session.Reset((uint)size.Width, (uint)size.Height, (uint)samples);
+			cyclesEngine.Session.Reset((uint)size.Width, (uint)size.Height, (uint)samples);
 			// then reset scene
-			cycles_engine.Session.Scene.Reset();
+			cyclesEngine.Session.Scene.Reset();
 			// and actually start
 			// we're rendering again
-			cycles_engine.Session.Start();
+			cyclesEngine.Session.Start();
 			// ... aaaaand we wait
-			cycles_engine.Session.Wait();
+			cyclesEngine.Session.Wait();
 
-			cycles_engine.CancelRender = true;
+			cyclesEngine.CancelRender = true;
 			#endregion
 
 #if DEBUG
-			SaveRenderedBufferAsImage(client, cycles_engine, size, "RC_modal_renderer");
+			SaveRenderedBufferAsImage(client, cyclesEngine, size, "RC_modal_renderer");
 #endif
 
 			// we're done now, so lets clean up our session.
-			cycles_engine.Session.Destroy();
+			cyclesEngine.Session.Destroy();
 
 			// set final status string and progress to 1.0f to signal completed render
-			cycles_engine.SetProgress(rw,
-				$"Render ready {cycles_engine.RenderedSamples + 1} samples, duration {cycles_engine.TimeString}", 1.0f);
-			cycles_engine.CancelRender = true;
+			cyclesEngine.SetProgress(rw,
+				$"Render ready {cyclesEngine.RenderedSamples + 1} samples, duration {cyclesEngine.TimeString}", 1.0f);
+			cyclesEngine.CancelRender = true;
 
 			// signal the render window we're done.
 			rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);

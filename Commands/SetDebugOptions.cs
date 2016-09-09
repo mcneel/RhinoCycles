@@ -14,66 +14,66 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using RhinoCyclesCore;
+using RhinoCyclesCore.Core;
 using Rhino;
 using Rhino.Commands;
 using Rhino.Input;
 using Rhino.Input.Custom;
 
-namespace RhinoCycles
+namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("0AB57C1A-7FDB-4C36-85D8-807E6A606389")]
 	public class SetDebugOptions : Command
 	{
-		private static SetDebugOptions g_thecommand;
+		private static SetDebugOptions _gThecommand;
 
 		public SetDebugOptions()
 		{
-			g_thecommand = this;
+			if(_gThecommand==null) _gThecommand = this;
 		}
 
 		public override string EnglishName => "RhinoCycles_SetDebugOptions";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			var get_number = new GetInteger();
-			get_number.SetLowerLimit(2, false);
-			get_number.SetUpperLimit(10000000, false);
-			get_number.SetDefaultInteger(RcCore.It.EngineSettings.Samples);
-			get_number.SetCommandPrompt("Set Debug Options");
+			var getNumber = new GetInteger();
+			getNumber.SetLowerLimit(2, false);
+			getNumber.SetUpperLimit(10000000, false);
+			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.Samples);
+			getNumber.SetCommandPrompt("Set Debug Options");
 
-			var toggle_verbose = new OptionToggle(RcCore.It.EngineSettings.Verbose, "No", "Yes");
-			var toggle_interactive = new OptionToggle(RcCore.It.EngineSettings.UseInteractiveRenderer, "No", "Yes");
+			var toggleVerbose = new OptionToggle(RcCore.It.EngineSettings.Verbose, "No", "Yes");
+			var toggleInteractive = new OptionToggle(RcCore.It.EngineSettings.UseInteractiveRenderer, "No", "Yes");
 
-			var spotlight_factor = new OptionDouble(RcCore.It.EngineSettings.SpotlightFactor, 0.0, 1000000.0);
-			var pointlight_factor = new OptionDouble(RcCore.It.EngineSettings.PointlightFactor, 0.0, 1000000.0);
-			var sunlight_factor = new OptionDouble(RcCore.It.EngineSettings.SunlightFactor, 0.0, 1000000.0);
-			var arealight_factor = new OptionDouble(RcCore.It.EngineSettings.ArealightFactor, 0.0, 1000000.0);
-			var polish_factor = new OptionDouble(RcCore.It.EngineSettings.PolishFactor, 0.0, 1000000.0);
+			var spotlightFactor = new OptionDouble(RcCore.It.EngineSettings.SpotlightFactor, 0.0, 1000000.0);
+			var pointlightFactor = new OptionDouble(RcCore.It.EngineSettings.PointlightFactor, 0.0, 1000000.0);
+			var sunlightFactor = new OptionDouble(RcCore.It.EngineSettings.SunlightFactor, 0.0, 1000000.0);
+			var arealightFactor = new OptionDouble(RcCore.It.EngineSettings.ArealightFactor, 0.0, 1000000.0);
+			var polishFactor = new OptionDouble(RcCore.It.EngineSettings.PolishFactor, 0.0, 1000000.0);
 
-			get_number.AddOptionToggle("verbose", ref toggle_verbose);
-			get_number.AddOptionToggle("use_interactive_renderer", ref toggle_interactive);
+			getNumber.AddOptionToggle("verbose", ref toggleVerbose);
+			getNumber.AddOptionToggle("use_interactive_renderer", ref toggleInteractive);
 
-			get_number.AddOptionDouble("spotlight_factor", ref spotlight_factor);
-			get_number.AddOptionDouble("pointlight_factor", ref pointlight_factor);
-			get_number.AddOptionDouble("sunlight_factor", ref sunlight_factor);
-			get_number.AddOptionDouble("arealight_factor", ref arealight_factor);
-			get_number.AddOptionDouble("polish_factor", ref polish_factor);
+			getNumber.AddOptionDouble("spotlight_factor", ref spotlightFactor);
+			getNumber.AddOptionDouble("pointlight_factor", ref pointlightFactor);
+			getNumber.AddOptionDouble("sunlight_factor", ref sunlightFactor);
+			getNumber.AddOptionDouble("arealight_factor", ref arealightFactor);
+			getNumber.AddOptionDouble("polish_factor", ref polishFactor);
 
 
 			while (true)
 			{
-				var get_rc = get_number.Get();
-				if (get_number.CommandResult() != Result.Success) return get_number.CommandResult();
-				switch (get_rc)
+				var getRc = getNumber.Get();
+				if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
+				switch (getRc)
 				{
 					case GetResult.Nothing:
 					case GetResult.Number:
-						RcCore.It.EngineSettings.Samples = get_number.Number();
-						ReadOptions(toggle_verbose, toggle_interactive, spotlight_factor, pointlight_factor, sunlight_factor, arealight_factor, polish_factor);
+						RcCore.It.EngineSettings.Samples = getNumber.Number();
+						ReadOptions(toggleVerbose, toggleInteractive, spotlightFactor, pointlightFactor, sunlightFactor, arealightFactor, polishFactor);
 						break;
 					case GetResult.Option:
-						ReadOptions(toggle_verbose, toggle_interactive, spotlight_factor, pointlight_factor, sunlight_factor, arealight_factor, polish_factor);
+						ReadOptions(toggleVerbose, toggleInteractive, spotlightFactor, pointlightFactor, sunlightFactor, arealightFactor, polishFactor);
 						continue;
 					default:
 						continue;
@@ -84,17 +84,17 @@ namespace RhinoCycles
 			return Result.Success;
 		}
 
-		private static void ReadOptions(OptionToggle toggle_verbose, OptionToggle toggle_interactive,
-			OptionDouble spotlight_factor, OptionDouble pointlight_factor, OptionDouble sunlight_factor,
-			OptionDouble arealight_factor, OptionDouble polish_factor)
+		private static void ReadOptions(OptionToggle toggleVerbose, OptionToggle toggleInteractive,
+			OptionDouble spotlightFactor, OptionDouble pointlightFactor, OptionDouble sunlightFactor,
+			OptionDouble arealightFactor, OptionDouble polishFactor)
 		{
-			RcCore.It.EngineSettings.Verbose = toggle_verbose.CurrentValue;
-			RcCore.It.EngineSettings.UseInteractiveRenderer = toggle_interactive.CurrentValue;
-			RcCore.It.EngineSettings.SpotlightFactor = (float) spotlight_factor.CurrentValue;
-			RcCore.It.EngineSettings.PointlightFactor = (float) pointlight_factor.CurrentValue;
-			RcCore.It.EngineSettings.SunlightFactor = (float) sunlight_factor.CurrentValue;
-			RcCore.It.EngineSettings.ArealightFactor = (float) arealight_factor.CurrentValue;
-			RcCore.It.EngineSettings.PolishFactor = (float) polish_factor.CurrentValue;
+			RcCore.It.EngineSettings.Verbose = toggleVerbose.CurrentValue;
+			RcCore.It.EngineSettings.UseInteractiveRenderer = toggleInteractive.CurrentValue;
+			RcCore.It.EngineSettings.SpotlightFactor = (float) spotlightFactor.CurrentValue;
+			RcCore.It.EngineSettings.PointlightFactor = (float) pointlightFactor.CurrentValue;
+			RcCore.It.EngineSettings.SunlightFactor = (float) sunlightFactor.CurrentValue;
+			RcCore.It.EngineSettings.ArealightFactor = (float) arealightFactor.CurrentValue;
+			RcCore.It.EngineSettings.PolishFactor = (float) polishFactor.CurrentValue;
 		}
 	}
 }

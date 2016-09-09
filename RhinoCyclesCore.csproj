@@ -51,8 +51,8 @@
     <Compile Include="Environments\XmlEnvironment.cs" />
     <Compile Include="Materials\EmissiveMaterial.cs" />
     <Compile Include="Materials\XmlMaterial.cs" />
-    <Compile Include="RhinoCyclesCore\RcCore.cs" />
-    <Compile Include="RhinoCyclesCore\Properties\AssemblyInfo.cs" />
+    <Compile Include="Core\RcCore.cs" />
+    <Compile Include="Core\Properties\AssemblyInfo.cs" />
     <Compile Include="Converters\BitmapConverter.cs" />
     <Compile Include="Converters\ShaderConverter.cs" />
     <Compile Include="CyclesBackground.cs" />

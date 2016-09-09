@@ -93,12 +93,12 @@ namespace RhinoCyclesCore.Materials
 				float transparency;
 				Fields.TryGetValue("transparency", out transparency);
 
-				float frost_amount;
-				Fields.TryGetValue("frost-amount", out frost_amount);
+				float frostAmount;
+				Fields.TryGetValue("frost-amount", out frostAmount);
 
-				float polish_amount;
-				Fields.TryGetValue("polish-amount", out polish_amount);
-				polish_amount = 1.0f - polish_amount;
+				float polishAmount;
+				Fields.TryGetValue("polish-amount", out polishAmount);
+				polishAmount = 1.0f - polishAmount;
 
 				return string.Format(
 					ccl.Utilities.Instance.NumberFormatInfo,
@@ -155,8 +155,8 @@ namespace RhinoCyclesCore.Materials
 					"",
 					color.R, color.G, color.B,
 					reflectivity,
-					polish_amount,
-					frost_amount,
+					polishAmount,
+					frostAmount,
 					transparency
 					);
 			}

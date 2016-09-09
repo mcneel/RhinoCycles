@@ -15,11 +15,11 @@ limitations under the License.
 **/
 
 using System.Runtime.InteropServices;
-using RhinoCyclesCore;
+using RhinoCyclesCore.Core;
 using Rhino;
 using Rhino.Commands;
 
-namespace RhinoCycles
+namespace RhinoCycles.Commands
 {
 	[Guid("DC871C42-C401-4CCA-A57C-83863A027476")]
 	public class ShowPaths : Command

@@ -48,24 +48,24 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// RhinoCycles shaders and Cycles shaders relations
 		/// </summary>
-		private readonly List<Tuple<object, CclShader>> m_all_shaders = new List<Tuple<object, CclShader>>();
+		private readonly List<Tuple<object, CclShader>> _allShaders = new List<Tuple<object, CclShader>>();
 
 		/// <summary>
 		/// record material changes for objects
 		/// </summary>
-		private readonly List<CyclesObjectShader> m_cq_objects_shader_changes = new List<CyclesObjectShader>(); 
+		private readonly List<CyclesObjectShader> _cqObjectsShaderChanges = new List<CyclesObjectShader>(); 
 		/// <summary>
 		/// record shader changes to push to cycles
 		/// </summary>
-		private readonly List<CyclesShader> m_cq_shaders = new List<CyclesShader>();
+		private readonly List<CyclesShader> _cqShaders = new List<CyclesShader>();
 		/// <summary>
 		/// record RenderMaterial CRC and Shader relationship. Key is RenderHash, Value is Shader.
 		/// </summary>
-		private readonly Dictionary<uint, CclShader> m_rh_ccl_shaders = new Dictionary<uint, CclShader>(); 
+		private readonly Dictionary<uint, CclShader> _rhCclShaders = new Dictionary<uint, CclShader>(); 
 		/// <summary>
 		/// record shader in scene relationship. Key is RenderMaterial.RenderHash, Value is shader id in scene.
 		/// </summary>
-		private readonly Dictionary<uint, uint> m_rh_ccl_scene_shader_ids = new Dictionary<uint, uint>();
+		private readonly Dictionary<uint, uint> _rhCclSceneShaderIds = new Dictionary<uint, uint>();
 
 		/// <summary>
 		/// Return true if any shader or object shader changes were recorded by the ChangeQueue mechanism.
@@ -73,23 +73,23 @@ namespace RhinoCyclesCore.Database
 		/// <returns>True when changes where recorded, false otherwise.</returns>
 		public bool HasChanges()
 		{
-			return m_cq_shaders.Any() || m_cq_objects_shader_changes.Any();
+			return _cqShaders.Any() || _cqObjectsShaderChanges.Any();
 		}
 
 		/// <summary>
 		/// Get a list of object shader changes.
 		/// </summary>
-		public List<CyclesObjectShader> ObjectShaderChanges => m_cq_objects_shader_changes;
+		public List<CyclesObjectShader> ObjectShaderChanges => _cqObjectsShaderChanges;
 
 		/// <summary>
 		/// Get a list of shader changes.
 		/// </summary>
-		public List<CyclesShader> ShaderChanges => m_cq_shaders;
+		public List<CyclesShader> ShaderChanges => _cqShaders;
 
 		/// <summary>
 		/// Get a list of all shaders.
 		/// </summary>
-		public List<Tuple<object, CclShader>> AllShaders => m_all_shaders;
+		public List<Tuple<object, CclShader>> AllShaders => _allShaders;
 
 		/// <summary>
 		/// Record the CclShader for given id.
@@ -98,7 +98,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="shader">ccl.Shader</param>
 		public void RecordRhCclShaderRelation(uint id, CclShader shader)
 		{
-				m_rh_ccl_shaders.Add(id, shader);
+				_rhCclShaders.Add(id, shader);
 		}
 
 		/// <summary>
@@ -108,7 +108,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="shaderSceneId">Cycles shader scene id</param>
 		public void RecordCclShaderSceneId(uint shaderId, uint shaderSceneId)
 		{
-				m_rh_ccl_scene_shader_ids.Add(shaderId, shaderSceneId);
+				_rhCclSceneShaderIds.Add(shaderId, shaderSceneId);
 		}
 
 		/// <summary>
@@ -119,7 +119,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns>Cycles shader scene id</returns>
 		public uint GetShaderIdForMatId(uint id)
 		{
-			return m_rh_ccl_scene_shader_ids[id];
+			return _rhCclSceneShaderIds[id];
 		}
 
 		/// <summary>
@@ -129,7 +129,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="shader"></param>
 		public void Add(CyclesLight l, CclShader shader)
 		{
-			m_all_shaders.Add(new Tuple<object, CclShader>(l, shader));
+			_allShaders.Add(new Tuple<object, CclShader>(l, shader));
 		}
 
 		/// <summary>
@@ -139,12 +139,12 @@ namespace RhinoCyclesCore.Database
 		/// <param name="shader"></param>
 		public void Add(CyclesShader s, CclShader shader)
 		{
-			m_all_shaders.Add(new Tuple<object, CclShader>(s, shader));
+			_allShaders.Add(new Tuple<object, CclShader>(s, shader));
 		}
 
 		public void AddObjectMaterialChange(CyclesObjectShader o)
 		{
-			if(!m_cq_objects_shader_changes.Contains(o)) m_cq_objects_shader_changes.Add(o);
+			if(!_cqObjectsShaderChanges.Contains(o)) _cqObjectsShaderChanges.Add(o);
 		}
 
 		/// <summary>
@@ -152,7 +152,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ClearObjectShaderChanges()
 		{
-			m_cq_objects_shader_changes.Clear();
+			_cqObjectsShaderChanges.Clear();
 		}
 
 		/// <summary>
@@ -160,7 +160,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ClearShaders()
 		{
-			m_cq_shaders.Clear();
+			_cqShaders.Clear();
 		}
 
 		/// <summary>
@@ -170,7 +170,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		public bool HasShader(uint shaderId)
 		{
-			return m_rh_ccl_shaders.ContainsKey(shaderId);
+			return _rhCclShaders.ContainsKey(shaderId);
 		}
 
 		/// <summary>
@@ -180,7 +180,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns>Shader if found, null otherwise</returns>
 		public CclShader GetShaderFromHash(uint shaderId)
 		{
-			return HasShader(shaderId) ? m_rh_ccl_shaders[shaderId] : null;
+			return HasShader(shaderId) ? _rhCclShaders[shaderId] : null;
 		}
 
 		/// <summary>
@@ -191,9 +191,9 @@ namespace RhinoCyclesCore.Database
 		public uint GetHashFromShader(CclShader shader)
 		{
 			var hash = uint.MaxValue;
-			foreach (var hash_shader in m_rh_ccl_shaders)
+			foreach (var hashShader in _rhCclShaders)
 			{
-				if (hash_shader.Value.Id == shader.Id) hash = hash_shader.Key;
+				if (hashShader.Value.Id == shader.Id) hash = hashShader.Key;
 			}
 
 			return hash;
@@ -205,10 +205,10 @@ namespace RhinoCyclesCore.Database
 		/// <param name="shader"></param>
 		public void AddShader(CyclesShader shader)
 		{
-			if (!m_rh_ccl_shaders.ContainsKey(shader.Id) && !m_cq_shaders.Contains(shader))
+			if (!_rhCclShaders.ContainsKey(shader.Id) && !_cqShaders.Contains(shader))
 			{
-				m_cq_shaders.Add(shader);
-				//m_all_shaders.Add(shader);
+				_cqShaders.Add(shader);
+				//_allShaders.Add(shader);
 			}
 		}
 

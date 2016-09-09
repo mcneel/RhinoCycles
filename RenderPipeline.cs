@@ -14,10 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using System.Drawing;
-using RhinoCyclesCore;
 using Rhino;
 using Rhino.Render;
-using System.Threading;
+using RhinoCyclesCore.RenderEngines;
 
 namespace RhinoCycles
 {

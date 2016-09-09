@@ -14,20 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Rhino.PlugIns;
-using Rhino.Commands;
-using Rhino;
-using Rhino.Display;
 using System.Drawing;
+using Rhino;
+using Rhino.Commands;
+using Rhino.Display;
+using Rhino.PlugIns;
 using Rhino.Render;
-using RhinoCyclesCore;
+using RhinoCyclesCore.Core;
+using RhinoCyclesCore.RenderEngines;
 
-namespace CyclesForRhino
+namespace CyclesForRhino.CyclesForRhino
 {
 	public class Plugin : RenderPlugIn
 	{
@@ -66,7 +62,7 @@ namespace CyclesForRhino
 		protected override Result Render(RhinoDoc doc, RunMode mode, bool fastPreview)
 		{
 			//AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id);
-			var engine = new RhinoCycles.ModalRenderEngine(doc, Id) {Settings = RcCore.It.EngineSettings};
+			var engine = new ModalRenderEngine(doc, Id) {Settings = RcCore.It.EngineSettings};
 
 			engine.Settings.UseInteractiveRenderer = false;
 			engine.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
@@ -126,8 +122,8 @@ namespace CyclesForRhino
 				return;
 			}
 
-			AsyncRenderContext a_rc = new RhinoCycles.PreviewRenderEngine(scene, Id);
-			var engine = (RhinoCycles.PreviewRenderEngine)a_rc;
+			AsyncRenderContext a_rc = new PreviewRenderEngine(scene, Id);
+			var engine = (PreviewRenderEngine)a_rc;
 			engine.Settings = RcCore.It.EngineSettings;
 			engine.Settings.IgnoreQualityChanges = true;
 			engine.Settings.SetQuality(PreviewSceneQuality.RefineThirdPass);
@@ -142,7 +138,7 @@ namespace CyclesForRhino
 			engine.CreateWorld();
 
 			/* render the preview scene */
-			RhinoCycles.PreviewRenderEngine.Renderer(engine);
+			PreviewRenderEngine.Renderer(engine);
 
 			/* set final preview bitmap, or null if cancelled */
 			scene.PreviewImage = engine.RenderWindow.GetBitmap();

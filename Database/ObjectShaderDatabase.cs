@@ -16,7 +16,6 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using CclObject = ccl.Object;
 
 namespace RhinoCyclesCore.Database
 {
@@ -26,40 +25,40 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// Record meshids that use a renderhash
 		/// </summary>
-		private readonly Dictionary<uint, List<Tuple<Guid, int>>> m_rh_renderhash_meshids = new Dictionary<uint, List<Tuple<Guid, int>>>();
+		private readonly Dictionary<uint, List<Tuple<Guid, int>>> _rhRenderhashMeshids = new Dictionary<uint, List<Tuple<Guid, int>>>();
 		/// <summary>
 		/// Record renderhash for meshid
 		/// </summary>
-		private readonly Dictionary<Tuple<Guid, int>, uint> m_rh_meshid_renderhash = new Dictionary<Tuple<Guid, int>, uint>();
+		private readonly Dictionary<Tuple<Guid, int>, uint> _rhMeshidRenderhash = new Dictionary<Tuple<Guid, int>, uint>();
 		/// <summary>
 		/// Record renderhash used object id (meshinstanceid)
 		/// </summary>
-		private readonly Dictionary<uint, uint> m_rh_meshinstance_renderhashes = new Dictionary<uint, uint>(); 
+		private readonly Dictionary<uint, uint> _rhMeshinstanceRenderhashes = new Dictionary<uint, uint>(); 
 		/// <summary>
 		/// Record object ids (meshinstanceid) on renderhash
 		/// </summary>
-		private readonly Dictionary<uint, List<uint>> m_rh_renderhash_objects = new Dictionary<uint, List<uint>>();
+		private readonly Dictionary<uint, List<uint>> _rhRenderhashObjects = new Dictionary<uint, List<uint>>();
 		#endregion
 
 		/// <summary>
 		/// Reference to the ObjectDatabase so we can query it.
 		/// </summary>
-		private readonly ObjectDatabase m_objects;
+		private readonly ObjectDatabase _objectDatabase;
 		/// <summary>
 		/// Construct a ObjectShaderDatabase that has access to objects.
 		/// </summary>
 		/// <param name="objects"></param>
 		public ObjectShaderDatabase(ObjectDatabase objects)
 		{
-			m_objects = objects;
+			_objectDatabase = objects;
 		}
 
 		public void Dispose()
 		{
-			m_rh_renderhash_meshids.Clear();
-			m_rh_meshid_renderhash.Clear();
-			m_rh_meshinstance_renderhashes.Clear();
-			m_rh_renderhash_objects.Clear();
+			_rhRenderhashMeshids.Clear();
+			_rhMeshidRenderhash.Clear();
+			_rhMeshinstanceRenderhashes.Clear();
+			_rhRenderhashObjects.Clear();
 		}
 
 
@@ -83,11 +82,11 @@ namespace RhinoCyclesCore.Database
 		private void RecordRenderHashMeshInstanceId(uint hash, uint meshInstanceId)
 		{
 			// save meshinstanceid (object id) for render hash
-			if (!m_rh_renderhash_objects.ContainsKey(hash)) m_rh_renderhash_objects.Add(hash, new List<uint>());
-			if (!m_rh_renderhash_objects[hash].Contains(meshInstanceId)) m_rh_renderhash_objects[hash].Add(meshInstanceId);
+			if (!_rhRenderhashObjects.ContainsKey(hash)) _rhRenderhashObjects.Add(hash, new List<uint>());
+			if (!_rhRenderhashObjects[hash].Contains(meshInstanceId)) _rhRenderhashObjects[hash].Add(meshInstanceId);
 
 			// save render hash for meshinstanceId (object id)
-			m_rh_meshinstance_renderhashes[meshInstanceId] = hash;
+			_rhMeshinstanceRenderhashes[meshInstanceId] = hash;
 		}
 
 		/// <summary>
@@ -98,10 +97,10 @@ namespace RhinoCyclesCore.Database
 		private void RecordRenderHashMeshId(uint hash, Tuple<Guid, int> meshId)
 		{
 			// save meshid into list for render hash
-			if (!m_rh_renderhash_meshids.ContainsKey(hash)) m_rh_renderhash_meshids.Add(hash, new List<Tuple<Guid, int>>());
-			if (!m_rh_renderhash_meshids[hash].Contains(meshId)) m_rh_renderhash_meshids[hash].Add(meshId);
+			if (!_rhRenderhashMeshids.ContainsKey(hash)) _rhRenderhashMeshids.Add(hash, new List<Tuple<Guid, int>>());
+			if (!_rhRenderhashMeshids[hash].Contains(meshId)) _rhRenderhashMeshids[hash].Add(meshId);
 			// save render hash for meshid
-			m_rh_meshid_renderhash[meshId] = hash;
+			_rhMeshidRenderhash[meshId] = hash;
 		}
 
 		/// <summary>
@@ -112,13 +111,13 @@ namespace RhinoCyclesCore.Database
 		private void RemoveRenderHashMeshInstanceId(uint hash, uint meshInstanceId)
 		{
 			//if(m_objects_on_shader.ContainsKey(oldShader)) m_objects_on_shader[oldShader].RemoveAll(x => x.Equals(oid));
-			if (m_rh_renderhash_objects.ContainsKey(hash)) m_rh_renderhash_objects[hash].RemoveAll(x => x.Equals(meshInstanceId));
-			if (m_rh_meshinstance_renderhashes.ContainsKey(meshInstanceId)) m_rh_meshinstance_renderhashes.Remove(meshInstanceId);
+			if (_rhRenderhashObjects.ContainsKey(hash)) _rhRenderhashObjects[hash].RemoveAll(x => x.Equals(meshInstanceId));
+			if (_rhMeshinstanceRenderhashes.ContainsKey(meshInstanceId)) _rhMeshinstanceRenderhashes.Remove(meshInstanceId);
 
-			var meshid = m_objects.FindMeshIdOnObjectId(meshInstanceId);
+			var meshid = _objectDatabase.FindMeshIdOnObjectId(meshInstanceId);
 
-			if (m_rh_renderhash_meshids.ContainsKey(hash)) m_rh_renderhash_meshids[hash].RemoveAll(x => x.Equals(meshid));
-			if (m_rh_meshid_renderhash.ContainsKey(meshid)) m_rh_meshid_renderhash.Remove(meshid);
+			if (_rhRenderhashMeshids.ContainsKey(hash)) _rhRenderhashMeshids[hash].RemoveAll(x => x.Equals(meshid));
+			if (_rhMeshidRenderhash.ContainsKey(meshid)) _rhMeshidRenderhash.Remove(meshid);
 		}
 
 		/// <summary>
@@ -131,7 +130,7 @@ namespace RhinoCyclesCore.Database
 		{
 			if(oldShader!=uint.MaxValue) RemoveRenderHashMeshInstanceId(oldShader, oid);
 
-			var meshid = m_objects.FindMeshIdOnObjectId(oid);
+			var meshid = _objectDatabase.FindMeshIdOnObjectId(oid);
 			RecordRenderHashRelation(newShader, meshid, oid);
 		}
 
@@ -142,7 +141,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns>The RenderHash for the Rhino material that is used on this mesh.</returns>
 		public uint FindRenderHashForMeshId(Tuple<Guid, int> meshId)
 		{
-			if (m_rh_meshid_renderhash.ContainsKey(meshId)) return m_rh_meshid_renderhash[meshId];
+			if (_rhMeshidRenderhash.ContainsKey(meshId)) return _rhMeshidRenderhash[meshId];
 
 			return uint.MaxValue;
 		}
@@ -154,7 +153,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		public uint FindRenderHashForObjectId(uint objectid)
 		{
-			if (m_rh_meshinstance_renderhashes.ContainsKey(objectid)) return m_rh_meshinstance_renderhashes[objectid];
+			if (_rhMeshinstanceRenderhashes.ContainsKey(objectid)) return _rhMeshinstanceRenderhashes[objectid];
 			return uint.MaxValue;
 		}
 

@@ -23,17 +23,16 @@ using Rhino.Render.ChangeQueue;
 using RhinoCyclesCore.Materials;
 using Light = Rhino.Render.ChangeQueue.Light;
 using Material = Rhino.DocObjects.Material;
-using sdd = System.Diagnostics.Debug;
 
-namespace RhinoCyclesCore
+namespace RhinoCyclesCore.Converters
 {
 	public class ShaderConverter
 	{
 
-		private readonly EngineSettings m_engine_settings;
+		private readonly EngineSettings _engineSettings;
 		public ShaderConverter(EngineSettings engineSettings)
 		{
-			m_engine_settings = engineSettings;
+			_engineSettings = engineSettings;
 		}
 
 		private enum ProbableMaterial
@@ -79,7 +78,8 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Create a CyclesShader based on given Material m
 		/// </summary>
-		/// <param name="m">Material to convert to CyclesShader</param>
+		/// <param name="rm">Material to convert to CyclesShader</param>
+		/// <param name="gamma">gamma to use for this shader</param>
 		/// <returns>The CyclesShader</returns>
 		internal CyclesShader CreateCyclesShader(RenderMaterial rm, float gamma)
 		{
@@ -136,7 +136,7 @@ namespace RhinoCyclesCore
 						var rfcl = m.TransparentColor;
 						var emcl = m.EmissionColor;
 
-						var difftex_alpha = m.AlphaTransparency;
+						var difftexAlpha = m.AlphaTransparency;
 
 						var col = RenderEngine.CreateFloat4(dcl.R, dcl.G, dcl.B, 255);
 						var spec = RenderEngine.CreateFloat4(scl.R, scl.G, scl.B, 255);
@@ -145,7 +145,7 @@ namespace RhinoCyclesCore
 						var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
 						var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
 
-						var polish = (float) m.ReflectionGlossiness*m_engine_settings.PolishFactor;
+						var polish = (float) m.ReflectionGlossiness*_engineSettings.PolishFactor;
 						shader = new CyclesShader
 						{
 							Id = mid,
@@ -178,40 +178,37 @@ namespace RhinoCyclesCore
 							Name = m.Name ?? ""
 						};
 
-						if (rm != null)
+						var diffchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Diffuse);
+						var difftex = rm.FindChild(diffchan) as RenderTexture;
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, difftex, diffchan, RenderMaterial.StandardChildSlots.Diffuse);
+						if (shader.HasDiffuseTexture)
 						{
-							var diffchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Diffuse);
-							var difftex = rm.FindChild(diffchan) as RenderTexture;
-							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, difftex, diffchan, RenderMaterial.StandardChildSlots.Diffuse);
-							if (shader.HasDiffuseTexture)
-							{
-								shader.DiffuseTexture.UseAlpha = difftex_alpha;
-								shader.DiffuseTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(diffchan)/100.0f, 1.0f);
-							}
+							shader.DiffuseTexture.UseAlpha = difftexAlpha;
+							shader.DiffuseTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(diffchan)/100.0f, 1.0f);
+						}
 
-							var bumpchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Bump);
-							var bumptex = rm.FindChild(bumpchan) as RenderTexture;
-							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, bumptex, bumpchan, RenderMaterial.StandardChildSlots.Bump);
-							if (shader.HasBumpTexture)
-							{
-								shader.BumpTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(bumpchan)/100.0f, 1.0f);
-							}
+						var bumpchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Bump);
+						var bumptex = rm.FindChild(bumpchan) as RenderTexture;
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, bumptex, bumpchan, RenderMaterial.StandardChildSlots.Bump);
+						if (shader.HasBumpTexture)
+						{
+							shader.BumpTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(bumpchan)/100.0f, 1.0f);
+						}
 
-							var transchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Transparency);
-							var transtex = rm.FindChild(transchan) as RenderTexture;
-							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, transtex, transchan, RenderMaterial.StandardChildSlots.Transparency);
-							if (shader.HasTransparencyTexture)
-							{
-								shader.TransparencyTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(transchan)/100.0f, 1.0f);
-							}
+						var transchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Transparency);
+						var transtex = rm.FindChild(transchan) as RenderTexture;
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, transtex, transchan, RenderMaterial.StandardChildSlots.Transparency);
+						if (shader.HasTransparencyTexture)
+						{
+							shader.TransparencyTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(transchan)/100.0f, 1.0f);
+						}
 
-							var envchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Environment);
-							var envtex = rm.FindChild(envchan) as RenderTexture;
-							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, envtex, envchan, RenderMaterial.StandardChildSlots.Environment);
-							if (shader.HasEnvironmentTexture)
-							{
-								shader.EnvironmentTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(envchan)/100.0f, 1.0f);
-							}
+						var envchan = rm.TextureChildSlotName(RenderMaterial.StandardChildSlots.Environment);
+						var envtex = rm.FindChild(envchan) as RenderTexture;
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, envtex, envchan, RenderMaterial.StandardChildSlots.Environment);
+						if (shader.HasEnvironmentTexture)
+						{
+							shader.EnvironmentTexture.Amount = (float) Math.Min(rm.ChildSlotAmount(envchan)/100.0f, 1.0f);
 						}
 						break;
 
@@ -231,7 +228,7 @@ namespace RhinoCyclesCore
 				};
 			}
 
-			if(shader != null) shader.Gamma = gamma;
+			shader.Gamma = gamma;
 
 			return shader;
 		}
@@ -239,7 +236,10 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Convert a Rhino.Render.ChangeQueue.Light to a CyclesLight
 		/// </summary>
+		/// <param name="changequeue"></param>
 		/// <param name="light"></param>
+		/// <param name="view"></param>
+		/// <param name="gamma"></param>
 		/// <returns></returns>
 		internal CyclesLight ConvertLight(ChangeQueue changequeue, Light light, ViewInfo view, float gamma)
 		{
@@ -265,6 +265,7 @@ namespace RhinoCyclesCore
 		/// Convert a Rhino light into a <c>CyclesLight</c>.
 		/// </summary>
 		/// <param name="lg">The Rhino light to convert</param>
+		/// <param name="gamma"></param>
 		/// <returns><c>CyclesLight</c></returns>
 		internal CyclesLight ConvertLight(Rhino.Geometry.Light lg, float gamma)
 		{
@@ -273,12 +274,12 @@ namespace RhinoCyclesCore
 			var spotangle = 0.0;
 			var smooth = 0.0;
 			var size = 0.0f;
-			var strength = (float)(lg.Intensity * m_engine_settings.PointlightFactor * enabled);
+			var strength = (float)(lg.Intensity * _engineSettings.PointlightFactor * enabled);
 			var axisu = new float4(0.0f);
 			var axisv = new float4(0.0f);
-			var use_mis = false;
-			var sizeu = 0.0f;
-			var sizev = 0.0f;
+			var useMis = false;
+			var sizeU = 0.0f;
+			var sizeV = 0.0f;
 
 			var co = RenderEngine.CreateFloat4(lg.Location.X, lg.Location.Y, lg.Location.Z);
 			var dir = RenderEngine.CreateFloat4(lg.Direction.X, lg.Direction.Y, lg.Direction.Z);
@@ -288,7 +289,7 @@ namespace RhinoCyclesCore
 			if (lg.IsDirectionalLight)
 			{
 				lt = LightType.Distant;
-				strength = (float)(lg.Intensity * m_engine_settings.SunlightFactor * enabled);
+				strength = (float)(lg.Intensity * _engineSettings.SunlightFactor * enabled);
 				//size = 0.01f;
 			}
 			else if (lg.IsSpotLight)
@@ -296,25 +297,25 @@ namespace RhinoCyclesCore
 				lt = LightType.Spot;
 				spotangle = lg.SpotAngleRadians * 2;
 				smooth = 1.0 / Math.Max(lg.HotSpot, 0.001f) - 1.0;
-				strength = (float)(lg.Intensity * m_engine_settings.SpotlightFactor * enabled);
+				strength = (float)(lg.Intensity * _engineSettings.SpotlightFactor * enabled);
 			}
 			else if (lg.IsRectangularLight)
 			{
 				lt = LightType.Area;
 
-				strength = (float)(lg.Intensity * m_engine_settings.ArealightFactor * enabled);
+				strength = (float)(lg.Intensity * _engineSettings.ArealightFactor * enabled);
 
 				var width = lg.Width;
 				var length = lg.Length;
 
-				sizeu = (float)width.Length;
-				sizev = (float)length.Length;
+				sizeU = (float)width.Length;
+				sizeV = (float)length.Length;
 
 				size = 1.0f;
 
-				var rect_loc = lg.Location + (lg.Width * 0.5) + (lg.Length * 0.5);
+				var rectLoc = lg.Location + (lg.Width * 0.5) + (lg.Length * 0.5);
 
-				co = RenderEngine.CreateFloat4(rect_loc.X, rect_loc.Y, rect_loc.Z);
+				co = RenderEngine.CreateFloat4(rectLoc.X, rectLoc.Y, rectLoc.Z);
 
 				width.Unitize();
 				length.Unitize();
@@ -322,7 +323,7 @@ namespace RhinoCyclesCore
 				axisu = RenderEngine.CreateFloat4(width.X, width.Y, width.Z);
 				axisv = RenderEngine.CreateFloat4(length.X, length.Y, length.Z);
 
-				use_mis = true;
+				useMis = true;
 			}
 			else if (lg.IsLinearLight)
 			{
@@ -337,13 +338,13 @@ namespace RhinoCyclesCore
 					DiffuseColor = color,
 					Size = size,
 
-					SizeU = sizeu,
-					SizeV = sizeu,
+					SizeU = sizeU,
+					SizeV = sizeV,
 
 					AxisU = axisu,
 					AxisV = axisv,
 
-					UseMis = use_mis,
+					UseMis = useMis,
 
 					SpotAngle = (float)spotangle,
 					SpotSmooth = (float)smooth,

@@ -16,9 +16,10 @@ limitations under the License.
 
 using System.Runtime.InteropServices;
 using Rhino.Render;
+using RhinoCyclesCore.Materials;
 using Utilities = ccl.Utilities;
 
-namespace RhinoCyclesCore.Materials
+namespace RhinoCyclesCore.Environments
 {
 	[Guid("BFA4D96F-A1B5-40BB-9851-7A88D60E6F26")]
 	[CustomRenderContent(IsPrivate=true)]

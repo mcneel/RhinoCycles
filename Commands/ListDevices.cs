@@ -19,7 +19,7 @@ using ccl;
 using Rhino;
 using Rhino.Commands;
 
-namespace RhinoCycles
+namespace RhinoCycles.Commands
 {
 	[Guid("9e91d7ea-7990-471f-a944-ad9ececcc88b")]
 	public class ListDevices : Command
@@ -39,9 +39,9 @@ namespace RhinoCycles
 		{
 			Plugin.InitialiseCSycles();
 
-			var num_devices = Device.Count;
-			var end_s = num_devices != 1 ? "s" : "";
-			RhinoApp.WriteLine($"We have {num_devices} device{end_s}");
+			var numDevices = Device.Count;
+			var endS = numDevices != 1 ? "s" : "";
+			RhinoApp.WriteLine($"We have {numDevices} device{endS}");
 			RhinoApp.WriteLine("----------");
 			foreach (var dev in Device.Devices)
 			{

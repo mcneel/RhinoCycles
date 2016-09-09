@@ -28,50 +28,50 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// record changes to push to cycles (new meshes, changes to existing ones)
 		/// </summary>
-		private readonly Dictionary<Tuple<Guid, int>, CyclesMesh> m_cq_mesh_changes = new Dictionary<Tuple<Guid, int>, CyclesMesh>();
+		private readonly Dictionary<Tuple<Guid, int>, CyclesMesh> _cqMeshChanges = new Dictionary<Tuple<Guid, int>, CyclesMesh>();
 		/// <summary>
 		/// record mesh removes from cycles
 		/// </summary>
-		private readonly List<Guid> m_cq_meshes_to_delete = new List<Guid>();
+		private readonly List<Guid> _cqMeshesToDelete = new List<Guid>();
 		/// <summary>
 		/// record what meshid tuple corresponds to what cycles mesh
 		/// </summary>
-		private readonly Dictionary<Tuple<Guid, int>, CclMesh> m_rh_ccl_meshes = new Dictionary<Tuple<Guid, int>, CclMesh>(); 
+		private readonly Dictionary<Tuple<Guid, int>, CclMesh> _rhCclMeshes = new Dictionary<Tuple<Guid, int>, CclMesh>(); 
 		/// <summary>
 		/// Record what meshinstanceid (objectid) points to what meshid
 		/// </summary>
-		private readonly Dictionary<uint, Tuple<Guid, int>> m_rh_objectid_meshid = new Dictionary<uint, Tuple<Guid, int>>();
+		private readonly Dictionary<uint, Tuple<Guid, int>> _rhObjectidMeshid = new Dictionary<uint, Tuple<Guid, int>>();
 		#endregion
 		#region lists for objects (rhino <-> cycles)
 		/// <summary>
 		/// record what uint corresponds to what object id in cycles
 		/// Key is InstanceAncestry.Id
 		/// </summary>
-		private readonly Dictionary<uint, CclObject> m_rh_ccl_objects = new Dictionary<uint, CclObject>(); 
+		private readonly Dictionary<uint, CclObject> _rhCclObjects = new Dictionary<uint, CclObject>(); 
 		/// <summary>
 		/// record objects to push to cycles
 		/// </summary>
-		private readonly List<CyclesObject> m_cq_new_updated_objects = new List<CyclesObject>();
+		private readonly List<CyclesObject> _cqNewUpdatedObjects = new List<CyclesObject>();
 		/// <summary>
 		/// record objects to remove/hide in cycles
 		/// </summary>
-		private readonly List<CyclesObject> m_cq_deleted_objects = new List<CyclesObject>(); 
+		private readonly List<CyclesObject> _cqDeletedObjects = new List<CyclesObject>(); 
 		/// <summary>
 		/// record dynamic object transformations
 		/// </summary>
-		private readonly List<CyclesObjectTransform> m_cq_object_transform =  new List<CyclesObjectTransform>();
+		private readonly List<CyclesObjectTransform> _cqObjectTransform =  new List<CyclesObjectTransform>();
 		#endregion
 
 		public void Dispose()
 		{
-			m_cq_mesh_changes.Clear();
-			m_cq_meshes_to_delete.Clear();
-			m_rh_ccl_meshes.Clear();
-			m_rh_objectid_meshid.Clear();
-			m_rh_ccl_objects.Clear();
-			m_cq_new_updated_objects.Clear();
-			m_cq_deleted_objects.Clear();
-			m_cq_object_transform.Clear();
+			_cqMeshChanges.Clear();
+			_cqMeshesToDelete.Clear();
+			_rhCclMeshes.Clear();
+			_rhObjectidMeshid.Clear();
+			_rhCclObjects.Clear();
+			_cqNewUpdatedObjects.Clear();
+			_cqDeletedObjects.Clear();
+			_cqObjectTransform.Clear();
 		}
 
 		/// <summary>
@@ -81,37 +81,37 @@ namespace RhinoCyclesCore.Database
 		public bool HasChanges()
 		{
 				return
-					m_cq_mesh_changes.Any() ||
-					m_cq_new_updated_objects.Any() ||
-					m_cq_deleted_objects.Any() ||
-					m_cq_meshes_to_delete.Any() ||
-					m_cq_object_transform.Any();
+					_cqMeshChanges.Any() ||
+					_cqNewUpdatedObjects.Any() ||
+					_cqDeletedObjects.Any() ||
+					_cqMeshesToDelete.Any() ||
+					_cqObjectTransform.Any();
 		}
 
 		/// <summary>
 		/// Get list of object transforms
 		/// </summary>
-		public List<CyclesObjectTransform> ObjectTransforms => m_cq_object_transform;
+		public List<CyclesObjectTransform> ObjectTransforms => _cqObjectTransform;
 
 		/// <summary>
 		/// Get list of deleted objects.
 		/// </summary>
-		public List<CyclesObject> DeletedObjects => m_cq_deleted_objects;
+		public List<CyclesObject> DeletedObjects => _cqDeletedObjects;
 
 		/// <summary>
 		/// Get list of objects that are added or have been changed.
 		/// </summary>
-		public List<CyclesObject> NewOrUpdatedObjects => m_cq_new_updated_objects;
+		public List<CyclesObject> NewOrUpdatedObjects => _cqNewUpdatedObjects;
 
 		/// <summary>
 		/// Get mapping of object and mesh changes.
 		/// </summary>
-		public Dictionary<Tuple<Guid, int>, CyclesMesh> MeshChanges => m_cq_mesh_changes;
+		public Dictionary<Tuple<Guid, int>, CyclesMesh> MeshChanges => _cqMeshChanges;
 
 		/// <summary>
 		/// Get list of meshes to delete.
 		/// </summary>
-		public List<Guid> MeshesToDelete => m_cq_meshes_to_delete;
+		public List<Guid> MeshesToDelete => _cqMeshesToDelete;
 
 		/// <summary>
 		/// Find meshid based on obid
@@ -120,7 +120,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		public Tuple<Guid, int> FindMeshIdOnObjectId(uint obid)
 		{
-			if (m_rh_objectid_meshid.ContainsKey(obid)) return m_rh_objectid_meshid[obid];
+			if (_rhObjectidMeshid.ContainsKey(obid)) return _rhObjectidMeshid[obid];
 
 			return null;
 		}
@@ -133,7 +133,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		public CclObject FindObjectRelation(uint obid)
 		{
-			if (m_rh_ccl_objects.ContainsKey(obid)) return m_rh_ccl_objects[obid];
+			if (_rhCclObjects.ContainsKey(obid)) return _rhCclObjects[obid];
 
 			return null;
 		} 
@@ -143,7 +143,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="ob"></param>
 		public void AddOrUpdateObject(CyclesObject ob)
 		{
-			if(!m_cq_new_updated_objects.Contains(ob)) m_cq_new_updated_objects.Add(ob);
+			if(!_cqNewUpdatedObjects.Contains(ob)) _cqNewUpdatedObjects.Add(ob);
 		}
 
 		/// <summary>
@@ -152,7 +152,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="ob"></param>
 		public void DeleteObject(CyclesObject ob)
 		{
-			if(!m_cq_deleted_objects.Contains(ob)) m_cq_deleted_objects.Add(ob);
+			if(!_cqDeletedObjects.Contains(ob)) _cqDeletedObjects.Add(ob);
 		}
 
 		/// <summary>
@@ -161,7 +161,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="id">Object id</param>
 		public void DeleteMesh(Guid id)
 		{
-			m_cq_meshes_to_delete.Add(id);
+			_cqMeshesToDelete.Add(id);
 		}
 
 		/// <summary>
@@ -169,7 +169,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		/// <param name="me"></param>
 		public void AddMesh(CyclesMesh me) {
-			m_cq_mesh_changes[me.MeshId] = me;
+			_cqMeshChanges[me.MeshId] = me;
 		}
 
 		/// <summary>
@@ -179,7 +179,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="mid"></param>
 		public void RecordObjectMeshRelation(Tuple<Guid, int> id, CclMesh mid)
 		{
-			m_rh_ccl_meshes[id] = mid;
+			_rhCclMeshes[id] = mid;
 		}
 
 
@@ -190,7 +190,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns>List of meshes</returns>
 		public CclMesh FindMeshRelation(Tuple<Guid, int> id)
 		{
-			if (m_rh_ccl_meshes.ContainsKey(id)) return m_rh_ccl_meshes[id];
+			if (_rhCclMeshes.ContainsKey(id)) return _rhCclMeshes[id];
 
 			return null;
 		}
@@ -202,7 +202,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="mid"></param>
 		public void RecordObjectRelation(uint obid, CclObject mid)
 		{
-			m_rh_ccl_objects[obid] = mid;
+			_rhCclObjects[obid] = mid;
 		}
 
 		/// <summary>
@@ -212,7 +212,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="meshid"></param>
 		public void RecordObjectIdMeshIdRelation(uint obid, Tuple<Guid, int> meshid)
 		{
-			m_rh_objectid_meshid[obid] = meshid;
+			_rhObjectidMeshid[obid] = meshid;
 		}
 
 		/// <summary>
@@ -221,8 +221,8 @@ namespace RhinoCyclesCore.Database
 		/// <param name="cot"></param>
 		public void AddDynamicObjectTransform(CyclesObjectTransform cot)
 		{
-			m_cq_object_transform.RemoveAll(x => x.Equals(cot));
-			m_cq_object_transform.Add(cot);
+			_cqObjectTransform.RemoveAll(x => x.Equals(cot));
+			_cqObjectTransform.Add(cot);
 		}
 
 		/// <summary>
@@ -230,7 +230,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ResetDynamicObjectTransformChangeQueue()
 		{
-			m_cq_object_transform.Clear();
+			_cqObjectTransform.Clear();
 		}
 
 		/// <summary>
@@ -238,8 +238,8 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ResetMeshChangeQueue()
 		{
-			m_cq_meshes_to_delete.Clear();
-			m_cq_mesh_changes.Clear();
+			_cqMeshesToDelete.Clear();
+			_cqMeshChanges.Clear();
 		}
 
 		/// <summary>
@@ -247,8 +247,8 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ResetObjectsChangeQueue()
 		{
-			m_cq_new_updated_objects.Clear();
-			m_cq_deleted_objects.Clear();
+			_cqNewUpdatedObjects.Clear();
+			_cqDeletedObjects.Clear();
 		}
 
 		/// <summary>
@@ -260,7 +260,7 @@ namespace RhinoCyclesCore.Database
 		{
 			var cclobs = new List<CclObject>();
 			var obids = new List<uint>();
-			foreach (var x in m_rh_objectid_meshid.Where(x => x.Value.Item1.Equals(id) && !obids.Contains(x.Key)))
+			foreach (var x in _rhObjectidMeshid.Where(x => x.Value.Item1.Equals(id) && !obids.Contains(x.Key)))
 			{
 				obids.Add(x.Key);
 			}

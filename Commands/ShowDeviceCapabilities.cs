@@ -19,7 +19,7 @@ using ccl;
 using Rhino;
 using Rhino.Commands;
 
-namespace RhinoCycles
+namespace RhinoCycles.Commands
 {
 	[Guid("7413124D-31F8-4B15-B92A-B6A17A884320")]
 	public class ShowDeviceCapabilities : Command

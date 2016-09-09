@@ -19,7 +19,7 @@ using System.Reflection;
 using Rhino;
 using Rhino.Commands;
 
-namespace RhinoCycles
+namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("CB9C1C0D-83F6-4157-BD57-F2AD6093FF73")]
 	public class ShowInfo : Command
@@ -39,13 +39,13 @@ namespace RhinoCycles
 		{
 			Plugin.InitialiseCSycles();
 
-			var rhcycles_ass = Assembly.GetExecutingAssembly();
-			var csycles_ass = Assembly.GetAssembly(typeof(ccl.Client));
-			var csycles_fvi = FileVersionInfo.GetVersionInfo(csycles_ass.Location);
+			var rhcyclesAss = Assembly.GetExecutingAssembly();
+			var csyclesAss = Assembly.GetAssembly(typeof(ccl.Client));
+			var csyclesFvi = FileVersionInfo.GetVersionInfo(csyclesAss.Location);
 
 			RhinoApp.WriteLine("----------");
-			RhinoApp.WriteLine($"RhinoCycles {RhinoBuildConstants.VERSION_STRING} @ {rhcycles_ass.Location}");
-			RhinoApp.WriteLine($"CCSycles {csycles_fvi.FileVersion} @ {csycles_ass.Location}");
+			RhinoApp.WriteLine($"RhinoCycles {RhinoBuildConstants.VERSION_STRING} @ {rhcyclesAss.Location}");
+			RhinoApp.WriteLine($"CCSycles {csyclesFvi.FileVersion} @ {csyclesAss.Location}");
 			RhinoApp.WriteLine("----------");
 			return Result.Success;
 		}

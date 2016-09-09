@@ -67,7 +67,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			get
 			{
-				string xml = "";
+				string xml;
 
 				Fields.TryGetValue("xml", out xml);
 

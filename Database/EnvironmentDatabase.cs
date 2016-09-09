@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using System.Globalization;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
@@ -29,11 +30,11 @@ namespace RhinoCyclesCore.Database
 		/// record background shader changes to push to cycles
 		/// note that we have only one object that gets updated when necessary.
 		/// </summary>
-		private readonly CyclesBackground m_cq_background = new CyclesBackground();
+		private readonly CyclesBackground _cqBackground = new CyclesBackground();
 
 		public void Dispose()
 		{
-			m_cq_background.Dispose();
+			_cqBackground.Dispose();
 		}
 
 		/// <summary>
@@ -42,10 +43,10 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void SetFloatTextureAsByteTexture(bool floatAsByte)
 		{
-			m_cq_background.m_float_as_byte = floatAsByte;
+			_cqBackground.m_float_as_byte = floatAsByte;
 		}
 
-		public CyclesBackground CyclesShader => m_cq_background;
+		public CyclesBackground CyclesShader => _cqBackground;
 
 		public RhinoShader CurrentBackgroundShader { get; set; }
 
@@ -56,8 +57,8 @@ namespace RhinoCyclesCore.Database
 		/// <param name="enable">Set to true if enabled.</param>
 		public void SetSkylightEnabled(bool enable)
 		{
-			m_cq_background.modified |= m_cq_background.skylight_enabled != enable;
-			m_cq_background.skylight_enabled = enable;
+			_cqBackground.modified |= _cqBackground.skylight_enabled != enable;
+			_cqBackground.skylight_enabled = enable;
 		}
 
 		/// <summary>
@@ -66,7 +67,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="gamma"></param>
 		public void SetGamma(float gamma)
 		{
-			m_cq_background.gamma = gamma;
+			_cqBackground.gamma = gamma;
 		}
 
 		/// <summary>
@@ -82,24 +83,24 @@ namespace RhinoCyclesCore.Database
 
 			var mod = false;
 
-			mod |= m_cq_background.background_fill != backgroundStyle;
-			m_cq_background.background_fill = backgroundStyle;
-			mod |= !m_cq_background.color1.Equals(color1);
-			m_cq_background.color1 = color1;
-			mod |= !m_cq_background.color2.Equals(color2);
-			m_cq_background.color2 = color2;
+			mod |= _cqBackground.background_fill != backgroundStyle;
+			_cqBackground.background_fill = backgroundStyle;
+			mod |= !_cqBackground.color1.Equals(color1);
+			_cqBackground.color1 = color1;
+			mod |= !_cqBackground.color2.Equals(color2);
+			_cqBackground.color2 = color2;
 
-			m_cq_background.modified |= mod;
+			_cqBackground.modified |= mod;
 		}
 
 		public void BackgroundWallpaper(ViewInfo view, bool scaleToFit)
 		{
-			m_cq_background.HandleWallpaper(view, scaleToFit);
+			_cqBackground.HandleWallpaper(view, scaleToFit);
 		}
 
 		public void BackgroundWallpaper(ViewInfo view)
 		{
-			m_cq_background.HandleWallpaper(view);
+			_cqBackground.HandleWallpaper(view);
 		}
 
 		/// <summary>
@@ -112,47 +113,47 @@ namespace RhinoCyclesCore.Database
 			switch (usage)
 			{
 				case RenderEnvironment.Usage.Background:
-					m_cq_background.Xml = "";
+					_cqBackground.Xml = "";
 					var xmlenv = (environment?.TopLevelParent as Materials.ICyclesMaterial);
 					if(xmlenv?.MaterialType == RhinoCyclesCore.CyclesShader.CyclesMaterial.XmlEnvironment)
 					{
-						m_cq_background.Xml = xmlenv.MaterialXml;
+						_cqBackground.Xml = xmlenv.MaterialXml;
 					}
-					m_cq_background.background_environment = environment;
+					_cqBackground.background_environment = environment;
 					if (environment != null)
 					{
-						var s = environment.GetParameter("background-projection") as System.IConvertible;
-						var proj = System.Convert.ToString(s);
-						m_cq_background.PlanarProjection = proj.Equals("planar");
+						var s = environment.GetParameter("background-projection") as IConvertible;
+						var proj = Convert.ToString(s, CultureInfo.InvariantCulture);
+						_cqBackground.PlanarProjection = proj.Equals("planar");
 					} else
 					{
-						m_cq_background.PlanarProjection = false;
+						_cqBackground.PlanarProjection = false;
 					}
 					break;
 				case RenderEnvironment.Usage.Skylighting:
-					m_cq_background.skylight_environment = environment;
+					_cqBackground.skylight_environment = environment;
 					break;
 				case RenderEnvironment.Usage.ReflectionAndRefraction:
-					m_cq_background.reflection_environment = environment;
+					_cqBackground.reflection_environment = environment;
 					break;
 			}
 
-			m_cq_background.HandleEnvironments();
+			_cqBackground.HandleEnvironments();
 
-			m_cq_background.modified = true;
+			_cqBackground.modified = true;
 		}
 
 		/// <summary>
 		/// True if background has changed.
 		/// </summary>
-		public bool BackgroundHasChanged => m_cq_background.modified;
+		public bool BackgroundHasChanged => _cqBackground.modified;
 
 		/// <summary>
 		/// Reset background changes.
 		/// </summary>
 		public void ResetBackgroundChangeQueue()
 		{
-			m_cq_background.Reset();
+			_cqBackground.Reset();
 		}
 	}
 }

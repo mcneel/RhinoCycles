@@ -20,6 +20,7 @@ using Rhino;
 using Rhino.Commands;
 using Rhino.Input;
 using Rhino.Input.Custom;
+using RhinoCycles.Viewport;
 
 namespace RhinoCycles.Commands
 {
@@ -29,7 +30,7 @@ namespace RhinoCycles.Commands
 		static ChangeSamples _instance;
 		public ChangeSamples()
 		{
-			_instance = this;
+			if(_instance==null) _instance = this;
 		}
 
 		public override string EnglishName => "RhinoCycles_ChangeSamples";
@@ -43,15 +44,15 @@ namespace RhinoCycles.Commands
 
 				if (rvp != null)
 				{
-					var get_number = new GetInteger();
-					get_number.SetLowerLimit(1, true);
-					get_number.SetDefaultInteger(rvp.HudMaximumPasses()+100);
-					get_number.SetCommandPrompt("Set new sample count");
-					var get_rc = get_number.Get();
-					if (get_number.CommandResult() != Result.Success) return get_number.CommandResult();
-					if (get_rc == GetResult.Number)
+					var getNumber = new GetInteger();
+					getNumber.SetLowerLimit(1, true);
+					getNumber.SetDefaultInteger(rvp.HudMaximumPasses()+100);
+					getNumber.SetCommandPrompt("Set new sample count");
+					var getRc = getNumber.Get();
+					if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
+					if (getRc == GetResult.Number)
 					{
-						var nr = get_number.Number();
+						var nr = getNumber.Number();
 						RhinoApp.WriteLine($"User changes samples to {nr}");
 						rvp.ChangeSamples(nr);
 						return Result.Success;

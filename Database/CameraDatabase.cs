@@ -1,5 +1,6 @@
 ﻿
 
+using System;
 using Rhino.Render;
 /**
 Copyright 2014-2016 Robert McNeel and Associates
@@ -23,8 +24,11 @@ namespace RhinoCyclesCore.Database
 {
 	public class FocalBlur
 	{
+		private static int _runningSerial;
+		private readonly int _serial;
 		public FocalBlur(RenderSettings rs)
 		{
+			_serial = _runningSerial++;
 			UseFocalBlur = rs.FocalBlurMode == RenderSettings.FocalBlurModes.Manual;
 			FocalDistance = (float)rs.FocalBlurDistance;
 			FocalAperture = (float)rs.FocalBlurAperture;
@@ -38,6 +42,7 @@ namespace RhinoCyclesCore.Database
 
 		public FocalBlur()
 		{
+			_serial = _runningSerial++;
 			UseFocalBlur = false;
 			FocalDistance = 10.0f;
 			FocalAperture = 0.0f;
@@ -53,13 +58,13 @@ namespace RhinoCyclesCore.Database
 			if (fb == null) return false;
 
 			return fb.UseFocalBlur == UseFocalBlur &&
-					fb.FocalAperture == FocalAperture &&
-					fb.FocalDistance == FocalDistance;
+					Math.Abs(fb.FocalAperture - FocalAperture) < 0.000001 &&
+					Math.Abs(fb.FocalDistance - FocalDistance) < 0.000001;
 		}
 
 		public override int GetHashCode()
 		{
-			return base.GetHashCode();
+			return _serial;
 		}
 	}
 
@@ -68,7 +73,7 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// record view changes to push to cycles
 		/// </summary>
-		private readonly List<CyclesView> m_cq_view_changes = new List<CyclesView>();
+		private readonly List<CyclesView> _cqViewChanges = new List<CyclesView>();
 
 		/// <summary>
 		/// Return true if ChangeQueue mechanism recorded viewport changes.
@@ -76,7 +81,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		public bool HasChanges()
 		{
-			return m_cq_view_changes.Any() || m_fb_modified;
+			return _cqViewChanges.Any() || _focalBlurModified;
 		}
 
 		/// <summary>
@@ -84,8 +89,8 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ResetViewChangeQueue()
 		{
-			m_cq_view_changes.Clear();
-			m_fb_modified = false;
+			_cqViewChanges.Clear();
+			_focalBlurModified = false;
 		}
 
 		/// <summary>
@@ -94,7 +99,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="t">view info</param>
 		public void AddViewChange(CyclesView t)
 		{
-			m_cq_view_changes.Add(t);
+			_cqViewChanges.Add(t);
 		}
 
 		/// <summary>
@@ -103,25 +108,25 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		public CyclesView LatestView()
 		{
-			return m_cq_view_changes.LastOrDefault();
+			return _cqViewChanges.LastOrDefault();
 		}
 
 		public FocalBlur GetBlur()
 		{
-			return m_fb;
+			return _focalBlur;
 		}
 
-		private FocalBlur m_fb = new FocalBlur();
-		private bool m_fb_modified = false;
+		private FocalBlur _focalBlur = new FocalBlur();
+		private bool _focalBlurModified;
 
 		public void HandleBlur(RenderSettings rs)
 		{
 			var fb = new FocalBlur(rs);
 
-			if(m_fb!=fb)
+			if(!_focalBlur.Equals(fb))
 			{
-				m_fb = fb;
-				m_fb_modified = true;
+				_focalBlur = fb;
+				_focalBlurModified = true;
 			}
 		}
 	}

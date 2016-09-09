@@ -19,11 +19,10 @@ using System.Drawing;
 using ccl;
 using Rhino.DocObjects;
 using Rhino.Render;
-using RhinoCyclesCore;
 using RhinoCyclesCore.Database;
 using sdd = System.Diagnostics.Debug;
 
-namespace RhinoCycles
+namespace RhinoCyclesCore.RenderEngines
 {
 	public class ViewportRenderEngine : RenderEngine
 	{
@@ -34,7 +33,7 @@ namespace RhinoCycles
 
 			Database.ViewChanged += Database_ViewChanged;
 
-			this.ChangesReady += ViewportRenderEngine_ChangesReady;
+			ChangesReady += ViewportRenderEngine_ChangesReady;
 
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;
@@ -52,7 +51,7 @@ namespace RhinoCycles
 		private bool _disposed;
 		protected override void Dispose(bool isDisposing)
 		{
-			lock (display_lock)
+			lock (DisplayLock)
 			{
 				if (_disposed) return;
 
@@ -108,7 +107,7 @@ namespace RhinoCycles
 			if (CancelRender) return;
 			if (Flush) return;
 			if (State != State.Rendering) return;
-			lock (display_lock)
+			lock (DisplayLock)
 			{
 				if (Session.Scene.TryLock())
 				{
@@ -146,7 +145,7 @@ namespace RhinoCycles
 		/// <param name="h">Height in pixels</param>
 		public void SetRenderSize(int w, int h)
 		{
-			lock (display_lock)
+			lock (DisplayLock)
 			{
 				RenderWindow.SetSize(new Size(w, h));
 			}
@@ -172,37 +171,37 @@ namespace RhinoCycles
 		/// </summary>
 		public void Renderer()
 		{
-			var cycles_engine = this;
+			var cyclesEngine = this;
 
-			var client = cycles_engine.Client;
-			var rw = cycles_engine.RenderWindow;
+			var client = cyclesEngine.Client;
+			var rw = cyclesEngine.RenderWindow;
 
 			if (rw == null) return;
 
-			var samples = cycles_engine.Settings.Samples;
+			var samples = cyclesEngine.Settings.Samples;
 
 			#region pick a render device
 
-			var render_device = cycles_engine.Settings.SelectedDevice == -1
+			var renderDevice = cyclesEngine.Settings.SelectedDevice == -1
 				? Device.FirstCuda
-				: Device.GetDevice(cycles_engine.Settings.SelectedDevice);
+				: Device.GetDevice(cyclesEngine.Settings.SelectedDevice);
 
-			if (cycles_engine.Settings.Verbose) sdd.WriteLine($"Using device {render_device.Name} {render_device.Description}");
+			if (cyclesEngine.Settings.Verbose) sdd.WriteLine($"Using device {renderDevice.Name} {renderDevice.Description}");
 			#endregion
 
-			var scene = CreateScene(client, render_device, cycles_engine);
+			var scene = CreateScene(client, renderDevice, cyclesEngine);
 
 
 			#region set up session parameters
-			var session_params = new SessionParameters(client, render_device)
+			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = render_device.IsCpu ? new Size(32, 32) : new Size(256, 256),
+				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(256, 256),
 				TileOrder = TileOrder.Center,
-				Threads = (uint)(render_device.IsCpu ? cycles_engine.Settings.Threads : 0),
+				Threads = (uint)(renderDevice.IsCpu ? cyclesEngine.Settings.Threads : 0),
 				ShadingSystem = ShadingSystem.SVM,
-				StartResolution = render_device.IsCpu ? 16 : 64,
+				StartResolution = renderDevice.IsCpu ? 16 : 64,
 				SkipLinearToSrgbConversion = true,
 				Background = false,
 				ProgressiveRefine = true,
@@ -210,32 +209,32 @@ namespace RhinoCycles
 			};
 			#endregion
 
-			if (cycles_engine.CancelRender) return;
+			if (cyclesEngine.CancelRender) return;
 
 			#region create session for scene
-			cycles_engine.Session = new Session(client, session_params, scene);
+			cyclesEngine.Session = new Session(client, sessionParams, scene);
 			#endregion
 
 			// register callbacks before starting any rendering
-			cycles_engine.SetCallbacks();
+			cyclesEngine.SetCallbacks();
 
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
-			cycles_engine.CheckFlushQueue();
-			if (!cycles_engine.CancelRender)
+			cyclesEngine.CheckFlushQueue();
+			if (!cyclesEngine.CancelRender)
 			{
-				cycles_engine.Synchronize();
+				cyclesEngine.Synchronize();
 			}
-			if (!cycles_engine.CancelRender)
+			if (!cyclesEngine.CancelRender)
 			{
-				cycles_engine.Session.Start();
+				cyclesEngine.Session.Start();
 			}
 
 			#endregion
 
 			// We've got Cycles rendering now, notify anyone who cares
-			cycles_engine.RenderStarted?.Invoke(cycles_engine, new RenderStartedEventArgs(!cycles_engine.CancelRender));
+			cyclesEngine.RenderStarted?.Invoke(cyclesEngine, new RenderStartedEventArgs(!cyclesEngine.CancelRender));
 		}
 
 		public event EventHandler Synchronized;

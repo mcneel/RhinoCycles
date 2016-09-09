@@ -15,25 +15,22 @@ limitations under the License.
 **/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace RhinoCyclesCore
+namespace RhinoCyclesCore.Core
 {
 	public sealed class RcCore
 	{
 		#region helper functions to get relative path between two paths
-		private const int FILE_ATTRIBUTE_DIRECTORY = 0x10;
+		private const int FileAttributeDirectory = 0x10;
 		public static string GetRelativePath(string fromPath, string toPath)
 		{
 
 			var path = new StringBuilder();
 			if (PathRelativePathTo(path,
-				fromPath, FILE_ATTRIBUTE_DIRECTORY,
-				toPath, FILE_ATTRIBUTE_DIRECTORY) == 0)
+				fromPath, FileAttributeDirectory,
+				toPath, FileAttributeDirectory) == 0)
 			{
 				throw new ArgumentException("Paths must have a common prefix");
 			}
@@ -71,12 +68,10 @@ namespace RhinoCyclesCore
 
 		public EngineSettings EngineSettings { get; set; }
 
-		private static readonly RcCore instance = new RcCore();
-
 		private RcCore() {
 			EngineSettings = new EngineSettings();
 		}
 
-		public static RcCore It => instance;
+		public static RcCore It { get; } = new RcCore();
 	}
 }

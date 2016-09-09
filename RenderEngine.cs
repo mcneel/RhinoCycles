@@ -41,16 +41,16 @@ namespace RhinoCyclesCore
 	/// </summary>
 	public partial class RenderEngine : AsyncRenderContext
 	{
-		private readonly object m_flushlock = new object();
+		private readonly object _flushlock = new object();
 
 		/// <summary>
 		/// Lock object to protect buffer access.
 		/// </summary>
-		public readonly object display_lock = new object();
+		public readonly object DisplayLock = new object();
 
-		protected CreatePreviewEventArgs m_preview_event_args;
+		protected CreatePreviewEventArgs PreviewEventArgs;
 
-		protected Guid m_plugin_id = Guid.Empty;
+		protected Guid PluginId = Guid.Empty;
 
 		/// <summary>
 		/// Reference to the client representation of this render engine instance.
@@ -146,7 +146,7 @@ namespace RhinoCyclesCore
 			}
 			set
 			{
-				lock (m_flushlock)
+				lock (_flushlock)
 				{
 					m_flush = value;
 				}
@@ -194,7 +194,7 @@ namespace RhinoCyclesCore
 			// We've been told we need to flush, so cancel current render
 			//State = State.Halted;
 			// acquire lock while flushing queue and uploading any data
-			lock (m_flushlock)
+			lock (_flushlock)
 			{
 				// flush the queue
 				Database.Flush();
@@ -254,20 +254,20 @@ namespace RhinoCyclesCore
 
 		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, ViewInfo view, ViewportInfo vp, bool interactive)
 		{
-			m_plugin_id = pluginId;
+			PluginId = pluginId;
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			m_view = view;
 			m_vp = vp;
 			m_interactive = interactive;
-			Database = new ChangeDatabase(m_plugin_id, this, m_doc_serialnumber, m_view, !m_interactive);
+			Database = new ChangeDatabase(PluginId, this, m_doc_serialnumber, m_view, !m_interactive);
 
 			RegisterEventHandler();
 		}
 
 		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive)
 		{
-			m_preview_event_args = previewEventArgs;
-			Database = new ChangeDatabase(pluginId, this, m_preview_event_args);
+			PreviewEventArgs = previewEventArgs;
+			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs);
 
 			RegisterEventHandler();
 		}
@@ -303,9 +303,9 @@ namespace RhinoCyclesCore
 		{
 			if (State == State.Stopped) return;
 
-			if (m_preview_event_args != null)
+			if (PreviewEventArgs != null)
 			{
-				if (m_preview_event_args.Cancel)
+				if (PreviewEventArgs.Cancel)
 				{
 					CancelRender = true;
 					Session.Cancel("Preview Cancelled");
@@ -493,7 +493,7 @@ namespace RhinoCyclesCore
 			base.StopRendering();
 			if (RenderThread == null) return;
 
-			lock (display_lock)
+			lock (DisplayLock)
 			{
 				System.Diagnostics.Debug.Assert(Session != null);
 

@@ -15,7 +15,7 @@ limitations under the License.
 **/
 
 using System;
-using RhinoCyclesCore;
+using RhinoCyclesCore.Core;
 using Rhino;
 using Rhino.Commands;
 using Rhino.Input;
@@ -29,7 +29,7 @@ namespace RhinoCycles.Commands
 		static SetThreads _instance;
 		public SetThreads()
 		{
-			_instance = this;
+			if(_instance==null) _instance = this;
 		}
 
 		///<summary>The only instance of the SetThreads command.</summary>
@@ -39,18 +39,18 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			var get_number = new GetInteger();
-			get_number.SetLowerLimit(0, false);
-			get_number.SetUpperLimit(Environment.ProcessorCount, false);
-			get_number.SetDefaultInteger(RcCore.It.EngineSettings.Threads);
-			get_number.SetCommandPrompt($"Set CPU render threads (max {Environment.ProcessorCount}, 0 for automatic)");
-			var get_rc = get_number.Get();
-			if (get_number.CommandResult() != Result.Success) return get_number.CommandResult();
-			if (get_rc == GetResult.Number)
+			var getNumber = new GetInteger();
+			getNumber.SetLowerLimit(0, false);
+			getNumber.SetUpperLimit(Environment.ProcessorCount, false);
+			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.Threads);
+			getNumber.SetCommandPrompt($"Set CPU render threads (max {Environment.ProcessorCount}, 0 for automatic)");
+			var getRc = getNumber.Get();
+			if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
+			if (getRc == GetResult.Number)
 			{
-				var nr = get_number.Number();
-				var end_s = nr != 1 ? "s" : "";
-				RhinoApp.WriteLine($"User wants {nr} CPU thread{end_s}");
+				var nr = getNumber.Number();
+				var endS = nr != 1 ? "s" : "";
+				RhinoApp.WriteLine($"User wants {nr} CPU thread{endS}");
 				RcCore.It.EngineSettings.Threads = nr;
 				return Result.Success;
 			}

@@ -14,20 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using RhinoCyclesCore;
+using RhinoCyclesCore.Core;
 using Rhino;
 using Rhino.Commands;
 
-namespace RhinoCycles
+namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("AB6ED632-D539-4E22-8DF1-D72E1C451064")]
 	public class ToggleShaders : Command
 	{
-		private static ToggleShaders g_thecommand;
+		private static ToggleShaders _gThecommand;
 
 		public ToggleShaders()
 		{
-			g_thecommand = this;
+			if(_gThecommand==null) _gThecommand = this;
 		}
 
 		public override string EnglishName => "RhinoCycles_ToggleSimpleShaders";
