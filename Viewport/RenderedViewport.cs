@@ -110,84 +110,101 @@ namespace RhinoCycles
 
 		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo, DisplayPipelineAttributes displayPipelineAttributes)
 		{
-			m_displaypipelineattributes = displayPipelineAttributes;
-			ssd.WriteLine($"CreateWorld {m_serial}");
+			lock (locker)
+			{
+				if (!alreadyCreated)
+				{
+					alreadyCreated = true;
+					m_displaypipelineattributes = displayPipelineAttributes;
+					ssd.WriteLine($"CreateWorld {m_serial}");
+				}
+			}
 		}
 
 		private Thread ModalThread;
 
+		private readonly object locker = new object();
+		private bool alreadyStarted;
+		private bool alreadyCreated;
 		public override bool StartRenderer(uint w, uint h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
-			if(forCapture)
+			lock (locker)
 			{
-				ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo);
-				m_cycles = null;
-				m_modal = mre;
-
-				mre.Settings = RcCore.It.EngineSettings;
-				mre.Settings.UseInteractiveRenderer = false;
-				mre.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
-
-				var rs = new Size((int)w, (int)h);
-
-				mre.RenderWindow = renderWindow;
-
-				mre.RenderDimension = rs;
-				mre.Database.RenderDimension = rs;
-
-				mre.Settings.Verbose = true;
-
-				mre.StatusTextUpdated += Mre_StatusTextUpdated;
-
-				mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
-
-				mre.SetFloatTextureAsByteTexture(false); // mre.Settings.RenderDeviceIsOpenCl);
-
-				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
-
-				ModalThread = new Thread(this.RenderOffscreen)
+				if (!alreadyStarted)
 				{
-					Name = "Cycles offscreen viewport rendering with ModalRenderEngine"
-				};
-				ModalThread.Start(mre);
+					alreadyStarted = true;
+					if (forCapture)
+					{
+						ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo);
+						m_cycles = null;
+						m_modal = mre;
 
-				return true;
+						mre.Settings = RcCore.It.EngineSettings;
+						mre.Settings.UseInteractiveRenderer = false;
+						mre.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
+
+						var rs = new Size((int)w, (int)h);
+
+						mre.RenderWindow = renderWindow;
+
+						mre.RenderDimension = rs;
+						mre.Database.RenderDimension = rs;
+
+						mre.Settings.Verbose = true;
+
+						mre.StatusTextUpdated += Mre_StatusTextUpdated;
+
+						mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
+
+						mre.SetFloatTextureAsByteTexture(false); // mre.Settings.RenderDeviceIsOpenCl);
+
+						mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
+
+						ModalThread = new Thread(this.RenderOffscreen)
+						{
+							Name = $"Cycles offscreen viewport rendering with ModalRenderEngine {m_serial}"
+						};
+						ModalThread.Start(mre);
+
+						return true;
+					}
+
+					ssd.WriteLine($"StartRender {m_serial}");
+					m_available = false; // the renderer hasn't started yet. It'll tell us when it has.
+					m_frame_available = false;
+
+					m_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
+
+					m_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
+					m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
+					m_cycles.StartSynchronizing += m_cycles_StartSynchronizing;
+					m_cycles.Synchronized += m_cycles_Synchronized;
+					m_cycles.PassRendered += m_cycles_PassRendered;
+					m_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
+					m_cycles.SamplesChanged += M_cycles_SamplesChanged;
+
+					m_cycles.Settings = RcCore.It.EngineSettings;
+					m_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
+
+					var renderSize = Rhino.Render.RenderPipeline.RenderSize(doc);
+
+					m_cycles.RenderWindow = renderWindow;
+					m_cycles.RenderDimension = renderSize;
+
+					m_cycles.Settings.Verbose = true;
+
+					m_maxsamples = m_cycles.Settings.Samples;
+
+					m_cycles.SetFloatTextureAsByteTexture(false); // m_cycles.Settings.RenderDeviceIsOpenCl);
+
+					m_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
+
+					m_starttime = DateTime.UtcNow;
+
+					m_cycles.StartRenderThread(m_cycles.Renderer, $"A cool Cycles viewport rendering thread {m_serial}");
+				}
+
 			}
-
-			ssd.WriteLine($"StartRender {m_serial}");
-			m_available = false; // the renderer hasn't started yet. It'll tell us when it has.
-			m_frame_available = false;
-
-			m_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
-
-			m_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
-			m_cycles.RenderStarted += m_cycles_RenderStarted; // render engine tells us when it actually is rendering
-			m_cycles.StartSynchronizing += m_cycles_StartSynchronizing;
-			m_cycles.Synchronized += m_cycles_Synchronized;
-			m_cycles.PassRendered += m_cycles_PassRendered;
-			m_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
-			m_cycles.SamplesChanged += M_cycles_SamplesChanged;
-
-			m_cycles.Settings = RcCore.It.EngineSettings;
-			m_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
-
-			var renderSize = Rhino.Render.RenderPipeline.RenderSize(doc);
-
-			m_cycles.RenderWindow = renderWindow;
-			m_cycles.RenderDimension = renderSize;
-
-			m_cycles.Settings.Verbose = true;
-
-			m_maxsamples = m_cycles.Settings.Samples;
-
-			m_cycles.SetFloatTextureAsByteTexture(false); // m_cycles.Settings.RenderDeviceIsOpenCl);
-
-			m_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
-
-			m_starttime = DateTime.UtcNow;
-
-			m_cycles.StartRenderThread(m_cycles.Renderer, "A cool Cycles viewport rendering thread");
-
 			return true;
 		}
 
@@ -257,7 +274,7 @@ namespace RhinoCycles
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
 		{
-			ssd.WriteLine($"Setting Gamma {e.Gamma} and ApplyGammaCorrection {e.Lwf.Active}");
+			ssd.WriteLine($"Setting Gamma {e.Gamma} and ApplyGammaCorrection {e.Lwf.Active} ({m_serial})");
 			SetUseLinearWorkflowGamma(e.Lwf.Active);
 			SetGamma(e.Gamma);
 			if (m_cycles != null)
