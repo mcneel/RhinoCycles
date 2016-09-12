@@ -102,6 +102,7 @@ namespace RhinoCyclesCore.RenderEngines
 		public void DisplayUpdateHandler(uint sessionId, int sample)
 		{
 			if (Session.IsPaused()) return;
+			if (_syncing) return;
 			// after first 10 frames have been rendered only update every third.
 			if (sample > 10 && sample < (Settings.Samples-2) && sample % 3 != 0) return;
 			if (CancelRender) return;
@@ -241,14 +242,24 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void TriggerSynchronized()
 		{
-			Synchronized?.Invoke(this, EventArgs.Empty);
+			lock (_syncLock)
+			{
+				Synchronized?.Invoke(this, EventArgs.Empty);
+				_syncing = false;
+			}
 		}
 
+		private readonly object _syncLock = new object();
+		private bool _syncing;
 		public event EventHandler StartSynchronizing;
 
 		public void TriggerStartSynchronizing()
 		{
-			StartSynchronizing?.Invoke(this, EventArgs.Empty);
+			lock (_syncLock)
+			{
+				_syncing = true;
+				StartSynchronizing?.Invoke(this, EventArgs.Empty);
+			}
 		}
 
 		public void Synchronize()
@@ -271,7 +282,6 @@ namespace RhinoCyclesCore.RenderEngines
 					Session.Scene.Unlock();
 
 					m_flush = false;
-					TriggerSynchronized();
 				} else
 				{
 					Session.Scene.Unlock();
@@ -283,6 +293,7 @@ namespace RhinoCyclesCore.RenderEngines
 				}
 				// unpause
 				Session.SetPause(false);
+				TriggerSynchronized();
 			}
 		}
 
