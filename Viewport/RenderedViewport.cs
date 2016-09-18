@@ -87,7 +87,12 @@ namespace RhinoCycles.Viewport
 
 		private void RenderedViewport_MaxPassesChanged(object sender, HudMaxPassesChangedEventArgs e)
 		{
-			_cycles?.ChangeSamples(e.MaxPasses);
+			ChangeSamples(e.MaxPasses);
+		}
+
+		public override bool HudAllowEditMaxPasses()
+		{
+			return true;
 		}
 
 		private void RenderedViewport_HudUnlockButtonPressed(object sender, EventArgs e)
