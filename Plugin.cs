@@ -35,11 +35,9 @@ namespace RhinoCycles
 
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
-			RenderContent.RegisterContent(this);
 			// code got moved to separate DLL so use that to register from.
 			var rccoreass = typeof(RcCore).Assembly;
 			RenderContent.RegisterContent(rccoreass, Id);
-			RealtimeDisplayMode.RegisterDisplayModes(this);
 
 			RenderContent.ContentFieldChanged += RenderContentOnContentFieldChanged;
 
