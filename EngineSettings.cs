@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+
+using System;
 using ccl;
 using Rhino;
 using Rhino.Render;
@@ -104,7 +106,7 @@ namespace RhinoCyclesCore
 			UseInteractiveRenderer = true;
 			UseSkyLight = false;
 
-			Threads = 0;
+			Threads = Math.Max(1, Environment.ProcessorCount - 2);
 			SelectedDevice = -1;
 
 			Samples = 100;
