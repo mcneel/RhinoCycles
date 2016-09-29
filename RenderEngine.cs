@@ -142,7 +142,12 @@ namespace RhinoCyclesCore
 		{
 			get
 			{
-				return m_flush;
+				bool flush;
+				lock (_flushlock)
+				{
+					flush = m_flush;
+				}
+				return flush;
 			}
 			set
 			{
@@ -150,7 +155,6 @@ namespace RhinoCyclesCore
 				{
 					m_flush = value;
 				}
-				TriggerChangesReady();
 			}
 		}
 

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Drawing;
+using System.Threading;
 using ccl;
 using Rhino.DocObjects;
 using Rhino.Render;
@@ -106,7 +107,6 @@ namespace RhinoCyclesCore.RenderEngines
 			// after first 10 frames have been rendered only update every third.
 			if (sample > 10 && sample < (Settings.Samples-2) && sample % 3 != 0) return;
 			if (CancelRender) return;
-			if (Flush) return;
 			if (State != State.Rendering) return;
 			lock (DisplayLock)
 			{
@@ -236,6 +236,13 @@ namespace RhinoCyclesCore.RenderEngines
 
 			// We've got Cycles rendering now, notify anyone who cares
 			cyclesEngine.RenderStarted?.Invoke(cyclesEngine, new RenderStartedEventArgs(!cyclesEngine.CancelRender));
+
+			while (!IsStopped)
+			{
+				Thread.Sleep(10);
+				if(Flush)
+					TriggerChangesReady();
+			}
 		}
 
 		public event EventHandler Synchronized;
