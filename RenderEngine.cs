@@ -305,7 +305,7 @@ namespace RhinoCyclesCore
 
 		public void TestCancel(uint sid)
 		{
-			if (State == State.Stopped) return;
+			if (IsStopped) return;
 
 			if (PreviewEventArgs != null)
 			{
@@ -348,7 +348,7 @@ namespace RhinoCyclesCore
 		/// <param name="sid"></param>
 		public void UpdateCallback(uint sid)
 		{
-			if (State == State.Stopped) return;
+			if (IsStopped) return;
 
 			var status = CSycles.progress_get_status(Client.Id, sid);
 			var substatus = CSycles.progress_get_substatus(Client.Id, sid);
@@ -401,7 +401,7 @@ namespace RhinoCyclesCore
 		/// <param name="th"></param>
 		public void DisplayBuffer(uint sessionId, uint tx, uint ty, uint tw, uint th)
 		{
-			if (State == State.Stopped) return;
+			if (IsStopped) return;
 			var start = DateTime.Now;
 			var rg = RenderBitmap;
 			if (RenderWindow != null)
@@ -470,7 +470,7 @@ namespace RhinoCyclesCore
 		/// <param name="depth"></param>
 		public void WriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
 		{
-			if (State == State.Stopped) return;
+			if (IsStopped) return;
 			DisplayBuffer(sessionId, x, y, w, h);
 		}
 
@@ -485,7 +485,7 @@ namespace RhinoCyclesCore
 		/// <param name="depth"></param>
 		public void UpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
 		{
-			if (State == State.Stopped) return;
+			if (IsStopped) return;
 			DisplayBuffer(sessionId, x, y, w, h);
 		}
 
