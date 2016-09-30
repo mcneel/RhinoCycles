@@ -454,9 +454,7 @@ namespace RhinoCyclesCore
 		/// <param name="msg"></param>
 		public static void LoggerCallback(string msg)
 		{
-#if DEBUG
 			sdd.WriteLine($"DBG: {msg}");
-#endif
 		}
 
 		/// <summary>
