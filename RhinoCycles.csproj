@@ -113,6 +113,44 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\cs-cz\XML\cs-czRhinoCycles.xml">
+      <Link>Localization\cs-czRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\de-de\XML\de-deRhinoCycles.xml">
+      <Link>Localization\de-deRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\es-es\XML\es-esRhinoCycles.xml">
+      <Link>Localization\es-esRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\fr-fr\XML\fr-frRhinoCycles.xml">
+      <Link>Localization\fr-frRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\it-it\XML\it-itRhinoCycles.xml">
+      <Link>Localization\it-itRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\ja-jp\XML\ja-jpRhinoCycles.xml">
+      <Link>Localization\ja-jpRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\ko-kr\XML\ko-krRhinoCycles.xml">
+      <Link>Localization\ko-krRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\pl-pl\XML\pl-plRhinoCycles.xml">
+      <Link>Localization\pl-plRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\pt-pt\XML\pt-ptRhinoCycles.xml">
+      <Link>Localization\pt-ptRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\ru-ru\XML\ru-ruRhinoCycles.xml">
+      <Link>Localization\ru-ruRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\zh-cn\XML\zh-cnRhinoCycles.xml">
+      <Link>Localization\zh-cnRhinoCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\zh-tw\XML\zh-twRhinoCycles.xml">
+      <Link>Localization\zh-twRhinoCycles.xml</Link>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>Move /Y "$(TargetPath)" "$(TargetDir)$(ProjectName).rhp"
