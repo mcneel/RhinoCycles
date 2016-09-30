@@ -275,7 +275,6 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				TriggerStartSynchronizing();
 				Session.SetPause(true);
-				Session.Scene.Lock();
 				if (UploadData())
 				{
 					State = State.Rendering;
@@ -286,12 +285,7 @@ namespace RhinoCyclesCore.RenderEngines
 					// then reset scene
 					Session.Scene.Reset();
 
-					Session.Scene.Unlock();
-
 					m_flush = false;
-				} else
-				{
-					Session.Scene.Unlock();
 				}
 
 				if (CancelRender)
