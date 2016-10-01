@@ -62,7 +62,7 @@ namespace CyclesForRhino.CyclesForRhino
 		protected override Result Render(RhinoDoc doc, RunMode mode, bool fastPreview)
 		{
 			//AsyncRenderContext a_rc = new RhinoCycles.ModalRenderEngine(doc, Id);
-			var engine = new ModalRenderEngine(doc, Id) {Settings = RcCore.It.EngineSettings};
+			ModalRenderEngine engine = new ModalRenderEngine(doc, Id) {Settings = RcCore.It.EngineSettings};
 
 			engine.Settings.UseInteractiveRenderer = false;
 			engine.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
