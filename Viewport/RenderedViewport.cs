@@ -107,12 +107,12 @@ namespace RhinoCycles.Viewport
 
 		private void RenderedViewport_HudPauseButtonPressed(object sender, EventArgs e)
 		{
-			_cycles?.PauseRendering();
+			_cycles?.Pause();
 		}
 
 		private void RenderedViewport_HudPlayButtonPressed(object sender, EventArgs e)
 		{
-			_cycles?.ContinueRendering();
+			_cycles?.Continue();
 		}
 
 		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo, DisplayPipelineAttributes displayPipelineAttributes)

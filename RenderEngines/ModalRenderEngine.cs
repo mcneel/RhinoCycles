@@ -53,13 +53,51 @@ namespace RhinoCyclesCore.RenderEngines
 			#region create callbacks for Cycles
 
 			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = UpdateRenderTileCallback;
-			m_write_render_tile_callback = WriteRenderTileCallback;
+			m_update_render_tile_callback = null;
+			m_write_render_tile_callback = null;
 			m_test_cancel_callback = null;
+			m_display_update_callback = DisplayUpdateHandler;
 
 			CSycles.log_to_stdout(false);
 
 			#endregion
+		}
+		public void DisplayUpdateHandler(uint sessionId, int sample)
+		{
+			if (Session.IsPaused()) return;
+			// after first 10 frames have been rendered only update every third.
+			if (sample > 10 && sample < (Settings.Samples-2) && sample % 3 != 0) return;
+			if (CancelRender) return;
+			if (State != State.Rendering) return;
+			lock (DisplayLock)
+			{
+				if (Session.Scene.TryLock())
+				{
+					// copy display buffer data into ccycles pixel buffer
+					Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
+					// copy stuff into renderwindow dib
+					using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
+					{
+						if (CancelRender) return;
+						if (channel != null)
+						{
+							if (CancelRender) return;
+							var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
+							var size = RenderDimension;
+							var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
+							if (CancelRender) return;
+							channel.SetValues(rect, size, pixelbuffer);
+						}
+					}
+#if DEBUGxx
+						SaveRenderedBuffer(sample);
+#endif
+					//PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
+					Session.Scene.Unlock();
+					//sdd.WriteLine(string.Format("display update, sample {0}", sample));
+					// now signal whoever is interested
+				}
+			}
 		}
 
 		private void MRE_Database_ViewChanged(object sender, Database.ChangeDatabase.ViewChangedEventArgs e)
@@ -100,10 +138,10 @@ namespace RhinoCyclesCore.RenderEngines
 				Experimental = false,
 				Samples = samples,
 				TileSize = renderDevice.IsGpu ? new Size(256, 256) : new Size(32, 32),
-				TileOrder = TileOrder.HilbertSpiral,
+				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsGpu ? 0 : cyclesEngine.Settings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
-				Background = true,
+				Background = false,
 				ProgressiveRefine = true,
 				Progressive = true,
 			};
@@ -121,7 +159,7 @@ namespace RhinoCyclesCore.RenderEngines
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
-			cyclesEngine.Database.OneShot();
+			//cyclesEngine.Database.OneShot();
 			cyclesEngine.m_flush = false;
 			cyclesEngine.UploadData();
 
@@ -145,6 +183,8 @@ namespace RhinoCyclesCore.RenderEngines
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Session.Destroy();
 
+			cyclesEngine.Database?.Dispose();
+
 			// set final status string and progress to 1.0f to signal completed render
 			cyclesEngine.SetProgress(rw,
 				$"Render ready {cyclesEngine.RenderedSamples + 1} samples, duration {cyclesEngine.TimeString}", 1.0f);
@@ -154,6 +194,22 @@ namespace RhinoCyclesCore.RenderEngines
 			rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 		}
 
+		public override bool SupportsPause()
+		{
+			return true;
+		}
+
+		public override void ResumeRendering()
+		{
+			State = State.Rendering;
+			Session.SetPause(false);
+		}
+
+		public override void PauseRendering()
+		{
+			State = State.Waiting;
+			Session.SetPause(true);
+		}
 	}
 
 }

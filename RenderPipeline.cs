@@ -68,5 +68,20 @@ namespace RhinoCycles
 		}
 
 		protected override bool OnRenderWindowBegin(Rhino.Display.RhinoView view, System.Drawing.Rectangle rect) { return false; }
+
+		public override bool SupportsPause()
+		{
+			return cyclesEngine.SupportsPause();
+		}
+
+		public override void PauseRendering()
+		{
+			cyclesEngine.PauseRendering();
+		}
+
+		public override void ResumeRendering()
+		{
+			cyclesEngine.ResumeRendering();
+		}
 	}
 }

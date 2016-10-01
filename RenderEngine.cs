@@ -191,7 +191,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public void CheckFlushQueue()
 		{
-			if (State == State.Waiting && Flush) ContinueRendering();
+			if (State == State.Waiting && Flush) Continue();
 			// not rendering, nor flush needed, bail
 			if (State != State.Rendering || Database == null || !Flush) return;
 
@@ -507,13 +507,13 @@ namespace RhinoCyclesCore
 			if(Settings.Verbose) sdd.WriteLine("Rendering stopped. The render window can be closed safely.");
 		}
 
-		public void PauseRendering()
+		public void Pause()
 		{
 			State = State.Waiting;
 			Session?.SetPause(true);
 		}
 
-		public void ContinueRendering()
+		public void Continue()
 		{
 			State = State.Rendering;
 			Session?.SetPause(false);
