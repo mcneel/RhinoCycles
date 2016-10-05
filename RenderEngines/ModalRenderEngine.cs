@@ -93,6 +93,9 @@ namespace RhinoCyclesCore.RenderEngines
 						SaveRenderedBuffer(sample);
 #endif
 					//PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
+
+					if(CancelRender || sample >= maxSamples) Session.Cancel("done");
+
 					Session.Scene.Unlock();
 					//sdd.WriteLine(string.Format("display update, sample {0}", sample));
 					// now signal whoever is interested
@@ -104,6 +107,8 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			//ViewCrc = e.Crc;
 		}
+
+		private int maxSamples;
 
 		/// <summary>
 		/// Entry point for a new render process. This is to be done in a separate thread.
@@ -119,6 +124,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			var size = cyclesEngine.RenderDimension;
 			var samples = cyclesEngine.Settings.Samples;
+			maxSamples = samples;
 
 			#region pick a render device
 
