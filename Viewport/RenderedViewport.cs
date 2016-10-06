@@ -244,9 +244,10 @@ namespace RhinoCycles.Viewport
 		{
 			if (_cycles != null)
 			{
-				return _cycles.Database.AreViewsEqual(GetView(), view);
+				var equal = _cycles.Database.AreViewsEqual(GetView(), view);
+				return equal;
 			}
-			else if (_modal != null)
+			if (_modal != null)
 			{
 				return _frameAvailable;
 			}
@@ -360,7 +361,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool IsRendererStarted()
 		{
-			return _started;
+			return _started || _alreadyStarted;
 		}
 
 		public override bool IsCompleted()
