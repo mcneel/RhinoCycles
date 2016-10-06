@@ -133,7 +133,7 @@ namespace RhinoCycles.Viewport
 		private readonly object _locker = new object();
 		private bool _alreadyStarted;
 		private bool _alreadyCreated;
-		public override bool StartRenderer(uint w, uint h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
+		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
 			lock (_locker)
 			{
