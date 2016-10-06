@@ -38,9 +38,7 @@ namespace RhinoCycles.Viewport
 	/// </summary>
 	public class RenderedViewportClassInfo : RealtimeDisplayModeClassInfo
 	{
-		public override string ClassName => LOC.STR("Raytraced");
-
-		public override string FullName => LOC.STR("Raytraced");
+		public override string Name => LOC.STR("Raytraced");
 
 		public override Guid GUID => new Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181");
 
