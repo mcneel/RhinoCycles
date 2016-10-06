@@ -14,12 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using Rhino;
 using Rhino.Commands;
 using Rhino.Display;
 using Rhino.PlugIns;
 using Rhino.Render;
+using Rhino.UI.Controls;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.RenderEngines;
 
@@ -27,8 +30,10 @@ namespace CyclesForRhino.CyclesForRhino
 {
 	public class Plugin : RenderPlugIn
 	{
+		private RenderEngineSettings _rengSettings;
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
+			_rengSettings = new RenderEngineSettings();
 			RhinoApp.WriteLine("Cycles for Rhino ready.");
 			return LoadReturnCode.Success;
 		}
@@ -147,6 +152,11 @@ namespace CyclesForRhino.CyclesForRhino
 			var prev = string.Format("{0}\\{1}.jpg", System.Environment.GetEnvironmentVariable("TEMP"), "previmg");
 			scene.PreviewImage.Save(prev, ImageFormat.Jpeg);
 #endif
+		}
+
+		public override void RenderSettingsCustomSections(List<ICollapsibleSection> sections)
+		{
+			sections.Add(_rengSettings);
 		}
 	}
 }

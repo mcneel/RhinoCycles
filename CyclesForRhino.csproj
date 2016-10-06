@@ -46,8 +46,17 @@
     <Compile Include="..\..\..\..\version.cs">
       <Link>Properties\version.cs</Link>
     </Compile>
+    <Compile Include="CyclesForRhino\RenderEngineSettings.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\Source\Eto\Eto - pcl.csproj">
+      <Project>{35ef0a4e-2a1a-492c-8bed-106774ea09f2}</Project>
+      <Name>Eto - pcl</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj">
+      <Project>{3d7c4cfa-38e3-46ed-a689-862a34f6656c}</Project>
+      <Name>Rhino.UI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj">
       <Project>{ed38373e-290c-4bde-acba-1601484e582a}</Project>
       <Name>RhinoCommon</Name>
