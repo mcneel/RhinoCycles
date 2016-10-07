@@ -40,7 +40,7 @@ namespace RhinoCycles.Commands
 			Plugin.InitialiseCSycles();
 			if (doc.Views.ActiveView.ActiveViewport.DisplayMode.Id == Guid.Parse("69E0C7A5-1C6A-46C8-B98B-8779686CD181"))
 			{
-				var rvp = doc.Views.ActiveView.RenderedDisplayMode as RenderedViewport;
+				var rvp = doc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
 
 				if (rvp != null)
 				{

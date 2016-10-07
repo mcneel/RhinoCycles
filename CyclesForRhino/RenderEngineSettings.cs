@@ -1,5 +1,6 @@
 ﻿using Eto.Drawing;
 using Eto.Forms;
+using Rhino;
 using Rhino.UI;
 using Rhino.UI.Controls;
 using RhinoCyclesCore.Core;
@@ -15,6 +16,8 @@ namespace CyclesForRhino.CyclesForRhino
 		private NumericUpDown _sampleInput;
 		private Label _seedLabel;
 		private NumericUpDown _seedInput;
+
+		private Label _activeViewIsRaytraced;
 
 
 		public RenderEngineSettings()
@@ -57,6 +60,11 @@ namespace CyclesForRhino.CyclesForRhino
 				MaximumDecimalPlaces = 0,
 				Value = RcCore.It.EngineSettings.Seed
 			};
+
+			_activeViewIsRaytraced = new Label()
+			{
+				Text = "..."
+			};
 		}
 
 		private void InitializeLayout()
@@ -68,7 +76,8 @@ namespace CyclesForRhino.CyclesForRhino
 				Rows =
 				{
 					new TableRow(_sampleLabel, _sampleInput),
-					new TableRow(_seedLabel, _seedInput)
+					new TableRow(_seedLabel, _seedInput),
+					new TableRow(_activeViewIsRaytraced),
 				}
 			};
 
@@ -89,6 +98,24 @@ namespace CyclesForRhino.CyclesForRhino
 				if (!pid.Equals(Rhino.Render.Utilities.DefaultRenderPlugInId))
 				{
 					_hidden = true;
+				}
+				var raytraced = RhinoDoc.ActiveDoc?.Views.ActiveView.RealtimeDisplayMode;
+				if ( raytraced == null)
+				{
+					_hidden = true;
+					_activeViewIsRaytraced.Text = "...";
+				}
+				else
+				{
+					if (raytraced.HudProductName() == "Raytraced")
+					{
+						_hidden = false;
+						_activeViewIsRaytraced.Text = $"raytraced {raytraced.HudProductName()} {raytraced.HudRendererPaused()}";
+					} else
+					{
+						_activeViewIsRaytraced.Text = "...";
+						_hidden = true;
+					}
 				}
 
 				return _hidden;
