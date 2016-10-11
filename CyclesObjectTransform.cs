@@ -19,7 +19,7 @@ using ccl;
 namespace RhinoCyclesCore
 {
 	/// <summary>
-	/// Intermediat class to record dynamic object transforms
+	/// Intermediate class to record dynamic object transforms
 	/// </summary>
 	public class CyclesObjectTransform
 	{
