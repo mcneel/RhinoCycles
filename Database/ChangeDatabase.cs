@@ -384,6 +384,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ResetChangeQueue()
 		{
+			_dynamic = false;
 			_currentViewInfo = null;
 			ClearGamma();
 			ClearLinearWorkflow();
@@ -955,69 +956,70 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		private const uint GroundPlaneMeshInstanceId = 1;
 
-		private readonly float gp_side_extension = 1.0E+5f;
+		private bool _gp_meshed = false;
+		private readonly float gp_side_extension = 1.0E+10f;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
 			var gpid = _groundplaneGuid;
-			var altitude = (float)(gp.Enabled ? gp.Altitude : 0.0);
-			var bb = GetQueueSceneBoundingBox();
-			var longestEdge = bb.IsValid ? bb.GetEdges().Max(edge => edge.Length) : -100.0;
-			var min = bb.Min;
-			min.Z = 0;
-			var max = bb.Max;
-			max.Z = 0;
-			var orig = bb.Center;
-			orig.Z = 0;
-
-			Plane p = new Plane(orig, Vector3d.ZAxis);
-			Plane pmap = new Plane(Point3d.Origin, Vector3d.ZAxis);
-			var xext = new Interval(min.X-gp_side_extension, max.X + gp_side_extension);
-			var yext = new Interval(min.Y-gp_side_extension, max.Y + gp_side_extension);
-			var smext = new Interval(0.0, 1.0);
-			PlaneSurface ps = new PlaneSurface(p, xext, yext);
-			var mp = new MeshingParameters
+			var altitude = (float) (gp.Enabled ? gp.Altitude : 0.0);
+			if (!_dynamic)
 			{
-				GridMinCount = 512,
-				GridMaxCount = 1024,
-				SimplePlanes = false
-			};
-			var meshes = Rhino.Geometry.Mesh.CreateFromBrep(ps.ToBrep(), mp);
-			Rhino.Geometry.Mesh m = new Rhino.Geometry.Mesh();
-			foreach (var mesh in meshes) m.Append(mesh);
+				Plane p = new Plane(Point3d.Origin, Vector3d.ZAxis);
+				Plane pmap = new Plane(Point3d.Origin, Vector3d.ZAxis);
+				var xext = new Interval(-gp_side_extension, gp_side_extension);
+				var yext = new Interval(-gp_side_extension, gp_side_extension);
+				var smext = new Interval(0.0, 1.0);
+				PlaneSurface ps = new PlaneSurface(p, xext, yext);
+				var mp = new MeshingParameters
+				{
+					GridMinCount = 512,
+					GridMaxCount = 1024,
+					SimplePlanes = false
+				};
+				var meshes = Rhino.Geometry.Mesh.CreateFromBrep(ps.ToBrep(), mp);
+				Rhino.Geometry.Mesh m = new Rhino.Geometry.Mesh();
+				foreach (var mesh in meshes) m.Append(mesh);
 
-			Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
-			var texscale = gp.TextureScale;
-			var tscale = Rhino.Geometry.Transform.Scale(p, texscale.X, texscale.Y, 1.0);
-			tfm *= tscale;
-			var motion = new Rhino.Geometry.Vector3d(gp.TextureOffset.X, gp.TextureOffset.Y, 0.0);
-			var ttrans = Rhino.Geometry.Transform.Translation(motion);
-			tfm *= ttrans;
-			var trot = Rhino.Geometry.Transform.Rotation(gp.TextureRotation, Point3d.Origin);
-			tfm *= trot;
-			var texturemapping = TextureMapping.CreatePlaneMapping(pmap, smext, smext, smext);
-			if (texturemapping!=null)
-			{
-				m.SetTextureCoordinates(texturemapping, tfm, false);
-				m.SetCachedTextureCoordinates(texturemapping, ref tfm);
+				Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
+				var texscale = gp.TextureScale;
+				var tscale = Rhino.Geometry.Transform.Scale(p, texscale.X, texscale.Y, 1.0);
+				tfm *= tscale;
+				var motion = new Rhino.Geometry.Vector3d(gp.TextureOffset.X, gp.TextureOffset.Y, 0.0);
+				var ttrans = Rhino.Geometry.Transform.Translation(motion);
+				tfm *= ttrans;
+				var trot = Rhino.Geometry.Transform.Rotation(gp.TextureRotation, Point3d.Origin);
+				tfm *= trot;
+				var texturemapping = TextureMapping.CreatePlaneMapping(pmap, smext, smext, smext);
+				if (texturemapping != null)
+				{
+					m.SetTextureCoordinates(texturemapping, tfm, false);
+					m.SetCachedTextureCoordinates(texturemapping, ref tfm);
+				}
+
+
+				HandleMeshData(_groundplaneGuid.Item1, _groundplaneGuid.Item2, m);
+
+				var t = ccl.Transform.Translate(0.0f, 0.0f, altitude);
+				var cyclesObject = new CyclesObject
+				{
+					matid = gp.MaterialId,
+					obid = GroundPlaneMeshInstanceId,
+					meshid = gpid,
+					Transform = t,
+					Visible = gp.Enabled,
+					IsShadowCatcher = gp.IsShadowOnly
+				};
+
+				_objectShaderDatabase.RecordRenderHashRelation(gp.MaterialId, gpid, GroundPlaneMeshInstanceId);
+				_objectDatabase.RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
+				_objectDatabase.AddOrUpdateObject(cyclesObject);
 			}
-
-
-			HandleMeshData(_groundplaneGuid.Item1, _groundplaneGuid.Item2, m);
-
-			var t = ccl.Transform.Translate(0.0f, 0.0f, altitude);
-			var cyclesObject = new CyclesObject
+			else
 			{
-				matid = gp.MaterialId,
-				obid = GroundPlaneMeshInstanceId,
-				meshid = gpid,
-				Transform = t,
-				Visible = gp.Enabled,
-				IsShadowCatcher = gp.IsShadowOnly
-			};
-
-			_objectShaderDatabase.RecordRenderHashRelation(gp.MaterialId, gpid, GroundPlaneMeshInstanceId);
-			_objectDatabase.RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
-			_objectDatabase.AddOrUpdateObject(cyclesObject);
+				var t = ccl.Transform.Translate(0.0f, 0.0f, altitude);
+				CyclesObjectTransform cot = new CyclesObjectTransform(GroundPlaneMeshInstanceId, t);
+				_objectDatabase.AddDynamicObjectTransform(cot);
+			}
 		}
 		/// <summary>
 		/// Handle ground plane changes.
@@ -1434,8 +1436,10 @@ namespace RhinoCyclesCore.Database
 			_renderEngine.Flush = true;
 		}
 
+		private bool _dynamic = false;
 		protected override void NotifyDynamicUpdatesAreAvailable()
 		{
+			_dynamic = true;
 			// nothing
 			//System.Diagnostics.Debug.WriteLine("dyn changes...");
 		}
