@@ -115,101 +115,82 @@ namespace RhinoCycles.Viewport
 
 		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo, DisplayPipelineAttributes displayPipelineAttributes)
 		{
-			lock (_locker)
-			{
-				if (!_alreadyCreated)
-				{
-					_alreadyCreated = true;
-					//_displayPipelineAttributes = displayPipelineAttributes;
-					ssd.WriteLine($"CreateWorld {_serial}");
-				}
-			}
 		}
 
 		private Thread _modalThread;
 
-		private readonly object _locker = new object();
-		private bool _alreadyStarted;
-		private bool _alreadyCreated;
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
-			lock (_locker)
+			if (forCapture)
 			{
-				if (!_alreadyStarted)
+				ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo);
+				_cycles = null;
+				_modal = mre;
+
+				mre.Settings = RcCore.It.EngineSettings;
+				mre.Settings.UseInteractiveRenderer = false;
+				mre.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
+
+				var rs = new Size((int)w, (int)h);
+
+				mre.RenderWindow = renderWindow;
+
+				mre.RenderDimension = rs;
+				mre.Database.RenderDimension = rs;
+
+				mre.Settings.Verbose = true;
+
+				mre.StatusTextUpdated += Mre_StatusTextUpdated;
+
+				mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
+
+				mre.SetFloatTextureAsByteTexture(false); // mre.Settings.RenderDeviceIsOpenCl);
+
+				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
+
+				_modalThread = new Thread(RenderOffscreen)
 				{
-					_alreadyStarted = true;
-					if (forCapture)
-					{
-						ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo);
-						_cycles = null;
-						_modal = mre;
+					Name = $"Cycles offscreen viewport rendering with ModalRenderEngine {_serial}"
+				};
+				_modalThread.Start(mre);
 
-						mre.Settings = RcCore.It.EngineSettings;
-						mre.Settings.UseInteractiveRenderer = false;
-						mre.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
-
-						var rs = new Size((int)w, (int)h);
-
-						mre.RenderWindow = renderWindow;
-
-						mre.RenderDimension = rs;
-						mre.Database.RenderDimension = rs;
-
-						mre.Settings.Verbose = true;
-
-						mre.StatusTextUpdated += Mre_StatusTextUpdated;
-
-						mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
-
-						mre.SetFloatTextureAsByteTexture(false); // mre.Settings.RenderDeviceIsOpenCl);
-
-						mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
-
-						_modalThread = new Thread(RenderOffscreen)
-						{
-							Name = $"Cycles offscreen viewport rendering with ModalRenderEngine {_serial}"
-						};
-						_modalThread.Start(mre);
-
-						return true;
-					}
-
-					ssd.WriteLine($"StartRender {_serial}");
-					_available = false; // the renderer hasn't started yet. It'll tell us when it has.
-					_frameAvailable = false;
-
-					_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
-
-					_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
-					_cycles.RenderStarted += CyclesRenderStarted; // render engine tells us when it actually is rendering
-					_cycles.StartSynchronizing += CyclesStartSynchronizing;
-					_cycles.Synchronized += CyclesSynchronized;
-					_cycles.PassRendered += CyclesPassRendered;
-					_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
-					_cycles.SamplesChanged += CyclesSamplesChanged;
-
-					_cycles.Settings = RcCore.It.EngineSettings;
-					_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
-
-					var renderSize = Rhino.Render.RenderPipeline.RenderSize(doc);
-
-					_cycles.RenderWindow = renderWindow;
-					_cycles.RenderDimension = renderSize;
-
-					_cycles.Settings.Verbose = true;
-
-					_maxSamples = _cycles.Settings.Samples;
-
-					_cycles.SetFloatTextureAsByteTexture(false); // m_cycles.Settings.RenderDeviceIsOpenCl);
-
-					_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
-
-					_startTime = DateTime.UtcNow;
-
-					_cycles.StartRenderThread(_cycles.Renderer, $"A cool Cycles viewport rendering thread {_serial}");
-				}
-
+				return true;
 			}
+
+			ssd.WriteLine($"StartRender {_serial}");
+			_available = false; // the renderer hasn't started yet. It'll tell us when it has.
+			_frameAvailable = false;
+
+			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
+
+			_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
+			_cycles.RenderStarted += CyclesRenderStarted; // render engine tells us when it actually is rendering
+			_cycles.StartSynchronizing += CyclesStartSynchronizing;
+			_cycles.Synchronized += CyclesSynchronized;
+			_cycles.PassRendered += CyclesPassRendered;
+			_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
+			_cycles.SamplesChanged += CyclesSamplesChanged;
+
+			_cycles.Settings = RcCore.It.EngineSettings;
+			_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
+
+			var renderSize = Rhino.Render.RenderPipeline.RenderSize(doc);
+
+			_cycles.RenderWindow = renderWindow;
+			_cycles.RenderDimension = renderSize;
+
+			_cycles.Settings.Verbose = true;
+
+			_maxSamples = _cycles.Settings.Samples;
+
+			_cycles.SetFloatTextureAsByteTexture(false); // m_cycles.Settings.RenderDeviceIsOpenCl);
+
+			_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
+
+			_startTime = DateTime.UtcNow;
+
+			_cycles.StartRenderThread(_cycles.Renderer, $"A cool Cycles viewport rendering thread {_serial}");
+
 			return true;
 		}
 
@@ -359,7 +340,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool IsRendererStarted()
 		{
-			return _started || _alreadyStarted;
+			return _started;
 		}
 
 		public override bool IsCompleted()
