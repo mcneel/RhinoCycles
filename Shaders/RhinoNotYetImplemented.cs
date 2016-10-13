@@ -34,12 +34,12 @@ namespace RhinoCyclesCore.Shaders
 		/// <summary>
 		/// Voronoi texture with Cell coloring
 		/// </summary>
-		private readonly VoronoiTexture vor = new VoronoiTexture {Coloring = "Cells"};
+		private readonly VoronoiTexture vor = new VoronoiTexture {Coloring = VoronoiTexture.ColoringTypes.Cells };
 
 		/// <summary>
 		/// Wave output with type Rings
 		/// </summary>
-		private readonly WaveTexture wav = new WaveTexture {WaveType = "Rings"};
+		private readonly WaveTexture wav = new WaveTexture {WaveType = WaveTexture.WaveTypes.Rings };
 		/// <summary>
 		/// Mathnode doing max(Wave factor, Voronoi factor)
 		/// </summary>
