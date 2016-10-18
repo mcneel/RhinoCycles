@@ -320,11 +320,8 @@ namespace RhinoCyclesCore.Database
 				{
 					me = new CclMesh(_renderEngine.Client, shader);
 				}
-				else
-				{
-					// or just reuse existing mesh container.
-					me.ClearData();
-				}
+
+				me.Resize((uint)cyclesMesh.verts.Length/3, (uint)cyclesMesh.faces.Length/3);
 
 				// update status bar of render window.
 				var stat =
