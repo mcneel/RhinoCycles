@@ -502,9 +502,6 @@ namespace RhinoCyclesCore
 				StopTheRenderer();
 				Session?.Destroy();
 			}
-
-			// done, let everybody know it
-			if(Settings.Verbose) sdd.WriteLine("Rendering stopped. The render window can be closed safely.");
 		}
 
 		public void Pause()

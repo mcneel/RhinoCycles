@@ -72,7 +72,6 @@ namespace RhinoCycles.Viewport
 		{
 			_runningSerial ++;
 			_serial = _runningSerial;
-			ssd.WriteLine($"Initialising a RenderedViewport {_serial}");
 			Plugin.InitialiseCSycles();
 			_available = true;
 
@@ -157,7 +156,6 @@ namespace RhinoCycles.Viewport
 				return true;
 			}
 
-			ssd.WriteLine($"StartRender {_serial}");
 			_available = false; // the renderer hasn't started yet. It'll tell us when it has.
 			_frameAvailable = false;
 
@@ -261,7 +259,6 @@ namespace RhinoCycles.Viewport
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
 		{
-			ssd.WriteLine($"Setting Gamma {e.Gamma} and ApplyGammaCorrection {e.Lwf.Active} ({_serial})");
 			SetUseLinearWorkflowGamma(e.Lwf.Active);
 			SetGamma(e.Gamma);
 			if (_cycles != null)
@@ -321,7 +318,6 @@ namespace RhinoCycles.Viewport
 
 		public override bool OnRenderSizeChanged(int width, int height)
 		{
-			ssd.WriteLine($"RestartRender {_serial}");
 			SetGamma(_cycles.Database.Gamma);
 			_startTime = DateTime.UtcNow;
 			_available = false;
@@ -333,7 +329,6 @@ namespace RhinoCycles.Viewport
 		{
 			_available = false;
 			_started = false;
-			ssd.WriteLine($"!!! === ShutdownRender {_serial} === !!!");
 			_cycles?.StopRendering();
 			_cycles?.Dispose();
 		}

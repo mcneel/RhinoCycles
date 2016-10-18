@@ -133,7 +133,6 @@ namespace RhinoCyclesCore.RenderEngines
 #endif
 					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
 					Session.Scene.Unlock();
-					//sdd.WriteLine(string.Format("display update, sample {0}", sample));
 					// now signal whoever is interested
 				}
 			}
@@ -187,7 +186,6 @@ namespace RhinoCyclesCore.RenderEngines
 				? Device.FirstCuda
 				: Device.GetDevice(cyclesEngine.Settings.SelectedDevice);
 
-			if (cyclesEngine.Settings.Verbose) sdd.WriteLine($"Using device {renderDevice.Name} {renderDevice.Description}");
 			#endregion
 
 			var scene = CreateScene(client, renderDevice, cyclesEngine);
