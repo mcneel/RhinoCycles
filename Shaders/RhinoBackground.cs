@@ -51,7 +51,7 @@ namespace RhinoCyclesCore.Shaders
 		// color stop on 0.0 is top color
 		readonly ColorRampNode _colorramp = new ColorRampNode();
 
-		readonly EnvironmentTextureNode _bgEnvTexture = new EnvironmentTextureNode { ColorSpace = TextureNode.TextureColorSpace.None, IsLinear = false, Interpolation = InterpolationType.Cubic };
+		readonly EnvironmentTextureNode _bgEnvTexture = new EnvironmentTextureNode { ColorSpace = TextureNode.TextureColorSpace.None, IsLinear = true, Interpolation = InterpolationType.Cubic};
 		readonly EnvironmentTextureNode _reflEnvTexture = new EnvironmentTextureNode { ColorSpace = TextureNode.TextureColorSpace.None, IsLinear = false };
 		readonly EnvironmentTextureNode _skyEnvTexture = new EnvironmentTextureNode { ColorSpace = TextureNode.TextureColorSpace.None, IsLinear = false };
 

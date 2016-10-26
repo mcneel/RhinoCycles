@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using System;
+using ccl;
 using CclShader = ccl.Shader;
 using ccl.ShaderNodes;
 using RhinoCyclesCore.Shaders;
@@ -106,6 +107,7 @@ namespace RhinoCyclesCore
 				else if (texture.HasFloatImage)
 				{
 					envnode.FloatImage = texture.TexFloat;
+					envnode.Interpolation = InterpolationType.Cubic;
 				}
 				envnode.Filename = texture.Name;
 				envnode.Width = (uint) texture.TexWidth;
