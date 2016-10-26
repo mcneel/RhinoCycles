@@ -73,5 +73,10 @@ namespace RhinoCyclesCore
 		{
 			return base.GetHashCode();
 		}
+
+		public override string ToString()
+		{
+			return $"Core.LinearWorkflow {Active} {Gamma} {GammaReciprocal}";
+		}
 	}
 }
