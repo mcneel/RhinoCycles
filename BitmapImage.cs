@@ -23,7 +23,7 @@ using Rhino.Render;
 
 namespace RhinoCyclesCore
 {
-	public class BitmapImage<T>
+	public class BitmapImage<T> : IDisposable
 	{
 		internal T[] Original;
 		internal T[] Corrected;
@@ -43,6 +43,8 @@ namespace RhinoCyclesCore
 			return ch > 255 ? 255 : ch;
 		}
 
+		internal bool GammaApplied { get; set; }
+
 		public BitmapImage(uint id, T[] data, int w, int h, bool linear)
 		{
 			Id = id;
@@ -54,24 +56,31 @@ namespace RhinoCyclesCore
 
 			var l = data.Length;
 			Original = new T[l];
-			Corrected = new T[l];
 			data.CopyTo(Original, 0);
-			data.CopyTo(Corrected, 0);
 		}
 
 		virtual public void ApplyGamma(float gamma)
 		{
 		}
 
-		public T[] Data => Corrected;
+		public T[] Data => IsLinear || !GammaApplied ? Original : Corrected;
 
 		public void SaveBitmaps()
 		{
 			SavePixels(Original, $"{Id}_original");
-			SavePixels(Corrected, $"{Id}_corrected");
+			if (!IsLinear && Corrected != null)
+			{
+				SavePixels(Corrected, $"{Id}_corrected");
+			}
 		}
 
 		protected virtual void SavePixels(T[] pixels, string name) {}
+
+		public void Dispose()
+		{
+			Original = null;
+			Corrected = null;
+		}
 	}
 
 	public class ByteBitmap : BitmapImage<byte>
@@ -85,11 +94,15 @@ namespace RhinoCyclesCore
 			if (!IsLinear && Math.Abs(gamma - 1.0f) > float.Epsilon)
 			{
 				var conv = Original.AsParallel().Select((b, i) => (i+1)%4 == 0 ? b : (byte) (Math.Pow(b/255.0f, gamma)*255.0f)).ToArray();
+				if(Corrected == null)
+					Corrected = new byte[Original.Length];
 				conv.CopyTo(Corrected, 0);
+				GammaApplied = true;
 			}
 			else
 			{
-				Original.CopyTo(Corrected, 0);
+				GammaApplied = false;
+				Corrected = null;
 			}
 		}
 
@@ -125,11 +138,15 @@ namespace RhinoCyclesCore
 			if (!IsLinear && Math.Abs(gamma - 1.0f) > float.Epsilon)
 			{
 				var conv = Original.AsParallel().Select((f, i) => (i+1)%4==0 ? f : (float)Math.Pow(f, gamma)).ToArray();
+				if(Corrected == null)
+					Corrected = new float[Original.Length];
 				conv.CopyTo(Corrected, 0);
+				GammaApplied = true;
 			}
 			else
 			{
-				Original.CopyTo(Corrected, 0);
+				Corrected = null;
+				GammaApplied = false;
 			}
 		}
 
