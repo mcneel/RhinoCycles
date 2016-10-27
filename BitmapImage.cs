@@ -31,6 +31,8 @@ namespace RhinoCyclesCore
 
 		public uint Id { get; }
 
+		public bool IsLinear { get; }
+
 		internal BitmapImage() { }
 
 		protected static int ColorClamp(int ch)
@@ -39,12 +41,14 @@ namespace RhinoCyclesCore
 			return ch > 255 ? 255 : ch;
 		}
 
-		public BitmapImage(uint id, T[] data, int w, int h)
+		public BitmapImage(uint id, T[] data, int w, int h, bool linear)
 		{
 			Id = id;
 
 			W = w;
 			H = h;
+
+			IsLinear = linear;
 
 			var l = data.Length;
 			Original = new T[l];
@@ -71,12 +75,12 @@ namespace RhinoCyclesCore
 	public class ByteBitmap : BitmapImage<byte>
 	{
 
-		public ByteBitmap(uint id, byte[] data, int w, int h) : base(id, data, w, h)
+		public ByteBitmap(uint id, byte[] data, int w, int h, bool linear) : base(id, data, w, h, linear)
 		{ }
 
 		override public void ApplyGamma(float gamma)
 		{
-			if (Math.Abs(gamma - 1.0f) > float.Epsilon)
+			if (!IsLinear && Math.Abs(gamma - 1.0f) > float.Epsilon)
 			{
 				var conv = Original.AsParallel().Select((b, i) => (i+1)%4 == 0 ? b : (byte) (Math.Pow(b/255.0f, gamma)*255.0f)).ToArray();
 				conv.CopyTo(Corrected, 0);
@@ -109,12 +113,12 @@ namespace RhinoCyclesCore
 
 	public class FloatBitmap : BitmapImage<float>
 	{
-		public FloatBitmap(uint id, float[] data, int w, int h) : base(id, data, w, h)
+		public FloatBitmap(uint id, float[] data, int w, int h, bool linear) : base(id, data, w, h, linear)
 		{ }
 
 		override public void ApplyGamma(float gamma)
 		{
-			if (Math.Abs(gamma - 1.0f) > float.Epsilon)
+			if (!IsLinear && Math.Abs(gamma - 1.0f) > float.Epsilon)
 			{
 				var conv = Original.AsParallel().Select((f, i) => (i+1)%4==0 ? f : (float)Math.Pow(f, gamma)).ToArray();
 				conv.CopyTo(Corrected, 0);
