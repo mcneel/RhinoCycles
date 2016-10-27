@@ -18,6 +18,8 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using Rhino.Display;
+using Rhino.Render;
 
 namespace RhinoCyclesCore
 {
@@ -91,23 +93,25 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		override protected void SavePixels(byte[] pixels, string name)
+		protected override void SavePixels(byte[] pixels, string name)
 		{
-			var bm = new Bitmap(W, H);
-			for (var x = 0; x < W; x++)
+			using (var rw = RenderWindow.Create(new Size(W, H)))
 			{
-				for (var y = 0; y < H; y++)
+				using (var ch = rw.OpenChannel(RenderWindow.StandardChannels.RGBA))
 				{
-					var i = y * W * 4 + x * 4;
-					var r = ColorClamp(pixels[i]);
-					var g = ColorClamp(pixels[i + 1]);
-					var b = ColorClamp(pixels[i + 2]);
-					var a = ColorClamp(pixels[i + 3]);
-					bm.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+					for (var x = 0; x < W; x++)
+					{
+						for (var y = 0; y < H; y++)
+						{
+							var i = y*W*4 + x*4;
+							ch.SetValue(x, y,
+								Color4f.FromArgb(pixels[i + 3]/255.0f, pixels[i]/255.0f, pixels[i + 1]/255.0f, pixels[i + 2]/255.0f));
+						}
+					}
 				}
+				var tmpfhdr = $"{Environment.GetEnvironmentVariable("TEMP")}\\byte_{name}.exr";
+				rw.SaveRenderImageAs(tmpfhdr, true);
 			}
-			var tmpf = $"{Environment.GetEnvironmentVariable("TEMP")}\\byte_{name}.png";
-			bm.Save(tmpf,  ImageFormat.Png);
 		}
 	}
 
@@ -129,23 +133,25 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		override protected void SavePixels(float[] pixels, string name)
+		protected override void SavePixels(float[] pixels, string name)
 		{
-			var bm = new Bitmap(W, H);
-			for (var x = 0; x < W; x++)
+			using (var rw = RenderWindow.Create(new Size(W, H)))
 			{
-				for (var y = 0; y < H; y++)
+				using (var ch = rw.OpenChannel(RenderWindow.StandardChannels.RGBA))
 				{
-					var i = y * W * 4 + x * 4;
-					var r = ColorClamp((int)(pixels[i] * 255.0f));
-					var g = ColorClamp((int)(pixels[i + 1] * 255.0f));
-					var b = ColorClamp((int)(pixels[i + 2] * 255.0f));
-					var a = ColorClamp((int)(pixels[i + 3] * 255.0f));
-					bm.SetPixel(x, y, Color.FromArgb(a, r, g, b));
+					for (var x = 0; x < W; x++)
+					{
+						for (var y = 0; y < H; y++)
+						{
+							var i = y*W*4 + x*4;
+							ch.SetValue(x, y, Color4f.FromArgb(pixels[i+3], pixels[i], pixels[i+1], pixels[i+2]));
+						}
+					}
 				}
+				var tmpfhdr = $"{Environment.GetEnvironmentVariable("TEMP")}\\float_{name}.exr";
+				rw.SaveRenderImageAs(tmpfhdr, true);
 			}
-			bm.Save($"{Environment.GetEnvironmentVariable("TEMP")}\\float_{name}.png",  ImageFormat.Png);
 		}
-		
+
 	}
 }

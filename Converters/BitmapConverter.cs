@@ -323,9 +323,6 @@ namespace RhinoCyclesCore.Converters
 			var halfpixelU = 0.5 / pwidth;
 			var halfpixelV = 0.5 / pheight;
 			var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
-#if DEBUGxx
-			var bmp = new Bitmap(pwidth, pheight, PixelFormat.Format64bppArgb);
-#endif
 
 			for (var x = 0; x < pwidth; x++)
 			{
@@ -343,15 +340,8 @@ namespace RhinoCyclesCore.Converters
 					fpixel[offset + 1] = col4F.G;
 					fpixel[offset + 2] = col4F.B;
 					fpixel[offset + 3] = col4F.A;
-#if DEBUGxx
-					bmp.SetPixel(x, y, col4F.AsSystemColor());
-#endif
 				}
 			}
-#if DEBUGxx
-			bmp.Save("C:\\bg.png", ImageFormat.Png);
-			bmp.Dispose();
-#endif
 			return fpixel;
 		}
 
@@ -361,6 +351,9 @@ namespace RhinoCyclesCore.Converters
 			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isEnv, planarProjection), pwidth, pheight, isLinear);
 			if (!read)
 			{
+#if DEBUG
+				img.SaveBitmaps();
+#endif
 				ByteImagesNew[rId] = img;
 			}
 
