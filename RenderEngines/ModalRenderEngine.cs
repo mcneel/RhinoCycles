@@ -148,6 +148,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Threads = (uint)(renderDevice.IsGpu ? 0 : cyclesEngine.Settings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				Background = false,
+				DisplayBufferLinear = true,
 				ProgressiveRefine = true,
 				Progressive = true,
 			};

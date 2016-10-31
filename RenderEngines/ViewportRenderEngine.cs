@@ -202,6 +202,7 @@ namespace RhinoCyclesCore.RenderEngines
 				ShadingSystem = ShadingSystem.SVM,
 				StartResolution = renderDevice.IsCpu ? 16 : 64,
 				SkipLinearToSrgbConversion = true,
+				DisplayBufferLinear = true,
 				Background = false,
 				ProgressiveRefine = true,
 				Progressive = true,
