@@ -110,8 +110,7 @@ namespace RhinoCyclesCore.RenderEngines
 			// register callbacks before starting any rendering
 			cyclesEngine.SetCallbacks();
 
-			// main render loop, including restarts
-			cyclesEngine.Database.OneShot();
+			// main render loop
 			cyclesEngine.m_flush = false;
 			cyclesEngine.UploadData();
 
