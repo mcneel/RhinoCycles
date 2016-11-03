@@ -120,6 +120,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
+			_started = true;
 			if (forCapture)
 			{
 				ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo);
@@ -211,7 +212,6 @@ namespace RhinoCycles.Viewport
 				mre.Renderer();
 				//SetCRC(mre.ViewCrc);
 				mre.SaveRenderedBuffer(0);
-				_started = true; // we started (and are also ready, though)
 				_available = true;
 				_frameAvailable = true;
 			}
@@ -222,7 +222,7 @@ namespace RhinoCycles.Viewport
 			if (_cycles != null)
 			{
 				var equal = _cycles.Database.AreViewsEqual(GetView(), view);
-				return equal;
+				return equal && _frameAvailable;
 			}
 			if (_modal != null)
 			{
@@ -234,12 +234,11 @@ namespace RhinoCycles.Viewport
 
 		void CyclesPassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
-			_frameAvailable = true;
-			_available = true;
-			_started = true;
 			if (_cycles?.IsRendering ?? false)
 			{
 				if (e.Sample <= 1) SetView(e.View);
+				_frameAvailable = true;
+				_available = true;
 				SignalRedraw();
 			}
 		}
@@ -321,6 +320,7 @@ namespace RhinoCycles.Viewport
 			SetGamma(_cycles.Database.Gamma);
 			_startTime = DateTime.UtcNow;
 			_available = false;
+			_frameAvailable = false;
 
 			return true;
 		}
@@ -328,7 +328,6 @@ namespace RhinoCycles.Viewport
 		public override void ShutdownRenderer()
 		{
 			_available = false;
-			_started = false;
 			_cycles?.StopRendering();
 			_cycles?.Dispose();
 		}
