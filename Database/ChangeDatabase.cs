@@ -118,7 +118,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="doc">Document runtime serial number</param>
 		/// <param name="view">Reference to the RhinoView for which this queue is created.</param>
 		/// <param name="modal">Set to true if rendering modal</param>
-		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, bool modal) : base(pluginId, doc, view)
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, bool modal) : base(pluginId, doc, view, !modal)
 		{
 			_renderEngine = engine;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
