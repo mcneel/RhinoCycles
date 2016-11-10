@@ -19,6 +19,7 @@ using System.Drawing;
 using ccl;
 using ccl.ShaderNodes;
 using Rhino.Render;
+using RhinoCyclesCore.Core;
 #if DEBUG
 using System.Drawing.Imaging;
 #endif
@@ -29,37 +30,11 @@ namespace RhinoCyclesCore
 	{
 		public void SaveRenderedBuffer(int sample)
 		{
-#if DEBUG
+			if (!RcCore.It.EngineSettings.SaveDebugImages) return;
 			var tmpf = $"{Environment.GetEnvironmentVariable("TEMP")}\\RC_{sample.ToString("D5")}.png";
 			RenderWindow.SaveDibAsBitmap(tmpf);
-#endif
 		}
 
-		public static void SaveRenderedBufferAsImage(Client client, RenderEngine cycles_engine, Size size, string name)
-		{
-#if DEBUG
-			uint bufsize;
-			uint bufstride;
-			CSycles.session_get_buffer_info(client.Id, cycles_engine.Session.Id, out bufsize, out bufstride);
-			var pixels = CSycles.session_copy_buffer(client.Id, cycles_engine.Session.Id, bufsize);
-
-			var bmp = new Bitmap(size.Width, size.Height);
-			for (var x = 0; x < size.Width; x++)
-			{
-				for (var y = 0; y < size.Height; y++)
-				{
-					var i = y*size.Width*4 + x*4;
-					var r = ColorClamp((int) (pixels[i]*255.0f));
-					var g = ColorClamp((int) (pixels[i + 1]*255.0f));
-					var b = ColorClamp((int) (pixels[i + 2]*255.0f));
-					var a = ColorClamp((int) (pixels[i + 3]*255.0f));
-					bmp.SetPixel(x, y, Color.FromArgb(a, r, g, b));
-				}
-			}
-			var tmpf = $"{Environment.GetEnvironmentVariable("TEMP")}\\{name}.png";
-			bmp.Save(tmpf, ImageFormat.Png);
-#endif
-		}
 		/// <summary>
 		/// create a ccl.Scene
 		/// </summary>

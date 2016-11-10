@@ -20,6 +20,7 @@ using ccl;
 using Rhino;
 using Rhino.DocObjects;
 using Rhino.Render;
+using RhinoCyclesCore.Core;
 using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCyclesCore.RenderEngines
@@ -89,9 +90,7 @@ namespace RhinoCyclesCore.RenderEngines
 							channel.SetValues(rect, size, pixelbuffer);
 						}
 					}
-#if DEBUGxx
-						SaveRenderedBuffer(sample);
-#endif
+					SaveRenderedBuffer(sample);
 					//PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
 
 					if(CancelRender || sample >= maxSamples) Session.Cancel("done");
@@ -183,9 +182,11 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.CancelRender = true;
 			#endregion
 
-#if DEBUG
-			SaveRenderedBufferAsImage(client, cyclesEngine, size, "RC_modal_renderer");
-#endif
+			if (RcCore.It.EngineSettings.SaveDebugImages)
+			{
+				var tmpf = $"{Environment.GetEnvironmentVariable("TEMP")}\\RC_modal_renderer.png";
+				cyclesEngine.RenderWindow.SaveRenderImageAs(tmpf, true);
+			}
 
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Session.Destroy();

@@ -21,6 +21,7 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using Rhino.Geometry;
 using Rhino.Render;
+using RhinoCyclesCore.Core;
 using Transform = ccl.Transform;
 
 namespace RhinoCyclesCore.Converters
@@ -361,9 +362,7 @@ namespace RhinoCyclesCore.Converters
 			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isEnv, planarProjection), pwidth, pheight, isLinear);
 			if (!read)
 			{
-#if DEBUG
-				img.SaveBitmaps();
-#endif
+				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
 				ByteImagesNew[rId] = img;
 			}
 
@@ -376,9 +375,7 @@ namespace RhinoCyclesCore.Converters
 			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isEnv, planarProjection), pwidth, pheight, isLinear);
 			if (!read)
 			{
-#if DEBUG
-				img.SaveBitmaps();
-#endif
+				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
 				FloatImagesNew[rId] = img;
 			}
 

@@ -205,7 +205,7 @@ namespace RhinoCyclesCore
 		/// Set to true if rhino shader conversion should be skipped.
 		/// </summary>
 		public bool UseSimpleShaders { get; set; }
-
+		public bool SaveDebugImages { get; set; }
 		public bool Verbose { get; set; }
 		public bool ShowTime { get; set; }
 		public bool UseInteractiveRenderer { get; set; }

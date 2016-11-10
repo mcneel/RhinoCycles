@@ -23,6 +23,7 @@ using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
 using RhinoCyclesCore.Converters;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore
 {
@@ -199,11 +200,7 @@ namespace RhinoCyclesCore
 				Bitmap newBitmap = new Bitmap(w, h);
 
 				var col = Color.Aqua;
-				if (color1 != Color.Empty)
-#if DEBUGxxx
-					if(!view.ShowWallpaperInGrayScale)
-#endif
-					col = color1;
+				if (color1 != Color.Empty) col = color1;
 				var brush = new SolidBrush(col);
 				var p = new Point(x, y);
 				var bmsize=	new Size(nw,nh);
@@ -228,14 +225,10 @@ namespace RhinoCyclesCore
 						}
 					}
 				}
-#if DEBUGxxx
-				var tmpf = string.Format("{0}\\{1}.png", Environment.GetEnvironmentVariable("TEMP"), "RC_wallpaper");
-				newBitmap.Save(tmpf, ImageFormat.Png);
-#endif
 				var wallpaperbm = BitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaperbm.ApplyGamma(gamma);
 				wallpaper.TexByte = wallpaperbm.Corrected;
-				wallpaperbm.SaveBitmaps();
+				if(RcCore.It.EngineSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
 				wallpaper.TexWidth = newBitmap.Width;
 				wallpaper.TexHeight = newBitmap.Height;
 				wallpaper.Name =
