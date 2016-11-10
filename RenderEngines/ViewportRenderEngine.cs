@@ -128,9 +128,7 @@ namespace RhinoCyclesCore.RenderEngines
 							channel.SetValues(rect, size, pixelbuffer);
 						}
 					}
-#if DEBUGxx
-						SaveRenderedBuffer(sample);
-#endif
+					SaveRenderedBuffer(sample);
 					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
 					Session.Scene.Unlock();
 					// now signal whoever is interested
