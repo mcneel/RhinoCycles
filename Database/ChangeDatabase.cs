@@ -1343,8 +1343,8 @@ namespace RhinoCyclesCore.Database
 				// set mesh reference and other stuff
 				cob.Mesh = mesh;
 				cob.Transform = ob.Transform;
-				cob.Visibility = ob.Visible ? PathRay.AllVisibility : PathRay.Hidden;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
+				cob.Visibility = ob.IsShadowCatcher ? PathRay.Camera : (ob.Visible ? PathRay.AllVisibility : PathRay.Hidden);
 				cob.TagUpdate();
 			}
 		}
