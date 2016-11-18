@@ -813,8 +813,7 @@ namespace RhinoCyclesCore.Database
 			foreach (var a in addedOrChanged)
 			{
 				var matid = a.MaterialId;
-				var mat = MaterialFromId(matid);
-
+				var mat = a.RenderMaterial;
 
 				if (!addedmats.Contains(matid))
 				{
