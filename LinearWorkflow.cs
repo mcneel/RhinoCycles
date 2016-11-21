@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using System;
-using LwFlow = Rhino.Render.ChangeQueue.LinearWorkflow;
+//using LwFlow = Rhino.Render.ChangeQueue.LinearWorkflow;
 namespace RhinoCyclesCore
 {
+  /*
 	/// <summary>
 	/// Intermediate class to convey linear workflow settings:
 	/// gamma, reciprocal gamma, active.
@@ -79,4 +80,5 @@ namespace RhinoCyclesCore
 			return $"Core.LinearWorkflow {Active} {Gamma} {GammaReciprocal}";
 		}
 	}
+  */
 }

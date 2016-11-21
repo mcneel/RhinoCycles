@@ -258,17 +258,17 @@ namespace RhinoCycles.Viewport
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
 		{
-			SetUseLinearWorkflowGamma(e.Lwf.Active);
-			SetGamma(e.Gamma);
+      LinearWorkflow.CopyFrom(e.Lwf);
+
 			if (_cycles != null)
 			{
 				var imageadjust = _cycles.RenderWindow.GetAdjust();
-				imageadjust.Gamma = e.Gamma;
+				imageadjust.Gamma = e.Lwf.PostProcessGamma;
 				_cycles.RenderWindow.SetAdjust(imageadjust);
 			} else if(_modal!= null)
 			{
 				var imageadjust = _modal.RenderWindow.GetAdjust();
-				imageadjust.Gamma = e.Gamma;
+				imageadjust.Gamma = e.Lwf.PostProcessGamma;
 				_modal.RenderWindow.SetAdjust(imageadjust);
 			}
 		}
@@ -317,7 +317,8 @@ namespace RhinoCycles.Viewport
 
 		public override bool OnRenderSizeChanged(int width, int height)
 		{
-			SetGamma(_cycles.Database.Gamma);
+			LinearWorkflow.PostProcessGamma = _cycles.Database.LinearWorkflow.PostProcessGamma;
+
 			_startTime = DateTime.UtcNow;
 			_available = false;
 			_frameAvailable = false;

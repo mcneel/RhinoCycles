@@ -29,7 +29,6 @@ using CqMesh = Rhino.Render.ChangeQueue.Mesh;
 using CqGroundPlane = Rhino.Render.ChangeQueue.GroundPlane;
 using CqLight = Rhino.Render.ChangeQueue.Light;
 using CqSkylight = Rhino.Render.ChangeQueue.Skylight;
-using CQLinearWorkflow = Rhino.Render.ChangeQueue.LinearWorkflow;
 using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;
 using CclObject = ccl.Object;
@@ -153,7 +152,6 @@ namespace RhinoCyclesCore.Database
 		{
 			if (LinearWorkflowHasChanged)
 			{
-				Gamma = LinearWorkflow.Gamma;
 				TriggerLinearWorkflowUploaded();
 			}
 		}
@@ -200,10 +198,10 @@ namespace RhinoCyclesCore.Database
 
 		public void UploadGammaChanges()
 		{
-			if (GammaHasChanged || LinearWorkflowHasChanged)
+			if (LinearWorkflowHasChanged)
 			{
 				TriggerLinearWorkflowUploaded();
-				BitmapConverter.ApplyGammaToTextures(GammaLinearWorkflow);
+				BitmapConverter.ApplyGammaToTextures(_linearWorkflow.PreProcessGamma);
 
 				_environmentDatabase.CurrentBackgroundShader?.Reset();
 
@@ -212,14 +210,14 @@ namespace RhinoCyclesCore.Database
 					var matsh = tup.Item1 as CyclesShader;
 					if (matsh != null)
 					{
-						matsh.Gamma = GammaLinearWorkflow;
+						matsh.Gamma = _linearWorkflow.PreProcessGamma;
 						TriggerMaterialShaderChanged(matsh, tup.Item2);
 					}
 
 					var lgsh = tup.Item1 as CyclesLight;
 					if (lgsh != null)
 					{
-						lgsh.Gamma = GammaLinearWorkflow;
+						lgsh.Gamma = _linearWorkflow.PreProcessGamma;
 						TriggerLightShaderChanged(lgsh, tup.Item2);
 					}
 
@@ -246,7 +244,7 @@ namespace RhinoCyclesCore.Database
 
 		internal void TriggerLinearWorkflowUploaded()
 		{
-			LinearWorkflowChanged?.Invoke(this, new LinearWorkflowChangedEventArgs(new LinearWorkflow(LinearWorkflow), Gamma));
+			LinearWorkflowChanged?.Invoke(this, new LinearWorkflowChangedEventArgs(new LinearWorkflow(LinearWorkflow)));
 		}
 
 		/// <summary>
@@ -383,7 +381,6 @@ namespace RhinoCyclesCore.Database
 		{
 			_dynamic = false;
 			_currentViewInfo = null;
-			ClearGamma();
 			ClearLinearWorkflow();
 			_environmentDatabase.ResetBackgroundChangeQueue();
 			_cameraDatabase.ResetViewChangeQueue();
@@ -408,52 +405,11 @@ namespace RhinoCyclesCore.Database
 				_lightDatabase.HasChanges() || 
 				_shaderDatabase.HasChanges() ||
 				_objectDatabase.HasChanges() ||
-				LinearWorkflowHasChanged ||
-				GammaHasChanged;
-		}
-
-		private float _gamma = 1.0f;
-
-		public bool GammaHasChanged { get; private set; }
-
-		public float Gamma
-		{
-			set
-			{
-				_gamma = value;
-				GammaHasChanged = true;
-			}
-			get
-			{
-				return _gamma;
-			}
-		}
-
-		public float GammaLinearWorkflow
-		{
-			get
-			{
-				if (LinearWorkflow != null)
-				{
-					return LinearWorkflow.Active ? Gamma : 1.0f;
-				}
-
-				return 1.0f;
-			}
+				LinearWorkflowHasChanged;
 		}
 
 
-		private void ClearGamma()
-		{
-			GammaHasChanged = false;
-		}
-
-		protected override void ApplyGammaChanges(double dGamma)
-		{
-			Gamma= (float) dGamma;
-		}
-
-		private LinearWorkflow _linearWorkflow = new LinearWorkflow(false, 1.0f);
+		private LinearWorkflow _linearWorkflow = new LinearWorkflow();
 
 		public bool LinearWorkflowHasChanged { get; private set; }
 
@@ -463,8 +419,6 @@ namespace RhinoCyclesCore.Database
 			{
 				_linearWorkflow = value;
 				LinearWorkflowHasChanged = true;
-
-				Gamma = _linearWorkflow.Gamma;
 			}
 			get
 			{
@@ -477,10 +431,9 @@ namespace RhinoCyclesCore.Database
 			LinearWorkflowHasChanged = false;
 		}
 
-		protected override void ApplyLinearWorkflowChanges(CQLinearWorkflow lw)
+		protected override void ApplyLinearWorkflowChanges(Rhino.Render.LinearWorkflow lw)
 		{
-			LinearWorkflow = new LinearWorkflow(lw);
-			sdd.WriteLine($"LinearWorkflow {lw.Active} {lw.Gamma} {lw.GammaReciprocal}");
+			sdd.WriteLine($"LinearWorkflow {lw.PreProcessColors} {lw.PreProcessTextures} {lw.PostProcessFrameBuffer} {lw.PreProcessGamma} {lw.PostProcessGammaReciprocal}");
 		}
 
 		/// <summary>
@@ -850,7 +803,7 @@ namespace RhinoCyclesCore.Database
 			if (_shaderDatabase.HasShader(mat.RenderHash)) return;
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, GammaLinearWorkflow);
+			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, _linearWorkflow.PreProcessGamma);
 			_shaderDatabase.AddShader(sh);
 		}
 
@@ -923,7 +876,7 @@ namespace RhinoCyclesCore.Database
 			{
 				if (_renderEngine.CancelRender) return;
 
-				shader.Gamma = GammaLinearWorkflow;
+				shader.Gamma = _linearWorkflow.PreProcessGamma;
 
 				// create a cycles shader
 				var sh = _renderEngine.CreateMaterialShader(shader);
@@ -1062,7 +1015,7 @@ namespace RhinoCyclesCore.Database
 			{
 				if (_renderEngine.CancelRender) return;
 
-				l.Gamma = GammaLinearWorkflow;
+				l.Gamma = _linearWorkflow.PreProcessGamma;
 
 				var lgsh = _renderEngine.CreateSimpleEmissionShader(l);
 				_renderEngine.Client.Scene.AddShader(lgsh);
@@ -1208,7 +1161,7 @@ namespace RhinoCyclesCore.Database
 				// with a view to force it to be a single-view only ChangeQueue.
 				// See #RH-32345 and #RH-32356
 					var v = GetQueueView();
-					var cl = _shaderConverter.ConvertLight(this, light, v, GammaLinearWorkflow);
+					var cl = _shaderConverter.ConvertLight(this, light, v, _linearWorkflow.PreProcessGamma);
 
 					_lightDatabase.AddLight(cl);
 				}
@@ -1262,7 +1215,7 @@ namespace RhinoCyclesCore.Database
 				}
 				else
 				{
-					var cl = _shaderConverter.ConvertLight(light, GammaLinearWorkflow);
+					var cl = _shaderConverter.ConvertLight(light, _linearWorkflow.PreProcessGamma);
 					//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
 					_lightDatabase.AddLight(cl);
 				}
@@ -1280,7 +1233,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="sun"></param>
 		protected override void ApplySunChanges(RGLight sun)
 		{
-			var cl = _shaderConverter.ConvertLight(sun, GammaLinearWorkflow);
+			var cl = _shaderConverter.ConvertLight(sun, _linearWorkflow.PreProcessGamma);
 			cl.Id = _sunGuid;
 			_lightDatabase.AddLight(cl);
 			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
@@ -1356,7 +1309,7 @@ namespace RhinoCyclesCore.Database
 		{
 			//System.Diagnostics.Debug.WriteLine("{0}", skylight);
 			_environmentDatabase.SetSkylightEnabled(skylight.Enabled);
-			_environmentDatabase.SetGamma(GammaLinearWorkflow);
+			_environmentDatabase.SetGamma(_linearWorkflow.PreProcessGamma);
 		}
 
 
@@ -1378,7 +1331,7 @@ namespace RhinoCyclesCore.Database
 						$"view has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}");
 					_environmentDatabase.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
 				}
-				_environmentDatabase.SetGamma(GammaLinearWorkflow);
+				_environmentDatabase.SetGamma(_linearWorkflow.PreProcessGamma);
 				_renderSettingsDatabase.SetQuality(rs.AntialiasLevel);
 				_renderEngine.Settings.SetQuality(rs.AntialiasLevel);
 			}
@@ -1396,7 +1349,7 @@ namespace RhinoCyclesCore.Database
 			 * environment instance is wrong. See http://mcneel.myjetbrains.com/youtrack/issue/RH-32418
 			 */
 			UpdateAllEnvironments();
-			_environmentDatabase.SetGamma(GammaLinearWorkflow);
+			_environmentDatabase.SetGamma(_linearWorkflow.PreProcessGamma);
 
 			//System.Diagnostics.Debug.WriteLine("{0}, env {1}", usage, env);
 		}

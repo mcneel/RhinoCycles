@@ -15,18 +15,17 @@ limitations under the License.
 **/
 
 using System;
+using Rhino.Render;
 
 namespace RhinoCyclesCore.Database
 {
 	public class LinearWorkflowChangedEventArgs: EventArgs
 	{
-		public float Gamma { get; private set; }
 		public LinearWorkflow Lwf { get; private set; }
 		
-		public LinearWorkflowChangedEventArgs(LinearWorkflow lwf, float gamma)
+		public LinearWorkflowChangedEventArgs(LinearWorkflow lwf)
 		{
 			Lwf = lwf;
-			Gamma = gamma;
 		}
 	}
 }
