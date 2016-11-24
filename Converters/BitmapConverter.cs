@@ -50,11 +50,10 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="shader"></param>
 		/// <param name="rm"></param>
 		/// <param name="renderTexture"></param>
-		/// <param name="channelName"></param>
 		/// <param name="textureType"></param>
-		internal static void MaterialBitmapFromEvaluator(ref CyclesShader shader, RenderMaterial rm, RenderTexture renderTexture, string channelName, RenderMaterial.StandardChildSlots textureType)
+		internal static void MaterialBitmapFromEvaluator(ref CyclesShader shader, RenderMaterial rm, RenderTexture renderTexture, RenderMaterial.StandardChildSlots textureType)
 		{
-			if (renderTexture == null || !rm.ChildSlotOn(channelName)) return;
+			if (renderTexture == null) return;
 
 			var rId = renderTexture.RenderHashWithoutLocalMapping;
 
@@ -65,127 +64,139 @@ namespace RhinoCyclesCore.Converters
 
 			using (var textureEvaluator = renderTexture.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
 			{
-				if (textureEvaluator == null) return;
-				int pheight;
-				int pwidth;
-				try
+				SimulatedTexture st = textureEvaluator == null ? renderTexture.SimulatedTexture(RenderTexture.TextureGeneration.Disallow) : null;
+				using (
+					var actualEvaluator = textureEvaluator ?? RenderTexture.NewBitmapTexture(st).CreateEvaluator(RenderTexture.TextureEvaluatorFlags.Normal))
 				{
-					int u, v, w;
-					renderTexture.PixelSize(out u, out v, out w);
-					pheight = u;
-					pwidth = v;
-				}
-				catch (Exception)
-				{
-					pheight = 1024;
-					pwidth = 1024;
-				}
+					InternalMaterialBitmapFromEvaluator(shader, renderTexture, textureType, rhinotfm, rId, actualEvaluator, projectionMode, envProjectionMode);
 
-				if (pheight == 0 || pwidth == 0)
-				{
-					pheight = 1024;
-					pwidth = 1024;
 				}
+			}
+		}
 
-				Transform t = new Transform(
-					rhinotfm.ToFloatArray(true)
-					);
+		private static void InternalMaterialBitmapFromEvaluator(CyclesShader shader, RenderTexture renderTexture,
+			RenderMaterial.StandardChildSlots textureType, Rhino.Geometry.Transform rhinotfm, uint rId, TextureEvaluator actualEvaluator,
+			TextureProjectionMode projectionMode, TextureEnvironmentMappingMode envProjectionMode)
+		{
+			int pheight;
+			int pwidth;
+			try
+			{
+				int u, v, w;
+				renderTexture.PixelSize(out u, out v, out w);
+				pheight = u;
+				pwidth = v;
+			}
+			catch (Exception)
+			{
+				pheight = 1024;
+				pwidth = 1024;
+			}
 
-				var isFloat = renderTexture.IsHdrCapable();
-				var isLinear = renderTexture.IsLinear();
+			if (pheight == 0 || pwidth == 0)
+			{
+				pheight = 1024;
+				pwidth = 1024;
+			}
 
-				if (isFloat)
-				{
-					var img = RetrieveFloatsImg(rId, pwidth, pheight, textureEvaluator, false, false, isLinear);
-					img.ApplyGamma(shader.Gamma);
-					switch (textureType)
-					{
-						case RenderMaterial.StandardChildSlots.Diffuse:
-							shader.DiffuseTexture.IsLinear = isLinear;
-							shader.DiffuseTexture.TexFloat = img.Data;
-							shader.DiffuseTexture.TexByte = null;
-							break;
-						case RenderMaterial.StandardChildSlots.Bump:
-							shader.BumpTexture.IsLinear = isLinear;
-							shader.BumpTexture.TexFloat = img.Data;
-							shader.BumpTexture.TexByte = null;
-							break;
-						case RenderMaterial.StandardChildSlots.Transparency:
-							shader.TransparencyTexture.IsLinear = isLinear;
-							shader.TransparencyTexture.TexFloat = img.Data;
-							shader.TransparencyTexture.TexByte = null;
-							break;
-						case RenderMaterial.StandardChildSlots.Environment:
-							shader.EnvironmentTexture.IsLinear = isLinear;
-							shader.EnvironmentTexture.TexFloat = img.Data;
-							shader.EnvironmentTexture.TexByte = null;
-							break;
-					}
-				}
-				else
-				{
-					var img = RetrieveBytesImg(rId, pwidth, pheight, textureEvaluator, false, false, isLinear);
-					img.ApplyGamma(shader.Gamma);
-					switch (textureType)
-					{
-						case RenderMaterial.StandardChildSlots.Diffuse:
-							shader.DiffuseTexture.IsLinear = isLinear;
-							shader.DiffuseTexture.TexFloat = null;
-							shader.DiffuseTexture.TexByte = img.Data;
-							break;
-						case RenderMaterial.StandardChildSlots.Bump:
-							shader.BumpTexture.IsLinear = isLinear;
-							shader.BumpTexture.TexFloat = null;
-							shader.BumpTexture.TexByte = img.Data;
-							break;
-						case RenderMaterial.StandardChildSlots.Transparency:
-							shader.TransparencyTexture.IsLinear = isLinear;
-							shader.TransparencyTexture.TexFloat = null;
-							shader.TransparencyTexture.TexByte = img.Data;
-							break;
-						case RenderMaterial.StandardChildSlots.Environment:
-							shader.EnvironmentTexture.IsLinear = isLinear;
-							shader.EnvironmentTexture.TexFloat = null;
-							shader.EnvironmentTexture.TexByte = img.Data;
-							break;
-					}
-				}
+			Transform t = new Transform(
+				rhinotfm.ToFloatArray(true)
+				);
+
+			var isFloat = renderTexture.IsHdrCapable();
+			var isLinear = renderTexture.IsLinear();
+
+			if (isFloat)
+			{
+				var img = RetrieveFloatsImg(rId, pwidth, pheight, actualEvaluator, false, false, isLinear);
+				img.ApplyGamma(shader.Gamma);
 				switch (textureType)
 				{
 					case RenderMaterial.StandardChildSlots.Diffuse:
-						shader.DiffuseTexture.TexWidth = pwidth;
-						shader.DiffuseTexture.TexHeight = pheight;
-						shader.DiffuseTexture.ProjectionMode = projectionMode;
-						shader.DiffuseTexture.EnvProjectionMode = envProjectionMode;
-						shader.DiffuseTexture.Transform = t;
-						shader.DiffuseTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+						shader.DiffuseTexture.IsLinear = isLinear;
+						shader.DiffuseTexture.TexFloat = img.Data;
+						shader.DiffuseTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Bump:
-						shader.BumpTexture.TexWidth = pwidth;
-						shader.BumpTexture.TexHeight = pheight;
-						shader.BumpTexture.ProjectionMode = projectionMode;
-						shader.BumpTexture.EnvProjectionMode = envProjectionMode;
-						shader.BumpTexture.Transform = t;
-						shader.BumpTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+						shader.BumpTexture.IsLinear = isLinear;
+						shader.BumpTexture.TexFloat = img.Data;
+						shader.BumpTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Transparency:
-						shader.TransparencyTexture.TexWidth = pwidth;
-						shader.TransparencyTexture.TexHeight = pheight;
-						shader.TransparencyTexture.ProjectionMode = projectionMode;
-						shader.TransparencyTexture.EnvProjectionMode = envProjectionMode;
-						shader.TransparencyTexture.Transform = t;
-						shader.TransparencyTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+						shader.TransparencyTexture.IsLinear = isLinear;
+						shader.TransparencyTexture.TexFloat = img.Data;
+						shader.TransparencyTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Environment:
-						shader.EnvironmentTexture.TexWidth = pwidth;
-						shader.EnvironmentTexture.TexHeight = pheight;
-						// special texture, always set to Environment/Emap
-						shader.EnvironmentTexture.ProjectionMode = TextureProjectionMode.EnvironmentMap;
-						shader.EnvironmentTexture.EnvProjectionMode = TextureEnvironmentMappingMode.EnvironmentMap;
-						shader.EnvironmentTexture.Transform = t;
-						shader.EnvironmentTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+						shader.EnvironmentTexture.IsLinear = isLinear;
+						shader.EnvironmentTexture.TexFloat = img.Data;
+						shader.EnvironmentTexture.TexByte = null;
 						break;
 				}
+			}
+			else
+			{
+				var img = RetrieveBytesImg(rId, pwidth, pheight, actualEvaluator, false, false, isLinear);
+				img.ApplyGamma(shader.Gamma);
+				switch (textureType)
+				{
+					case RenderMaterial.StandardChildSlots.Diffuse:
+						shader.DiffuseTexture.IsLinear = isLinear;
+						shader.DiffuseTexture.TexFloat = null;
+						shader.DiffuseTexture.TexByte = img.Data;
+						break;
+					case RenderMaterial.StandardChildSlots.Bump:
+						shader.BumpTexture.IsLinear = isLinear;
+						shader.BumpTexture.TexFloat = null;
+						shader.BumpTexture.TexByte = img.Data;
+						break;
+					case RenderMaterial.StandardChildSlots.Transparency:
+						shader.TransparencyTexture.IsLinear = isLinear;
+						shader.TransparencyTexture.TexFloat = null;
+						shader.TransparencyTexture.TexByte = img.Data;
+						break;
+					case RenderMaterial.StandardChildSlots.Environment:
+						shader.EnvironmentTexture.IsLinear = isLinear;
+						shader.EnvironmentTexture.TexFloat = null;
+						shader.EnvironmentTexture.TexByte = img.Data;
+						break;
+				}
+			}
+			switch (textureType)
+			{
+				case RenderMaterial.StandardChildSlots.Diffuse:
+					shader.DiffuseTexture.TexWidth = pwidth;
+					shader.DiffuseTexture.TexHeight = pheight;
+					shader.DiffuseTexture.ProjectionMode = projectionMode;
+					shader.DiffuseTexture.EnvProjectionMode = envProjectionMode;
+					shader.DiffuseTexture.Transform = t;
+					shader.DiffuseTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+					break;
+				case RenderMaterial.StandardChildSlots.Bump:
+					shader.BumpTexture.TexWidth = pwidth;
+					shader.BumpTexture.TexHeight = pheight;
+					shader.BumpTexture.ProjectionMode = projectionMode;
+					shader.BumpTexture.EnvProjectionMode = envProjectionMode;
+					shader.BumpTexture.Transform = t;
+					shader.BumpTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+					break;
+				case RenderMaterial.StandardChildSlots.Transparency:
+					shader.TransparencyTexture.TexWidth = pwidth;
+					shader.TransparencyTexture.TexHeight = pheight;
+					shader.TransparencyTexture.ProjectionMode = projectionMode;
+					shader.TransparencyTexture.EnvProjectionMode = envProjectionMode;
+					shader.TransparencyTexture.Transform = t;
+					shader.TransparencyTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+					break;
+				case RenderMaterial.StandardChildSlots.Environment:
+					shader.EnvironmentTexture.TexWidth = pwidth;
+					shader.EnvironmentTexture.TexHeight = pheight;
+					// special texture, always set to Environment/Emap
+					shader.EnvironmentTexture.ProjectionMode = TextureProjectionMode.EnvironmentMap;
+					shader.EnvironmentTexture.EnvProjectionMode = TextureEnvironmentMappingMode.EnvironmentMap;
+					shader.EnvironmentTexture.Transform = t;
+					shader.EnvironmentTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+					break;
 			}
 		}
 
