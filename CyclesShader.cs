@@ -192,6 +192,8 @@ namespace RhinoCyclesCore
 		public float IOR { get; set; }
 		public float Roughness { get; set; }
 		public float Reflectivity { get; set; }
+		public float Metalic { get; set; }
+		public bool NoMetalic => Math.Abs(Metalic) < 0.00001f;
 		public float Shine { get; set; }
 		public float Transparency { get; set; }
 		public bool NoTransparency => Math.Abs(Transparency) < 0.00001f;

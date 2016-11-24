@@ -21,250 +21,6 @@ namespace RhinoCyclesCore.Shaders
 {
 	public class RhinoFullNxt : RhinoShader
 	{
-#region Shader Nodes
-
-		/// <summary>
-		/// Texture coordinates
-		/// </summary>
-		private readonly TextureCoordinateNode m_texture_coordinate = new TextureCoordinateNode("Texture Coordinates");
-
-		/// <summary>
-		/// Fresnel to fac [0.0f - 1.0f]
-		/// </summary>
-		private readonly FresnelNode m_fresnel_factor = new FresnelNode("Fresnel factor");
-
-		/// <summary>
-		/// Light path inputs
-		/// </summary>
-		private readonly LightPathNode m_lightpath = new LightPathNode("light paths");
-
-		#region diffuse
-		/// <summary>
-		/// Diffuse solid color
-		/// </summary>
-		private readonly ColorNode m_diffuse_solid_color = new ColorNode("Diffuse solid color");
-
-		/// <summary>
-		/// Diffuse BSDF
-		/// </summary>
-		private readonly DiffuseBsdfNode m_diffuse_bsdf = new DiffuseBsdfNode("Diffuse BSDF");
-
-		/// <summary>
-		/// MixNode to drive amount of solid color
-		/// </summary>
-		private readonly MixNode m_diffuse_col_amount = new MixNode("Diffuse solid color amount") { BlendType = MixNode.BlendTypes.Add };
-
-		/// <summary>
-		/// MixNode to drive amount of texture color
-		/// </summary>
-		private readonly MixNode m_diffuse_tex_amount = new MixNode("Diffuse texture amount") { BlendType = MixNode.BlendTypes.Add };
-
-		/// <summary>
-		/// Mix texture color and diffuse color, driven by texture alpha to enforce diffuse texture merge
-		/// </summary>
-		private readonly MixNode m_diffuse_merge_texalpha_solid = new MixNode("Diffuse texture +alpha merge with solid color") { BlendType = MixNode.BlendTypes.Mix };
-
-		/// <summary>
-		/// MixNode to drive amount of texture color
-		/// </summary>
-		private readonly MixNode m_diffuse_tex_and_solid_col_add = new MixNode("Diffuse texture + Diffuse solid color") { BlendType = MixNode.BlendTypes.Add };
-
-		/// <summary>
-		/// Diffuse Color Texture
-		/// </summary>
-		private readonly ImageTextureNode m_diffuse_texture = new ImageTextureNode("Diffuse Texture Image");
-		#endregion
-
-		#region reflection
-
-		/// <summary>
-		/// Reflection solid color
-		/// </summary>
-		private readonly ColorNode m_reflection_solid_color = new ColorNode("Reflection solid color");
-
-		/// <summary>
-		/// Mix node to drive amount of solid reflection color
-		/// </summary>
-		private readonly MixNode m_reflection_col_amount = new MixNode("Reflection solid color amount") { BlendType = MixNode.BlendTypes.Add };
-
-		/// <summary>
-		/// Reflection BSDF
-		/// </summary>
-		private readonly GlossyBsdfNode m_reflection_bsdf = new GlossyBsdfNode("Reflection BSDF") { Distribution = GlossyBsdfNode.GlossyDistribution.GGX };
-
-		/// <summary>
-		/// Drive reflection amount based on fresnel factor
-		/// </summary>
-		private readonly MixClosureNode m_reflection_fresnel_mod = new MixClosureNode("Reflection fresnel mod");
-
-		#endregion
-
-		#region transparency
-
-		/// <summary>
-		/// Transparency solid color
-		/// </summary>
-		private readonly ColorNode m_transparency_solid_color = new ColorNode("Transparency solid color");
-
-		/// <summary>
-		/// Drive transparency color amount
-		/// </summary>
-		private readonly MixNode m_transparency_col_amount = new MixNode("Transparency solid color amount") { BlendType = MixNode.BlendTypes.Add };
-
-		/// <summary>
-		/// Refraction BSDF for transparent material with IOR capability
-		/// </summary>
-		private readonly RefractionBsdfNode m_transparency_bsdf = new RefractionBsdfNode("Transparency BSDF") { Distribution = RefractionBsdfNode.RefractionDistribution.GGX };
-
-		/// <summary>
-		/// Drive transparency amount based on (inverse) fresnel factor
-		/// </summary>
-		private readonly MixClosureNode m_transparency_fresnel_mod = new MixClosureNode("Transparency fresnel mod");
-
-		#endregion
-
-		#region transparency texture
-
-		/// <summary>
-		/// Transparency texture (alpha map)
-		/// </summary>
-		private readonly ImageTextureNode m_transparency_texture = new ImageTextureNode("Transparency texture");
-
-		/// <summary>
-		/// Convert input image to luminance
-		/// </summary>
-		private readonly RgbToLuminanceNode m_transparency_to_luminance = new RgbToLuminanceNode("Transparency to Luminance");
-
-		/// <summary>
-		/// Invert luminance value, white is opaque
-		/// </summary>
-		private readonly MathNode m_luminance_invert = new MathNode("Invert luminance - white is opaque");
-
-		/// <summary>
-		/// Factor luminance strength with texture channel amount
-		/// </summary>
-		private readonly MathNode m_transparency_texture_amount = new MathNode("Transparency texture amount") { Operation = MathNode.Operations.Multiply };
-
-		#endregion
-
-		#region texture alpha
-
-		/// <summary>
-		/// invert diffuse texture alpha
-		/// </summary>
-		private readonly MathNode m_inverse_diffuse_alpha = new MathNode("Inverse of diffuse texture alpha") { Operation = MathNode.Operations.Subtract };
-
-		/// <summary>
-		/// add transparency alpha and texture alpha
-		/// </summary>
-		private readonly MathNode m_transparency_plus_diffuse = new MathNode("Add transparency texture alpha and diffuse texture alpha") { Operation = MathNode.Operations.Add };
-
-		/// <summary>
-		/// effective alpha
-		/// </summary>
-		private readonly MathNode m_effective_alpha = new MathNode("1.0 - ((1.0-diff alpha) + transp alpha)") {Operation = MathNode.Operations.Subtract };
-
-		/// <summary>
-		/// Drive diffuse and transparency alpha
-		/// </summary>
-		private readonly MixClosureNode m_diffuse_and_transparency_alpha = new MixClosureNode("Effective object transparency");
-
-		/// <summary>
-		/// Complete transparency to mix final shader with (such that we can have alpha mask after reflection and regular transparency)
-		/// </summary>
-		private readonly TransparentBsdfNode m_transparent = new TransparentBsdfNode("transparent BSDF for texture (diff and transp) alpha");
-
-		#endregion
-
-		#region lighting transport through transparency
-
-		/// <summary>
-		/// Color transparency
-		/// </summary>
-		private readonly TransparentBsdfNode m_light_transport_bsdf = new TransparentBsdfNode("Light Transport through Transparency BSDF");
-
-		/// <summary>
-		/// Give 1.0f when shadow or reflection ray
-		/// </summary>
-		private readonly MathNode m_lightpath_transport_max = new MathNode("Max (shadow,reflection)");
-
-		/// <summary>
-		/// if shadow or reflection ray, make sure we let those through to color shadow and light objects behind
-		/// </summary>
-		private readonly MixClosureNode m_mix_lightpath = new MixClosureNode("Mix lightpaths and transparent bsdf");
-
-		#endregion
-
-		#region shadeless
-
-		/// <summary>
-		/// Emission node to set to 1.0f strength for color input, to result in shadeless effect (self-illumination)
-		/// </summary>
-		private readonly EmissionNode m_shadeless_control = new EmissionNode("Control shadeless");
-
-		/// <summary>
-		/// Choose between shaded or shadeless
-		/// </summary>
-		private readonly MixClosureNode m_shaded_or_shadeless = new MixClosureNode("Shaded or shadeless");
-
-		#endregion
-
-		#region emission
-		
-		/// <summary>
-		/// Emission color
-		/// </summary>
-		private readonly ColorNode m_emission_solid_color = new ColorNode("Emission color");
-
-		/// <summary>
-		/// Emission BSDF
-		/// </summary>
-		private readonly EmissionNode m_emission_bsdf = new EmissionNode("Emission BSDF");
-
-		#endregion
-
-		#region bump nodes
-
-		/// <summary>
-		/// Bump the normals
-		/// </summary>
-		private readonly BumpNode m_bump_normal = new BumpNode("Bump the normals");
-
-		private readonly RgbToBwNode m_bump_bw = new RgbToBwNode("Bump texture color to bw");
-
-		private readonly ImageTextureNode m_bump_texture = new ImageTextureNode("Bump texture");
-		#endregion
-
-		#region environment slot
-
-		private  readonly ImageTextureNode m_environment_slot_texture = new ImageTextureNode("Environment slot");
-
-		private readonly EmissionNode m_environment_slot_shadeless = new EmissionNode("Environment slot shadeless");
-
-		private readonly MixClosureNode m_environment_slot_mix = new MixClosureNode("Environment slot mixin");
-		#endregion
-
-		#region shader adders
-
-		/// <summary>
-		/// Add diffuse and reflection components
-		/// </summary>
-		private readonly AddClosureNode m_diffuse_and_reflection = new AddClosureNode("Diffuse + Reflection");
-
-		/// <summary>
-		/// Add diffuse, reflection and transparency components
-		/// </summary>
-		private readonly AddClosureNode m_diffuse_and_reflection_and_transparency = new AddClosureNode("Diffuse + Reflection + Transparency");
-
-		/// <summary>
-		/// Add diffuse, reflection, transparency and emission components
-		/// </summary>
-		private readonly AddClosureNode m_diffuse_and_reflection_and_transparency_and_emission = new AddClosureNode("Diffuse + Reflection + Transparency + Emission");
-
-		#endregion
-
-#endregion
-
 		public RhinoFullNxt(Client client, CyclesShader intermediate) : this(client, intermediate, null, intermediate.Name)
 		{
 		}
@@ -294,336 +50,224 @@ namespace RhinoCyclesCore.Shaders
 
 		public override Shader GetShader()
 		{
-
-#region add shader nodes
-
-			// Add texture coordinates
-			m_shader.AddNode(m_texture_coordinate);
-
-			// Add fresnel to factor
-			m_shader.AddNode(m_fresnel_factor);
-
-			// Add light paths input
-			m_shader.AddNode(m_lightpath);
-
-			// Add nodes for diffuse color (solid + texture)
-			m_shader.AddNode(m_diffuse_bsdf);
-			m_shader.AddNode(m_diffuse_solid_color);
-			m_shader.AddNode(m_diffuse_texture);
-			m_shader.AddNode(m_diffuse_col_amount);
-			m_shader.AddNode(m_diffuse_tex_amount);
-			m_shader.AddNode(m_diffuse_merge_texalpha_solid);
-			m_shader.AddNode(m_diffuse_tex_and_solid_col_add);
-
-			// Add nodes for reflection
-			m_shader.AddNode(m_reflection_solid_color);
-			m_shader.AddNode(m_reflection_col_amount);
-			m_shader.AddNode(m_reflection_bsdf);
-			m_shader.AddNode(m_reflection_fresnel_mod);
-
-			// Add nodes for transparency
-			m_shader.AddNode(m_transparency_solid_color);
-			m_shader.AddNode(m_transparency_col_amount);
-			m_shader.AddNode(m_transparency_bsdf);
-			m_shader.AddNode(m_transparency_fresnel_mod);
-
-			// Add nodes for transparency texture
-			m_shader.AddNode(m_transparency_texture);
-			m_shader.AddNode(m_transparency_to_luminance);
-			m_shader.AddNode(m_luminance_invert);
-			m_shader.AddNode(m_transparency_texture_amount);
-
-			// Add nodes for transparency based on alpha channels and transp texture
-			m_shader.AddNode(m_inverse_diffuse_alpha);
-			m_shader.AddNode(m_transparency_plus_diffuse);
-			m_shader.AddNode(m_effective_alpha);
-			m_shader.AddNode(m_diffuse_and_transparency_alpha);
-			m_shader.AddNode(m_transparent);
-
-			// Add nodes for lighting through transparency
-			m_shader.AddNode(m_light_transport_bsdf);
-			m_shader.AddNode(m_lightpath_transport_max);
-			m_shader.AddNode(m_mix_lightpath);
-
-			// Add nodes for emission
-			m_shader.AddNode(m_emission_solid_color);
-			m_shader.AddNode(m_emission_bsdf);
-
-			// Add nodes for shaded/shadeless control
-			m_shader.AddNode(m_shadeless_control);
-			m_shader.AddNode(m_shaded_or_shadeless);
-
-			// Add bump texture nodes
-			m_shader.AddNode(m_bump_normal);
-			m_shader.AddNode(m_bump_bw);
-			m_shader.AddNode(m_bump_texture);
-
-			// Add environment slot nodes
-			m_shader.AddNode(m_environment_slot_texture);
-			m_shader.AddNode(m_environment_slot_shadeless);
-			m_shader.AddNode(m_environment_slot_mix);
-
-			// Add nodes for adding shader components
-			m_shader.AddNode(m_diffuse_and_reflection);
-			m_shader.AddNode(m_diffuse_and_reflection_and_transparency);
-			m_shader.AddNode(m_diffuse_and_reflection_and_transparency_and_emission);
-
-#endregion
-
-			m_fresnel_factor.ins.IOR.Value = m_original.FresnelIOR;
-
-			if (m_original.FresnelReflections)
-			{
-				m_fresnel_factor.outs.Fac.Connect(m_reflection_fresnel_mod.ins.Fac);
-				//m_fresnel_factor.outs.Fac.Connect(m_transparency_fresnel_mod.ins.Fac);
-			}
-
-#region configure and connect diffuse solid color and diffuse texture nodes
-
-			m_diffuse_solid_color.Value = m_original.DiffuseColor ^ m_original.Gamma;
-			m_diffuse_solid_color.outs.Color.Connect(m_diffuse_col_amount.ins.Color2);
-			m_diffuse_solid_color.outs.Color.Connect(m_diffuse_merge_texalpha_solid.ins.Color1);
-
-			// set diffuse texture and its projection (projection connects m_texture_coordinate)
-			RenderEngine.SetTextureImage(m_diffuse_texture, m_original.DiffuseTexture);
-			RenderEngine.SetProjectionMode(m_shader, m_original.DiffuseTexture, m_diffuse_texture, m_texture_coordinate);
-			m_diffuse_texture.ColorSpace = TextureNode.TextureColorSpace.None;
-			m_diffuse_texture.IsLinear = false;
-			// connect diffuse texture to diffuse color strength mixer
+			var texcoord147 = new TextureCoordinateNode("texcoord");
+			var diffuse_texture148 = new ImageTextureNode("diffuse_texture");
+			diffuse_texture148.ins.Vector.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			diffuse_texture148.Projection = TextureNode.TextureProjection.Flat;
+			diffuse_texture148.ColorSpace = TextureNode.TextureColorSpace.None;
+			diffuse_texture148.Extension = TextureNode.TextureExtension.Repeat;
+			diffuse_texture148.Interpolation = InterpolationType.Linear;
+			diffuse_texture148.IsLinear = false;
 			if (m_original.HasDiffuseTexture)
 			{
-				m_diffuse_texture.outs.Color.Connect(m_diffuse_tex_amount.ins.Color2);
-				m_diffuse_texture.outs.Alpha.Connect(m_diffuse_merge_texalpha_solid.ins.Fac);
-				m_diffuse_texture.outs.Alpha.Connect(m_diffuse_tex_and_solid_col_add.ins.Fac);
-				if (m_original.DiffuseTexture.UseAlpha)
-				{
-					m_diffuse_texture.outs.Alpha.Connect(m_inverse_diffuse_alpha.ins.Value2);
-				}
+				RenderEngine.SetTextureImage(diffuse_texture148, m_original.DiffuseTexture);
+				diffuse_texture148.UseAlpha = m_original.DiffuseTexture.UseAlpha;
+				RenderEngine.SetProjectionMode(m_shader, m_original.DiffuseTexture, diffuse_texture148, texcoord147);
 			}
-
-			// set diffuse solid color. Mixing factor is 1.0 - diffuse texture strength
-			m_diffuse_col_amount.ins.Fac.Value = 1.0f - m_original.DiffuseTexture.Amount;
-			m_diffuse_col_amount.BlendType = MixNode.BlendTypes.Add;
-			m_diffuse_col_amount.UseClamp = true;
-			m_diffuse_col_amount.ins.Color1.Value = Colors.black;
-			// connecting solid strength in second
-			m_diffuse_col_amount.outs.Color.Connect(m_diffuse_tex_and_solid_col_add.ins.Color2);
-
-			// prepare diffuse texture color strength mixer
-			m_diffuse_tex_amount.ins.Fac.Value = m_original.DiffuseTexture.Amount;
-			m_diffuse_tex_amount.BlendType = MixNode.BlendTypes.Add;
-			m_diffuse_tex_amount.UseClamp = true;
-			m_diffuse_tex_amount.ins.Color1.Value = Colors.black;
-			m_diffuse_tex_amount.outs.Color.Connect(m_diffuse_merge_texalpha_solid.ins.Color2);
-
-			m_diffuse_merge_texalpha_solid.BlendType = MixNode.BlendTypes.Mix;
-			m_diffuse_merge_texalpha_solid.UseClamp = true;
-			m_diffuse_merge_texalpha_solid.ins.Fac.Value = 0.0f;
-			m_diffuse_merge_texalpha_solid.outs.Color.Connect(m_diffuse_tex_and_solid_col_add.ins.Color1);
-
-			// prepare diffuse solid + diffuse texture adder
-			m_diffuse_tex_and_solid_col_add.ins.Fac.Value = 0.0f;
-			m_diffuse_tex_and_solid_col_add.UseClamp = true;
-			// connect final diffuse color to bsdf BSDF
-			m_diffuse_tex_and_solid_col_add.outs.Color.Connect(m_diffuse_bsdf.ins.Color);
-			m_diffuse_tex_and_solid_col_add.outs.Color.Connect(m_shadeless_control.ins.Color);
-
-			// connect diffuse bsdf to shaded/shadeless control
-			m_diffuse_bsdf.outs.BSDF.Connect(m_shaded_or_shadeless.ins.Closure1);
-
-#endregion
-
-#region configure and connect reflection nodes
-
-			// set solid reflection color
-			m_reflection_solid_color.Value = m_original.ReflectionColor ^ m_original.Gamma;
-			m_reflection_solid_color.outs.Color.Connect(m_reflection_col_amount.ins.Color2);
-
-			// set driver of reflection color amount - mix with black, 1.0f means full reflection color
-			m_reflection_col_amount.ins.Color1.Value = Colors.black;
-			m_reflection_col_amount.BlendType = MixNode.BlendTypes.Add;
-			m_reflection_col_amount.UseClamp = true;
-			m_reflection_col_amount.ins.Fac.Value = m_original.Reflectivity;
-			m_reflection_col_amount.outs.Color.Connect(m_reflection_bsdf.ins.Color);
-
-			// actual reflection node settings, use roughness as well and
-			m_reflection_bsdf.ins.Roughness.Value = m_original.ReflectionRoughness;
-			m_reflection_bsdf.outs.BSDF.Connect(m_reflection_fresnel_mod.ins.Closure2);
-
-			m_reflection_fresnel_mod.ins.Fac.Value = 1.0f;
-			if(m_original.Reflectivity > 0.0f) m_reflection_fresnel_mod.outs.Closure.Connect(m_diffuse_and_reflection.ins.Closure2);
-
-#endregion
-
-#region configure and connect transparency nodes
-
-			// set transparency 'solid' color
-			m_transparency_solid_color.Value = m_original.TransparencyColor ^ m_original.Gamma;
-			m_transparency_solid_color.outs.Color.Connect(m_transparency_col_amount.ins.Color2);
-
-			// drive solid color amount with transparency amount
-			m_transparency_col_amount.ins.Color1.Value = Colors.black;
-			m_transparency_col_amount.UseClamp = true;
-			m_transparency_col_amount.BlendType = MixNode.BlendTypes.Add;
-			m_transparency_col_amount.ins.Fac.Value = m_original.Transparency;
-			m_transparency_col_amount.outs.Color.Connect(m_transparency_bsdf.ins.Color);
-			m_transparency_col_amount.outs.Color.Connect(m_light_transport_bsdf.ins.Color);
-
-			// transparency bsdf, use roughness
-			m_transparency_bsdf.ins.Roughness.Value = m_original.RefractionRoughness;
-			m_transparency_bsdf.Distribution = RefractionBsdfNode.RefractionDistribution.GGX;
-			m_transparency_bsdf.ins.IOR.Value = m_original.IOR;
-			m_transparency_bsdf.outs.BSDF.Connect(m_transparency_fresnel_mod.ins.Closure2);
-
-			m_transparency_fresnel_mod.ins.Fac.Value = 1.0f;
-			if(m_original.Transparency > 0.0f) m_transparency_fresnel_mod.outs.Closure.Connect(m_diffuse_and_reflection_and_transparency.ins.Closure2);
-
-#endregion
-
-#region configure and connect nodes for transparency texture handling
-			
-			// set transparency texture
-			RenderEngine.SetTextureImage(m_transparency_texture, m_original.TransparencyTexture);
-			RenderEngine.SetProjectionMode(m_shader, m_original.TransparencyTexture, m_transparency_texture, m_texture_coordinate);
-			m_transparency_texture.ColorSpace = TextureNode.TextureColorSpace.None;
-			m_transparency_texture.IsLinear = false;
-
-			// convert transparency texture input to luminance
-			m_transparency_texture.outs.Color.Connect(m_transparency_to_luminance.ins.Color);
-
-			m_transparency_to_luminance.outs.Val.Connect(m_luminance_invert.ins.Value2);
-
-			// invert luminance
-			m_luminance_invert.Operation = MathNode.Operations.Subtract;
-			m_luminance_invert.UseClamp = true;
-			m_luminance_invert.ins.Value1.Value = 1.0f;
-
-			m_luminance_invert.outs.Value.Connect(m_transparency_texture_amount.ins.Value1);
-
-			m_transparency_texture_amount.Operation = MathNode.Operations.Multiply;
-			m_transparency_texture_amount.UseClamp = true;
-			m_transparency_texture_amount.ins.Value2.Value = m_original.TransparencyTexture.Amount;
-
-			if(m_original.HasTransparencyTexture) m_transparency_texture_amount.outs.Value.Connect(m_transparency_plus_diffuse.ins.Value1);
-
-#endregion
-
-#region Configure and connect nodes for transparency based on alpha channels and transp texture
-
-			// by default inverse of diff alpha both value inputs to 1.0f, connect to trans and diff alpha adder
-			m_inverse_diffuse_alpha.Operation = MathNode.Operations.Subtract;
-			m_inverse_diffuse_alpha.UseClamp = true;
-			m_inverse_diffuse_alpha.ins.Value1.Value = 1.0f;
-			m_inverse_diffuse_alpha.ins.Value2.Value = 1.0f;
-			m_inverse_diffuse_alpha.outs.Value.Connect(m_transparency_plus_diffuse.ins.Value2);
-
-			// ensure adder value1 is by default 0.0f, driven by transparency texture luminance otherwise
-			m_transparency_plus_diffuse.Operation = MathNode.Operations.Add;
-			m_transparency_plus_diffuse.UseClamp = true;
-			m_transparency_plus_diffuse.ins.Value1.Value = 0.0f;
-			m_transparency_plus_diffuse.outs.Value.Connect(m_effective_alpha.ins.Value2);
-
-			// let effective alpha drive final node.
-			m_effective_alpha.Operation = MathNode.Operations.Subtract;
-			m_effective_alpha.UseClamp = true;
-			m_effective_alpha.ins.Value1.Value = 1.0f;
-			m_effective_alpha.outs.Value.Connect(m_diffuse_and_transparency_alpha.ins.Fac);
-
-			m_transparent.ins.Color.Value = Colors.white;
-			m_transparent.outs.BSDF.Connect(m_diffuse_and_transparency_alpha.ins.Closure1);
-
-#endregion
-
-#region configure and connect nodes for light transport through transparent material
-			m_lightpath.outs.IsShadowRay.Connect(m_lightpath_transport_max.ins.Value1);
-			m_lightpath.outs.IsReflectionRay.Connect(m_lightpath_transport_max.ins.Value2);
-
-			m_lightpath_transport_max.UseClamp = true;
-			m_lightpath_transport_max.Operation = MathNode.Operations.Maximum;
-
-			// connect max(shadow,reflection) only when transparency is defined on the transparent color channel
-			// not the transparency texture channel
-			m_lightpath_transport_max.outs.Value.Connect(m_mix_lightpath.ins.Fac);
-
-			m_light_transport_bsdf.outs.BSDF.Connect(m_mix_lightpath.ins.Closure2);
-
-			m_mix_lightpath.ins.Fac.Value = 0.0f;
-			m_mix_lightpath.outs.Closure.Connect(m_diffuse_and_reflection_and_transparency.ins.Closure1);
-#endregion
-
-#region configure and connect emission
-			m_emission_solid_color.Value = m_original.EmissionColor ^ m_original.Gamma;
-			m_emission_solid_color.outs.Color.Connect(m_emission_bsdf.ins.Color);
-
-			if (!m_original.EmissionColor.IsZero(false))
-			{
-				m_emission_bsdf.ins.Strength.Value = 1.0f;
-				m_emission_bsdf.outs.Emission.Connect(m_diffuse_and_reflection_and_transparency_and_emission.ins.Closure2);
-			}
-
-#endregion
-
-#region configure and connect shaded/shadeless controls
-			m_lightpath.outs.IsCameraRay.Connect(m_shadeless_control.ins.Strength);
-			m_shadeless_control.outs.Emission.Connect(m_shaded_or_shadeless.ins.Closure2);
-
-			m_shaded_or_shadeless.ins.Fac.Value = m_original.ShadelessAsFloat; // will be 1.0f for shadeless, 0.0f for shaded
-			m_shaded_or_shadeless.outs.Closure.Connect(m_diffuse_and_reflection.ins.Closure1);
-#endregion
-
-#region configure and connect bump texture nodes
+			var invert_diffuse_color_amount161 = new MathNode("invert_diffuse_color_amount");
+			invert_diffuse_color_amount161.ins.Value1.Value = 1f;
+			invert_diffuse_color_amount161.ins.Value2.Value = m_original.DiffuseTexture.Amount;
+			invert_diffuse_color_amount161.Operation = MathNode.Operations.Subtract;
+			invert_diffuse_color_amount161.UseClamp = false;
+			var diffuse_texture_amount158 = new MixNode("diffuse_texture_amount");
+			diffuse_texture_amount158.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			diffuse_texture_amount158.ins.Color2.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			diffuse_texture_amount158.ins.Fac.Value = m_original.DiffuseTexture.Amount;
+			var diffuse_col_amount160 = new MixNode("diffuse_col_amount");
+			diffuse_col_amount160.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			diffuse_col_amount160.ins.Color2.Value = m_original.DiffuseColor;
+			diffuse_col_amount160.ins.Fac.Value = 0.49f;
+			var bump_texture165 = new ImageTextureNode("bump_texture");
+			bump_texture165.ins.Vector.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			bump_texture165.Projection = TextureNode.TextureProjection.Flat;
+			bump_texture165.ColorSpace = TextureNode.TextureColorSpace.None;
+			bump_texture165.Extension = TextureNode.TextureExtension.Repeat;
+			bump_texture165.Interpolation = InterpolationType.Linear;
+			bump_texture165.UseAlpha = true;
+			bump_texture165.IsLinear = false;
 
 			if (m_original.HasBumpTexture)
 			{
-				RenderEngine.SetTextureImage(m_bump_texture, m_original.BumpTexture);
-				RenderEngine.SetProjectionMode(m_shader, m_original.BumpTexture, m_bump_texture, m_texture_coordinate);
-
-				m_bump_texture.ColorSpace = TextureNode.TextureColorSpace.None;
-				m_bump_texture.IsLinear = false;
-
-				m_bump_texture.outs.Color.Connect(m_bump_bw.ins.Color);
-				m_bump_bw.outs.Val.Connect(m_bump_normal.ins.Height);
-				m_bump_normal.ins.Strength.Value = 100.0f * m_original.BumpTexture.Amount;
-				m_bump_normal.ins.Distance.Value = 0.01f;
-
-				m_bump_normal.outs.Normal.Connect(m_diffuse_bsdf.ins.Normal);
-				m_bump_normal.outs.Normal.Connect(m_reflection_bsdf.ins.Normal);
-				m_bump_normal.outs.Normal.Connect(m_transparency_bsdf.ins.Normal);
-				m_bump_normal.outs.Normal.Connect(m_fresnel_factor.ins.Normal);
+				RenderEngine.SetTextureImage(bump_texture165, m_original.BumpTexture);
+				RenderEngine.SetProjectionMode(m_shader, m_original.BumpTexture, bump_texture165, texcoord147);
 			}
-#endregion
 
-#region configure and connect environment slot nodes
-
-			if (m_original.HasEnvironmentTexture)
+			var bump_texture_to_bw199 = new RgbToBwNode("bump_texture_to_bw");
+			bump_texture_to_bw199.ins.Color.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			var bump_amount200 = new MathNode("bump_amount");
+			bump_amount200.ins.Value1.Value = 10f;
+			bump_amount200.ins.Value2.Value = m_original.BumpTexture.Amount;
+			bump_amount200.Operation = MathNode.Operations.Multiply;
+			bump_amount200.UseClamp = false;
+			var combine_diffuse_color_and_texture162 = new MixNode("combine_diffuse_color_and_texture");
+			combine_diffuse_color_and_texture162.ins.Color1.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			combine_diffuse_color_and_texture162.ins.Color2.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			combine_diffuse_color_and_texture162.ins.Fac.Value = 0.5f;
+			var bump164 = new BumpNode("bump");
+			bump164.ins.Height.Value = 0f;
+			bump164.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			bump164.ins.Strength.Value = 0f;
+			bump164.ins.Distance.Value = 0.1f;
+			var invert_roughness130 = new MathNode("invert_roughness");
+			invert_roughness130.ins.Value1.Value = 1f;
+			invert_roughness130.ins.Value2.Value = m_original.Roughness;
+			invert_roughness130.Operation = MathNode.Operations.Subtract;
+			invert_roughness130.UseClamp = false;
+			var multiply_transparency131 = new MathNode("multiply_transparency");
+			multiply_transparency131.ins.Value1.Value = 1f;
+			multiply_transparency131.ins.Value2.Value = m_original.Transparency;
+			multiply_transparency131.Operation = MathNode.Operations.Multiply;
+			multiply_transparency131.UseClamp = false;
+			var light_path123 = new LightPathNode("light_path");
+			var multiply_with_shadowray132 = new MathNode("multiply_with_shadowray");
+			multiply_with_shadowray132.ins.Value1.Value = 0f;
+			multiply_with_shadowray132.ins.Value2.Value = 0f;
+			multiply_with_shadowray132.Operation = MathNode.Operations.Multiply;
+			multiply_with_shadowray132.UseClamp = false;
+			var layer_weight134 = new LayerWeightNode("layer_weight");
+			layer_weight134.ins.Blend.Value = 0.89f;
+			layer_weight134.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			var principled120 = new UberBsdfNode("principled");
+			principled120.ins.BaseColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			principled120.ins.SpecularColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			principled120.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			principled120.ins.Metallic.Value = m_original.Metalic;
+			principled120.ins.Subsurface.Value = 0f;
+			principled120.ins.SubsurfaceRadius.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			principled120.ins.Specular.Value = m_original.Shine;
+			principled120.ins.Roughness.Value = m_original.Roughness;
+			principled120.ins.SpecularTint.Value = 0f;
+			principled120.ins.Anisotropic.Value = 0f;
+			principled120.ins.Sheen.Value = 0f;
+			principled120.ins.SheenTint.Value = 0f;
+			principled120.ins.Clearcoat.Value = 0f;
+			principled120.ins.ClearcoatGloss.Value = 0f;
+			principled120.ins.IOR.Value = m_original.IOR;
+			principled120.ins.Transparency.Value = m_original.Transparency;
+			principled120.ins.RefractionRoughness.Value = m_original.RefractionRoughness;
+			principled120.ins.AnisotropicRotation.Value = 0f;
+			principled120.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			principled120.ins.ClearcoatNormal.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			principled120.ins.Tangent.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			var coloured_shadow_trans_color129 = new TransparentBsdfNode("coloured_shadow_trans_color");
+			coloured_shadow_trans_color129.ins.Color.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			var weight_for_shadowray_coloured_shadow133 = new MathNode("weight_for_shadowray_coloured_shadow");
+			weight_for_shadowray_coloured_shadow133.ins.Value1.Value = 0f;
+			weight_for_shadowray_coloured_shadow133.ins.Value2.Value = 0f;
+			weight_for_shadowray_coloured_shadow133.Operation = MathNode.Operations.Multiply;
+			weight_for_shadowray_coloured_shadow133.UseClamp = false;
+			var invert_alpha153 = new MathNode("invert_alpha");
+			invert_alpha153.ins.Value1.Value = 1f;
+			invert_alpha153.ins.Value2.Value = 0f;
+			invert_alpha153.Operation = MathNode.Operations.Subtract;
+			invert_alpha153.UseClamp = false;
+			var coloured_shadow_mix135 = new MixClosureNode("coloured_shadow_mix");
+			coloured_shadow_mix135.ins.Fac.Value = 0f;
+			var alphacutter_transparent149 = new TransparentBsdfNode("alphacutter_transparent");
+			alphacutter_transparent149.ins.Color.Value = new ccl.float4(1f, 1f, 1f, 1f);
+			var toggle_image_alpha151 = new MathNode("toggle_image_alpha");
+			toggle_image_alpha151.ins.Value1.Value = m_original.DiffuseTexture.UseAlphaAsFloat;
+			toggle_image_alpha151.ins.Value2.Value = 1f;
+			toggle_image_alpha151.Operation = MathNode.Operations.Multiply;
+			toggle_image_alpha151.UseClamp = false;
+			var transparency_texture154 = new ImageTextureNode("transparency_texture");
+			transparency_texture154.ins.Vector.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			transparency_texture154.Projection = TextureNode.TextureProjection.Flat;
+			transparency_texture154.ColorSpace = TextureNode.TextureColorSpace.None;
+			transparency_texture154.Extension = TextureNode.TextureExtension.Repeat;
+			transparency_texture154.Interpolation = InterpolationType.Linear;
+			transparency_texture154.UseAlpha = true;
+			transparency_texture154.IsLinear = false;
+			if (m_original.HasTransparencyTexture)
 			{
-				RenderEngine.SetTextureImage(m_environment_slot_texture, m_original.EnvironmentTexture);
-				RenderEngine.SetProjectionMode(m_shader, m_original.EnvironmentTexture, m_environment_slot_texture, m_texture_coordinate);
-
-				m_environment_slot_texture.ColorSpace = TextureNode.TextureColorSpace.None;
-				m_environment_slot_texture.IsLinear = false;
-
-				m_environment_slot_shadeless.ins.Strength.Value = 1.0f;
-
-				m_environment_slot_texture.outs.Color.Connect(m_environment_slot_shadeless.ins.Color);
-
-				m_environment_slot_shadeless.outs.Emission.Connect(m_environment_slot_mix.ins.Closure2);
-				m_environment_slot_mix.ins.Fac.Value = m_original.EnvironmentTexture.Amount;
+				RenderEngine.SetTextureImage(transparency_texture154, m_original.TransparencyTexture);
+				RenderEngine.SetProjectionMode(m_shader, m_original.TransparencyTexture, transparency_texture154, texcoord147);
 			}
-
-#endregion
-
-#region connect up nodes for adding shader components
-			m_diffuse_and_reflection.outs.Closure.Connect(m_mix_lightpath.ins.Closure1);
-			m_diffuse_and_reflection_and_transparency.outs.Closure.Connect(m_diffuse_and_reflection_and_transparency_and_emission.ins.Closure1);
-			m_diffuse_and_reflection_and_transparency_and_emission.outs.Closure.Connect(m_environment_slot_mix.ins.Closure1);
-			m_environment_slot_mix.outs.Closure.Connect(m_diffuse_and_transparency_alpha.ins.Closure2);
-#endregion
-
-			// connect final shader mixer to output
-			m_diffuse_and_transparency_alpha.outs.Closure.Connect(m_shader.Output.ins.Surface);
-
-			// finalize
+			var color___luminance155 = new RgbToLuminanceNode("color___luminance");
+			color___luminance155.ins.Color.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			var invert_luminence157 = new MathNode("invert_luminence");
+			invert_luminence157.ins.Value1.Value = 1f;
+			invert_luminence157.ins.Value2.Value = 0f;
+			invert_luminence157.Operation = MathNode.Operations.Subtract;
+			invert_luminence157.UseClamp = false;
+			var transparency_texture_amount163 = new MathNode("transparency_texture_amount");
+			transparency_texture_amount163.ins.Value1.Value = 1f;
+			transparency_texture_amount163.ins.Value2.Value = m_original.TransparencyTexture.Amount;
+			transparency_texture_amount163.Operation = MathNode.Operations.Multiply;
+			transparency_texture_amount163.UseClamp = false;
+			var alpha_cutter_mix150 = new MixClosureNode("alpha_cutter_mix");
+			alpha_cutter_mix150.ins.Fac.Value = 1f;
+			var toggle_transparency_texture159 = new MathNode("toggle_transparency_texture");
+			toggle_transparency_texture159.ins.Value1.Value = m_original.HasTransparencyTexture ? 1.0f : 0.0f;
+			toggle_transparency_texture159.ins.Value2.Value = 1f;
+			toggle_transparency_texture159.Operation = MathNode.Operations.Multiply;
+			toggle_transparency_texture159.UseClamp = false;
+			var transparency_alpha_cutter156 = new MixClosureNode("transparency_alpha_cutter");
+			transparency_alpha_cutter156.ins.Fac.Value = 1f;
+			m_shader.AddNode(texcoord147);
+			m_shader.AddNode(diffuse_texture148);
+			m_shader.AddNode(invert_diffuse_color_amount161);
+			m_shader.AddNode(diffuse_texture_amount158);
+			m_shader.AddNode(diffuse_col_amount160);
+			m_shader.AddNode(bump_texture165);
+			m_shader.AddNode(bump_texture_to_bw199);
+			m_shader.AddNode(bump_amount200);
+			m_shader.AddNode(combine_diffuse_color_and_texture162);
+			m_shader.AddNode(bump164);
+			m_shader.AddNode(invert_roughness130);
+			m_shader.AddNode(multiply_transparency131);
+			m_shader.AddNode(light_path123);
+			m_shader.AddNode(multiply_with_shadowray132);
+			m_shader.AddNode(layer_weight134);
+			m_shader.AddNode(principled120);
+			m_shader.AddNode(coloured_shadow_trans_color129);
+			m_shader.AddNode(weight_for_shadowray_coloured_shadow133);
+			m_shader.AddNode(invert_alpha153);
+			m_shader.AddNode(coloured_shadow_mix135);
+			m_shader.AddNode(alphacutter_transparent149);
+			m_shader.AddNode(toggle_image_alpha151);
+			m_shader.AddNode(transparency_texture154);
+			m_shader.AddNode(color___luminance155);
+			m_shader.AddNode(invert_luminence157);
+			m_shader.AddNode(transparency_texture_amount163);
+			m_shader.AddNode(alpha_cutter_mix150);
+			m_shader.AddNode(toggle_transparency_texture159);
+			m_shader.AddNode(transparency_alpha_cutter156);
+			//texcoord147.outs.UV.Connect(diffuse_texture148.ins.Vector);
+			diffuse_texture148.outs.Color.Connect(diffuse_texture_amount158.ins.Color2);
+			invert_diffuse_color_amount161.outs.Value.Connect(diffuse_col_amount160.ins.Fac);
+			//texcoord147.outs.UV.Connect(bump_texture165.ins.Vector);
+			bump_texture165.outs.Color.Connect(bump_texture_to_bw199.ins.Color);
+			diffuse_texture_amount158.outs.Color.Connect(combine_diffuse_color_and_texture162.ins.Color1);
+			diffuse_col_amount160.outs.Color.Connect(combine_diffuse_color_and_texture162.ins.Color2);
+			bump_texture_to_bw199.outs.Val.Connect(bump164.ins.Height);
+			bump_amount200.outs.Value.Connect(bump164.ins.Strength);
+			invert_roughness130.outs.Value.Connect(multiply_transparency131.ins.Value1);
+			multiply_transparency131.outs.Value.Connect(multiply_with_shadowray132.ins.Value1);
+			light_path123.outs.IsShadowRay.Connect(multiply_with_shadowray132.ins.Value2);
+			combine_diffuse_color_and_texture162.outs.Color.Connect(principled120.ins.BaseColor);
+			combine_diffuse_color_and_texture162.outs.Color.Connect(principled120.ins.SpecularColor);
+			bump164.outs.Normal.Connect(principled120.ins.Normal);
+			diffuse_texture148.outs.Color.Connect(coloured_shadow_trans_color129.ins.Color);
+			multiply_with_shadowray132.outs.Value.Connect(weight_for_shadowray_coloured_shadow133.ins.Value1);
+			layer_weight134.outs.Facing.Connect(weight_for_shadowray_coloured_shadow133.ins.Value2);
+			diffuse_texture148.outs.Alpha.Connect(invert_alpha153.ins.Value2);
+			principled120.outs.BSDF.Connect(coloured_shadow_mix135.ins.Closure1);
+			coloured_shadow_trans_color129.outs.BSDF.Connect(coloured_shadow_mix135.ins.Closure2);
+			weight_for_shadowray_coloured_shadow133.outs.Value.Connect(coloured_shadow_mix135.ins.Fac);
+			invert_alpha153.outs.Value.Connect(toggle_image_alpha151.ins.Value2);
+			//texcoord147.outs.UV.Connect(transparency_texture154.ins.Vector);
+			transparency_texture154.outs.Color.Connect(color___luminance155.ins.Color);
+			color___luminance155.outs.Val.Connect(invert_luminence157.ins.Value2);
+			invert_luminence157.outs.Value.Connect(transparency_texture_amount163.ins.Value1);
+			coloured_shadow_mix135.outs.Closure.Connect(alpha_cutter_mix150.ins.Closure1);
+			alphacutter_transparent149.outs.BSDF.Connect(alpha_cutter_mix150.ins.Closure2);
+			toggle_image_alpha151.outs.Value.Connect(alpha_cutter_mix150.ins.Fac);
+			transparency_texture_amount163.outs.Value.Connect(toggle_transparency_texture159.ins.Value2);
+			alpha_cutter_mix150.outs.Closure.Connect(transparency_alpha_cutter156.ins.Closure1);
+			alphacutter_transparent149.outs.BSDF.Connect(transparency_alpha_cutter156.ins.Closure2);
+			toggle_transparency_texture159.outs.Value.Connect(transparency_alpha_cutter156.ins.Fac);
+			transparency_alpha_cutter156.outs.Closure.Connect(m_shader.Output.ins.Surface);
 			m_shader.FinalizeGraph();
 
 			return m_shader;
