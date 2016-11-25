@@ -417,6 +417,8 @@ namespace RhinoCyclesCore.Database
 		{
 			set
 			{
+				if (_linearWorkflow.Equals(value)) return;
+
 				_linearWorkflow = value;
 				LinearWorkflowHasChanged = true;
 			}
@@ -434,6 +436,7 @@ namespace RhinoCyclesCore.Database
 		protected override void ApplyLinearWorkflowChanges(Rhino.Render.LinearWorkflow lw)
 		{
 			sdd.WriteLine($"LinearWorkflow {lw.PreProcessColors} {lw.PreProcessTextures} {lw.PostProcessFrameBuffer} {lw.PreProcessGamma} {lw.PostProcessGammaReciprocal}");
+			LinearWorkflow = lw;
 		}
 
 		/// <summary>
