@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using System;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -35,6 +36,10 @@ namespace RhinoCycles
 
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
+			if (RhinoApp.RunningOnVMWare())
+			{
+				CSycles.putenv("CYCLES_OPENCL_TEST", "NONE");
+			}
 			// code got moved to separate DLL so use that to register from.
 			var rccoreass = typeof(RcCore).Assembly;
 			RenderContent.RegisterContent(rccoreass, Id);
