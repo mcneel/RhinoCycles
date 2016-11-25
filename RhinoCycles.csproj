@@ -95,6 +95,7 @@
     <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj">
       <Project>{3d7c4cfa-38e3-46ed-a689-862a34f6656c}</Project>
       <Name>Rhino.UI</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj">
       <Project>{ed38373e-290c-4bde-acba-1601484e582a}</Project>
@@ -104,6 +105,7 @@
     <ProjectReference Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
       <Project>{78e5c303-7764-446e-baba-fdb410bd98e1}</Project>
       <Name>RhinoWindows</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\cycles\csycles\csycles.csproj">
       <Project>{36396655-e087-4c00-990b-ce44f08e4fb2}</Project>
@@ -113,6 +115,7 @@
       <Project>{509fc709-9478-43ff-b669-a1a4e3ba8b4a}</Project>
       <Name>RhinoCyclesCore</Name>
       <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

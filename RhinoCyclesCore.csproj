@@ -107,22 +107,27 @@
     <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\Source\Eto.Wpf\Eto.Wpf - net45.csproj">
       <Project>{63137fa0-ca55-11e3-9c1a-0800200c9a66}</Project>
       <Name>Eto.Wpf - net45</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\Source\Eto\Eto - pcl.csproj">
       <Project>{35ef0a4e-2a1a-492c-8bed-106774ea09f2}</Project>
       <Name>Eto - pcl</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj">
       <Project>{3d7c4cfa-38e3-46ed-a689-862a34f6656c}</Project>
       <Name>Rhino.UI</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj">
       <Project>{ed38373e-290c-4bde-acba-1601484e582a}</Project>
       <Name>RhinoCommon</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
       <Project>{78e5c303-7764-446e-baba-fdb410bd98e1}</Project>
       <Name>RhinoWindows</Name>
+      <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\cycles\csycles\csycles.csproj">
       <Project>{36396655-e087-4c00-990b-ce44f08e4fb2}</Project>
