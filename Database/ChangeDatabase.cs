@@ -244,7 +244,7 @@ namespace RhinoCyclesCore.Database
 
 		internal void TriggerLinearWorkflowUploaded()
 		{
-			LinearWorkflowChanged?.Invoke(this, new LinearWorkflowChangedEventArgs(new LinearWorkflow(LinearWorkflow)));
+			LinearWorkflowChanged?.Invoke(this, new LinearWorkflowChangedEventArgs(LinearWorkflow));
 		}
 
 		/// <summary>
@@ -419,7 +419,7 @@ namespace RhinoCyclesCore.Database
 			{
 				if (_linearWorkflow.Equals(value)) return;
 
-				_linearWorkflow = value;
+				_linearWorkflow.CopyFrom(value);
 				LinearWorkflowHasChanged = true;
 			}
 			get
