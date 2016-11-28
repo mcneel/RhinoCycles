@@ -258,19 +258,14 @@ namespace RhinoCycles.Viewport
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
 		{
-      LinearWorkflow.CopyFrom(e.Lwf);
+			LinearWorkflow.CopyFrom(e.Lwf);
+			var rengine = _cycles ?? _modal as RenderEngine;
 
-			if (_cycles != null)
-			{
-				var imageadjust = _cycles.RenderWindow.GetAdjust();
-				imageadjust.Gamma = e.Lwf.PostProcessGamma;
-				_cycles.RenderWindow.SetAdjust(imageadjust);
-			} else if(_modal!= null)
-			{
-				var imageadjust = _modal.RenderWindow.GetAdjust();
-				imageadjust.Gamma = e.Lwf.PostProcessGamma;
-				_modal.RenderWindow.SetAdjust(imageadjust);
-			}
+			if (rengine == null) return;
+
+			var imageadjust = rengine.RenderWindow.GetAdjust();
+			imageadjust.Gamma = e.Lwf.PostProcessGamma;
+			rengine.RenderWindow.SetAdjust(imageadjust);
 		}
 
 		void CyclesRenderStarted(object sender, ViewportRenderEngine.RenderStartedEventArgs e)
