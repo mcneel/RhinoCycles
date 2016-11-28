@@ -210,8 +210,9 @@ namespace RhinoCycles.Viewport
 			if (mre != null)
 			{
 				mre.Renderer();
-				//SetCRC(mre.ViewCrc);
+#if DEBUG
 				mre.SaveRenderedBuffer(0);
+#endif
 				_available = true;
 				_frameAvailable = true;
 			}
