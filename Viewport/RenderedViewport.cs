@@ -131,7 +131,7 @@ namespace RhinoCycles.Viewport
 				mre.Settings.UseInteractiveRenderer = false;
 				mre.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
 
-				var rs = new Size((int)w, (int)h);
+				var rs = new Size(w, h);
 
 				mre.RenderWindow = renderWindow;
 
