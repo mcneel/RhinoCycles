@@ -1177,7 +1177,7 @@ namespace RhinoCyclesCore.Database
 			var p = new Plane(ld.Location, ld.Direction);
 			var circle = new Circle(p, ld.Width.Length);
 			var c = new Cylinder(circle, ld.Direction.Length);
-			var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(true, true));
+			var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(true, true), MeshingParameters.FastRenderMesh);
 			var mesh = new Rhino.Geometry.Mesh();
 			foreach (var im in m) mesh.Append(im);
 			var t = ccl.Transform.Identity();
