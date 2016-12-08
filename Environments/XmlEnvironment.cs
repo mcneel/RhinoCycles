@@ -33,7 +33,7 @@ namespace RhinoCyclesCore.Environments
 		{
 			var xml = "<background color=\"0 1 0\" name=\"bg\" strength=\"1\" />" +
 								"<connect from=\"bg background\" to=\"output surface\" />";
-			Fields.Add("xml", xml, "XML definition");
+			Fields.Add("xmlcode", xml, "XML definition");
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -46,7 +46,7 @@ namespace RhinoCyclesCore.Environments
 			get {
 				string xml;
 
-				Fields.TryGetValue("xml", out xml);
+				Fields.TryGetValue("xmlcode", out xml);
 
 				return xml;
 			}

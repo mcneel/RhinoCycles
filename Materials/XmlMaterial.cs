@@ -37,7 +37,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			var xml = "<diffuse_bsdf color=\"0 1 0\" name=\"diff\"/>" +
 								"<connect from=\"diff bsdf\" to=\"output surface\" />";
-			Fields.Add("xml", xml, "XML");
+			Fields.Add("xmlcode", xml, "XML");
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -69,7 +69,7 @@ namespace RhinoCyclesCore.Materials
 			{
 				string xml;
 
-				Fields.TryGetValue("xml", out xml);
+				Fields.TryGetValue("xmlcode", out xml);
 
 				return xml;
 			}
