@@ -266,7 +266,7 @@ namespace RhinoCycles.Viewport
 			if (rengine == null) return;
 
 			var imageadjust = rengine.RenderWindow.GetAdjust();
-			imageadjust.Gamma = e.Lwf.PostProcessFrameBuffer ? e.Lwf.PostProcessGamma : 1.0f;
+			imageadjust.Gamma = 1.0f;
 			rengine.RenderWindow.SetAdjust(imageadjust);
 		}
 
