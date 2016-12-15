@@ -75,7 +75,7 @@ namespace RhinoCyclesCore.Shaders
 			diffuse_texture_amount158.ins.Fac.Value = m_original.DiffuseTexture.Amount;
 			var diffuse_col_amount160 = new MixNode("diffuse_col_amount");
 			diffuse_col_amount160.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
-			diffuse_col_amount160.ins.Color2.Value = m_original.DiffuseColor;
+			diffuse_col_amount160.ins.Color2.Value = m_original.DiffuseColor ^ m_original.Gamma;
 			diffuse_col_amount160.ins.Fac.Value = 0.49f;
 			var bump_texture165 = new ImageTextureNode("bump_texture");
 			bump_texture165.ins.Vector.Value = new ccl.float4(0f, 0f, 0f, 1f);
