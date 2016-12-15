@@ -135,6 +135,7 @@ namespace RhinoCyclesCore
 		/// 
 		/// This may add new nodes to the shader!
 		/// </summary>
+		/// <param name="shader"></param>
 		/// <param name="texture"></param>
 		/// <param name="image_node"></param>
 		/// <param name="texture_coordinates"></param>
