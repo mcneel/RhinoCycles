@@ -195,6 +195,7 @@ namespace RhinoCyclesCore
 		public float Metalic { get; set; }
 		public bool NoMetalic => Math.Abs(Metalic) < 0.00001f;
 		public float Shine { get; set; }
+		public float Gloss { get; set; }
 		public float Transparency { get; set; }
 		public bool NoTransparency => Math.Abs(Transparency) < 0.00001f;
 		public bool HasTransparency => !NoTransparency;
@@ -216,6 +217,7 @@ namespace RhinoCyclesCore
 		}
 
 		public bool FresnelReflections { get; set; }
+		public float FresnelReflectionsAsFloat => FresnelReflections ? 1.0f : 0.0f;
 
 		public string Name { get; set; }
 	}

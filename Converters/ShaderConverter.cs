@@ -133,6 +133,9 @@ namespace RhinoCyclesCore.Converters
 								reflectivity = 0f;
 								metalic = 0f;
 								break;
+							case ProbableMaterial.Custom:
+								metalic = reflectivity;
+								break;
 						}
 
 
@@ -170,6 +173,7 @@ namespace RhinoCyclesCore.Converters
 							Metalic =  metalic,
 							Transparency = (float) m.Transparency,
 							Shine = shine,
+							Gloss = polish,
 
 							FresnelReflections = m.FresnelReflections,
 
