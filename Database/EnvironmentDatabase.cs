@@ -67,7 +67,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="gamma"></param>
 		public void SetGamma(float gamma)
 		{
-			_cqBackground.gamma = gamma;
+			_cqBackground.Gamma = gamma;
 		}
 
 		/// <summary>

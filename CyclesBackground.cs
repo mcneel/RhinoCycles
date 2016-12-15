@@ -92,7 +92,18 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public Color sky_color = Color.Empty;
 
-		public float gamma = 1.0f;
+		private float gamma = 1.0f;
+		public float Gamma
+		{
+			get { return gamma; }
+			set {
+				if (Math.Abs(value - gamma) > 0.00001f)
+				{
+					modified = true;
+				}
+				gamma = value;
+			}
+		}
 
 		public string Xml = "";
 
@@ -226,7 +237,7 @@ namespace RhinoCyclesCore
 					}
 				}
 				var wallpaperbm = BitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
-				wallpaperbm.ApplyGamma(gamma);
+				wallpaperbm.ApplyGamma(Gamma);
 				wallpaper.TexByte = wallpaperbm.Corrected;
 				if(RcCore.It.EngineSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
 				wallpaper.TexWidth = newBitmap.Width;
@@ -260,7 +271,7 @@ namespace RhinoCyclesCore
 				bg_color = Color.Empty;
 				bg.Clear();
 			}
-			BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg, gamma, m_float_as_byte, PlanarProjection);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg, Gamma, m_float_as_byte, PlanarProjection);
 
 			bool resampled = false;
 			if (skylight_environment != null)
@@ -296,7 +307,7 @@ namespace RhinoCyclesCore
 
 
 
-						BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, gamma, m_float_as_byte, false);
+						BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, Gamma, m_float_as_byte, false);
 						resampled = true;
 
 						render_texture.Dispose();
@@ -311,7 +322,7 @@ namespace RhinoCyclesCore
 				sky.Clear();
 			}
 			if(!resampled)
-				BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky, gamma, m_float_as_byte, false);
+				BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky, Gamma, m_float_as_byte, false);
 
 			if (reflection_environment != null)
 			{
@@ -326,7 +337,7 @@ namespace RhinoCyclesCore
 				refl_color = Color.Empty;
 				refl.Clear();
 			}
-			BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl, gamma, m_float_as_byte, false);
+			BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl, Gamma, m_float_as_byte, false);
 		}
 
 		/// <summary>

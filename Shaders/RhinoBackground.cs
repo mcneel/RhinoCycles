@@ -90,11 +90,11 @@ namespace RhinoCyclesCore.Shaders
 				var black = new float4(0.0f);
 				var tst = new float4(1.0f, 0.5f, 0.25f);
 
-				var color1 = (m_original_background.color1.IsEmpty ? tst : RenderEngine.CreateFloat4(m_original_background.color1)) ^ m_original_background.gamma;
-				var color2 = (m_original_background.color2.IsEmpty ? tst : RenderEngine.CreateFloat4(m_original_background.color2)) ^ m_original_background.gamma;
-				var bgcolor = (m_original_background.bg_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.bg_color)) ^ m_original_background.gamma;
-				var skycolor = (m_original_background.sky_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.sky_color)) ^ m_original_background.gamma;
-				var reflcolor = (m_original_background.refl_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.refl_color)) ^ m_original_background.gamma;
+				var color1 = (m_original_background.color1.IsEmpty ? tst : RenderEngine.CreateFloat4(m_original_background.color1)) ^ m_original_background.Gamma;
+				var color2 = (m_original_background.color2.IsEmpty ? tst : RenderEngine.CreateFloat4(m_original_background.color2)) ^ m_original_background.Gamma;
+				var bgcolor = (m_original_background.bg_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.bg_color)) ^ m_original_background.Gamma;
+				var skycolor = (m_original_background.sky_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.sky_color)) ^ m_original_background.Gamma;
+				var reflcolor = (m_original_background.refl_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.refl_color)) ^ m_original_background.Gamma;
 
 				// our main background shader. With just this, and some color != black set we should get skylighting
 				// use the bgcolor from the background (360deg) environment if it is specified, instead.

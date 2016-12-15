@@ -439,6 +439,7 @@ namespace RhinoCyclesCore.Database
 		{
 			sdd.WriteLine($"LinearWorkflow {lw.PreProcessColors} {lw.PreProcessTextures} {lw.PostProcessFrameBuffer} {lw.PreProcessGamma} {lw.PostProcessGammaReciprocal}");
 			LinearWorkflow = lw;
+			_environmentDatabase.SetGamma(PreProcessGamma);
 		}
 
 		/// <summary>
