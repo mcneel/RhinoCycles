@@ -249,6 +249,7 @@ namespace RhinoCyclesCore.Shaders
 			combine_diffuse_color_and_texture162.outs.Color.Connect(principled120.ins.SpecularColor);
 			bump164.outs.Normal.Connect(principled120.ins.Normal);
 			diffuse_texture148.outs.Color.Connect(coloured_shadow_trans_color129.ins.Color);
+			combine_diffuse_color_and_texture162.outs.Color.Connect(coloured_shadow_trans_color129.ins.Color);
 			multiply_with_shadowray132.outs.Value.Connect(weight_for_shadowray_coloured_shadow133.ins.Value1);
 			layer_weight134.outs.Facing.Connect(weight_for_shadowray_coloured_shadow133.ins.Value2);
 			diffuse_texture148.outs.Alpha.Connect(invert_alpha153.ins.Value2);
