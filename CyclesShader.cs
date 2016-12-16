@@ -109,6 +109,7 @@ namespace RhinoCyclesCore
 
 			Glass,
 			Diffuse,
+			Paint,
 			SimplePlastic,
 			SimpleMetal,
 			Emissive,
