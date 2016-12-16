@@ -90,6 +90,7 @@ namespace RhinoCyclesCore.Converters
 			CyclesShader shader = null;
 
 			var crm = rm as ICyclesMaterial;
+			CyclesShader.CyclesMaterial mattype = CyclesShader.CyclesMaterial.No;
 
 			if (crm == null)
 			{
@@ -106,135 +107,129 @@ namespace RhinoCyclesCore.Converters
 				var rcl = m.ReflectionColor;
 				var rfcl = m.TransparentColor;
 				var emcl = m.EmissionColor;
-				var polish = (float) m.ReflectionGlossiness; //*_engineSettings.PolishFactor;
-				var reflectivity = (float) m.Reflectivity; //*_engineSettings.PolishFactor;
+				var polish = (float)m.ReflectionGlossiness; //*_engineSettings.PolishFactor;
+				var reflectivity = (float)m.Reflectivity; //*_engineSettings.PolishFactor;
 				var metalic = 0f;
-				var shine = (float) (m.Shine/Material.MaxShine);
+				var shine = (float)(m.Shine / Material.MaxShine);
 
 				switch (probemat)
 				{
 					case ProbableMaterial.Plaster:
-						var plaster = new DiffuseMaterial();
-						plaster.SetParameter("diffuse", m.DiffuseColor);
-						crm = plaster;
+						mattype = CyclesShader.CyclesMaterial.Diffuse;
 						break;
-					default:
-						switch (probemat)
-						{
-							case ProbableMaterial.Glass:
-							case ProbableMaterial.Gem:
-								dcl = m.TransparentColor;
-								metalic = 0f;
-								break;
-							case ProbableMaterial.Metal:
-								dcl = m.ReflectionColor;
-								metalic = reflectivity; //1.0f;
-								break;
-							case ProbableMaterial.Plastic:
-								polish = reflectivity;
-								shine = polish;
-								reflectivity = 0f;
-								metalic = 0f;
-								break;
-							case ProbableMaterial.Custom:
-								metalic = reflectivity;
-								break;
-						}
-
-
-						var difftexAlpha = m.AlphaTransparency;
-
-						var col = RenderEngine.CreateFloat4(dcl.R, dcl.G, dcl.B, 255);
-						var spec = RenderEngine.CreateFloat4(scl.R, scl.G, scl.B, 255);
-						var refl = RenderEngine.CreateFloat4(rcl.R, rcl.G, rcl.B, 255);
-						var transp = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
-						var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
-						var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
-
-						shader = new CyclesShader
-						{
-							Id = mid,
-							Type = CyclesShader.Shader.Diffuse,
-							CyclesMaterialType = CyclesShader.CyclesMaterial.No,
-
-							Shadeless = m.DisableLighting,
-
-							DiffuseColor = col,
-							SpecularColor = spec,
-							ReflectionColor = refl,
-							ReflectionRoughness = polish,
-							RefractionColor = refr,
-							RefractionRoughness = (float) m.RefractionGlossiness,
-							TransparencyColor = transp,
-							EmissionColor = emis,
-
-
-							FresnelIOR = (float) m.FresnelIndexOfRefraction,
-							IOR = (float) m.IndexOfRefraction,
-							Roughness = (float) m.ReflectionGlossiness,
-							Reflectivity = reflectivity,
-							Metalic =  metalic,
-							Transparency = (float) m.Transparency,
-							Shine = shine,
-							Gloss = polish,
-
-							FresnelReflections = m.FresnelReflections,
-
-							Gamma = gamma,
-
-							Name = m.Name ?? ""
-						};
-
-						shader.DiffuseTexture.Amount = 0.0f;
-						shader.BumpTexture.Amount = 0.0f;
-						shader.TransparencyTexture.Amount = 0.0f;
-						shader.EnvironmentTexture.Amount = 0.0f;
-
-						if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse))
-						{
-							var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
-
-							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, difftex, RenderMaterial.StandardChildSlots.Diffuse);
-							if (shader.HasDiffuseTexture)
-							{
-								shader.DiffuseTexture.UseAlpha = difftexAlpha;
-								shader.DiffuseTexture.Amount = (float) Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse)/100.0f, 1.0f);
-							}
-						}
-
-						if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump))
-						{
-							var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
-							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, bumptex, RenderMaterial.StandardChildSlots.Bump);
-							if (shader.HasBumpTexture)
-							{
-								shader.BumpTexture.Amount = (float) Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump)/100.0f, 1.0f);
-							}
-						}
-
-						if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency))
-						{
-							var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
-							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, transtex,
-								RenderMaterial.StandardChildSlots.Transparency);
-							if (shader.HasTransparencyTexture)
-							{
-								shader.TransparencyTexture.Amount = (float) Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Transparency)/100.0f, 1.0f);
-							}
-						}
-
-						if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment))
-						{
-							var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
-							BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, envtex,
-								RenderMaterial.StandardChildSlots.Environment);
-							if (shader.HasEnvironmentTexture)
-							{
-								shader.EnvironmentTexture.Amount = (float) Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment)/100.0f, 1.0f);
-							}
-						}
+					case ProbableMaterial.Glass:
+					case ProbableMaterial.Gem:
+						//dcl = m.TransparentColor;
+						metalic = 0f;
+						mattype = CyclesShader.CyclesMaterial.Glass;
 						break;
+					case ProbableMaterial.Metal:
+						//dcl = m.ReflectionColor;
+						metalic = reflectivity; //1.0f;
+						mattype = CyclesShader.CyclesMaterial.SimpleMetal;
+						break;
+					case ProbableMaterial.Plastic:
+						polish = reflectivity;
+						shine = polish;
+						reflectivity = 0f;
+						metalic = 0f;
+						mattype = CyclesShader.CyclesMaterial.SimplePlastic;
+						break;
+					case ProbableMaterial.Custom:
+						metalic = reflectivity;
+						break;
+				}
 
+				var difftexAlpha = m.AlphaTransparency;
+
+				var col = RenderEngine.CreateFloat4(dcl.R, dcl.G, dcl.B, 255);
+				var spec = RenderEngine.CreateFloat4(scl.R, scl.G, scl.B, 255);
+				var refl = RenderEngine.CreateFloat4(rcl.R, rcl.G, rcl.B, 255);
+				var transp = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
+				var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
+				var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
+
+				shader = new CyclesShader
+				{
+					Id = mid,
+					Type = CyclesShader.Shader.Diffuse,
+					CyclesMaterialType = mattype,
+
+					Shadeless = m.DisableLighting,
+
+					DiffuseColor = col,
+					SpecularColor = spec,
+					ReflectionColor = refl,
+					ReflectionRoughness = polish,
+					RefractionColor = refr,
+					RefractionRoughness = (float)m.RefractionGlossiness,
+					TransparencyColor = transp,
+					EmissionColor = emis,
+
+
+					FresnelIOR = (float)m.FresnelIndexOfRefraction,
+					IOR = (float)m.IndexOfRefraction,
+					Roughness = (float)m.ReflectionGlossiness,
+					Reflectivity = reflectivity,
+					Metalic = metalic,
+					Transparency = (float)m.Transparency,
+					Shine = shine,
+					Gloss = metalic > 0.0f ? polish : 0.0f,
+
+					FresnelReflections = m.FresnelReflections,
+
+					Gamma = gamma,
+
+					Name = m.Name ?? ""
+				};
+
+				shader.DiffuseTexture.Amount = 0.0f;
+				shader.BumpTexture.Amount = 0.0f;
+				shader.TransparencyTexture.Amount = 0.0f;
+				shader.EnvironmentTexture.Amount = 0.0f;
+
+				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse))
+				{
+					var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
+
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, difftex, RenderMaterial.StandardChildSlots.Diffuse);
+					if (shader.HasDiffuseTexture)
+					{
+						shader.DiffuseTexture.UseAlpha = difftexAlpha;
+						shader.DiffuseTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) / 100.0f, 1.0f);
+					}
+				}
+
+				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump))
+				{
+					var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, bumptex, RenderMaterial.StandardChildSlots.Bump);
+					if (shader.HasBumpTexture)
+					{
+						shader.BumpTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) / 100.0f, 1.0f);
+					}
+				}
+
+				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency))
+				{
+					var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, transtex,
+						RenderMaterial.StandardChildSlots.Transparency);
+					if (shader.HasTransparencyTexture)
+					{
+						shader.TransparencyTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Transparency) / 100.0f, 1.0f);
+					}
+				}
+
+				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment))
+				{
+					var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, envtex,
+						RenderMaterial.StandardChildSlots.Environment);
+					if (shader.HasEnvironmentTexture)
+					{
+						shader.EnvironmentTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) / 100.0f, 1.0f);
+					}
 				}
 
 				rm.EndChange();

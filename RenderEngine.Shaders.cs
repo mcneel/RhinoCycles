@@ -25,14 +25,14 @@ namespace RhinoCyclesCore
 	{
 		internal CclShader CreateMaterialShader(CyclesShader shader)
 		{
-			CclShader sh;
+			CclShader sh = null;
 			switch (shader.CyclesMaterialType)
 			{
-				case CyclesShader.CyclesMaterial.No:
-					sh = CreateCyclesShaderFromRhinoV6BasicMat(shader);
+				case CyclesShader.CyclesMaterial.Xml:
+					sh = CreateCyclesShaderFromXml(shader);
 					break;
 				default:
-					sh = CreateCyclesShaderFromXml(shader);
+					sh = CreateCyclesShaderFromRhinoV6BasicMat(shader);
 					break;
 			}
 
@@ -41,14 +41,14 @@ namespace RhinoCyclesCore
 
 		internal CclShader RecreateMaterialShader(CyclesShader shader, CclShader existing)
 		{
-			CclShader sh;
+			CclShader sh = null;
 			switch (shader.CyclesMaterialType)
 			{
-				case CyclesShader.CyclesMaterial.No:
-					sh = RecreateCyclesShaderFromRhinoV6BasicMat(shader, existing);
+				case CyclesShader.CyclesMaterial.Xml:
+					sh = RecreateCyclesShaderFromXml(shader, existing);
 					break;
 				default:
-					sh = RecreateCyclesShaderFromXml(shader, existing);
+					sh = RecreateCyclesShaderFromRhinoV6BasicMat(shader, existing);
 					break;
 			}
 
