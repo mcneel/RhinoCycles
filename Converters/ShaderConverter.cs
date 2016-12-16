@@ -72,6 +72,9 @@ namespace RhinoCyclesCore.Converters
 				return ProbableMaterial.Plastic;
 			}
 
+			if(rm.SmellsLikePaint || rm.SmellsLikePlastic)
+				return ProbableMaterial.Plastic;
+
 			return ProbableMaterial.Custom;
 		}
 
