@@ -165,12 +165,16 @@ namespace RhinoCyclesCore
 
 		public CyclesTextureImage DiffuseTexture { get; set; }
 		public bool HasDiffuseTexture => DiffuseTexture.HasTextureImage;
+		public float HasDiffuseTextureAsFloat => HasDiffuseTexture ? 1.0f : 0.0f;
 		public CyclesTextureImage BumpTexture { get; set; }
 		public bool HasBumpTexture => BumpTexture.HasTextureImage;
+		public float HasBumpTextureAsFloat => HasBumpTexture ? 1.0f : 0.0f;
 		public CyclesTextureImage TransparencyTexture { get; set; }
 		public bool HasTransparencyTexture => TransparencyTexture.HasTextureImage;
+		public float HasTransparencyTextureAsFloat => HasTransparencyTexture ? 1.0f : 0.0f;
 		public CyclesTextureImage EnvironmentTexture { get; set; }
 		public bool HasEnvironmentTexture => EnvironmentTexture.HasTextureImage;
+		public float HasEnvironmentTextureAsFloat => HasEnvironmentTexture ? 1.0f : 0.0f;
 
 		public CyclesTextureImage GiEnvTexture { get; set; }
 		public bool HasGiEnvTexture => GiEnvTexture.HasTextureImage;
