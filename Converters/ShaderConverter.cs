@@ -44,12 +44,6 @@ namespace RhinoCyclesCore.Converters
 			Gem,
 			Plastic,
 			Metal,
-			TexturedPlaster,
-			TexturedPaint,
-			TexturedGlass,
-			TexturedGem,
-			TexturedPlastic,
-			TexturedMetal,
 			Custom
 		}
 
@@ -75,44 +69,40 @@ namespace RhinoCyclesCore.Converters
 
 		private static ProbableMaterial WhatMaterial(RenderMaterial rm, Rhino.DocObjects.Material m)
 		{
-			if (rm.TypeId.Equals(RenderMaterial.PlasterMaterialGuid))
-			{
-				return ProbableMaterial.Plaster;
-				
-			}
 			if (rm.TypeId.Equals(RenderMaterial.PictureMaterialGuid))
 			{
 				return ProbableMaterial.Picture;
 				
 			}
-			if (rm.TypeId.Equals(RenderMaterial.PaintMaterialGuid))
+			if (rm.TypeId.Equals(RenderMaterial.PlasterMaterialGuid) || rm.SmellsLikePlaster || rm.SmellsLikeTexturedPlaster)
+			{
+				return ProbableMaterial.Plaster;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.PaintMaterialGuid) || rm.SmellsLikePaint || rm.SmellsLikeTexturedPaint)
 			{
 				return ProbableMaterial.Paint;
 				
 			}
-			if (rm.TypeId.Equals(RenderMaterial.PlasticMaterialGuid))
+			if (rm.TypeId.Equals(RenderMaterial.PlasticMaterialGuid) || rm.SmellsLikePlastic || rm.SmellsLikeTexturedPlastic)
 			{
 				return ProbableMaterial.Plastic;
 				
 			}
-			if (rm.TypeId.Equals(RenderMaterial.GlassMaterialGuid))
+			if (rm.TypeId.Equals(RenderMaterial.GlassMaterialGuid) || rm.SmellsLikeGlass || rm.SmellsLikeTexturedGlass)
 			{
 				return ProbableMaterial.Glass;
 				
 			}
-			if (rm.TypeId.Equals(RenderMaterial.GemMaterialGuid))
+			if (rm.TypeId.Equals(RenderMaterial.GemMaterialGuid) || rm.SmellsLikeGem || rm.SmellsLikeTexturedGem)
 			{
 				return ProbableMaterial.Gem;
 				
 			}
-			if (rm.TypeId.Equals(RenderMaterial.MetalMaterialGuid))
+			if (rm.TypeId.Equals(RenderMaterial.MetalMaterialGuid) || rm.SmellsLikeMetal || rm.SmellsLikeTexturedMetal)
 			{
 				return ProbableMaterial.Metal;
 			}
-
-			if(rm.SmellsLikeTexturedMetal)
-				return ProbableMaterial.TexturedMetal;
-
 
 			return ProbableMaterial.Custom;
 		}
