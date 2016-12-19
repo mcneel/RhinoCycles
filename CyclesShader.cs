@@ -120,6 +120,31 @@ namespace RhinoCyclesCore
 
 		public Shader Type { get; set; }
 
+		/// <summary>
+		/// Gamma corrected base color
+		/// </summary>
+		public float4 BaseColor
+		{
+			get
+			{
+				float4 c;
+				switch (CyclesMaterialType)
+				{
+					case CyclesMaterial.SimpleMetal:
+						c = ReflectionColor;
+						break;
+					case CyclesMaterial.Glass:
+						c = TransparencyColor;
+						break;
+					default:
+						c = DiffuseColor;
+						break;
+				}
+
+				return c ^ Gamma;
+			}
+		}
+
 		public float4 DiffuseColor { get; set; }
 
 		public bool HasOnlyDiffuseColor => !HasDiffuseTexture
