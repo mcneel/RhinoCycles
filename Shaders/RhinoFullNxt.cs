@@ -74,7 +74,7 @@ namespace RhinoCyclesCore.Shaders
 
 			var diffuse_col_amount91 = new MixNode("diffuse_col_amount");
 			diffuse_col_amount91.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
-			diffuse_col_amount91.ins.Color2.Value = m_original.DiffuseColor ^ m_original.Gamma;
+			diffuse_col_amount91.ins.Color2.Value = m_original.BaseColor;
 			diffuse_col_amount91.ins.Fac.Value = 0f;
 
 			var bump_texture96 = new ImageTextureNode("bump_texture");
@@ -118,9 +118,6 @@ namespace RhinoCyclesCore.Shaders
 			roughness_times_roughness111.UseClamp = false;
 
 			var principled_metal55 = new UberBsdfNode("principled_metal");
-			principled_metal55.ins.BaseColor.Value = m_original.ReflectionColor;
-			principled_metal55.ins.SpecularColor.Value = m_original.ReflectionColor;
-			principled_metal55.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 			principled_metal55.ins.Metallic.Value = m_original.Reflectivity;
 			principled_metal55.ins.Subsurface.Value = 0f;
 			principled_metal55.ins.SubsurfaceRadius.Value = new ccl.float4(0f, 0f, 0f, 1f);
@@ -141,20 +138,17 @@ namespace RhinoCyclesCore.Shaders
 			principled_metal55.ins.Tangent.Value = new ccl.float4(0f, 0f, 0f, 1f);
 
 			var principled_paint58 = new UberBsdfNode("principled_paint");
-			principled_paint58.ins.BaseColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
-			principled_paint58.ins.SpecularColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
-			principled_paint58.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 			principled_paint58.ins.Metallic.Value = 0f;
 			principled_paint58.ins.Subsurface.Value = 0f;
 			principled_paint58.ins.SubsurfaceRadius.Value = new ccl.float4(0f, 0f, 0f, 1f);
 			principled_paint58.ins.Specular.Value = m_original.Gloss;
 			principled_paint58.ins.Roughness.Value = 0f;
-			/*principled_paint58.ins.SpecularTint.Value = m_original.SpecularTint;
+			principled_paint58.ins.SpecularTint.Value = m_original.Shine;
 			principled_paint58.ins.Anisotropic.Value = 0f;
-			principled_paint58.ins.Sheen.Value = m_original.SpecularTint;
-			principled_paint58.ins.SheenTint.Value = m_original.SpecularTint;
-			principled_paint58.ins.Clearcoat.Value = m_original.SpecularTint;
-			principled_paint58.ins.ClearcoatGloss.Value = m_original.SpecularTint;*/
+			principled_paint58.ins.Sheen.Value = m_original.Shine;
+			principled_paint58.ins.SheenTint.Value = m_original.Shine;
+			principled_paint58.ins.Clearcoat.Value = m_original.Shine;
+			principled_paint58.ins.ClearcoatGloss.Value = m_original.Shine;
 			principled_paint58.ins.IOR.Value = 0f;
 			principled_paint58.ins.Transparency.Value = 0f;
 			principled_paint58.ins.RefractionRoughness.Value = 0f;
@@ -188,9 +182,6 @@ namespace RhinoCyclesCore.Shaders
 			layer_weight70.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
 
 			var principled_glass_and_gem60 = new UberBsdfNode("principled_glass_and_gem");
-			principled_glass_and_gem60.ins.BaseColor.Value = m_original.TransparencyColor;
-			principled_glass_and_gem60.ins.SpecularColor.Value = m_original.TransparencyColor;
-			principled_glass_and_gem60.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 			principled_glass_and_gem60.ins.Metallic.Value = 0f;
 			principled_glass_and_gem60.ins.Subsurface.Value = 0f;
 			principled_glass_and_gem60.ins.SubsurfaceRadius.Value = new ccl.float4(0f, 0f, 0f, 1f);
@@ -246,7 +237,6 @@ namespace RhinoCyclesCore.Shaders
 			reflectivity_fresnel_weight107.UseClamp = false;
 
 			var principled62 = new UberBsdfNode("principled");
-			principled62.ins.BaseColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 			principled62.ins.SpecularColor.Value = m_original.SpecularColor;
 			principled62.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 			principled62.ins.Metallic.Value = m_original.Metalic;
@@ -279,7 +269,6 @@ namespace RhinoCyclesCore.Shaders
 			reflectivity_blend104.ins.Fac.Value = 0f;
 
 			var shadeless_bsdf99 = new EmissionNode("shadeless_bsdf");
-			shadeless_bsdf99.ins.Color.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 			shadeless_bsdf99.ins.Strength.Value = 1f;
 
 			var invert_roughness72 = new MathNode("invert_roughness");
@@ -310,7 +299,6 @@ namespace RhinoCyclesCore.Shaders
 			shadeless100.ins.Fac.Value = m_original.ShadelessAsFloat;
 
 			var coloured_shadow_trans_color71 = new TransparentBsdfNode("coloured_shadow_trans_color");
-			coloured_shadow_trans_color71.ins.Color.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 
 			var weight_for_shadowray_coloured_shadow75 = new MathNode("weight_for_shadowray_coloured_shadow");
 			weight_for_shadowray_coloured_shadow75.ins.Value1.Value = 0f;
@@ -346,7 +334,6 @@ namespace RhinoCyclesCore.Shaders
 			transparency_texture85.IsLinear = false;
 
 			var color___luminance86 = new RgbToLuminanceNode("color___luminance");
-			color___luminance86.ins.Color.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 
 			var invert_luminence88 = new MathNode("invert_luminence");
 			invert_luminence88.ins.Value1.Value = 1f;
@@ -450,6 +437,8 @@ namespace RhinoCyclesCore.Shaders
 			bump_amount98.outs.Value.Connect(bump95.ins.Strength);
 			combine_diffuse_color_and_texture93.outs.Color.Connect(diffuse54.ins.Color);
 			bump95.outs.Normal.Connect(diffuse54.ins.Normal);
+			combine_diffuse_color_and_texture93.outs.Color.Connect(principled_metal55.ins.BaseColor);
+			combine_diffuse_color_and_texture93.outs.Color.Connect(principled_metal55.ins.SpecularColor);
 			roughness_times_roughness111.outs.Value.Connect(principled_metal55.ins.Roughness);
 			bump95.outs.Normal.Connect(principled_metal55.ins.Normal);
 			combine_diffuse_color_and_texture93.outs.Color.Connect(principled_paint58.ins.BaseColor);
@@ -460,6 +449,8 @@ namespace RhinoCyclesCore.Shaders
 			invert_roughness66.outs.Value.Connect(transparency_factor_for_roughness67.ins.Value1);
 			transparency_factor_for_roughness67.outs.Value.Connect(toggle_when_shadow68.ins.Value1);
 			light_path78.outs.IsShadowRay.Connect(toggle_when_shadow68.ins.Value2);
+			combine_diffuse_color_and_texture93.outs.Color.Connect(principled_glass_and_gem60.ins.BaseColor);
+			combine_diffuse_color_and_texture93.outs.Color.Connect(principled_glass_and_gem60.ins.SpecularColor);
 			roughness_times_roughness111.outs.Value.Connect(principled_glass_and_gem60.ins.Roughness);
 			bump95.outs.Normal.Connect(principled_glass_and_gem60.ins.Normal);
 			toggle_when_shadow68.outs.Value.Connect(transparency_layer_weight69.ins.Value1);
@@ -527,7 +518,6 @@ namespace RhinoCyclesCore.Shaders
 				RenderEngine.SetTextureImage(transparency_texture85, m_original.TransparencyTexture);
 				RenderEngine.SetProjectionMode(m_shader, m_original.TransparencyTexture, transparency_texture85, texcoord79);
 			}
-
 
 			switch (m_original.CyclesMaterialType)
 			{
