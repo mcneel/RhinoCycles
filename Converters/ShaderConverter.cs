@@ -38,10 +38,18 @@ namespace RhinoCyclesCore.Converters
 		private enum ProbableMaterial
 		{
 			Plaster,
+			Picture,
+			Paint,
 			Glass,
 			Gem,
 			Plastic,
 			Metal,
+			TexturedPlaster,
+			TexturedPaint,
+			TexturedGlass,
+			TexturedGem,
+			TexturedPlastic,
+			TexturedMetal,
 			Custom
 		}
 
@@ -55,25 +63,56 @@ namespace RhinoCyclesCore.Converters
 		{
 			if(rm.SmellsLikePlaster) return ProbableMaterial.Plaster;
 
+			if(rm.SmellsLikeGem && rm.GetParameter("type")!=null) return ProbableMaterial.Gem;
+			if(rm.SmellsLikeGlass && rm.GetParameter("ior")!=null) return ProbableMaterial.Glass;
+			if(rm.SmellsLikePlastic) return ProbableMaterial.Plastic;
+			if(rm.SmellsLikePaint) return ProbableMaterial.Paint;
+
 			if(rm.SmellsLikeMetal) return ProbableMaterial.Metal;
 
-			if (rm.SmellsLikeGlass)
+			return ProbableMaterial.Custom;
+		}
+
+		private static ProbableMaterial WhatMaterial(RenderMaterial rm, Rhino.DocObjects.Material m)
+		{
+			if (rm.TypeId.Equals(RenderMaterial.PlasterMaterialGuid))
 			{
-				if (rm.GetParameter("type") != null)
-				{
-					return ProbableMaterial.Gem;
-				}
-
-				if(rm.GetParameter("ior") != null)
-				{
-					return ProbableMaterial.Glass;
-				}
-
+				return ProbableMaterial.Plaster;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.PictureMaterialGuid))
+			{
+				return ProbableMaterial.Picture;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.PaintMaterialGuid))
+			{
+				return ProbableMaterial.Paint;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.PlasticMaterialGuid))
+			{
 				return ProbableMaterial.Plastic;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.GlassMaterialGuid))
+			{
+				return ProbableMaterial.Glass;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.GemMaterialGuid))
+			{
+				return ProbableMaterial.Gem;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.MetalMaterialGuid))
+			{
+				return ProbableMaterial.Metal;
 			}
 
-			if(rm.SmellsLikePaint || rm.SmellsLikePlastic)
-				return ProbableMaterial.Plastic;
+			if(rm.SmellsLikeTexturedMetal)
+				return ProbableMaterial.TexturedMetal;
+
 
 			return ProbableMaterial.Custom;
 		}
@@ -94,12 +133,13 @@ namespace RhinoCyclesCore.Converters
 
 			if (crm == null)
 			{
-				// figure out what type of material we are.
-				var probemat = GuessMaterialFromSmell(rm);
 				// always simulate material, need to know now myself
 				// what to read out from the simulated material to
 				// populate my own material descriptions.
 				var m = rm.SimulateMaterial(true);
+				// figure out what type of material we are.
+				//var probemat = GuessMaterialFromSmell(rm);
+				var probemat = WhatMaterial(rm, m);
 
 				rm.BeginChange(RenderContent.ChangeContexts.Ignore);
 				var dcl = m.DiffuseColor;
@@ -125,8 +165,11 @@ namespace RhinoCyclesCore.Converters
 						break;
 					case ProbableMaterial.Metal:
 						//dcl = m.ReflectionColor;
-						metalic = reflectivity; //1.0f;
+						metalic = 1.0f;
 						mattype = CyclesShader.CyclesMaterial.SimpleMetal;
+						break;
+					case ProbableMaterial.Paint:
+						mattype = CyclesShader.CyclesMaterial.Paint;
 						break;
 					case ProbableMaterial.Plastic:
 						polish = reflectivity;
