@@ -74,32 +74,63 @@ namespace RhinoCyclesCore.Converters
 				return ProbableMaterial.Picture;
 				
 			}
-			if (rm.TypeId.Equals(RenderMaterial.PlasterMaterialGuid) || rm.SmellsLikePlaster || rm.SmellsLikeTexturedPlaster)
+			if (rm.TypeId.Equals(RenderMaterial.PlasterMaterialGuid))
 			{
 				return ProbableMaterial.Plaster;
 				
 			}
-			if (rm.TypeId.Equals(RenderMaterial.PaintMaterialGuid) || rm.SmellsLikePaint || rm.SmellsLikeTexturedPaint)
-			{
-				return ProbableMaterial.Paint;
-				
-			}
-			if (rm.TypeId.Equals(RenderMaterial.PlasticMaterialGuid) || rm.SmellsLikePlastic || rm.SmellsLikeTexturedPlastic)
-			{
-				return ProbableMaterial.Plastic;
-				
-			}
-			if (rm.TypeId.Equals(RenderMaterial.GlassMaterialGuid) || rm.SmellsLikeGlass || rm.SmellsLikeTexturedGlass)
+			if (rm.TypeId.Equals(RenderMaterial.GlassMaterialGuid))
 			{
 				return ProbableMaterial.Glass;
 				
 			}
-			if (rm.TypeId.Equals(RenderMaterial.GemMaterialGuid) || rm.SmellsLikeGem || rm.SmellsLikeTexturedGem)
+			if (rm.TypeId.Equals(RenderMaterial.GemMaterialGuid))
 			{
 				return ProbableMaterial.Gem;
 				
 			}
-			if (rm.TypeId.Equals(RenderMaterial.MetalMaterialGuid) || rm.SmellsLikeMetal || rm.SmellsLikeTexturedMetal)
+			if (rm.TypeId.Equals(RenderMaterial.PaintMaterialGuid))
+			{
+				return ProbableMaterial.Paint;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.PlasticMaterialGuid))
+			{
+				return ProbableMaterial.Plastic;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.MetalMaterialGuid))
+			{
+				return ProbableMaterial.Metal;
+			}
+
+
+			if (rm.SmellsLikePlaster || rm.SmellsLikeTexturedPlaster)
+			{
+				return ProbableMaterial.Plaster;
+				
+			}
+			if (rm.SmellsLikeGlass || rm.SmellsLikeTexturedGlass)
+			{
+				return ProbableMaterial.Glass;
+				
+			}
+			if (rm.SmellsLikeGem || rm.SmellsLikeTexturedGem)
+			{
+				return ProbableMaterial.Gem;
+				
+			}
+			if (rm.SmellsLikePaint || rm.SmellsLikeTexturedPaint)
+			{
+				return ProbableMaterial.Paint;
+				
+			}
+			if (rm.SmellsLikePlastic || rm.SmellsLikeTexturedPlastic)
+			{
+				return ProbableMaterial.Plastic;
+				
+			}
+			if (rm.SmellsLikeMetal || rm.SmellsLikeTexturedMetal)
 			{
 				return ProbableMaterial.Metal;
 			}
@@ -158,9 +189,6 @@ namespace RhinoCyclesCore.Converters
 						metalic = 1.0f;
 						mattype = CyclesShader.CyclesMaterial.SimpleMetal;
 						break;
-					case ProbableMaterial.Paint:
-						mattype = CyclesShader.CyclesMaterial.Paint;
-						break;
 					case ProbableMaterial.Plastic:
 						polish = reflectivity;
 						shine = polish;
@@ -168,8 +196,11 @@ namespace RhinoCyclesCore.Converters
 						metalic = 0f;
 						mattype = CyclesShader.CyclesMaterial.SimplePlastic;
 						break;
+					case ProbableMaterial.Paint:
+						mattype = CyclesShader.CyclesMaterial.Paint;
+						break;
 					case ProbableMaterial.Custom:
-						metalic = reflectivity;
+						metalic = m.FresnelReflections ? 0.0f : reflectivity;
 						break;
 				}
 
