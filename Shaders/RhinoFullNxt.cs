@@ -213,29 +213,6 @@ namespace RhinoCyclesCore.Shaders
 			var transparency_blend_for_shadow64 = new MixClosureNode("transparency_blend_for_shadow");
 			transparency_blend_for_shadow64.ins.Fac.Value = 0f;
 
-			var glossy105 = new GlossyBsdfNode("glossy");
-			glossy105.ins.Color.Value = m_original.ReflectionColor;
-			glossy105.ins.Roughness.Value = 0f;
-			glossy105.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-
-			var glass110 = new GlassBsdfNode("glass");
-			glass110.ins.Color.Value = m_original.ReflectionColor;
-			glass110.ins.Roughness.Value = 0f;
-			glass110.ins.IOR.Value = m_original.IOR;
-			glass110.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-
-			var multiply108 = new MathNode("multiply");
-			multiply108.ins.Value1.Value = m_original.Reflectivity;
-			multiply108.ins.Value2.Value = m_original.FresnelReflectionsAsFloat;
-			multiply108.Operation = MathNode.Operations.Multiply;
-			multiply108.UseClamp = false;
-
-			var reflectivity_fresnel_weight107 = new MathNode("reflectivity_fresnel_weight");
-			reflectivity_fresnel_weight107.ins.Value1.Value = 0.35f;
-			reflectivity_fresnel_weight107.ins.Value2.Value = 0.5f;
-			reflectivity_fresnel_weight107.Operation = MathNode.Operations.Multiply;
-			reflectivity_fresnel_weight107.UseClamp = false;
-
 			var principled62 = new UberBsdfNode("principled");
 			principled62.ins.SpecularColor.Value = m_original.SpecularColor;
 			principled62.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
@@ -258,15 +235,6 @@ namespace RhinoCyclesCore.Shaders
 			principled62.ins.ClearcoatNormal.Value = new ccl.float4(0f, 0f, 0f, 1f);
 			principled62.ins.Tangent.Value = new ccl.float4(0f, 0f, 0f, 1f);
 
-			var blend109 = new MixClosureNode("blend");
-			blend109.ins.Fac.Value = m_original.Transparency;
-
-			var layerweight_for_reflectivity_blend106 = new LayerWeightNode("layerweight_for_reflectivity_blend");
-			layerweight_for_reflectivity_blend106.ins.Blend.Value = 0.175f;
-			layerweight_for_reflectivity_blend106.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-
-			var reflectivity_blend104 = new MixClosureNode("reflectivity_blend");
-			reflectivity_blend104.ins.Fac.Value = 0f;
 
 			var shadeless_bsdf99 = new EmissionNode("shadeless_bsdf");
 			shadeless_bsdf99.ins.Strength.Value = 1f;
@@ -393,14 +361,7 @@ namespace RhinoCyclesCore.Shaders
 			m_shader.AddNode(transparent63);
 			m_shader.AddNode(transparency_layer_weight69);
 			m_shader.AddNode(transparency_blend_for_shadow64);
-			m_shader.AddNode(glossy105);
-			m_shader.AddNode(glass110);
-			m_shader.AddNode(multiply108);
-			m_shader.AddNode(reflectivity_fresnel_weight107);
 			m_shader.AddNode(principled62);
-			m_shader.AddNode(blend109);
-			m_shader.AddNode(layerweight_for_reflectivity_blend106);
-			m_shader.AddNode(reflectivity_blend104);
 			m_shader.AddNode(shadeless_bsdf99);
 			m_shader.AddNode(invert_roughness72);
 			m_shader.AddNode(multiply_transparency73);
@@ -458,24 +419,15 @@ namespace RhinoCyclesCore.Shaders
 			principled_glass_and_gem60.outs.BSDF.Connect(transparency_blend_for_shadow64.ins.Closure1);
 			transparent63.outs.BSDF.Connect(transparency_blend_for_shadow64.ins.Closure2);
 			transparency_layer_weight69.outs.Value.Connect(transparency_blend_for_shadow64.ins.Fac);
-			roughness_times_roughness111.outs.Value.Connect(glossy105.ins.Roughness);
-			roughness_times_roughness111.outs.Value.Connect(glass110.ins.Roughness);
-			multiply108.outs.Value.Connect(reflectivity_fresnel_weight107.ins.Value1);
 			combine_diffuse_color_and_texture93.outs.Color.Connect(principled62.ins.BaseColor);
 			roughness_times_roughness111.outs.Value.Connect(principled62.ins.Roughness);
 			bump95.outs.Normal.Connect(principled62.ins.Normal);
-			glossy105.outs.BSDF.Connect(blend109.ins.Closure1);
-			glass110.outs.BSDF.Connect(blend109.ins.Closure2);
-			reflectivity_fresnel_weight107.outs.Value.Connect(layerweight_for_reflectivity_blend106.ins.Blend);
-			principled62.outs.BSDF.Connect(reflectivity_blend104.ins.Closure1);
-			blend109.outs.Closure.Connect(reflectivity_blend104.ins.Closure2);
-			layerweight_for_reflectivity_blend106.outs.Fresnel.Connect(reflectivity_blend104.ins.Fac);
 			combine_diffuse_color_and_texture93.outs.Color.Connect(shadeless_bsdf99.ins.Color);
 			roughness_times_roughness111.outs.Value.Connect(invert_roughness72.ins.Value2);
 			invert_roughness72.outs.Value.Connect(multiply_transparency73.ins.Value1);
 			multiply_transparency73.outs.Value.Connect(multiply_with_shadowray74.ins.Value1);
 			light_path65.outs.IsShadowRay.Connect(multiply_with_shadowray74.ins.Value2);
-			reflectivity_blend104.outs.Closure.Connect(shadeless100.ins.Closure1);
+			principled62.outs.BSDF.Connect(shadeless100.ins.Closure1);
 			shadeless_bsdf99.outs.Emission.Connect(shadeless100.ins.Closure2);
 			combine_diffuse_color_and_texture93.outs.Color.Connect(coloured_shadow_trans_color71.ins.Color);
 			multiply_with_shadowray74.outs.Value.Connect(weight_for_shadowray_coloured_shadow75.ins.Value1);
@@ -500,6 +452,7 @@ namespace RhinoCyclesCore.Shaders
 			transparency_alpha_cutter87.outs.Closure.Connect(custom_emission101.ins.Closure1);
 			emissive103.outs.Emission.Connect(custom_emission101.ins.Closure2);
 			emission_value102.outs.Val.Connect(custom_emission101.ins.Fac);
+
 
 			if (m_original.HasDiffuseTexture)
 			{
