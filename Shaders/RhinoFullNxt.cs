@@ -169,17 +169,14 @@ namespace RhinoCyclesCore.Shaders
 			principled_metal1102.ins.Tangent.Value = new ccl.float4(0f, 0f, 0f, 1f);
 
 			var principled_paint1105 = new UberBsdfNode("principled_paint");
-			principled_paint1105.ins.BaseColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
-			principled_paint1105.ins.SpecularColor.Value = m_original.SpecularColor;
-			principled_paint1105.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			principled_paint1105.ins.SpecularColor.Value = m_original.SpecularColor ^ m_original.Gamma;
 			principled_paint1105.ins.Metallic.Value = 0f;
 			principled_paint1105.ins.Subsurface.Value = 0f;
 			principled_paint1105.ins.SubsurfaceRadius.Value = new ccl.float4(0f, 0f, 0f, 1f);
-			principled_paint1105.ins.Specular.Value = m_original.Gloss;
-			principled_paint1105.ins.Roughness.Value = 0f;
+			principled_paint1105.ins.Specular.Value = m_original.Shine;
 			principled_paint1105.ins.SpecularTint.Value = 0f;
 			principled_paint1105.ins.Anisotropic.Value = 0f;
-			principled_paint1105.ins.Sheen.Value = 0f;
+			principled_paint1105.ins.Sheen.Value = m_original.Shine;
 			principled_paint1105.ins.SheenTint.Value = 0f;
 			principled_paint1105.ins.Clearcoat.Value = 0f;
 			principled_paint1105.ins.ClearcoatGloss.Value = 0f;
