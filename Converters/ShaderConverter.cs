@@ -168,8 +168,8 @@ namespace RhinoCyclesCore.Converters
 				var rcl = m.ReflectionColor;
 				var rfcl = m.TransparentColor;
 				var emcl = m.EmissionColor;
-				var polish = (float)m.ReflectionGlossiness; //*_engineSettings.PolishFactor;
-				var reflectivity = (float)m.Reflectivity; //*_engineSettings.PolishFactor;
+				var polish = (float)m.ReflectionGlossiness;
+				var reflectivity = (float)m.Reflectivity;
 				var metalic = 0f;
 				var shine = (float)(m.Shine / Material.MaxShine);
 
@@ -180,12 +180,10 @@ namespace RhinoCyclesCore.Converters
 						break;
 					case ProbableMaterial.Glass:
 					case ProbableMaterial.Gem:
-						//dcl = m.TransparentColor;
 						metalic = 0f;
 						mattype = CyclesShader.CyclesMaterial.Glass;
 						break;
 					case ProbableMaterial.Metal:
-						//dcl = m.ReflectionColor;
 						metalic = 1.0f;
 						mattype = CyclesShader.CyclesMaterial.SimpleMetal;
 						break;
