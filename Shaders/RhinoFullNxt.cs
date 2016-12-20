@@ -453,7 +453,6 @@ namespace RhinoCyclesCore.Shaders
 			emissive103.outs.Emission.Connect(custom_emission101.ins.Closure2);
 			emission_value102.outs.Val.Connect(custom_emission101.ins.Fac);
 
-
 			if (m_original.HasDiffuseTexture)
 			{
 				RenderEngine.SetTextureImage(diffuse_texture80, m_original.DiffuseTexture);
