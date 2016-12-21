@@ -19,6 +19,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
@@ -160,12 +161,13 @@ namespace RhinoCyclesCore
 			m_old_hidden = view.WallpaperHidden;
 			m_old_grayscale = view.ShowWallpaperInGrayScale;
 			m_old_scaletofit = scaleToFit;
-			if (string.IsNullOrEmpty(view.WallpaperFilename) || !File.Exists(view.WallpaperFilename))
+			var file = Rhino.Render.Utilities.FindFile(RhinoDoc.ActiveDoc, view.WallpaperFilename);
+			if (string.IsNullOrEmpty(file) || !File.Exists(file))
 			{
 				wallpaper.Clear();
 				return;
 			}
-			m_old_wallpaper = view.WallpaperFilename ?? "";
+			m_old_wallpaper = file ?? "";
 			var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(m_old_wallpaper));
 			try
 			{
@@ -191,7 +193,7 @@ namespace RhinoCyclesCore
 
 				var w = Math.Abs(right - left);
 				var h = Math.Abs(bottom - top);
-				Bitmap bm = new Bitmap(view.WallpaperFilename);
+				Bitmap bm = new Bitmap(file);
 				var ar = (float) bm.Width/bm.Height;
 				var fac = 1.0f;
 				if (ar < 1.0f)
@@ -243,7 +245,7 @@ namespace RhinoCyclesCore
 				wallpaper.TexWidth = newBitmap.Width;
 				wallpaper.TexHeight = newBitmap.Height;
 				wallpaper.Name =
-					$"{view.WallpaperFilename}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
+					$"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
 			}
 			catch (Exception)
 			{
