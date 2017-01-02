@@ -46,6 +46,21 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("metal-polish", 0.0f, "Roughness");
 		}
 
+		public void BakeParameters()
+		{
+			Color4f col;
+			if (Fields.TryGetValue("metal-color", out col))
+			{
+				Color = col;
+			}
+			float val;
+			if (Fields.TryGetValue("metal-polish", out val))
+			{
+				Roughness = val;
+			}
+
+		}
+
 		protected override void OnAddUserInterfaceSections()
 		{
 			AddAutomaticUserInterfaceSection("Parameters", 0);
