@@ -29,6 +29,7 @@ namespace RhinoCyclesCore
 			switch (shader.CyclesMaterialType)
 			{
 				case CyclesShader.CyclesMaterial.Xml:
+				case CyclesShader.CyclesMaterial.FlakedCarPaint:
 					sh = CreateCyclesShaderFromXml(shader);
 					break;
 				default:
