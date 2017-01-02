@@ -33,13 +33,47 @@ namespace RhinoCyclesCore.Materials
 
 		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.SimplePlastic;
 
+		private Color4f Diffuse { get; set; }
+		private float Polish { get; set; }
+		private float Frost { get; set; }
+		private float Transparency { get; set; }
+		private float Reflectivity { get; set; }
+
 		public SimplePlasticMaterial()
 		{
-			Fields.Add("diffuse", Color4f.White, "Color");
-			Fields.Add("polish-amount", 0.0f, "Polish");
-			Fields.Add("frost-amount", 0.0f, "Frost");
-			Fields.Add("transparency", 0.0f, "Transparency");
-			Fields.Add("reflectivity", 0.0f, "Reflectivity");
+			Diffuse = Color4f.White;
+			Polish = Frost = Transparency = Reflectivity = 0.0f;
+			Fields.Add("diffuse", Diffuse, "Color");
+			Fields.Add("polish-amount", Polish, "Polish");
+			Fields.Add("frost-amount", Frost, "Frost");
+			Fields.Add("transparency", Transparency, "Transparency");
+			Fields.Add("reflectivity", Reflectivity, "Reflectivity");
+		}
+
+		public void BakeParameters()
+		{
+			Color4f col;
+			if (Fields.TryGetValue("diffuse", out col))
+			{
+				Diffuse = col;
+			}
+			float val;
+			if (Fields.TryGetValue("polish-amount", out val))
+			{
+				Polish = val;
+			}
+			if (Fields.TryGetValue("frost-amount", out val))
+			{
+				Frost = val;
+			}
+			if (Fields.TryGetValue("transparency", out val))
+			{
+				Transparency = val;
+			}
+			if (Fields.TryGetValue("reflectivity", out val))
+			{
+				Reflectivity = val;
+			}
 		}
 
 		public override void SimulateMaterial(ref Material simulatedMaterial, bool forDataOnly)
@@ -83,22 +117,9 @@ namespace RhinoCyclesCore.Materials
 		{
 			get
 			{
-				Color4f color;
-				Fields.TryGetValue("diffuse", out color);
-				color = Color4f.ApplyGamma(color, Gamma);
+				Color4f color = Color4f.ApplyGamma(Diffuse, Gamma);
 
-				float reflectivity;
-				Fields.TryGetValue("reflectivity", out reflectivity);
-
-				float transparency;
-				Fields.TryGetValue("transparency", out transparency);
-
-				float frostAmount;
-				Fields.TryGetValue("frost-amount", out frostAmount);
-
-				float polishAmount;
-				Fields.TryGetValue("polish-amount", out polishAmount);
-				polishAmount = 1.0f - polishAmount;
+				float polishAmount = 1.0f - Polish;
 
 				return string.Format(
 					ccl.Utilities.Instance.NumberFormatInfo,
@@ -154,10 +175,10 @@ namespace RhinoCyclesCore.Materials
 
 					"",
 					color.R, color.G, color.B,
-					reflectivity,
+					Reflectivity,
 					polishAmount,
-					frostAmount,
-					transparency
+					Frost,
+					Transparency
 					);
 			}
 		}

@@ -33,9 +33,17 @@ namespace RhinoCyclesCore.Materials
 
 		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Diffuse;
 
+		private Color4f Diffuse { get; set; }
+
 		public DiffuseMaterial()
 		{
 			Fields.Add("diffuse", Color4f.White, "Color");
+		}
+
+		public void BakeParameters()
+		{
+			Color4f color;
+			Diffuse = Fields.TryGetValue("diffuse", out color) ? color : Color4f.White;
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -68,11 +76,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			get
 			{
-				Color4f color;
-
-				Fields.TryGetValue("diffuse", out color);
-
-				color = Color4f.ApplyGamma(color, Gamma);
+				Color4f color = Color4f.ApplyGamma(Diffuse, Gamma);
 
 				return string.Format(
 					ccl.Utilities.Instance.NumberFormatInfo,

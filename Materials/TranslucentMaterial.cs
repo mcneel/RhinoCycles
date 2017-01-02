@@ -29,9 +29,21 @@ namespace RhinoCyclesCore.Materials
 
 		public float Gamma { get; set; }
 
+		private Color4f Diffuse { get; set; }
+
 		public TranslucentMaterial()
 		{
-			Fields.Add("diffuse_color", Color4f.White, "Diffuse Color");
+			Diffuse = Color4f.White;
+			Fields.Add("diffuse_color", Diffuse, "Diffuse Color");
+		}
+
+		public void BakeParameters()
+		{
+			Color4f col;
+			if (Fields.TryGetValue("diffuse_color", out col))
+			{
+				Diffuse = col;
+			}
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -60,11 +72,9 @@ namespace RhinoCyclesCore.Materials
 
 		public string MaterialXml
 		{
-			get {
-				Color4f color;
-
-				Fields.TryGetValue("diffuse_color", out color);
-				color = Color4f.ApplyGamma(color, Gamma);
+			get
+			{
+				Color4f color = Color4f.ApplyGamma(Diffuse, Gamma);
 
 				return string.Format(
 					ccl.Utilities.Instance.NumberFormatInfo,
@@ -74,7 +84,8 @@ namespace RhinoCyclesCore.Materials
 					"<connect from=\"diff bsdf\" to=\"mix closure1\" />" +
 					"<connect from=\"translucent bsdf\" to=\"mix closure2\" />" +
 					"<connect from=\"mix closure\" to=\"output surface\" />" +
-			             " ", color.R, color.G, color.B); }
+			             " ", color.R, color.G, color.B);
+			}
 		}
 
 		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Translucent;

@@ -23,7 +23,6 @@ using Utilities = ccl.Utilities;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("5C717BA9-C033-48D1-A03A-CC2E8A49E540")]
-	[CustomRenderContent(IsPrivate=true)]
 	public class FlakedCarPaintMaterial : RenderMaterial, ICyclesMaterial
 	{
 		public override string TypeName => "Cycles Flaked Car Paint Material (DEV)";
@@ -31,19 +30,68 @@ namespace RhinoCyclesCore.Materials
 
 		public float Gamma { get; set; }
 
+		private Color4f FlakeColor1 { get; set; }
+		private Color4f CoatColor1 { get; set; }
+		private Color4f FlakeColor2 { get; set; }
+		private Color4f CoatColor2 { get; set; }
+		private float FlakeSize { get; set; }
+		private float Fresnel { get; set; }
+		private float MixFactor { get; set; }
+
 		public FlakedCarPaintMaterial()
 		{
 			var flake1 = new Color4f(0.002f, 0.502f, 0.002f, 1.0f);
+			FlakeColor1 = flake1;
 			var shine1 = new Color4f(0.0f, 0.048f, 0.5f, 1.0f);
+			CoatColor1 = shine1;
 			var flake2 = new Color4f(0.098f, 0.503f, 0.102f, 1.0f);
+			FlakeColor2 = flake2;
 			var shine2 = new Color4f(0.503f, 0.0f, 0.001f, 1.0f);
+			CoatColor2 = shine2;
+			FlakeSize = 100.0f;
+			Fresnel = 1.56f;
+			MixFactor = 0.5f;
 			Fields.Add("flake1", flake1, "Flake Color 1");
 			Fields.Add("shine1", shine1, "Coat Shine 1");
 			Fields.Add("flake2", flake2, "Flake Color 2");
 			Fields.Add("shine2", shine2, "Coat Shine 2");
-			Fields.Add("flakesize", 0.0, "Flake Size");
-			Fields.Add("fresnel", 1.56f, "Fresnel");
-			Fields.Add("gamma", 1.0f, "Flake and Shine Mix Factor");
+			Fields.Add("flakesize", FlakeSize, "Flake Size");
+			Fields.Add("fresnel", Fresnel, "Fresnel");
+			Fields.Add("gamma", MixFactor, "Flake and Shine Mix Factor");
+		}
+
+		public void BakeParameters()
+		{
+			Color4f color;
+			if (Fields.TryGetValue("flake1", out color))
+			{
+				FlakeColor1 = color;
+			}
+			if (Fields.TryGetValue("flake2", out color))
+			{
+				FlakeColor2 = color;
+			}
+			if (Fields.TryGetValue("shine1", out color))
+			{
+				CoatColor1 = color;
+			}
+			if (Fields.TryGetValue("shine2", out color))
+			{
+				CoatColor2 = color;
+			}
+			float val;
+			if (Fields.TryGetValue("flakesize", out val))
+			{
+				FlakeSize = val;
+			}
+			if (Fields.TryGetValue("fresnel", out val))
+			{
+				Fresnel = val;
+			}
+			if (Fields.TryGetValue("gamma", out val))
+			{
+				MixFactor = val;
+			}
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -71,19 +119,6 @@ namespace RhinoCyclesCore.Materials
 			return m;
 		}
 
-
-/*		public override uint RenderHash
-		{
-			get
-			{
-				if(IsRenderHashCached())
-					return base.RenderHash;
-				SetRenderHash((uint)DateTime.Now.Ticks);
-				return base.RenderHash;
-			}
-		}
-		*/
-
 		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.FlakedCarPaint;
 
 
@@ -91,32 +126,13 @@ namespace RhinoCyclesCore.Materials
 		{
 			get
 			{
-				Color4f flake1;
-				Fields.TryGetValue("flake1", out flake1);
-				flake1 = Color4f.ApplyGamma(flake1, Gamma);
+				var flake1 = Color4f.ApplyGamma(FlakeColor1, Gamma);
 
-				Color4f flake2;
-				Fields.TryGetValue("flake2", out flake2);
-				flake2 = Color4f.ApplyGamma(flake2, Gamma);
+				var flake2 = Color4f.ApplyGamma(FlakeColor2, Gamma);
 
-				Color4f shine1;
-				Fields.TryGetValue("shine1", out shine1);
-				shine1 = Color4f.ApplyGamma(shine1, Gamma);
+				var shine1 = Color4f.ApplyGamma(CoatColor1, Gamma);
 
-				Color4f shine2;
-				Fields.TryGetValue("shine2", out shine2);
-				shine2 = Color4f.ApplyGamma(shine2, Gamma);
-
-				float gamma;
-				Fields.TryGetValue("gamma", out gamma);
-
-				float fresnel;
-				Fields.TryGetValue("fresnel", out fresnel);
-
-				float flakesize;
-				Fields.TryGetValue("flakesize", out flakesize);
-
-				flakesize = 1000.0f - 900.0f*flakesize;
+				var shine2 = Color4f.ApplyGamma(CoatColor2, Gamma);
 
 				var nodegraph = string.Format(
 					Utilities.Instance.NumberFormatInfo,
@@ -147,9 +163,8 @@ namespace RhinoCyclesCore.Materials
 					"<connect from=\"mixflakes closure\" to=\"mixinglossiness closure1\" />" +
 					"<connect from=\"shine bsdf\" to=\"mixinglossiness closure2\" />" +
 
-
 					"<connect from=\"mixinglossiness closure\" to=\"output surface\" />",
-					flakesize, gamma, fresnel,
+					FlakeSize, MixFactor, Fresnel,
 					flake1.R, flake1.G, flake1.B,
 					shine1.R, shine1.G, shine1.B,
 					flake2.R, flake2.G, flake2.B,

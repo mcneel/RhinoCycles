@@ -299,12 +299,14 @@ namespace RhinoCyclesCore.Converters
 			}
 			if (crm != null)
 			{
+				crm.BakeParameters();
 				shader = new CyclesShader
 				{
 					Id = mid,
-					CyclesMaterialType = crm.MaterialType,
+					CyclesMaterialType = CyclesShader.CyclesMaterial.Xml,
 					Gamma = gamma,
-					Crm = crm
+					Crm = crm,
+					Name = rm.Name ?? "some cycles material"
 				};
 			}
 

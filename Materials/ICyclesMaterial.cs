@@ -18,10 +18,28 @@ namespace RhinoCyclesCore.Materials
 {
 	public interface ICyclesMaterial
 	{
+		/// <summary>
+		/// Get the material type for the implementation
+		/// </summary>
 		CyclesShader.CyclesMaterial MaterialType { get; }
 
+		/// <summary>
+		/// Bake parameters from Fields dictionary. Implement this if you
+		/// need access to your own custom render material Fields dictionary
+		/// after a flush.
+		/// </summary>
+		void BakeParameters();
+
+		/// <summary>
+		/// Get the XML representing the material. Note that if you need to access
+		/// this after a Flush from the ChangeQueue you need to call BakeParameters()
+		/// on your custom render material first.
+		/// </summary>
 		string MaterialXml { get; }
 
+		/// <summary>
+		/// Set the gamma to use when serializing to XML.
+		/// </summary>
 		float Gamma { get; set; }
 	}
 }

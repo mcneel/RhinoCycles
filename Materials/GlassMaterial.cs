@@ -35,11 +35,36 @@ namespace RhinoCyclesCore.Materials
 
 		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Glass;
 
+		private Color4f Color { get; set; }
+		private float Frost { get; set; }
+		private float Ior { get; set; }
+
 		public GlassMaterial()
 		{
-			Fields.Add("glass_color", Color4f.White, "Glass Color");
-			Fields.Add("frost-amount", 0.0f, "Frost");
-			Fields.Add("ior", 1.45f, "IOR");
+			Color = Color4f.White;
+			Fields.Add("glass_color", Color, "Glass Color");
+			Frost = 0.0f;
+			Fields.Add("frost-amount", Frost, "Frost");
+			Ior = 1.45f;
+			Fields.Add("ior", Ior, "IOR");
+		}
+
+		public void BakeParameters()
+		{
+			Color4f col;
+			if (Fields.TryGetValue("glass_color", out col))
+			{
+				Color = col;
+			}
+			float val;
+			if (Fields.TryGetValue("frost-amount", out val))
+			{
+				Frost = val;
+			}
+			if (Fields.TryGetValue("ior", out val))
+			{
+				Ior = val;
+			}
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -54,7 +79,7 @@ namespace RhinoCyclesCore.Materials
 			simulatedMaterial.Reflectivity = 1.0;
 			simulatedMaterial.Transparency = 1.0;
 			simulatedMaterial.FresnelReflections = true;
-			simulatedMaterial.DiffuseColor = Color.Black;
+			simulatedMaterial.DiffuseColor = System.Drawing.Color.Black;
 
 			Color4f color;
 			if (Fields.TryGetValue("glass_color", out color))
@@ -90,17 +115,10 @@ namespace RhinoCyclesCore.Materials
 		{
 			get
 			{
-				Color4f color;
-				float frost;
-				float IOR;
 
-				Fields.TryGetValue("glass_color", out color);
-				Fields.TryGetValue("frost-amount", out frost);
-				Fields.TryGetValue("ior", out IOR);
+				float frost = (float)Math.Pow(Frost, 2);
 
-				frost = (float)Math.Pow(frost, 2);
-
-				color = Color4f.ApplyGamma(color, Gamma);
+				Color4f color = Color4f.ApplyGamma(Color, Gamma);
 
 				return string.Format(
 					ccl.Utilities.Instance.NumberFormatInfo,
@@ -120,7 +138,7 @@ namespace RhinoCyclesCore.Materials
 					
 					color.R, color.G, color.B,
 					frost,
-					IOR);
+					Ior);
 			}
 		}
 	}

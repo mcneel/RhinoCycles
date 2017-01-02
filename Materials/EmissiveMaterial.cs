@@ -34,10 +34,29 @@ namespace RhinoCyclesCore.Materials
 
 		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Emissive;
 
+		private float Strength { get; set; }
+		private Color4f Emission { get; set; }
+
 		public EmissiveMaterial()
 		{
+			Emission = Color4f.White;
 			Fields.Add("emission_color", Color4f.White, "Emissive Color");
+			Strength = 1.0f;
 			Fields.Add("strength", 1.0f, "Strength");
+		}
+
+		public void BakeParameters()
+		{
+			Color4f color;
+			if (Fields.TryGetValue("emission_color", out color))
+			{
+				Emission = color;
+			}
+			float strength;
+			if (Fields.TryGetValue("strength", out strength))
+			{
+				Strength = strength;
+			}
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -83,13 +102,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			get
 			{
-				Color4f color;
-				float strength;
-
-				Fields.TryGetValue("emission_color", out color);
-				Fields.TryGetValue("strength", out strength);
-
-				color = Color4f.ApplyGamma(color, Gamma);
+				Color4f color = Color4f.ApplyGamma(Emission, Gamma);
 
 				return string.Format(
 					Utilities.Instance.NumberFormatInfo,
@@ -107,7 +120,7 @@ namespace RhinoCyclesCore.Materials
 					"",
 					
 					color.R, color.G, color.B,
-					strength);
+					Strength);
 			}
 		}
 	}

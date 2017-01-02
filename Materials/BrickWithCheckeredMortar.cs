@@ -28,6 +28,8 @@ namespace RhinoCyclesCore.Materials
 
 		public float Gamma { get; set; }
 
+		public void BakeParameters() { }
+
 		public override void SimulateMaterial(ref Rhino.DocObjects.Material simulatedMaterial, bool forDataOnly)
 		{
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);

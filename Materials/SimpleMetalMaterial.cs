@@ -35,10 +35,15 @@ namespace RhinoCyclesCore.Materials
 
 		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.SimpleMetal;
 
+		private Color4f Color { get; set; }
+		private float Roughness { get; set; }
+
 		public SimpleMetalMaterial()
 		{
+			Color = Color4f.White;
+			Roughness = 0.0f;
 			Fields.Add("metal-color", Color4f.White, "Metal Color");
-			Fields.Add("metal-polish", 0.0f, "Polish");
+			Fields.Add("metal-polish", 0.0f, "Roughness");
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -53,7 +58,7 @@ namespace RhinoCyclesCore.Materials
 			simulatedMaterial.Reflectivity = 1.0;
 			simulatedMaterial.Transparency = 0.0;
 			simulatedMaterial.FresnelReflections = false;
-			simulatedMaterial.DiffuseColor = Color.Black;
+			simulatedMaterial.DiffuseColor = System.Drawing.Color.Black;
 
 			Color4f color;
 			if (Fields.TryGetValue("metal-color", out color))
@@ -82,15 +87,8 @@ namespace RhinoCyclesCore.Materials
 		{
 			get
 			{
-				Color4f color;
-				float polish;
-
-				Fields.TryGetValue("metal-color", out color);
-				Fields.TryGetValue("metal-polish", out polish);
-
-				polish = (float)Math.Pow(polish, 2);
-
-				color = Color4f.ApplyGamma(color, Gamma);
+				var polish = (float)Math.Pow(Roughness, 2);
+				var color = Color4f.ApplyGamma(Color, Gamma);
 
 				return string.Format(
 					ccl.Utilities.Instance.NumberFormatInfo,

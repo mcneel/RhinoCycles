@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using Rhino.Display;
 using Rhino.Render;
 
 namespace RhinoCyclesCore.Materials
@@ -27,12 +28,43 @@ namespace RhinoCyclesCore.Materials
 
 		public float Gamma { get; set; }
 
+		private Color4f Color1 { get; set; }
+		private Color4f Color2 { get; set; }
+		private Color4f Mortar { get; set; }
+		private float Offset { get; set; }
+
 		public SimpleBrickMaterial()
 		{
-			Fields.Add("color1", Rhino.Display.Color4f.White, "Color 1");
-			Fields.Add("color2", Rhino.Display.Color4f.White, "Color 2");
-			Fields.Add("mortar", Rhino.Display.Color4f.Black, "Mortar Color");
-			Fields.Add("offset", 0.0f, "Offset");
+			Color1 = Color2 = Color4f.White;
+			Mortar = Color4f.Black;
+			Offset = 0.33f;
+			Fields.Add("color1", Color1, "Color 1");
+			Fields.Add("color2", Color2, "Color 2");
+			Fields.Add("mortar", Mortar, "Mortar Color");
+			Fields.Add("offset", Offset, "Offset");
+		}
+
+		public void BakeParameters()
+		{
+			Color4f col;
+			if (Fields.TryGetValue("color1", out col))
+			{
+				Color1 = col;
+			}
+			if (Fields.TryGetValue("color2", out col))
+			{
+				Color2 = col;
+			}
+			if (Fields.TryGetValue("mortar", out col))
+			{
+				Mortar = col;
+			}
+			float val;
+			if (Fields.TryGetValue("offset", out val))
+			{
+				Offset = val;
+			}
+
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -67,19 +99,8 @@ namespace RhinoCyclesCore.Materials
 			get
 			{
 				var name = "brick";
-				Rhino.Display.Color4f color1;
-				Fields.TryGetValue("color1", out color1);
-				color1 = Rhino.Display.Color4f.ApplyGamma(color1, Gamma);
-
-				Rhino.Display.Color4f color2;
-				Fields.TryGetValue("color2", out color2);
-				color2 = Rhino.Display.Color4f.ApplyGamma(color2, Gamma);
-
-				Rhino.Display.Color4f mortar;
-				Fields.TryGetValue("mortar", out mortar);
-
-				float offset;
-				Fields.TryGetValue("offset", out offset);
+				var color1 = Color4f.ApplyGamma(Color1, Gamma);
+				var color2 = Color4f.ApplyGamma(Color2, Gamma);
 
 				var nodegraph = string.Format(
 					ccl.Utilities.Instance.NumberFormatInfo,
@@ -98,8 +119,8 @@ namespace RhinoCyclesCore.Materials
 					name,
 					color1.R, color1.G, color1.B,
 					color2.R, color2.G, color2.B,
-					mortar.R, mortar.G, mortar.B,
-					offset
+					Mortar.R, Mortar.G, Mortar.B,
+					Offset
 					);
 				return nodegraph;
 			}
