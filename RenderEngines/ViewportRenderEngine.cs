@@ -164,12 +164,15 @@ namespace RhinoCyclesCore.RenderEngines
 		/// </summary>
 		public event EventHandler<RenderStartedEventArgs> RenderStarted;
 
+		public bool Locked { get; set; }
+
 		/// <summary>
 		/// Entry point for viewport interactive rendering
 		/// </summary>
 		public void Renderer()
 		{
 			var cyclesEngine = this;
+			Locked = false;
 
 			var client = cyclesEngine.Client;
 			var rw = cyclesEngine.RenderWindow;
@@ -237,7 +240,7 @@ namespace RhinoCyclesCore.RenderEngines
 			while (!IsStopped)
 			{
 				Thread.Sleep(10);
-				if(Flush)
+				if(!Locked && Flush)
 					TriggerChangesReady();
 			}
 		}

@@ -56,6 +56,19 @@ namespace RhinoCycles.Viewport
 
 		private bool _locked;
 
+		private bool Locked
+		{
+			get
+			{
+				return _locked;
+			}
+			set
+			{
+				_locked = value;
+				if(_cycles!=null) _cycles.Locked = _locked;
+			}
+		}
+
 		public bool IsSynchronizing { get; private set; }
 
 		private ViewportRenderEngine _cycles;
@@ -94,12 +107,12 @@ namespace RhinoCycles.Viewport
 
 		private void RenderedViewport_HudUnlockButtonPressed(object sender, EventArgs e)
 		{
-			_locked = false;
+			Locked = false;
 		}
 
 		private void RenderedViewport_HudLockButtonPressed(object sender, EventArgs e)
 		{
-			_locked = true;
+			Locked = true;
 		}
 
 		private void RenderedViewport_HudPauseButtonPressed(object sender, EventArgs e)
@@ -374,7 +387,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool HudRendererLocked()
 		{
-			return _locked;
+			return Locked;
 		}
 
 		public override bool HudShowMaxPasses()
