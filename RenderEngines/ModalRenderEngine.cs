@@ -202,18 +202,18 @@ namespace RhinoCyclesCore.RenderEngines
 			rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 		}
 
-		public override bool SupportsPause()
+		public bool SupportsPause()
 		{
 			return true;
 		}
 
-		public override void ResumeRendering()
+		public void ResumeRendering()
 		{
 			State = State.Rendering;
 			Session.SetPause(false);
 		}
 
-		public override void PauseRendering()
+		public void PauseRendering()
 		{
 			State = State.Waiting;
 			Session.SetPause(true);
