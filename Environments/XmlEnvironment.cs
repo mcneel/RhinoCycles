@@ -46,7 +46,6 @@ namespace RhinoCyclesCore.Environments
 			{
 				Xml = xml;
 			}
-
 		}
 
 		protected override void OnAddUserInterfaceSections()
