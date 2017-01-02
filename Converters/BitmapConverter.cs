@@ -61,6 +61,7 @@ namespace RhinoCyclesCore.Converters
 
 			var projectionMode = renderTexture.GetProjectionMode();
 			var envProjectionMode = renderTexture.GetInternalEnvironmentMappingMode();
+			var repeat = renderTexture.GetWrapType() == TextureWrapType.Repeating;
 
 			using (var textureEvaluator = renderTexture.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
 			{
@@ -68,7 +69,7 @@ namespace RhinoCyclesCore.Converters
 				using (
 					var actualEvaluator = textureEvaluator ?? RenderTexture.NewBitmapTexture(st).CreateEvaluator(RenderTexture.TextureEvaluatorFlags.Normal))
 				{
-					InternalMaterialBitmapFromEvaluator(shader, renderTexture, textureType, rhinotfm, rId, actualEvaluator, projectionMode, envProjectionMode);
+					InternalMaterialBitmapFromEvaluator(shader, renderTexture, textureType, rhinotfm, rId, actualEvaluator, projectionMode, envProjectionMode, repeat);
 
 				}
 			}
@@ -76,7 +77,7 @@ namespace RhinoCyclesCore.Converters
 
 		private static void InternalMaterialBitmapFromEvaluator(CyclesShader shader, RenderTexture renderTexture,
 			RenderMaterial.StandardChildSlots textureType, Rhino.Geometry.Transform rhinotfm, uint rId, TextureEvaluator actualEvaluator,
-			TextureProjectionMode projectionMode, TextureEnvironmentMappingMode envProjectionMode)
+			TextureProjectionMode projectionMode, TextureEnvironmentMappingMode envProjectionMode, bool repeat)
 		{
 			int pheight;
 			int pwidth;
@@ -170,6 +171,7 @@ namespace RhinoCyclesCore.Converters
 					shader.DiffuseTexture.ProjectionMode = projectionMode;
 					shader.DiffuseTexture.EnvProjectionMode = envProjectionMode;
 					shader.DiffuseTexture.Transform = t;
+					shader.DiffuseTexture.Repeat = repeat;
 					shader.DiffuseTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
 					break;
 				case RenderMaterial.StandardChildSlots.Bump:
@@ -178,6 +180,7 @@ namespace RhinoCyclesCore.Converters
 					shader.BumpTexture.ProjectionMode = projectionMode;
 					shader.BumpTexture.EnvProjectionMode = envProjectionMode;
 					shader.BumpTexture.Transform = t;
+					shader.BumpTexture.Repeat = repeat;
 					shader.BumpTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
 					break;
 				case RenderMaterial.StandardChildSlots.Transparency:
@@ -186,6 +189,7 @@ namespace RhinoCyclesCore.Converters
 					shader.TransparencyTexture.ProjectionMode = projectionMode;
 					shader.TransparencyTexture.EnvProjectionMode = envProjectionMode;
 					shader.TransparencyTexture.Transform = t;
+					shader.TransparencyTexture.Repeat = repeat;
 					shader.TransparencyTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
 					break;
 				case RenderMaterial.StandardChildSlots.Environment:
@@ -195,6 +199,7 @@ namespace RhinoCyclesCore.Converters
 					shader.EnvironmentTexture.ProjectionMode = TextureProjectionMode.EnvironmentMap;
 					shader.EnvironmentTexture.EnvProjectionMode = TextureEnvironmentMappingMode.EnvironmentMap;
 					shader.EnvironmentTexture.Transform = t;
+					shader.EnvironmentTexture.Repeat = repeat;
 					shader.EnvironmentTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
 					break;
 			}

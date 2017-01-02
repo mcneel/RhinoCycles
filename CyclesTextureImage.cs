@@ -44,6 +44,9 @@ namespace RhinoCyclesCore
 		public TextureProjectionMode ProjectionMode { get; set; }
 		public TextureEnvironmentMappingMode EnvProjectionMode { get; set; }
 
+		public bool Repeat { get; set; }
+		public float RepeatAsFloat => Repeat ? 1.0f : 0.0f;
+
 		public CyclesTextureImage()
 		{
 			Clear();
