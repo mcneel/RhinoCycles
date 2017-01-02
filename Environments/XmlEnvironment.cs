@@ -29,11 +29,24 @@ namespace RhinoCyclesCore.Environments
 
 		public float Gamma { get; set; }
 
+		private string Xml { get; set; }
+
 		public XmlEnvironment()
 		{
-			var xml = "<background color=\"0 1 0\" name=\"bg\" strength=\"1\" />" +
+			Xml = "<background color=\"0 1 0\" name=\"bg\" strength=\"1\" />" +
 								"<connect from=\"bg background\" to=\"output surface\" />";
-			Fields.Add("xmlcode", xml, "XML definition");
+
+			Fields.Add("xmlcode", Xml, "XML definition");
+		}
+
+		public void BakeParameters()
+		{
+			string xml;
+			if (Fields.TryGetValue("xmlcode", out xml))
+			{
+				Xml = xml;
+			}
+
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -44,11 +57,7 @@ namespace RhinoCyclesCore.Environments
 		public string MaterialXml
 		{
 			get {
-				string xml;
-
-				Fields.TryGetValue("xmlcode", out xml);
-
-				return xml;
+				return Xml;
 			}
 		}
 

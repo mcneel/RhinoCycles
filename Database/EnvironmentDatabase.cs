@@ -115,8 +115,9 @@ namespace RhinoCyclesCore.Database
 				case RenderEnvironment.Usage.Background:
 					_cqBackground.Xml = "";
 					var xmlenv = (environment?.TopLevelParent as Materials.ICyclesMaterial);
-					if(xmlenv?.MaterialType == RhinoCyclesCore.CyclesShader.CyclesMaterial.XmlEnvironment)
+					if(xmlenv?.MaterialType == RhinoCyclesCore.CyclesShader.CyclesMaterial.XmlEnvironment || xmlenv?.MaterialType == RhinoCyclesCore.CyclesShader.CyclesMaterial.SimpleNoiseEnvironment)
 					{
+						xmlenv.BakeParameters();
 						_cqBackground.Xml = xmlenv.MaterialXml;
 					}
 					_cqBackground.background_environment = environment;

@@ -30,12 +30,43 @@ namespace RhinoCyclesCore.Environments
 
 		public float Gamma { get; set; }
 
+		private float Scale { get; set; }
+		private float Detail { get; set; }
+		private float Distortion { get; set; }
+		private float Strength { get; set; }
+
 		public SimpleNoiseEnvironment()
 		{
-			Fields.Add("scale", 5.0f, "Scale");
-			Fields.Add("detail", 2.0f, "Detail");
-			Fields.Add("distortion", 0.0f, "Distortion");
-			Fields.Add("strength", 1.0f, "Background Strength");
+			Scale = 5.0f;
+			Fields.Add("scale", Scale, "Scale");
+			Detail = 2.0f;
+			Fields.Add("detail", Detail, "Detail");
+			Distortion = 0.0f;
+			Fields.Add("distortion", Distortion, "Distortion");
+			Strength = 1.0f;
+			Fields.Add("strength", Strength, "Background Strength");
+		}
+
+		public void BakeParameters()
+		{
+			float val;
+			if (Fields.TryGetValue("scale", out val))
+			{
+				Scale = val;
+			}
+			if (Fields.TryGetValue("detail", out val))
+			{
+				Detail = val;
+			}
+			if (Fields.TryGetValue("distortion", out val))
+			{
+				Distortion = val;
+			}
+			if (Fields.TryGetValue("strength", out val))
+			{
+				Strength = val;
+			}
+
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -46,22 +77,12 @@ namespace RhinoCyclesCore.Environments
 		public string MaterialXml
 		{
 			get {
-				float scale;
-				float detail;
-				float distortion;
-				float strength;
-
-				Fields.TryGetValue("scale", out scale);
-				Fields.TryGetValue("detail", out detail);
-				Fields.TryGetValue("distortion", out distortion);
-				Fields.TryGetValue("strength", out strength);
-
 				var nodegraph = string.Format(Utilities.Instance.NumberFormatInfo,
 					"<noise_texture name=\"nt\" scale=\"{0}\" detail=\"{1}\" distortion=\"{2}\" />" +
 					"<background name=\"bg\" strength=\"{3}\" />" +
 					"<connect from=\"nt color\" to=\"bg color\" />" +
 					"<connect from=\"bg background\" to=\"output surface\" />",
-					scale, detail, distortion, strength);
+					Scale, Detail, Distortion, Strength);
 
 				return nodegraph;
 			}
