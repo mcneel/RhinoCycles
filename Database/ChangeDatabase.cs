@@ -911,7 +911,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		private const uint GroundPlaneMeshInstanceId = 1;
 
-		private readonly float gp_side_extension = 1.0E+10f;
+		private readonly float gp_side_extension = 1.0E+7f;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
 			var gpid = _groundplaneGuid;
@@ -923,16 +923,8 @@ namespace RhinoCyclesCore.Database
 				var xext = new Interval(-gp_side_extension, gp_side_extension);
 				var yext = new Interval(-gp_side_extension, gp_side_extension);
 				var smext = new Interval(0.0, 1.0);
-				PlaneSurface ps = new PlaneSurface(p, xext, yext);
-				var mp = new MeshingParameters
-				{
-					GridMinCount = 512,
-					GridMaxCount = 1024,
-					SimplePlanes = false
-				};
-				var meshes = Rhino.Geometry.Mesh.CreateFromBrep(ps.ToBrep(), mp);
-				Rhino.Geometry.Mesh m = new Rhino.Geometry.Mesh();
-				foreach (var mesh in meshes) m.Append(mesh);
+				var m = Rhino.Geometry.Mesh.CreateFromPlane(p, xext, yext, 100, 100);
+				m.Weld(0.1);
 
 				Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
 				var texscale = gp.TextureScale;
@@ -949,7 +941,6 @@ namespace RhinoCyclesCore.Database
 					m.SetTextureCoordinates(texturemapping, tfm, false);
 					m.SetCachedTextureCoordinates(texturemapping, ref tfm);
 				}
-
 
 				HandleMeshData(_groundplaneGuid.Item1, _groundplaneGuid.Item2, m);
 
@@ -1356,8 +1347,6 @@ namespace RhinoCyclesCore.Database
 			 */
 			UpdateAllEnvironments();
 			_environmentDatabase.SetGamma(PreProcessGamma);
-
-			//System.Diagnostics.Debug.WriteLine("{0}, env {1}", usage, env);
 		}
 
 		private void UpdateAllEnvironments()
