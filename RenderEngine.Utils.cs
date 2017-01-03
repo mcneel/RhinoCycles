@@ -79,6 +79,7 @@ namespace RhinoCyclesCore
 					SampleAllLightsIndirect = cycles_engine.Settings.SampleAllLightsIndirect,
 					SampleClampDirect = cycles_engine.Settings.SampleClampDirect,
 					SampleClampIndirect = cycles_engine.Settings.SampleClampIndirect,
+					LightSamplingThreshold =  cycles_engine.Settings.LightSamplingThreshold,
 					SamplingPattern = SamplingPattern.CMJ,
 					Seed = cycles_engine.Settings.Seed
 				}

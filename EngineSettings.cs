@@ -84,6 +84,7 @@ namespace RhinoCyclesCore
 			FilterGlossy = es.FilterGlossy;
 			SampleClampDirect = es.SampleClampDirect;
 			SampleClampIndirect = es.SampleClampIndirect;
+			LightSamplingThreshold = es.LightSamplingThreshold;
 			SampleAllLights = es.SampleAllLights;
 			SampleAllLightsIndirect = es.SampleAllLightsIndirect;
 			
@@ -143,6 +144,7 @@ namespace RhinoCyclesCore
 			FilterGlossy = 0.5f;
 			SampleClampDirect = 0.0f;
 			SampleClampIndirect = 5.0f;
+			LightSamplingThreshold = 0.05f;
 			SampleAllLights = true;
 			SampleAllLightsIndirect = true;
 		}
@@ -164,24 +166,28 @@ namespace RhinoCyclesCore
 			{
 				case AntialiasLevel.None:
 					Samples = 50;
+					LightSamplingThreshold = 0.1f;
 					break;
 				case AntialiasLevel.Draft:
 					Samples = 200;
 					DiffuseSamples = 2;
 					GlossySamples = 2;
 					TransmissionSamples = 2;
+					LightSamplingThreshold = 0.1f;
 					break;
 				case AntialiasLevel.Good:
 					Samples = 500;
 					DiffuseSamples = 3;
 					GlossySamples = 3;
 					TransmissionSamples = 3;
+					LightSamplingThreshold = 0.07f;
 					break;
 				case AntialiasLevel.High:
 					Samples = 2000;
 					DiffuseSamples = 32;
 					GlossySamples = 32;
 					TransmissionSamples = 32;
+					LightSamplingThreshold = 0.05f;
 					break;
 			}
 		}
@@ -241,6 +247,7 @@ namespace RhinoCyclesCore
 		public float FilterGlossy { get; set; }
 		public float SampleClampDirect { get; set; }
 		public float SampleClampIndirect { get; set; }
+		public float LightSamplingThreshold { get; set; }
 		public bool SampleAllLights { get; set; }
 		public bool SampleAllLightsIndirect { get; set; }
 		public float SensorWidth { get; set; }

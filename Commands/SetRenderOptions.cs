@@ -76,6 +76,7 @@ namespace RhinoCycles.Commands
 			var filterGlossy = new OptionDouble(RcCore.It.EngineSettings.FilterGlossy, 0.0, 100.0);
 			var sampleClampDirect = new OptionDouble(RcCore.It.EngineSettings.SampleClampDirect, 0.0, 100.0);
 			var sampleClampIndirect = new OptionDouble(RcCore.It.EngineSettings.SampleClampIndirect, 0.0, 100.0);
+			var lightSamplingThreshold = new OptionDouble(RcCore.It.EngineSettings.LightSamplingThreshold, 0.0, 1.0);
 			var sampleAllLights = new OptionToggle(RcCore.It.EngineSettings.SampleAllLights, "no", "yes");
 			var sampleAllLightsIndirect = new OptionToggle(RcCore.It.EngineSettings.SampleAllLightsIndirect, "no", "yes");
 
@@ -109,6 +110,7 @@ namespace RhinoCycles.Commands
 			getNumber.AddOptionDouble("filter_glossy", ref filterGlossy);
 			getNumber.AddOptionDouble("sample_clamp_direct", ref sampleClampDirect);
 			getNumber.AddOptionDouble("sample_clamp_indirect", ref sampleClampIndirect);
+			getNumber.AddOptionDouble("light_sampling_threshold", ref lightSamplingThreshold);
 			getNumber.AddOptionToggle("sample_all_lights", ref sampleAllLights);
 			getNumber.AddOptionToggle("sample_all_lights_indirect", ref sampleAllLightsIndirect);
 
@@ -139,12 +141,13 @@ namespace RhinoCycles.Commands
 						RcCore.It.EngineSettings.SensorWidth = (float)sensorWidth.CurrentValue;
 						RcCore.It.EngineSettings.SensorHeight = (float)sensorHeight.CurrentValue;
 						RcCore.It.EngineSettings.IntegratorMethod = branched.CurrentValue ? IntegratorMethod.BranchedPath : IntegratorMethod.Path;
-						RcCore.It.EngineSettings.SamplingPattern = SamplingPattern.Sobol;
-						RcCore.It.EngineSettings.FilterGlossy = 0.0f;
-						RcCore.It.EngineSettings.SampleClampDirect = 0.0f;
-						RcCore.It.EngineSettings.SampleClampIndirect = 0.0f;
-						RcCore.It.EngineSettings.SampleAllLights = true;
-						RcCore.It.EngineSettings.SampleAllLightsIndirect = true;
+						RcCore.It.EngineSettings.SamplingPattern = SamplingPattern.CMJ;
+						RcCore.It.EngineSettings.FilterGlossy = (float)filterGlossy.CurrentValue;
+						RcCore.It.EngineSettings.SampleClampDirect = (float)sampleClampDirect.CurrentValue;
+						RcCore.It.EngineSettings.SampleClampIndirect = (float)sampleClampIndirect.CurrentValue;
+						RcCore.It.EngineSettings.LightSamplingThreshold = (float)lightSamplingThreshold.CurrentValue;
+						RcCore.It.EngineSettings.SampleAllLights = sampleAllLights.CurrentValue;
+						RcCore.It.EngineSettings.SampleAllLightsIndirect = sampleAllLightsIndirect.CurrentValue;
 						break;
 					case GetResult.Option:
 						continue;
