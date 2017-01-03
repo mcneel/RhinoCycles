@@ -353,11 +353,10 @@ namespace RhinoCyclesCore
 			var status = CSycles.progress_get_status(Client.Id, sid);
 			var substatus = CSycles.progress_get_substatus(Client.Id, sid);
 			RenderedSamples = CSycles.progress_get_sample(Client.Id, sid);
-			int tile;
 			float progress;
-			double total_time, render_time, tile_time;
-			CSycles.progress_get_tile(Client.Id, sid, out tile, out total_time, out render_time, out tile_time);
-			CSycles.progress_get_progress(Client.Id, sid, out progress, out total_time, out render_time, out tile_time);
+			double total_time, sample_time;
+			CSycles.progress_get_time(Client.Id, sid, out total_time, out sample_time);
+			CSycles.progress_get_progress(Client.Id, sid, out progress);
 			int hr = ((int)total_time) / (60 * 60);
 			int min = (((int)total_time) / 60) % 60;
 			int sec = ((int)total_time) % 60;
