@@ -1113,13 +1113,15 @@ namespace RhinoCyclesCore.Database
 			emissive.SetParameter("emission_color", color);
 			emissive.SetParameter("strength", (float)rgl.Intensity);
 			emissive.EndChange();
+			emissive.BakeParameters();
 			var shader = new CyclesShader
 			{
 				Name = rgl.Name,
 				Id = matid,
 				Crm = emissive,
-				CyclesMaterialType = CyclesShader.CyclesMaterial.Emissive
+				CyclesMaterialType = CyclesShader.CyclesMaterial.Xml
 			};
+			shader.Type = CyclesShader.Shader.Diffuse;
 
 			_shaderDatabase.AddShader(shader);
 		}
