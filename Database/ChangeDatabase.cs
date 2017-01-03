@@ -1361,6 +1361,8 @@ namespace RhinoCyclesCore.Database
 			_environmentDatabase.SetBackground(bgenv, RenderEnvironment.Usage.Background);
 			_environmentDatabase.SetBackground(skyenv, RenderEnvironment.Usage.Skylighting);
 			_environmentDatabase.SetBackground(reflenv, RenderEnvironment.Usage.ReflectionAndRefraction);
+
+			_environmentDatabase.HandleEnvironments();
 		}
 
 		/// <summary>

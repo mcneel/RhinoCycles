@@ -138,10 +138,12 @@ namespace RhinoCyclesCore.Database
 					_cqBackground.reflection_environment = environment;
 					break;
 			}
-
-			_cqBackground.HandleEnvironments();
-
 			_cqBackground.modified = true;
+		}
+
+		public void HandleEnvironments()
+		{
+			_cqBackground.HandleEnvironments();
 		}
 
 		/// <summary>
