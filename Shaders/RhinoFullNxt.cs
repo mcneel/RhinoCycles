@@ -71,7 +71,7 @@ namespace RhinoCyclesCore.Shaders
 
 			var honor_texture_repeat231 = new MathNode("honor_texture_repeat");
 			honor_texture_repeat231.ins.Value1.Value = 1f;
-			honor_texture_repeat231.ins.Value2.Value = m_original.DiffuseTexture.RepeatAsFloat;
+			honor_texture_repeat231.ins.Value2.Value = m_original.DiffuseTexture.Repeat ? 0.0f : 1.0f;
 			honor_texture_repeat231.Operation = MathNode.Operations.Multiply;
 			honor_texture_repeat231.UseClamp = false;
 
