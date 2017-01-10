@@ -1312,13 +1312,14 @@ namespace RhinoCyclesCore.Database
 		}
 
 
+		BackgroundStyle previousStyle = BackgroundStyle.SolidColor;
 		protected override void ApplyRenderSettingsChanges(RenderSettings rs)
 		{
 			if (rs != null)
 			{
 				_cameraDatabase.HandleBlur(rs);
 				_environmentDatabase.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
-				if (rs.BackgroundStyle == BackgroundStyle.Environment)
+				if (previousStyle!=BackgroundStyle.Environment && rs.BackgroundStyle == BackgroundStyle.Environment)
 				{
 					UpdateAllEnvironments();
 				}
@@ -1330,6 +1331,7 @@ namespace RhinoCyclesCore.Database
 						$"view has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}");
 					_environmentDatabase.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
 				}
+				previousStyle = rs.BackgroundStyle;
 				_environmentDatabase.SetGamma(PreProcessGamma);
 				_renderSettingsDatabase.SetQuality(rs.AntialiasLevel);
 				_renderEngine.Settings.SetQuality(rs.AntialiasLevel);
