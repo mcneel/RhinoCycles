@@ -67,7 +67,7 @@ namespace RhinoCyclesCore.Converters
 			{
 				SimulatedTexture st = textureEvaluator == null ? renderTexture.SimulatedTexture(RenderTexture.TextureGeneration.Disallow) : null;
 				using (
-					var actualEvaluator = textureEvaluator ?? RenderTexture.NewBitmapTexture(st).CreateEvaluator(RenderTexture.TextureEvaluatorFlags.Normal))
+					var actualEvaluator = textureEvaluator ?? RenderTexture.NewBitmapTexture(st).CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
 				{
 					InternalMaterialBitmapFromEvaluator(shader, renderTexture, textureType, rhinotfm, rId, actualEvaluator, projectionMode, envProjectionMode, repeat);
 
