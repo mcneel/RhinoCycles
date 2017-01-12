@@ -41,6 +41,18 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public ccl.Transform Transform { get; set; }
 
+		public float BumpDistance
+		{
+			get
+			{
+				if (Transform == null) return 0.0f;
+				var td = Transform.x.x;
+				if (td > 0.2f) return 0.05f;
+				if (td < 0.06) return 2.0f;
+				return td > 0.14 ? 0.1f : 0.75f;
+			}
+		}
+
 		public TextureProjectionMode ProjectionMode { get; set; }
 		public TextureEnvironmentMappingMode EnvProjectionMode { get; set; }
 
