@@ -16,6 +16,7 @@ limitations under the License.
 
 using ccl;
 using ccl.ShaderNodes;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -151,7 +152,7 @@ namespace RhinoCyclesCore.Shaders
 			bump_texture_to_bw210.ins.Color.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 
 			var bump_amount211 = new MathNode("bump_amount");
-			bump_amount211.ins.Value1.Value = 10f;
+			bump_amount211.ins.Value1.Value = 1f;
 			bump_amount211.ins.Value2.Value = m_original.BumpTexture.Amount;
 			bump_amount211.Operation = MathNode.Operations.Multiply;
 			bump_amount211.UseClamp = false;
