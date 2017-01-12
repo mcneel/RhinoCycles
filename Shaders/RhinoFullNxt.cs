@@ -166,7 +166,7 @@ namespace RhinoCyclesCore.Shaders
 			bump208.ins.Height.Value = 0f;
 			bump208.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
 			bump208.ins.Strength.Value = 0f;
-			bump208.ins.Distance.Value = 0.1f;
+			bump208.ins.Distance.Value = m_original.BumpTexture.BumpDistance;
 
 			var diffuse168 = new DiffuseBsdfNode("diffuse");
 			diffuse168.ins.Color.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
