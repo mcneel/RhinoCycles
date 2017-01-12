@@ -48,6 +48,7 @@ namespace RhinoCyclesCore
 			UseSkyLight = es.UseSkyLight;
 
 			Threads = es.Threads;
+			BumpDistance = es.BumpDistance;
 			SelectedDevice = es.SelectedDevice;
 
 			Samples = es.Samples;
@@ -108,6 +109,7 @@ namespace RhinoCyclesCore
 			UseSkyLight = false;
 
 			Threads = Math.Max(1, Environment.ProcessorCount - 2);
+			BumpDistance = 0.1f;
 			SelectedDevice = -1;
 
 			Samples = 100;
@@ -223,6 +225,7 @@ namespace RhinoCyclesCore
 		public float PolishFactor { get; set; }
 
 		public int Threads { get; set; }
+		public float BumpDistance { get; set; }
 		public int SelectedDevice { get; set; }
 
 		public IntegratorMethod IntegratorMethod { get; set; }
