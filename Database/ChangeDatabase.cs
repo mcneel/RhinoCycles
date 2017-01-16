@@ -286,6 +286,7 @@ namespace RhinoCyclesCore.Database
 
 			var curmesh = 0;
 			var totalmeshes = _objectDatabase.MeshChanges.Count;
+			Rhino.RhinoApp.OutputDebugString($"Uploading {totalmeshes} mesh changes");
 			foreach (var meshChange in _objectDatabase.MeshChanges)
 			{
 				var cyclesMesh = meshChange.Value;
@@ -324,6 +325,7 @@ namespace RhinoCyclesCore.Database
 				// update status bar of render window.
 				var stat =
 					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.verts.Length}, t: {cyclesMesh.faces.Length} using shader {shid}]";
+				Rhino.RhinoApp.OutputDebugString($"{stat}\n");
 
 				// set progress, but without rendering percentage (hence the -1.0f)
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
@@ -769,8 +771,14 @@ namespace RhinoCyclesCore.Database
 				_objectDatabase.DeleteObject(delob);
 				//System.Diagnostics.Debug.WriteLine("Deleted MI {0}", d);
 			}
+			var totalmeshes = addedOrChanged.Count;
+			var curmesh = 0;
+			Rhino.RhinoApp.OutputDebugString($"Received {totalmeshes} mesh instance changes\n");
 			foreach (var a in addedOrChanged)
 			{
+				curmesh++;
+
+				Rhino.RhinoApp.OutputDebugString($"Handling mesh instance {curmesh}/{totalmeshes}\n");
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
 
