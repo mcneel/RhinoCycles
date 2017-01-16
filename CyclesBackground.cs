@@ -155,20 +155,29 @@ namespace RhinoCyclesCore
 
 		public void HandleWallpaper(ViewInfo view, bool scaleToFit)
 		{
-			modified |= m_old_hidden != view.WallpaperHidden | m_old_grayscale != view.ShowWallpaperInGrayScale;
-			modified |= m_old_scaletofit != scaleToFit;
-			modified |= !m_old_wallpaper.Equals(view.WallpaperFilename);
-			m_old_hidden = view.WallpaperHidden;
-			m_old_grayscale = view.ShowWallpaperInGrayScale;
-			m_old_scaletofit = scaleToFit;
 			var file = Rhino.Render.Utilities.FindFile(RhinoDoc.ActiveDoc, view.WallpaperFilename);
+
+			bool modifiedWallpaper = false;
+			modifiedWallpaper |= m_old_hidden != view.WallpaperHidden | m_old_grayscale != view.ShowWallpaperInGrayScale;
+			modifiedWallpaper |= m_old_scaletofit != scaleToFit;
+			modifiedWallpaper |= !m_old_wallpaper.Equals(file);
+			modified |= modifiedWallpaper;
+
 			if (string.IsNullOrEmpty(file) || !File.Exists(file))
 			{
+				Rhino.RhinoApp.OutputDebugString($"{file} not found, clearing and returning\n");
 				wallpaper.Clear();
 				return;
 			}
+
+			if(!modifiedWallpaper) { return; }
+
+			m_old_hidden = view.WallpaperHidden;
+			m_old_grayscale = view.ShowWallpaperInGrayScale;
+			m_old_scaletofit = scaleToFit;
 			m_old_wallpaper = file ?? "";
 			var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(m_old_wallpaper));
+			Rhino.RhinoApp.OutputDebugString($"Handling wallpaper, reading {file}\n");
 			try
 			{
 				int near, far;
@@ -247,8 +256,9 @@ namespace RhinoCyclesCore
 				wallpaper.Name =
 					$"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				Rhino.RhinoApp.OutputDebugString($"wallpaper failure: {e.Message}.");
 				wallpaper.Clear();
 			}
 		}

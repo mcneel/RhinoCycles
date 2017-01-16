@@ -556,10 +556,6 @@ namespace RhinoCyclesCore.Database
 
 			_currentViewInfo = viewInfo;
 
-			//System.Diagnostics.Debug.WriteLine(String.Format("ChangeDatabase ApplyViewChange on view {0}", viewInfo.Name));
-
-			_environmentDatabase.BackgroundWallpaper(viewInfo);
-
 			var vp = viewInfo.Viewport;
 
 			// camera transform, camera to world conversion
@@ -1331,11 +1327,11 @@ namespace RhinoCyclesCore.Database
 				{
 					UpdateAllEnvironments();
 				}
-				else if (rs.BackgroundStyle == BackgroundStyle.WallpaperImage)
+				else if (previousStyle!=BackgroundStyle.WallpaperImage && rs.BackgroundStyle == BackgroundStyle.WallpaperImage)
 				{
 					var view = GetQueueView();
 					var y = string.IsNullOrEmpty(view.WallpaperFilename);
-					sdd.WriteLine(
+					Rhino.RhinoApp.OutputDebugString(
 						$"view has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}");
 					_environmentDatabase.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
 				}
@@ -1357,6 +1353,7 @@ namespace RhinoCyclesCore.Database
 			 * The earlier assumption that non-changing EnvironmentIdForUsage meant non-changing
 			 * environment instance is wrong. See http://mcneel.myjetbrains.com/youtrack/issue/RH-32418
 			 */
+			Rhino.RhinoApp.OutputDebugString($"ApplyEnvironmentChanges {usage}");
 			UpdateAllEnvironments();
 			_environmentDatabase.SetGamma(PreProcessGamma);
 		}
