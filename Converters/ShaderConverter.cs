@@ -198,7 +198,7 @@ namespace RhinoCyclesCore.Converters
 						mattype = CyclesShader.CyclesMaterial.Paint;
 						break;
 					case ProbableMaterial.Custom:
-						metalic = m.FresnelReflections ? 0.0f : reflectivity;
+						mattype = CyclesShader.CyclesMaterial.No;
 						break;
 				}
 
