@@ -144,7 +144,7 @@ namespace RhinoCyclesCore
 
 			SamplingPattern = SamplingPattern.CMJ;
 			FilterGlossy = 0.5f;
-			SampleClampDirect = 0.0f;
+			SampleClampDirect = 1.0f;
 			SampleClampIndirect = 5.0f;
 			LightSamplingThreshold = 0.05f;
 			SampleAllLights = true;
