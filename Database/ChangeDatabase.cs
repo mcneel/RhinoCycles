@@ -1136,6 +1136,14 @@ namespace RhinoCyclesCore.Database
 		/// <param name="lightChanges"></param>
 		protected override void ApplyLightChanges(List<CqLight> lightChanges)
 		{
+			// we don't necessarily get view changes prior to light changes, so
+			// the old _currentViewInfo could be null - at the end of a Flush
+			// it would be thrown away. Hence we now ask the ChangeQueue for the
+			// proper view info. It will be given if one constructed the ChangeQueue
+			// with a view to force it to be a single-view only ChangeQueue.
+			// See #RH-32345 and #RH-32356
+			var v = GetQueueView();
+
 			foreach (var light in lightChanges)
 			{
 				if (light.Data.IsLinearLight)
@@ -1157,13 +1165,6 @@ namespace RhinoCyclesCore.Database
 				}
 				else
 				{
-				// we don't necessarily get view changes prior to light changes, so
-				// the old _currentViewInfo could be null - at the end of a Flush
-				// it would be thrown away. Hence we now ask the ChangeQueue for the
-				// proper view info. It will be given if one constructed the ChangeQueue
-				// with a view to force it to be a single-view only ChangeQueue.
-				// See #RH-32345 and #RH-32356
-					var v = GetQueueView();
 					var cl = _shaderConverter.ConvertLight(this, light, v, PreProcessGamma);
 
 					_lightDatabase.AddLight(cl);
