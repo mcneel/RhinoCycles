@@ -915,7 +915,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		private const uint GroundPlaneMeshInstanceId = 1;
 
-		private readonly float gp_side_extension = 1.0E+7f;
+		private readonly float gp_side_extension = 1.0E+6f;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
 			var gpid = _groundplaneGuid;
