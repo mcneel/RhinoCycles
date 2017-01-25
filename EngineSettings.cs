@@ -186,9 +186,11 @@ namespace RhinoCyclesCore
 					break;
 				case AntialiasLevel.High:
 					Samples = 2000;
-					DiffuseSamples = 32;
-					GlossySamples = 32;
-					TransmissionSamples = 32;
+					DiffuseSamples = 128;
+					GlossySamples = 128;
+					TransmissionSamples = 128;
+					TransparentMaxBounce = 128;
+					TransparentMinBounce = 128;
 					LightSamplingThreshold = 0.05f;
 					break;
 			}
