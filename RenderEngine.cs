@@ -129,6 +129,7 @@ namespace RhinoCyclesCore
 		public event EventHandler ChangesReady;
 		public void TriggerChangesReady()
 		{
+			Rhino.RhinoApp.OutputDebugString("Triggering changes, changequeue applied everything\n");
 			ChangesReady?.Invoke(this, EventArgs.Empty);
 		}
 
@@ -153,6 +154,10 @@ namespace RhinoCyclesCore
 			{
 				lock (_flushlock)
 				{
+					if (value == false)
+					{
+						Rhino.RhinoApp.OutputDebugString("RenderEngine setting Flush to false\n");
+					}
 					m_flush = value;
 				}
 			}

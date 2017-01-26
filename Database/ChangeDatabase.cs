@@ -268,6 +268,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadMeshChanges()
 		{
+			Rhino.RhinoApp.OutputDebugString("UploadMeshChanges\n");
 			// handle mesh deletes first
 			foreach (var meshDelete in _objectDatabase.MeshesToDelete)
 			{
@@ -275,6 +276,7 @@ namespace RhinoCyclesCore.Database
 
 				foreach (var cob in cobs)
 				{
+					Rhino.RhinoApp.OutputDebugString($"\tDeleting mesh {cob.Id}.{cob.Mesh.Id} ({meshDelete}\n");
 					// remove mesh data
 					cob.Mesh.ClearData();
 					cob.Mesh.TagRebuild();
@@ -659,17 +661,19 @@ namespace RhinoCyclesCore.Database
 		/// <param name="added"></param>
 		protected override void ApplyMeshChanges(Guid[] deleted, List<CqMesh> added)
 		{
-			//System.Diagnostics.Debug.WriteLine("ChangeDatabase ApplyMeshChanges, deleted {0}, added {1}", deleted.Length, added.Count);
+			Rhino.RhinoApp.OutputDebugString($"ChangeDatabase ApplyMeshChanges, deleted {deleted.Length}\n");
 
 			foreach (var guid in deleted)
 			{
 				// only delete those that aren't listed in the added list
 				if (!(from mesh in added where mesh.Id() == guid select mesh).Any())
 				{
-					//System.Diagnostics.Debug.WriteLine("Deleting {0}", guid);
+					Rhino.RhinoApp.OutputDebugString($" record mesh deletion {guid}\n");
 					_objectDatabase.DeleteMesh(guid);
 				}
 			}
+
+			Rhino.RhinoApp.OutputDebugString($"ChangeDatabase ApplyMeshChanges added {added.Count}\n");
 
 			foreach (var cqm in added)
 			{
@@ -688,9 +692,11 @@ namespace RhinoCyclesCore.Database
 
 		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata)
 		{
+			Rhino.RhinoApp.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
 			// Get face indices flattened to an
-			// integer array.
+			// integer array. The result will be triangulated faces.
 			var findices = meshdata.Faces.ToIntArray(true);
+			Rhino.RhinoApp.OutputDebugString($" .. {findices.Length/3}\n");
 
 			// Get texture coordinates and
 			// flattens to a float array.
@@ -769,14 +775,14 @@ namespace RhinoCyclesCore.Database
 			}
 			var totalmeshes = addedOrChanged.Count;
 			var curmesh = 0;
-			Rhino.RhinoApp.OutputDebugString($"Received {totalmeshes} mesh instance changes\n");
+			Rhino.RhinoApp.OutputDebugString($"ApplyMeshInstanceChanges: Received {totalmeshes} mesh instance changes\n");
 			foreach (var a in addedOrChanged)
 			{
 				curmesh++;
 
-				Rhino.RhinoApp.OutputDebugString($"Handling mesh instance {curmesh}/{totalmeshes}\n");
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
+				Rhino.RhinoApp.OutputDebugString($"\tHandling mesh instance {curmesh}/{totalmeshes}. material {matid} ({mat.Name})\n");
 
 				if (!addedmats.Contains(matid))
 				{
@@ -850,8 +856,11 @@ namespace RhinoCyclesCore.Database
 			// list of material hashes
 			var distinctMats = new List<uint>();
 
+			Rhino.RhinoApp.OutputDebugString($"ApplyMaterialChanges: {mats.Count}\n");
+
 			foreach (var mat in mats)
 			{
+				Rhino.RhinoApp.OutputDebugString($"\t[material {mat.Id}, {mat.MeshInstanceId}, {mat.MeshIndex}]\n");
 				var rm = MaterialFromId(mat.Id);
 
 				if (!distinctMats.Contains(mat.Id))
@@ -1264,6 +1273,7 @@ namespace RhinoCyclesCore.Database
 			{
 				if (ob.cob != null)
 				{
+					Rhino.RhinoApp.OutputDebugString($"UploadObjectChanges: deleting object {ob.obid} {ob.cob.Id}\n");
 					var cob = ob.cob;
 					// deleting we do (for now?) by marking object as hidden.
 					// we *don't* clear mesh data here, since that very mesh
@@ -1272,6 +1282,8 @@ namespace RhinoCyclesCore.Database
 					cob.TagUpdate();
 				}
 			}
+
+			Rhino.RhinoApp.OutputDebugString($"UploadObjectChanges: adding/modifying objects {_objectDatabase.NewOrUpdatedObjects.Count}\n");
 
 			// now combine objects and meshes, creating new objects when necessary
 			foreach (var ob in _objectDatabase.NewOrUpdatedObjects)
@@ -1295,6 +1307,8 @@ namespace RhinoCyclesCore.Database
 					_objectDatabase.RecordObjectRelation(ob.obid, cob);
 					_objectDatabase.RecordObjectIdMeshIdRelation(ob.obid, ob.meshid);
 				}
+
+				Rhino.RhinoApp.OutputDebugString($"\tadding/modifying object {ob.obid} {ob.meshid} {cob.Id}\n");
 
 				// set mesh reference and other stuff
 				cob.Mesh = mesh;
@@ -1333,7 +1347,7 @@ namespace RhinoCyclesCore.Database
 					var view = GetQueueView();
 					var y = string.IsNullOrEmpty(view.WallpaperFilename);
 					Rhino.RhinoApp.OutputDebugString(
-						$"view has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}");
+						$"view has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}\n");
 					_environmentDatabase.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
 				}
 				previousStyle = rs.BackgroundStyle;
@@ -1354,7 +1368,7 @@ namespace RhinoCyclesCore.Database
 			 * The earlier assumption that non-changing EnvironmentIdForUsage meant non-changing
 			 * environment instance is wrong. See http://mcneel.myjetbrains.com/youtrack/issue/RH-32418
 			 */
-			Rhino.RhinoApp.OutputDebugString($"ApplyEnvironmentChanges {usage}");
+			Rhino.RhinoApp.OutputDebugString($"ApplyEnvironmentChanges {usage}\n");
 			UpdateAllEnvironments();
 			_environmentDatabase.SetGamma(PreProcessGamma);
 		}
@@ -1375,12 +1389,15 @@ namespace RhinoCyclesCore.Database
 			_environmentDatabase.HandleEnvironments();
 		}
 
+		private static int _updateCounter = 0;
+
 		/// <summary>
 		/// We get notified of (dynamic?) changes.
 		/// </summary>
 		protected override void NotifyBeginUpdates()
 		{
 			// nothing
+			Rhino.RhinoApp.OutputDebugString($"NotifyBeginUpdates {++_updateCounter}\n");
 		}
 
 		/// <summary>
@@ -1388,12 +1405,14 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		protected override void NotifyEndUpdates()
 		{
+			Rhino.RhinoApp.OutputDebugString($"NotifyEndUpdates {_updateCounter}\n");
 			_renderEngine.Flush = true;
 		}
 
 		private bool _dynamic = false;
 		protected override void NotifyDynamicUpdatesAreAvailable()
 		{
+			Rhino.RhinoApp.OutputDebugString("NotifyDynamicUpdatesAreAvailable\n");
 			_dynamic = true;
 			// nothing
 			//System.Diagnostics.Debug.WriteLine("dyn changes...");
