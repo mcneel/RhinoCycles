@@ -1009,12 +1009,21 @@ namespace RhinoCyclesCore.Database
 				_objectDatabase.AddDynamicObjectTransform(cot);
 			}
 		}
+
+		private uint old_gp_crc = 0;
 		/// <summary>
 		/// Handle ground plane changes.
 		/// </summary>
 		/// <param name="gp"></param>
 		protected override void ApplyGroundPlaneChanges(CqGroundPlane gp)
 		{
+			var gpcrc = gp.Crc;
+			if (gpcrc == old_gp_crc) return;
+
+			Rhino.RhinoApp.OutputDebugString("ApplyGroundPlaneChanges.\n");
+
+			old_gp_crc = gpcrc;
+
 			//System.Diagnostics.Debug.WriteLine("groundplane");
 			InitialiseGroundPlane(gp);
 
