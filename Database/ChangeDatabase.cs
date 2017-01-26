@@ -703,27 +703,8 @@ namespace RhinoCyclesCore.Database
 			var tc = meshdata.TextureCoordinates;
 			var rhuv = tc.ToFloatArray();
 
-			float[] rhvn = null;
-			var hasNormals = true;
-			// Get rhino vertex normals and
-			// flatten to a float array.
-			if (meshdata.Normals.Count < 1)
-			{
-				if (meshdata.Normals.ComputeNormals())
-				{
-					Rhino.RhinoApp.OutputDebugString("\t\tvertex normals calculated on the fly\n");
-				}
-				else
-				{
-					hasNormals = false;
-					Rhino.RhinoApp.OutputDebugString("\t\tVertex normals missing and couldn't generate\n");
-				}
-			}
-			if (hasNormals)
-			{
-				var vn = meshdata.Normals;
-				rhvn = vn.ToFloatArray();
-			}
+			var vn = meshdata.Normals;
+			var rhvn = vn.ToFloatArray();
 
 			// now convert UVs: from vertex indexed array to per face per vertex
 			var cmuv = rhuv.Length > 0 ? new float[findices.Length * 2] : null;
