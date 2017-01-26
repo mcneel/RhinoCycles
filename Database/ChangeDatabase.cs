@@ -766,12 +766,42 @@ namespace RhinoCyclesCore.Database
 			// helper list to ensure we don't add same material multiple times.
 			var addedmats = new List<uint>();
 
-			foreach (var d in deleted)
+			Rhino.RhinoApp.OutputDebugString($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
+			foreach (var dm in deleted)
 			{
-				var cob = _objectDatabase.FindObjectRelation(d);
-				var delob = new CyclesObject {cob = cob};
-				_objectDatabase.DeleteObject(delob);
-				//System.Diagnostics.Debug.WriteLine("Deleted MI {0}", d);
+				Rhino.RhinoApp.OutputDebugString($"\ttold to DELETE {dm}\n");
+			}
+			foreach (var aoc in addedOrChanged)
+			{
+				Rhino.RhinoApp.OutputDebugString($"\ttold to ADD {aoc.InstanceId}\n");
+			}
+			Rhino.RhinoApp.OutputDebugString($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
+			var inDeleted = from inst in addedOrChanged where deleted.Contains(inst.InstanceId) select inst;
+			var skipFromDeleted = (from inst in inDeleted where true select inst.InstanceId).ToList();
+
+			if (skipFromDeleted.Count > 0)
+			{
+				Rhino.RhinoApp.OutputDebugString($"\t{skipFromDeleted.Count} in both deleted and addedOrChanged!\n");
+				foreach (var skip in skipFromDeleted)
+				{
+					Rhino.RhinoApp.OutputDebugString($"\t\t{skip} should not be deleted!\n");
+				}
+			}
+			var realDeleted = (from dlt in deleted where !skipFromDeleted.Contains(dlt) select dlt).ToList();
+			Rhino.RhinoApp.OutputDebugString($"\tActually deleting {realDeleted.Count} mesh instances!\n");
+			foreach (var d in realDeleted)
+			{
+					var cob = _objectDatabase.FindObjectRelation(d);
+					if (cob != null)
+					{
+						var delob = new CyclesObject {cob = cob};
+						_objectDatabase.DeleteObject(delob);
+						Rhino.RhinoApp.OutputDebugString($"\tDeleting mesh instance {d} {cob.Id}\n");
+					}
+					else
+					{
+						Rhino.RhinoApp.OutputDebugString($"\tMesh instance {d} has no object relation..\n");
+					}
 			}
 			var totalmeshes = addedOrChanged.Count;
 			var curmesh = 0;
