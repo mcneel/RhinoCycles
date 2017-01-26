@@ -286,7 +286,7 @@ namespace RhinoCyclesCore.Database
 
 			var curmesh = 0;
 			var totalmeshes = _objectDatabase.MeshChanges.Count;
-			Rhino.RhinoApp.OutputDebugString($"Uploading {totalmeshes} mesh changes");
+			Rhino.RhinoApp.OutputDebugString($"\tUploading {totalmeshes} mesh changes\n");
 			foreach (var meshChange in _objectDatabase.MeshChanges)
 			{
 				var cyclesMesh = meshChange.Value;
@@ -324,8 +324,8 @@ namespace RhinoCyclesCore.Database
 
 				// update status bar of render window.
 				var stat =
-					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.verts.Length}, t: {cyclesMesh.faces.Length} using shader {shid}]";
-				Rhino.RhinoApp.OutputDebugString($"{stat}\n");
+					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.verts.Length/3}, t: {cyclesMesh.faces.Length/3} using shader {shid}]";
+				Rhino.RhinoApp.OutputDebugString($"\t\t{stat}\n");
 
 				// set progress, but without rendering percentage (hence the -1.0f)
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);

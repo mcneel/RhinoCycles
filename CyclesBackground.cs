@@ -258,7 +258,7 @@ namespace RhinoCyclesCore
 			}
 			catch (Exception e)
 			{
-				Rhino.RhinoApp.OutputDebugString($"wallpaper failure: {e.Message}.");
+				Rhino.RhinoApp.OutputDebugString($"wallpaper failure: {e.Message}.\n");
 				wallpaper.Clear();
 			}
 		}
