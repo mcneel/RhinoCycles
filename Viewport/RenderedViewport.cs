@@ -42,6 +42,8 @@ namespace RhinoCycles.Viewport
 
 		public override Guid GUID => new Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181");
 
+		public override bool DrawOpenGl => true;
+
 		public override Type RealtimeDisplayModeType => typeof(RenderedViewport);
 	}
 
@@ -235,8 +237,8 @@ namespace RhinoCycles.Viewport
 		{
 			if (_cycles != null)
 			{
-				var equal = _cycles.Database.AreViewsEqual(GetView(), view);
-				return equal && _frameAvailable;
+				//var equal = _cycles.Database.AreViewsEqual(GetView(), view);
+				return /*equal &&*/ _frameAvailable;
 			}
 			if (_modal != null)
 			{
@@ -253,12 +255,14 @@ namespace RhinoCycles.Viewport
 				if (e.Sample <= 1) SetView(e.View);
 				_frameAvailable = true;
 				_available = true;
+				Rhino.RhinoApp.OutputDebugString($"Signalling for redraw, {e.Sample}\n");
 				SignalRedraw();
 			}
 		}
 
 		void CyclesStartSynchronizing(object sender, EventArgs e)
 		{
+			_samples = -1;
 			IsSynchronizing = true;
 		}
 
@@ -323,6 +327,16 @@ namespace RhinoCycles.Viewport
 				width = _modal.RenderDimension.Width;
 				height = _modal.RenderDimension.Height;
 			}
+		}
+
+		public override bool DrawOpenGl()
+		{
+			Rhino.RhinoApp.OutputDebugString($"DrawOpenGl {_samples}\n");
+			if (_samples < 0) return false;
+			var width = _cycles.RenderDimension.Width;
+			var height = _cycles.RenderDimension.Height;
+			_cycles.Session.RhinoDraw(width, height);
+			return true;
 		}
 
 		public override bool OnRenderSizeChanged(int width, int height)

@@ -108,6 +108,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (sample > 10 && sample < (Settings.Samples-2) && sample % 3 != 0) return;
 			if (CancelRender) return;
 			if (State != State.Rendering) return;
+			/*
 			lock (DisplayLock)
 			{
 				if (Session.Scene.TryLock())
@@ -129,11 +130,12 @@ namespace RhinoCyclesCore.RenderEngines
 						}
 					}
 					SaveRenderedBuffer(sample);
+					// now signal whoever is interested
 					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
 					Session.Scene.Unlock();
-					// now signal whoever is interested
 				}
-			}
+			}*/
+			PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
 		}
 
 		/// <summary>
@@ -145,7 +147,7 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			lock (DisplayLock)
 			{
-				RenderWindow.SetSize(new Size(w, h));
+				RenderWindow?.SetSize(new Size(w, h));
 			}
 		}
 
