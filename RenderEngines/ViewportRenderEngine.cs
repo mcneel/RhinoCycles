@@ -100,12 +100,30 @@ namespace RhinoCyclesCore.RenderEngines
 		/// </summary>
 		public event EventHandler<PassRenderedEventArgs> PassRendered;
 
+		public void DrawOpenGl()
+		{
+			if (Session.IsPaused()) return;
+			if (_syncing) return;
+			if (CancelRender) return;
+			if (State != State.Rendering) return;
+			var width = RenderDimension.Width;
+			var height = RenderDimension.Height;
+			lock (DisplayLock)
+			{
+				if (Session.Scene.TryLock())
+				{
+					Session.RhinoDraw(width, height);
+					Session.Scene.Unlock();
+				}
+			}
+		}
+
 		public void DisplayUpdateHandler(uint sessionId, int sample)
 		{
 			if (Session.IsPaused()) return;
 			if (_syncing) return;
 			// after first 10 frames have been rendered only update every third.
-			if (sample > 10 && sample < (Settings.Samples-2) && sample % 3 != 0) return;
+			if (sample > 10 && sample < (Settings.Samples - 2) && sample%3 != 0) return;
 			if (CancelRender) return;
 			if (State != State.Rendering) return;
 			/*
@@ -135,7 +153,14 @@ namespace RhinoCyclesCore.RenderEngines
 					Session.Scene.Unlock();
 				}
 			}*/
-			PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
+			//lock (DisplayLock)
+			{
+				if (Session.Scene.TryLock())
+				{
+					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
+					Session.Scene.Unlock();
+				}
+			}
 		}
 
 		/// <summary>

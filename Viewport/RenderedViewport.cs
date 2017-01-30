@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using Rhino;
@@ -248,15 +249,26 @@ namespace RhinoCycles.Viewport
 			return false;
 		}
 
+		//Stopwatch renderPasStopwatch = new Stopwatch();
+
 		void CyclesPassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
 			if (_cycles?.IsRendering ?? false)
 			{
-				if (e.Sample <= 1) SetView(e.View);
-				_frameAvailable = true;
-				_available = true;
-				Rhino.RhinoApp.OutputDebugString($"Signalling for redraw, {e.Sample}\n");
-				SignalRedraw();
+				if (e.Sample <= 1)
+				{
+					//renderPasStopwatch.Restart();
+					SetView(e.View);
+				}
+				//if (e.Sample <= 1 || renderPasStopwatch.ElapsedMilliseconds > 5)
+				{
+					_frameAvailable = true;
+					_available = true;
+
+					Rhino.RhinoApp.OutputDebugString($"Signalling for redraw, {e.Sample}\n");
+					SignalRedraw();
+					//if(e.Sample>1) renderPasStopwatch.Restart();
+				}
 			}
 		}
 
@@ -333,9 +345,7 @@ namespace RhinoCycles.Viewport
 		{
 			Rhino.RhinoApp.OutputDebugString($"DrawOpenGl {_samples}\n");
 			if (_samples < 0) return false;
-			var width = _cycles.RenderDimension.Width;
-			var height = _cycles.RenderDimension.Height;
-			_cycles.Session.RhinoDraw(width, height);
+			_cycles.DrawOpenGl();
 			return true;
 		}
 
