@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using ccl;
@@ -41,18 +42,24 @@ namespace RhinoCyclesCore.RenderEngines
 			m_update_render_tile_callback = null;
 			m_write_render_tile_callback = null;
 			m_test_cancel_callback = null;
-			m_display_update_callback = DisplayUpdateHandler;
+			m_display_update_callback = null;
+			m_logger_callback = ViewportLoggerCallback;
 
 			CSycles.log_to_stdout(false);
+			CSycles.set_logger(Client.Id, m_logger_callback);
 #endregion
 			
+		}
+
+		public void ViewportLoggerCallback(string msg) {
+			Rhino.RhinoApp.OutputDebugString($"{msg}\n");
 		}
 
 
 		private bool _disposed;
 		protected override void Dispose(bool isDisposing)
 		{
-			lock (DisplayLock)
+			//lock (DisplayLock)
 			{
 				if (_disposed) return;
 
@@ -108,59 +115,9 @@ namespace RhinoCyclesCore.RenderEngines
 			if (State != State.Rendering) return;
 			var width = RenderDimension.Width;
 			var height = RenderDimension.Height;
-			lock (DisplayLock)
-			{
-				if (Session.Scene.TryLock())
-				{
-					Session.RhinoDraw(width, height);
-					Session.Scene.Unlock();
-				}
-			}
-		}
-
-		public void DisplayUpdateHandler(uint sessionId, int sample)
-		{
-			if (Session.IsPaused()) return;
-			if (_syncing) return;
-			// after first 10 frames have been rendered only update every third.
-			if (sample > 10 && sample < (Settings.Samples - 2) && sample%3 != 0) return;
-			if (CancelRender) return;
-			if (State != State.Rendering) return;
-			/*
-			lock (DisplayLock)
-			{
-				if (Session.Scene.TryLock())
-				{
-					// copy display buffer data into ccycles pixel buffer
-					Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
-					// copy stuff into renderwindow dib
-					using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
-					{
-						if (CancelRender) return;
-						if (channel != null)
-						{
-							if (CancelRender) return;
-							var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
-							var size = RenderDimension;
-							var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
-							if (CancelRender) return;
-							channel.SetValues(rect, size, pixelbuffer);
-						}
-					}
-					SaveRenderedBuffer(sample);
-					// now signal whoever is interested
-					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
-					Session.Scene.Unlock();
-				}
-			}*/
-			//lock (DisplayLock)
-			{
-				if (Session.Scene.TryLock())
-				{
-					PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
-					Session.Scene.Unlock();
-				}
-			}
+			Rhino.RhinoApp.OutputDebugString("viewport render engine ready to draw ogl ...");
+			Session.RhinoDraw(width, height);
+			Rhino.RhinoApp.OutputDebugString("[OK]\n");
 		}
 
 		/// <summary>
@@ -170,7 +127,7 @@ namespace RhinoCyclesCore.RenderEngines
 		/// <param name="h">Height in pixels</param>
 		public void SetRenderSize(int w, int h)
 		{
-			lock (DisplayLock)
+			//lock (DisplayLock)
 			{
 				RenderWindow?.SetSize(new Size(w, h));
 			}
@@ -250,13 +207,15 @@ namespace RhinoCyclesCore.RenderEngines
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
 			cyclesEngine.CheckFlushQueue();
+			cyclesEngine.TriggerStatusTextUpdated(new StatusTextEventArgs("Uploading data", 0.0f, -1));
 			if (!cyclesEngine.CancelRender)
 			{
 				cyclesEngine.Synchronize();
 			}
+
 			if (!cyclesEngine.CancelRender)
 			{
-				cyclesEngine.Session.Start();
+				cyclesEngine.Session.PrepareRun();
 			}
 
 			#endregion
@@ -264,23 +223,31 @@ namespace RhinoCyclesCore.RenderEngines
 			// We've got Cycles rendering now, notify anyone who cares
 			cyclesEngine.RenderStarted?.Invoke(cyclesEngine, new RenderStartedEventArgs(!cyclesEngine.CancelRender));
 
+			bool tiles = true;
 			while (!IsStopped)
 			{
+				if(tiles) {
+				tiles = cyclesEngine.Session.Sample();
+					if(tiles) {
+						cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(-1, View));
+					}
+				}
 				Thread.Sleep(10);
-				if(!Locked && Flush)
+				if(!Locked && Flush) {
 					TriggerChangesReady();
+					tiles = true;
+				}
 			}
+
+			cyclesEngine.Session.EndRun();
 		}
 
 		public event EventHandler Synchronized;
 
 		public void TriggerSynchronized()
 		{
-			lock (_syncLock)
-			{
-				Synchronized?.Invoke(this, EventArgs.Empty);
-				_syncing = false;
-			}
+			Synchronized?.Invoke(this, EventArgs.Empty);
+			_syncing = false;
 		}
 
 		private readonly object _syncLock = new object();
@@ -289,11 +256,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void TriggerStartSynchronizing()
 		{
-			lock (_syncLock)
-			{
-				_syncing = true;
-				StartSynchronizing?.Invoke(this, EventArgs.Empty);
-			}
+			_syncing = true;
+			StartSynchronizing?.Invoke(this, EventArgs.Empty);
 		}
 
 		public void Synchronize()
@@ -301,7 +265,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (Session != null && State == State.Uploading)
 			{
 				TriggerStartSynchronizing();
-				Session.SetPause(true);
+				
 				if (UploadData())
 				{
 					State = State.Rendering;
@@ -319,9 +283,9 @@ namespace RhinoCyclesCore.RenderEngines
 				{
 					State = State.Stopped;
 				}
+				TriggerSynchronized();
 				// unpause
 				Session.SetPause(false);
-				TriggerSynchronized();
 			}
 		}
 

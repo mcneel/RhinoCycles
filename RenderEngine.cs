@@ -108,6 +108,7 @@ namespace RhinoCyclesCore
 		protected CSycles.RenderTileCallback m_write_render_tile_callback;
 		protected CSycles.TestCancelCallback m_test_cancel_callback;
 		protected CSycles.DisplayUpdateCallback m_display_update_callback;
+		protected CSycles.LoggerCallback m_logger_callback;
 
 		public class SamplesChangedEventArgs : EventArgs
 		{
@@ -154,10 +155,6 @@ namespace RhinoCyclesCore
 			{
 				lock (_flushlock)
 				{
-					if (value == false)
-					{
-						Rhino.RhinoApp.OutputDebugString("RenderEngine setting Flush to false\n");
-					}
 					m_flush = value;
 				}
 			}
@@ -196,7 +193,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public void CheckFlushQueue()
 		{
-			if (State == State.Waiting && Flush) Continue();
+			if (State == State.Waiting) Continue();
 			// not rendering, nor flush needed, bail
 			if (State != State.Rendering || Database == null || !Flush) return;
 
@@ -212,8 +209,11 @@ namespace RhinoCyclesCore
 				// change state to signal need for uploading
 				if (HasSceneChanges())
 				{
-					State = State.Uploading;
 					if (!m_interactive) Session?.Cancel("Scene changes detected.\n");
+					else {
+						Session?.SetPause(true);
+					}
+					State = State.Uploading;
 				}
 
 				// reset flush flag directly, since we already have lock.

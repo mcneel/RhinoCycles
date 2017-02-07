@@ -82,8 +82,6 @@ namespace RhinoCycles.Viewport
 		private int _maxSamples;
 		private string _status = "";
 
-		//private DisplayPipelineAttributes _displayPipelineAttributes;
-
 		public RenderedViewport()
 		{
 			_runningSerial ++;
@@ -238,8 +236,7 @@ namespace RhinoCycles.Viewport
 		{
 			if (_cycles != null)
 			{
-				//var equal = _cycles.Database.AreViewsEqual(GetView(), view);
-				return /*equal &&*/ _frameAvailable;
+				return _frameAvailable;
 			}
 			if (_modal != null)
 			{
@@ -249,32 +246,21 @@ namespace RhinoCycles.Viewport
 			return false;
 		}
 
-		//Stopwatch renderPasStopwatch = new Stopwatch();
-
 		void CyclesPassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
 			if (_cycles?.IsRendering ?? false)
 			{
-				if (e.Sample <= 1)
-				{
-					//renderPasStopwatch.Restart();
-					SetView(e.View);
-				}
-				//if (e.Sample <= 1 || renderPasStopwatch.ElapsedMilliseconds > 5)
-				{
-					_frameAvailable = true;
-					_available = true;
+				_frameAvailable = true;
+				_available = true;
 
-					Rhino.RhinoApp.OutputDebugString($"Signalling for redraw, {e.Sample}\n");
-					SignalRedraw();
-					//if(e.Sample>1) renderPasStopwatch.Restart();
-				}
+				SignalRedraw();
 			}
 		}
 
 		void CyclesStartSynchronizing(object sender, EventArgs e)
 		{
 			_samples = -1;
+			_frameAvailable = false;
 			IsSynchronizing = true;
 		}
 
@@ -288,7 +274,6 @@ namespace RhinoCycles.Viewport
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
 		{
-			//LinearWorkflow.CopyFrom(e.Lwf);
 			LinearWorkflow.PostProcessGamma = e.Lwf.PostProcessGamma;
 			var rengine = _cycles ?? _modal as RenderEngine;
 
@@ -313,9 +298,10 @@ namespace RhinoCycles.Viewport
 
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
 		{
+			Rhino.RhinoApp.OutputDebugString(e.StatusText);
 			_samples = e.Samples;
 
-			_status = _samples < 0 ? "Updating Engine" : "";
+			_status = _samples < 1 ? "Updating Engine" : "";
 		}
 
 		public override bool ShowCaptureProgress()
@@ -343,7 +329,6 @@ namespace RhinoCycles.Viewport
 
 		public override bool DrawOpenGl()
 		{
-			Rhino.RhinoApp.OutputDebugString($"DrawOpenGl {_samples}\n");
 			if (_samples < 0) return false;
 			_cycles.DrawOpenGl();
 			return true;
@@ -351,8 +336,6 @@ namespace RhinoCycles.Viewport
 
 		public override bool OnRenderSizeChanged(int width, int height)
 		{
-			//LinearWorkflow.PostProcessGamma = _cycles.Database.LinearWorkflow.PostProcessGamma;
-
 			_startTime = DateTime.UtcNow;
 			_available = false;
 			_frameAvailable = false;
@@ -374,7 +357,6 @@ namespace RhinoCycles.Viewport
 
 		public override bool IsCompleted()
 		{
-			//SetGamma(m_cycles.Database.Gamma);
 			var rc = _available && _cycles.State == State.Rendering && _frameAvailable && _samples==_maxSamples;
 			return rc;
 		}
