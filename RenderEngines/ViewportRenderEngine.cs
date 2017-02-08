@@ -46,7 +46,7 @@ namespace RhinoCyclesCore.RenderEngines
 			m_logger_callback = ViewportLoggerCallback;
 
 			CSycles.log_to_stdout(false);
-			CSycles.set_logger(Client.Id, m_logger_callback);
+			//CSycles.set_logger(Client.Id, m_logger_callback);
 #endregion
 			
 		}
@@ -115,9 +115,9 @@ namespace RhinoCyclesCore.RenderEngines
 			if (State != State.Rendering) return;
 			var width = RenderDimension.Width;
 			var height = RenderDimension.Height;
-			Rhino.RhinoApp.OutputDebugString("viewport render engine ready to draw ogl ...");
+			//Rhino.RhinoApp.OutputDebugString("viewport render engine ready to draw ogl ...");
 			Session.RhinoDraw(width, height);
-			Rhino.RhinoApp.OutputDebugString("[OK]\n");
+			//Rhino.RhinoApp.OutputDebugString("[OK]\n");
 		}
 
 		/// <summary>

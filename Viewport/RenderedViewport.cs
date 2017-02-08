@@ -298,7 +298,7 @@ namespace RhinoCycles.Viewport
 
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
 		{
-			Rhino.RhinoApp.OutputDebugString(e.StatusText);
+			//Rhino.RhinoApp.OutputDebugString($"{e.StatusText}\n");
 			_samples = e.Samples;
 
 			_status = _samples < 1 ? "Updating Engine" : "";
