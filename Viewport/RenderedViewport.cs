@@ -46,6 +46,8 @@ namespace RhinoCycles.Viewport
 		public override bool DrawOpenGl => true;
 
 		public override Type RealtimeDisplayModeType => typeof(RenderedViewport);
+
+		public override bool DontRegisterAttributesOnStart => true;
 	}
 
 	public class RenderedViewport : RealtimeDisplayMode
