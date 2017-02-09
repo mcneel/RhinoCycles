@@ -95,6 +95,9 @@ namespace RhinoCycles.Viewport
 			HudPauseButtonPressed += RenderedViewport_HudPauseButtonPressed;
 			HudLockButtonPressed += RenderedViewport_HudLockButtonPressed;
 			HudUnlockButtonPressed += RenderedViewport_HudUnlockButtonPressed;
+			HudProductNamePressed += RenderedViewport_HudPlayProductNamePressed;
+			HudStatusTextPressed += RenderedViewport_HudPlayStatusTextPressed;
+			HudTimePressed += RenderedViewport_HudPlayTimePressed;
 			MaxPassesChanged += RenderedViewport_MaxPassesChanged;
 		}
 
@@ -126,6 +129,21 @@ namespace RhinoCycles.Viewport
 		private void RenderedViewport_HudPlayButtonPressed(object sender, EventArgs e)
 		{
 			_cycles?.Continue();
+		}
+
+		private void RenderedViewport_HudPlayProductNamePressed(object sender, EventArgs e)
+		{
+			Rhino.RhinoApp.OutputDebugString("product name pressed\n");
+		}
+
+		private void RenderedViewport_HudPlayStatusTextPressed(object sender, EventArgs e)
+		{
+			Rhino.RhinoApp.OutputDebugString("status text pressed\n");
+		}
+
+		private void RenderedViewport_HudPlayTimePressed(object sender, EventArgs e)
+		{
+			Rhino.RhinoApp.OutputDebugString("time pressed\n");
 		}
 
 		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo, DisplayPipelineAttributes displayPipelineAttributes)
