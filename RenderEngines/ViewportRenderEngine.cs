@@ -15,14 +15,11 @@ limitations under the License.
 **/
 
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using ccl;
 using Rhino.DocObjects;
-using Rhino.Render;
 using RhinoCyclesCore.Database;
-using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCyclesCore.RenderEngines
 {
@@ -59,15 +56,12 @@ namespace RhinoCyclesCore.RenderEngines
 		private bool _disposed;
 		protected override void Dispose(bool isDisposing)
 		{
-			//lock (DisplayLock)
-			{
-				if (_disposed) return;
+			if (_disposed) return;
 
-				Database?.Dispose();
-				Client?.Dispose();
-				base.Dispose(isDisposing);
-				_disposed = true;
-			}
+			Database?.Dispose();
+			Client?.Dispose();
+			base.Dispose(isDisposing);
+			_disposed = true;
 		}
 
 		private void ViewportRenderEngine_ChangesReady(object sender, EventArgs e)
@@ -109,15 +103,9 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void DrawOpenGl()
 		{
-			if (Session.IsPaused()) return;
-			if (_syncing) return;
-			if (CancelRender) return;
-			if (State != State.Rendering) return;
 			var width = RenderDimension.Width;
 			var height = RenderDimension.Height;
-			//Rhino.RhinoApp.OutputDebugString("viewport render engine ready to draw ogl ...");
 			Session.RhinoDraw(width, height);
-			//Rhino.RhinoApp.OutputDebugString("[OK]\n");
 		}
 
 		/// <summary>
@@ -127,10 +115,7 @@ namespace RhinoCyclesCore.RenderEngines
 		/// <param name="h">Height in pixels</param>
 		public void SetRenderSize(int w, int h)
 		{
-			//lock (DisplayLock)
-			{
-				RenderWindow?.SetSize(new Size(w, h));
-			}
+			RenderWindow?.SetSize(new Size(w, h));
 		}
 
 		public class RenderStartedEventArgs : EventArgs
@@ -223,19 +208,23 @@ namespace RhinoCyclesCore.RenderEngines
 			// We've got Cycles rendering now, notify anyone who cares
 			cyclesEngine.RenderStarted?.Invoke(cyclesEngine, new RenderStartedEventArgs(!cyclesEngine.CancelRender));
 
-			bool tiles = true;
 			while (!IsStopped)
 			{
-				if(tiles) {
-				tiles = cyclesEngine.Session.Sample();
-					if(tiles) {
-						cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(-1, View));
-					}
+				if(_needReset) {
+					_needReset = false;
+					var size = RenderDimension;
+
+					// lets first reset session
+					Session.Reset((uint) size.Width, (uint) size.Height, (uint) Settings.Samples);
+					// then reset scene
+					Session.Scene.Reset();
 				}
-				Thread.Sleep(10);
+				if(cyclesEngine.IsRendering && cyclesEngine.Session.Sample()) {
+					cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(-1, View));
+				}
+				Thread.Sleep(0);
 				if(!Locked && Flush) {
 					TriggerChangesReady();
-					tiles = true;
 				}
 			}
 
@@ -247,19 +236,16 @@ namespace RhinoCyclesCore.RenderEngines
 		public void TriggerSynchronized()
 		{
 			Synchronized?.Invoke(this, EventArgs.Empty);
-			_syncing = false;
 		}
 
-		private readonly object _syncLock = new object();
-		private bool _syncing;
 		public event EventHandler StartSynchronizing;
 
 		public void TriggerStartSynchronizing()
 		{
-			_syncing = true;
 			StartSynchronizing?.Invoke(this, EventArgs.Empty);
 		}
 
+		bool _needReset;
 		public void Synchronize()
 		{
 			if (Session != null && State == State.Uploading)
@@ -269,12 +255,7 @@ namespace RhinoCyclesCore.RenderEngines
 				if (UploadData())
 				{
 					State = State.Rendering;
-					var size = RenderDimension;
-
-					// lets first reset session
-					Session.Reset((uint) size.Width, (uint) size.Height, (uint) Settings.Samples);
-					// then reset scene
-					Session.Scene.Reset();
+					_needReset = true;
 
 					m_flush = false;
 				}
@@ -284,8 +265,6 @@ namespace RhinoCyclesCore.RenderEngines
 					State = State.Stopped;
 				}
 				TriggerSynchronized();
-				// unpause
-				Session.SetPause(false);
 			}
 		}
 
@@ -293,7 +272,6 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			Settings.Samples = samples;
 			Session?.SetSamples(samples);
-			Session?.SetPause(false);
 		}
 
 	}

@@ -211,7 +211,7 @@ namespace RhinoCyclesCore
 				{
 					if (!m_interactive) Session?.Cancel("Scene changes detected.\n");
 					else {
-						Session?.SetPause(true);
+						// TODO: ensure ViewportRenderEngine doesn't set pause ever. Session?.SetPause(true);
 					}
 					State = State.Uploading;
 				}
@@ -511,13 +511,14 @@ namespace RhinoCyclesCore
 		public void Pause()
 		{
 			State = State.Waiting;
-			Session?.SetPause(true);
+			// TODO: specialisation for ViewportRenderEngine, not pausing session: Session?.SetPause(true);
 		}
 
 		public void Continue()
 		{
 			State = State.Rendering;
-			Session?.SetPause(false);
+			// TODO: specialisation for ViewportRenderEngine, not pausing session: Session?.SetPause(true);
+			//Session?.SetPause(false);
 		}
 
 		private void StopTheRenderer()

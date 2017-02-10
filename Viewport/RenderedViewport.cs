@@ -15,7 +15,6 @@ limitations under the License.
 **/
 
 using System;
-using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using Rhino;
@@ -28,7 +27,6 @@ using RhinoCyclesCore;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
 using RhinoCyclesCore.RenderEngines;
-using ssd = System.Diagnostics.Debug;
 
 namespace RhinoCycles.Viewport
 {
@@ -133,17 +131,17 @@ namespace RhinoCycles.Viewport
 
 		private void RenderedViewport_HudPlayProductNamePressed(object sender, EventArgs e)
 		{
-			Rhino.RhinoApp.OutputDebugString("product name pressed\n");
+			RhinoApp.OutputDebugString("product name pressed\n");
 		}
 
 		private void RenderedViewport_HudPlayStatusTextPressed(object sender, EventArgs e)
 		{
-			Rhino.RhinoApp.OutputDebugString("status text pressed\n");
+			RhinoApp.OutputDebugString("status text pressed\n");
 		}
 
 		private void RenderedViewport_HudPlayTimePressed(object sender, EventArgs e)
 		{
-			Rhino.RhinoApp.OutputDebugString("time pressed\n");
+			RhinoApp.OutputDebugString("time pressed\n");
 		}
 
 		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo, DisplayPipelineAttributes displayPipelineAttributes)
@@ -321,7 +319,8 @@ namespace RhinoCycles.Viewport
 			//Rhino.RhinoApp.OutputDebugString($"{e.StatusText}\n");
 			_samples = e.Samples;
 
-			_status = _samples < 1 ? "Updating Engine" : "";
+			if(_cycles?.IsWaiting ?? false) _status = "Paused";
+			else _status = _samples < 1 ? "Updating Engine" : "";
 		}
 
 		public override bool ShowCaptureProgress()
