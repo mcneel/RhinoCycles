@@ -211,9 +211,8 @@ namespace RhinoCyclesCore.Converters
 				var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
 				var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
 
-				shader = new CyclesShader
+				shader = new CyclesShader(mid)
 				{
-					Id = mid,
 					Type = CyclesShader.Shader.Diffuse,
 					CyclesMaterialType = mattype,
 
@@ -300,9 +299,8 @@ namespace RhinoCyclesCore.Converters
 			if (crm != null)
 			{
 				crm.BakeParameters();
-				shader = new CyclesShader
+				shader = new CyclesShader(mid)
 				{
-					Id = mid,
 					CyclesMaterialType = CyclesShader.CyclesMaterial.Xml,
 					Gamma = gamma,
 					Crm = crm,

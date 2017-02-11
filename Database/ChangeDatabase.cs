@@ -1164,10 +1164,9 @@ namespace RhinoCyclesCore.Database
 			emissive.SetParameter("strength", (float)rgl.Intensity);
 			emissive.EndChange();
 			emissive.BakeParameters();
-			var shader = new CyclesShader
+			var shader = new CyclesShader(matid)
 			{
 				Name = rgl.Name,
-				Id = matid,
 				Crm = emissive,
 				CyclesMaterialType = CyclesShader.CyclesMaterial.Xml
 			};

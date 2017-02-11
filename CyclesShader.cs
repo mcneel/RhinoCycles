@@ -28,8 +28,9 @@ namespace RhinoCyclesCore
 	public class CyclesShader
 	{
 
-		public CyclesShader()
+		public CyclesShader(uint id)
 		{
+			Id = id;
 			DiffuseTexture = new CyclesTextureImage();
 			BumpTexture = new CyclesTextureImage();
 			TransparencyTexture = new CyclesTextureImage();
@@ -71,7 +72,7 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// RenderHash of the RenderMaterial for which this intermediary is created.
 		/// </summary>
-		public uint Id { get; set; }
+		public uint Id { get; }
 
 		/// <summary>
 		/// Type of shader this represents.
