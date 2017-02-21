@@ -173,11 +173,10 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.Reset((uint)size.Width, (uint)size.Height, (uint)samples);
 			// then reset scene
 			cyclesEngine.Session.Scene.Reset();
+
+			cyclesEngine.Session.PrepareRun();
 			// and actually start
-			// we're rendering again
-			cyclesEngine.Session.Start();
-			// ... aaaaand we wait
-			cyclesEngine.Session.Wait();
+			while(cyclesEngine.Session.Sample()) { }
 
 			cyclesEngine.CancelRender = true;
 			#endregion
