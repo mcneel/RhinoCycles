@@ -54,10 +54,10 @@ namespace RhinoCyclesCore.RenderEngines
 			#region create callbacks for Cycles
 
 			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = null;
-			m_write_render_tile_callback = null;
+			m_update_render_tile_callback = UpdateRenderTileCallback;
+			m_write_render_tile_callback = WriteRenderTileCallback;
 			m_test_cancel_callback = null;
-			m_display_update_callback = DisplayUpdateHandler;
+			m_display_update_callback = null; //DisplayUpdateHandler;
 
 			CSycles.log_to_stdout(false);
 
@@ -70,10 +70,10 @@ namespace RhinoCyclesCore.RenderEngines
 			if (sample > 10 && sample < (Settings.Samples-2) && sample % 3 != 0) return;
 			if (CancelRender) return;
 			if (State != State.Rendering) return;
-			lock (DisplayLock)
-			{
-				if (Session.Scene.TryLock())
-				{
+			//lock (DisplayLock)
+			//{
+				//if (Session.Scene.TryLock())
+				//{
 					// copy display buffer data into ccycles pixel buffer
 					Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
 					// copy stuff into renderwindow dib
@@ -95,11 +95,11 @@ namespace RhinoCyclesCore.RenderEngines
 
 					if(CancelRender || sample >= maxSamples) Session.Cancel("done");
 
-					Session.Scene.Unlock();
+					//Session.Scene.Unlock();
 					//sdd.WriteLine(string.Format("display update, sample {0}", sample));
 					// now signal whoever is interested
-				}
-			}
+				//}
+			//}
 		}
 
 		private void MRE_Database_ViewChanged(object sender, Database.ChangeDatabase.ViewChangedEventArgs e)
@@ -146,7 +146,7 @@ namespace RhinoCyclesCore.RenderEngines
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsGpu ? 0 : cyclesEngine.Settings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
-				Background = false,
+				Background = true,
 				DisplayBufferLinear = true,
 				ProgressiveRefine = true,
 				Progressive = true,
@@ -169,14 +169,14 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.m_flush = false;
 			cyclesEngine.UploadData();
 
+			cyclesEngine.Session.PrepareRun();
+
 			// lets first reset session
 			cyclesEngine.Session.Reset((uint)size.Width, (uint)size.Height, (uint)samples);
 			// then reset scene
 			cyclesEngine.Session.Scene.Reset();
-
-			cyclesEngine.Session.PrepareRun();
 			// and actually start
-			while(cyclesEngine.Session.Sample()) { }
+			while (cyclesEngine.Session.Sample()) {}
 
 			cyclesEngine.CancelRender = true;
 			#endregion
