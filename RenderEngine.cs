@@ -209,10 +209,11 @@ namespace RhinoCyclesCore
 				// change state to signal need for uploading
 				if (HasSceneChanges())
 				{
-					if (!m_interactive) Session?.Cancel("Scene changes detected.\n");
-					else {
-						// TODO: ensure ViewportRenderEngine doesn't set pause ever. Session?.SetPause(true);
-					}
+					Session?.Cancel("Scene changes detected.\n");
+					//if (!m_interactive) Session?.Cancel("Scene changes detected.\n");
+					//else {
+					//	// TODO: ensure ViewportRenderEngine doesn't set pause ever. Session?.SetPause(true);
+					//}
 					State = State.Uploading;
 				}
 
