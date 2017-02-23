@@ -431,7 +431,7 @@ namespace RhinoCyclesCore.Converters
 
 					Strength = strength,
 
-					CastShadow = true,
+					CastShadow = lg.ShadowIntensity > 0.0,
 
 					Gamma = gamma,
 
