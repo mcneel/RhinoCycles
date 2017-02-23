@@ -88,6 +88,6 @@ namespace RhinoCyclesCore.Environments
 			}
 		}
 
-		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.SimpleNoiseEnvironment;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.SimpleNoiseEnvironment;
 	}
 }

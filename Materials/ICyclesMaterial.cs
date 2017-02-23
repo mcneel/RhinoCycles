@@ -21,7 +21,7 @@ namespace RhinoCyclesCore.Materials
 		/// <summary>
 		/// Get the material type for the implementation
 		/// </summary>
-		CyclesShader.CyclesMaterial MaterialType { get; }
+		ShaderBody.CyclesMaterial MaterialType { get; }
 
 		/// <summary>
 		/// Bake parameters from Fields dictionary. Implement this if you

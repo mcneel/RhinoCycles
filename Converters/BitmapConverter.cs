@@ -51,7 +51,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="rm"></param>
 		/// <param name="renderTexture"></param>
 		/// <param name="textureType"></param>
-		internal static void MaterialBitmapFromEvaluator(ref CyclesShader shader, RenderMaterial rm, RenderTexture renderTexture, RenderMaterial.StandardChildSlots textureType)
+		internal static void MaterialBitmapFromEvaluator(ref ShaderBody shader, RenderMaterial rm, RenderTexture renderTexture, RenderMaterial.StandardChildSlots textureType)
 		{
 			if (renderTexture == null) return;
 
@@ -75,7 +75,7 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		private static void InternalMaterialBitmapFromEvaluator(CyclesShader shader, RenderTexture renderTexture,
+		private static void InternalMaterialBitmapFromEvaluator(ShaderBody shader, RenderTexture renderTexture,
 			RenderMaterial.StandardChildSlots textureType, Rhino.Geometry.Transform rhinotfm, uint rId, TextureEvaluator actualEvaluator,
 			TextureProjectionMode projectionMode, TextureEnvironmentMappingMode envProjectionMode, bool repeat)
 		{

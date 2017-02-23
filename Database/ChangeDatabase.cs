@@ -1164,12 +1164,8 @@ namespace RhinoCyclesCore.Database
 			emissive.SetParameter("strength", (float)rgl.Intensity);
 			emissive.EndChange();
 			emissive.BakeParameters();
-			var shader = new CyclesShader(matid)
-			{
-				Name = rgl.Name,
-				Crm = emissive,
-				CyclesMaterialType = CyclesShader.CyclesMaterial.Xml
-			};
+			var shader = new CyclesShader(matid);
+			shader.FrontXmlShader(rgl.Name, emissive);
 			shader.Type = CyclesShader.Shader.Diffuse;
 
 			_shaderDatabase.AddShader(shader);
@@ -1227,7 +1223,6 @@ namespace RhinoCyclesCore.Database
 			var mesh = new Rhino.Geometry.Mesh();
 			foreach (var im in m) mesh.Append(im);
 			var t = ccl.Transform.Identity();
-			//t.SetTranslate(ld.Location.X, ld.Location.Y, ld.Location.Z);
 
 			var ldid = new Tuple<Guid, int>(ld.Id, 0);
 

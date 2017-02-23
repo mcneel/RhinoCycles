@@ -88,6 +88,6 @@ namespace RhinoCyclesCore.Materials
 			}
 		}
 
-		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Translucent;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.Translucent;
 	}
 }

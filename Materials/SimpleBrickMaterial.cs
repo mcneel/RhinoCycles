@@ -91,7 +91,7 @@ namespace RhinoCyclesCore.Materials
 		}
 
 
-		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Brick;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.Brick;
 
 
 		public string MaterialXml

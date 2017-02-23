@@ -31,7 +31,7 @@ namespace RhinoCyclesCore.Materials
 
 		public float Gamma { get; set; }
 
-		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.Xml;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.Xml;
 
 		private string Xml { get; set; }
 

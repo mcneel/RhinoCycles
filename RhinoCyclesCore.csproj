@@ -95,7 +95,6 @@
     <Compile Include="Shaders\RhinoFullNxt.cs" />
     <Compile Include="Shaders\RhinoLight.cs" />
     <Compile Include="Shaders\RhinoBackground.cs" />
-    <Compile Include="Shaders\RhinoFull.cs" />
     <Compile Include="Shaders\RhinoNotYetImplemented.cs" />
     <Compile Include="Shaders\RhinoShader.cs" />
     <Compile Include="ViewPlane.cs" />

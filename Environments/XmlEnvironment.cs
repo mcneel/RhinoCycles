@@ -60,6 +60,6 @@ namespace RhinoCyclesCore.Environments
 			}
 		}
 
-		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.XmlEnvironment;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.XmlEnvironment;
 	}
 }

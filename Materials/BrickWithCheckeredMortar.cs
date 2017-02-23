@@ -47,7 +47,7 @@ namespace RhinoCyclesCore.Materials
 		}
 
 
-		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.BrickCheckeredMortar;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.BrickCheckeredMortar;
 
 
 		public string MaterialXml

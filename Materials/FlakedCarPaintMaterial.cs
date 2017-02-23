@@ -119,7 +119,7 @@ namespace RhinoCyclesCore.Materials
 			return m;
 		}
 
-		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.FlakedCarPaint;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.FlakedCarPaint;
 
 
 		public string MaterialXml

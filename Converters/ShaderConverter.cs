@@ -35,108 +35,7 @@ namespace RhinoCyclesCore.Converters
 			_engineSettings = engineSettings;
 		}
 
-		private enum ProbableMaterial
-		{
-			Plaster,
-			Picture,
-			Paint,
-			Glass,
-			Gem,
-			Plastic,
-			Metal,
-			Custom
-		}
-
-		/// <summary>
-		/// Determine material type using smell, but also querying for
-		/// specific parameters on the RenderMaterial
-		/// </summary>
-		/// <param name="rm"></param>
-		/// <returns>ProbableMaterial</returns>
-		private ProbableMaterial GuessMaterialFromSmell(RenderMaterial rm)
-		{
-			if(rm.SmellsLikePlaster) return ProbableMaterial.Plaster;
-
-			if(rm.SmellsLikeGem && rm.GetParameter("type")!=null) return ProbableMaterial.Gem;
-			if(rm.SmellsLikeGlass && rm.GetParameter("ior")!=null) return ProbableMaterial.Glass;
-			if(rm.SmellsLikePlastic) return ProbableMaterial.Plastic;
-			if(rm.SmellsLikePaint) return ProbableMaterial.Paint;
-
-			if(rm.SmellsLikeMetal) return ProbableMaterial.Metal;
-
-			return ProbableMaterial.Custom;
-		}
-
-		private static ProbableMaterial WhatMaterial(RenderMaterial rm, Rhino.DocObjects.Material m)
-		{
-			if (rm.TypeId.Equals(RenderMaterial.PictureMaterialGuid))
-			{
-				return ProbableMaterial.Picture;
-				
-			}
-			if (rm.TypeId.Equals(RenderMaterial.PlasterMaterialGuid))
-			{
-				return ProbableMaterial.Plaster;
-				
-			}
-			if (rm.TypeId.Equals(RenderMaterial.GlassMaterialGuid))
-			{
-				return ProbableMaterial.Glass;
-				
-			}
-			if (rm.TypeId.Equals(RenderMaterial.GemMaterialGuid))
-			{
-				return ProbableMaterial.Gem;
-				
-			}
-			if (rm.TypeId.Equals(RenderMaterial.PaintMaterialGuid))
-			{
-				return ProbableMaterial.Paint;
-				
-			}
-			if (rm.TypeId.Equals(RenderMaterial.PlasticMaterialGuid))
-			{
-				return ProbableMaterial.Plastic;
-				
-			}
-			if (rm.TypeId.Equals(RenderMaterial.MetalMaterialGuid))
-			{
-				return ProbableMaterial.Metal;
-			}
-
-
-			if (rm.SmellsLikePlaster || rm.SmellsLikeTexturedPlaster)
-			{
-				return ProbableMaterial.Plaster;
-				
-			}
-			if (rm.SmellsLikeGlass || rm.SmellsLikeTexturedGlass)
-			{
-				return ProbableMaterial.Glass;
-				
-			}
-			if (rm.SmellsLikeGem || rm.SmellsLikeTexturedGem)
-			{
-				return ProbableMaterial.Gem;
-				
-			}
-			if (rm.SmellsLikePaint || rm.SmellsLikeTexturedPaint)
-			{
-				return ProbableMaterial.Paint;
-				
-			}
-			if (rm.SmellsLikePlastic || rm.SmellsLikeTexturedPlastic)
-			{
-				return ProbableMaterial.Plastic;
-				
-			}
-			if (rm.SmellsLikeMetal || rm.SmellsLikeTexturedMetal)
-			{
-				return ProbableMaterial.Metal;
-			}
-
-			return ProbableMaterial.Custom;
-		}
+		private Guid realtimDisplaMaterialId = new Guid("e6cd1973-b739-496e-ab69-32957fa48492");
 
 		/// <summary>
 		/// Create a CyclesShader based on given Material m
@@ -147,168 +46,29 @@ namespace RhinoCyclesCore.Converters
 		internal CyclesShader CreateCyclesShader(RenderMaterial rm, float gamma)
 		{
 			var mid = rm.RenderHash;
-			CyclesShader shader = null;
+			var shader = new CyclesShader(mid);
 
-			var crm = rm as ICyclesMaterial;
-			CyclesShader.CyclesMaterial mattype = CyclesShader.CyclesMaterial.No;
+			shader.Type = CyclesShader.Shader.Diffuse;
 
-			if (crm == null)
+			RenderMaterial front;
+			if (rm.TypeId.Equals(realtimDisplaMaterialId))
 			{
-				// always simulate material, need to know now myself
-				// what to read out from the simulated material to
-				// populate my own material descriptions.
-				var m = rm.SimulateMaterial(true);
-				// figure out what type of material we are.
-				//var probemat = GuessMaterialFromSmell(rm);
-				var probemat = WhatMaterial(rm, m);
-
-				rm.BeginChange(RenderContent.ChangeContexts.Ignore);
-				var dcl = m.DiffuseColor;
-				var scl = m.SpecularColor;
-				var rcl = m.ReflectionColor;
-				var rfcl = m.TransparentColor;
-				var emcl = m.EmissionColor;
-				var polish = (float)m.ReflectionGlossiness;
-				var reflectivity = (float)m.Reflectivity;
-				var metalic = 0f;
-				var shine = (float)(m.Shine / Material.MaxShine);
-
-				switch (probemat)
+				if (rm.FirstChild?.ChildSlotName?.Equals("front") ?? false)
 				{
-					case ProbableMaterial.Plaster:
-						mattype = CyclesShader.CyclesMaterial.Diffuse;
-						break;
-					case ProbableMaterial.Glass:
-					case ProbableMaterial.Gem:
-						metalic = 0f;
-						mattype = CyclesShader.CyclesMaterial.Glass;
-						break;
-					case ProbableMaterial.Metal:
-						metalic = 1.0f;
-						mattype = CyclesShader.CyclesMaterial.SimpleMetal;
-						break;
-					case ProbableMaterial.Plastic:
-						polish = reflectivity;
-						shine = polish;
-						reflectivity = 0f;
-						metalic = 0f;
-						mattype = CyclesShader.CyclesMaterial.SimplePlastic;
-						break;
-					case ProbableMaterial.Paint:
-						mattype = CyclesShader.CyclesMaterial.Paint;
-						break;
-					case ProbableMaterial.Custom:
-						mattype = CyclesShader.CyclesMaterial.No;
-						break;
+					front = rm.FirstChild as RenderMaterial;
+					shader.CreateFrontShader(front, gamma);
 				}
-
-				var difftexAlpha = m.AlphaTransparency;
-
-				var col = RenderEngine.CreateFloat4(dcl.R, dcl.G, dcl.B, 255);
-				var spec = RenderEngine.CreateFloat4(scl.R, scl.G, scl.B, 255);
-				var refl = RenderEngine.CreateFloat4(rcl.R, rcl.G, rcl.B, 255);
-				var transp = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
-				var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
-				var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
-
-				shader = new CyclesShader(mid)
+				if (rm.FirstChild?.NextSibling?.ChildSlotName?.Equals("back") ?? false)
 				{
-					Type = CyclesShader.Shader.Diffuse,
-					CyclesMaterialType = mattype,
-
-					Shadeless = m.DisableLighting,
-
-					DiffuseColor = col,
-					SpecularColor = spec,
-					ReflectionColor = refl,
-					ReflectionRoughness = polish,
-					RefractionColor = refr,
-					RefractionRoughness = (float)m.RefractionGlossiness,
-					TransparencyColor = transp,
-					EmissionColor = emis,
-
-
-					FresnelIOR = (float)m.FresnelIndexOfRefraction,
-					IOR = (float)m.IndexOfRefraction,
-					Roughness = (float)m.ReflectionGlossiness,
-					Reflectivity = reflectivity,
-					Metalic = metalic,
-					Transparency = (float)m.Transparency,
-					Shine = shine,
-					Gloss = metalic > 0.0f ? polish : 0.0f,
-
-					FresnelReflections = m.FresnelReflections,
-
-					Gamma = gamma,
-
-					Name = m.Name ?? ""
-				};
-
-				shader.DiffuseTexture.Amount = 0.0f;
-				shader.BumpTexture.Amount = 0.0f;
-				shader.TransparencyTexture.Amount = 0.0f;
-				shader.EnvironmentTexture.Amount = 0.0f;
-
-				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse))
-				{
-					var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
-
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, difftex, RenderMaterial.StandardChildSlots.Diffuse);
-					if (shader.HasDiffuseTexture)
-					{
-						shader.DiffuseTexture.UseAlpha = difftexAlpha;
-						shader.DiffuseTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) / 100.0f, 1.0f);
-					}
+					var back = rm.FirstChild.NextSibling as RenderMaterial;
+					shader.CreateBackShader(back, gamma);
 				}
-
-				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump))
-				{
-					var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, bumptex, RenderMaterial.StandardChildSlots.Bump);
-					if (shader.HasBumpTexture)
-					{
-						shader.BumpTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) / 100.0f, 1.0f);
-					}
-				}
-
-				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency))
-				{
-					var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, transtex,
-						RenderMaterial.StandardChildSlots.Transparency);
-					if (shader.HasTransparencyTexture)
-					{
-						shader.TransparencyTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Transparency) / 100.0f, 1.0f);
-					}
-				}
-
-				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment))
-				{
-					var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shader, rm, envtex,
-						RenderMaterial.StandardChildSlots.Environment);
-					if (shader.HasEnvironmentTexture)
-					{
-						shader.EnvironmentTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) / 100.0f, 1.0f);
-					}
-				}
-
-				rm.EndChange();
-
 			}
-			if (crm != null)
+			else
 			{
-				crm.BakeParameters();
-				shader = new CyclesShader(mid)
-				{
-					CyclesMaterialType = CyclesShader.CyclesMaterial.Xml,
-					Gamma = gamma,
-					Crm = crm,
-					Name = rm.Name ?? "some cycles material"
-				};
+				front = rm;
+				shader.CreateFrontShader(front, gamma);
 			}
-
-			shader.Gamma = gamma;
 
 			return shader;
 		}

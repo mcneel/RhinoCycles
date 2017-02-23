@@ -15,10 +15,14 @@ limitations under the License.
 **/
 using System;
 using ccl;
+using Rhino.DocObjects;
+using Rhino.Render;
 using RhinoCyclesCore.Materials;
+using RhinoCyclesCore.Converters;
 
 namespace RhinoCyclesCore
 {
+
 	/// <summary>
 	/// Intermediate class to convert various Rhino shader types
 	/// to Cycles shaders
@@ -27,21 +31,20 @@ namespace RhinoCyclesCore
 	/// </summary>
 	public class CyclesShader
 	{
-
+		private ShaderBody _front;
+		private ShaderBody _back;
 		public CyclesShader(uint id)
 		{
 			Id = id;
-			DiffuseTexture = new CyclesTextureImage();
-			BumpTexture = new CyclesTextureImage();
-			TransparencyTexture = new CyclesTextureImage();
-			EnvironmentTexture = new CyclesTextureImage();
-			GiEnvTexture = new CyclesTextureImage();
-			BgEnvTexture = new CyclesTextureImage();
-			ReflRefrEnvTexture = new CyclesTextureImage();
-			CyclesMaterialType = CyclesMaterial.No;
+			_front = null;
+			_back = null;
+
 		}
 
-		public ICyclesMaterial Crm { get; set; }
+		/// <summary>
+		/// RenderHash of the RenderMaterial for which this intermediary is created.
+		/// </summary>
+		public uint Id { get; }
 
 		public override int GetHashCode()
 		{
@@ -55,24 +58,276 @@ namespace RhinoCyclesCore
 			return other != null && Id.Equals(other.Id);
 		}
 
-		/// <summary>
-		/// Set to true if a shadeless effect is wanted (self-illuminating).
-		/// </summary>
-		public bool Shadeless { get; set; }
-		/// <summary>
-		/// Get <c>Shadeless</c> as a float value
-		/// </summary>
-		public float ShadelessAsFloat => Shadeless ? 1.0f : 0.0f;
+		public bool CreateFrontShader(RenderMaterial rm, float gamma)
+		{
+			_front = new ShaderBody(Id);
+			return CreateShaderPart(_front, rm, gamma);
+		}
 
-		/// <summary>
-		/// Set the CyclesMaterial type
-		/// </summary>
-		public CyclesMaterial CyclesMaterialType { get; set; }
+		public void FrontXmlShader(string name, ICyclesMaterial crm)
+		{
+			_front = new ShaderBody(Id)
+			{
+				Name = name,
+				Crm = crm,
+				CyclesMaterialType = ShaderBody.CyclesMaterial.Xml
+			};
+		}
 
-		/// <summary>
-		/// RenderHash of the RenderMaterial for which this intermediary is created.
-		/// </summary>
-		public uint Id { get; }
+		public bool CreateBackShader(RenderMaterial rm, float gamma)
+		{
+			_back = new ShaderBody(Id);
+			return CreateShaderPart(_back, rm, gamma);
+		}
+
+		public ShaderBody Front => _front;
+		public ShaderBody Back => _back;
+
+		public bool DisplayMaterial => _front != null && _back != null;
+
+		public bool ValidDisplayMaterial =>
+			_front?.CyclesMaterialType != ShaderBody.CyclesMaterial.Xml
+			&&
+			_back?.CyclesMaterialType != ShaderBody.CyclesMaterial.Xml;
+
+		public float Gamma { get; set; }
+
+		private enum ProbableMaterial
+		{
+			Plaster,
+			Picture,
+			Paint,
+			Glass,
+			Gem,
+			Plastic,
+			Metal,
+			Custom
+		}
+		private static ProbableMaterial WhatMaterial(RenderMaterial rm, Rhino.DocObjects.Material m)
+		{
+			if (rm.TypeId.Equals(RenderMaterial.PictureMaterialGuid))
+			{
+				return ProbableMaterial.Picture;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.PlasterMaterialGuid))
+			{
+				return ProbableMaterial.Plaster;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.GlassMaterialGuid))
+			{
+				return ProbableMaterial.Glass;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.GemMaterialGuid))
+			{
+				return ProbableMaterial.Gem;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.PaintMaterialGuid))
+			{
+				return ProbableMaterial.Paint;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.PlasticMaterialGuid))
+			{
+				return ProbableMaterial.Plastic;
+				
+			}
+			if (rm.TypeId.Equals(RenderMaterial.MetalMaterialGuid))
+			{
+				return ProbableMaterial.Metal;
+			}
+
+
+			if (rm.SmellsLikePlaster || rm.SmellsLikeTexturedPlaster)
+			{
+				return ProbableMaterial.Plaster;
+				
+			}
+			if (rm.SmellsLikeGlass || rm.SmellsLikeTexturedGlass)
+			{
+				return ProbableMaterial.Glass;
+				
+			}
+			if (rm.SmellsLikeGem || rm.SmellsLikeTexturedGem)
+			{
+				return ProbableMaterial.Gem;
+				
+			}
+			if (rm.SmellsLikePaint || rm.SmellsLikeTexturedPaint)
+			{
+				return ProbableMaterial.Paint;
+				
+			}
+			if (rm.SmellsLikePlastic || rm.SmellsLikeTexturedPlastic)
+			{
+				return ProbableMaterial.Plastic;
+				
+			}
+			if (rm.SmellsLikeMetal || rm.SmellsLikeTexturedMetal)
+			{
+				return ProbableMaterial.Metal;
+			}
+
+			return ProbableMaterial.Custom;
+		}
+
+		private bool CreateShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
+		{
+			var crm = rm as ICyclesMaterial;
+			ShaderBody.CyclesMaterial mattype = ShaderBody.CyclesMaterial.No;
+			if (crm == null)
+			{
+				// always simulate material, need to know now myself
+				// what to read out from the simulated material to
+				// populate my own material descriptions.
+				var m = rm.SimulateMaterial(true);
+				// figure out what type of material we are.
+				//var probemat = GuessMaterialFromSmell(rm);
+				var probemat = WhatMaterial(rm, m);
+
+				rm.BeginChange(RenderContent.ChangeContexts.Ignore);
+				var dcl = m.DiffuseColor;
+				var scl = m.SpecularColor;
+				var rcl = m.ReflectionColor;
+				var rfcl = m.TransparentColor;
+				var emcl = m.EmissionColor;
+				var polish = (float)m.ReflectionGlossiness;
+				var reflectivity = (float)m.Reflectivity;
+				var metalic = 0f;
+				var shine = (float)(m.Shine / Material.MaxShine);
+
+				switch (probemat)
+				{
+					case ProbableMaterial.Plaster:
+						mattype = ShaderBody.CyclesMaterial.Diffuse;
+						break;
+					case ProbableMaterial.Glass:
+					case ProbableMaterial.Gem:
+						metalic = 0f;
+						mattype = ShaderBody.CyclesMaterial.Glass;
+						break;
+					case ProbableMaterial.Metal:
+						metalic = 1.0f;
+						mattype = ShaderBody.CyclesMaterial.SimpleMetal;
+						break;
+					case ProbableMaterial.Plastic:
+						polish = reflectivity;
+						shine = polish;
+						reflectivity = 0f;
+						metalic = 0f;
+						mattype = ShaderBody.CyclesMaterial.SimplePlastic;
+						break;
+					case ProbableMaterial.Paint:
+						mattype = ShaderBody.CyclesMaterial.Paint;
+						break;
+					case ProbableMaterial.Custom:
+						mattype = ShaderBody.CyclesMaterial.No;
+						break;
+				}
+
+				var difftexAlpha = m.AlphaTransparency;
+
+				var col = RenderEngine.CreateFloat4(dcl.R, dcl.G, dcl.B, 255);
+				var spec = RenderEngine.CreateFloat4(scl.R, scl.G, scl.B, 255);
+				var refl = RenderEngine.CreateFloat4(rcl.R, rcl.G, rcl.B, 255);
+				var transp = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
+				var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
+				var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
+
+				//shb.Type = CyclesShader.Shader.Diffuse,
+				shb.CyclesMaterialType = mattype;
+
+				shb.Shadeless = m.DisableLighting;
+
+				shb.DiffuseColor = col;
+				shb.SpecularColor = spec;
+				shb.ReflectionColor = refl;
+				shb.ReflectionRoughness = polish;
+				shb.RefractionColor = refr;
+				shb.RefractionRoughness = (float)m.RefractionGlossiness;
+				shb.TransparencyColor = transp;
+				shb.EmissionColor = emis;
+
+
+				shb.FresnelIOR = (float)m.FresnelIndexOfRefraction;
+				shb.IOR = (float)m.IndexOfRefraction;
+				shb.Roughness = (float)m.ReflectionGlossiness;
+				shb.Reflectivity = reflectivity;
+				shb.Metalic = metalic;
+				shb.Transparency = (float)m.Transparency;
+				shb.Shine = shine;
+				shb.Gloss = metalic > 0.0f ? polish : 0.0f;
+
+				shb.FresnelReflections = m.FresnelReflections;
+
+				shb.Gamma = gamma;
+
+				shb.Name = m.Name ?? "";
+
+				shb.DiffuseTexture.Amount = 0.0f;
+				shb.BumpTexture.Amount = 0.0f;
+				shb.TransparencyTexture.Amount = 0.0f;
+				shb.EnvironmentTexture.Amount = 0.0f;
+
+				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse))
+				{
+					var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
+
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, rm, difftex, RenderMaterial.StandardChildSlots.Diffuse);
+					if (shb.HasDiffuseTexture)
+					{
+						shb.DiffuseTexture.UseAlpha = difftexAlpha;
+						shb.DiffuseTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) / 100.0f, 1.0f);
+					}
+				}
+
+				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump))
+				{
+					var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, rm, bumptex, RenderMaterial.StandardChildSlots.Bump);
+					if (shb.HasBumpTexture)
+					{
+						shb.BumpTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) / 100.0f, 1.0f);
+					}
+				}
+
+				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency))
+				{
+					var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, rm, transtex,
+						RenderMaterial.StandardChildSlots.Transparency);
+					if (shb.HasTransparencyTexture)
+					{
+						shb.TransparencyTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Transparency) / 100.0f, 1.0f);
+					}
+				}
+
+				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment))
+				{
+					var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, rm, envtex,
+						RenderMaterial.StandardChildSlots.Environment);
+					if (shb.HasEnvironmentTexture)
+					{
+						shb.EnvironmentTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) / 100.0f, 1.0f);
+					}
+				}
+
+				rm.EndChange();
+			}
+			else
+			{
+				crm.BakeParameters();
+				shb.Crm = crm;
+				shb.CyclesMaterialType = ShaderBody.CyclesMaterial.Xml;
+				shb.Gamma = gamma;
+				shb.Name = rm.Name ?? "some cycles material";
+			}
+			return true;
+		}
 
 		/// <summary>
 		/// Type of shader this represents.
@@ -82,6 +337,33 @@ namespace RhinoCyclesCore
 			Background,
 			Diffuse
 		}
+
+		public Shader Type { get; set; }
+
+	}
+
+	public class ShaderBody
+	{
+
+		public uint Id { get; }
+
+		public ShaderBody(uint id)
+		{
+			Id = id;
+			DiffuseTexture = new CyclesTextureImage();
+			BumpTexture = new CyclesTextureImage();
+			TransparencyTexture = new CyclesTextureImage();
+			EnvironmentTexture = new CyclesTextureImage();
+			GiEnvTexture = new CyclesTextureImage();
+			BgEnvTexture = new CyclesTextureImage();
+			ReflRefrEnvTexture = new CyclesTextureImage();
+			CyclesMaterialType = CyclesMaterial.No;
+		}
+		public ICyclesMaterial Crm { get; set; }
+		/// <summary>
+		/// Set the CyclesMaterial type
+		/// </summary>
+		public CyclesMaterial CyclesMaterialType { get; set; }
 
 		/// <summary>
 		/// Enumeration of Cycles custom materials.
@@ -119,7 +401,14 @@ namespace RhinoCyclesCore
 			XmlEnvironment,
 		}
 
-		public Shader Type { get; set; }
+		/// <summary>
+		/// Set to true if a shadeless effect is wanted (self-illuminating).
+		/// </summary>
+		public bool Shadeless { get; set; }
+		/// <summary>
+		/// Get <c>Shadeless</c> as a float value
+		/// </summary>
+		public float ShadelessAsFloat => Shadeless ? 1.0f : 0.0f;
 
 		/// <summary>
 		/// Gamma corrected base color
@@ -251,5 +540,6 @@ namespace RhinoCyclesCore
 		public float FresnelReflectionsAsFloat => FresnelReflections ? 1.0f : 0.0f;
 
 		public string Name { get; set; }
+		
 	}
 }

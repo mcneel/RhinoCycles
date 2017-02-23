@@ -33,7 +33,7 @@ namespace RhinoCyclesCore.Materials
 
 		public float Gamma { get; set; }
 
-		public CyclesShader.CyclesMaterial MaterialType => CyclesShader.CyclesMaterial.SimpleMetal;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.SimpleMetal;
 
 		private Color4f Color { get; set; }
 		private float Roughness { get; set; }

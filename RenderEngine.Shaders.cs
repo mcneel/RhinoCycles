@@ -26,15 +26,22 @@ namespace RhinoCyclesCore
 		internal CclShader CreateMaterialShader(CyclesShader shader)
 		{
 			CclShader sh = null;
-			switch (shader.CyclesMaterialType)
+			if (shader.DisplayMaterial && shader.ValidDisplayMaterial)
 			{
-				case CyclesShader.CyclesMaterial.Xml:
-				case CyclesShader.CyclesMaterial.FlakedCarPaint:
-					sh = CreateCyclesShaderFromXml(shader);
-					break;
-				default:
-					sh = CreateCyclesShaderFromRhinoV6BasicMat(shader);
-					break;
+				sh = CreateCyclesShaderFromRhinoV6BasicMat(shader);
+			}
+			else
+			{
+				switch (shader.Front.CyclesMaterialType)
+				{
+					case ShaderBody.CyclesMaterial.Xml:
+					case ShaderBody.CyclesMaterial.FlakedCarPaint:
+						sh = CreateCyclesShaderFromXml(shader.Front);
+						break;
+					default:
+						sh = CreateCyclesShaderFromRhinoV6BasicMat(shader);
+						break;
+				}
 			}
 
 			return sh;
@@ -43,20 +50,28 @@ namespace RhinoCyclesCore
 		internal CclShader RecreateMaterialShader(CyclesShader shader, CclShader existing)
 		{
 			CclShader sh = null;
-			switch (shader.CyclesMaterialType)
+			if (shader.DisplayMaterial && shader.ValidDisplayMaterial)
 			{
-				case CyclesShader.CyclesMaterial.Xml:
-					sh = RecreateCyclesShaderFromXml(shader, existing);
-					break;
-				default:
-					sh = RecreateCyclesShaderFromRhinoV6BasicMat(shader, existing);
-					break;
+				sh = RecreateCyclesShaderFromRhinoV6BasicMat(shader, existing);
+			}
+			else
+			{
+				switch (shader.Front.CyclesMaterialType)
+				{
+					case ShaderBody.CyclesMaterial.Xml:
+					case ShaderBody.CyclesMaterial.FlakedCarPaint:
+						sh = RecreateCyclesShaderFromXml(shader.Front, existing);
+						break;
+					default:
+						sh = RecreateCyclesShaderFromRhinoV6BasicMat(shader, existing);
+						break;
+				}
 			}
 
 			return sh;
 		}
 
-		internal CclShader CreateCyclesShaderFromXml(CyclesShader shader)
+		internal CclShader CreateCyclesShaderFromXml(ShaderBody shader)
 		{
 			var sh = new CclShader(Client, CclShader.ShaderType.Material)
 			{
@@ -71,11 +86,10 @@ namespace RhinoCyclesCore
 			return sh;
 		}
 
-		internal CclShader RecreateCyclesShaderFromXml(CyclesShader shader, CclShader existing)
+		internal CclShader RecreateCyclesShaderFromXml(ShaderBody shader, CclShader existing)
 		{
 			existing.Recreate();
 			CclShader.ShaderFromXml(ref existing, shader.Crm.MaterialXml);
-
 			return existing;
 		}
 
