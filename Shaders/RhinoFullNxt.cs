@@ -58,11 +58,19 @@ namespace RhinoCyclesCore.Shaders
 
 				var backfacing=  new GeometryInfoNode("backfacepicker");
 				var flipper = new MixClosureNode("front or back");
+				var lp = new LightPathNode("lp for bf");
+				var mlt = new MathNode("toggle bf only when camera ray") {Operation = MathNode.Operations.Multiply};
 
 				m_shader.AddNode(backfacing);
 				m_shader.AddNode(flipper);
+				m_shader.AddNode(lp);
+				m_shader.AddNode(mlt);
 
-				backfacing.outs.Backfacing.Connect(flipper.ins.Fac);
+				lp.outs.IsCameraRay.Connect(mlt.ins.Value1);
+				backfacing.outs.Backfacing.Connect(mlt.ins.Value2);
+
+				mlt.outs.Value.Connect(flipper.ins.Fac);
+
 				var frontclosure = front.GetClosureSocket();
 				var backclosure = back.GetClosureSocket();
 
