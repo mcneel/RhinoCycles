@@ -1371,7 +1371,7 @@ namespace RhinoCyclesCore.Database
 				_environmentDatabase.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
 				if (previousStyle!=BackgroundStyle.Environment && rs.BackgroundStyle == BackgroundStyle.Environment)
 				{
-					UpdateAllEnvironments();
+					UpdateAllEnvironments(RenderEnvironment.Usage.Background);
 				}
 				else if (previousStyle!=BackgroundStyle.WallpaperImage && rs.BackgroundStyle == BackgroundStyle.WallpaperImage)
 				{
@@ -1400,24 +1400,33 @@ namespace RhinoCyclesCore.Database
 			 * environment instance is wrong. See http://mcneel.myjetbrains.com/youtrack/issue/RH-32418
 			 */
 			Rhino.RhinoApp.OutputDebugString($"ApplyEnvironmentChanges {usage}\n");
-			UpdateAllEnvironments();
 			_environmentDatabase.SetGamma(PreProcessGamma);
+			UpdateAllEnvironments(usage);
 		}
 
-		private void UpdateAllEnvironments()
+		private void UpdateAllEnvironments(RenderEnvironment.Usage usage)
 		{
-			var bgenvId = EnvironmentIdForUsage(RenderEnvironment.Usage.Background);
-			var skyenvId = EnvironmentIdForUsage(RenderEnvironment.Usage.Skylighting);
-			var reflenvId = EnvironmentIdForUsage(RenderEnvironment.Usage.ReflectionAndRefraction);
-			var bgenv = EnvironmentForid(bgenvId);
-			var skyenv = EnvironmentForid(skyenvId);
-			var reflenv = EnvironmentForid(reflenvId);
+			switch (usage)
+			{
+				case RenderEnvironment.Usage.Background:
+					var bgenvId = EnvironmentIdForUsage(RenderEnvironment.Usage.Background);
+					var bgenv = EnvironmentForid(bgenvId);
+					_environmentDatabase.SetBackground(bgenv, RenderEnvironment.Usage.Background);
+					break;
+				case RenderEnvironment.Usage.Skylighting:
+					var skyenvId = EnvironmentIdForUsage(RenderEnvironment.Usage.Skylighting);
+					var skyenv = EnvironmentForid(skyenvId);
+					_environmentDatabase.SetBackground(skyenv, RenderEnvironment.Usage.Skylighting);
+					break;
+				case RenderEnvironment.Usage.ReflectionAndRefraction:
+					var reflenvId = EnvironmentIdForUsage(RenderEnvironment.Usage.ReflectionAndRefraction);
+					var reflenv = EnvironmentForid(reflenvId);
 
-			_environmentDatabase.SetBackground(bgenv, RenderEnvironment.Usage.Background);
-			_environmentDatabase.SetBackground(skyenv, RenderEnvironment.Usage.Skylighting);
-			_environmentDatabase.SetBackground(reflenv, RenderEnvironment.Usage.ReflectionAndRefraction);
+					_environmentDatabase.SetBackground(reflenv, RenderEnvironment.Usage.ReflectionAndRefraction);
+					break;
+			}
 
-			_environmentDatabase.HandleEnvironments();
+			_environmentDatabase.HandleEnvironments(usage);
 		}
 
 		private static int _updateCounter = 0;

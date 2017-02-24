@@ -40,10 +40,11 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// OpenCL doesn't properly support HDRi textures in the environment,
 		/// so read them as byte textures instead.
+		/// @todo remove as obsolete
 		/// </summary>
 		public void SetFloatTextureAsByteTexture(bool floatAsByte)
 		{
-			_cqBackground.m_float_as_byte = floatAsByte;
+			_cqBackground.m_float_as_byte = true;
 		}
 
 		public CyclesBackground CyclesShader => _cqBackground;
@@ -141,9 +142,9 @@ namespace RhinoCyclesCore.Database
 			_cqBackground.modified = true;
 		}
 
-		public void HandleEnvironments()
+		public void HandleEnvironments(RenderEnvironment.Usage usage)
 		{
-			_cqBackground.HandleEnvironments();
+			_cqBackground.HandleEnvironments(usage);
 		}
 
 		/// <summary>
