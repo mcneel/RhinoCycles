@@ -26,6 +26,7 @@ namespace RhinoCyclesCore
 		public CyclesObject()
 		{
 			Visible = true;
+			CastShadow = true;
 		}
 
 		public ccl.Object cob { get; set; }
@@ -54,6 +55,8 @@ namespace RhinoCyclesCore
 		/// Visibility toggle.
 		/// </summary>
 		public bool Visible { get; set; }
+
+		public bool CastShadow { get; set; }
 
 		/// <summary>
 		/// Shadow-only toggle.

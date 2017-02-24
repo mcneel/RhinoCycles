@@ -820,7 +820,7 @@ namespace RhinoCyclesCore.Database
 
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				//System.Diagnostics.Debug.WriteLine("Added MI {0}", a.InstanceId);
-				var ob = new CyclesObject {obid = a.InstanceId, meshid = meshid, Transform = CclXformFromRhinoXform(a.Transform), matid = a.MaterialId};
+				var ob = new CyclesObject {obid = a.InstanceId, meshid = meshid, Transform = CclXformFromRhinoXform(a.Transform), matid = a.MaterialId, CastShadow = a.CastShadows};
 
 				var shaderchange = new CyclesObjectShader(a.InstanceId)
 				{
@@ -993,6 +993,7 @@ namespace RhinoCyclesCore.Database
 					meshid = gpid,
 					Transform = t,
 					Visible = gp.Enabled,
+					CastShadow = false,
 					IsShadowCatcher = gp.IsShadowOnly
 				};
 
@@ -1239,6 +1240,7 @@ namespace RhinoCyclesCore.Database
 				meshid = ldid,
 				Transform = t,
 				Visible = true,
+				CastShadow = false,
 				IsShadowCatcher = false
 			};
 
@@ -1345,7 +1347,12 @@ namespace RhinoCyclesCore.Database
 				cob.Mesh = mesh;
 				cob.Transform = ob.Transform;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
-				cob.Visibility = ob.Visible ? (ob.IsShadowCatcher ? PathRay.Camera : PathRay.AllVisibility): PathRay.Hidden;
+				var vis = ob.Visible ? (ob.IsShadowCatcher ? PathRay.Camera : PathRay.AllVisibility): PathRay.Hidden;
+				if (ob.CastShadow == false)
+				{
+					vis &= ~PathRay.Shadow;
+				}
+				cob.Visibility = vis;
 				cob.TagUpdate();
 			}
 		}
