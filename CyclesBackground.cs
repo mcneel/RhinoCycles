@@ -188,7 +188,7 @@ namespace RhinoCyclesCore
 				var right = screenport.Right;
 
 				// color matrix used for conversion to gray scale
-				ColorMatrix cm = new ColorMatrix(
+				ColorMatrix cmgray = new ColorMatrix(
 					new[]{
 						new[] { 0.3f, 0.3f, 0.3f, 0.0f, 0.0f},
 						new[] { .59f, .59f, .59f, 0.0f, 0.0f},
@@ -197,35 +197,50 @@ namespace RhinoCyclesCore
 						new[] { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}
 					}
 				);
+				ColorMatrix cmcolor = new ColorMatrix(
+					new[]{
+						new[] { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+						new[] { 0.0f, 1.0f, 0.0f, 0.0f, 0.0f},
+						new[] { 0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+						new[] { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f},
+						new[] { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}
+					}
+				);
 				ImageAttributes attr = new ImageAttributes();
-				attr.SetColorMatrix(cm);
+				attr.SetColorMatrix(view.ShowWallpaperInGrayScale ? cmgray : cmcolor);
 
 				var w = Math.Abs(right - left);
 				var h = Math.Abs(bottom - top);
+				var viewport_ar = (float)w / h;
 				Bitmap bm = new Bitmap(file);
-				var ar = (float) bm.Width/bm.Height;
-				var fac = 1.0f;
-				if (ar < 1.0f)
+				var image_ar = (float)bm.Width / bm.Height;
+
+				int nw = 0;
+				int nh = 0;
+				int x = 0;
+				int y = 0;
+				if (image_ar > viewport_ar)
 				{
-					fac = (h/(float)bm.Height);
+					x = 0;
+					nw = w;
+					nh = (int)(w / image_ar);
+					y = (int)(h * 0.5 - nh * 0.5);
 				}
-				else if (ar > 1.0f)
+				else
 				{
-					fac = (w/(float)bm.Width);
+					y = 0;
+					nh = h;
+					nw = (int)(h * image_ar);
+					x = (int)(w * 0.5 - nw * 0.5);
 				}
 
-				int nw = (int)(bm.Width * fac);
-				int nh = (int)(bm.Height * fac);
-
-				int x = (w - nw)/2;
-				int y = (h - nh)/2;
 				Bitmap newBitmap = new Bitmap(w, h);
 
 				var col = Color.Aqua;
 				if (color1 != Color.Empty) col = color1;
 				var brush = new SolidBrush(col);
 				var p = new Point(x, y);
-				var bmsize=	new Size(nw,nh);
+				var bmsize = new Size(nw, nh);
 				if (scaleToFit)
 				{
 					bmsize = new Size(w, h);
@@ -237,20 +252,13 @@ namespace RhinoCyclesCore
 					g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 					if (!view.WallpaperHidden)
 					{
-						if (view.ShowWallpaperInGrayScale)
-						{
-							g.DrawImage(bm, new Rectangle(p, bmsize), 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, attr);
-						}
-						else
-						{
-							g.DrawImage(bm, new Rectangle(p, bmsize));
-						}
+						g.DrawImage(bm, new Rectangle(p, bmsize), 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, attr);
 					}
 				}
 				var wallpaperbm = BitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaperbm.ApplyGamma(Gamma);
 				wallpaper.TexByte = wallpaperbm.Corrected;
-				if(RcCore.It.EngineSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
+				if (RcCore.It.EngineSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
 				wallpaper.TexWidth = newBitmap.Width;
 				wallpaper.TexHeight = newBitmap.Height;
 				wallpaper.Name =
