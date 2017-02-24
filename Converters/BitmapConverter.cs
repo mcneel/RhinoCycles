@@ -31,16 +31,25 @@ namespace RhinoCyclesCore.Converters
 		static readonly internal Dictionary<uint, ByteBitmap> ByteImagesNew = new Dictionary<uint, ByteBitmap>();
 		static readonly internal Dictionary<uint, FloatBitmap> FloatImagesNew = new Dictionary<uint, FloatBitmap>();
 
+		static readonly private object bytelocker = new object();
+		static readonly private object floatlocker = new object();
+
 		public static void ApplyGammaToTextures(float gamma)
 		{
-			foreach (var v in ByteImagesNew.Values)
+			lock (bytelocker)
 			{
-				v.ApplyGamma(gamma);
+				foreach (var v in ByteImagesNew.Values)
+				{
+					v.ApplyGamma(gamma);
+				}
 			}
 
-			foreach (var v in FloatImagesNew.Values)
+			lock (floatlocker)
 			{
-				v.ApplyGamma(gamma);
+				foreach (var v in FloatImagesNew.Values)
+				{
+					v.ApplyGamma(gamma);
+				}
 			}
 		}
 
@@ -379,7 +388,10 @@ namespace RhinoCyclesCore.Converters
 			if (!read)
 			{
 				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
-				ByteImagesNew[rId] = img;
+				lock (bytelocker)
+				{
+					ByteImagesNew[rId] = img;
+				}
 			}
 
 			return img;
@@ -392,7 +404,10 @@ namespace RhinoCyclesCore.Converters
 			if (!read)
 			{
 				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
-				FloatImagesNew[rId] = img;
+				lock (floatlocker)
+				{
+					FloatImagesNew[rId] = img;
+				}
 			}
 
 			return img;
