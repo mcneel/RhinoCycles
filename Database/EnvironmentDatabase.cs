@@ -44,7 +44,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void SetFloatTextureAsByteTexture(bool floatAsByte)
 		{
-			_cqBackground.m_float_as_byte = true;
+			_cqBackground.m_float_as_byte = false;
 		}
 
 		public CyclesBackground CyclesShader => _cqBackground;
