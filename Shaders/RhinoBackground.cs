@@ -210,7 +210,7 @@ namespace RhinoCyclesCore.Shaders
 					_bgEnvTexture.outs.Color.Connect(_backgroundNode.ins.Color);
 					_bgEnvTexture.Projection = TextureNode.EnvironmentProjection.Wallpaper;
 				}
-				else if (m_original_background.background_fill == BackgroundStyle.WallpaperImage)
+				else if (m_original_background.background_fill == BackgroundStyle.WallpaperImage && m_original_background.wallpaper.HasTextureImage)
 				{
 					_bgEnvTexture.outs.Color.Connect(_backgroundNode.ins.Color);
 					_bgEnvTexture.Projection = TextureNode.EnvironmentProjection.Wallpaper;

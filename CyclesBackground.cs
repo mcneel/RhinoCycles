@@ -167,6 +167,7 @@ namespace RhinoCyclesCore
 			{
 				Rhino.RhinoApp.OutputDebugString($"{file} not found, clearing and returning\n");
 				wallpaper.Clear();
+				wallpaper_solid = color1;
 				return;
 			}
 
