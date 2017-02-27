@@ -99,7 +99,7 @@ namespace RhinoCyclesCore.Shaders
 				// our main background shader. With just this, and some color != black set we should get skylighting
 				// use the bgcolor from the background (360deg) environment if it is specified, instead.
 				_backgroundNode.ins.Strength.Value = 1.0f;
-				_backgroundNode.ins.Color.Value = (m_original_background.background_environment != null ? bgcolor : color1);
+				_backgroundNode.ins.Color.Value = (m_original_background.background_environment != null && m_original_background.background_fill==BackgroundStyle.Environment? bgcolor : color1);
 
 				#region skylight disabler/enabler nodes
 
