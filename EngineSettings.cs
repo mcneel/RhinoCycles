@@ -167,25 +167,10 @@ namespace RhinoCyclesCore
 			switch (quality)
 			{
 				case AntialiasLevel.None:
-					Samples = 50;
-					LightSamplingThreshold = 0.1f;
-					break;
 				case AntialiasLevel.Draft:
-					Samples = 200;
-					DiffuseSamples = 2;
-					GlossySamples = 2;
-					TransmissionSamples = 2;
-					LightSamplingThreshold = 0.1f;
-					break;
 				case AntialiasLevel.Good:
-					Samples = 500;
-					DiffuseSamples = 3;
-					GlossySamples = 3;
-					TransmissionSamples = 3;
-					LightSamplingThreshold = 0.07f;
-					break;
 				case AntialiasLevel.High:
-					Samples = 2000;
+					Samples = 10000;
 					DiffuseSamples = 128;
 					GlossySamples = 128;
 					TransmissionSamples = 128;
