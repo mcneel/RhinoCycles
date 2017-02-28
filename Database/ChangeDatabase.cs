@@ -1390,8 +1390,6 @@ namespace RhinoCyclesCore.Database
 				}
 				previousStyle = rs.BackgroundStyle;
 				_environmentDatabase.SetGamma(PreProcessGamma);
-				_renderSettingsDatabase.SetQuality(rs.AntialiasLevel);
-				_renderEngine.Settings.SetQuality(rs.AntialiasLevel);
 			}
 		}
 
