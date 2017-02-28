@@ -1010,6 +1010,7 @@ namespace RhinoCyclesCore.Database
 		}
 
 		private uint old_gp_crc = 0;
+		private bool old_gp_enabled = false;
 		/// <summary>
 		/// Handle ground plane changes.
 		/// </summary>
@@ -1017,11 +1018,12 @@ namespace RhinoCyclesCore.Database
 		protected override void ApplyGroundPlaneChanges(CqGroundPlane gp)
 		{
 			var gpcrc = gp.Crc;
-			if (gpcrc == old_gp_crc) return;
+			if (gpcrc == old_gp_crc && old_gp_enabled == gp.Enabled) return;
 
 			Rhino.RhinoApp.OutputDebugString("ApplyGroundPlaneChanges.\n");
 
 			old_gp_crc = gpcrc;
+			old_gp_enabled = gp.Enabled;
 
 			//System.Diagnostics.Debug.WriteLine("groundplane");
 			InitialiseGroundPlane(gp);
