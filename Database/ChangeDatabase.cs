@@ -35,6 +35,7 @@ using CclObject = ccl.Object;
 using RGLight = Rhino.Geometry.Light;
 using Rhino.Geometry;
 using RhinoCyclesCore.Converters;
+using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Shaders;
 
 namespace RhinoCyclesCore.Database
@@ -121,7 +122,7 @@ namespace RhinoCyclesCore.Database
 		{
 			_renderEngine = engine;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
-			_shaderConverter = new ShaderConverter(engine.Settings);
+			_shaderConverter = new ShaderConverter();
 			_modalRenderer = modal;
 		}
 
@@ -137,7 +138,7 @@ namespace RhinoCyclesCore.Database
 			_renderEngine = engine;
 			_modalRenderer = true;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
-			_shaderConverter = new ShaderConverter(engine.Settings);
+			_shaderConverter = new ShaderConverter();
 		}
 
 		protected override void Dispose(bool isDisposing)
@@ -162,7 +163,7 @@ namespace RhinoCyclesCore.Database
 		public void UploadRenderSettingsChanges()
 		{
 			if (_renderSettingsDatabase.HasChanged)
-				_renderEngine.TriggerSamplesChanged(_renderEngine.Settings.Samples);
+				_renderEngine.TriggerSamplesChanged(RcCore.It.EngineSettings.Samples);
 		}
 
 		/// <summary>
@@ -170,6 +171,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadObjectShaderChanges()
 		{
+			Rhino.RhinoApp.OutputDebugString($"Uploading object shader changes {_shaderDatabase.ObjectShaderChanges.Count}\n");
 			foreach (var obshad in _shaderDatabase.ObjectShaderChanges)
 			{
 
@@ -541,8 +543,8 @@ namespace RhinoCyclesCore.Database
 			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
 			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
 
-			scene.Camera.SensorHeight = _renderEngine.Settings.SensorHeight;
-			scene.Camera.SensorWidth = _renderEngine.Settings.SensorWidth;
+			scene.Camera.SensorHeight = RcCore.It.EngineSettings.SensorHeight;
+			scene.Camera.SensorWidth = RcCore.It.EngineSettings.SensorWidth;
 			scene.Camera.Update();
 		}
 
@@ -819,19 +821,25 @@ namespace RhinoCyclesCore.Database
 				}
 
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
-				//System.Diagnostics.Debug.WriteLine("Added MI {0}", a.InstanceId);
 				var ob = new CyclesObject {obid = a.InstanceId, meshid = meshid, Transform = CclXformFromRhinoXform(a.Transform), matid = a.MaterialId, CastShadow = a.CastShadows};
+				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
 
 				var shaderchange = new CyclesObjectShader(a.InstanceId)
 				{
-					OldShaderHash = uint.MaxValue,
+					OldShaderHash = oldhash,
 					NewShaderHash = a.MaterialId
 				};
 
-				_shaderDatabase.AddObjectMaterialChange(shaderchange);
+				if (shaderchange.Changed)
+				{
+					Rhino.RhinoApp.OutputDebugString(
+						$"\t\tsetting material, from old {shaderchange.OldShaderHash} to new {shaderchange.NewShaderHash}\n");
 
-				_objectShaderDatabase.RecordRenderHashRelation(a.MaterialId, meshid, a.InstanceId);
-				_objectDatabase.RecordObjectIdMeshIdRelation(a.InstanceId, meshid);
+					_shaderDatabase.AddObjectMaterialChange(shaderchange);
+
+					_objectShaderDatabase.RecordRenderHashRelation(a.MaterialId, meshid, a.InstanceId);
+					_objectDatabase.RecordObjectIdMeshIdRelation(a.InstanceId, meshid);
+				}
 				_objectDatabase.AddOrUpdateObject(ob);
 			}
 		}
@@ -859,6 +867,7 @@ namespace RhinoCyclesCore.Database
 		private void HandleMaterialChangeOnObject(uint matid, uint obid)
 		{
 			var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(obid);
+			Rhino.RhinoApp.OutputDebugString($"handle material change on object {oldhash} {matid}\n");
 			// skip if no change in renderhash
 			if (oldhash != matid)
 			{
@@ -868,7 +877,7 @@ namespace RhinoCyclesCore.Database
 					OldShaderHash = oldhash
 				};
 
-				//System.Diagnostics.Debug.WriteLine("CQMat.Id: {0} meshinstanceid: {1}", mat.Id, obid);
+				Rhino.RhinoApp.OutputDebugString($"\t-> for {o.Id} old material {o.OldShaderHash} new {o.NewShaderHash}\n");
 
 				_shaderDatabase.AddObjectMaterialChange(o);
 			}
@@ -918,8 +927,9 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadShaderChanges()
 		{
+			Rhino.RhinoApp.OutputDebugString($"Uploading shader changes {_shaderDatabase.ShaderChanges.Count}\n");
 			// map shaders. key is RenderHash
-			foreach (var shader in _shaderDatabase.ShaderChanges)//m_cq_shaders)
+			foreach (var shader in _shaderDatabase.ShaderChanges)
 			{
 				if (_renderEngine.CancelRender) return;
 
@@ -937,9 +947,9 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
-		#endregion SHADERS
+#endregion SHADERS
 
-		#region GROUNDPLANE
+#region GROUNDPLANE
 
 		/// <summary>
 		/// Guid of our groundplane object.
@@ -1036,7 +1046,7 @@ namespace RhinoCyclesCore.Database
 			HandleMaterialChangeOnObject(mat.RenderHash, obid);
 		}
 
-		#endregion
+#endregion
 
 		/// <summary>
 		/// Handle dynamic object transforms
@@ -1052,7 +1062,7 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
-		#region LIGHT & SUN
+#region LIGHT & SUN
 
 		/// <summary>
 		/// Upload all light changes to the Cycles render engine

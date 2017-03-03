@@ -19,6 +19,7 @@ using System.Drawing;
 using System.Threading;
 using ccl;
 using Rhino.DocObjects;
+using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
 
 namespace RhinoCyclesCore.RenderEngines
@@ -148,13 +149,13 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (rw == null) return;
 
-			var samples = cyclesEngine.Settings.Samples;
+			var samples = RcCore.It.EngineSettings.Samples;
 
 			#region pick a render device
 
-			var renderDevice = cyclesEngine.Settings.SelectedDevice == -1
+			var renderDevice = RcCore.It.EngineSettings.SelectedDevice == -1
 				? Device.FirstCuda
-				: Device.GetDevice(cyclesEngine.Settings.SelectedDevice);
+				: Device.GetDevice(RcCore.It.EngineSettings.SelectedDevice);
 
 			#endregion
 
@@ -168,7 +169,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Samples = samples,
 				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(256, 256),
 				TileOrder = TileOrder.Center,
-				Threads = (uint)(renderDevice.IsCpu ? cyclesEngine.Settings.Threads : 0),
+				Threads = (uint)(renderDevice.IsCpu ? RcCore.It.EngineSettings.Threads : 0),
 				ShadingSystem = ShadingSystem.SVM,
 				StartResolution = renderDevice.IsCpu ? 16 : 64,
 				SkipLinearToSrgbConversion = true,
@@ -215,7 +216,7 @@ namespace RhinoCyclesCore.RenderEngines
 					var size = RenderDimension;
 
 					// lets first reset session
-					Session.Reset((uint) size.Width, (uint) size.Height, (uint) Settings.Samples);
+					Session.Reset((uint) size.Width, (uint) size.Height, (uint) RcCore.It.EngineSettings.Samples);
 					// then reset scene
 					Session.Scene.Reset();
 				}
@@ -270,7 +271,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void ChangeSamples(int samples)
 		{
-			Settings.Samples = samples;
+			RcCore.It.EngineSettings.Samples = samples;
 			Session?.SetSamples(samples);
 		}
 

@@ -18,6 +18,7 @@ using System;
 using System.Drawing;
 using ccl;
 using Rhino.Render;
+using RhinoCyclesCore.Core;
 using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCyclesCore.RenderEngines
@@ -69,15 +70,15 @@ namespace RhinoCyclesCore.RenderEngines
 			var client = cyclesEngine.Client;
 
 			var size = cyclesEngine.RenderDimension;
-			var samples = cyclesEngine.Settings.Samples;
+			var samples = RcCore.It.EngineSettings.Samples;
 
 #region pick a render device
 
-			var renderDevice = cyclesEngine.Settings.SelectedDevice == -1
+			var renderDevice = RcCore.It.EngineSettings.SelectedDevice == -1
 				? Device.FirstCuda
-				: Device.GetDevice(cyclesEngine.Settings.SelectedDevice);
+				: Device.GetDevice(RcCore.It.EngineSettings.SelectedDevice);
 
-			if (cyclesEngine.Settings.Verbose) sdd.WriteLine(
+			if (RcCore.It.EngineSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
 #endregion
 
@@ -92,7 +93,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Samples = samples,
 				TileSize = renderDevice.IsCuda ? new Size(256, 256) : new Size(32, 32),
 				TileOrder = TileOrder.HilbertSpiral,
-				Threads = (uint)(renderDevice.IsCuda ? 0 : cyclesEngine.Settings.Threads),
+				Threads = (uint)(renderDevice.IsCuda ? 0 : RcCore.It.EngineSettings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				Background = true,
 				DisplayBufferLinear = true,

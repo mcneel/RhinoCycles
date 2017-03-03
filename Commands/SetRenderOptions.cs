@@ -41,11 +41,11 @@ namespace RhinoCycles.Commands
 		{
 			var getNumber = new GetNumber();
 			getNumber.SetLowerLimit(2.0, false);
-			getNumber.SetUpperLimit(100000.0, false);
+			getNumber.SetUpperLimit(uint.MaxValue, false);
 			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.Samples);
 			getNumber.SetCommandPrompt("Set render samples");
 
-			var useCustomSettings = new OptionToggle(RcCore.It.EngineSettings.UseCustomQualitySettings, "No", "Yes");
+			var useCustomSettings = new OptionToggle(RcCore.It.EngineSettings.UseCustomSettings, "No", "Yes");
 
 			var minBounce = new OptionInteger(RcCore.It.EngineSettings.MinBounce, 0, 500);
 			var maxBounce = new OptionInteger(RcCore.It.EngineSettings.MaxBounce, 0, 500);
@@ -123,7 +123,7 @@ namespace RhinoCycles.Commands
 					case GetResult.Number:
 						RhinoApp.WriteLine($"We got: {getNumber.Number()}, {minBounce.CurrentValue}, {maxBounce.CurrentValue}");
 						RcCore.It.EngineSettings.Samples = (int)getNumber.Number();
-						RcCore.It.EngineSettings.UseCustomQualitySettings = useCustomSettings.CurrentValue;
+						RcCore.It.EngineSettings.UseCustomSettings = useCustomSettings.CurrentValue;
 						RcCore.It.EngineSettings.Seed = seed.CurrentValue;
 						RcCore.It.EngineSettings.MaxBounce = maxBounce.CurrentValue;
 						RcCore.It.EngineSettings.MinBounce = minBounce.CurrentValue;

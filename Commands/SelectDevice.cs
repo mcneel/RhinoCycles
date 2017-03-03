@@ -39,11 +39,11 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			Plugin.InitialiseCSycles();
+			(PlugIn as Plugin)?.InitialiseCSycles();
 			var getNumber = new GetInteger();
 			getNumber.SetLowerLimit(-1, false);
 			getNumber.SetUpperLimit((int)(Device.Count-1), false);
-			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.SelectedDevice);
+			getNumber.SetDefaultInteger(PlugIn.Settings.GetInteger("rc_renderdevice", -1));
 			getNumber.SetCommandPrompt($"Select device to render on (-1 for default, 0-{Device.Count - 1})");
 			var getRc = getNumber.Get();
 			if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
@@ -52,6 +52,7 @@ namespace RhinoCycles.Commands
 				var idx = getNumber.Number();
 				Device dev = idx > -1 ? Device.GetDevice(idx) : Device.FirstCuda;
 				RhinoApp.WriteLine($"User selected device {idx}: {dev}");
+				PlugIn.Settings.SetInteger("rc_renderdevice", idx);
 				RcCore.It.EngineSettings.SelectedDevice = idx;
 				return Result.Success;
 			}

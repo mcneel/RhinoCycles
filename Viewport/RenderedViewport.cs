@@ -86,7 +86,7 @@ namespace RhinoCycles.Viewport
 		{
 			_runningSerial ++;
 			_serial = _runningSerial;
-			Plugin.InitialiseCSycles();
+			(EngineSettings.RcPlugIn as RhinoCycles.Plugin)?.InitialiseCSycles();
 			_available = true;
 
 			HudPlayButtonPressed += RenderedViewport_HudPlayButtonPressed;
@@ -159,18 +159,12 @@ namespace RhinoCycles.Viewport
 				_cycles = null;
 				_modal = mre;
 
-				mre.Settings = RcCore.It.EngineSettings;
-				mre.Settings.UseInteractiveRenderer = false;
-				mre.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
-
 				var rs = new Size(w, h);
 
 				mre.RenderWindow = renderWindow;
 
 				mre.RenderDimension = rs;
 				mre.Database.RenderDimension = rs;
-
-				mre.Settings.Verbose = true;
 
 				mre.StatusTextUpdated += Mre_StatusTextUpdated;
 
@@ -202,17 +196,12 @@ namespace RhinoCycles.Viewport
 			_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 			_cycles.SamplesChanged += CyclesSamplesChanged;
 
-			_cycles.Settings = RcCore.It.EngineSettings;
-			_cycles.Settings.SetQuality(doc.RenderSettings.AntialiasLevel);
-
 			var renderSize = Rhino.Render.RenderPipeline.RenderSize(doc);
 
 			_cycles.RenderWindow = renderWindow;
 			_cycles.RenderDimension = renderSize;
 
-			_cycles.Settings.Verbose = true;
-
-			_maxSamples = _cycles.Settings.Samples;
+			_maxSamples = RcCore.It.EngineSettings.Samples;
 
 			_cycles.SetFloatTextureAsByteTexture(false); // m_cycles.Settings.RenderDeviceIsOpenCl);
 

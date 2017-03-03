@@ -22,6 +22,7 @@ using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
+using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
 using sdd = System.Diagnostics.Debug;
 
@@ -376,7 +377,7 @@ namespace RhinoCyclesCore
 
 			// don't set full 100% progress here yet, because that signals the renderwindow the end of async render
 			if (progress >= 0.9999f) progress = 1.0f;
-			if (Settings.Samples == ushort.MaxValue) progress = -1.0f;
+			if (RcCore.It.EngineSettings.Samples == ushort.MaxValue) progress = -1.0f;
 			RenderWindow?.SetProgress(status, progress);
 
 			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples>0 ? (RenderedSamples+1) : RenderedSamples));

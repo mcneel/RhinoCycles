@@ -20,6 +20,7 @@ using Rhino.DocObjects;
 using Rhino.Geometry;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
+using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Materials;
 using Light = Rhino.Render.ChangeQueue.Light;
 using Material = Rhino.DocObjects.Material;
@@ -28,12 +29,6 @@ namespace RhinoCyclesCore.Converters
 {
 	public class ShaderConverter
 	{
-
-		private readonly EngineSettings _engineSettings;
-		public ShaderConverter(EngineSettings engineSettings)
-		{
-			_engineSettings = engineSettings;
-		}
 
 		private Guid realtimDisplaMaterialId = new Guid("e6cd1973-b739-496e-ab69-32957fa48492");
 
@@ -114,7 +109,7 @@ namespace RhinoCyclesCore.Converters
 			var spotangle = 0.0;
 			var smooth = 0.0;
 			var size = 0.0f;
-			var strength = (float)(lg.Intensity * _engineSettings.PointlightFactor * enabled);
+			var strength = (float)(lg.Intensity * RcCore.It.EngineSettings.PointlightFactor * enabled);
 			var axisu = new float4(0.0f);
 			var axisv = new float4(0.0f);
 			var useMis = false;
@@ -129,7 +124,7 @@ namespace RhinoCyclesCore.Converters
 			if (lg.IsDirectionalLight)
 			{
 				lt = LightType.Distant;
-				strength = (float)(lg.Intensity * _engineSettings.SunlightFactor * enabled);
+				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.SunlightFactor * enabled);
 				//size = 0.01f;
 			}
 			else if (lg.IsSpotLight)
@@ -137,13 +132,13 @@ namespace RhinoCyclesCore.Converters
 				lt = LightType.Spot;
 				spotangle = lg.SpotAngleRadians * 2;
 				smooth = 1.0 / Math.Max(lg.HotSpot, 0.001f) - 1.0;
-				strength = (float)(lg.Intensity * _engineSettings.SpotlightFactor * enabled);
+				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.SpotlightFactor * enabled);
 			}
 			else if (lg.IsRectangularLight)
 			{
 				lt = LightType.Area;
 
-				strength = (float)(lg.Intensity * _engineSettings.ArealightFactor * enabled);
+				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.ArealightFactor * enabled);
 
 				var width = lg.Width;
 				var length = lg.Length;

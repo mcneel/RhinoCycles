@@ -37,7 +37,7 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			Plugin.InitialiseCSycles();
+			(PlugIn as Plugin)?.InitialiseCSycles();
 
 			var rhcyclesAss = Assembly.GetExecutingAssembly();
 			var csyclesAss = Assembly.GetAssembly(typeof(ccl.Client));

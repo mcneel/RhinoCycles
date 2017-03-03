@@ -64,7 +64,6 @@
     <Compile Include="Commands\ShowDeviceCapabilities.cs" />
     <Compile Include="Commands\SetDebugOptions.cs" />
     <Compile Include="Commands\SetThreads.cs" />
-    <Compile Include="Commands\ToggleShaders.cs" />
     <Compile Include="Commands\SetRenderOptions.cs" />
     <Compile Include="Commands\ListDevices.cs" />
     <Compile Include="Plugin.cs" />

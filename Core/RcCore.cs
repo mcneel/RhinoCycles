@@ -66,10 +66,12 @@ namespace RhinoCyclesCore.Core
 
 		public string AppPath { get; set; }
 
-		public EngineSettings EngineSettings { get; set; }
+		public EngineSettings EngineSettings => _engineSettings;
 
+		private readonly EngineSettings _engineSettings;
 		private RcCore() {
-			EngineSettings = new EngineSettings();
+			if(_engineSettings == null)
+				_engineSettings = new EngineSettings();
 		}
 
 		public static RcCore It { get; } = new RcCore();

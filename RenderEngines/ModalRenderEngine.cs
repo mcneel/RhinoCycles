@@ -67,7 +67,7 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			if (Session.IsPaused()) return;
 			// after first 10 frames have been rendered only update every third.
-			if (sample > 10 && sample < (Settings.Samples-2) && sample % 3 != 0) return;
+			if (sample > 10 && sample < (RcCore.It.EngineSettings.Samples-2) && sample % 3 != 0) return;
 			if (CancelRender) return;
 			if (State != State.Rendering) return;
 			//lock (DisplayLock)
@@ -122,16 +122,16 @@ namespace RhinoCyclesCore.RenderEngines
 			if (rw == null) return; // we don't have a window to write to...
 
 			var size = cyclesEngine.RenderDimension;
-			var samples = cyclesEngine.Settings.Samples;
+			var samples = RcCore.It.EngineSettings.Samples;
 			maxSamples = samples;
 
 			#region pick a render device
 
-			var renderDevice = cyclesEngine.Settings.SelectedDevice == -1
+			var renderDevice = RcCore.It.EngineSettings.SelectedDevice == -1
 				? Device.FirstCuda
-				: Device.GetDevice(cyclesEngine.Settings.SelectedDevice);
+				: Device.GetDevice(RcCore.It.EngineSettings.SelectedDevice);
 
-			if (cyclesEngine.Settings.Verbose) sdd.WriteLine(
+			if (RcCore.It.EngineSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
 			#endregion
 
@@ -144,7 +144,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Samples = samples,
 				TileSize = renderDevice.IsGpu ? new Size(256, 256) : new Size(32, 32),
 				TileOrder = TileOrder.Center,
-				Threads = (uint)(renderDevice.IsGpu ? 0 : cyclesEngine.Settings.Threads),
+				Threads = (uint)(renderDevice.IsGpu ? 0 : RcCore.It.EngineSettings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				Background = true,
 				DisplayBufferLinear = true,

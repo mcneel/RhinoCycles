@@ -24,26 +24,5 @@ namespace RhinoCyclesCore
 		/// Get or set the resolution for rendering.
 		/// </summary>
 		public Size RenderDimension { get; set; }
-
-		/// <summary>
-		/// Hold instance specific EngineSettings.
-		/// </summary>
-		private EngineSettings m_settings;
-
-		/// <summary>
-		/// Get or set EngineSettings for this instance. If you set
-		/// EngineSettings a deep-copy will be made.
-		/// </summary>
-		public EngineSettings Settings
-		{
-			get
-			{
-				return m_settings ?? (m_settings = new EngineSettings());
-			}
-			set
-			{
-				m_settings = new EngineSettings(value);
-			}
-		}
 	}
 }

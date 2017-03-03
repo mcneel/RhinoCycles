@@ -65,5 +65,10 @@ namespace RhinoCyclesCore
 		/// Get/set the new shader hash for object in scene.
 		/// </summary>
 		public uint NewShaderHash { get; set; }
+
+		/// <summary>
+		/// True if old and new shaders differ
+		/// </summary>
+		public bool Changed => OldShaderHash != NewShaderHash;
 	}
 }

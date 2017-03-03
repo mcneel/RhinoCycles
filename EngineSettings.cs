@@ -17,12 +17,15 @@ limitations under the License.
 using System;
 using ccl;
 using Rhino;
+using Rhino.PlugIns;
 using Rhino.Render;
 
 namespace RhinoCyclesCore
 {
 	public class EngineSettings
 	{
+		public static readonly PlugIn RcPlugIn = PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"));
+
 		public EngineSettings()
 		{
 			DefaultSettings();
@@ -30,74 +33,10 @@ namespace RhinoCyclesCore
 
 		public bool IgnoreQualityChanges { get; set; }
 
-		public EngineSettings(EngineSettings es)
-		{
-			Verbose = es.Verbose;
-			ShowTime = es.ShowTime;
-			UseSimpleShaders = es.UseSimpleShaders;
-			IntegratorMethod = es.IntegratorMethod;
-			UseCustomQualitySettings = es.UseCustomQualitySettings;
-
-			SpotlightFactor = es.SpotlightFactor;
-			PointlightFactor = es.PointlightFactor;
-			SunlightFactor = es.SunlightFactor;
-			ArealightFactor = es.ArealightFactor;
-			PolishFactor = es.PolishFactor;
-
-			UseInteractiveRenderer = es.UseInteractiveRenderer;
-			UseSkyLight = es.UseSkyLight;
-
-			Threads = es.Threads;
-			BumpDistance = es.BumpDistance;
-			SelectedDevice = es.SelectedDevice;
-
-			Samples = es.Samples;
-			Seed = es.Seed;
-
-			MinBounce = es.MinBounce;
-			MaxBounce = es.MaxBounce;
-
-			NoCaustics = es.NoCaustics;
-
-			MaxDiffuseBounce = es.MaxDiffuseBounce;
-			MaxGlossyBounce = es.MaxGlossyBounce;
-			MaxTransmissionBounce = es.MaxTransmissionBounce;
-			MaxVolumeBounce = es.MaxVolumeBounce;
-
-			TransparentMinBounce = es.TransparentMinBounce;
-			TransparentMaxBounce = es.TransparentMaxBounce;
-			TransparentShadows = es.TransparentShadows;
-
-			/* the following sample settings are used when branched path integrator is used. */
-			AaSamples = es.AaSamples;
-			DiffuseSamples = es.DiffuseSamples;
-			GlossySamples = es.GlossySamples;
-			TransmissionSamples = es.TransmissionSamples;
-			AoSamples = es.AoSamples;
-			MeshLightSamples = es.MeshLightSamples;
-			SubsurfaceSamples = es.SubsurfaceSamples;
-			VolumeSamples = es.VolumeSamples;
-
-			SensorWidth = es.SensorWidth;
-			SensorHeight = es.SensorHeight;
-
-			SamplingPattern = es.SamplingPattern;
-			FilterGlossy = es.FilterGlossy;
-			SampleClampDirect = es.SampleClampDirect;
-			SampleClampIndirect = es.SampleClampIndirect;
-			LightSamplingThreshold = es.LightSamplingThreshold;
-			SampleAllLights = es.SampleAllLights;
-			SampleAllLightsIndirect = es.SampleAllLightsIndirect;
-			
-		}
-
 		public void DefaultSettings()
 		{
-			Verbose = false;
 			ShowTime = true;
-			UseSimpleShaders = false;
 			IntegratorMethod = IntegratorMethod.Path;
-			UseCustomQualitySettings = false;
 
 			SpotlightFactor = 40.0f;
 			PointlightFactor = 40.0f;
@@ -108,11 +47,8 @@ namespace RhinoCyclesCore
 			UseInteractiveRenderer = true;
 			UseSkyLight = false;
 
-			Threads = Math.Max(1, Environment.ProcessorCount - 2);
 			BumpDistance = 0.1f;
-			SelectedDevice = -1;
 
-			Samples = 100;
 			Seed = 128;
 
 			MinBounce = 3;
@@ -153,7 +89,7 @@ namespace RhinoCyclesCore
 
 		public void SetQuality(PreviewSceneQuality quality)
 		{
-			Samples = 500;
+			//Samples = 500;
 			GlossySamples = 2;
 			TransmissionSamples = 2;
 		}
@@ -162,7 +98,7 @@ namespace RhinoCyclesCore
 		{
 			if (IgnoreQualityChanges) return;
 
-			if (UseCustomQualitySettings) return;
+			if (UseCustomSettings) return;
 
 			switch (quality)
 			{
@@ -170,7 +106,7 @@ namespace RhinoCyclesCore
 				case AntialiasLevel.Draft:
 				case AntialiasLevel.Good:
 				case AntialiasLevel.High:
-					Samples = 10000;
+					//Samples = 10000;
 					DiffuseSamples = 128;
 					GlossySamples = 128;
 					TransmissionSamples = 128;
@@ -196,12 +132,20 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		/// <summary>
-		/// Set to true if rhino shader conversion should be skipped.
-		/// </summary>
-		public bool UseSimpleShaders { get; set; }
-		public bool SaveDebugImages { get; set; }
-		public bool Verbose { get; set; }
+		public bool SaveDebugImagesDefault => false;
+
+		public bool SaveDebugImages
+		{
+			get { return RcPlugIn.Settings.GetBool("rc_savedebugimages", SaveDebugImagesDefault); }
+			set { RcPlugIn.Settings.SetBool("rc_savedebugimages", value); }
+		}
+
+		public bool VerboseDefault => false;
+		public bool Verbose
+		{
+			get { return RcPlugIn.Settings.GetBool("rc_verbose", VerboseDefault); }
+			set { RcPlugIn.Settings.SetBool("rc_verbose", value); }
+		}
 		public bool ShowTime { get; set; }
 		public bool UseInteractiveRenderer { get; set; }
 		public bool UseSkyLight { get; set; }
@@ -211,9 +155,19 @@ namespace RhinoCyclesCore
 		public float ArealightFactor { get; set; }
 		public float PolishFactor { get; set; }
 
-		public int Threads { get; set; }
+		public int ThreadsDefault => Math.Max(1, Environment.ProcessorCount - 2);
+		public int Threads
+		{
+			get { return RcPlugIn.Settings.GetInteger("rc_threads", ThreadsDefault); }
+			set { RcPlugIn.Settings.SetInteger("rc_threads", value); }
+		}
 		public float BumpDistance { get; set; }
-		public int SelectedDevice { get; set; }
+		public int SelectedDeviceDefault => -1;
+		public int SelectedDevice
+		{
+			get { return RcPlugIn.Settings.GetInteger("rc_selecteddevice", SelectedDeviceDefault); }
+			set { RcPlugIn.Settings.SetInteger("rc_selecteddevice", value); }
+		}
 
 		public IntegratorMethod IntegratorMethod { get; set; }
 		public int MinBounce { get; set; }
@@ -231,7 +185,13 @@ namespace RhinoCyclesCore
 		public int MeshLightSamples { get; set; }
 		public int SubsurfaceSamples { get; set; }
 		public int VolumeSamples { get; set; }
-		public int Samples { get; set; }
+		public int SamplesDefault => 10000;
+		public int Samples
+		{
+			get { return RcPlugIn.Settings.GetInteger("rc_samples", SamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("rc_samples", value); }
+		}
+
 		public int Seed { get; set; }
 		public SamplingPattern SamplingPattern { get; set; }
 		public float FilterGlossy { get; set; }
@@ -245,7 +205,19 @@ namespace RhinoCyclesCore
 		public int TransparentMinBounce { get; set; }
 		public int TransparentMaxBounce { get; set; }
 		public bool TransparentShadows { get; set; }
-		public bool UseCustomQualitySettings { get; set; }
+
+		public bool UseCustomSettingsDefault => true;
+		public bool UseCustomSettings
+		{
+			get
+			{
+					return RcPlugIn.Settings.GetBool("rc_usecustomsettings", UseCustomSettingsDefault);
+			}
+			set
+			{
+				RcPlugIn.Settings.SetBool("rc_usecustomsettings", value);
+			}
+		}
 
 	}
 }
