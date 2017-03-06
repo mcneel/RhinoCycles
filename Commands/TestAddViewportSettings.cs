@@ -23,6 +23,7 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
+#if ITSDONE
 			var vpi = ViewportInfo.FromRhinoViewport(doc.Views.ActiveView.ActiveViewport);
 
 			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
@@ -45,6 +46,9 @@ namespace RhinoCycles.Commands
 				nvud.Dictionary.Set("test", 1);
 				vpi.UserData.Add(nvud);
 			}
+#else
+			RhinoApp.WriteLine("waiting for lessons on userdata usage");
+#endif
 
 			return Result.Success;
 		}
