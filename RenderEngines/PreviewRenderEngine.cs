@@ -70,7 +70,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var client = cyclesEngine.Client;
 
 			var size = cyclesEngine.RenderDimension;
-			var samples = RcCore.It.EngineSettings.Samples;
+			var samples = 500;
 
 #region pick a render device
 
@@ -91,8 +91,8 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = renderDevice.IsCuda ? new Size(256, 256) : new Size(32, 32),
-				TileOrder = TileOrder.HilbertSpiral,
+				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(256, 256),
+				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsCuda ? 0 : RcCore.It.EngineSettings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				Background = true,

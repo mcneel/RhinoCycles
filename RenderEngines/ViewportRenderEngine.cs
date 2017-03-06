@@ -167,7 +167,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(256, 256),
+				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(RcCore.It.EngineSettings.TileX, RcCore.It.EngineSettings.TileY),
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsCpu ? RcCore.It.EngineSettings.Threads : 0),
 				ShadingSystem = ShadingSystem.SVM,
