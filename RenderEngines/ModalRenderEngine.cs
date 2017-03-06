@@ -67,39 +67,28 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			if (Session.IsPaused()) return;
 			// after first 10 frames have been rendered only update every third.
-			if (sample > 10 && sample < (RcCore.It.EngineSettings.Samples-2) && sample % 3 != 0) return;
+			if (sample > 10 && sample < (RcCore.It.EngineSettings.Samples - 2) && sample % 3 != 0) return;
 			if (CancelRender) return;
 			if (State != State.Rendering) return;
-			//lock (DisplayLock)
-			//{
-				//if (Session.Scene.TryLock())
-				//{
-					// copy display buffer data into ccycles pixel buffer
-					Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
-					// copy stuff into renderwindow dib
-					using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
-					{
-						if (CancelRender) return;
-						if (channel != null)
-						{
-							if (CancelRender) return;
-							var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
-							var size = RenderDimension;
-							var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
-							if (CancelRender) return;
-							channel.SetValues(rect, size, pixelbuffer);
-						}
-					}
-					SaveRenderedBuffer(sample);
-					//PassRendered?.Invoke(this, new PassRenderedEventArgs(sample, View));
+			// copy display buffer data into ccycles pixel buffer
+			Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
+			using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
+			{
+				if (CancelRender) return;
+				if (channel != null)
+				{
+					if (CancelRender) return;
+					var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
+					var size = RenderDimension;
+					var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
+					if (CancelRender) return;
+					channel.SetValues(rect, size, pixelbuffer);
+				}
+			}
+			SaveRenderedBuffer(sample);
 
-					if(CancelRender || sample >= maxSamples) Session.Cancel("done");
+			if (CancelRender || sample >= maxSamples) Session.Cancel("done");
 
-					//Session.Scene.Unlock();
-					//sdd.WriteLine(string.Format("display update, sample {0}", sample));
-					// now signal whoever is interested
-				//}
-			//}
 		}
 
 		private void MRE_Database_ViewChanged(object sender, Database.ChangeDatabase.ViewChangedEventArgs e)
