@@ -56,6 +56,7 @@
       <Link>Properties\version.cs</Link>
     </Compile>
     <Compile Include="Commands\ChangeSamples.cs" />
+    <Compile Include="Commands\TestAddViewportSettings.cs" />
     <Compile Include="Commands\TestSetBumpDistance.cs" />
     <Compile Include="Commands\TestSaveDebugImagesToggle.cs" />
     <Compile Include="Commands\ShowInfo.cs" />
@@ -67,6 +68,7 @@
     <Compile Include="Commands\SetRenderOptions.cs" />
     <Compile Include="Commands\ListDevices.cs" />
     <Compile Include="Plugin.cs" />
+    <Compile Include="Settings\ViewportSettings.cs" />
     <Compile Include="Viewport\RenderedViewport.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>

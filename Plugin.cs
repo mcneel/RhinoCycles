@@ -86,9 +86,6 @@ namespace RhinoCycles
 				{
 					CSycles.initialise();
 					RcCore.It.Initialised = true;
-					RcCore.It.EngineSettings.SelectedDevice = Settings.GetInteger("rc_renderdevice", -1);
-					RcCore.It.EngineSettings.Samples = Settings.GetInteger("rc_samples", 10000);
-					RcCore.It.EngineSettings.UseCustomSettings = Settings.GetBool("rc_usecustomsettings", false);
 				}
 			}
 		}
