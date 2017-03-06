@@ -558,6 +558,8 @@ namespace RhinoCyclesCore.Database
 		{
 			if (!IsPreview && !viewInfo.Viewport.Id.Equals(ViewId)) return;
 
+			_environmentDatabase.BackgroundWallpaper(viewInfo, previousScaleBackgroundToFit);
+
 			_currentViewInfo = viewInfo;
 
 			var vp = viewInfo.Viewport;
@@ -1382,17 +1384,18 @@ namespace RhinoCyclesCore.Database
 
 
 		BackgroundStyle previousStyle = BackgroundStyle.SolidColor;
+		private bool previousScaleBackgroundToFit = false;
 		protected override void ApplyRenderSettingsChanges(RenderSettings rs)
 		{
 			if (rs != null)
 			{
 				_cameraDatabase.HandleBlur(rs);
 				_environmentDatabase.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
-				if (previousStyle!=BackgroundStyle.Environment && rs.BackgroundStyle == BackgroundStyle.Environment)
+				if (rs.BackgroundStyle == BackgroundStyle.Environment)
 				{
 					UpdateAllEnvironments(RenderEnvironment.Usage.Background);
 				}
-				else if (previousStyle!=BackgroundStyle.WallpaperImage && rs.BackgroundStyle == BackgroundStyle.WallpaperImage)
+				else if (rs.BackgroundStyle == BackgroundStyle.WallpaperImage)
 				{
 					var view = GetQueueView();
 					var y = string.IsNullOrEmpty(view.WallpaperFilename);
@@ -1400,6 +1403,7 @@ namespace RhinoCyclesCore.Database
 						$"view has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}\n");
 					_environmentDatabase.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
 				}
+				previousScaleBackgroundToFit = rs.ScaleBackgroundToFit;
 				previousStyle = rs.BackgroundStyle;
 				_environmentDatabase.SetGamma(PreProcessGamma);
 			}
