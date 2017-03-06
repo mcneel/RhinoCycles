@@ -136,6 +136,13 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetBool("rc_verbose", value); }
 		}
 
+		public bool ShowMaxPassesDefault = false;
+		public bool ShowMaxPasses
+		{
+			get { return RcPlugIn.Settings.GetBool("rc_maxpasses", ShowMaxPassesDefault); }
+			set { RcPlugIn.Settings.SetBool("rc_maxpasses", value); }
+		}
+
 		public float SpotlightFactorDefault => 40.0f;
 		public float SpotlightFactor
 		{

@@ -406,7 +406,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool HudShowMaxPasses()
 		{
-			return false;
+			return RcCore.It.EngineSettings.ShowMaxPasses;
 		}
 
 		public override bool HudShowPasses()

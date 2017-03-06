@@ -45,10 +45,13 @@ namespace RhinoCycles.Commands
 			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.Samples);
 			getNumber.SetCommandPrompt("Set render samples");
 
+			var showMaxPasses = new OptionToggle(RcCore.It.EngineSettings.ShowMaxPasses, "HideMaxPasses", "ShowMaxPasses");
+
 			var minBounce = new OptionInteger(RcCore.It.EngineSettings.MinBounce, 0, 500);
 			var maxBounce = new OptionInteger(RcCore.It.EngineSettings.MaxBounce, 0, 500);
 			var tileX = new OptionInteger(RcCore.It.EngineSettings.TileX, 0, 10000);
 			var tileY = new OptionInteger(RcCore.It.EngineSettings.TileY, 0, 10000);
+
 
 			var maxDiffuseBounce = new OptionInteger(RcCore.It.EngineSettings.MaxDiffuseBounce, 0, 200);
 			var maxGlossyBounce = new OptionInteger(RcCore.It.EngineSettings.MaxGlossyBounce, 0, 200);
@@ -80,6 +83,7 @@ namespace RhinoCycles.Commands
 			var sampleAllLights = new OptionToggle(RcCore.It.EngineSettings.SampleAllLights, "no", "yes");
 			var sampleAllLightsIndirect = new OptionToggle(RcCore.It.EngineSettings.SampleAllLightsIndirect, "no", "yes");
 
+			getNumber.AddOptionToggle("show_max_passes", ref showMaxPasses);
 			getNumber.AddOptionInteger("min_bounces", ref minBounce);
 			getNumber.AddOptionInteger("max_bounces", ref maxBounce);
 			getNumber.AddOptionInteger("tile_x", ref tileX);
@@ -123,6 +127,7 @@ namespace RhinoCycles.Commands
 					case GetResult.Number:
 						RhinoApp.WriteLine($"We got: {getNumber.Number()}, {minBounce.CurrentValue}, {maxBounce.CurrentValue}");
 						RcCore.It.EngineSettings.Samples = (int)getNumber.Number();
+						RcCore.It.EngineSettings.ShowMaxPasses = showMaxPasses.CurrentValue;
 						RcCore.It.EngineSettings.Seed = seed.CurrentValue;
 						RcCore.It.EngineSettings.MaxBounce = maxBounce.CurrentValue;
 						RcCore.It.EngineSettings.MinBounce = minBounce.CurrentValue;
