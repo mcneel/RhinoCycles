@@ -73,9 +73,6 @@ namespace RhinoCycles.Commands
 			var transparentMaxBounce = new OptionInteger(RcCore.It.EngineSettings.TransparentMaxBounce, 0, 200);
 			var transparentShadows = new OptionToggle(RcCore.It.EngineSettings.TransparentShadows, "NoTransparentShadows", "TransparentShadows");
 
-			var branched = new OptionToggle(RcCore.It.EngineSettings.IntegratorMethod==IntegratorMethod.BranchedPath, "Path", "BranchedPath");
-
-			var samplingPattern = new OptionToggle(RcCore.It.EngineSettings.SamplingPattern == SamplingPattern.CMJ, "Sobol", "CMJ");
 			var filterGlossy = new OptionDouble(RcCore.It.EngineSettings.FilterGlossy, 0.0, 100.0);
 			var sampleClampDirect = new OptionDouble(RcCore.It.EngineSettings.SampleClampDirect, 0.0, 100.0);
 			var sampleClampIndirect = new OptionDouble(RcCore.It.EngineSettings.SampleClampIndirect, 0.0, 100.0);
@@ -106,11 +103,9 @@ namespace RhinoCycles.Commands
 			getNumber.AddOptionDouble("sensor_width", ref sensorWidth);
 			getNumber.AddOptionDouble("sensor_height", ref sensorHeight);
 
-			getNumber.AddOptionToggle("integrator_method", ref branched);
 
 			getNumber.AddOptionInteger("seed", ref seed, "Seed to use for sampling distribution");
 
-			getNumber.AddOptionToggle("sampling_pattern", ref samplingPattern);
 			getNumber.AddOptionDouble("filter_glossy", ref filterGlossy);
 			getNumber.AddOptionDouble("sample_clamp_direct", ref sampleClampDirect);
 			getNumber.AddOptionDouble("sample_clamp_indirect", ref sampleClampIndirect);
@@ -146,8 +141,6 @@ namespace RhinoCycles.Commands
 						RcCore.It.EngineSettings.GlossySamples = glossySamples.CurrentValue;
 						RcCore.It.EngineSettings.SensorWidth = (float)sensorWidth.CurrentValue;
 						RcCore.It.EngineSettings.SensorHeight = (float)sensorHeight.CurrentValue;
-						RcCore.It.EngineSettings.IntegratorMethod = branched.CurrentValue ? IntegratorMethod.BranchedPath : IntegratorMethod.Path;
-						RcCore.It.EngineSettings.SamplingPattern = SamplingPattern.CMJ;
 						RcCore.It.EngineSettings.FilterGlossy = (float)filterGlossy.CurrentValue;
 						RcCore.It.EngineSettings.SampleClampDirect = (float)sampleClampDirect.CurrentValue;
 						RcCore.It.EngineSettings.SampleClampIndirect = (float)sampleClampIndirect.CurrentValue;

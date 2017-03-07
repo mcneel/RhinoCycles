@@ -39,61 +39,61 @@ namespace RhinoCyclesCore
 			SamplingPattern = SamplingPattern.CMJ;
 
 			// persisted settings
-			SaveDebugImages = SaveDebugImagesDefault;
-			Verbose = VerboseDefault;
+			SaveDebugImages = SaveDebugImages;
+			Verbose = Verbose;
 
-			SpotlightFactor = SpotlightFactorDefault;
-			PointlightFactor = PointlightFactorDefault;
-			SunlightFactor = SunlightFactorDefault;
-			ArealightFactor = ArealightFactorDefault;
-			PolishFactor = PolishFactorDefault;
+			SpotlightFactor = SpotlightFactor;
+			PointlightFactor = PointlightFactor;
+			SunlightFactor = SunlightFactor;
+			ArealightFactor = ArealightFactor;
+			PolishFactor = PolishFactor;
 
-			Threads = ThreadsDefault;
-			BumpDistance = BumpDistanceDefault;
+			Threads = Threads;
+			BumpDistance = BumpDistance;
 
-			SelectedDevice = SelectedDeviceDefault;
+			SelectedDevice = SelectedDevice;
 
-			MinBounce = MinBounceDefault;
-			MaxBounce = MaxBounceDefault;
+			MinBounce = MinBounce;
+			MaxBounce = MaxBounce;
 
-			NoCaustics = NoCausticsDefault;
+			NoCaustics = NoCaustics;
 
-			MaxDiffuseBounce = MaxDiffuseBounceDefault;
-			MaxGlossyBounce = MaxGlossyBounceDefault;
-			MaxTransmissionBounce = MaxTransmissionBounceDefault;
+			MaxDiffuseBounce = MaxDiffuseBounce;
+			MaxGlossyBounce = MaxGlossyBounce;
+			MaxTransmissionBounce = MaxTransmissionBounce;
 
-			MaxVolumeBounce = MaxVolumeBounceDefault;
+			MaxVolumeBounce = MaxVolumeBounce;
 
-			AaSamples = AaSamplesDefault;
+			AaSamples = AaSamples;
 
-			DiffuseSamples = DiffuseSamplesDefault;
-			GlossySamples = GlossySamplesDefault;
-			TransmissionSamples = TransmissionSamplesDefault;
+			DiffuseSamples = DiffuseSamples;
+			GlossySamples = GlossySamples;
+			TransmissionSamples = TransmissionSamples;
 			
-			AoSamples = AoSamplesDefault;
+			AoSamples = AoSamples;
 			
-			MeshLightSamples = MeshLightSamplesDefault;
-			SubsurfaceSamples = SubsurfaceSamplesDefault;
-			VolumeSamples = VolumeSamplesDefault;
+			MeshLightSamples = MeshLightSamples;
+			SubsurfaceSamples = SubsurfaceSamples;
+			VolumeSamples = VolumeSamples;
 
-			Samples = SamplesDefault;
-			Seed = SeedDefault;
+			Samples = Samples;
+			Seed = Seed;
 
-			FilterGlossy = FilterGlossyDefault;
+			FilterGlossy = FilterGlossy;
 
-			SampleClampDirect = SampleClampDirectDefault;
-			SampleClampIndirect = SampleClampIndirectDefault;
-			LightSamplingThreshold = LightSamplingThresholdDefault;
+			SampleClampDirect = SampleClampDirect;
+			SampleClampIndirect = SampleClampIndirect;
+			LightSamplingThreshold = LightSamplingThreshold;
 
-			SampleAllLights = SampleAllLightsDefault;
-			SampleAllLightsIndirect = SampleAllLightsIndirectDefault;
+			SampleAllLights = SampleAllLights;
+			SampleAllLightsIndirect = SampleAllLightsIndirect;
 
-			SensorWidth = SensorWidthDefault;
-			SensorHeight = SensorHeightDefault;
+			SensorWidth = SensorWidth;
+			SensorHeight = SensorHeight;
 
-			TransparentMinBounce = TransparentMinBounceDefault;
-			TransparentMaxBounce = TransparentMaxBounceDefault;
-			TransparentShadows = TransparentShadowsDefault;
+			TransparentMinBounce = TransparentMinBounce;
+			TransparentMaxBounce = TransparentMaxBounce;
+			TransparentShadows = TransparentShadows;
 		}
 
 		public void SetQuality(PreviewSceneQuality quality)
