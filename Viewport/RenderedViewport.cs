@@ -154,7 +154,6 @@ namespace RhinoCycles.Viewport
 
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
-			_started = true;
 			if (forCapture)
 			{
 				ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo);
@@ -305,6 +304,7 @@ namespace RhinoCycles.Viewport
 		void CyclesRenderStarted(object sender, ViewportRenderEngine.RenderStartedEventArgs e)
 		{
 			_available = false;
+			_started = true;
 		}
 
 		public void ChangeSamples(int samples)
