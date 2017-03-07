@@ -506,21 +506,17 @@ namespace RhinoCyclesCore
 				System.Diagnostics.Debug.Assert(Session != null);
 
 				StopTheRenderer();
-				Session?.Destroy();
 			}
 		}
 
 		public void Pause()
 		{
 			State = State.Waiting;
-			// TODO: specialisation for ViewportRenderEngine, not pausing session: Session?.SetPause(true);
 		}
 
 		public void Continue()
 		{
 			State = State.Rendering;
-			// TODO: specialisation for ViewportRenderEngine, not pausing session: Session?.SetPause(true);
-			//Session?.SetPause(false);
 		}
 
 		private void StopTheRenderer()

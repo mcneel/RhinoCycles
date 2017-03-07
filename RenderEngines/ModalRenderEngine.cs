@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Drawing;
+using System.Threading;
 using ccl;
 using Rhino;
 using Rhino.DocObjects;
@@ -57,7 +58,7 @@ namespace RhinoCyclesCore.RenderEngines
 			m_update_render_tile_callback = UpdateRenderTileCallback;
 			m_write_render_tile_callback = WriteRenderTileCallback;
 			m_test_cancel_callback = null;
-			m_display_update_callback = null; //DisplayUpdateHandler;
+			m_display_update_callback = null;
 
 			CSycles.log_to_stdout(false);
 
@@ -165,7 +166,19 @@ namespace RhinoCyclesCore.RenderEngines
 			// then reset scene
 			cyclesEngine.Session.Scene.Reset();
 			// and actually start
-			while (cyclesEngine.Session.Sample()) {}
+			bool stillrendering = true;
+			while (stillrendering)
+			{
+				if (cyclesEngine.IsRendering)
+				{
+					stillrendering = cyclesEngine.Session.Sample();
+				}
+				else
+				{
+					Thread.Sleep(100);
+				}
+				if (cyclesEngine.IsStopped) break;
+			}
 
 			cyclesEngine.CancelRender = true;
 			#endregion
@@ -198,13 +211,11 @@ namespace RhinoCyclesCore.RenderEngines
 		public void ResumeRendering()
 		{
 			State = State.Rendering;
-			Session.SetPause(false);
 		}
 
 		public void PauseRendering()
 		{
 			State = State.Waiting;
-			Session.SetPause(true);
 		}
 	}
 
