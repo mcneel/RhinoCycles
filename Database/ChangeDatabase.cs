@@ -558,7 +558,11 @@ namespace RhinoCyclesCore.Database
 		{
 			if (!IsPreview && !viewInfo.Viewport.Id.Equals(ViewId)) return;
 
-			_environmentDatabase.BackgroundWallpaper(viewInfo, previousScaleBackgroundToFit);
+			if (_wallpaperInitialized)
+			{
+				_environmentDatabase.SetGamma(PreProcessGamma);
+				_environmentDatabase.BackgroundWallpaper(viewInfo, _previousScaleBackgroundToFit);
+			}
 
 			_currentViewInfo = viewInfo;
 
@@ -1383,13 +1387,14 @@ namespace RhinoCyclesCore.Database
 		}
 
 
-		BackgroundStyle previousStyle = BackgroundStyle.SolidColor;
-		private bool previousScaleBackgroundToFit = false;
+		private bool _previousScaleBackgroundToFit = false;
+		private bool _wallpaperInitialized = false;
 		protected override void ApplyRenderSettingsChanges(RenderSettings rs)
 		{
 			if (rs != null)
 			{
 				_cameraDatabase.HandleBlur(rs);
+				_environmentDatabase.SetGamma(PreProcessGamma);
 				_environmentDatabase.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
 				if (rs.BackgroundStyle == BackgroundStyle.Environment)
 				{
@@ -1402,10 +1407,9 @@ namespace RhinoCyclesCore.Database
 					Rhino.RhinoApp.OutputDebugString(
 						$"view has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}\n");
 					_environmentDatabase.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
+					_wallpaperInitialized = true;
 				}
-				previousScaleBackgroundToFit = rs.ScaleBackgroundToFit;
-				previousStyle = rs.BackgroundStyle;
-				_environmentDatabase.SetGamma(PreProcessGamma);
+				_previousScaleBackgroundToFit = rs.ScaleBackgroundToFit;
 			}
 		}
 
