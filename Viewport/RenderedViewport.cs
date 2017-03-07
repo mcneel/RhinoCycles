@@ -78,6 +78,7 @@ namespace RhinoCycles.Viewport
 		private ModalRenderEngine _modal;
 
 		private DateTime _startTime;
+		private DateTime _lastTime;
 		private int _samples = -1;
 		private int _maxSamples;
 		private string _status = "";
@@ -126,6 +127,7 @@ namespace RhinoCycles.Viewport
 
 		private void RenderedViewport_HudPlayButtonPressed(object sender, EventArgs e)
 		{
+			_startTime = _startTime + (DateTime.UtcNow - _lastTime);
 			_cycles?.Continue();
 		}
 
@@ -209,6 +211,7 @@ namespace RhinoCycles.Viewport
 			_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
 			_startTime = DateTime.UtcNow;
+			_lastTime = _startTime;
 
 			_cycles.StartRenderThread(_cycles.Renderer, $"A cool Cycles viewport rendering thread {_serial}");
 
@@ -264,6 +267,7 @@ namespace RhinoCycles.Viewport
 				_crc = ComputeViewportCrc(e.View);
 				_frameAvailable = true;
 				_available = true;
+				_lastTime = DateTime.UtcNow;
 
 				SignalRedraw();
 			}
@@ -308,6 +312,10 @@ namespace RhinoCycles.Viewport
 			if (!(_maxSamples < samples && _samples < samples))
 			{
 				_startTime = DateTime.UtcNow;
+			}
+			else
+			{
+				_startTime = _startTime + (DateTime.UtcNow - _lastTime);
 			}
 			_maxSamples = samples;
 			_cycles?.ChangeSamples(samples);
