@@ -230,6 +230,8 @@ namespace RhinoCyclesCore.RenderEngines
 			}
 
 			cyclesEngine.Session.EndRun();
+
+			cyclesEngine.Session.Destroy();
 		}
 
 		public event EventHandler Synchronized;
