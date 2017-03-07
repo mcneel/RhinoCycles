@@ -185,6 +185,7 @@ namespace RhinoCycles.Viewport
 
 			_available = false; // the renderer hasn't started yet. It'll tell us when it has.
 			_frameAvailable = false;
+			_crc = 0;
 
 			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
 
@@ -236,27 +237,31 @@ namespace RhinoCycles.Viewport
 #endif
 				_available = true;
 				_frameAvailable = true;
+				_crc = 0;
 			}
 		}
 
 		public override bool IsFrameBufferAvailable(ViewInfo view)
 		{
+			var crc = ComputeViewportCrc(view);
 			if (_cycles != null)
 			{
-				return _frameAvailable;
+				return _frameAvailable && _crc == crc;
 			}
 			if (_modal != null)
 			{
-				return _frameAvailable;
+				return _frameAvailable && _crc == crc;
 			}
 
 			return false;
 		}
 
+		private uint _crc = 0;
 		void CyclesPassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
 			if (_cycles?.IsRendering ?? false)
 			{
+				_crc = ComputeViewportCrc(e.View);
 				_frameAvailable = true;
 				_available = true;
 
@@ -268,6 +273,7 @@ namespace RhinoCycles.Viewport
 		{
 			_samples = -1;
 			_frameAvailable = false;
+			_crc = 0;
 			IsSynchronizing = true;
 		}
 
@@ -275,6 +281,7 @@ namespace RhinoCycles.Viewport
 		{
 			_startTime = DateTime.UtcNow;
 			_frameAvailable = false;
+			_crc = 0;
 			_samples = -1;
 			IsSynchronizing = false;
 		}
@@ -347,6 +354,7 @@ namespace RhinoCycles.Viewport
 			_startTime = DateTime.UtcNow;
 			_available = false;
 			_frameAvailable = false;
+			_crc = 0;
 
 			return true;
 		}
