@@ -305,7 +305,10 @@ namespace RhinoCycles.Viewport
 
 		public void ChangeSamples(int samples)
 		{
-			_startTime = DateTime.UtcNow; 
+			if (!(_maxSamples < samples && _samples < samples))
+			{
+				_startTime = DateTime.UtcNow;
+			}
 			_maxSamples = samples;
 			_cycles?.ChangeSamples(samples);
 		}
