@@ -386,7 +386,7 @@ namespace RhinoCycles.Viewport
       return LOC.STR("Cycles");
     }
 
-    public override string HudStatusText()
+    public override string HudCustomStatusText()
 		{
 			return _status;
 		}
@@ -426,7 +426,7 @@ namespace RhinoCycles.Viewport
 			return true;
 		}
 
-		public override bool HudShowStatusText()
+		public override bool HudShowCustomStatusText()
 		{
 			return true;
 		}
