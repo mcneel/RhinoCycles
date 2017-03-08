@@ -137,6 +137,10 @@ namespace RhinoCyclesCore
 		}
 
 		public bool ShowMaxPassesDefault = false;
+		/// <summary>
+		/// Set to true to show the maximum passes count in the HUD, i.e. 48/100. For
+		/// false it would show just 48.
+		/// </summary>
 		public bool ShowMaxPasses
 		{
 			get { return RcPlugIn.Settings.GetBool("rc_maxpasses", ShowMaxPassesDefault); }
@@ -179,6 +183,11 @@ namespace RhinoCyclesCore
 		}
 
 		public int ThreadsDefault => Math.Max(1, Environment.ProcessorCount - 2);
+		/// <summary>
+		/// Set the amount of rendering threads to create. Especially useful for CPU rendering where
+		/// one doesn't want to use 100% CPU to retain responsiveness. By default set to
+		/// (logical) processor count - 2, at minimum 1.
+		/// </summary>
 		public int Threads
 		{
 			get { return RcPlugIn.Settings.GetInteger("rc_threads", ThreadsDefault); }
@@ -186,6 +195,9 @@ namespace RhinoCyclesCore
 		}
 
 		public int TileXDefault => 128;
+		/// <summary>
+		/// Set the width of the render tile.
+		/// </summary>
 		public int TileX
 		{
 			get { return RcPlugIn.Settings.GetInteger("rc_tilex", TileXDefault); }
@@ -193,6 +205,9 @@ namespace RhinoCyclesCore
 		}
 
 		public int TileYDefault => 128;
+		/// <summary>
+		/// Set the height of the render tile.
+		/// </summary>
 		public int TileY
 		{
 			get { return RcPlugIn.Settings.GetInteger("rc_tiley", TileYDefault); }
