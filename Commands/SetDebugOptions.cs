@@ -37,10 +37,10 @@ namespace RhinoCycles.Commands
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			var getNumber = new GetInteger();
-			getNumber.SetLowerLimit(2, false);
-			getNumber.SetUpperLimit(10000000, false);
-			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.Samples);
-			getNumber.SetCommandPrompt("Set Debug Options");
+			getNumber.SetLowerLimit(0, false);
+			getNumber.SetUpperLimit(500, false);
+			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.ThrottleMs);
+			getNumber.SetCommandPrompt("Set throttle (in ms)");
 
 			var toggleVerbose = new OptionToggle(RcCore.It.EngineSettings.Verbose, "No", "Yes");
 
@@ -67,7 +67,7 @@ namespace RhinoCycles.Commands
 				{
 					case GetResult.Nothing:
 					case GetResult.Number:
-						RcCore.It.EngineSettings.Samples = getNumber.Number();
+						RcCore.It.EngineSettings.ThrottleMs = getNumber.Number();
 						ReadOptions(toggleVerbose, spotlightFactor, pointlightFactor, sunlightFactor, arealightFactor, polishFactor);
 						break;
 					case GetResult.Option:

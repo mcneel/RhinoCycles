@@ -48,6 +48,7 @@ namespace RhinoCyclesCore
 			ArealightFactor = ArealightFactor;
 			PolishFactor = PolishFactor;
 
+			ThrottleMs = ThrottleMs;
 			Threads = Threads;
 			BumpDistance = BumpDistance;
 
@@ -180,6 +181,19 @@ namespace RhinoCyclesCore
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble("rc_polishfactor", PolishFactorDefault); }
 			set { RcPlugIn.Settings.SetDouble("rc_polishfactor", value); }
+		}
+
+		public int ThrottleMsDefault => 0;
+		/// <summary>
+		/// On systems where the (only) GPU is the primary device it can happen that
+		/// the system becomes very sluggish while using Raytraced. Set this to a number
+		/// greater than zero to introduce a throttle. Note that the number is a sleep
+		/// duration in milliseconds.
+		/// </summary>
+		public int ThrottleMs
+		{
+			get { return RcPlugIn.Settings.GetInteger("rc_throttlems", ThrottleMsDefault); }
+			set { RcPlugIn.Settings.SetInteger("rc_throttlems", value); }
 		}
 
 		public int ThreadsDefault => Math.Max(1, Environment.ProcessorCount - 2);

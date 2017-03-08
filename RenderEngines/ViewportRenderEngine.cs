@@ -209,6 +209,8 @@ namespace RhinoCyclesCore.RenderEngines
 			// We've got Cycles rendering now, notify anyone who cares
 			cyclesEngine.RenderStarted?.Invoke(cyclesEngine, new RenderStartedEventArgs(!cyclesEngine.CancelRender));
 
+			var throttle = RcCore.It.EngineSettings.ThrottleMs;
+
 			while (!IsStopped)
 			{
 				if(_needReset) {
@@ -223,7 +225,7 @@ namespace RhinoCyclesCore.RenderEngines
 				if(cyclesEngine.IsRendering && cyclesEngine.Session.Sample()) {
 					cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(-1, View));
 				}
-				Thread.Sleep(0);
+				Thread.Sleep(throttle);
 				if(!Locked && Flush) {
 					TriggerChangesReady();
 				}
