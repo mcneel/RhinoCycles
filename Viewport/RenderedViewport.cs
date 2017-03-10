@@ -87,7 +87,7 @@ namespace RhinoCycles.Viewport
 		{
 			_runningSerial ++;
 			_serial = _runningSerial;
-			(EngineSettings.RcPlugIn as RhinoCycles.Plugin)?.InitialiseCSycles();
+			(EngineSettings.RcPlugIn as Plugin)?.InitialiseCSycles();
 			_available = true;
 
 			HudPlayButtonPressed += RenderedViewport_HudPlayButtonPressed;
@@ -186,7 +186,7 @@ namespace RhinoCycles.Viewport
 
 			_available = false; // the renderer hasn't started yet. It'll tell us when it has.
 			_frameAvailable = false;
-			_crc = 0;
+			_sameView = false;
 
 			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
 
@@ -239,31 +239,37 @@ namespace RhinoCycles.Viewport
 #endif
 				_available = true;
 				_frameAvailable = true;
-				_crc = 0;
+				_sameView = false;
 			}
 		}
 
 		public override bool IsFrameBufferAvailable(ViewInfo view)
 		{
-			var crc = ComputeViewportCrc(view);
 			if (_cycles != null)
 			{
-				return _frameAvailable && _crc == crc;
+				if (!_sameView && _cycles.ViewSet)
+				{
+					_sameView = _cycles.Database.AreViewsEqual(view, _cycles.View);
+				}
+				return _frameAvailable && _sameView;
 			}
 			if (_modal != null)
 			{
-				return _frameAvailable && _crc == crc;
+				if (!_sameView && _modal.ViewSet)
+				{
+					_sameView = _modal.Database.AreViewsEqual(view, _modal.View);
+				}
+				return _frameAvailable && _sameView;
 			}
 
 			return false;
 		}
 
-		private uint _crc = 0;
+		private bool _sameView;
 		void CyclesPassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
 			if (_cycles?.IsRendering ?? false)
 			{
-				_crc = ComputeViewportCrc(e.View);
 				_frameAvailable = true;
 				_available = true;
 				_lastTime = DateTime.UtcNow;
@@ -276,7 +282,7 @@ namespace RhinoCycles.Viewport
 		{
 			_samples = -1;
 			_frameAvailable = false;
-			_crc = 0;
+			_sameView = false;
 			IsSynchronizing = true;
 		}
 
@@ -284,7 +290,7 @@ namespace RhinoCycles.Viewport
 		{
 			_startTime = DateTime.UtcNow;
 			_frameAvailable = false;
-			_crc = 0;
+			_sameView = false;
 			_samples = -1;
 			IsSynchronizing = false;
 		}
@@ -358,7 +364,7 @@ namespace RhinoCycles.Viewport
 			_startTime = DateTime.UtcNow;
 			_available = false;
 			_frameAvailable = false;
-			_crc = 0;
+			_sameView = false;
 
 			return true;
 		}
