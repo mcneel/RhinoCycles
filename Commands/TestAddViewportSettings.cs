@@ -23,32 +23,16 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-#if ITSDONE
-			var vpi = ViewportInfo.FromRhinoViewport(doc.Views.ActiveView.ActiveViewport);
+			var vi = new ViewInfo(doc.Views.ActiveView.ActiveViewport);
+			var vpi = vi.Viewport;
 
 			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
 
-			if (vud != null)
-			{
-				int test = 0;
-				if (vud.Dictionary.TryGetInteger("test", out test))
-				{
-					vud.Dictionary.Set("test", ++test);
-				}
-				else
-				{
-					vud.Dictionary.Set("test", 0);
-				}
-			}
-			else
+			if (vud == null)
 			{
 				var nvud = new ViewportSettings();
-				nvud.Dictionary.Set("test", 1);
 				vpi.UserData.Add(nvud);
 			}
-#else
-			RhinoApp.WriteLine("waiting for lessons on userdata usage");
-#endif
 
 			return Result.Success;
 		}

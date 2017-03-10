@@ -15,14 +15,20 @@ limitations under the License.
 **/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
 using ccl;
 using Rhino;
+using Rhino.Display;
+using Rhino.DocObjects;
 using Rhino.PlugIns;
 using Rhino.Render;
+using RhinoCycles.Settings;
 using RhinoCyclesCore.Core;
+using RhinoWindows.Forms;
+using ObjectPropertiesPage = Rhino.UI.ObjectPropertiesPage;
 
 namespace RhinoCycles
 {
@@ -33,6 +39,8 @@ namespace RhinoCycles
 		/// available even when RhinoCycles isn't the current renderer
 		/// </summary>
 		public override PlugInLoadTime LoadTime => PlugInLoadTime.AtStartup;
+
+		private ViewportPropertiesPage m_page;
 
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
@@ -65,7 +73,34 @@ namespace RhinoCycles
 			RcCore.It.Initialised = false;
 			AsyncInitialise();
 
+			m_page = new ViewportPropertiesPage();
+
+			RhinoView.SetActive += RhinoView_SetActive;
+
 			return LoadReturnCode.Success;
+		}
+
+		public static ViewportSettings GetActiveViewportSettings()
+		{
+			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
+			var vpi = vi.Viewport;
+			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
+
+			return vud;
+		}
+		private void RhinoView_SetActive(object sender, ViewEventArgs e)
+		{
+			var vi = new ViewInfo(e.View.ActiveViewport);
+			var vpi = vi.Viewport;
+			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
+			if (vud != null)
+			{
+				m_page.UserDataAvailable(vud);
+			}
+			else
+			{
+				m_page.NoUserDataAvailable();
+			}
 		}
 
 		private static readonly object InitialiseLock = new object();
@@ -102,5 +137,10 @@ namespace RhinoCycles
 			base.OnShutdown();
 		}
 
+		protected override void ObjectPropertiesPages(List<ObjectPropertiesPage> pages)
+		{
+			pages.Add(m_page);
+			base.ObjectPropertiesPages(pages);
+		}
 	}
 }
