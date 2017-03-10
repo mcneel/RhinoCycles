@@ -249,6 +249,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public ViewInfo View { get; set; }
 
+		public bool ViewSet => View != null;
+
 #region CONSTRUCTORS
 
 		private void RegisterEventHandler()
