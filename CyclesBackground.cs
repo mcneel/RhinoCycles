@@ -42,7 +42,7 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// True if ChangeQueue modified the background
 		/// </summary>
-		public bool modified;
+		public bool modified { get; set; }
 
 		/// <summary>
 		/// True if skylight is enabled
