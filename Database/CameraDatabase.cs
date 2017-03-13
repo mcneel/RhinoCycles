@@ -119,15 +119,19 @@ namespace RhinoCyclesCore.Database
 		private FocalBlur _focalBlur = new FocalBlur();
 		private bool _focalBlurModified;
 
-		public void HandleBlur(RenderSettings rs)
+		public bool HandleBlur(RenderSettings rs)
 		{
 			var fb = new FocalBlur(rs);
+			var rc = false;
 
 			if(!_focalBlur.Equals(fb))
 			{
 				_focalBlur = fb;
 				_focalBlurModified = true;
+				rc = true;
 			}
+
+			return rc;
 		}
 	}
 }

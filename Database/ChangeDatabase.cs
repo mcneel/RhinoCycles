@@ -1309,6 +1309,7 @@ namespace RhinoCyclesCore.Database
 		{
 			if (_environmentDatabase.BackgroundHasChanged)
 			{
+				Rhino.RhinoApp.OutputDebugString("Uploading background changes\n");
 				RhinoShader curbg;
 				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader, out curbg);
 			}
@@ -1389,11 +1390,14 @@ namespace RhinoCyclesCore.Database
 
 		private bool _previousScaleBackgroundToFit = false;
 		private bool _wallpaperInitialized = false;
+		private bool _focalBlurInitialized = false;
 		protected override void ApplyRenderSettingsChanges(RenderSettings rs)
 		{
 			if (rs != null)
 			{
-				_cameraDatabase.HandleBlur(rs);
+				var fb = _cameraDatabase.HandleBlur(rs);
+				if (_focalBlurInitialized && fb) return;
+				_focalBlurInitialized = true;
 				_environmentDatabase.SetGamma(PreProcessGamma);
 				_environmentDatabase.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
 				if (rs.BackgroundStyle == BackgroundStyle.Environment)
