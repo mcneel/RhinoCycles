@@ -180,6 +180,8 @@ namespace RhinoCyclesCore.RenderEngines
 				if (cyclesEngine.IsStopped) break;
 			}
 
+			cyclesEngine.Session.EndRun();
+
 			cyclesEngine.CancelRender = true;
 			#endregion
 
