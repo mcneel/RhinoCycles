@@ -57,6 +57,7 @@
     </Compile>
     <Compile Include="Commands\ChangeSamples.cs" />
     <Compile Include="Commands\TestAddViewportSettings.cs" />
+    <Compile Include="Commands\ShowCyclesViewportSettingsPanelToggle.cs" />
     <Compile Include="Commands\TestSetBumpDistance.cs" />
     <Compile Include="Commands\TestSaveDebugImagesToggle.cs" />
     <Compile Include="Commands\ShowInfo.cs" />

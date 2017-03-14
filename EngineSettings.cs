@@ -42,6 +42,8 @@ namespace RhinoCyclesCore
 			SaveDebugImages = SaveDebugImages;
 			Verbose = Verbose;
 
+			ShowViewportPropertiesPanel = ShowViewportPropertiesPanel;
+
 			SpotlightFactor = SpotlightFactor;
 			PointlightFactor = PointlightFactor;
 			SunlightFactor = SunlightFactor;
@@ -128,6 +130,13 @@ namespace RhinoCyclesCore
 		{
 			get { return RcPlugIn.Settings.GetBool("rc_savedebugimages", SaveDebugImagesDefault); }
 			set { RcPlugIn.Settings.SetBool("rc_savedebugimages", value); }
+		}
+
+		public bool ShowViewportPropertiesPanelDefault => false;
+		public bool ShowViewportPropertiesPanel
+		{
+			get { return RcPlugIn.Settings.GetBool("rc_showviewproportiesdialog", ShowViewportPropertiesPanelDefault); }
+			set { RcPlugIn.Settings.SetBool("rc_showviewproportiesdialog", value); }
 		}
 
 		public bool VerboseDefault => false;
