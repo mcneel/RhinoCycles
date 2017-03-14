@@ -29,7 +29,7 @@ namespace RhinoCycles.Settings
 		///</summary>
 		public IntegratorSection()
 		{
-			m_caption = new LocalizeStringPair("Integrator", "Integrator");
+			m_caption = new LocalizeStringPair("Integrator settings", LOC.STR("Integrator settings"));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
@@ -48,7 +48,7 @@ namespace RhinoCycles.Settings
 		{
 			m_button_lb = new Label()
 			{
-				Text = "Seed",
+				Text = LOC.STR("Seed"),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 

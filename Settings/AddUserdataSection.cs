@@ -25,7 +25,7 @@ namespace RhinoCycles.Settings
 		///</summary>
 		public AddUserdataSection()
 		{
-			m_caption = new LocalizeStringPair("Override Cycles settings", "Override Cycles settings");
+			m_caption = new LocalizeStringPair("Override View-specific Cycles settings", LOC.STR("Override View-specific Cycles settings"));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
@@ -35,7 +35,7 @@ namespace RhinoCycles.Settings
 		{
 			m_button = new Button()
 			{
-				Text = "Open settings..."
+				Text = LOC.STR("Override settings..."),
 			};
 		}
 

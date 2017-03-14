@@ -38,25 +38,6 @@ namespace RhinoCycles.Settings
 		{
 			get { return Dictionary.GetInteger("samples", RcCore.It.EngineSettings.Samples); }
 			set { Dictionary.Set("samples", value); }
-#if oho
-			get
-			{
-				//var rc = Dictionary.GetInteger("samples", RcCore.It.EngineSettings.Samples);
-				int rc = -1;
-				int orc;
-				if (Dictionary.TryGetInteger("samples", out orc))
-				{
-					rc = orc;
-				}
-				else
-				{
-					rc = RcCore.It.EngineSettings.SamplesDefault;
-					Dictionary.Set("samples", rc);
-				}
-				return rc;
-			}
-			set { Dictionary.Set("samples", value); }
-#endif
 		}
 
 		public int Seed
