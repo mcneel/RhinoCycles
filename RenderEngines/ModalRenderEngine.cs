@@ -153,7 +153,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.SetCallbacks();
 
 			// main render loop, including restarts
-			#region start the rendering thread, wait for it to complete, we're rendering now!
+			#region start the rendering loop, wait for it to complete, we're rendering now!
 
 			//cyclesEngine.Database.OneShot();
 			cyclesEngine.m_flush = false;
@@ -167,11 +167,13 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.Scene.Reset();
 			// and actually start
 			bool stillrendering = true;
+			var throttle = Math.Max(0, RcCore.It.EngineSettings.ThrottleMs);
 			while (stillrendering)
 			{
 				if (cyclesEngine.IsRendering)
 				{
 					stillrendering = cyclesEngine.Session.Sample();
+					Thread.Sleep(throttle);
 				}
 				else
 				{
