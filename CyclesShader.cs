@@ -214,9 +214,9 @@ namespace RhinoCyclesCore
 						mattype = ShaderBody.CyclesMaterial.SimpleMetal;
 						break;
 					case ProbableMaterial.Plastic:
-						polish = reflectivity;
-						shine = polish;
-						reflectivity = 0f;
+						//polish = reflectivity;
+						//shine = polish;
+						//reflectivity = 0f;
 						metalic = 0f;
 						mattype = ShaderBody.CyclesMaterial.SimplePlastic;
 						break;
@@ -245,7 +245,7 @@ namespace RhinoCyclesCore
 				shb.DiffuseColor = col;
 				shb.SpecularColor = spec;
 				shb.ReflectionColor = refl;
-				shb.ReflectionRoughness = polish;
+				shb.ReflectionRoughness = (float)m.ReflectionGlossiness; // polish;
 				shb.RefractionColor = refr;
 				shb.RefractionRoughness = (float)m.RefractionGlossiness;
 				shb.TransparencyColor = transp;
@@ -259,7 +259,7 @@ namespace RhinoCyclesCore
 				shb.Metalic = metalic;
 				shb.Transparency = (float)m.Transparency;
 				shb.Shine = shine;
-				shb.Gloss = metalic > 0.0f ? polish : 0.0f;
+				shb.Gloss = (float)m.ReflectionGlossiness;
 
 				shb.FresnelReflections = m.FresnelReflections;
 
@@ -417,8 +417,8 @@ namespace RhinoCyclesCore
 		{
 			get
 			{
-				float4 c;
-				switch (CyclesMaterialType)
+				float4 c = DiffuseColor;
+				/*switch (CyclesMaterialType)
 				{
 					case CyclesMaterial.SimpleMetal:
 						c = ReflectionColor;
@@ -429,7 +429,7 @@ namespace RhinoCyclesCore
 					default:
 						c = DiffuseColor;
 						break;
-				}
+				}*/
 
 				return c ^ Gamma;
 			}
@@ -472,8 +472,10 @@ namespace RhinoCyclesCore
 		public float4 SpecularColor { get; set; }
 		public float4 ReflectionColor { get; set; }
 		public float ReflectionRoughness { get; set; }
+		public float ReflectionRoughnessPow2 => ReflectionRoughness * ReflectionRoughness;
 		public float4 RefractionColor { get; set; }
 		public float RefractionRoughness { get; set; }
+		public float RefractionRoughnessPow2 => RefractionRoughness * RefractionRoughness;
 		public float4 TransparencyColor { get; set; }
 		public float4 EmissionColor { get; set; }
 		public bool HasEmission => !EmissionColor.IsZero(false);
