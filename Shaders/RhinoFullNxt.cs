@@ -95,7 +95,6 @@ namespace RhinoCyclesCore.Shaders
 
 		private ShaderNode GetShaderPart(ShaderBody part)
 		{
-
 			var invert_shine_factor127 = new MathNode("invert_shine_factor");
 			invert_shine_factor127.ins.Value1.Value = 1f;
 			invert_shine_factor127.ins.Value2.Value = part.Shine;
@@ -423,6 +422,31 @@ namespace RhinoCyclesCore.Shaders
 			var custom_alpha_cutter90 = new MixClosureNode("custom_alpha_cutter");
 			custom_alpha_cutter90.ins.Fac.Value = 0f;
 
+			var uber135 = new UberBsdfNode("uber");
+			uber135.ins.BaseColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			uber135.ins.SpecularColor.Value = part.SpecularColor;
+			uber135.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+			uber135.ins.Metallic.Value = 0f;
+			uber135.ins.Subsurface.Value = 0f;
+			uber135.ins.SubsurfaceRadius.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			uber135.ins.Specular.Value = 1f;
+			uber135.ins.Roughness.Value = part.ReflectionRoughnessPow2;
+			uber135.ins.SpecularTint.Value = 0.5f;
+			uber135.ins.Anisotropic.Value = 0f;
+			uber135.ins.Sheen.Value = 1f;
+			uber135.ins.SheenTint.Value = 0.5f;
+			uber135.ins.Clearcoat.Value = 1f;
+			uber135.ins.ClearcoatGloss.Value = 0.5f;
+			uber135.ins.IOR.Value = part.IOR;
+			uber135.ins.Transparency.Value = part.Transparency;
+			uber135.ins.RefractionRoughness.Value = part.RefractionRoughnessPow2;
+			uber135.ins.AnisotropicRotation.Value = 0f;
+			uber135.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			uber135.ins.ClearcoatNormal.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			uber135.ins.Tangent.Value = new ccl.float4(0f, 0f, 0f, 1f);
+
+			var coloured_shadow_mix132 = new MixClosureNode("coloured_shadow_mix");
+			coloured_shadow_mix132.ins.Fac.Value = 0f;
 
 			m_shader.AddNode(invert_shine_factor127);
 			m_shader.AddNode(pow2125);
@@ -487,6 +511,9 @@ namespace RhinoCyclesCore.Shaders
 			m_shader.AddNode(transparent85);
 			m_shader.AddNode(toggle_transparency_texture66);
 			m_shader.AddNode(custom_alpha_cutter90);
+			m_shader.AddNode(texcoord60);
+			m_shader.AddNode(uber135);
+			m_shader.AddNode(coloured_shadow_mix132);
 
 
 			invert_shine_factor127.outs.Value.Connect(pow2125.ins.Value1);
@@ -571,7 +598,16 @@ namespace RhinoCyclesCore.Shaders
 			coloured_shadow_mix98.outs.Closure.Connect(custom_alpha_cutter90.ins.Closure1);
 			transparent85.outs.BSDF.Connect(custom_alpha_cutter90.ins.Closure2);
 			toggle_transparency_texture66.outs.Value.Connect(custom_alpha_cutter90.ins.Fac);
+			final_base_color79.outs.Image.Connect(uber135.ins.BaseColor);
+			bump70.outs.Normal.Connect(uber135.ins.Normal);
+			bump70.outs.Normal.Connect(uber135.ins.ClearcoatNormal);
+			uber135.outs.BSDF.Connect(coloured_shadow_mix132.ins.Closure1);
+			coloured_shadow_trans_color92.outs.BSDF.Connect(coloured_shadow_mix132.ins.Closure2);
+			weight_for_shadowray_coloured_shadow96.outs.Value.Connect(coloured_shadow_mix132.ins.Fac);
 
+
+			custom_alpha_cutter90.outs.Closure.Connect(m_shader.Output.ins.Surface);
+			coloured_shadow_mix132.outs.Closure.Connect(m_shader.Output.ins.Surface);
 			if (part.HasDiffuseTexture)
 			{
 				RenderEngine.SetTextureImage(diffuse_texture61, part.DiffuseTexture);
@@ -596,6 +632,7 @@ namespace RhinoCyclesCore.Shaders
 				RenderEngine.SetProjectionMode(m_shader, part.EnvironmentTexture, environment_texture102, texcoord60);
 			}
 
+			if (part.CyclesMaterialType == ShaderBody.CyclesMaterial.Glass) return coloured_shadow_mix132;
 			return custom_alpha_cutter90;
 		}
 
