@@ -95,6 +95,7 @@ namespace RhinoCyclesCore.Shaders
 
 		private ShaderNode GetShaderPart(ShaderBody part)
 		{
+
 			var invert_shine_factor127 = new MathNode("invert_shine_factor");
 			invert_shine_factor127.ins.Value1.Value = 1f;
 			invert_shine_factor127.ins.Value2.Value = part.Shine;
@@ -194,20 +195,20 @@ namespace RhinoCyclesCore.Shaders
 			var diffuse_texture_amount65 = new MixNode("diffuse_texture_amount");
 			diffuse_texture_amount65.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
 			diffuse_texture_amount65.ins.Color2.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
-			diffuse_texture_amount65.ins.Fac.Value = 1f;
+			diffuse_texture_amount65.ins.Fac.Value = 0f;
 			diffuse_texture_amount65.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Add;
 			diffuse_texture_amount65.UseClamp = false;
 
 			var invert_diffuse_color_amount68 = new MathNode("invert_diffuse_color_amount");
 			invert_diffuse_color_amount68.ins.Value1.Value = 1f;
-			invert_diffuse_color_amount68.ins.Value2.Value = 1f;
+			invert_diffuse_color_amount68.ins.Value2.Value = 0f;
 			invert_diffuse_color_amount68.Operation = MathNode.Operations.Subtract;
 			invert_diffuse_color_amount68.UseClamp = false;
 
 			var diffuse_col_amount67 = new MixNode("diffuse_col_amount");
 			diffuse_col_amount67.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
 			diffuse_col_amount67.ins.Color2.Value = part.BaseColor;
-			diffuse_col_amount67.ins.Fac.Value = 0f;
+			diffuse_col_amount67.ins.Fac.Value = 1f;
 			diffuse_col_amount67.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Add;
 			diffuse_col_amount67.UseClamp = false;
 
@@ -298,9 +299,9 @@ namespace RhinoCyclesCore.Shaders
 			attenuated_reflection_color109.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Mix;
 			attenuated_reflection_color109.UseClamp = false;
 
-			var fresnel110 = new FresnelNode("fresnel");
-			fresnel110.ins.IOR.Value = part.IOR;
-			fresnel110.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
+			var fresnel_based_on_constant146 = new FresnelNode("fresnel_based_on_constant");
+			fresnel_based_on_constant146.ins.IOR.Value = part.FresnelIOR;
+			fresnel_based_on_constant146.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
 
 			var simple_reflection115 = new CombineRgbNode("simple_reflection");
 			simple_reflection115.ins.R.Value = part.Reflectivity;
@@ -489,7 +490,7 @@ namespace RhinoCyclesCore.Shaders
 			uber132.ins.Anisotropic.Value = 0f;
 			uber132.ins.Sheen.Value = 1f;
 			uber132.ins.SheenTint.Value = 0.3f;
-			uber132.ins.Clearcoat.Value = 1f;
+			uber132.ins.Clearcoat.Value = 0f;
 			uber132.ins.ClearcoatGloss.Value = 0.1f;
 			uber132.ins.IOR.Value = part.IOR;
 			uber132.ins.Transparency.Value = part.Transparency;
@@ -539,7 +540,7 @@ namespace RhinoCyclesCore.Shaders
 			m_shader.AddNode(diffuse87);
 			m_shader.AddNode(shadeless_bsdf99);
 			m_shader.AddNode(attenuated_reflection_color109);
-			m_shader.AddNode(fresnel110);
+			m_shader.AddNode(fresnel_based_on_constant146);
 			m_shader.AddNode(simple_reflection115);
 			m_shader.AddNode(fresnel_reflection116);
 			m_shader.AddNode(select_reflection_or_fresnel_reflection114);
@@ -629,8 +630,8 @@ namespace RhinoCyclesCore.Shaders
 			final_base_color79.outs.Image.Connect(diffuse87.ins.Color);
 			bump70.outs.Normal.Connect(diffuse87.ins.Normal);
 			final_base_color79.outs.Image.Connect(shadeless_bsdf99.ins.Color);
-			bump70.outs.Normal.Connect(fresnel110.ins.Normal);
-			fresnel110.outs.Fac.Connect(fresnel_reflection116.ins.R);
+			bump70.outs.Normal.Connect(fresnel_based_on_constant146.ins.Normal);
+			fresnel_based_on_constant146.outs.Fac.Connect(fresnel_reflection116.ins.R);
 			simple_reflection115.outs.Image.Connect(select_reflection_or_fresnel_reflection114.ins.Color1);
 			fresnel_reflection116.outs.Image.Connect(select_reflection_or_fresnel_reflection114.ins.Color2);
 			diffuse87.outs.BSDF.Connect(shadeless100.ins.Closure1);
