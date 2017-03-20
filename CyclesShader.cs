@@ -418,18 +418,18 @@ namespace RhinoCyclesCore
 			get
 			{
 				float4 c = DiffuseColor;
-				/*switch (CyclesMaterialType)
+				switch (CyclesMaterialType)
 				{
-					case CyclesMaterial.SimpleMetal:
-						c = ReflectionColor;
-						break;
+					//case CyclesMaterial.SimpleMetal:
+					//	c = ReflectionColor;
+					//	break;
 					case CyclesMaterial.Glass:
 						c = TransparencyColor;
 						break;
 					default:
 						c = DiffuseColor;
 						break;
-				}*/
+				}
 
 				return c ^ Gamma;
 			}
