@@ -21,6 +21,7 @@ using Rhino.Commands;
 namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("f463e853-eaa2-401e-82ba-3d3e9cfb168b")]
+	[CommandStyle(Style.Hidden)]
 	public class TestSaveDebugImagesToggle : Command
 	{
 		static TestSaveDebugImagesToggle _instance;

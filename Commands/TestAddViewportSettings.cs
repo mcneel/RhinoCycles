@@ -11,7 +11,13 @@ using RhinoCycles.Settings;
 
 namespace RhinoCycles.Commands
 {
+	/// <summary>
+	/// Although originally a test command, this is now internally used by
+	/// RhinoCycles to add user data to an active viewport, if that user
+	/// data doesn't already exist.
+	/// </summary>
 	[Guid("2CEB43DC-7623-492A-BD62-86D9F63AA9A9")]
+	[CommandStyle(Style.Hidden)]
 	public class TestAddViewportSettings : Command
 	{
 		static TestAddViewportSettings _instance;
