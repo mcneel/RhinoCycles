@@ -38,7 +38,7 @@ namespace RhinoCycles.Settings
 		///</summary>
 		public SessionSection()
 		{
-			m_caption = new LocalizeStringPair("Session settings", LOC.STR("Session settings"));
+			m_caption = new LocalizeStringPair("Session settings", Localization.LocalizeString("Session settings", 5));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
@@ -57,7 +57,7 @@ namespace RhinoCycles.Settings
 		{
 			m_button_lb = new Label()
 			{
-				Text = LOC.STR("Samples"),
+				Text = Localization.LocalizeString("Samples", 6),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			m_samples = new NumericStepper()
