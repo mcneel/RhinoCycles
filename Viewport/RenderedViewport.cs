@@ -37,7 +37,7 @@ namespace RhinoCycles.Viewport
 	/// </summary>
 	public class RenderedViewportClassInfo : RealtimeDisplayModeClassInfo
 	{
-		public override string Name => LOC.STR("Cycles");
+		public override string Name => Localization.LocalizeString("Cycles", 8);
 
 		public override Guid GUID => new Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181");
 
@@ -389,7 +389,7 @@ namespace RhinoCycles.Viewport
 
     public override string HudProductName()
     {
-      return LOC.STR("Cycles");
+      return Localization.LocalizeString("Cycles", 9);
     }
 
     public override string HudCustomStatusText()

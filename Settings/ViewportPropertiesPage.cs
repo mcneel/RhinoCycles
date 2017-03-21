@@ -53,7 +53,7 @@ namespace RhinoCycles.Settings
 		}
 
 		public override string EnglishPageTitle => "Cycles";
-		public override string LocalPageTitle => LOC.STR("Cycles");
+		public override string LocalPageTitle => Localization.LocalizeString("Cycles", 7);
 
 		public override Icon Icon => null;
 
