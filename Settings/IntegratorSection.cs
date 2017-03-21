@@ -16,6 +16,9 @@ limitations under the License.
 using System;
 using Eto.Forms;
 using Rhino.UI;
+using RhinoCycles.Viewport;
+using Rhino;
+using static RhinoCyclesCore.RenderEngine;
 
 namespace RhinoCycles.Settings
 {
@@ -25,8 +28,35 @@ namespace RhinoCycles.Settings
 	public class IntegratorSection: Section
 	{
 		private LocalizeStringPair m_caption;
-		private Label m_button_lb;
+		private Label m_seed_lb;
 		private NumericStepper m_seed;
+
+		private Label m_diffusesamples_lb;
+		private NumericStepper m_diffusesamples;
+
+		private Label m_glossysamples_lb;
+		private NumericStepper m_glossysamples;
+
+		private Label m_transmissionsamples_lb;
+		private NumericStepper m_transmissionsamples;
+
+		private Label m_minbounce_lb;
+		private NumericStepper m_minbounce;
+
+		private Label m_maxbounce_lb;
+		private NumericStepper m_maxbounce;
+
+		private Label m_maxdiffusebounce_lb;
+		private NumericStepper m_maxdiffusebounce;
+
+		private Label m_maxglossybounce_lb;
+		private NumericStepper m_maxglossybounce;
+
+		private Label m_maxvolumebounce_lb;
+		private NumericStepper m_maxvolumebounce;
+
+		private Label m_maxtransmissionbounce_lb;
+		private NumericStepper m_maxtransmissionbounce;
 
 		public override LocalizeStringPair Caption => m_caption;
 
@@ -47,17 +77,37 @@ namespace RhinoCycles.Settings
 			ViewportSettingsReceived += IntegratorSection_ViewportSettingsReceived;
 		}
 
+		protected override void OnShown(EventArgs e)
+		{
+			base.OnShown(e);
+			var layout = Content as TableLayout;
+			if (layout == null) return;
+			layout.SetColumnScale(0, true);
+			layout.SetColumnScale(1, true);
+		}
+
 		private void IntegratorSection_ViewportSettingsReceived(object sender, ViewportSettingsReceivedEventArgs e)
 		{
 			if (e.ViewportSettings != null)
 			{
+				UnregisterControlEvents();
 				m_seed.Value = e.ViewportSettings.Seed;
+				m_diffusesamples.Value = e.ViewportSettings.DiffuseSamples;
+				m_glossysamples.Value = e.ViewportSettings.GlossySamples;
+				m_transmissionsamples.Value = e.ViewportSettings.TransmissionSamples;
+				m_minbounce.Value = e.ViewportSettings.MinBounce;
+				m_maxbounce.Value = e.ViewportSettings.MaxBounce;
+				m_maxdiffusebounce.Value = e.ViewportSettings.MaxDiffuseBounce;
+				m_maxglossybounce.Value = e.ViewportSettings.MaxGlossyBounce;
+				m_maxvolumebounce.Value = e.ViewportSettings.MaxVolumeBounce;
+				m_maxtransmissionbounce.Value = e.ViewportSettings.MaxTransmissionBounce;
+				RegisterControlEvents();
 			}
 		}
 
 		private void InitializeComponents()
 		{
-			m_button_lb = new Label()
+			m_seed_lb = new Label()
 			{
 				Text = Localization.LocalizeString("Seed", 4),
 				VerticalAlignment = VerticalAlignment.Center,
@@ -70,6 +120,151 @@ namespace RhinoCycles.Settings
 				MinValue = 0,
 				MaximumDecimalPlaces = 0,
 				Width = 75,
+				Tag = IntegratorSetting.Seed,
+			};
+
+			m_diffusesamples_lb = new Label()
+			{
+				Text = LOC.STR("Diffuse Samples"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			m_diffusesamples = new NumericStepper()
+			{
+				Value = 0,
+				MaxValue = int.MaxValue,
+				MinValue = 0,
+				MaximumDecimalPlaces = 0,
+				Width = 75,
+				Tag = IntegratorSetting.DiffuseSamples,
+			};
+
+			m_glossysamples_lb = new Label()
+			{
+				Text = LOC.STR("Glossy Samples"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			m_glossysamples = new NumericStepper()
+			{
+				Value = 0,
+				MaxValue = int.MaxValue,
+				MinValue = 0,
+				MaximumDecimalPlaces = 0,
+				Width = 75,
+				Tag = IntegratorSetting.GlossySamples,
+			};
+
+			m_transmissionsamples_lb = new Label()
+			{
+				Text = LOC.STR("Transmission Samples"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			m_transmissionsamples = new NumericStepper()
+			{
+				Value = 0,
+				MaxValue = int.MaxValue,
+				MinValue = 0,
+				MaximumDecimalPlaces = 0,
+				Width = 75,
+				Tag = IntegratorSetting.TransmissionSamples,
+			};
+
+			m_minbounce_lb = new Label()
+			{
+				Text = LOC.STR("Minimum Bounces"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			m_minbounce = new NumericStepper()
+			{
+				Value = 0,
+				MaxValue = int.MaxValue,
+				MinValue = 0,
+				MaximumDecimalPlaces = 0,
+				Width = 75,
+				Tag = IntegratorSetting.MinBounce,
+			};
+
+			m_maxbounce_lb = new Label()
+			{
+				Text = LOC.STR("Maximum Bounces"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			m_maxbounce = new NumericStepper()
+			{
+				Value = 0,
+				MaxValue = int.MaxValue,
+				MinValue = 0,
+				MaximumDecimalPlaces = 0,
+				Width = 75,
+				Tag = IntegratorSetting.MaxBounce,
+			};
+
+			m_maxdiffusebounce_lb = new Label()
+			{
+				Text = LOC.STR("Maximum Diffuse Bounces"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			m_maxdiffusebounce = new NumericStepper()
+			{
+				Value = 0,
+				MaxValue = int.MaxValue,
+				MinValue = 0,
+				MaximumDecimalPlaces = 0,
+				Width = 75,
+				Tag = IntegratorSetting.MaxDiffuseBounce,
+			};
+
+			m_maxglossybounce_lb = new Label()
+			{
+				Text = LOC.STR("Maximum Glossy Bounces"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			m_maxglossybounce = new NumericStepper()
+			{
+				Value = 0,
+				MaxValue = int.MaxValue,
+				MinValue = 0,
+				MaximumDecimalPlaces = 0,
+				Width = 75,
+				Tag = IntegratorSetting.MaxGlossyBounce,
+			};
+
+			m_maxvolumebounce_lb = new Label()
+			{
+				Text = LOC.STR("Maximum Volume Bounces"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			m_maxvolumebounce = new NumericStepper()
+			{
+				Value = 0,
+				MaxValue = int.MaxValue,
+				MinValue = 0,
+				MaximumDecimalPlaces = 0,
+				Width = 75,
+				Tag = IntegratorSetting.MaxVolumeBounce,
+			};
+
+			m_maxtransmissionbounce_lb = new Label()
+			{
+				Text = LOC.STR("Maximum Transmission Bounces"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			m_maxtransmissionbounce = new NumericStepper()
+			{
+				Value = 0,
+				MaxValue = int.MaxValue,
+				MinValue = 0,
+				MaximumDecimalPlaces = 0,
+				Width = 75,
+				Tag = IntegratorSetting.MaxTransmissionBounce,
 			};
 
 		}
@@ -80,13 +275,22 @@ namespace RhinoCycles.Settings
 			TableLayout layout = new TableLayout()
 			{
 				// Padding around the table
-				Padding = 10,
+				Padding = new Eto.Drawing.Padding(3, 5, 3, 0),
 				// Spacing between table cells
-				Spacing = new Eto.Drawing.Size(15, 15),
+				Spacing = new Eto.Drawing.Size(15, 5),
 				Rows =
-								{
-										new TableRow(m_button_lb, m_seed),
-								}
+					{
+						new TableRow(m_seed_lb, m_seed),
+						//new TableRow(m_diffusesamples_lb, m_diffusesamples),
+						//new TableRow(m_glossysamples_lb, m_glossysamples),
+						//new TableRow(m_transmissionsamples_lb, m_transmissionsamples),
+						new TableRow(m_minbounce_lb, m_minbounce),
+						new TableRow(m_maxbounce_lb, m_maxbounce),
+						new TableRow(m_maxdiffusebounce_lb, m_maxdiffusebounce),
+						new TableRow(m_maxglossybounce_lb, m_maxglossybounce),
+						new TableRow(m_maxtransmissionbounce_lb, m_maxtransmissionbounce),
+						new TableRow(m_maxvolumebounce_lb, m_maxvolumebounce),
+					}
 			};
 			Content = layout;
 		}
@@ -94,18 +298,85 @@ namespace RhinoCycles.Settings
 		private void RegisterControlEvents()
 		{
 			m_seed.ValueChanged += M_seed_ValueChanged;
+			m_diffusesamples.ValueChanged += M_seed_ValueChanged;
+			m_glossysamples.ValueChanged += M_seed_ValueChanged;
+			m_transmissionsamples.ValueChanged += M_seed_ValueChanged;
+			m_minbounce.ValueChanged += M_seed_ValueChanged;
+			m_maxbounce.ValueChanged += M_seed_ValueChanged;
+			m_maxdiffusebounce.ValueChanged += M_seed_ValueChanged;
+			m_maxglossybounce.ValueChanged += M_seed_ValueChanged;
+			m_maxvolumebounce.ValueChanged += M_seed_ValueChanged;
+			m_maxtransmissionbounce.ValueChanged += M_seed_ValueChanged;
 		}
 
+		private void UnregisterControlEvents()
+		{
+			m_seed.ValueChanged -= M_seed_ValueChanged;
+			m_diffusesamples.ValueChanged -= M_seed_ValueChanged;
+			m_glossysamples.ValueChanged -= M_seed_ValueChanged;
+			m_transmissionsamples.ValueChanged -= M_seed_ValueChanged;
+			m_minbounce.ValueChanged -= M_seed_ValueChanged;
+			m_maxbounce.ValueChanged -= M_seed_ValueChanged;
+			m_maxdiffusebounce.ValueChanged -= M_seed_ValueChanged;
+			m_maxglossybounce.ValueChanged -= M_seed_ValueChanged;
+			m_maxvolumebounce.ValueChanged -= M_seed_ValueChanged;
+			m_maxtransmissionbounce.ValueChanged -= M_seed_ValueChanged;
+		}
+
+
+		private void ChangeIntegratorSetting(IntegratorSetting setting, int value)
+		{
+			var rvp = RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
+			if (rvp == null) return;
+			var vud = Plugin.GetActiveViewportSettings();
+			if (vud == null) return;
+
+			rvp.TriggerViewportSettingsChanged(vud);
+		}
 		private void M_seed_ValueChanged(object sender, EventArgs e)
 		{
 			var vud = Plugin.GetActiveViewportSettings();
 			if (vud == null) return;
 
-			vud.Seed = (int)m_seed.Value;
-		}
+			var ns = sender as NumericStepper;
+			if (ns == null) return;
+			var setting = (IntegratorSetting)ns.Tag;
 
-		private void UnRegisterControlEvents()
-		{
+			switch (setting)
+			{
+				case IntegratorSetting.Seed:
+					vud.Seed = (int)ns.Value;
+					break;
+				case IntegratorSetting.DiffuseSamples:
+					vud.DiffuseSamples = (int)ns.Value;
+					break;
+				case IntegratorSetting.GlossySamples:
+					vud.GlossySamples = (int)ns.Value;
+					break;
+				case IntegratorSetting.TransmissionSamples:
+					vud.TransmissionSamples = (int)ns.Value;
+					break;
+				case IntegratorSetting.MinBounce:
+					vud.MinBounce = (int)ns.Value;
+					break;
+				case IntegratorSetting.MaxBounce:
+					vud.MaxBounce = (int)ns.Value;
+					break;
+				case IntegratorSetting.MaxDiffuseBounce:
+					vud.MaxDiffuseBounce = (int)ns.Value;
+					break;
+				case IntegratorSetting.MaxGlossyBounce:
+					vud.MaxGlossyBounce = (int)ns.Value;
+					break;
+				case IntegratorSetting.MaxTransmissionBounce:
+					vud.MaxTransmissionBounce = (int)ns.Value;
+					break;
+				case IntegratorSetting.MaxVolumeBounce:
+					vud.MaxVolumeBounce = (int)ns.Value;
+					break;
+			}
+
+			ChangeIntegratorSetting(setting, (int)ns.Value);
 		}
 
 	}

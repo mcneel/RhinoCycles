@@ -198,6 +198,8 @@ namespace RhinoCycles.Viewport
 			_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 			_cycles.SamplesChanged += CyclesSamplesChanged;
 
+			ViewportSettingsChanged += _cycles.ViewportSettingsChangedHandler;
+			_cycles.CurrentViewportSettingsRequested += _cycles_CurrentViewportSettingsRequested;
 			var renderSize = Rhino.Render.RenderPipeline.RenderSize(doc);
 
 			_cycles.RenderWindow = renderWindow;
@@ -216,6 +218,15 @@ namespace RhinoCycles.Viewport
 
 			return true;
 		}
+
+		private void _cycles_CurrentViewportSettingsRequested(object sender, EventArgs e)
+		{
+			var vud = Plugin.GetActiveViewportSettings();
+			if (vud == null) return;
+			TriggerViewportSettingsChanged(vud);
+		}
+
+		public event EventHandler<ViewportSettingsChangedArgs> ViewportSettingsChanged;
 
 		private void CyclesSamplesChanged(object sender, RenderEngine.SamplesChangedEventArgs e)
 		{
@@ -312,12 +323,22 @@ namespace RhinoCycles.Viewport
 			_available = false;
 			_started = true;
 		}
+		private void _ResetRenderTime()
+		{
+			_startTime = _startTime + (DateTime.UtcNow - _lastTime);
+			_lastTime = _startTime;
+		}
 
 		public void ChangeSamples(int samples)
 		{
-			_startTime = _startTime + (DateTime.UtcNow - _lastTime);
+			_ResetRenderTime();
 			_maxSamples = samples;
 			_cycles?.ChangeSamples(samples);
+		}
+
+		public void TriggerViewportSettingsChanged(IViewportSettings settings)
+		{
+			ViewportSettingsChanged?.Invoke(this, new ViewportSettingsChangedArgs(settings));
 		}
 
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)

@@ -82,6 +82,8 @@ namespace RhinoCycles
 
 		public static ViewportSettings GetActiveViewportSettings()
 		{
+			if (RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return null;
+
 			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
 			var vpi = vi.Viewport;
 			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
@@ -121,6 +123,7 @@ namespace RhinoCycles
 				{
 					CSycles.initialise();
 					RcCore.It.Initialised = true;
+					RcCore.It.TriggerInitialisationCompleted(this);
 				}
 			}
 		}

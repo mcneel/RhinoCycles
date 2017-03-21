@@ -1,11 +1,13 @@
 ﻿using Rhino.DocObjects.Custom;
 using System.Runtime.InteropServices;
 using RhinoCyclesCore.Core;
+using RhinoCyclesCore;
+using Rhino;
 
 namespace RhinoCycles.Settings
 {
 	[Guid("CAE9D284-03B0-4D1C-AA46-B431BC9A7EA2")]
-	public class ViewportSettings : UserDictionary
+	public class ViewportSettings : UserDictionary, IViewportSettings
 	{
 		public ViewportSettings()
 		{
@@ -19,6 +21,7 @@ namespace RhinoCycles.Settings
 			if (src != null)
 			{
 				Samples = src.Samples;
+				ThrottleMs = src.ThrottleMs;
 				Seed = src.Seed;
 				TileX = src.TileX;
 				TileY = src.TileY;
@@ -33,11 +36,36 @@ namespace RhinoCycles.Settings
 				MaxTransmissionBounce = src.MaxTransmissionBounce;
 			}
 		}
+		public virtual uint IntegratorHash
+		{
+			get
+			{
+				uint rem = 0xdeadbeef;
+				rem = RhinoMath.CRC32(rem, Seed);
+				rem = RhinoMath.CRC32(rem, DiffuseSamples);
+				rem = RhinoMath.CRC32(rem, GlossySamples);
+				rem = RhinoMath.CRC32(rem, TransmissionSamples);
+				rem = RhinoMath.CRC32(rem, MinBounce);
+				rem = RhinoMath.CRC32(rem, MaxBounce);
+				rem = RhinoMath.CRC32(rem, MaxDiffuseBounce);
+				rem = RhinoMath.CRC32(rem, MaxGlossyBounce);
+				rem = RhinoMath.CRC32(rem, MaxVolumeBounce);
+				rem = RhinoMath.CRC32(rem, MaxTransmissionBounce);
+
+				return rem;
+			}
+		}
 
 		public int Samples
 		{
 			get { return Dictionary.GetInteger("samples", RcCore.It.EngineSettings.Samples); }
 			set { Dictionary.Set("samples", value); }
+		}
+
+		public int ThrottleMs
+		{
+			get { return Dictionary.GetInteger("throttlems", RcCore.It.EngineSettings.ThrottleMs); }
+			set { Dictionary.Set("throttlems", value); }
 		}
 
 		public int Seed

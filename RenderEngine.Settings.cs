@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using System;
 using System.Drawing;
 
 namespace RhinoCyclesCore
@@ -24,5 +25,57 @@ namespace RhinoCyclesCore
 		/// Get or set the resolution for rendering.
 		/// </summary>
 		public Size RenderDimension { get; set; }
+		public enum IntegratorSetting
+		{
+			Seed,
+			DiffuseSamples,
+			GlossySamples,
+			TransmissionSamples,
+			MinBounce,
+			MaxBounce,
+			MaxDiffuseBounce,
+			MaxGlossyBounce,
+			MaxTransmissionBounce,
+			MaxVolumeBounce,
+		}
+
+		public event EventHandler CurrentViewportSettingsRequested;
+		protected void TriggerCurrentViewportSettingsRequested()
+		{
+			CurrentViewportSettingsRequested?.Invoke(this, EventArgs.Empty);
+		}
+
+		private uint _oldIntegratorHash = 0;
+		public void ViewportSettingsChangedHandler(object sender, ViewportSettingsChangedArgs e)
+		{
+			if (Session != null && Session.Scene != null)
+			{
+				var hash = e.Settings.IntegratorHash;
+				if (hash != _oldIntegratorHash)
+				{
+					var integrator = Session.Scene.Integrator;
+					integrator.Seed = e.Settings.Seed;
+					integrator.DiffuseSamples = e.Settings.DiffuseSamples;
+					integrator.GlossySamples = e.Settings.GlossySamples;
+					integrator.MinBounce = e.Settings.MinBounce;
+					integrator.MaxBounce = e.Settings.MaxBounce;
+					integrator.MaxDiffuseBounce = e.Settings.MaxDiffuseBounce;
+					integrator.MaxGlossyBounce = e.Settings.MaxGlossyBounce;
+					integrator.MaxTransmissionBounce = e.Settings.MaxTransmissionBounce;
+					integrator.MaxVolumeBounce = e.Settings.MaxVolumeBounce;
+					integrator.TagForUpdate();
+					_needReset = true;
+					_oldIntegratorHash = hash;
+				}
+				Session.SetSamples(e.Settings.Samples);
+				_throttle = e.Settings.ThrottleMs;
+				_samples = (uint)e.Settings.Samples;
+			}
+		}
+
+		protected int _throttle = 10;
+		protected uint _samples = 1;
+
+		protected bool _needReset;
 	}
 }

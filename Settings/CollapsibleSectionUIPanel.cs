@@ -4,7 +4,7 @@ using Rhino.UI.Controls;
 
 namespace RhinoCycles.Settings
 {
-	public class CollapsibleSectionUIPanel : Panel
+	public class CollapsibleSectionUIPanel : Scrollable
 	{
 		/// <summary>
 		/// Returns the ID of this panel.

@@ -42,6 +42,16 @@ namespace RhinoCyclesCore.Core
 				string pszFrom, int dwAttrFrom, string pszTo, int dwAttrTo);
 		#endregion
 
+
+		public void TriggerInitialisationCompleted(object sender)
+		{
+			InitialisationCompleted?.Invoke(sender, EventArgs.Empty);
+		}
+
+		/// <summary>
+		/// Event signalling that CCSycles initialisation has been completed.
+		/// </summary>
+		public event EventHandler InitialisationCompleted;
 		/// <summary>
 		/// Flag to keep track of CSycles initialisation
 		/// </summary>

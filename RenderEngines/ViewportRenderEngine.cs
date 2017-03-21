@@ -21,6 +21,7 @@ using ccl;
 using Rhino.DocObjects;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
+using Rhino;
 
 namespace RhinoCyclesCore.RenderEngines
 {
@@ -144,6 +145,9 @@ namespace RhinoCyclesCore.RenderEngines
 			var cyclesEngine = this;
 			Locked = false;
 
+			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
+			var vpi = vi.Viewport;
+
 			var client = cyclesEngine.Client;
 			var rw = cyclesEngine.RenderWindow;
 
@@ -160,7 +164,6 @@ namespace RhinoCyclesCore.RenderEngines
 			#endregion
 
 			var scene = CreateScene(client, renderDevice, cyclesEngine);
-
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(client, renderDevice)
@@ -186,6 +189,11 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session = new Session(client, sessionParams, scene);
 			#endregion
 
+			_throttle = RcCore.It.EngineSettings.ThrottleMs;
+			_samples = (uint)RcCore.It.EngineSettings.Samples;
+
+			TriggerCurrentViewportSettingsRequested();
+
 			// register callbacks before starting any rendering
 			cyclesEngine.SetCallbacks();
 
@@ -209,8 +217,6 @@ namespace RhinoCyclesCore.RenderEngines
 			// We've got Cycles rendering now, notify anyone who cares
 			cyclesEngine.RenderStarted?.Invoke(cyclesEngine, new RenderStartedEventArgs(!cyclesEngine.CancelRender));
 
-			var throttle = RcCore.It.EngineSettings.ThrottleMs;
-
 			while (!IsStopped)
 			{
 				if(_needReset) {
@@ -218,14 +224,14 @@ namespace RhinoCyclesCore.RenderEngines
 					var size = RenderDimension;
 
 					// lets first reset session
-					Session.Reset((uint) size.Width, (uint) size.Height, (uint) RcCore.It.EngineSettings.Samples);
+					Session.Reset((uint) size.Width, (uint) size.Height, _samples);
 					// then reset scene
 					Session.Scene.Reset();
 				}
 				if(cyclesEngine.IsRendering && cyclesEngine.Session.Sample()) {
 					cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(-1, View));
 				}
-				Thread.Sleep(throttle);
+				Thread.Sleep(_throttle);
 				if(!Locked && Flush) {
 					TriggerChangesReady();
 				}
@@ -249,8 +255,6 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			StartSynchronizing?.Invoke(this, EventArgs.Empty);
 		}
-
-		bool _needReset;
 		public void Synchronize()
 		{
 			if (Session != null && State == State.Uploading)
@@ -275,10 +279,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void ChangeSamples(int samples)
 		{
-			RcCore.It.EngineSettings.Samples = samples;
 			Session?.SetSamples(samples);
 		}
-
 	}
 
 }

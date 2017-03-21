@@ -25,10 +25,19 @@ namespace RhinoCycles.Settings
 			{
 				g.FillRectangle(brush, new Rectangle(Point.Empty, m_icon.Size));
 			}
+
+		}
+
+		public override bool OnActivate(bool active)
+		{
+			if(active) CollapsibleSectionHolder_ViewDataChanged(null, EventArgs.Empty);
+			return base.OnActivate(active);
 		}
 
 		private void CollapsibleSectionHolder_ViewDataChanged(object sender, EventArgs e)
 		{
+			if (RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return;
+
 			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
 			var vpi = vi.Viewport;
 			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
