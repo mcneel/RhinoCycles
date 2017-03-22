@@ -192,7 +192,7 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetDouble("rc_polishfactor", value); }
 		}
 
-		public int ThrottleMsDefault => 0;
+		public int ThrottleMsDefault => 10;
 		/// <summary>
 		/// On systems where the (only) GPU is the primary device it can happen that
 		/// the system becomes very sluggish while using Raytraced. Set this to a number
