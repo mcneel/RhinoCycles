@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -125,7 +125,7 @@ namespace RhinoCycles.Settings
 
 			m_diffusesamples_lb = new Label()
 			{
-				Text = LOC.STR("Diffuse Samples"),
+				Text = Localization.LocalizeString("Diffuse Samples", 10),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -141,7 +141,7 @@ namespace RhinoCycles.Settings
 
 			m_glossysamples_lb = new Label()
 			{
-				Text = LOC.STR("Glossy Samples"),
+				Text = Localization.LocalizeString("Glossy Samples", 11),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -157,7 +157,7 @@ namespace RhinoCycles.Settings
 
 			m_transmissionsamples_lb = new Label()
 			{
-				Text = LOC.STR("Transmission Samples"),
+				Text = Localization.LocalizeString("Transmission Samples", 12),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -173,7 +173,7 @@ namespace RhinoCycles.Settings
 
 			m_minbounce_lb = new Label()
 			{
-				Text = LOC.STR("Minimum Bounces"),
+				Text = Localization.LocalizeString("Minimum Bounces", 13),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -189,7 +189,7 @@ namespace RhinoCycles.Settings
 
 			m_maxbounce_lb = new Label()
 			{
-				Text = LOC.STR("Maximum Bounces"),
+				Text = Localization.LocalizeString("Maximum Bounces", 14),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -205,7 +205,7 @@ namespace RhinoCycles.Settings
 
 			m_maxdiffusebounce_lb = new Label()
 			{
-				Text = LOC.STR("Maximum Diffuse Bounces"),
+				Text = Localization.LocalizeString("Maximum Diffuse Bounces", 15),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -221,7 +221,7 @@ namespace RhinoCycles.Settings
 
 			m_maxglossybounce_lb = new Label()
 			{
-				Text = LOC.STR("Maximum Glossy Bounces"),
+				Text = Localization.LocalizeString("Maximum Glossy Bounces", 16),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -237,7 +237,7 @@ namespace RhinoCycles.Settings
 
 			m_maxvolumebounce_lb = new Label()
 			{
-				Text = LOC.STR("Maximum Volume Bounces"),
+				Text = Localization.LocalizeString("Maximum Volume Bounces", 17),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -253,7 +253,7 @@ namespace RhinoCycles.Settings
 
 			m_maxtransmissionbounce_lb = new Label()
 			{
-				Text = LOC.STR("Maximum Transmission Bounces"),
+				Text = Localization.LocalizeString("Maximum Transmission Bounces", 18),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 

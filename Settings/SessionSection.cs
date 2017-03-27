@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -112,7 +112,7 @@ namespace RhinoCycles.Settings
 			};
 			m_throttlems_lb = new Label()
 			{
-				Text = LOC.STR("Throttle (in ms)"),
+				Text = Localization.LocalizeString("Throttle (in ms)", 19),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			m_throttlems = new NumericStepper()
@@ -125,7 +125,7 @@ namespace RhinoCycles.Settings
 			};
 			m_device_lb = new Label()
 			{
-				Text = LOC.STR("Device"),
+				Text = Localization.LocalizeString("Device", 20),
 				VerticalAlignment = VerticalAlignment.Top,
 			};
 			m_devices = new ListBox();
