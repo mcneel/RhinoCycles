@@ -1,4 +1,5 @@
-﻿/**
+﻿//#define YES
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +23,7 @@ using Rhino.DocObjects;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
 using Rhino;
+using System.Collections.Generic;
 
 namespace RhinoCyclesCore.RenderEngines
 {
@@ -157,9 +159,26 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#region pick a render device
 
+#if YES
+			var rd0 = Device.GetDevice(0);
+			var rd1 = Device.GetDevice(1);
+			var rd2 = Device.GetDevice(2);
+			var rd3 = Device.GetDevice(3);
+			var rd4 = Device.GetDevice(4);
+			var rdlist = new List<Device>();
+			//rdlist.Add(rd0);
+			rdlist.Add(rd1);
+			rdlist.Add(rd2);
+			//rdlist.Add(rd3);
+			//rdlist.Add(rd4);
+
+			var renderDevice = Device.CreateMultiDevice(rdlist);
+
+#else
 			var renderDevice = RcCore.It.EngineSettings.SelectedDevice == -1
 				? Device.FirstCuda
 				: Device.GetDevice(RcCore.It.EngineSettings.SelectedDevice);
+#endif
 
 			#endregion
 
