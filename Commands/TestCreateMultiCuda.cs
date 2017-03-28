@@ -54,6 +54,11 @@ namespace RhinoCycles.Commands
 					allowedIds.Add((int)dev.Id);
 				}
 			}
+			if(allowedIds.Count <2)
+			{
+				RhinoApp.WriteLine("Not enough devices to create a multi-device from");
+				return Result.Nothing;
+			}
 			var getString = new GetString();
 			getString.SetCommandPrompt($"Enter comma-delimited string");
 			var getRc = getString.Get();
@@ -76,6 +81,12 @@ namespace RhinoCycles.Commands
 				List<int> idList = new List<int>();
 				foreach (var s in set) idList.Add(s);
 				idList.Sort();
+
+				if(idList.Count<2)
+				{
+					RhinoApp.WriteLine("A multi-device needs to have at least 2 devices");
+					return Result.Failure;
+				}
 
 				List<Device> devList = new List<Device>();
 				foreach(var id in idList)
