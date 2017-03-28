@@ -40,6 +40,16 @@ namespace RhinoCycles.Commands
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			(PlugIn as Plugin)?.InitialiseCSycles();
+			var numDevices = Device.Count;
+			var endS = numDevices != 1 ? "s" : "";
+			RhinoApp.WriteLine($"We have {numDevices} device{endS}");
+			RhinoApp.WriteLine("----------");
+			foreach (var dev in Device.Devices)
+			{
+				if(dev.Id < 100000)
+					RhinoApp.WriteLine($"	Device {dev.Id}: {dev.Name} ({dev.Description})");
+			}
+			RhinoApp.WriteLine("----------");
 			var getNumber = new GetInteger();
 			getNumber.SetLowerLimit(-1, false);
 			getNumber.SetUpperLimit((int)(Device.Count-1), false);
