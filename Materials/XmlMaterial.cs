@@ -33,13 +33,13 @@ namespace RhinoCyclesCore.Materials
 
 		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.Xml;
 
-		private string Xml { get; set; }
+		private string XmlString { get; set; }
 
 		public XmlMaterial()
 		{
-			Xml = "<diffuse_bsdf color=\"0 1 0\" name=\"diff\"/>" +
+			XmlString = "<diffuse_bsdf color=\"0 1 0\" name=\"diff\"/>" +
 								"<connect from=\"diff bsdf\" to=\"output surface\" />";
-			Fields.Add("xmlcode", Xml, "XML");
+			Fields.Add("xmlcode", XmlString, "XML");
 		}
 
 		public void BakeParameters()
@@ -47,7 +47,7 @@ namespace RhinoCyclesCore.Materials
 			string xml;
 			if (Fields.TryGetValue("xmlcode", out xml))
 			{
-				Xml = xml;
+				XmlString = xml;
 			}
 		}
 
@@ -78,7 +78,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			get
 			{
-				return Xml;
+				return XmlString;
 			}
 		}
 	}
