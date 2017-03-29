@@ -117,9 +117,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#region pick a render device
 
-			var renderDevice = RcCore.It.EngineSettings.SelectedDevice == -1
-				? Device.FirstCuda
-				: Device.GetDevice(RcCore.It.EngineSettings.SelectedDevice);
+			var renderDevice = RcCore.It.EngineSettings.RenderDevice;
 
 			if (RcCore.It.EngineSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");

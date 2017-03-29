@@ -76,8 +76,18 @@ namespace RhinoCycles.Commands
 				var idx = getNumber.Number();
 				Device dev = Device.GetDevice(idx);
 				RhinoApp.WriteLine($"User selected device {idx}: {dev}");
-				PlugIn.Settings.SetInteger("rc_renderdevice", idx);
-				RcCore.It.EngineSettings.SelectedDevice = idx;
+				List<int> sdidx = new List<int>();
+				if(dev.IsMulti)
+				{
+					foreach(var sd in dev.SubdevicesIndex)
+					{
+						RhinoApp.WriteLine($"  {sd.Item1} {sd.Item2}");
+						sdidx.Add(sd.Item1);
+					}
+				}
+				var idxstr = string.Join(",", sdidx);
+
+				RcCore.It.EngineSettings.SelectedDeviceStr = idxstr;
 				return Result.Success;
 			}
 

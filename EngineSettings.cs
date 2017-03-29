@@ -54,7 +54,7 @@ namespace RhinoCyclesCore
 			Threads = Threads;
 			BumpDistance = BumpDistance;
 
-			SelectedDevice = SelectedDevice;
+			SelectedDeviceStr = SelectedDeviceStr;
 
 			MinBounce = MinBounce;
 			MaxBounce = MaxBounce;
@@ -107,10 +107,7 @@ namespace RhinoCyclesCore
 		{
 			get
 			{
-				var renderDevice = SelectedDevice == -1
-					? Device.FirstGpu
-					: Device.GetDevice(SelectedDevice);
-				return renderDevice;
+				return Device.DeviceFromString(SelectedDeviceStr);
 			}
 		}
 
@@ -234,10 +231,18 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetDouble("rc_bumpdistance", value); }
 		}
 		public int SelectedDeviceDefault => -1;
+		[Obsolete("Device selection setting has changed to be a string to cope with multi-devices.")]
 		public virtual int SelectedDevice
 		{
 			get { return RcPlugIn.Settings.GetInteger("rc_selecteddevice", SelectedDeviceDefault); }
 			set { RcPlugIn.Settings.SetInteger("rc_selecteddevice", value); }
+		}
+
+		public string SelectedDeviceStrDefault => "-1";
+		public virtual string SelectedDeviceStr
+		{
+			get { return RcPlugIn.Settings.GetString("rc_selecteddevicestr", SelectedDeviceStrDefault); }
+			set { RcPlugIn.Settings.SetString("rc_selecteddevicestr", value); }
 		}
 
 		public virtual IntegratorMethod IntegratorMethod { get; set; }

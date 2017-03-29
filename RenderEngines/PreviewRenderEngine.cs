@@ -72,11 +72,9 @@ namespace RhinoCyclesCore.RenderEngines
 			var size = cyclesEngine.RenderDimension;
 			var samples = 500;
 
-#region pick a render device
+			#region pick a render device
 
-			var renderDevice = RcCore.It.EngineSettings.SelectedDevice == -1
-				? Device.FirstCuda
-				: Device.GetDevice(RcCore.It.EngineSettings.SelectedDevice);
+			var renderDevice = RcCore.It.EngineSettings.RenderDevice;
 
 			if (RcCore.It.EngineSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");

@@ -66,17 +66,7 @@ namespace RhinoCycles.Commands
 			if (getRc == GetResult.String)
 			{
 				var res = getString.StringResult();
-				var cleaned = res.Trim().ToLowerInvariant().Split(',');
-				HashSet<int> set = new HashSet<int>();
-				foreach(var item in cleaned)
-				{
-					int x;
-					if(int.TryParse(item, out x))
-					{
-						set.Add(x);
-					}
-				}
-
+				var set = Device.IdSetFromString(res);
 				set.IntersectWith(allowedIds);
 				List<int> idList = new List<int>();
 				foreach (var s in set) idList.Add(s);

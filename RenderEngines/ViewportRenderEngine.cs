@@ -175,9 +175,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var renderDevice = Device.CreateMultiDevice(rdlist);
 
 #else
-			var renderDevice = RcCore.It.EngineSettings.SelectedDevice == -1
-				? Device.FirstCuda
-				: Device.GetDevice(RcCore.It.EngineSettings.SelectedDevice);
+			var renderDevice = RcCore.It.EngineSettings.RenderDevice;
 #endif
 
 			#endregion
