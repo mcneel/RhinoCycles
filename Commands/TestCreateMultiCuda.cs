@@ -85,7 +85,11 @@ namespace RhinoCycles.Commands
 				}
 
 				var multiDevice = Device.CreateMultiDevice(devList);
-				RhinoApp.WriteLine($"	Device {multiDevice.Id}: {multiDevice.Name} ({multiDevice.Description})");
+				RhinoApp.WriteLine($"	Device {multiDevice.Id}: {multiDevice.Name} ({multiDevice.Description}), {multiDevice.SubdeviceCount} devices");
+				foreach(var sd in multiDevice.SubdevicesIndex)
+				{
+					RhinoApp.WriteLine($"  {sd.Item1} {sd.Item2}");
+				}
 
 				return Result.Success;
 			}
