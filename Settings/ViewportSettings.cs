@@ -20,6 +20,7 @@ namespace RhinoCycles.Settings
 			var src = source as ViewportSettings;
 			if (src != null)
 			{
+				SelectedDevice = src.SelectedDevice;
 				Samples = src.Samples;
 				ThrottleMs = src.ThrottleMs;
 				Seed = src.Seed;
@@ -54,6 +55,12 @@ namespace RhinoCycles.Settings
 
 				return rem;
 			}
+		}
+
+		public string SelectedDevice
+		{
+			get { return Dictionary.GetString("selecteddevice", RcCore.It.EngineSettings.SelectedDeviceStr); }
+			set { Dictionary.Set("selecteddevice", value); }
 		}
 
 		public int Samples

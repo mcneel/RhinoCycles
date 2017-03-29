@@ -44,11 +44,13 @@ namespace RhinoCycles.Settings
 			section0.ViewDataChanged += Section0_ViewDataChanged;
 			IntegratorSection section1 = new IntegratorSection();
 			SessionSection section2 = new SessionSection();
+			DeviceSection section3 = new DeviceSection();
 
 			// Populate the holder with sections
 			m_holder.Add(section0);
 			m_holder.Add(section1);
 			m_holder.Add(section2);
+			m_holder.Add(section3);
 
 			// Create a tablelayout that contains the holder and add it to the UI
 			// Content
@@ -75,12 +77,14 @@ namespace RhinoCycles.Settings
 			(m_holder.SectionAt(0) as Section)?.Show(null);
 			(m_holder.SectionAt(1) as Section)?.Hide();
 			(m_holder.SectionAt(2) as Section)?.Hide();
+			(m_holder.SectionAt(3) as Section)?.Hide();
 		}
 		public void UserdataAvailable(ViewportSettings vud)
 		{
 			(m_holder.SectionAt(0) as Section)?.Hide();
 			(m_holder.SectionAt(1) as Section)?.Show(vud);
 			(m_holder.SectionAt(2) as Section)?.Show(vud);
+			(m_holder.SectionAt(3) as Section)?.Show(vud);
 		}
 	}
 }
