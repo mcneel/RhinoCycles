@@ -10,20 +10,36 @@ using System.Windows.Threading;
 using Rhino;
 using RhinoCycles.Viewport;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace RhinoCycles.Settings
 {
+	public class SelectionChangedEventArgs : EventArgs
+	{
+		public ObservableCollection<DeviceItem> Collection { get; private set; }
+		public SelectionChangedEventArgs(ObservableCollection<DeviceItem> col)
+		{
+			Collection = col;
+		}
+	}
+
 	public class GridDevicePage : TabPage
 	{
 		private GridView m_gv;
 
+		public GridView Grid => m_gv;
+
 		private ObservableCollection<DeviceItem> m_col;
 
-		public ObservableCollection<DeviceItem> Collection { get { return m_col; } }
+		public ObservableCollection<DeviceItem> Collection => m_col;
+
+		public event EventHandler SelectionChanged;
 
 		public GridDevicePage()
 		{
 			m_col = new ObservableCollection<DeviceItem>();
+			m_col.CollectionChanged += M_col_CollectionChanged;
 			m_gv = new GridView { DataStore = m_col };
 			m_gv.Columns.Add(new GridColumn {
 				DataCell = new TextBoxCell { Binding = Binding.Property<DeviceItem, string>(r => r.Text) },
@@ -32,7 +48,8 @@ namespace RhinoCycles.Settings
 
 			m_gv.Columns.Add(new GridColumn {
 				DataCell = new CheckBoxCell { Binding = Binding.Property<DeviceItem, bool?>(r => r.Selected) },
-				HeaderText = "Use"
+				HeaderText = "Use",
+				Editable = true
 			});
 			Content = new StackLayout
 			{
@@ -43,13 +60,87 @@ namespace RhinoCycles.Settings
 				}
 			};
 		}
+
+		public void RegisterEventHandlers()
+		{
+			foreach(var di in m_col)
+			{
+				di.PropertyChanged += Di_PropertyChanged;
+			}
+		}
+
+		public void UnregisterEventHandlers()
+		{
+			foreach(var di in m_col)
+			{
+				di.PropertyChanged -= Di_PropertyChanged;
+			}
+		}
+
+		private void M_col_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+		{
+			if(e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+			{
+				foreach(var i in e.NewItems)
+				{
+					var di = i as DeviceItem;
+					if(di!=null)
+					{
+						di.PropertyChanged -= Di_PropertyChanged;
+						di.PropertyChanged += Di_PropertyChanged;
+					}
+				}
+			}
+		}
+
+		private void Di_PropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			var di = sender as DeviceItem;
+			if (e.PropertyName.CompareTo("Selected") == 0)
+			{
+				SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(m_col));
+			}
+		}
 	}
 
-	public class DeviceItem
+	public class DeviceItem : INotifyPropertyChanged
 	{
 		public string Text { get; set; }
-		public bool Selected { get; set; }
-		public int Id { get; set; }
+
+		private bool _selected;
+		public bool Selected
+		{
+			get { return _selected; }
+			set
+			{
+				if(value!=_selected)
+				{
+					_selected = value;
+					OnPropertyChanged();
+				}
+			}
+		}
+
+		ccl.Device _dev;
+		int _id;
+		public int Id { get {
+				return _id;
+			}
+			set
+			{
+				_id = value;
+				_dev = ccl.Device.GetDevice(_id);
+			}
+		}
+
+		public ccl.Device Device => _dev;
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private void OnPropertyChanged([CallerMemberName] string memberName = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(memberName));
+		}
 	}
 	///<summary>
 	/// The UI implementation of of Section one
@@ -132,13 +223,13 @@ namespace RhinoCycles.Settings
 			Application.Instance.AsyncInvoke(() =>
 			{
 				var vud = Plugin.GetActiveViewportSettings();
-				UnRegisterControlEvents();
 				SuspendLayout();
+				UnRegisterControlEvents();
 				SetupListbox(vud, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
 				SetupListbox(vud, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
 				SetupListbox(vud, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
-				ResumeLayout();
 				RegisterControlEvents();
+				ResumeLayout();
 			}
 			);
 		}
@@ -147,8 +238,17 @@ namespace RhinoCycles.Settings
 		{
 			if (e.ViewportSettings != null)
 			{
+				SuspendLayout();
 				UnRegisterControlEvents();
+				SetupListbox(e.ViewportSettings, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
+				SetupListbox(e.ViewportSettings, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
+				SetupListbox(e.ViewportSettings, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
+				var rd = ActiveDevice(e.ViewportSettings);
+				if (rd.IsCuda || rd.IsMultiCuda) m_tc.SelectedPage = m_tabpage_cuda;
+				else if (rd.IsOpenCl || rd.IsMultiOpenCl) m_tc.SelectedPage = m_tabpage_opencl;
+				else m_tc.SelectedPage = m_tabpage_cpu;
 				RegisterControlEvents();
+				ResumeLayout();
 			}
 		}
 
@@ -182,30 +282,27 @@ namespace RhinoCycles.Settings
 
 		private void RegisterControlEvents()
 		{
-			//m_samples.ValueChanged += M_ValueChanged;
-			//m_throttlems.ValueChanged += M_ValueChanged;
+			m_tabpage_cpu.SelectionChanged += deviceSelectionChanged;
+			m_tabpage_cpu.RegisterEventHandlers();
+			m_tabpage_cuda.SelectionChanged += deviceSelectionChanged;
+			m_tabpage_cuda.RegisterEventHandlers();
+			m_tabpage_opencl.SelectionChanged += deviceSelectionChanged;
+			m_tabpage_opencl.RegisterEventHandlers();
 		}
 
-		private void M_ValueChanged(object sender, EventArgs e)
+		private void deviceSelectionChanged(object sender, EventArgs e)
 		{
-			/*var vud = Plugin.GetActiveViewportSettings();
-			if (vud == null) return;
-
-			vud.Samples = (int)m_samples.Value;
-			vud.ThrottleMs = (int)m_throttlems.Value;
-
-			var rvp = RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
-			if (rvp == null) return;
-
-			rvp.TriggerViewportSettingsChanged(vud);
-			rvp.ChangeSamples(vud.Samples);
-			rvp.SignalRedraw();*/
+			throw new NotImplementedException();
 		}
 
 		private void UnRegisterControlEvents()
 		{
-			//m_samples.ValueChanged -= M_ValueChanged;
-			//m_throttlems.ValueChanged -= M_ValueChanged;
+			m_tabpage_cpu.SelectionChanged -= deviceSelectionChanged;
+			m_tabpage_cpu.UnregisterEventHandlers();
+			m_tabpage_cuda.SelectionChanged -= deviceSelectionChanged;
+			m_tabpage_cuda.UnregisterEventHandlers();
+			m_tabpage_opencl.SelectionChanged -= deviceSelectionChanged;
+			m_tabpage_opencl.UnregisterEventHandlers();
 		}
 	}
 }
