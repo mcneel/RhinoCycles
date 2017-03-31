@@ -34,7 +34,7 @@ namespace RhinoCycles.Settings
 
 		public ObservableCollection<DeviceItem> Collection => m_col;
 
-		public event EventHandler SelectionChanged;
+		public event EventHandler<SelectionChangedEventArgs> SelectionChanged;
 
 		public GridDevicePage()
 		{
@@ -61,6 +61,22 @@ namespace RhinoCycles.Settings
 			};
 		}
 
+		public void ClearSelection()
+		{
+			foreach(var di in m_col)
+			{
+				di.Selected = false;
+			}
+		}
+
+		public string DeviceSelectionString()
+		{
+			var str = string.Join(",", (from d in m_col where d.Selected select d.Id).ToList());
+
+			return string.IsNullOrEmpty(str) ? "-1" : str;
+
+		}
+
 		public void RegisterEventHandlers()
 		{
 			foreach(var di in m_col)
@@ -83,8 +99,7 @@ namespace RhinoCycles.Settings
 			{
 				foreach(var i in e.NewItems)
 				{
-					var di = i as DeviceItem;
-					if(di!=null)
+					if (i is DeviceItem di)
 					{
 						di.PropertyChanged -= Di_PropertyChanged;
 						di.PropertyChanged += Di_PropertyChanged;
@@ -143,15 +158,24 @@ namespace RhinoCycles.Settings
 		}
 	}
 	///<summary>
-	/// The UI implementation of of Section one
+	/// The UI implementation of device section
 	///</summary>
 	public class DeviceSection: Section
 	{
 		private LocalizeStringPair m_caption;
 		private TabControl m_tc;
+		private Label m_lb_curdev;
+		private Label m_curdev;
+		private Label m_lb_newdev;
+		private Label m_newdev;
 		private GridDevicePage m_tabpage_cpu;
 		private GridDevicePage m_tabpage_cuda;
 		private GridDevicePage m_tabpage_opencl;
+		private Button m_reset;
+		private Button m_select;
+		private ccl.Device m_currentDevice;
+		private ccl.Device m_newDevice;
+		private readonly string m_nodeviceselected = LOC.STR("No device selected, default device will be used");
 
 		public override LocalizeStringPair Caption
 		{
@@ -213,7 +237,7 @@ namespace RhinoCycles.Settings
 			{
 				if (d.Type == t)
 				{
-					lb.Add(new DeviceItem { Text = d.NiceName, Selected = rd.EqualsId(d.Id), Id = (int)d.Type });
+					lb.Add(new DeviceItem { Text = d.NiceName, Selected = rd.EqualsId(d.Id), Id = (int)d.Id });
 				}
 			}
 		}
@@ -223,30 +247,42 @@ namespace RhinoCycles.Settings
 			Application.Instance.AsyncInvoke(() =>
 			{
 				var vud = Plugin.GetActiveViewportSettings();
+				m_currentDevice = RcCore.It.EngineSettings.RenderDevice;
+				m_newDevice = vud!=null ? ccl.Device.DeviceFromString(vud.SelectedDevice) : m_currentDevice;
 				SuspendLayout();
 				UnRegisterControlEvents();
+				ShowDeviceData();
 				SetupListbox(vud, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
 				SetupListbox(vud, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
 				SetupListbox(vud, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
+				ActivateDevicePage(vud);
 				RegisterControlEvents();
 				ResumeLayout();
 			}
 			);
 		}
 
+		private void ActivateDevicePage(ViewportSettings vud)
+		{
+			var rd = ActiveDevice(vud);
+			if (rd.IsCuda || rd.IsMultiCuda) m_tc.SelectedPage = m_tabpage_cuda;
+			else if (rd.IsOpenCl || rd.IsMultiOpenCl) m_tc.SelectedPage = m_tabpage_opencl;
+			else m_tc.SelectedPage = m_tabpage_cpu;
+		}
+
 		private void DeviceSection_ViewportSettingsReceived(object sender, ViewportSettingsReceivedEventArgs e)
 		{
 			if (e.ViewportSettings != null)
 			{
+				m_currentDevice = RcCore.It.EngineSettings.RenderDevice;
+				m_newDevice = ccl.Device.DeviceFromString(e.ViewportSettings.SelectedDevice);
 				SuspendLayout();
 				UnRegisterControlEvents();
+				ShowDeviceData();
 				SetupListbox(e.ViewportSettings, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
 				SetupListbox(e.ViewportSettings, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
 				SetupListbox(e.ViewportSettings, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
-				var rd = ActiveDevice(e.ViewportSettings);
-				if (rd.IsCuda || rd.IsMultiCuda) m_tc.SelectedPage = m_tabpage_cuda;
-				else if (rd.IsOpenCl || rd.IsMultiOpenCl) m_tc.SelectedPage = m_tabpage_opencl;
-				else m_tc.SelectedPage = m_tabpage_cpu;
+				ActivateDevicePage(e.ViewportSettings);
 				RegisterControlEvents();
 				ResumeLayout();
 			}
@@ -254,13 +290,20 @@ namespace RhinoCycles.Settings
 
 		private void InitializeComponents()
 		{
+			m_reset = new Button { Text = LOC.STR("Reset device selection"), ToolTip = LOC.STR("Reset the current selection to that corresponding to the application-level render device selection.") };
+			m_select = new Button { Text = LOC.STR("Use current device selection"), ToolTip = LOC.STR("Sets the current selection as application level render device.") };
 			m_tc = new TabControl();
-			m_tabpage_cpu = new GridDevicePage { Text = "CPU" };
-			m_tabpage_cuda = new GridDevicePage { Text = "CUDA" };
-			m_tabpage_opencl = new GridDevicePage { Text = "OpenCL" };
+			m_tabpage_cpu = new GridDevicePage { Text = "CPU", ToolTip = LOC.STR("Show all the render devices in the CPU category.") };
+			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", ToolTip = LOC.STR("Show all the render devices in the CUDA category. These are the NVidia graphics and compute cards.") };
+			m_tabpage_opencl = new GridDevicePage { Text = "OpenCL", ToolTip = LOC.STR("Show all the render devices in the OpenCL category. These include all devices that support the OpenCL technology, including CPUs and most graphics cards.") };
 			m_tc.Pages.Add(m_tabpage_cpu);
 			m_tc.Pages.Add(m_tabpage_cuda);
 			m_tc.Pages.Add(m_tabpage_opencl);
+
+			m_lb_curdev = new Label { Text = LOC.STR("Current render device:") };
+			m_curdev = new Label { Text = "...", Wrap = WrapMode.Word };
+			m_lb_newdev = new Label { Text = LOC.STR("New render device:") };
+			m_newdev = new Label { Text = "...", Wrap = WrapMode.Word };
 		}
 
 
@@ -268,13 +311,15 @@ namespace RhinoCycles.Settings
 		{
 			StackLayout layout = new StackLayout()
 			{
-				// Padding around the table
 				Padding = 10,
-				// Spacing between table cells
 				HorizontalContentAlignment = HorizontalAlignment.Stretch,
+				Orientation = Orientation.Vertical,
 				Items =
 				{
+					TableLayout.Horizontal(15, m_lb_curdev, m_curdev, null),
 					new StackLayoutItem(m_tc, true),
+					TableLayout.Horizontal(15, m_lb_newdev, m_newdev, null),
+					TableLayout.Horizontal(15, null, m_reset, m_select, null),
 				}
 			};
 			Content = layout;
@@ -282,26 +327,89 @@ namespace RhinoCycles.Settings
 
 		private void RegisterControlEvents()
 		{
-			m_tabpage_cpu.SelectionChanged += deviceSelectionChanged;
+			m_reset.Click += HandleResetClick;
+			m_select.Click += HandleSelectClick;
+			m_tabpage_cpu.SelectionChanged += DeviceSelectionChanged;
 			m_tabpage_cpu.RegisterEventHandlers();
-			m_tabpage_cuda.SelectionChanged += deviceSelectionChanged;
+			m_tabpage_cuda.SelectionChanged += DeviceSelectionChanged;
 			m_tabpage_cuda.RegisterEventHandlers();
-			m_tabpage_opencl.SelectionChanged += deviceSelectionChanged;
+			m_tabpage_opencl.SelectionChanged += DeviceSelectionChanged;
 			m_tabpage_opencl.RegisterEventHandlers();
 		}
 
-		private void deviceSelectionChanged(object sender, EventArgs e)
+		private void ShowDeviceData()
 		{
-			throw new NotImplementedException();
+			var nodev = LOC.STR("No device found");
+			if(m_currentDevice!=null)
+			{
+				m_curdev.Text = $"{m_currentDevice.NiceName} ({m_currentDevice.Type})";
+			}
+			else
+			{
+				m_curdev.Text = nodev;
+			}
+			if(m_newDevice != null)
+			{
+				m_newdev.Text = $"{m_newDevice.NiceName} ({m_newDevice.Type})";
+			}
+			else
+			{
+				m_newdev.Text = nodev;
+			}
+		}
+
+		private void HandleResetClick(object sender, EventArgs e)
+		{
+			var vud = Plugin.GetActiveViewportSettings();
+			if (vud != null)
+			{
+				vud.SelectedDevice = RcCore.It.EngineSettings.SelectedDeviceStr;
+				It_InitialisationCompleted(this, EventArgs.Empty);
+			}
+		}
+
+		private void HandleSelectClick(object sender, EventArgs e)
+		{
+			var vud = Plugin.GetActiveViewportSettings();
+			if (vud != null)
+			{
+				RcCore.It.EngineSettings.SelectedDeviceStr = vud.SelectedDevice;
+				It_InitialisationCompleted(this, EventArgs.Empty);
+			}
+		}
+
+		private void DeviceSelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			UnRegisterControlEvents();
+
+			if (sender is GridDevicePage senderpage)
+			{
+
+				foreach (var page in m_tc.Pages)
+				{
+					if (page is GridDevicePage p && p != sender) p.ClearSelection();
+				}
+				var vud = Plugin.GetActiveViewportSettings();
+
+				m_newDevice = ccl.Device.DeviceFromString(senderpage.DeviceSelectionString());
+				if(vud!=null) vud.SelectedDevice = m_newDevice.DeviceString;
+				
+			}
+
+			RegisterControlEvents();
+
+			It_InitialisationCompleted(this, EventArgs.Empty);
 		}
 
 		private void UnRegisterControlEvents()
 		{
-			m_tabpage_cpu.SelectionChanged -= deviceSelectionChanged;
+			m_reset.Click -= HandleResetClick;
+			m_select.Click -= HandleSelectClick;
+			m_tabpage_cpu.SelectionChanged -= DeviceSelectionChanged;
 			m_tabpage_cpu.UnregisterEventHandlers();
-			m_tabpage_cuda.SelectionChanged -= deviceSelectionChanged;
+			m_tabpage_cuda.SelectionChanged -= DeviceSelectionChanged;
 			m_tabpage_cuda.UnregisterEventHandlers();
-			m_tabpage_opencl.SelectionChanged -= deviceSelectionChanged;
+			m_tabpage_opencl.SelectionChanged -= DeviceSelectionChanged;
 			m_tabpage_opencl.UnregisterEventHandlers();
 		}
 	}
