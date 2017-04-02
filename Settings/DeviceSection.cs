@@ -25,15 +25,6 @@ using System.Runtime.CompilerServices;
 
 namespace RhinoCycles.Settings
 {
-	public class SelectionChangedEventArgs : EventArgs
-	{
-		public ObservableCollection<DeviceItem> Collection { get; private set; }
-		public SelectionChangedEventArgs(ObservableCollection<DeviceItem> col)
-		{
-			Collection = col;
-		}
-	}
-
 	public class GridDevicePage : TabPage
 	{
 		private GridView m_gv;
@@ -44,7 +35,7 @@ namespace RhinoCycles.Settings
 
 		public ObservableCollection<DeviceItem> Collection => m_col;
 
-		public event EventHandler<SelectionChangedEventArgs> SelectionChanged;
+		public event EventHandler SelectionChanged;
 
 		public GridDevicePage()
 		{
@@ -123,7 +114,7 @@ namespace RhinoCycles.Settings
 			var di = sender as DeviceItem;
 			if (e.PropertyName.CompareTo("Selected") == 0)
 			{
-				SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(m_col));
+				SelectionChanged?.Invoke(this, EventArgs.Empty);
 			}
 		}
 	}
@@ -388,13 +379,12 @@ namespace RhinoCycles.Settings
 			}
 		}
 
-		private void DeviceSelectionChanged(object sender, SelectionChangedEventArgs e)
+		private void DeviceSelectionChanged(object sender, EventArgs e)
 		{
 			UnRegisterControlEvents();
 
 			if (sender is GridDevicePage senderpage)
 			{
-
 				foreach (var page in m_tc.Pages)
 				{
 					if (page is GridDevicePage p && p != sender) p.ClearSelection();
