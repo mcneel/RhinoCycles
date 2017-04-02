@@ -247,7 +247,7 @@ namespace RhinoCycles.Settings
 			{
 				if (d.Type == t)
 				{
-					lb.Add(new DeviceItem { Text = d.NiceName, Selected = rd.EqualsId(d.Id), Id = (int)d.Id });
+					lb.Add(new DeviceItem { Text = d.NiceName, Selected = rd.HasId(d.Id), Id = (int)d.Id });
 				}
 			}
 		}
