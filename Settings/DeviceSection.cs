@@ -349,7 +349,7 @@ namespace RhinoCycles.Settings
 
 		private void ShowDeviceData()
 		{
-			var nodev = LOC.STR("No device found");
+			var nodev = "-";
 			if(m_currentDevice!=null)
 			{
 				m_curdev.Text = $"{m_currentDevice.NiceName} ({m_currentDevice.Type})";
@@ -358,7 +358,7 @@ namespace RhinoCycles.Settings
 			{
 				m_curdev.Text = nodev;
 			}
-			if(m_newDevice != null)
+			if(m_newDevice != null && m_currentDevice != m_newDevice)
 			{
 				m_newdev.Text = $"{m_newDevice.NiceName} ({m_newDevice.Type})";
 			}
