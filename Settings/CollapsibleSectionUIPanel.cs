@@ -4,7 +4,7 @@ using Rhino.UI.Controls;
 
 namespace RhinoCycles.Settings
 {
-	public class CollapsibleSectionUIPanel : Scrollable
+	public class CollapsibleSectionUIPanel : Panel
 	{
 		/// <summary>
 		/// Returns the ID of this panel.
@@ -57,9 +57,9 @@ namespace RhinoCycles.Settings
 			TableLayout tableLayout = new TableLayout()
 			{
 				Rows =
-								{
-										m_holder
-								}
+				{
+					m_holder
+				}
 			};
 
 			Content = tableLayout;
@@ -78,6 +78,8 @@ namespace RhinoCycles.Settings
 			(m_holder.SectionAt(1) as Section)?.Hide();
 			(m_holder.SectionAt(2) as Section)?.Hide();
 			(m_holder.SectionAt(3) as Section)?.Hide();
+			m_holder.Invalidate(true);
+			Invalidate(true);
 		}
 		public void UserdataAvailable(ViewportSettings vud)
 		{
@@ -85,6 +87,8 @@ namespace RhinoCycles.Settings
 			(m_holder.SectionAt(1) as Section)?.Show(vud);
 			(m_holder.SectionAt(2) as Section)?.Show(vud);
 			(m_holder.SectionAt(3) as Section)?.Show(vud);
+			m_holder.Invalidate(true);
+			Invalidate(true);
 		}
 	}
 }
