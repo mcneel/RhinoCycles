@@ -280,6 +280,20 @@ namespace RhinoCycles.Settings
 
 		private void InitializeLayout()
 		{
+			var bounceTable = new TableLayout()
+			{
+				Spacing = new Eto.Drawing.Size(1, 5),
+				Rows =
+				{
+					new TableRow(new TableCell(m_minimum, true), new TableCell(m_maximum, true)),
+					new TableRow(m_minbounce, m_maxbounce),
+					new TableRow(m_maxdiffusebounce_lb, m_maxdiffusebounce),
+					new TableRow(m_maxglossybounce_lb, m_maxglossybounce),
+					new TableRow(m_maxtransmissionbounce_lb, m_maxtransmissionbounce),
+					new TableRow(m_maxvolumebounce_lb, m_maxvolumebounce),
+				}
+			};
+
 			StackLayout layout = new StackLayout()
 			{
 				// Padding around the table
@@ -296,30 +310,10 @@ namespace RhinoCycles.Settings
 					TableLayout.Horizontal(10,
 						new GroupBox()
 						{
-							Content = new StackLayout()
-							{
-								HorizontalContentAlignment = HorizontalAlignment.Stretch,
-								Items =
-								{
-									TableLayout.Horizontal(10, null, m_minimum, m_maximum, null),
-									TableLayout.Horizontal(10, m_minbounce, m_maxbounce, null),
-								}
-							}
-						}
-					),
-					TableLayout.Horizontal(10,
-						new GroupBox()
-						{
-							Content = new TableLayout()
-							{
-								Rows =
-								{
-									new TableRow(m_maxdiffusebounce_lb, m_maxdiffusebounce),
-									new TableRow(m_maxglossybounce_lb, m_maxglossybounce),
-									new TableRow(m_maxtransmissionbounce_lb, m_maxtransmissionbounce),
-									new TableRow(m_maxvolumebounce_lb, m_maxvolumebounce),
-								}
-							}
+							Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
+							Text = LOC.STR("Ray Bounces"),
+							ToolTip = LOC.STR("Settings controlling the bounce limits\nfor different types of rays."),
+							Content = bounceTable,
 						}
 					),
 				}
