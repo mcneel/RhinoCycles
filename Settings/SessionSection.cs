@@ -33,13 +33,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// The Heigth of the section
 		///</summary>
-		public override int SectionHeight
-		{
-			get
-			{
-				return Content.Height;
-			}
-		}
+		public override int SectionHeight => Content.Height;
 
 		///<summary>
 		/// Constructor for SectionOne

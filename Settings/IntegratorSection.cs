@@ -40,10 +40,10 @@ namespace RhinoCycles.Settings
 		private Label m_transmissionsamples_lb;
 		private NumericStepper m_transmissionsamples;
 
-		private Label m_minbounce_lb;
-		private NumericStepper m_minbounce;
+		private Label m_maximum;
+		private Label m_minimum;
 
-		private Label m_maxbounce_lb;
+		private NumericStepper m_minbounce;
 		private NumericStepper m_maxbounce;
 
 		private Label m_maxdiffusebounce_lb;
@@ -63,7 +63,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// The Heigth of the section
 		///</summary>
-		public override int SectionHeight => this.Content.Height;
+		public override int SectionHeight => Content.Height;
 
 		///<summary>
 		/// Constructor for SectionOne
@@ -171,9 +171,9 @@ namespace RhinoCycles.Settings
 				Tag = IntegratorSetting.TransmissionSamples,
 			};
 
-			m_minbounce_lb = new Label()
+			m_minimum = new Label()
 			{
-				Text = Localization.LocalizeString("Minimum Bounces", 13),
+				Text = LOC.STR("Minimum"),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -187,9 +187,9 @@ namespace RhinoCycles.Settings
 				Tag = IntegratorSetting.MinBounce,
 			};
 
-			m_maxbounce_lb = new Label()
+			m_maximum = new Label()
 			{
-				Text = Localization.LocalizeString("Maximum Bounces", 14),
+				Text = LOC.STR("Maximum"),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -205,13 +205,15 @@ namespace RhinoCycles.Settings
 
 			m_maxdiffusebounce_lb = new Label()
 			{
-				Text = Localization.LocalizeString("Maximum Diffuse Bounces", 15),
+				Text = LOC.STR("Diffuse"),
+				ToolTip = Localization.LocalizeString("Maximum Diffuse Bounces", 15),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
 			m_maxdiffusebounce = new NumericStepper()
 			{
 				Value = 0,
+				ToolTip = Localization.LocalizeString("Maximum Diffuse Bounces", 15),
 				MaxValue = int.MaxValue,
 				MinValue = 0,
 				MaximumDecimalPlaces = 0,
@@ -221,13 +223,15 @@ namespace RhinoCycles.Settings
 
 			m_maxglossybounce_lb = new Label()
 			{
-				Text = Localization.LocalizeString("Maximum Glossy Bounces", 16),
+				Text = LOC.STR("Glossy"),
+				ToolTip = Localization.LocalizeString("Maximum Glossy Bounces", 16),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
 			m_maxglossybounce = new NumericStepper()
 			{
 				Value = 0,
+				ToolTip = Localization.LocalizeString("Maximum Glossy Bounces", 16),
 				MaxValue = int.MaxValue,
 				MinValue = 0,
 				MaximumDecimalPlaces = 0,
@@ -237,13 +241,15 @@ namespace RhinoCycles.Settings
 
 			m_maxvolumebounce_lb = new Label()
 			{
-				Text = Localization.LocalizeString("Maximum Volume Bounces", 17),
+				Text = LOC.STR("Volume"),
+				ToolTip = Localization.LocalizeString("Maximum Volume Bounces", 17),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
 			m_maxvolumebounce = new NumericStepper()
 			{
 				Value = 0,
+				ToolTip = Localization.LocalizeString("Maximum Volume Bounces", 17),
 				MaxValue = int.MaxValue,
 				MinValue = 0,
 				MaximumDecimalPlaces = 0,
@@ -253,13 +259,15 @@ namespace RhinoCycles.Settings
 
 			m_maxtransmissionbounce_lb = new Label()
 			{
-				Text = Localization.LocalizeString("Maximum Transmission Bounces", 18),
+				Text = ("Transmission"),
+				ToolTip = Localization.LocalizeString("Maximum Transmission Bounces", 18),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
 			m_maxtransmissionbounce = new NumericStepper()
 			{
 				Value = 0,
+				ToolTip = Localization.LocalizeString("Maximum Transmission Bounces", 18),
 				MaxValue = int.MaxValue,
 				MinValue = 0,
 				MaximumDecimalPlaces = 0,
@@ -272,25 +280,49 @@ namespace RhinoCycles.Settings
 
 		private void InitializeLayout()
 		{
-			TableLayout layout = new TableLayout()
+			StackLayout layout = new StackLayout()
 			{
 				// Padding around the table
 				Padding = new Eto.Drawing.Padding(3, 5, 3, 0),
 				// Spacing between table cells
-				Spacing = new Eto.Drawing.Size(15, 5),
-				Rows =
-					{
-						new TableRow(m_seed_lb, m_seed),
-						//new TableRow(m_diffusesamples_lb, m_diffusesamples),
-						//new TableRow(m_glossysamples_lb, m_glossysamples),
-						//new TableRow(m_transmissionsamples_lb, m_transmissionsamples),
-						new TableRow(m_minbounce_lb, m_minbounce),
-						new TableRow(m_maxbounce_lb, m_maxbounce),
-						new TableRow(m_maxdiffusebounce_lb, m_maxdiffusebounce),
-						new TableRow(m_maxglossybounce_lb, m_maxglossybounce),
-						new TableRow(m_maxtransmissionbounce_lb, m_maxtransmissionbounce),
-						new TableRow(m_maxvolumebounce_lb, m_maxvolumebounce),
-					}
+				//Spacing = new Eto.Drawing.Size(15, 5),
+				HorizontalContentAlignment = HorizontalAlignment.Stretch,
+				Items =
+				{
+				TableLayout.Horizontal(10, m_seed_lb, m_seed),
+					//new TableRow(m_diffusesamples_lb, m_diffusesamples),
+					//new TableRow(m_glossysamples_lb, m_glossysamples),
+					//new TableRow(m_transmissionsamples_lb, m_transmissionsamples),
+					TableLayout.Horizontal(10,
+						new GroupBox()
+						{
+							Content = new StackLayout()
+							{
+								HorizontalContentAlignment = HorizontalAlignment.Stretch,
+								Items =
+								{
+									TableLayout.Horizontal(10, null, m_minimum, m_maximum, null),
+									TableLayout.Horizontal(10, m_minbounce, m_maxbounce, null),
+								}
+							}
+						}
+					),
+					TableLayout.Horizontal(10,
+						new GroupBox()
+						{
+							Content = new TableLayout()
+							{
+								Rows =
+								{
+									new TableRow(m_maxdiffusebounce_lb, m_maxdiffusebounce),
+									new TableRow(m_maxglossybounce_lb, m_maxglossybounce),
+									new TableRow(m_maxtransmissionbounce_lb, m_maxtransmissionbounce),
+									new TableRow(m_maxvolumebounce_lb, m_maxvolumebounce),
+								}
+							}
+						}
+					),
+				}
 			};
 			Content = layout;
 		}

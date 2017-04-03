@@ -49,9 +49,9 @@ namespace RhinoCycles.Settings
 				// Spacing between table cells
 				Spacing = new Eto.Drawing.Size(15, 15),
 				Rows =
-								{
-										new TableRow(m_button),
-								}
+				{
+					new TableRow(m_button),
+				}
 			};
 			Content = layout;
 		}

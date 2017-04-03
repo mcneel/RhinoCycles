@@ -186,13 +186,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// The Heigth of the section
 		///</summary>
-		public override int SectionHeight
-		{
-			get
-			{
-				return Content.Height;
-			}
-		}
+		public override int SectionHeight => Content.Height;
 
 		///<summary>
 		/// Constructor for SectionOne
@@ -291,12 +285,12 @@ namespace RhinoCycles.Settings
 
 		private void InitializeComponents()
 		{
-			m_reset = new Button { Text = LOC.STR("Reset device selection"), ToolTip = LOC.STR("Reset the current selection to that corresponding to the application-level render device selection.") };
+			m_reset = new Button { Text = LOC.STR("Reset device selection"), ToolTip = LOC.STR("Reset the current selection to that corresponding\nto the application-level render device selection.") };
 			m_select = new Button { Text = LOC.STR("Use current device selection"), ToolTip = LOC.STR("Sets the current selection as application level render device.") };
 			m_tc = new TabControl();
 			m_tabpage_cpu = new GridDevicePage { Text = "CPU", ToolTip = LOC.STR("Show all the render devices in the CPU category.") };
-			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", ToolTip = LOC.STR("Show all the render devices in the CUDA category. These are the NVidia graphics and compute cards.") };
-			m_tabpage_opencl = new GridDevicePage { Text = "OpenCL", ToolTip = LOC.STR("Show all the render devices in the OpenCL category. These include all devices that support the OpenCL technology, including CPUs and most graphics cards.") };
+			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", ToolTip = LOC.STR("Show all the render devices in the CUDA category.\nThese are the NVidia graphics and compute cards.") };
+			m_tabpage_opencl = new GridDevicePage { Text = "OpenCL", ToolTip = LOC.STR("Show all the render devices in the OpenCL category.\nThese include all devices that support the OpenCL technology, including CPUs and most graphics cards.") };
 			m_tc.Pages.Add(m_tabpage_cpu);
 			m_tc.Pages.Add(m_tabpage_cuda);
 			m_tc.Pages.Add(m_tabpage_opencl);
