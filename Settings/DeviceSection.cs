@@ -203,12 +203,12 @@ namespace RhinoCycles.Settings
 
 		protected override void OnShown(EventArgs e)
 		{
-			base.OnShown(e);
 			var vud = Plugin.GetActiveViewportSettings();
 			var rd = ActiveDevice(vud);
 			if (rd.IsCpu) m_tc.SelectedPage = m_tabpage_cpu;
 			if (rd.IsCuda || rd.IsMultiCuda) m_tc.SelectedPage = m_tabpage_cuda;
 			if (rd.IsOpenCl || rd.IsMultiOpenCl) m_tc.SelectedPage = m_tabpage_opencl;
+			base.OnShown(e);
 		}
 
 		private static ccl.Device ActiveDevice(ViewportSettings vud)

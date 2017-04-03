@@ -50,11 +50,11 @@ namespace RhinoCycles.Settings
 
 		protected override void OnShown(EventArgs e)
 		{
-			base.OnShown(e);
 			var layout = Content as TableLayout;
 			if (layout == null) return;
 			layout.SetColumnScale(0, true);
 			layout.SetColumnScale(1, true);
+			base.OnShown(e);
 		}
 
 		private void It_InitialisationCompleted(object sender, EventArgs e)
