@@ -32,8 +32,6 @@ namespace RhinoCycles.Settings
 		private NumericStepper m_samples;
 		private Label m_throttlems_lb;
 		private NumericStepper m_throttlems;
-		private Label m_device_lb;
-		private ListBox m_devices;
 
 		public override LocalizeStringPair Caption
 		{
@@ -58,31 +56,17 @@ namespace RhinoCycles.Settings
 			ViewportSettingsReceived += SessionSection_ViewportSettingsReceived;
 		}
 
-		protected override void OnShown(EventArgs e)
-		{
-			var layout = Content as TableLayout;
-			if (layout == null) return;
-			layout.SetColumnScale(0, true);
-			layout.SetColumnScale(1, true);
-			base.OnShown(e);
-		}
-
 		private void It_InitialisationCompleted(object sender, EventArgs e)
 		{
 			Application.Instance.AsyncInvoke(() =>
 			{
 				var vud = Plugin.GetActiveViewportSettings();
+				if (vud == null) return;
 				SuspendLayout();
-				m_devices.Items.Clear();
-				foreach (var d in ccl.Device.Devices)
-				{
-					m_devices.Items.Add(d.Name);
-				}
-				if (vud != null)
-				{
-					var rd = RcCore.It.EngineSettings.RenderDevice;
-					m_devices.SelectedIndex = (int)rd.Id;
-				}
+				UnRegisterControlEvents();
+				m_samples.Value = vud.Samples;
+				m_throttlems.Value = vud.ThrottleMs;
+				RegisterControlEvents();
 				ResumeLayout();
 			}
 			);
@@ -127,29 +111,32 @@ namespace RhinoCycles.Settings
 				MinValue = 0,
 				Width = 75,
 			};
-			m_device_lb = new Label()
-			{
-				Text = Localization.LocalizeString("Device", 20),
-				VerticalAlignment = VerticalAlignment.Top,
-			};
-			m_devices = new ListBox();
 		}
 
 
 		private void InitializeLayout()
 		{
-			TableLayout layout = new TableLayout()
+			StackLayout layout = new StackLayout()
 			{
 				// Padding around the table
-				Padding = 10,
+				Padding = new Eto.Drawing.Padding(3, 5, 3, 0),
 				// Spacing between table cells
-				Spacing = new Eto.Drawing.Size(15, 15),
-				Rows =
-					{
-							new TableRow(m_samples_lb, m_samples),
-							new TableRow(m_throttlems_lb, m_throttlems),
-							//new TableRow(m_device_lb, m_devices),
-					}
+				HorizontalContentAlignment = HorizontalAlignment.Stretch,
+				Items =
+				{
+					TableLayout.HorizontalScaled(10, 
+						new Panel() {
+							Padding = 10,
+							Content = new TableLayout() {
+								Spacing = new Eto.Drawing.Size(1, 5),
+								Rows = {
+									new TableRow( new TableCell(m_samples_lb, true), new TableCell(m_samples, true)),
+									new TableRow(m_throttlems_lb, m_throttlems),
+								}
+							}
+						}
+					)
+				}
 			};
 			Content = layout;
 		}
