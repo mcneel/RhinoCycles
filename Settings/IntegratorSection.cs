@@ -77,15 +77,6 @@ namespace RhinoCycles.Settings
 			ViewportSettingsReceived += IntegratorSection_ViewportSettingsReceived;
 		}
 
-		protected override void OnShown(EventArgs e)
-		{
-			var layout = Content as TableLayout;
-			if (layout == null) return;
-			layout.SetColumnScale(0, true);
-			layout.SetColumnScale(1, true);
-			base.OnShown(e);
-		}
-
 		private void IntegratorSection_ViewportSettingsReceived(object sender, ViewportSettingsReceivedEventArgs e)
 		{
 			if (e.ViewportSettings != null)
@@ -303,7 +294,16 @@ namespace RhinoCycles.Settings
 				HorizontalContentAlignment = HorizontalAlignment.Stretch,
 				Items =
 				{
-				TableLayout.Horizontal(10, m_seed_lb, m_seed),
+				TableLayout.Horizontal(10,
+					new GroupBox() {
+						Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
+						Text = Localization.LocalizeString("Seed", 4),
+						ToolTip = LOC.STR("Set the seed for the random number generator."),
+						Content = new TableLayout
+						{
+							Rows = { new TableRow(new TableCell(m_seed, true)) }
+						}
+					}),
 					//new TableRow(m_diffusesamples_lb, m_diffusesamples),
 					//new TableRow(m_glossysamples_lb, m_glossysamples),
 					//new TableRow(m_transmissionsamples_lb, m_transmissionsamples),
