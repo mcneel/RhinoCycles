@@ -13,14 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
-
-using System;
-using System.Linq;
 using Eto.Forms;
 using Rhino.UI;
 using RhinoCyclesCore.Core;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace RhinoCycles.Settings
@@ -43,14 +42,13 @@ namespace RhinoCycles.Settings
 			m_col.CollectionChanged += M_col_CollectionChanged;
 			m_gv = new GridView { DataStore = m_col };
 			m_gv.Columns.Add(new GridColumn {
-				DataCell = new TextBoxCell { Binding = Binding.Property<DeviceItem, string>(r => r.Text) },
-				HeaderText = "Device"
-			});
-
-			m_gv.Columns.Add(new GridColumn {
 				DataCell = new CheckBoxCell { Binding = Binding.Property<DeviceItem, bool?>(r => r.Selected) },
 				HeaderText = "Use",
 				Editable = true
+			});
+			m_gv.Columns.Add(new GridColumn {
+				DataCell = new TextBoxCell { Binding = Binding.Property<DeviceItem, string>(r => r.Text) },
+				HeaderText = "Device"
 			});
 			Content = new StackLayout
 			{
@@ -307,14 +305,15 @@ namespace RhinoCycles.Settings
 			StackLayout layout = new StackLayout()
 			{
 				Padding = 10,
+				Spacing = 5,
 				HorizontalContentAlignment = HorizontalAlignment.Stretch,
 				Orientation = Orientation.Vertical,
 				Items =
 				{
-					TableLayout.Horizontal(15, m_lb_curdev, m_curdev, null),
+					TableLayout.HorizontalScaled(15, m_lb_curdev, m_curdev),
 					new StackLayoutItem(m_tc, true),
-					TableLayout.Horizontal(15, m_lb_newdev, m_newdev, null),
-					TableLayout.Horizontal(15, null, m_reset, m_select, null),
+					TableLayout.HorizontalScaled(15, m_lb_newdev, m_newdev),
+					TableLayout.HorizontalScaled(15, m_reset, m_select),
 				}
 			};
 			Content = layout;
