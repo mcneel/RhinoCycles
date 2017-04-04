@@ -17,6 +17,7 @@ using System;
 using Eto.Forms;
 using Rhino;
 using Rhino.UI;
+using Rhino.DocObjects;
 
 namespace RhinoCycles.Settings
 {
@@ -38,7 +39,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public AddUserdataSection()
+		public AddUserdataSection(bool for_app) : base(for_app)
 		{
 			m_caption = new LocalizeStringPair("Override View-specific Cycles settings", Localization.LocalizeString("Override View-specific Cycles settings", 1));
 			InitializeComponents();
@@ -86,7 +87,16 @@ namespace RhinoCycles.Settings
 
 		private void OnButtonClick(object sender, EventArgs e)
 		{
-			RhinoApp.RunScript("_TestAddViewportSettings", false);
+			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
+			var vpi = vi.Viewport;
+
+			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
+
+			if (vud == null)
+			{
+				var nvud = new ViewportSettings();
+				vpi.UserData.Add(nvud);
+			}
 			ViewDataChanged?.Invoke(this, EventArgs.Empty);
 		}
 

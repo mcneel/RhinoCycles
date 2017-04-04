@@ -46,7 +46,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public SessionSection()
+		public SessionSection(bool for_app) : base(for_app)
 		{
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
 			m_caption = new LocalizeStringPair("Session settings", Localization.LocalizeString("Session settings", 5));
@@ -70,6 +70,11 @@ namespace RhinoCycles.Settings
 				ResumeLayout();
 			}
 			);
+		}
+
+		public override void DisplayData()
+		{
+			SessionSection_ViewportSettingsReceived(this, new ViewportSettingsReceivedEventArgs(Settings));
 		}
 
 		private void SessionSection_ViewportSettingsReceived(object sender, ViewportSettingsReceivedEventArgs e)

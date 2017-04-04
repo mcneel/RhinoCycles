@@ -16,6 +16,7 @@ limitations under the License.
 using Rhino;
 using Rhino.DocObjects;
 using Rhino.UI;
+using RhinoCyclesCore;
 using System;
 using System.Drawing;
 
@@ -26,7 +27,7 @@ namespace RhinoCycles.Settings
 		private Bitmap m_icon;
 		public ViewportPropertiesPage()
 		{
-			CollapsibleSectionHolder = new CollapsibleSectionUIPanel();
+			CollapsibleSectionHolder = new ViewportCollapsibleSectionUIPanel();
 			CollapsibleSectionHolder.ViewDataChanged += CollapsibleSectionHolder_ViewDataChanged;
 			m_icon = new Bitmap(32, 32);
 			var brush = new SolidBrush(Color.Chocolate);
@@ -66,7 +67,7 @@ namespace RhinoCycles.Settings
 			CollapsibleSectionHolder.NoUserdataAvailable();
 		}
 
-		public void UserDataAvailable(ViewportSettings vud)
+		public void UserDataAvailable(IViewportSettings vud)
 		{
 			CollapsibleSectionHolder.UserdataAvailable(vud);
 		}
@@ -80,6 +81,6 @@ namespace RhinoCycles.Settings
 
 		public override object PageControl => CollapsibleSectionHolder;
 
-		private CollapsibleSectionUIPanel CollapsibleSectionHolder { get; }
+		private ViewportCollapsibleSectionUIPanel CollapsibleSectionHolder { get; }
 	}
 }

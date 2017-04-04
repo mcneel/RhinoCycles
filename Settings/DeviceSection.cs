@@ -15,6 +15,7 @@ limitations under the License.
 **/
 using Eto.Forms;
 using Rhino.UI;
+using RhinoCyclesCore;
 using RhinoCyclesCore.Core;
 using System;
 using System.Collections.ObjectModel;
@@ -189,7 +190,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public DeviceSection()
+		public DeviceSection(bool for_app) : base(for_app)
 		{
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
 			m_caption = new LocalizeStringPair("Device settings", LOC.STR("Device settings"));
@@ -209,7 +210,7 @@ namespace RhinoCycles.Settings
 			base.OnShown(e);
 		}
 
-		private static ccl.Device ActiveDevice(ViewportSettings vud)
+		private static ccl.Device ActiveDevice(IViewportSettings vud)
 		{
 			ccl.Device rd;
 			if (vud == null)
@@ -218,11 +219,11 @@ namespace RhinoCycles.Settings
 			}
 			else
 			{
-				rd = ccl.Device.DeviceFromString(vud.SelectedDevice);
+				rd = ccl.Device.DeviceFromString(vud.SelectedDeviceStr);
 			}
 			return rd;
 		}
-		private static void SetupListbox(ViewportSettings vud, ObservableCollection<DeviceItem> lb, ccl.DeviceType t)
+		private static void SetupListbox(IViewportSettings vud, ObservableCollection<DeviceItem> lb, ccl.DeviceType t)
 		{
 			var rd = ActiveDevice(vud);
 			lb.Clear();
@@ -235,13 +236,18 @@ namespace RhinoCycles.Settings
 			}
 		}
 
+		public override void DisplayData()
+		{
+			DeviceSection_ViewportSettingsReceived(this, new ViewportSettingsReceivedEventArgs(Settings));
+		}
+
 		private void It_InitialisationCompleted(object sender, EventArgs e)
 		{
 			Application.Instance.AsyncInvoke(() =>
 			{
-				var vud = Plugin.GetActiveViewportSettings();
+				IViewportSettings vud = Settings;
 				m_currentDevice = RcCore.It.EngineSettings.RenderDevice;
-				m_newDevice = vud!=null ? ccl.Device.DeviceFromString(vud.SelectedDevice) : m_currentDevice;
+				m_newDevice = vud!=null ? ccl.Device.DeviceFromString(vud.SelectedDeviceStr) : m_currentDevice;
 				SuspendLayout();
 				UnRegisterControlEvents();
 				ShowDeviceData();
@@ -255,7 +261,7 @@ namespace RhinoCycles.Settings
 			);
 		}
 
-		private void ActivateDevicePage(ViewportSettings vud)
+		private void ActivateDevicePage(IViewportSettings vud)
 		{
 			var rd = ActiveDevice(vud);
 			if (rd.IsCuda || rd.IsMultiCuda) m_tc.SelectedPage = m_tabpage_cuda;
@@ -268,7 +274,7 @@ namespace RhinoCycles.Settings
 			if (e.ViewportSettings != null)
 			{
 				m_currentDevice = RcCore.It.EngineSettings.RenderDevice;
-				m_newDevice = ccl.Device.DeviceFromString(e.ViewportSettings.SelectedDevice);
+				m_newDevice = ccl.Device.DeviceFromString(e.ViewportSettings.SelectedDeviceStr);
 				SuspendLayout();
 				UnRegisterControlEvents();
 				ShowDeviceData();
@@ -357,7 +363,7 @@ namespace RhinoCycles.Settings
 			var vud = Plugin.GetActiveViewportSettings();
 			if (vud != null)
 			{
-				vud.SelectedDevice = RcCore.It.EngineSettings.SelectedDeviceStr;
+				vud.SelectedDeviceStr = RcCore.It.EngineSettings.SelectedDeviceStr;
 				It_InitialisationCompleted(this, EventArgs.Empty);
 			}
 		}
@@ -367,7 +373,7 @@ namespace RhinoCycles.Settings
 			var vud = Plugin.GetActiveViewportSettings();
 			if (vud != null)
 			{
-				RcCore.It.EngineSettings.SelectedDeviceStr = vud.SelectedDevice;
+				RcCore.It.EngineSettings.SelectedDeviceStr = vud.SelectedDeviceStr;
 				It_InitialisationCompleted(this, EventArgs.Empty);
 			}
 		}
@@ -385,7 +391,7 @@ namespace RhinoCycles.Settings
 				var vud = Plugin.GetActiveViewportSettings();
 
 				m_newDevice = ccl.Device.DeviceFromString(senderpage.DeviceSelectionString());
-				if(vud!=null) vud.SelectedDevice = m_newDevice.DeviceString;
+				if(vud!=null) vud.SelectedDeviceStr = m_newDevice.DeviceString;
 				
 			}
 

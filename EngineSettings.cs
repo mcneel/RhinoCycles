@@ -460,6 +460,8 @@ namespace RhinoCyclesCore
 		int MaxVolumeBounce { get; set; }
 		int MaxTransmissionBounce { get; set; }
 
+		string SelectedDeviceStr { get; set; }
+
 		uint IntegratorHash { get; }
 	}
 

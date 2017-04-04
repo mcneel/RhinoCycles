@@ -19,6 +19,8 @@ using Rhino.UI;
 using RhinoCycles.Viewport;
 using Rhino;
 using static RhinoCyclesCore.RenderEngine;
+using RhinoCyclesCore;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCycles.Settings
 {
@@ -64,17 +66,21 @@ namespace RhinoCycles.Settings
 		/// The Heigth of the section
 		///</summary>
 		public override int SectionHeight => Content.Height;
-
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public IntegratorSection()
+		public IntegratorSection(bool for_app) : base(for_app)
 		{
 			m_caption = new LocalizeStringPair("Integrator settings", Localization.LocalizeString("Integrator settings", 3));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
 			ViewportSettingsReceived += IntegratorSection_ViewportSettingsReceived;
+		}
+
+		public override void DisplayData()
+		{
+			IntegratorSection_ViewportSettingsReceived(this, new ViewportSettingsReceivedEventArgs(Settings));
 		}
 
 		private void IntegratorSection_ViewportSettingsReceived(object sender, ViewportSettingsReceivedEventArgs e)
@@ -361,7 +367,14 @@ namespace RhinoCycles.Settings
 		}
 		private void M_seed_ValueChanged(object sender, EventArgs e)
 		{
-			var vud = Plugin.GetActiveViewportSettings();
+			IViewportSettings vud;
+			if (!m_for_app)
+			{
+				vud = Plugin.GetActiveViewportSettings() as IViewportSettings;
+			} else
+			{
+				vud = RcCore.It.EngineSettings as IViewportSettings;
+			}
 			if (vud == null) return;
 
 			var ns = sender as NumericStepper;
@@ -402,7 +415,7 @@ namespace RhinoCycles.Settings
 					break;
 			}
 
-			ChangeIntegratorSetting(setting, (int)ns.Value);
+			if(!m_for_app) ChangeIntegratorSetting(setting, (int)ns.Value);
 		}
 
 	}

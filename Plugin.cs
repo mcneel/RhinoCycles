@@ -25,10 +25,12 @@ using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.PlugIns;
 using Rhino.Render;
+using Rhino.UI;
 using RhinoCycles.Settings;
 using RhinoCyclesCore.Core;
 using RhinoWindows.Forms;
 using ObjectPropertiesPage = Rhino.UI.ObjectPropertiesPage;
+using RhinoCyclesCore;
 
 namespace RhinoCycles
 {
@@ -80,7 +82,7 @@ namespace RhinoCycles
 			return LoadReturnCode.Success;
 		}
 
-		public static ViewportSettings GetActiveViewportSettings()
+		public static IViewportSettings GetActiveViewportSettings()
 		{
 			if (RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return null;
 
@@ -140,6 +142,17 @@ namespace RhinoCycles
 			base.OnShutdown();
 		}
 
+		protected override void OptionsDialogPages(List<Rhino.UI.OptionsDialogPage> pages)
+		{
+			var optionsPage = new Settings.OptionsDialogPage();
+			pages.Add(optionsPage);
+			base.OptionsDialogPages(pages);
+		}
+
+		/*protected override void DocumentPropertiesDialogPages(RhinoDoc doc, List<Rhino.UI.OptionsDialogPage> pages)
+		{
+			base.DocumentPropertiesDialogPages(doc, pages);
+		}*/
 		protected override void ObjectPropertiesPages(List<ObjectPropertiesPage> pages)
 		{
 			if (RcCore.It.EngineSettings.ShowViewportPropertiesPanel)

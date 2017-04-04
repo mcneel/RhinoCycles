@@ -16,6 +16,8 @@ limitations under the License.
 using System;
 using Rhino;
 using Rhino.UI.Controls;
+using RhinoCyclesCore;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCycles.Settings
 {
@@ -26,7 +28,36 @@ namespace RhinoCycles.Settings
 	{
 		protected int m_table_padding = 10;
 
-		public virtual void DisplayData(RhinoDoc doc)
+		protected readonly bool m_for_app = false;
+		/// <summary>
+		/// Constructor
+		/// </summary>
+		/// <param name="for_app">Pass in 'true' if sections display application settings. 'false' means
+		/// viewport-specific settings.</param>
+		public Section(bool for_app) { m_for_app = for_app; }
+
+		/// <summary>
+		/// Access to settings related to viewport/sessions through IViewportSettings
+		/// </summary>
+		public IViewportSettings Settings
+		{
+			get
+			{
+
+				IViewportSettings vud;
+				if (!m_for_app)
+				{
+					vud = Plugin.GetActiveViewportSettings();
+				}
+				else
+				{
+					vud = RcCore.It.EngineSettings;
+				}
+				return vud;
+			}
+		}
+
+		public virtual void DisplayData()
 		{
 		}
 
@@ -40,7 +71,7 @@ namespace RhinoCycles.Settings
 			_hidden = true;
 		}
 
-		public void Show(ViewportSettings vud)
+		public void Show(IViewportSettings vud)
 		{
 			_hidden = false;
 			ViewportSettingsReceived?.Invoke(this, new ViewportSettingsReceivedEventArgs(vud));
@@ -48,8 +79,8 @@ namespace RhinoCycles.Settings
 
 		public class ViewportSettingsReceivedEventArgs : EventArgs
 		{
-			public ViewportSettings ViewportSettings { get; }
-			public ViewportSettingsReceivedEventArgs(ViewportSettings vud)
+			public IViewportSettings ViewportSettings { get; }
+			public ViewportSettingsReceivedEventArgs(IViewportSettings vud)
 			{
 				ViewportSettings = vud;
 			}

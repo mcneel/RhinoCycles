@@ -16,10 +16,11 @@ limitations under the License.
 using System;
 using Eto.Forms;
 using Rhino.UI.Controls;
+using RhinoCyclesCore;
 
 namespace RhinoCycles.Settings
 {
-	public class CollapsibleSectionUIPanel : Panel
+	public class ViewportCollapsibleSectionUIPanel : Panel
 	{
 		/// <summary>
 		/// Returns the ID of this panel.
@@ -28,14 +29,14 @@ namespace RhinoCycles.Settings
 		{
 			get
 			{
-				return typeof(CollapsibleSectionUIPanel).GUID;
+				return typeof(ViewportCollapsibleSectionUIPanel).GUID;
 			}
 		}
 
 		/// <summary>
 		/// Public constructor
 		/// </summary>
-		public CollapsibleSectionUIPanel()
+		public ViewportCollapsibleSectionUIPanel()
 		{
 			InitializeComponents();
 			InitializeLayout();
@@ -54,12 +55,12 @@ namespace RhinoCycles.Settings
 			// displays a title for each section
 
 			// Create two sections
-			AddUserdataSection section0 = new AddUserdataSection();
+			AddUserdataSection section0 = new AddUserdataSection(false);
 
 			section0.ViewDataChanged += Section0_ViewDataChanged;
-			IntegratorSection section1 = new IntegratorSection();
-			SessionSection section2 = new SessionSection();
-			DeviceSection section3 = new DeviceSection();
+			IntegratorSection section1 = new IntegratorSection(false);
+			SessionSection section2 = new SessionSection(false);
+			DeviceSection section3 = new DeviceSection(false);
 
 			// Populate the holder with sections
 			m_holder.Add(section0);
@@ -96,7 +97,7 @@ namespace RhinoCycles.Settings
 			m_holder.Invalidate(true);
 			Invalidate(true);
 		}
-		public void UserdataAvailable(ViewportSettings vud)
+		public void UserdataAvailable(IViewportSettings vud)
 		{
 			(m_holder.SectionAt(0) as Section)?.Hide();
 			(m_holder.SectionAt(1) as Section)?.Show(vud);
