@@ -318,8 +318,8 @@ namespace RhinoCycles.Settings
 				{
 					TableLayout.HorizontalScaled(15, m_lb_curdev, m_curdev),
 					new StackLayoutItem(m_tc, true),
-					TableLayout.HorizontalScaled(15, m_lb_newdev, m_newdev),
-					TableLayout.HorizontalScaled(15, m_reset, m_select),
+					m_for_app ? null : TableLayout.HorizontalScaled(15, m_lb_newdev, m_newdev),
+					m_for_app ? null : TableLayout.HorizontalScaled(15, m_reset, m_select),
 				}
 			};
 			Content = layout;
@@ -388,7 +388,7 @@ namespace RhinoCycles.Settings
 				{
 					if (page is GridDevicePage p && p != sender) p.ClearSelection();
 				}
-				var vud = Plugin.GetActiveViewportSettings();
+				var vud = Settings; // Plugin.GetActiveViewportSettings();
 
 				m_newDevice = ccl.Device.DeviceFromString(senderpage.DeviceSelectionString());
 				if(vud!=null) vud.SelectedDeviceStr = m_newDevice.DeviceString;
