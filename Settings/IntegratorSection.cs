@@ -170,7 +170,7 @@ namespace RhinoCycles.Settings
 
 			m_minimum = new Label()
 			{
-				Text = LOC.STR("Minimum"),
+				Text = Localization.LocalizeString("Minimum", 29),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -186,7 +186,7 @@ namespace RhinoCycles.Settings
 
 			m_maximum = new Label()
 			{
-				Text = LOC.STR("Maximum"),
+				Text = Localization.LocalizeString("Maximum", 30),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -202,7 +202,7 @@ namespace RhinoCycles.Settings
 
 			m_maxdiffusebounce_lb = new Label()
 			{
-				Text = LOC.STR("Diffuse"),
+				Text = Localization.LocalizeString("Diffuse", 31),
 				ToolTip = Localization.LocalizeString("Maximum Diffuse Bounces", 15),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
@@ -220,7 +220,7 @@ namespace RhinoCycles.Settings
 
 			m_maxglossybounce_lb = new Label()
 			{
-				Text = LOC.STR("Glossy"),
+				Text = Localization.LocalizeString("Glossy", 32),
 				ToolTip = Localization.LocalizeString("Maximum Glossy Bounces", 16),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
@@ -238,7 +238,7 @@ namespace RhinoCycles.Settings
 
 			m_maxvolumebounce_lb = new Label()
 			{
-				Text = LOC.STR("Volume"),
+				Text = Localization.LocalizeString("Volume", 33),
 				ToolTip = Localization.LocalizeString("Maximum Volume Bounces", 17),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
@@ -304,7 +304,7 @@ namespace RhinoCycles.Settings
 					new GroupBox() {
 						Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
 						Text = Localization.LocalizeString("Seed", 4),
-						ToolTip = LOC.STR("Set the seed for the random number generator."),
+						ToolTip = Localization.LocalizeString("Set the seed for the random number generator.", 34),
 						Content = new TableLayout
 						{
 							Rows = { new TableRow(new TableCell(m_seed, true)) }
@@ -317,8 +317,8 @@ namespace RhinoCycles.Settings
 						new GroupBox()
 						{
 							Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
-							Text = LOC.STR("Ray Bounces"),
-							ToolTip = LOC.STR("Settings controlling the bounce limits\nfor different types of rays."),
+							Text = Localization.LocalizeString("Ray Bounces", 35),
+							ToolTip = Localization.LocalizeString("Settings controlling the bounce limits\nfor different types of rays.", 36),
 							Content = bounceTable,
 						}
 					),

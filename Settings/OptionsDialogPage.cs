@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@ namespace RhinoCycles.Settings
 {
 	public class OptionsDialogPage : Rhino.UI.OptionsDialogPage
 	{
-		public OptionsDialogPage() : base(LOC.STR("Raytraced settings"))
+		public OptionsDialogPage() : base(Localization.LocalizeString("Raytraced settings", 37))
 		{
 			CollapsibleSectionHolder = new OptionsDialogCollapsibleSectionUIPanel();
 		}
