@@ -17,6 +17,7 @@ using System;
 using Eto.Forms;
 using Rhino.UI.Controls;
 using RhinoCyclesCore;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCycles.Settings
 {
@@ -40,71 +41,86 @@ namespace RhinoCycles.Settings
 		{
 			InitializeComponents();
 			InitializeLayout();
+			RcCore.It.EngineSettings.ApplicationSettingsChanged += EngineSettings_ApplicationSettingsChanged;
+		}
+
+		private void EngineSettings_ApplicationSettingsChanged(object sender, ApplicationChangedEventArgs e)
+		{
+			if (!e.Settings.AllowViewportSettingsOverride)
+			{
+				Prevented();
+			}
+			else
+			{
+				var vud = m_addUserDataSection.Settings;
+				Allowed(vud);
+			}
 		}
 
 		private EtoCollapsibleSectionHolder m_holder;
+		private AddUserdataSection m_addUserDataSection;
+		private IntegratorSection m_integratorSection;
+		private SessionSection m_sessionSection;
+		private DeviceSection m_deviceSection;
 		private void InitializeComponents()
 		{
 			m_holder = new EtoCollapsibleSectionHolder();
-
+			m_addUserDataSection = new AddUserdataSection(false);
+			m_integratorSection = new IntegratorSection(false);
+			m_sessionSection = new SessionSection(false);
+			m_deviceSection = new DeviceSection(false);
 		}
 
 		private void InitializeLayout()
 		{
-			// Create holder for sections. The holder can expand/collaps sections and
-			// displays a title for each section
+			m_addUserDataSection.ViewDataChanged += AddUserData_ViewDataChanged;
 
-			// Create two sections
-			AddUserdataSection section0 = new AddUserdataSection(false);
+			m_holder.Add(m_addUserDataSection);
+			m_holder.Add(m_integratorSection);
+			m_holder.Add(m_sessionSection);
+			m_holder.Add(m_deviceSection);
 
-			section0.ViewDataChanged += Section0_ViewDataChanged;
-			IntegratorSection section1 = new IntegratorSection(false);
-			SessionSection section2 = new SessionSection(false);
-			DeviceSection section3 = new DeviceSection(false);
-
-			// Populate the holder with sections
-			m_holder.Add(section0);
-			m_holder.Add(section1);
-			m_holder.Add(section2);
-			m_holder.Add(section3);
-
-			// Create a tablelayout that contains the holder and add it to the UI
-			// Content
-			TableLayout tableLayout = new TableLayout()
-			{
-				Rows =
-				{
-					m_holder
-				}
-			};
-
-			Content = tableLayout;
+			Content = m_holder;
 		}
 
 		public event EventHandler ViewDataChanged;
 
-		private void Section0_ViewDataChanged(object sender, EventArgs e)
+		private void AddUserData_ViewDataChanged(object sender, EventArgs e)
 		{
 			ViewDataChanged?.Invoke(sender, e);
 		}
 
+		private void Prevented()
+		{
+			m_addUserDataSection?.Show(null);
+			m_integratorSection?.Hide();
+			m_sessionSection?.Hide();
+			m_deviceSection?.Hide();
+		}
+
+		private void Allowed(IViewportSettings vud)
+		{
+			m_addUserDataSection?.Hide();
+			m_integratorSection?.Show(vud);
+			m_sessionSection?.Show(vud);
+			m_deviceSection?.Show(vud);
+		}
+
 		public void NoUserdataAvailable()
 		{
-			(m_holder.SectionAt(0) as Section)?.Show(null);
-			(m_holder.SectionAt(1) as Section)?.Hide();
-			(m_holder.SectionAt(2) as Section)?.Hide();
-			(m_holder.SectionAt(3) as Section)?.Hide();
-			m_holder.Invalidate(true);
-			Invalidate(true);
+			Prevented();
 		}
+
 		public void UserdataAvailable(IViewportSettings vud)
 		{
-			(m_holder.SectionAt(0) as Section)?.Hide();
-			(m_holder.SectionAt(1) as Section)?.Show(vud);
-			(m_holder.SectionAt(2) as Section)?.Show(vud);
-			(m_holder.SectionAt(3) as Section)?.Show(vud);
-			m_holder.Invalidate(true);
-			Invalidate(true);
+			if (RcCore.It.EngineSettings.AllowViewportSettingsOverride)
+			{
+				Allowed(vud);
+			}
+			else
+			{
+				Prevented();
+			}
 		}
 	}
 }

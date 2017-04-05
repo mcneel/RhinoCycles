@@ -18,6 +18,7 @@ using Eto.Forms;
 using Rhino;
 using Rhino.UI;
 using Rhino.DocObjects;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCycles.Settings
 {
@@ -28,6 +29,7 @@ namespace RhinoCycles.Settings
 	{
 		private LocalizeStringPair m_caption;
 		private Button m_button;
+		private Label m_nooverride;
 
 		public override LocalizeStringPair Caption => m_caption;
 
@@ -36,6 +38,7 @@ namespace RhinoCycles.Settings
 		///</summary>
 		public override int SectionHeight => Content.Height;
 
+		public override bool Collapsible => false;
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
@@ -44,7 +47,7 @@ namespace RhinoCycles.Settings
 			m_caption = new LocalizeStringPair("Override View-specific Cycles settings", Localization.LocalizeString("Override View-specific Cycles settings", 1));
 			InitializeComponents();
 			InitializeLayout();
-			RegisterControlEvents();
+			RegisterEvents();
 		}
 
 		private void InitializeComponents()
@@ -52,6 +55,12 @@ namespace RhinoCycles.Settings
 			m_button = new Button()
 			{
 				Text = Localization.LocalizeString("Override settings...", 2),
+				Visible = RcCore.It.EngineSettings.AllowViewportSettingsOverride,
+			};
+			m_nooverride = new Label()
+			{
+				Text = LOC.STR("Override not enabled in application settings"),
+				Visible = !RcCore.It.EngineSettings.AllowViewportSettingsOverride,
 			};
 		}
 
@@ -67,18 +76,27 @@ namespace RhinoCycles.Settings
 				Rows =
 				{
 					new TableRow(m_button),
+					new TableRow(m_nooverride),
 				}
 			};
 			Content = layout;
 		}
 
-		private void RegisterControlEvents()
+		private void RegisterEvents()
 		{
+			RcCore.It.EngineSettings.ApplicationSettingsChanged += EngineSettings_ApplicationSettingsChanged;
 			m_button.Click += OnButtonClick;
 		}
 
-		private void UnRegisterControlEvents()
+		private void EngineSettings_ApplicationSettingsChanged(object sender, RhinoCyclesCore.ApplicationChangedEventArgs e)
 		{
+			m_button.Visible = e.Settings.AllowViewportSettingsOverride;
+			m_nooverride.Visible = !e.Settings.AllowViewportSettingsOverride;
+		}
+
+		private void UnregisterEvents()
+		{
+			RcCore.It.EngineSettings.ApplicationSettingsChanged -= EngineSettings_ApplicationSettingsChanged;
 			m_button.Click -= OnButtonClick;
 		}
 

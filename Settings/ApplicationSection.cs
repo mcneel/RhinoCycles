@@ -14,24 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using Eto.Forms;
-using Rhino;
 using Rhino.UI;
-using RhinoCycles.Viewport;
 using RhinoCyclesCore.Core;
 using System;
 
 namespace RhinoCycles.Settings
 {
 	///<summary>
-	/// The UI implementation of of Section one
+	/// Application level settings
 	///</summary>
-	public class SessionSection: Section
+	public class ApplicationSection: Section
 	{
 		private LocalizeStringPair m_caption;
-		private Label m_samples_lb;
-		private NumericStepper m_samples;
-		private Label m_throttlems_lb;
-		private NumericStepper m_throttlems;
+		private Label m_allowdeviceoverride_lb;
+		private CheckBox m_allowdeviceoverride;
+		private Label m_allowviewportsettingsoverride_lb;
+		private CheckBox m_allowviewportsettingsoverride;
 
 		public override LocalizeStringPair Caption
 		{
@@ -46,26 +44,26 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public SessionSection(bool for_app) : base(for_app)
+		public ApplicationSection(bool for_app) : base(for_app)
 		{
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
-			m_caption = new LocalizeStringPair("Session settings", Localization.LocalizeString("Session settings", 5));
+			m_caption = new LocalizeStringPair("Application-wide", LOC.STR("Application-wide"));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
-			ViewportSettingsReceived += SessionSection_ViewportSettingsReceived;
+			ViewportSettingsReceived += ApplicationSection_ViewportSettingsReceived;
 		}
 
 		private void It_InitialisationCompleted(object sender, EventArgs e)
 		{
 			Application.Instance.AsyncInvoke(() =>
 			{
-				var vud = Settings;
+				var vud = RcCore.It.EngineSettings;
 				if (vud == null) return;
 				SuspendLayout();
 				UnRegisterControlEvents();
-				m_samples.Value = vud.Samples;
-				m_throttlems.Value = vud.ThrottleMs;
+				m_allowdeviceoverride.Checked = vud.AllowSelectedDeviceOverride;
+				m_allowviewportsettingsoverride.Checked = vud.AllowViewportSettingsOverride;
 				RegisterControlEvents();
 				ResumeLayout();
 			}
@@ -74,46 +72,39 @@ namespace RhinoCycles.Settings
 
 		public override void DisplayData()
 		{
-			SessionSection_ViewportSettingsReceived(this, new ViewportSettingsReceivedEventArgs(Settings));
+			ApplicationSection_ViewportSettingsReceived(this, new ViewportSettingsReceivedEventArgs(Settings));
 		}
-		private void SessionSection_ViewportSettingsReceived(object sender, ViewportSettingsReceivedEventArgs e)
+
+		private void ApplicationSection_ViewportSettingsReceived(object sender, ViewportSettingsReceivedEventArgs e)
 		{
 			if (e.ViewportSettings != null)
 			{
 				UnRegisterControlEvents();
-				m_samples.Value = e.ViewportSettings.Samples;
-				m_throttlems.Value = e.ViewportSettings.ThrottleMs;
+				m_allowdeviceoverride.Checked = e.ViewportSettings.AllowSelectedDeviceOverride;
+				m_allowviewportsettingsoverride.Checked = RcCore.It.EngineSettings.AllowViewportSettingsOverride;
 				RegisterControlEvents();
 			}
 		}
 
 		private void InitializeComponents()
 		{
-			m_samples_lb = new Label()
+			m_allowdeviceoverride_lb = new Label()
 			{
-				Text = Localization.LocalizeString("Samples", 6),
+				Text = LOC.STR("Allow device override in viewport"),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
-			m_samples = new NumericStepper()
+			m_allowdeviceoverride = new CheckBox()
 			{
-				Value = 0,
-				MaximumDecimalPlaces = 0,
-				MaxValue = int.MaxValue,
-				MinValue = 0,
-				Width = 75,
+				Checked = false,
 			};
-			m_throttlems_lb = new Label()
+			m_allowviewportsettingsoverride_lb = new Label()
 			{
-				Text = Localization.LocalizeString("Throttle (in ms)", 19),
+				Text = LOC.STR("Allow viewport settings override"),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
-			m_throttlems = new NumericStepper()
+			m_allowviewportsettingsoverride = new CheckBox()
 			{
-				Value = 0,
-				MaximumDecimalPlaces = 0,
-				MaxValue = int.MaxValue,
-				MinValue = 0,
-				Width = 75,
+				Checked = false,
 			};
 		}
 
@@ -134,8 +125,8 @@ namespace RhinoCycles.Settings
 							Content = new TableLayout() {
 								Spacing = new Eto.Drawing.Size(1, 5),
 								Rows = {
-									new TableRow( new TableCell(m_samples_lb, true), new TableCell(m_samples, true)),
-									new TableRow(m_throttlems_lb, m_throttlems),
+									new TableRow( new TableCell(m_allowdeviceoverride_lb, true), new TableCell(m_allowdeviceoverride, true)),
+									new TableRow( m_allowviewportsettingsoverride_lb, m_allowviewportsettingsoverride),
 								}
 							}
 						}
@@ -147,33 +138,23 @@ namespace RhinoCycles.Settings
 
 		private void RegisterControlEvents()
 		{
-			m_samples.ValueChanged += M_ValueChanged;
-			m_throttlems.ValueChanged += M_ValueChanged;
+			m_allowdeviceoverride.CheckedChanged += M_ValueChanged;
+			m_allowviewportsettingsoverride.CheckedChanged += M_ValueChanged;
 		}
 
 		private void M_ValueChanged(object sender, EventArgs e)
 		{
-			var vud = Settings;
+			var vud = RcCore.It.EngineSettings;
 			if (vud == null) return;
 
-			vud.Samples = (int)m_samples.Value;
-			vud.ThrottleMs = (int)m_throttlems.Value;
-
-			if (!m_for_app)
-			{
-				var rvp = RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
-				if (rvp == null) return;
-
-				rvp.TriggerViewportSettingsChanged(vud);
-				rvp.ChangeSamples(vud.Samples);
-				rvp.SignalRedraw();
-			}
+			vud.AllowSelectedDeviceOverride = m_allowdeviceoverride.Checked.HasValue ? m_allowdeviceoverride.Checked.Value : false;
+			vud.AllowViewportSettingsOverride = m_allowviewportsettingsoverride.Checked.HasValue ? m_allowviewportsettingsoverride.Checked.Value : false;
 		}
 
 		private void UnRegisterControlEvents()
 		{
-			m_samples.ValueChanged -= M_ValueChanged;
-			m_throttlems.ValueChanged -= M_ValueChanged;
+			m_allowdeviceoverride.CheckedChanged -= M_ValueChanged;
+			m_allowviewportsettingsoverride.CheckedChanged -= M_ValueChanged;
 		}
 	}
 }

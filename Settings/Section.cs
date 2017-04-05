@@ -45,7 +45,7 @@ namespace RhinoCycles.Settings
 			{
 
 				IViewportSettings vud;
-				if (!m_for_app)
+				if (!m_for_app && RcCore.It.EngineSettings.AllowViewportSettingsOverride)
 				{
 					vud = Plugin.GetActiveViewportSettings();
 				}
@@ -69,11 +69,13 @@ namespace RhinoCycles.Settings
 		public void Hide()
 		{
 			_hidden = true;
+			Visible = false;
 		}
 
 		public void Show(IViewportSettings vud)
 		{
 			_hidden = false;
+			Visible = true;
 			ViewportSettingsReceived?.Invoke(this, new ViewportSettingsReceivedEventArgs(vud));
 		}
 

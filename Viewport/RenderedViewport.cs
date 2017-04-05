@@ -221,7 +221,14 @@ namespace RhinoCycles.Viewport
 
 		private void _cycles_CurrentViewportSettingsRequested(object sender, EventArgs e)
 		{
-			var vud = Plugin.GetActiveViewportSettings();
+			IViewportSettings vud;
+			if (RcCore.It.EngineSettings.AllowViewportSettingsOverride)
+			{
+				vud = Plugin.GetActiveViewportSettings();
+			} else
+			{
+				vud = RcCore.It.EngineSettings;
+			}
 			if (vud == null) return;
 			TriggerViewportSettingsChanged(vud);
 		}

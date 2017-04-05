@@ -33,6 +33,11 @@ namespace RhinoCycles.Settings
 		protected override void OnDuplicate(UserData source)
 		{
 			var src = source as ViewportSettings;
+			CopyFrom(src);
+		}
+
+		public void CopyFrom(IViewportSettings src)
+		{
 			if (src != null)
 			{
 				SelectedDeviceStr = src.SelectedDeviceStr;
@@ -71,6 +76,8 @@ namespace RhinoCycles.Settings
 				return rem;
 			}
 		}
+
+		public bool AllowSelectedDeviceOverride => RcCore.It.EngineSettings.AllowSelectedDeviceOverride;
 
 		public string SelectedDeviceStr
 		{

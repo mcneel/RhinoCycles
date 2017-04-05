@@ -41,7 +41,7 @@ namespace RhinoCycles.Settings
 		{
 			m_col = new ObservableCollection<DeviceItem>();
 			m_col.CollectionChanged += M_col_CollectionChanged;
-			m_gv = new GridView { DataStore = m_col };
+			m_gv = new GridView { DataStore = m_col, ShowHeader = false };
 			m_gv.Columns.Add(new GridColumn {
 				DataCell = new CheckBoxCell { Binding = Binding.Property<DeviceItem, bool?>(r => r.Selected) },
 				HeaderText = "Use",
@@ -187,6 +187,8 @@ namespace RhinoCycles.Settings
 		///</summary>
 		public override int SectionHeight => Content.Height;
 
+		public override bool Hidden => !RcCore.It.EngineSettings.AllowSelectedDeviceOverride ? true : base.Hidden;
+
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
@@ -223,7 +225,7 @@ namespace RhinoCycles.Settings
 			}
 			return rd;
 		}
-		private static void SetupListbox(IViewportSettings vud, ObservableCollection<DeviceItem> lb, ccl.DeviceType t)
+		private static void SetupDeviceData(IViewportSettings vud, ObservableCollection<DeviceItem> lb, ccl.DeviceType t)
 		{
 			var rd = ActiveDevice(vud);
 			lb.Clear();
@@ -251,9 +253,9 @@ namespace RhinoCycles.Settings
 				SuspendLayout();
 				UnRegisterControlEvents();
 				ShowDeviceData();
-				SetupListbox(vud, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
-				SetupListbox(vud, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
-				SetupListbox(vud, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
+				SetupDeviceData(vud, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
+				SetupDeviceData(vud, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
+				SetupDeviceData(vud, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
 				ActivateDevicePage(vud);
 				RegisterControlEvents();
 				ResumeLayout();
@@ -278,9 +280,9 @@ namespace RhinoCycles.Settings
 				SuspendLayout();
 				UnRegisterControlEvents();
 				ShowDeviceData();
-				SetupListbox(e.ViewportSettings, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
-				SetupListbox(e.ViewportSettings, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
-				SetupListbox(e.ViewportSettings, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
+				SetupDeviceData(e.ViewportSettings, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
+				SetupDeviceData(e.ViewportSettings, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
+				SetupDeviceData(e.ViewportSettings, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
 				ActivateDevicePage(e.ViewportSettings);
 				RegisterControlEvents();
 				ResumeLayout();

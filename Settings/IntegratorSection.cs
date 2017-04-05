@@ -21,6 +21,7 @@ using Rhino;
 using static RhinoCyclesCore.RenderEngine;
 using RhinoCyclesCore;
 using RhinoCyclesCore.Core;
+using Rhino.DocObjects;
 
 namespace RhinoCycles.Settings
 {
@@ -358,23 +359,39 @@ namespace RhinoCycles.Settings
 
 		private void ChangeIntegratorSetting(IntegratorSetting setting, int value)
 		{
-			var rvp = RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
-			if (rvp == null) return;
-			var vud = Plugin.GetActiveViewportSettings();
-			if (vud == null) return;
+			if (!m_for_app)
+			{
+				var rvp = RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
+				if (rvp == null) return;
+				var vud = Plugin.GetActiveViewportSettings();
+				if (vud == null) return;
 
-			rvp.TriggerViewportSettingsChanged(vud);
+				rvp.TriggerViewportSettingsChanged(vud);
+			} else
+			{
+				if(!RcCore.It.EngineSettings.AllowViewportSettingsOverride)
+				{
+					foreach(var v in RhinoDoc.ActiveDoc.Views)
+					{
+						var rvp = v.RealtimeDisplayMode as RenderedViewport;
+						if (rvp == null) continue;
+
+						rvp.TriggerViewportSettingsChanged(RcCore.It.EngineSettings);
+						var vi = new ViewInfo(v.ActiveViewport);
+						var vpi = vi.Viewport;
+
+						var vud = vpi.UserData.Find(typeof(ViewportSettings)) as ViewportSettings;
+
+						if (vud == null) continue;
+
+						vud.CopyFrom(RcCore.It.EngineSettings);
+					}
+				}
+			}
 		}
 		private void M_seed_ValueChanged(object sender, EventArgs e)
 		{
-			IViewportSettings vud;
-			if (!m_for_app)
-			{
-				vud = Plugin.GetActiveViewportSettings() as IViewportSettings;
-			} else
-			{
-				vud = RcCore.It.EngineSettings as IViewportSettings;
-			}
+			var vud = Settings;
 			if (vud == null) return;
 
 			var ns = sender as NumericStepper;

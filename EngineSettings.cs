@@ -19,10 +19,11 @@ using ccl;
 using Rhino;
 using Rhino.PlugIns;
 using Rhino.Render;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore
 {
-	public class EngineSettings : IViewportSettings
+	public class EngineSettings : IApplicationSettings, IViewportSettings
 	{
 		public static readonly PlugIn RcPlugIn = PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"));
 
@@ -55,6 +56,7 @@ namespace RhinoCyclesCore
 			BumpDistance = BumpDistance;
 
 			SelectedDeviceStr = SelectedDeviceStr;
+			AllowSelectedDeviceOverride = AllowSelectedDeviceOverride;
 
 			MinBounce = MinBounce;
 			MaxBounce = MaxBounce;
@@ -97,6 +99,9 @@ namespace RhinoCyclesCore
 			TransparentMinBounce = TransparentMinBounce;
 			TransparentMaxBounce = TransparentMaxBounce;
 			TransparentShadows = TransparentShadows;
+
+			// application settings
+			AllowViewportSettingsOverride = AllowViewportSettingsOverride;
 		}
 
 		public bool RenderDeviceIsCuda => RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
@@ -243,6 +248,13 @@ namespace RhinoCyclesCore
 		{
 			get { return RcPlugIn.Settings.GetString("rc_selecteddevicestr", SelectedDeviceStrDefault); }
 			set { RcPlugIn.Settings.SetString("rc_selecteddevicestr", value); }
+		}
+
+		public bool AllowSelectedDeviceOverrideDefault => false;
+		public virtual bool AllowSelectedDeviceOverride
+		{
+			get { return RcPlugIn.Settings.GetBool("rc_allowselecteddeviceoverride", AllowSelectedDeviceOverrideDefault); }
+			set { RcPlugIn.Settings.SetBool("rc_allowselecteddeviceoverride", value); }
 		}
 
 		public virtual IntegratorMethod IntegratorMethod { get; set; }
@@ -423,6 +435,24 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetBool("rc_transparentshadows", value); }
 		}
 
+		public bool AllowViewportSettingsOverrideDefault => true;
+		public virtual bool AllowViewportSettingsOverride
+		{
+			get { return RcPlugIn.Settings.GetBool("rc_allowviewportsettingsoverride", AllowViewportSettingsOverrideDefault); }
+			set {
+				var old = AllowViewportSettingsOverride;
+				if (old != value) {
+					RcPlugIn.Settings.SetBool("rc_allowviewportsettingsoverride", value);
+					TriggerApplicationSettingsChanged();
+				}
+			}
+		}
+
+		private void TriggerApplicationSettingsChanged()
+		{
+			ApplicationSettingsChanged?.Invoke(this, new ApplicationChangedEventArgs(this));
+		}
+
 		public virtual uint IntegratorHash
 		{
 			get
@@ -442,7 +472,17 @@ namespace RhinoCyclesCore
 				return rem;
 			}
 		}
+
+		public event EventHandler<ApplicationChangedEventArgs> ApplicationSettingsChanged;
 	}
+
+	public interface IAllSettings : IApplicationSettings, IViewportSettings { }
+
+	public interface IApplicationSettings
+	{
+		bool AllowViewportSettingsOverride { get; set; }
+	}
+
 	public interface IViewportSettings
 	{
 		int Samples { get; set; }
@@ -462,9 +502,16 @@ namespace RhinoCyclesCore
 
 		string SelectedDeviceStr { get; set; }
 
+		bool AllowSelectedDeviceOverride { get; }
+
 		uint IntegratorHash { get; }
 	}
 
+	public class ApplicationChangedEventArgs : EventArgs
+	{
+		public IApplicationSettings Settings { get; private set; }
+		public ApplicationChangedEventArgs(IApplicationSettings aps) { Settings = aps; }
+	}
 	public class ViewportSettingsChangedArgs : EventArgs
 	{
 		public IViewportSettings Settings { get; private set; }
