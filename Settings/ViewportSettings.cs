@@ -79,93 +79,95 @@ namespace RhinoCycles.Settings
 
 		public bool AllowSelectedDeviceOverride => RcCore.It.EngineSettings.AllowSelectedDeviceOverride;
 
+		private bool UseThis => RcCore.It.EngineSettings.AllowViewportSettingsOverride;
+
 		public string SelectedDeviceStr
 		{
-			get { return Dictionary.GetString("selecteddevice", RcCore.It.EngineSettings.SelectedDeviceStr); }
+			get { return UseThis ? Dictionary.GetString("selecteddevice", RcCore.It.EngineSettings.SelectedDeviceStr) : RcCore.It.EngineSettings.SelectedDeviceStr; }
 			set { Dictionary.Set("selecteddevice", value); }
 		}
 
 		public int Samples
 		{
-			get { return Dictionary.GetInteger("samples", RcCore.It.EngineSettings.Samples); }
+			get { return UseThis ? Dictionary.GetInteger("samples", RcCore.It.EngineSettings.Samples) : RcCore.It.EngineSettings.Samples; }
 			set { Dictionary.Set("samples", value); }
 		}
 
 		public int ThrottleMs
 		{
-			get { return Dictionary.GetInteger("throttlems", RcCore.It.EngineSettings.ThrottleMs); }
+			get { return UseThis ? Dictionary.GetInteger("throttlems", RcCore.It.EngineSettings.ThrottleMs) : RcCore.It.EngineSettings.ThrottleMs; }
 			set { Dictionary.Set("throttlems", value); }
 		}
 
 		public int Seed
 		{
-			get { return Dictionary.GetInteger("seed", RcCore.It.EngineSettings.Seed); }
+			get { return UseThis ? Dictionary.GetInteger("seed", RcCore.It.EngineSettings.Seed) : RcCore.It.EngineSettings.Seed; }
 			set { Dictionary.Set("seed", value); }
 		}
 
 		public int TileX
 		{
-			get { return Dictionary.GetInteger("tilex", RcCore.It.EngineSettings.TileX); }
+			get { return UseThis ? Dictionary.GetInteger("tilex", RcCore.It.EngineSettings.TileX) : RcCore.It.EngineSettings.TileX; }
 			set { Dictionary.Set("tilex", value); }
 		}
 
 		public int TileY
 		{
-			get { return Dictionary.GetInteger("tilex", RcCore.It.EngineSettings.TileY); }
+			get { return UseThis ? Dictionary.GetInteger("tilex", RcCore.It.EngineSettings.TileY) : RcCore.It.EngineSettings.TileY; }
 			set { Dictionary.Set("tilex", value); }
 		}
 
 		public int DiffuseSamples
 		{
-			get { return Dictionary.GetInteger("diffusesamples", RcCore.It.EngineSettings.DiffuseSamples); }
+			get { return UseThis ? Dictionary.GetInteger("diffusesamples", RcCore.It.EngineSettings.DiffuseSamples) : RcCore.It.EngineSettings.DiffuseSamples; }
 			set { Dictionary.Set("diffusesamples", value); }
 		}
 
 		public int GlossySamples
 		{
-			get { return Dictionary.GetInteger("glossysamples", RcCore.It.EngineSettings.GlossySamples); }
+			get { return UseThis ? Dictionary.GetInteger("glossysamples", RcCore.It.EngineSettings.GlossySamples) : RcCore.It.EngineSettings.GlossySamples; }
 			set { Dictionary.Set("glossysamples", value); }
 		}
 
 		public int TransmissionSamples
 		{
-			get { return Dictionary.GetInteger("transmissionsamples", RcCore.It.EngineSettings.TransmissionSamples); }
+			get { return UseThis ? Dictionary.GetInteger("transmissionsamples", RcCore.It.EngineSettings.TransmissionSamples) : RcCore.It.EngineSettings.TransmissionSamples; }
 			set { Dictionary.Set("transmissionsamples", value); }
 		}
 
 		public int MinBounce
 		{
-			get { return Dictionary.GetInteger("minbounce", RcCore.It.EngineSettings.MinBounce); }
+			get { return UseThis ? Dictionary.GetInteger("minbounce", RcCore.It.EngineSettings.MinBounce) : RcCore.It.EngineSettings.MinBounce; }
 			set { Dictionary.Set("minbounce", value); }
 		}
 
 		public int MaxBounce
 		{
-			get { return Dictionary.GetInteger("maxbounce", RcCore.It.EngineSettings.MaxBounce); }
+			get { return UseThis ? Dictionary.GetInteger("maxbounce", RcCore.It.EngineSettings.MaxBounce) : RcCore.It.EngineSettings.MaxBounce; }
 			set { Dictionary.Set("maxbounce", value); }
 		}
 
 		public int MaxDiffuseBounce
 		{
-			get { return Dictionary.GetInteger("maxdiffusebounce", RcCore.It.EngineSettings.MaxDiffuseBounce); }
+			get { return UseThis ? Dictionary.GetInteger("maxdiffusebounce", RcCore.It.EngineSettings.MaxDiffuseBounce) : RcCore.It.EngineSettings.MaxDiffuseBounce; }
 			set { Dictionary.Set("maxdiffusebounce", value); }
 		}
 
 		public int MaxGlossyBounce
 		{
-			get { return Dictionary.GetInteger("maxglossybounce", RcCore.It.EngineSettings.MaxGlossyBounce); }
+			get { return UseThis ? Dictionary.GetInteger("maxglossybounce", RcCore.It.EngineSettings.MaxGlossyBounce) : RcCore.It.EngineSettings.MaxGlossyBounce; }
 			set { Dictionary.Set("maxglossybounce", value); }
 		}
 
 		public int MaxVolumeBounce
 		{
-			get { return Dictionary.GetInteger("maxvolumebounce", RcCore.It.EngineSettings.MaxVolumeBounce); }
+			get { return UseThis ? Dictionary.GetInteger("maxvolumebounce", RcCore.It.EngineSettings.MaxVolumeBounce) : RcCore.It.EngineSettings.MaxVolumeBounce; }
 			set { Dictionary.Set("maxvolumebounce", value); }
 		}
 
 		public int MaxTransmissionBounce
 		{
-			get { return Dictionary.GetInteger("maxtransmissionbounce", RcCore.It.EngineSettings.MaxTransmissionBounce); }
+			get { return UseThis ? Dictionary.GetInteger("maxtransmissionbounce", RcCore.It.EngineSettings.MaxTransmissionBounce) : RcCore.It.EngineSettings.MaxTransmissionBounce; }
 			set { Dictionary.Set("maxtransmissionbounce", value); }
 		}
 	}
