@@ -125,8 +125,8 @@ namespace RhinoCycles.Settings
 							Content = new TableLayout() {
 								Spacing = new Eto.Drawing.Size(1, 5),
 								Rows = {
-									new TableRow( new TableCell(m_allowdeviceoverride_lb, true), new TableCell(m_allowdeviceoverride, true)),
-									new TableRow( m_allowviewportsettingsoverride_lb, m_allowviewportsettingsoverride),
+									new TableRow( new TableCell(m_allowviewportsettingsoverride_lb, true), new TableCell(m_allowviewportsettingsoverride, true)),
+									new TableRow( m_allowdeviceoverride_lb, m_allowdeviceoverride),
 								}
 							}
 						}
@@ -147,8 +147,8 @@ namespace RhinoCycles.Settings
 			var vud = RcCore.It.EngineSettings;
 			if (vud == null) return;
 
-			vud.AllowSelectedDeviceOverride = m_allowdeviceoverride.Checked.HasValue ? m_allowdeviceoverride.Checked.Value : false;
 			vud.AllowViewportSettingsOverride = m_allowviewportsettingsoverride.Checked.HasValue ? m_allowviewportsettingsoverride.Checked.Value : false;
+			vud.AllowSelectedDeviceOverride = m_allowdeviceoverride.Checked.HasValue ? m_allowdeviceoverride.Checked.Value : false;
 		}
 
 		private void UnRegisterControlEvents()

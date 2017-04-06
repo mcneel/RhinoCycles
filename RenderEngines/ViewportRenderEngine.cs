@@ -175,7 +175,8 @@ namespace RhinoCyclesCore.RenderEngines
 			var renderDevice = Device.CreateMultiDevice(rdlist);
 
 #else
-			var renderDevice = RcCore.It.EngineSettings.RenderDevice;
+			TriggerCurrentViewportSettingsRequested();
+			var renderDevice = RenderDevice; // RcCore.It.EngineSettings.RenderDevice;
 #endif
 
 			#endregion

@@ -50,13 +50,13 @@ namespace RhinoCycles.Settings
 		private void InitializeLayout()
 		{
 			ApplicationSection applicationSection = new ApplicationSection(true);
-			applicationSection.DisplayData();
 			IntegratorSection integratorSection = new IntegratorSection(true);
-			integratorSection.DisplayData();
 			SessionSection sessionSection = new SessionSection(true);
-			sessionSection.DisplayData();
 			DeviceSection deviceSection = new DeviceSection(true);
+			applicationSection.DisplayData();
 			deviceSection.DisplayData();
+			integratorSection.DisplayData();
+			sessionSection.DisplayData();
 			m_holder.Add(applicationSection);
 			m_holder.Add(integratorSection);
 			m_holder.Add(sessionSection);
@@ -66,10 +66,5 @@ namespace RhinoCycles.Settings
 		}
 
 		public event EventHandler ViewDataChanged;
-
-		private void Section0_ViewDataChanged(object sender, EventArgs e)
-		{
-			ViewDataChanged?.Invoke(sender, e);
-		}
 	}
 }

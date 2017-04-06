@@ -372,10 +372,11 @@ namespace RhinoCycles.Settings
 
 		private void HandleSelectClick(object sender, EventArgs e)
 		{
-			var vud = Plugin.GetActiveViewportSettings();
-			if (vud != null)
+			var vud = Settings; // Plugin.GetActiveViewportSettings();
+			if (vud != null && RcCore.It.EngineSettings.AllowSelectedDeviceOverride)
 			{
-				RcCore.It.EngineSettings.SelectedDeviceStr = vud.SelectedDeviceStr;
+				//RcCore.It.EngineSettings.SelectedDeviceStr = vud.SelectedDeviceStr;
+				Rhino.RhinoApp.RunScript("_-SetDisplayMode Wireframe Enter _-SetDisplayMode Raytraced Enter", false);
 				It_InitialisationCompleted(this, EventArgs.Empty);
 			}
 		}

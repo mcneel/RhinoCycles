@@ -46,8 +46,13 @@ namespace RhinoCyclesCore
 		}
 
 		private uint _oldIntegratorHash = 0;
+		protected ccl.Device RenderDevice { get; set; }
 		public void ViewportSettingsChangedHandler(object sender, ViewportSettingsChangedArgs e)
 		{
+			if(e.Settings.AllowSelectedDeviceOverride)
+			{
+				RenderDevice = ccl.Device.DeviceFromString(e.Settings.SelectedDeviceStr);
+			}
 			if (Session != null && Session.Scene != null)
 			{
 				var hash = e.Settings.IntegratorHash;

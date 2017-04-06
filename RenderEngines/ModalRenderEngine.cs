@@ -116,14 +116,14 @@ namespace RhinoCyclesCore.RenderEngines
 			maxSamples = samples;
 
 			#region pick a render device
-
 			var renderDevice = RcCore.It.EngineSettings.RenderDevice;
 
 			if (RcCore.It.EngineSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
 			#endregion
-
 			var scene = CreateScene(client, renderDevice, cyclesEngine);
+
+			cyclesEngine.TriggerCurrentViewportSettingsRequested();
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(client, renderDevice)

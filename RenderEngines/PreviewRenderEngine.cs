@@ -73,7 +73,6 @@ namespace RhinoCyclesCore.RenderEngines
 			var samples = 500;
 
 			#region pick a render device
-
 			var renderDevice = RcCore.It.EngineSettings.RenderDevice;
 
 			if (RcCore.It.EngineSettings.Verbose) sdd.WriteLine(
