@@ -64,7 +64,5 @@ namespace RhinoCycles.Settings
 
 			Content = m_holder;
 		}
-
-		public event EventHandler ViewDataChanged;
 	}
 }
