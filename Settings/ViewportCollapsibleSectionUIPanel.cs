@@ -75,11 +75,6 @@ namespace RhinoCycles.Settings
 		{
 			m_addUserDataSection.ViewDataChanged += AddUserData_ViewDataChanged;
 
-			m_addUserDataSection.DisplayData();
-			m_deviceSection.DisplayData();
-			m_integratorSection.DisplayData();
-			m_sessionSection.DisplayData();
-
 			m_holder.Add(m_addUserDataSection);
 			m_holder.Add(m_integratorSection);
 			m_holder.Add(m_sessionSection);
