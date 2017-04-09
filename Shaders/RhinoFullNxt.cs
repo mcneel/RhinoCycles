@@ -444,7 +444,7 @@ namespace RhinoCyclesCore.Shaders
 
 			var uber132 = new UberBsdfNode("uber");
 			uber132.ins.BaseColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
-			uber132.ins.SpecularColor.Value = part.SpecularColor;
+			//uber132.ins.SpecularColor.Value = part.SpecularColor;
 			uber132.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 			uber132.ins.Metallic.Value = 0f;
 			uber132.ins.Subsurface.Value = 0f;
