@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using RhinoCyclesCore.Core;
 using System;
 using System.Drawing;
 
@@ -52,6 +53,10 @@ namespace RhinoCyclesCore
 			if(e.Settings.AllowSelectedDeviceOverride)
 			{
 				RenderDevice = ccl.Device.DeviceFromString(e.Settings.SelectedDeviceStr);
+			}
+			else
+			{
+				RenderDevice = ccl.Device.DeviceFromString(RcCore.It.EngineSettings.SelectedDeviceStr);
 			}
 			if (Session != null && Session.Scene != null)
 			{

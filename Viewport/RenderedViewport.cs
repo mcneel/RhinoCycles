@@ -225,6 +225,7 @@ namespace RhinoCycles.Viewport
 			if (RcCore.It.EngineSettings.AllowViewportSettingsOverride)
 			{
 				vud = Plugin.GetActiveViewportSettings();
+				if(vud==null) vud = RcCore.It.EngineSettings;
 			} else
 			{
 				vud = RcCore.It.EngineSettings;
