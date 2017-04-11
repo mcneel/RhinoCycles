@@ -187,7 +187,13 @@ namespace RhinoCycles.Settings
 		///</summary>
 		public override int SectionHeight => Content.Height;
 
-		public override bool Hidden => !RcCore.It.EngineSettings.AllowSelectedDeviceOverride ? true : base.Hidden;
+		public override bool Hidden
+		{
+			get
+			{
+				return m_for_app ? false : !RcCore.It.EngineSettings.AllowSelectedDeviceOverride ? true : base.Hidden;
+			}
+		}
 
 		///<summary>
 		/// Constructor for SectionOne
