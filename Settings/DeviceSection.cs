@@ -168,11 +168,13 @@ namespace RhinoCycles.Settings
 		private Label m_curdev;
 		private Label m_lb_newdev;
 		private Label m_newdev;
+		private Label m_appdev;
 		private GridDevicePage m_tabpage_cpu;
 		private GridDevicePage m_tabpage_cuda;
 		private GridDevicePage m_tabpage_opencl;
 		private Button m_reset;
 		private Button m_select;
+		private Button m_useAppDevice;
 		private ccl.Device m_currentDevice;
 		private ccl.Device m_newDevice;
 		private readonly string m_nodeviceselected = Localization.LocalizeString("No device selected, default device will be used", 13);
@@ -227,7 +229,7 @@ namespace RhinoCycles.Settings
 			}
 			else
 			{
-				rd = ccl.Device.DeviceFromString(vud.SelectedDeviceStr);
+				rd = ccl.Device.DeviceFromString(vud.IntermediateSelectedDeviceStr);
 			}
 			return rd;
 		}
@@ -254,8 +256,9 @@ namespace RhinoCycles.Settings
 			Application.Instance.AsyncInvoke(() =>
 			{
 				IViewportSettings vud = Settings;
-				m_currentDevice = RcCore.It.EngineSettings.RenderDevice;
-				m_newDevice = vud!=null ? ccl.Device.DeviceFromString(vud.SelectedDeviceStr) : m_currentDevice;
+				if (vud == null) return;
+				m_currentDevice = Settings.RenderDevice;
+				m_newDevice = vud!=null ? ccl.Device.DeviceFromString(vud.IntermediateSelectedDeviceStr) : m_currentDevice;
 				SuspendLayout();
 				UnRegisterControlEvents();
 				ShowDeviceData();
@@ -298,7 +301,8 @@ namespace RhinoCycles.Settings
 		private void InitializeComponents()
 		{
 			m_reset = new Button { Text = LOC.STR("Reset device"), ToolTip = Localization.LocalizeString("Reset the current selection to that corresponding\nto the application-level render device selection.", 21) };
-			m_select = new Button { Text = LOC.STR("Activate device"), ToolTip = Localization.LocalizeString("Sets the current selection as application level render device.", 23) };
+			m_select = new Button { Text = LOC.STR("Activate device"), ToolTip = LOC.STR("Activate the selection as the new render device for this viewport.\nThis will restart the render session.") };
+			m_useAppDevice = new Button { Text = LOC.STR("Use Application device"), ToolTip = LOC.STR("Use the render device as specified in the application settings.\nThis will restart the render session.") };
 			m_tc = new TabControl();
 			m_tabpage_cpu = new GridDevicePage { Text = "CPU", ToolTip = Localization.LocalizeString("Show all the render devices in the CPU category.", 24) };
 			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", ToolTip = Localization.LocalizeString("Show all the render devices in the CUDA category.\nThese are the NVidia graphics and compute cards.", 25) };
@@ -311,6 +315,7 @@ namespace RhinoCycles.Settings
 			m_curdev = new Label { Text = "...", Wrap = WrapMode.Word };
 			m_lb_newdev = new Label { Text = Localization.LocalizeString("New render device:", 28) };
 			m_newdev = new Label { Text = "...", Wrap = WrapMode.Word };
+			m_appdev = new Label { Text = "...", Wrap = WrapMode.Word };
 		}
 
 
@@ -328,6 +333,8 @@ namespace RhinoCycles.Settings
 					new StackLayoutItem(m_tc, true),
 					m_for_app ? null : TableLayout.HorizontalScaled(15, m_lb_newdev, m_newdev),
 					m_for_app ? null : TableLayout.HorizontalScaled(15, m_reset, m_select),
+					m_for_app ? null : TableLayout.HorizontalScaled(15, m_useAppDevice),
+					m_for_app ? null : TableLayout.HorizontalScaled(15, m_appdev),
 				}
 			};
 			Content = layout;
@@ -337,6 +344,7 @@ namespace RhinoCycles.Settings
 		{
 			m_reset.Click += HandleResetClick;
 			m_select.Click += HandleSelectClick;
+			m_useAppDevice.Click += HandleUseAppDeviceClick;
 			m_tabpage_cpu.SelectionChanged += DeviceSelectionChanged;
 			m_tabpage_cpu.RegisterEventHandlers();
 			m_tabpage_cuda.SelectionChanged += DeviceSelectionChanged;
@@ -372,6 +380,7 @@ namespace RhinoCycles.Settings
 				m_newdev.Visible = false;
 				m_lb_newdev.Visible = false;
 			}
+			m_appdev.Text = RcCore.It.EngineSettings.RenderDevice.NiceName;
 		}
 
 		private void HandleResetClick(object sender, EventArgs e)
@@ -380,6 +389,7 @@ namespace RhinoCycles.Settings
 			if (vud != null)
 			{
 				vud.SelectedDeviceStr = RcCore.It.EngineSettings.SelectedDeviceStr;
+				vud.IntermediateSelectedDeviceStr = vud.SelectedDeviceStr;
 				It_InitialisationCompleted(this, EventArgs.Empty);
 			}
 		}
@@ -389,7 +399,20 @@ namespace RhinoCycles.Settings
 			var vud = Settings;
 			if (!m_for_app && vud != null && RcCore.It.EngineSettings.AllowSelectedDeviceOverride)
 			{
-				Rhino.RhinoApp.RunScript("_-SetDisplayMode Wireframe Enter _-SetDisplayMode Raytraced Enter", false);
+				vud.SelectedDeviceStr = vud.IntermediateSelectedDeviceStr;
+				Rhino.RhinoApp.RunScript("_-SetDisplayMode Mode Wireframe Enter _-SetDisplayMode Mode Raytraced Enter", false);
+				It_InitialisationCompleted(this, EventArgs.Empty);
+			}
+		}
+
+		private void HandleUseAppDeviceClick(object sender, EventArgs e)
+		{
+			var vud = Settings;
+			if (!m_for_app && vud != null)
+			{
+				vud.SelectedDeviceStr = RcCore.It.EngineSettings.SelectedDeviceStr;
+				vud.IntermediateSelectedDeviceStr = vud.SelectedDeviceStr;
+				Rhino.RhinoApp.RunScript("_-SetDisplayMode Mode Wireframe Enter _-SetDisplayMode Mode Raytraced Enter", false);
 				It_InitialisationCompleted(this, EventArgs.Empty);
 			}
 		}
@@ -404,11 +427,10 @@ namespace RhinoCycles.Settings
 				{
 					if (page is GridDevicePage p && p != sender) p.ClearSelection();
 				}
-				var vud = Settings; // Plugin.GetActiveViewportSettings();
+				var vud = Settings;
 
 				m_newDevice = ccl.Device.DeviceFromString(senderpage.DeviceSelectionString());
-				if(vud!=null) vud.SelectedDeviceStr = m_newDevice.DeviceString;
-				
+				if(vud!=null) vud.IntermediateSelectedDeviceStr = m_newDevice.DeviceString;
 			}
 
 			RegisterControlEvents();
@@ -420,6 +442,7 @@ namespace RhinoCycles.Settings
 		{
 			m_reset.Click -= HandleResetClick;
 			m_select.Click -= HandleSelectClick;
+			m_useAppDevice.Click -= HandleUseAppDeviceClick;
 			m_tabpage_cpu.SelectionChanged -= DeviceSelectionChanged;
 			m_tabpage_cpu.UnregisterEventHandlers();
 			m_tabpage_cuda.SelectionChanged -= DeviceSelectionChanged;

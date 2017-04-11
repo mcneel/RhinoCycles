@@ -83,8 +83,22 @@ namespace RhinoCycles.Settings
 
 		public string SelectedDeviceStr
 		{
-			get { return UseThis ? Dictionary.GetString("selecteddevice", RcCore.It.EngineSettings.SelectedDeviceStr) : RcCore.It.EngineSettings.SelectedDeviceStr; }
+			get { return UseThis && AllowSelectedDeviceOverride ? Dictionary.GetString("selecteddevice", RcCore.It.EngineSettings.SelectedDeviceStr) : RcCore.It.EngineSettings.SelectedDeviceStr; }
 			set { Dictionary.Set("selecteddevice", value); }
+		}
+
+		public string IntermediateSelectedDeviceStr
+		{
+			get { return Dictionary.GetString("intermediateselecteddevice", SelectedDeviceStr); }
+			set { Dictionary.Set("intermediateselecteddevice", value); }
+		}
+
+		public ccl.Device RenderDevice
+		{
+			get
+			{
+				return ccl.Device.DeviceFromString(SelectedDeviceStr);
+			}
 		}
 
 		public int Samples

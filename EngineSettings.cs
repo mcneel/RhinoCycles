@@ -56,6 +56,7 @@ namespace RhinoCyclesCore
 			BumpDistance = BumpDistance;
 
 			SelectedDeviceStr = SelectedDeviceStr;
+			IntermediateSelectedDeviceStr = IntermediateSelectedDeviceStr;
 			AllowSelectedDeviceOverride = AllowSelectedDeviceOverride;
 
 			MinBounce = MinBounce;
@@ -248,6 +249,12 @@ namespace RhinoCyclesCore
 		{
 			get { return RcPlugIn.Settings.GetString("rc_selecteddevicestr", SelectedDeviceStrDefault); }
 			set { RcPlugIn.Settings.SetString("rc_selecteddevicestr", value); }
+		}
+
+		public virtual string IntermediateSelectedDeviceStr
+		{
+			get { return RcPlugIn.Settings.GetString("rc_intermediateselecteddevicestr", SelectedDeviceStr); }
+			set { RcPlugIn.Settings.SetString("rc_intermediateselecteddevicestr", value); }
 		}
 
 		public bool AllowSelectedDeviceOverrideDefault => false;
@@ -502,7 +509,10 @@ namespace RhinoCyclesCore
 
 		string SelectedDeviceStr { get; set; }
 
+		string IntermediateSelectedDeviceStr { get; set; }
+
 		bool AllowSelectedDeviceOverride { get; }
+		Device RenderDevice { get; }
 
 		uint IntegratorHash { get; }
 	}
