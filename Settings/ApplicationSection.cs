@@ -58,13 +58,8 @@ namespace RhinoCycles.Settings
 		{
 			Application.Instance.AsyncInvoke(() =>
 			{
-				var vud = RcCore.It.EngineSettings;
-				if (vud == null) return;
 				SuspendLayout();
-				UnRegisterControlEvents();
-				m_allowdeviceoverride.Checked = vud.AllowSelectedDeviceOverride;
-				m_allowviewportsettingsoverride.Checked = vud.AllowViewportSettingsOverride;
-				RegisterControlEvents();
+				DisplayData();
 				ResumeLayout();
 			}
 			);
@@ -80,8 +75,10 @@ namespace RhinoCycles.Settings
 			if (e.ViewportSettings != null)
 			{
 				UnRegisterControlEvents();
-				m_allowdeviceoverride.Checked = e.ViewportSettings.AllowSelectedDeviceOverride;
 				m_allowviewportsettingsoverride.Checked = RcCore.It.EngineSettings.AllowViewportSettingsOverride;
+				m_allowdeviceoverride.Checked = RcCore.It.EngineSettings.AllowViewportSettingsOverride ? e.ViewportSettings.AllowSelectedDeviceOverride : false;
+
+				m_allowdeviceoverride.Enabled = RcCore.It.EngineSettings.AllowViewportSettingsOverride;
 				RegisterControlEvents();
 			}
 		}
@@ -149,6 +146,8 @@ namespace RhinoCycles.Settings
 
 			vud.AllowViewportSettingsOverride = m_allowviewportsettingsoverride.Checked.HasValue ? m_allowviewportsettingsoverride.Checked.Value : false;
 			vud.AllowSelectedDeviceOverride = m_allowdeviceoverride.Checked.HasValue ? m_allowdeviceoverride.Checked.Value : false;
+
+			DisplayData();
 		}
 
 		private void UnRegisterControlEvents()
