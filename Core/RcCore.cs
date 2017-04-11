@@ -57,6 +57,8 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		public bool Initialised { get; set; }
 
+		public bool AppInitialised { get; set; }
+
 		/// <summary>
 		/// Get the path used to look up .cubins (absolute)
 		/// </summary>
@@ -80,6 +82,7 @@ namespace RhinoCyclesCore.Core
 
 		private readonly EngineSettings _engineSettings;
 		private RcCore() {
+			AppInitialised = false;
 			if(_engineSettings == null)
 				_engineSettings = new EngineSettings();
 		}

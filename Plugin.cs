@@ -46,6 +46,9 @@ namespace RhinoCycles
 
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
+
+			RhinoApp.Initialized += RhinoApp_Initialized;
+
 			if (RhinoApp.RunningOnVMWare())
 			{
 				CSycles.putenv("CYCLES_OPENCL_TEST", "NONE");
@@ -80,6 +83,11 @@ namespace RhinoCycles
 			RhinoView.SetActive += RhinoView_SetActive;
 
 			return LoadReturnCode.Success;
+		}
+
+		private void RhinoApp_Initialized(object sender, EventArgs e)
+		{
+			RcCore.It.AppInitialised = true;
 		}
 
 		public static IViewportSettings GetActiveViewportSettings()
@@ -123,6 +131,8 @@ namespace RhinoCycles
 			{
 				if (!RcCore.It.Initialised)
 				{
+					CSycles.debug_set_opencl_kernel(1);
+					CSycles.debug_set_opencl_single_program(true);
 					CSycles.initialise();
 					RcCore.It.Initialised = true;
 					RcCore.It.TriggerInitialisationCompleted(this);
@@ -137,6 +147,7 @@ namespace RhinoCycles
 
 		protected override void OnShutdown()
 		{
+			RhinoApp.Initialized -= RhinoApp_Initialized;
 			/* Clean up everything from C[CS]?ycles. */
 			CSycles.shutdown();
 			base.OnShutdown();

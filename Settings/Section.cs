@@ -34,7 +34,9 @@ namespace RhinoCycles.Settings
 		/// </summary>
 		/// <param name="for_app">Pass in 'true' if sections display application settings. 'false' means
 		/// viewport-specific settings.</param>
-		public Section(bool for_app) { m_for_app = for_app; }
+		public Section(bool for_app) {
+			m_for_app = for_app;
+		}
 
 		/// <summary>
 		/// Access to settings related to viewport/sessions through IViewportSettings
@@ -65,6 +67,12 @@ namespace RhinoCycles.Settings
 		{
 		}
 
+		private bool CanShowSections()
+		{
+			return m_for_app || (RcCore.It.AppInitialised && RcCore.It.Initialised && RhinoDoc.ActiveDoc != null && RhinoDoc.ActiveDoc.Views.ActiveView!=null &&
+					(RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as Viewport.RenderedViewport)!=null);
+		}
+
 		private bool _hidden;
 		public void Hide()
 		{
@@ -74,8 +82,8 @@ namespace RhinoCycles.Settings
 
 		public void Show(IViewportSettings vud)
 		{
-			_hidden = false;
-			Visible = true;
+			_hidden = CanShowSections() ? false : true;
+			Visible = CanShowSections() ? true : false;
 			ViewportSettingsReceived?.Invoke(this, new ViewportSettingsReceivedEventArgs(vud));
 		}
 
