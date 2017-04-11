@@ -160,7 +160,7 @@ namespace RhinoCycles.Settings
 	///<summary>
 	/// The UI implementation of device section
 	///</summary>
-	public class DeviceSection: Section
+	public class DeviceSection : Section
 	{
 		private LocalizeStringPair m_caption;
 		private TabControl m_tc;
@@ -297,8 +297,8 @@ namespace RhinoCycles.Settings
 
 		private void InitializeComponents()
 		{
-			m_reset = new Button { Text = Localization.LocalizeString("Reset device selection", 20), ToolTip = Localization.LocalizeString("Reset the current selection to that corresponding\nto the application-level render device selection.", 21) };
-			m_select = new Button { Text = Localization.LocalizeString("Use current device selection", 22), ToolTip = Localization.LocalizeString("Sets the current selection as application level render device.", 23) };
+			m_reset = new Button { Text = LOC.STR("Reset device"), ToolTip = Localization.LocalizeString("Reset the current selection to that corresponding\nto the application-level render device selection.", 21) };
+			m_select = new Button { Text = LOC.STR("Activate device"), ToolTip = Localization.LocalizeString("Sets the current selection as application level render device.", 23) };
 			m_tc = new TabControl();
 			m_tabpage_cpu = new GridDevicePage { Text = "CPU", ToolTip = Localization.LocalizeString("Show all the render devices in the CPU category.", 24) };
 			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", ToolTip = Localization.LocalizeString("Show all the render devices in the CUDA category.\nThese are the NVidia graphics and compute cards.", 25) };
@@ -358,11 +358,19 @@ namespace RhinoCycles.Settings
 			}
 			if(m_newDevice != null && m_currentDevice != m_newDevice)
 			{
+				m_select.Visible = true;
+				m_reset.Visible = true;
 				m_newdev.Text = $"{m_newDevice.NiceName} ({m_newDevice.Type})";
+				m_newdev.Visible = true;
+				m_lb_newdev.Visible = true;
 			}
 			else
 			{
+				m_select.Visible = false;
+				m_reset.Visible = false;
 				m_newdev.Text = nodev;
+				m_newdev.Visible = false;
+				m_lb_newdev.Visible = false;
 			}
 		}
 
@@ -378,10 +386,9 @@ namespace RhinoCycles.Settings
 
 		private void HandleSelectClick(object sender, EventArgs e)
 		{
-			var vud = Settings; // Plugin.GetActiveViewportSettings();
+			var vud = Settings;
 			if (!m_for_app && vud != null && RcCore.It.EngineSettings.AllowSelectedDeviceOverride)
 			{
-				//RcCore.It.EngineSettings.SelectedDeviceStr = vud.SelectedDeviceStr;
 				Rhino.RhinoApp.RunScript("_-SetDisplayMode Wireframe Enter _-SetDisplayMode Raytraced Enter", false);
 				It_InitialisationCompleted(this, EventArgs.Empty);
 			}
