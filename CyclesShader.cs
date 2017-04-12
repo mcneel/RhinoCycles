@@ -431,7 +431,9 @@ namespace RhinoCyclesCore
 						break;
 				}
 
-				return c ^ Gamma;
+				var gcc = c ^ Gamma;
+
+				return gcc;
 			}
 		}
 
