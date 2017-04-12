@@ -472,13 +472,17 @@ namespace RhinoCyclesCore
 		                                      && !HasBumpTexture;
 
 		public float4 SpecularColor { get; set; }
+		public float4 SpecularColorGamma => SpecularColor ^ Gamma;
 		public float4 ReflectionColor { get; set; }
+		public float4 ReflectionColorGamma => ReflectionColor ^ Gamma;
 		public float ReflectionRoughness { get; set; }
 		public float ReflectionRoughnessPow2 => ReflectionRoughness * ReflectionRoughness;
 		public float4 RefractionColor { get; set; }
+		public float4 RefractionColorGamma => RefractionColor ^ Gamma;
 		public float RefractionRoughness { get; set; }
 		public float RefractionRoughnessPow2 => RefractionRoughness * RefractionRoughness;
 		public float4 TransparencyColor { get; set; }
+		public float4 TransparencyColorGamma => TransparencyColor ^ Gamma;
 		public float4 EmissionColor { get; set; }
 		public bool HasEmission => !EmissionColor.IsZero(false);
 
