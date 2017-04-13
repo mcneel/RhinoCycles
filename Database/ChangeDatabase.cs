@@ -204,29 +204,34 @@ namespace RhinoCyclesCore.Database
 		{
 			if (LinearWorkflowHasChanged)
 			{
-				TriggerLinearWorkflowUploaded();
 				BitmapConverter.ApplyGammaToTextures(PreProcessGamma);
 
 				_environmentDatabase.CurrentBackgroundShader?.Reset();
 
 				foreach (var tup in _shaderDatabase.AllShaders)
 				{
+					var cclsh = tup.Item2;
 					var matsh = tup.Item1 as CyclesShader;
 					if (matsh != null)
 					{
+						Rhino.RhinoApp.OutputDebugString($"Updating material {cclsh.Id}, old gamma {matsh.Gamma} new gamma ");
 						matsh.Gamma = PreProcessGamma;
-						TriggerMaterialShaderChanged(matsh, tup.Item2);
+						Rhino.RhinoApp.OutputDebugString($"{matsh.Gamma}\n");
+						TriggerMaterialShaderChanged(matsh, cclsh);
 					}
 
 					var lgsh = tup.Item1 as CyclesLight;
 					if (lgsh != null)
 					{
+						Rhino.RhinoApp.OutputDebugString($"Updating light {cclsh.Id}, old gamma {lgsh.Gamma} new gamma ");
 						lgsh.Gamma = PreProcessGamma;
-						TriggerLightShaderChanged(lgsh, tup.Item2);
+						Rhino.RhinoApp.OutputDebugString($"{lgsh.Gamma}\n");
+						TriggerLightShaderChanged(lgsh, cclsh);
 					}
 
 				}
 
+				TriggerLinearWorkflowUploaded();
 				TriggerFilmUpdateTagged();
 			}
 		}
