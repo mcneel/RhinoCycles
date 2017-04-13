@@ -67,12 +67,6 @@ namespace RhinoCycles.Settings
 		{
 		}
 
-		private bool CanShowSections()
-		{
-			return m_for_app || (RcCore.It.AppInitialised && RcCore.It.Initialised && RhinoDoc.ActiveDoc != null && RhinoDoc.ActiveDoc.Views.ActiveView!=null &&
-					(RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as Viewport.RenderedViewport)!=null);
-		}
-
 		private bool _hidden;
 		public void Hide()
 		{
@@ -82,8 +76,8 @@ namespace RhinoCycles.Settings
 
 		public void Show(IViewportSettings vud)
 		{
-			_hidden = CanShowSections() ? false : true;
-			Visible = CanShowSections() ? true : false;
+			_hidden = false;
+			Visible = true;
 			ViewportSettingsReceived?.Invoke(this, new ViewportSettingsReceivedEventArgs(vud));
 		}
 
