@@ -23,7 +23,7 @@ namespace RhinoCycles.Settings
 {
 	public class OptionsDialogPage : Rhino.UI.OptionsDialogPage
 	{
-		public OptionsDialogPage() : base(Localization.LocalizeString("Raytraced settings", 37))
+		public OptionsDialogPage() : base(Localization.LocalizeString("Cycles", 7))
 		{
 			CollapsibleSectionHolder = new OptionsDialogCollapsibleSectionUIPanel();
 		}
