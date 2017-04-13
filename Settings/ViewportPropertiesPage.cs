@@ -75,7 +75,7 @@ namespace RhinoCycles.Settings
 		public override string EnglishPageTitle => "Cycles";
 		public override string LocalPageTitle => Localization.LocalizeString("Cycles", 7);
 
-		public override Icon Icon => null;
+		public override Icon PageIcon(Size sizeInPixels) => null;
 
 		public override PropertyPageType PageType => PropertyPageType.View;
 
