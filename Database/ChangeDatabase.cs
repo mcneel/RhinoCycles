@@ -151,10 +151,12 @@ namespace RhinoCyclesCore.Database
 
 		public void UploadLinearWorkflowChanges()
 		{
+			/*
 			if (LinearWorkflowHasChanged)
 			{
 				TriggerLinearWorkflowUploaded();
 			}
+			*/
 		}
 
 		/// <summary>
