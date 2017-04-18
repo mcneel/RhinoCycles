@@ -431,6 +431,7 @@ namespace RhinoCycles.Settings
 
 				m_newDevice = ccl.Device.DeviceFromString(senderpage.DeviceSelectionString());
 				if(vud!=null) vud.IntermediateSelectedDeviceStr = m_newDevice.DeviceString;
+				if (m_for_app) vud.SelectedDeviceStr = vud.IntermediateSelectedDeviceStr;
 			}
 
 			RegisterControlEvents();
