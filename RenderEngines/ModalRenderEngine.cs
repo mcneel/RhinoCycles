@@ -97,7 +97,7 @@ namespace RhinoCyclesCore.RenderEngines
 			//ViewCrc = e.Crc;
 		}
 
-		private int maxSamples;
+		private uint maxSamples;
 
 		/// <summary>
 		/// Entry point for a new render process. This is to be done in a separate thread.
@@ -112,8 +112,9 @@ namespace RhinoCyclesCore.RenderEngines
 			if (rw == null) return; // we don't have a window to write to...
 
 			var size = cyclesEngine.RenderDimension;
-			var samples = RcCore.It.EngineSettings.Samples;
-			maxSamples = samples;
+			_samples = (uint)RcCore.It.EngineSettings.Samples;
+			maxSamples = _samples;
+			cyclesEngine.TriggerCurrentViewportSettingsRequested();
 
 			#region pick a render device
 			var renderDevice = RcCore.It.EngineSettings.RenderDevice;
@@ -124,12 +125,13 @@ namespace RhinoCyclesCore.RenderEngines
 			var scene = CreateScene(client, renderDevice, cyclesEngine);
 
 			cyclesEngine.TriggerCurrentViewportSettingsRequested();
+			maxSamples = _samples;
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
-				Samples = samples,
+				Samples = (int)_samples,
 				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(RcCore.It.EngineSettings.TileX, RcCore.It.EngineSettings.TileY),
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsGpu ? 0 : RcCore.It.EngineSettings.Threads),
@@ -160,7 +162,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.PrepareRun();
 
 			// lets first reset session
-			cyclesEngine.Session.Reset((uint)size.Width, (uint)size.Height, (uint)samples);
+			cyclesEngine.Session.Reset((uint)size.Width, (uint)size.Height, _samples);
 			// then reset scene
 			cyclesEngine.Session.Scene.Reset();
 			// and actually start
