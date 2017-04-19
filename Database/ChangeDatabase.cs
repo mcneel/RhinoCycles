@@ -149,25 +149,6 @@ namespace RhinoCyclesCore.Database
 			base.Dispose(isDisposing);
 		}
 
-		public void UploadLinearWorkflowChanges()
-		{
-			/*
-			if (LinearWorkflowHasChanged)
-			{
-				TriggerLinearWorkflowUploaded();
-			}
-			*/
-		}
-
-		/// <summary>
-		/// Notify interested clients of i.e. sample count changes.
-		/// </summary>
-		public void UploadRenderSettingsChanges()
-		{
-			if (_renderSettingsDatabase.HasChanged)
-				_renderEngine.TriggerSamplesChanged(RcCore.It.EngineSettings.Samples);
-		}
-
 		/// <summary>
 		/// Change shaders on objects and their meshes
 		/// </summary>

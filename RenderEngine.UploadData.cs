@@ -36,24 +36,13 @@ namespace RhinoCyclesCore
 		/// </summary>
 		protected bool UploadData()
 		{
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.0f, "Start data upload"));
+			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.1f, "Start data upload"));
 
 			if (CancelRender) return false;
 
-			Database.UploadRenderSettingsChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.1f, "Render settings uploaded"));
-
-			if (CancelRender) return false;
-
-			// linear workflow changes
-			Database.UploadLinearWorkflowChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.2f, "Linear workflow uploaded"));
-
-			if (CancelRender) return false;
-
-			// gamma changes
+			// linear workflow & gamma changes
 			Database.UploadGammaChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.25f, "Linear workflow (gamma changes) uploaded"));
+			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.2f, "Linear workflow (gamma changes) uploaded"));
 
 			if (CancelRender) return false;
 
