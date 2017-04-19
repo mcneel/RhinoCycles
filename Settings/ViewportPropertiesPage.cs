@@ -81,6 +81,14 @@ namespace RhinoCycles.Settings
 
 		public override object PageControl => CollapsibleSectionHolder;
 
+		public override bool ShouldDisplay(RhinoObject rhObj)
+		{
+			if (RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return false;
+
+			var dm = RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as Viewport.RenderedViewport;
+			return RhinoCyclesCore.Core.RcCore.It.EngineSettings.AllowViewportSettingsOverride && dm != null;
+		}
+
 		private ViewportCollapsibleSectionUIPanel CollapsibleSectionHolder { get; }
 	}
 }

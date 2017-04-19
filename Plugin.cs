@@ -166,10 +166,7 @@ namespace RhinoCycles
 		}*/
 		protected override void ObjectPropertiesPages(List<ObjectPropertiesPage> pages)
 		{
-			if (RcCore.It.EngineSettings.ShowViewportPropertiesPanel)
-			{
-				pages.Add(m_page);
-			}
+			pages.Add(m_page);
 			base.ObjectPropertiesPages(pages);
 		}
 	}
