@@ -196,6 +196,7 @@ namespace RhinoCycles.Viewport
 			_cycles.Synchronized += CyclesSynchronized;
 			_cycles.PassRendered += CyclesPassRendered;
 			_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
+			_cycles.UploadProgress += _cycles_UploadProgress;
 			_cycles.SamplesChanged += CyclesSamplesChanged;
 
 			ViewportSettingsChanged += _cycles.ViewportSettingsChangedHandler;
@@ -217,6 +218,12 @@ namespace RhinoCycles.Viewport
 			_cycles.StartRenderThread(_cycles.Renderer, $"A cool Cycles viewport rendering thread {_serial}");
 
 			return true;
+		}
+
+		private void _cycles_UploadProgress(object sender, UploadProgressEventArgs e)
+		{
+			_status = e.Message;
+			SignalRedraw();
 		}
 
 		private void _cycles_CurrentViewportSettingsRequested(object sender, EventArgs e)
@@ -353,7 +360,7 @@ namespace RhinoCycles.Viewport
 			if (_cycles?.IsWaiting ?? false) _status = "Paused";
 			else
 			{
-				_status = _samples < 1 ? e.StatusText : ""; // "Updating Engine" : "";
+				_status = _samples < 0 ? e.StatusText : ""; // "Updating Engine" : "";
 				SignalRedraw();
 			}
 		}
