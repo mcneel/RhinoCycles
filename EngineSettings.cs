@@ -29,13 +29,6 @@ namespace RhinoCyclesCore
 
 		public EngineSettings()
 		{
-			DefaultSettings();
-		}
-
-		public bool IgnoreQualityChanges { get; set; }
-
-		public void DefaultSettings()
-		{
 			IntegratorMethod = IntegratorMethod.Path;
 			SamplingPattern = SamplingPattern.CMJ;
 
@@ -104,6 +97,80 @@ namespace RhinoCyclesCore
 			AllowViewportSettingsOverride = AllowViewportSettingsOverride;
 			SaveDebugImages = SaveDebugImages;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
+		}
+
+		public bool IgnoreQualityChanges { get; set; }
+
+		public void DefaultSettings()
+		{
+			IntegratorMethod = IntegratorMethod.Path;
+			SamplingPattern = SamplingPattern.CMJ;
+
+			// persisted settings
+			Verbose = VerboseDefault;
+
+			ShowViewportPropertiesPanel = ShowViewportPropertiesPanelDefault;
+
+			SpotlightFactor = SpotlightFactorDefault;
+			PointlightFactor = PointlightFactorDefault;
+			SunlightFactor = SunlightFactorDefault;
+			ArealightFactor = ArealightFactorDefault;
+			PolishFactor = PolishFactorDefault;
+
+			ThrottleMs = ThrottleMsDefault;
+			Threads = ThreadsDefault;
+			BumpDistance = BumpDistanceDefault;
+
+			SelectedDeviceStr = SelectedDeviceStrDefault;
+			IntermediateSelectedDeviceStr = SelectedDeviceStrDefault;
+			AllowSelectedDeviceOverride = AllowSelectedDeviceOverrideDefault;
+
+			MinBounce = MinBounceDefault;
+			MaxBounce = MaxBounceDefault;
+
+			NoCaustics = NoCausticsDefault;
+
+			MaxDiffuseBounce = MaxDiffuseBounceDefault;
+			MaxGlossyBounce = MaxGlossyBounceDefault;
+			MaxTransmissionBounce = MaxTransmissionBounceDefault;
+
+			MaxVolumeBounce = MaxVolumeBounceDefault;
+
+			AaSamples = AaSamplesDefault;
+
+			DiffuseSamples = DiffuseSamplesDefault;
+			GlossySamples = GlossySamplesDefault;
+			TransmissionSamples = TransmissionSamplesDefault;
+			
+			AoSamples = AoSamplesDefault;
+			
+			MeshLightSamples = MeshLightSamplesDefault;
+			SubsurfaceSamples = SubsurfaceSamplesDefault;
+			VolumeSamples = VolumeSamplesDefault;
+
+			Samples = SamplesDefault;
+			Seed = SeedDefault;
+
+			FilterGlossy = FilterGlossyDefault;
+
+			SampleClampDirect = SampleClampDirectDefault;
+			SampleClampIndirect = SampleClampIndirectDefault;
+			LightSamplingThreshold = LightSamplingThresholdDefault;
+
+			SampleAllLights = SampleAllLightsDefault;
+			SampleAllLightsIndirect = SampleAllLightsIndirectDefault;
+
+			SensorWidth = SensorWidthDefault;
+			SensorHeight = SensorHeightDefault;
+
+			TransparentMinBounce = TransparentMinBounceDefault;
+			TransparentMaxBounce = TransparentMaxBounceDefault;
+			TransparentShadows = TransparentShadowsDefault;
+
+			// application settings
+			AllowViewportSettingsOverride = AllowViewportSettingsOverrideDefault;
+			SaveDebugImages = SaveDebugImagesDefault;
+			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorldDefault;
 		}
 
 		public bool RenderDeviceIsCuda => RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
@@ -450,7 +517,7 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetBool("rc_transparentshadows", value); }
 		}
 
-		public bool AllowViewportSettingsOverrideDefault => true;
+		public bool AllowViewportSettingsOverrideDefault => false;
 		public virtual bool AllowViewportSettingsOverride
 		{
 			get { return RcPlugIn.Settings.GetBool("rc_allowviewportsettingsoverride", AllowViewportSettingsOverrideDefault); }
