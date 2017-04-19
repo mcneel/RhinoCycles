@@ -355,7 +355,7 @@ namespace RhinoCyclesCore
 			get { return RcPlugIn.Settings.GetInteger("rc_volumesamples", VolumeSamplesDefault); }
 			set { RcPlugIn.Settings.SetInteger("rc_volumesamples", value); }
 		}
-		public int SamplesDefault => 10000;
+		public int SamplesDefault => 1000;
 		public virtual int Samples
 		{
 			get { return RcPlugIn.Settings.GetInteger("rc_samples", SamplesDefault); }

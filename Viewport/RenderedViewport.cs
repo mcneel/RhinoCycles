@@ -350,8 +350,12 @@ namespace RhinoCycles.Viewport
 			//Rhino.RhinoApp.OutputDebugString($"{e.StatusText}\n");
 			_samples = e.Samples;
 
-			if(_cycles?.IsWaiting ?? false) _status = "Paused";
-			else _status = _samples < 1 ? "Updating Engine" : "";
+			if (_cycles?.IsWaiting ?? false) _status = "Paused";
+			else
+			{
+				_status = _samples < 1 ? e.StatusText : ""; // "Updating Engine" : "";
+				SignalRedraw();
+			}
 		}
 
 		public override bool ShowCaptureProgress()
