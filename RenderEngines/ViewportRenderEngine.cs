@@ -155,7 +155,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (rw == null) return;
 
-			var samples = RcCore.It.EngineSettings.Samples;
+			_throttle = RcCore.It.EngineSettings.ThrottleMs;
+			_samples = RcCore.It.EngineSettings.Samples;
 
 			#region pick a render device
 
@@ -187,7 +188,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
-				Samples = samples,
+				Samples = (int)_samples,
 				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(RcCore.It.EngineSettings.TileX, RcCore.It.EngineSettings.TileY),
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsCpu ? RcCore.It.EngineSettings.Threads : 0),
@@ -206,9 +207,6 @@ namespace RhinoCyclesCore.RenderEngines
 			#region create session for scene
 			cyclesEngine.Session = new Session(client, sessionParams, scene);
 			#endregion
-
-			_throttle = RcCore.It.EngineSettings.ThrottleMs;
-			_samples = (uint)RcCore.It.EngineSettings.Samples;
 
 			TriggerCurrentViewportSettingsRequested();
 
@@ -242,7 +240,7 @@ namespace RhinoCyclesCore.RenderEngines
 					var size = RenderDimension;
 
 					// lets first reset session
-					Session.Reset((uint) size.Width, (uint) size.Height, _samples);
+					Session.Reset(size.Width, size.Height, _samples);
 					// then reset scene
 					Session.Scene.Reset();
 				}

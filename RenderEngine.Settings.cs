@@ -79,12 +79,12 @@ namespace RhinoCyclesCore
 				}
 				Session.SetSamples(e.Settings.Samples);
 				_throttle = e.Settings.ThrottleMs;
-				_samples = (uint)e.Settings.Samples;
+				_samples = e.Settings.Samples;
 			}
 		}
 
 		protected int _throttle = 10;
-		protected uint _samples = 1;
+		protected int _samples = 1;
 
 		protected bool _needReset;
 	}
