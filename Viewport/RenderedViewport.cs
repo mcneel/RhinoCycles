@@ -277,7 +277,7 @@ namespace RhinoCycles.Viewport
 				{
 					_sameView = _cycles.Database.AreViewsEqual(view, _cycles.View);
 				}
-				return _frameAvailable && _sameView;
+				return _frameAvailable && _sameView && _samples > -1;
 			}
 			if (_modal != null)
 			{
