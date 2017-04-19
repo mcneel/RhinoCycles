@@ -197,7 +197,6 @@ namespace RhinoCycles.Viewport
 			_cycles.PassRendered += CyclesPassRendered;
 			_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 			_cycles.UploadProgress += _cycles_UploadProgress;
-			_cycles.SamplesChanged += CyclesSamplesChanged;
 
 			ViewportSettingsChanged += _cycles.ViewportSettingsChangedHandler;
 			_cycles.CurrentViewportSettingsRequested += _cycles_CurrentViewportSettingsRequested;
@@ -210,7 +209,12 @@ namespace RhinoCycles.Viewport
 
 			_cycles.SetFloatTextureAsByteTexture(false); // m_cycles.Settings.RenderDeviceIsOpenCl);
 
+			_startTime = DateTime.UtcNow; // use _startTime to time CreateWorld
 			_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
+
+			var createWorldDuration = DateTime.UtcNow - _startTime;
+
+			RhinoApp.OutputDebugString($"CreateWorld({RcCore.It.EngineSettings.FlushAtEndOfCreateWorld}): {createWorldDuration.Ticks} ticks ({createWorldDuration.TotalMilliseconds} ms)\n");
 
 			_startTime = DateTime.UtcNow;
 			_lastTime = _startTime;
@@ -242,11 +246,6 @@ namespace RhinoCycles.Viewport
 		}
 
 		public event EventHandler<ViewportSettingsChangedArgs> ViewportSettingsChanged;
-
-		private void CyclesSamplesChanged(object sender, RenderEngine.SamplesChangedEventArgs e)
-		{
-			ChangeSamples(e.Count);
-		}
 
 		private double _progress;
 		private void Mre_StatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
@@ -342,9 +341,15 @@ namespace RhinoCycles.Viewport
 
 		public void ChangeSamples(int samples)
 		{
-			_ResetRenderTime();
+			var vud = Plugin.GetActiveViewportSettings();
+			if (vud == null) vud = RcCore.It.EngineSettings;
+			if(vud!=null)
+			{
+				vud.Samples = samples;
+			}
 			_maxSamples = samples;
 			_cycles?.ChangeSamples(samples);
+			_ResetRenderTime();
 		}
 
 		public void TriggerViewportSettingsChanged(IViewportSettings settings)

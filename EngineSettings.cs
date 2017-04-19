@@ -40,7 +40,6 @@ namespace RhinoCyclesCore
 			SamplingPattern = SamplingPattern.CMJ;
 
 			// persisted settings
-			SaveDebugImages = SaveDebugImages;
 			Verbose = Verbose;
 
 			ShowViewportPropertiesPanel = ShowViewportPropertiesPanel;
@@ -103,6 +102,8 @@ namespace RhinoCyclesCore
 
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverride;
+			SaveDebugImages = SaveDebugImages;
+			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
 		}
 
 		public bool RenderDeviceIsCuda => RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
@@ -123,6 +124,13 @@ namespace RhinoCyclesCore
 		{
 			get { return RcPlugIn.Settings.GetBool("rc_savedebugimages", SaveDebugImagesDefault); }
 			set { RcPlugIn.Settings.SetBool("rc_savedebugimages", value); }
+		}
+
+		public bool FlushAtEndOfCreateWorldDefault => false;
+		public virtual bool FlushAtEndOfCreateWorld
+		{
+			get { return RcPlugIn.Settings.GetBool("rc_flushatendofcreateworld", FlushAtEndOfCreateWorldDefault); }
+			set { RcPlugIn.Settings.SetBool("rc_flushatendofcreateworld", value); }
 		}
 
 		public bool ShowViewportPropertiesPanelDefault => false;

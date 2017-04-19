@@ -294,6 +294,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void ChangeSamples(int samples)
 		{
+			_samples = samples;
 			Session?.SetSamples(samples);
 		}
 	}
