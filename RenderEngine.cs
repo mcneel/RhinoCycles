@@ -292,7 +292,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public void CreateWorld()
 		{
-			Database.CreateWorld();
+			Database.CreateWorld(false);
 		}
 
 		/// <summary>

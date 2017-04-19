@@ -217,7 +217,6 @@ namespace RhinoCyclesCore.RenderEngines
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
 			cyclesEngine.CheckFlushQueue();
-			cyclesEngine.TriggerStatusTextUpdated(new StatusTextEventArgs("Uploading data", 0.0f, -1));
 			if (!cyclesEngine.CancelRender)
 			{
 				cyclesEngine.Synchronize();
