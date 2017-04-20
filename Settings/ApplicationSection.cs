@@ -47,7 +47,7 @@ namespace RhinoCycles.Settings
 		public ApplicationSection(bool for_app) : base(for_app)
 		{
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
-			m_caption = new LocalizeStringPair("Application-wide", LOC.STR("Application-wide"));
+			m_caption = new LocalizeStringPair("Application-wide", Localization.LocalizeString("Application-wide", 22));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
@@ -87,7 +87,7 @@ namespace RhinoCycles.Settings
 		{
 			m_allowdeviceoverride_lb = new Label()
 			{
-				Text = LOC.STR("Allow device override in viewport"),
+				Text = Localization.LocalizeString("Allow device override in viewport", 23),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			m_allowdeviceoverride = new CheckBox()
@@ -96,7 +96,7 @@ namespace RhinoCycles.Settings
 			};
 			m_allowviewportsettingsoverride_lb = new Label()
 			{
-				Text = LOC.STR("Allow viewport settings override"),
+				Text = Localization.LocalizeString("Allow viewport settings override", 37),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			m_allowviewportsettingsoverride = new CheckBox()

@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +59,7 @@ namespace RhinoCycles.Settings
 			};
 			m_nooverride = new Label()
 			{
-				Text = LOC.STR("Override not enabled in application settings"),
+				Text = Localization.LocalizeString("Override not enabled in application settings", 20),
 				Visible = !RcCore.It.EngineSettings.AllowViewportSettingsOverride,
 			};
 		}

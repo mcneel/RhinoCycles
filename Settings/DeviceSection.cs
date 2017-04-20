@@ -300,9 +300,9 @@ namespace RhinoCycles.Settings
 
 		private void InitializeComponents()
 		{
-			m_reset = new Button { Text = LOC.STR("Reset device"), ToolTip = Localization.LocalizeString("Reset the current selection to that corresponding\nto the application-level render device selection.", 21) };
-			m_select = new Button { Text = LOC.STR("Activate device"), ToolTip = LOC.STR("Activate the selection as the new render device for this viewport.\nThis will restart the render session.") };
-			m_useAppDevice = new Button { Text = LOC.STR("Use Application device"), ToolTip = LOC.STR("Use the render device as specified in the application settings.\nThis will restart the render session.") };
+			m_reset = new Button { Text = Localization.LocalizeString("Reset device", 38), ToolTip = Localization.LocalizeString("Reset the current selection to that corresponding\nto the application-level render device selection.", 21) };
+			m_select = new Button { Text = Localization.LocalizeString("Activate device", 39), ToolTip = Localization.LocalizeString("Activate the selection as the new render device for this viewport.\nThis will restart the render session.", 40) };
+			m_useAppDevice = new Button { Text = Localization.LocalizeString("Use Application device", 41), ToolTip = Localization.LocalizeString("Use the render device as specified in the application settings.\nThis will restart the render session.", 42) };
 			m_tc = new TabControl();
 			m_tabpage_cpu = new GridDevicePage { Text = "CPU", ToolTip = Localization.LocalizeString("Show all the render devices in the CPU category.", 24) };
 			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", ToolTip = Localization.LocalizeString("Show all the render devices in the CUDA category.\nThese are the NVidia graphics and compute cards.", 25) };

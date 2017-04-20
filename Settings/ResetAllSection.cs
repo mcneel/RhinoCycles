@@ -45,7 +45,7 @@ namespace RhinoCycles.Settings
 		///</summary>
 		public ResetAllSection(bool for_app) : base(for_app)
 		{
-			m_caption = new LocalizeStringPair("Reset section", LOC.STR("Reset settings"));
+			m_caption = new LocalizeStringPair("Reset section", Localization.LocalizeString("Reset settings", 43));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
@@ -57,7 +57,7 @@ namespace RhinoCycles.Settings
 		{
 			m_resetall = new Button()
 			{
-				Text = LOC.STR("Reset all Cycles settings to their defaults"),
+				Text = Localization.LocalizeString("Reset all Cycles settings to their defaults", 44),
 				Width = 75,
 			};
 		}
