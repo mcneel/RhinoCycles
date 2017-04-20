@@ -25,6 +25,18 @@ namespace RhinoCyclesCore.Materials
 	[CustomRenderContent(IsPrivate=true)]
 	public class XmlMaterial : RenderMaterial, ICyclesMaterial
 	{
+		public override bool Icon(Size size, out Bitmap bitmap)
+		{
+			var icon = new Icon(Properties.Resources.Cycles_material, size);
+			bitmap = icon.ToBitmap();
+			return bitmap!=null;
+		}
+
+		public override bool VirtualIcon(Size size, out Bitmap bitmap)
+		{
+			return Icon(size, out bitmap);
+		}
+
 		public override string TypeName => "Cycles Xml";
 
 		public override string TypeDescription => "Cycles Xml (grasshopper)";

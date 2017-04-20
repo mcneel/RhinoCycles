@@ -87,6 +87,11 @@
     <Compile Include="Materials\SimplePlasticMaterial.cs" />
     <Compile Include="Materials\TranslucentMaterial.cs" />
     <Compile Include="Measurement.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="RenderEngine.cs" />
     <Compile Include="RenderEngine.UploadData.cs" />
     <Compile Include="RenderEngine.Settings.cs" />
@@ -133,6 +138,15 @@
       <Project>{36396655-e087-4c00-990b-ce44f08e4fb2}</Project>
       <Name>csycles</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\Cycles_material.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
