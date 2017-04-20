@@ -1220,15 +1220,21 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
+		private readonly MeshingParameters mp = new MeshingParameters(0.1);
+
 		private void HandleLinearLightAddOrModify(uint lightmeshinstanceid, RGLight ld)
 		{
 			var brepf = ld.HasBrepForm;
 			var p = new Plane(ld.Location, ld.Direction);
 			var circle = new Circle(p, ld.Width.Length);
 			var c = new Cylinder(circle, ld.Direction.Length);
-			var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(true, true), MeshingParameters.FastRenderMesh);
+			mp.MinimumEdgeLength = 0.001;
+			mp.GridMinCount = 16;
+			mp.JaggedSeams = false;
+			var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(true, true), mp);
 			var mesh = new Rhino.Geometry.Mesh();
 			foreach (var im in m) mesh.Append(im);
+			mesh.RebuildNormals();
 			var t = ccl.Transform.Identity();
 
 			var ldid = new Tuple<Guid, int>(ld.Id, 0);
