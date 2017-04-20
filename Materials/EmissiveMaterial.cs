@@ -120,7 +120,7 @@ namespace RhinoCyclesCore.Materials
 					"",
 					
 					color.R, color.G, color.B,
-					Strength);
+					Strength / 100.0f);
 			}
 		}
 	}
