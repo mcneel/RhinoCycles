@@ -148,6 +148,15 @@
   <ItemGroup>
     <None Include="Icons\Cycles_material.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\CPU.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\CUDA.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\OpenCL.ico" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
