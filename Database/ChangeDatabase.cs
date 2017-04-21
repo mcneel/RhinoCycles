@@ -1168,6 +1168,7 @@ namespace RhinoCyclesCore.Database
 			var emissive = new Materials.EmissiveMaterial();
 			Color4f color = new Color4f(rgl.Diffuse);
 			emissive.BeginChange(RenderContent.ChangeContexts.Ignore);
+			emissive.Gamma = PreProcessGamma;
 			emissive.SetParameter("emission_color", color);
 			emissive.SetParameter("strength", (float)rgl.Intensity);
 			emissive.EndChange();
