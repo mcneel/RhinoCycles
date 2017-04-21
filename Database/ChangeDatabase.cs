@@ -1253,7 +1253,8 @@ namespace RhinoCyclesCore.Database
 				Transform = t,
 				Visible = true,
 				CastShadow = false,
-				IsShadowCatcher = false
+				IsShadowCatcher = false,
+				CastNoShadow = ld.ShadowIntensity < 0.00001,
 			};
 
 			_objectShaderDatabase.RecordRenderHashRelation(matid, ldid, lightmeshinstanceid);
@@ -1365,6 +1366,7 @@ namespace RhinoCyclesCore.Database
 				{
 					vis &= ~PathRay.Shadow;
 				}
+				cob.MeshLightNoCastShadow = ob.CastNoShadow;
 				cob.Visibility = vis;
 				cob.TagUpdate();
 			}
