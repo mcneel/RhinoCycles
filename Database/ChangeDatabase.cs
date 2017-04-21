@@ -1155,6 +1155,7 @@ namespace RhinoCyclesCore.Database
 			crc = Rhino.RhinoMath.CRC32(crc, ll.Diffuse.G);
 			crc = Rhino.RhinoMath.CRC32(crc, ll.Diffuse.B);
 			crc = Rhino.RhinoMath.CRC32(crc, ll.Intensity);
+			crc = Rhino.RhinoMath.CRC32(crc, ll.ShadowIntensity);
 
 			return crc;
 		}
