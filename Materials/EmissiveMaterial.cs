@@ -36,6 +36,9 @@ namespace RhinoCyclesCore.Materials
 
 		private float Strength { get; set; }
 		private Color4f Emission { get; set; }
+		private int Falloff { get; set; }
+		private float Smooth { get; set; }
+		private bool Hide { get; set; }
 
 		public EmissiveMaterial()
 		{
@@ -43,6 +46,13 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("emission_color", Color4f.White, "Emissive Color");
 			Strength = 1.0f;
 			Fields.Add("strength", 1.0f, "Strength");
+			Falloff = 0;
+			Fields.Add("falloff", 0, "Fall-off");
+			Smooth = 0.0f;
+			Fields.Add("smooth", 0.0f, "Smooth");
+			Hide = false;
+			Fields.Add("hide", true, "Hide");
+
 		}
 
 		public void BakeParameters()
@@ -56,6 +66,21 @@ namespace RhinoCyclesCore.Materials
 			if (Fields.TryGetValue("strength", out strength))
 			{
 				Strength = strength;
+			}
+			int falloff;
+			if (Fields.TryGetValue("falloff", out falloff))
+			{
+				Falloff = falloff;
+			}
+			float smooth;
+			if (Fields.TryGetValue("smooth", out smooth))
+			{
+				Smooth = smooth;
+			}
+			bool hide;
+			if (Fields.TryGetValue("hide", out hide))
+			{
+				Hide = hide;
 			}
 		}
 
@@ -104,23 +129,50 @@ namespace RhinoCyclesCore.Materials
 			{
 				Color4f color = Color4f.ApplyGamma(Emission, Gamma);
 
+				string falloff;
+				switch(Falloff)
+				{
+					case 0:
+						falloff = "constant";
+						break;
+					case 1:
+						falloff = "linear";
+						break;
+					default:
+						falloff = "quadratic";
+						break;
+				}
+
+				var hidepart = "";
+				if(Hide)
+				{
+					hidepart = 
+					"<connect from=\"emission emission\" to=\"mix closure1\" />" +
+					"<connect from=\"lp iscameraray\" to=\"mix fac\" />" +
+					"<connect from=\"mix closure\" to=\"output surface\" />";
+				} else
+				{
+					hidepart =
+					"<connect from=\"emission emission\" to=\"output surface\" />";
+				}
+
 				return string.Format(
 					Utilities.Instance.NumberFormatInfo,
 					"<transparent_bsdf color=\"1 1 1\" name=\"transp\" />" +
 					"<emission color=\"{0} {1} {2}\" name=\"emission\" />" +
-					"<light_falloff name=\"lfo\" strength=\"{3}\"/>" +
+					"<light_falloff name=\"lfo\" strength=\"{3}\" smooth=\"{4}\" />" +
 					"<light_path name=\"lp\" />" +
 					"<mix_closure name=\"mix\" />" +
 
 					"<connect from=\"transp bsdf\" to=\"mix closure2\" />" +
-					"<connect from=\"lfo constant\" to=\"emission strength\" />" +
-					"<connect from=\"emission emission\" to=\"mix closure1\" />" +
-					"<connect from=\"lp iscameraray\" to=\"mix fac\" />" +
-					"<connect from=\"mix closure\" to=\"output surface\" />" +
-					"",
+					"<connect from=\"lfo {5}\" to=\"emission strength\" />" +
+					"{6}",
 					
 					color.R, color.G, color.B,
-					Strength / 100.0f);
+					Strength / 100.0f,
+					Smooth,
+					falloff,
+					hidepart);
 			}
 		}
 	}
