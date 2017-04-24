@@ -989,10 +989,13 @@ namespace RhinoCyclesCore.Database
 
 				HandleMeshData(_groundplaneGuid.Item1, _groundplaneGuid.Item2, m);
 
+				var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
+				var mat = gp.IsShadowOnly ? def : MaterialFromId( gp.MaterialId);
+
 				var t = ccl.Transform.Translate(0.0f, 0.0f, altitude);
 				var cyclesObject = new CyclesObject
 				{
-					matid = gp.MaterialId,
+					matid = mat.RenderHash,
 					obid = GroundPlaneMeshInstanceId,
 					meshid = gpid,
 					Transform = t,
@@ -1001,7 +1004,7 @@ namespace RhinoCyclesCore.Database
 					IsShadowCatcher = gp.IsShadowOnly
 				};
 
-				_objectShaderDatabase.RecordRenderHashRelation(gp.MaterialId, gpid, GroundPlaneMeshInstanceId);
+				_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, gpid, GroundPlaneMeshInstanceId);
 				_objectDatabase.RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
 				_objectDatabase.AddOrUpdateObject(cyclesObject);
 			}
@@ -1032,7 +1035,8 @@ namespace RhinoCyclesCore.Database
 			//System.Diagnostics.Debug.WriteLine("groundplane");
 			InitialiseGroundPlane(gp);
 
-			var mat = MaterialFromId(gp.MaterialId);
+			var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
+			var mat = gp.IsShadowOnly ? def : MaterialFromId( gp.MaterialId);
 			HandleRenderMaterial(mat);
 
 			var obid = GroundPlaneMeshInstanceId;
