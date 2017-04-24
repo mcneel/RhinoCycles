@@ -16,6 +16,7 @@ limitations under the License.
 using Rhino;
 using Rhino.DocObjects;
 using Rhino.UI;
+using RhinoCyclesCore.Core;
 using System;
 using System.Drawing;
 
@@ -30,6 +31,14 @@ namespace RhinoCycles.Settings
 
 		public override object PageControl => CollapsibleSectionHolder;
 
+		public override bool ShowApplyButton => false;
+		public override bool ShowDefaultsButton => true;
+
+		public override void OnDefaults()
+		{
+			RcCore.It.EngineSettings.DefaultSettings();
+			CollapsibleSectionHolder.UpdateSections();
+		}
 		private OptionsDialogCollapsibleSectionUIPanel CollapsibleSectionHolder { get; }
 	}
 }
