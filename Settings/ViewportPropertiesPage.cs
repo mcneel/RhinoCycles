@@ -24,19 +24,10 @@ namespace RhinoCycles.Settings
 {
 	public class ViewportPropertiesPage : ObjectPropertiesPage
 	{
-		private Bitmap m_icon;
 		public ViewportPropertiesPage()
 		{
 			CollapsibleSectionHolder = new ViewportCollapsibleSectionUIPanel();
 			CollapsibleSectionHolder.ViewDataChanged += CollapsibleSectionHolder_ViewDataChanged;
-			m_icon = new Bitmap(32, 32);
-			var brush = new SolidBrush(Color.Chocolate);
-
-			using (Graphics g = Graphics.FromImage(m_icon))
-			{
-				g.FillRectangle(brush, new Rectangle(Point.Empty, m_icon.Size));
-			}
-
 		}
 
 		public override bool OnActivate(bool active)
@@ -75,7 +66,7 @@ namespace RhinoCycles.Settings
 		public override string EnglishPageTitle => "Cycles";
 		public override string LocalPageTitle => Localization.LocalizeString("Cycles", 7);
 
-		public override Icon PageIcon(Size sizeInPixels) => null;
+		public override Icon PageIcon(Size sizeInPixels) => new Icon(Properties.Resources.Cycles_viewport_properties, sizeInPixels);
 
 		public override PropertyPageType PageType => PropertyPageType.View;
 

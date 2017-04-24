@@ -93,6 +93,16 @@ namespace RhinoCycles.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
+        internal static System.Drawing.Icon Cycles_viewport_properties {
+            get {
+                object obj = ResourceManager.GetObject("Cycles_viewport_properties", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
         internal static System.Drawing.Icon OpenCL {
             get {
                 object obj = ResourceManager.GetObject("OpenCL", resourceCulture);

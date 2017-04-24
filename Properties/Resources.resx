@@ -127,6 +127,9 @@
   <data name="Cycles_material" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Icons\Cycles_material.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="Cycles_viewport_properties" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Icons\Cycles_viewport_properties.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="OpenCL" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Icons\OpenCL.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
