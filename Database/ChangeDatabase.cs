@@ -1156,6 +1156,7 @@ namespace RhinoCyclesCore.Database
 			crc = Rhino.RhinoMath.CRC32(crc, ll.Diffuse.B);
 			crc = Rhino.RhinoMath.CRC32(crc, ll.Intensity);
 			crc = Rhino.RhinoMath.CRC32(crc, ll.ShadowIntensity);
+			crc = Rhino.RhinoMath.CRC32(crc, ll.IsEnabled ? 1 : 0);
 
 			return crc;
 		}
@@ -1170,7 +1171,7 @@ namespace RhinoCyclesCore.Database
 			emissive.BeginChange(RenderContent.ChangeContexts.Ignore);
 			emissive.Gamma = PreProcessGamma;
 			emissive.SetParameter("emission_color", color);
-			emissive.SetParameter("strength", (float)rgl.Intensity);
+			emissive.SetParameter("strength", (float)rgl.Intensity * (rgl.IsEnabled ? 1 : 0));
 			emissive.EndChange();
 			emissive.BakeParameters();
 			var shader = new CyclesShader(matid);
@@ -1253,7 +1254,7 @@ namespace RhinoCyclesCore.Database
 				obid = lightmeshinstanceid,
 				meshid = ldid,
 				Transform = t,
-				Visible = true,
+				Visible = ld.IsEnabled,
 				CastShadow = false,
 				IsShadowCatcher = false,
 				CastNoShadow = ld.ShadowIntensity < 0.00001,
