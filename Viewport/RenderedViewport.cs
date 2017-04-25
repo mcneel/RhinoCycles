@@ -227,7 +227,7 @@ namespace RhinoCycles.Viewport
 		private void _cycles_UploadProgress(object sender, UploadProgressEventArgs e)
 		{
 			_status = e.Message;
-			SignalRedraw();
+			if(!_cycles.CancelRender) SignalRedraw();
 		}
 
 		private void _cycles_CurrentViewportSettingsRequested(object sender, EventArgs e)
@@ -295,7 +295,7 @@ namespace RhinoCycles.Viewport
 				_available = true;
 				_lastTime = DateTime.UtcNow;
 
-				SignalRedraw();
+				if(!_cycles.CancelRender) SignalRedraw();
 			}
 		}
 
@@ -366,7 +366,7 @@ namespace RhinoCycles.Viewport
 			else
 			{
 				_status = _samples < 0 ? e.StatusText : ""; // "Updating Engine" : "";
-				SignalRedraw();
+				if(!_cycles.CancelRender) SignalRedraw();
 			}
 		}
 

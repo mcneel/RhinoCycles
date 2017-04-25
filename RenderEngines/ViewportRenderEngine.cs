@@ -247,7 +247,7 @@ namespace RhinoCyclesCore.RenderEngines
 					cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(-1, View));
 				}
 				Thread.Sleep(_throttle);
-				if(!Locked && !IsStopped && Flush) {
+				if(!Locked && !CancelRender && !IsStopped && Flush) {
 					TriggerChangesReady();
 				}
 			}
