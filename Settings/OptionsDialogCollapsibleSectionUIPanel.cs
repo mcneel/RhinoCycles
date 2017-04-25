@@ -51,25 +51,17 @@ namespace RhinoCycles.Settings
 		IntegratorSection m_integratorSection;
 		SessionSection m_sessionSection;
 		DeviceSection m_deviceSection;
-		//ResetAllSection m_resetAllSection;
 		private void InitializeLayout()
 		{
 			m_applicationSection = new ApplicationSection(true);
 			m_integratorSection = new IntegratorSection(true);
 			m_sessionSection = new SessionSection(true);
 			m_deviceSection = new DeviceSection(true);
-			//m_resetAllSection = new ResetAllSection(true);
-			//m_resetAllSection.Reset += ResetAllSection_Reset;
-			//m_applicationSection.DisplayData();
-			//m_deviceSection.DisplayData();
-			//m_integratorSection.DisplayData();
-			//m_sessionSection.DisplayData();
 			m_holder.Add(m_applicationSection);
 			m_holder.Add(m_integratorSection);
 			m_holder.Add(m_sessionSection);
 			m_holder.Add(m_deviceSection);
 			UpdateSections();
-			//m_holder.Add(m_resetAllSection);
 
 			Content = m_holder;
 		}
