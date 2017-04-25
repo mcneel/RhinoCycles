@@ -76,8 +76,10 @@ namespace RhinoCycles.Settings
 		{
 			if (RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return false;
 
+			if (!RhinoCyclesCore.Core.RcCore.It.EngineSettings.AllowViewportSettingsOverride) return false;
+
 			var dm = RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as Viewport.RenderedViewport;
-			return RhinoCyclesCore.Core.RcCore.It.EngineSettings.AllowViewportSettingsOverride && dm != null;
+			return dm != null;
 		}
 
 		private ViewportCollapsibleSectionUIPanel CollapsibleSectionHolder { get; }
