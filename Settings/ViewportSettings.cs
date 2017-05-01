@@ -93,6 +93,18 @@ namespace RhinoCycles.Settings
 			set { Dictionary.Set("intermediateselecteddevice", value); }
 		}
 
+		public bool UseStartResolution
+		{
+			get { return Dictionary.GetBool("usestartresolution", RcCore.It.EngineSettings.UseStartResolution); }
+			set { Dictionary.Set("usestartresolution", value); }
+		}
+
+		public int StartResolution
+		{
+			get { return Dictionary.GetInteger("startresolution", RcCore.It.EngineSettings.StartResolution); }
+			set { Dictionary.Set("startresolution", value); }
+		}
+
 		public ccl.Device RenderDevice
 		{
 			get

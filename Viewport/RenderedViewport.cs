@@ -27,6 +27,7 @@ using RhinoCyclesCore;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
 using RhinoCyclesCore.RenderEngines;
+using System.Diagnostics;
 
 namespace RhinoCycles.Viewport
 {
@@ -54,7 +55,6 @@ namespace RhinoCycles.Viewport
 		private readonly int _serial;
 
 		private bool _started;
-		private bool _available;
 		private bool _frameAvailable;
 
 		private bool _locked;
@@ -83,12 +83,13 @@ namespace RhinoCycles.Viewport
 		private int _maxSamples;
 		private string _status = "";
 
+		private int _fadeInMs = 10;
+
 		public RenderedViewport()
 		{
 			_runningSerial ++;
 			_serial = _runningSerial;
 			(EngineSettings.RcPlugIn as Plugin)?.InitialiseCSycles();
-			_available = true;
 
 			HudPlayButtonPressed += RenderedViewport_HudPlayButtonPressed;
 			HudPauseButtonPressed += RenderedViewport_HudPauseButtonPressed;
@@ -150,10 +151,35 @@ namespace RhinoCycles.Viewport
 		{
 		}
 
+		public override bool UseFastDraw() { return true; }
+
 		private Thread _modalThread;
+		private Thread _sw;
+		private readonly object timerLock = new object();
+
+		private float _alpha = 0.0f;
+
+		private bool _runTimerForAlpha = true;
+		public void TimerForAlpha ()
+		{
+			while (_runTimerForAlpha)
+			{
+				lock (timerLock)
+				{
+					if (_samples > 0 && _alpha < 1.0f)
+					{
+						_alpha += 0.01f;
+						if (_alpha > 1.0f) _alpha = 1.0f;
+						SignalRedraw();
+					}
+				}
+				Thread.Sleep(_fadeInMs);
+			}
+		}
 
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
+			_started = true;
 			if (forCapture)
 			{
 				ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo);
@@ -183,8 +209,8 @@ namespace RhinoCycles.Viewport
 
 				return true;
 			}
+			_fadeInMs = RcCore.It.EngineSettings.FadeInMs;
 
-			_available = false; // the renderer hasn't started yet. It'll tell us when it has.
 			_frameAvailable = false;
 			_sameView = false;
 
@@ -218,7 +244,11 @@ namespace RhinoCycles.Viewport
 
 			_startTime = DateTime.UtcNow;
 			_lastTime = _startTime;
-
+			_sw = new Thread(TimerForAlpha)
+			{
+				Name = "Cycles RenderedViewport Alpha Thread"
+			};
+			_sw.Start();
 			_cycles.StartRenderThread(_cycles.Renderer, $"A cool Cycles viewport rendering thread {_serial}");
 
 			return true;
@@ -262,7 +292,6 @@ namespace RhinoCycles.Viewport
 #if DEBUG
 				mre.SaveRenderedBuffer(0);
 #endif
-				_available = true;
 				_frameAvailable = true;
 				_sameView = false;
 			}
@@ -272,11 +301,16 @@ namespace RhinoCycles.Viewport
 		{
 			if (_cycles != null)
 			{
+				int _samplesLocal;
+				lock(timerLock)
+				{
+					_samplesLocal = _samples;
+				}
 				if (!_sameView && _cycles.ViewSet)
 				{
 					_sameView = _cycles.Database.AreViewsEqual(view, _cycles.View);
 				}
-				return _frameAvailable && _sameView && _samples > -1;
+				return _frameAvailable && _sameView && _samplesLocal > 0;
 			}
 			if (_modal != null)
 			{
@@ -292,7 +326,6 @@ namespace RhinoCycles.Viewport
 			if (_cycles?.IsRendering ?? false)
 			{
 				_frameAvailable = true;
-				_available = true;
 				_lastTime = DateTime.UtcNow;
 
 				if(!_cycles.CancelRender) SignalRedraw();
@@ -301,7 +334,10 @@ namespace RhinoCycles.Viewport
 
 		void CyclesStartSynchronizing(object sender, EventArgs e)
 		{
-			_samples = -1;
+			lock (timerLock)
+			{
+				_samples = -1;
+			}
 			_frameAvailable = false;
 			_sameView = false;
 			IsSynchronizing = true;
@@ -312,7 +348,11 @@ namespace RhinoCycles.Viewport
 			_startTime = DateTime.UtcNow;
 			_frameAvailable = false;
 			_sameView = false;
-			_samples = -1;
+			lock (timerLock)
+			{
+				_samples = -1;
+				_alpha = 0.0f;
+			}
 			IsSynchronizing = false;
 		}
 
@@ -330,7 +370,6 @@ namespace RhinoCycles.Viewport
 
 		void CyclesRenderStarted(object sender, ViewportRenderEngine.RenderStartedEventArgs e)
 		{
-			_available = false;
 			_started = true;
 		}
 		private void _ResetRenderTime()
@@ -360,12 +399,17 @@ namespace RhinoCycles.Viewport
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
 		{
 			//Rhino.RhinoApp.OutputDebugString($"{e.StatusText}\n");
-			_samples = e.Samples;
+			int samplesLocal;
+			lock (timerLock)
+			{
+				_samples = e.Samples;
+				samplesLocal = _samples;
+			}
 
 			if (_cycles?.IsWaiting ?? false) _status = "Paused";
 			else
 			{
-				_status = _samples < 0 ? e.StatusText : ""; // "Updating Engine" : "";
+				_status = samplesLocal < 0 ? e.StatusText : ""; // "Updating Engine" : "";
 				if(!_cycles.CancelRender) SignalRedraw();
 			}
 		}
@@ -395,15 +439,21 @@ namespace RhinoCycles.Viewport
 
 		public override bool DrawOpenGl()
 		{
-			if (_samples < 0) return false;
-			_cycles.DrawOpenGl();
+			int samplesLocal;
+			float alphaLocal;
+			lock(timerLock)
+			{
+				samplesLocal = _samples;
+				alphaLocal = _alpha;
+			}
+			if (samplesLocal < 1) return false;
+			_cycles.DrawOpenGl(_alpha);
 			return true;
 		}
 
 		public override bool OnRenderSizeChanged(int width, int height)
 		{
 			_startTime = DateTime.UtcNow;
-			_available = false;
 			_frameAvailable = false;
 			_sameView = false;
 
@@ -412,7 +462,7 @@ namespace RhinoCycles.Viewport
 
 		public override void ShutdownRenderer()
 		{
-			_available = false;
+			_runTimerForAlpha = false;
 			_cycles?.StopRendering();
 			_cycles?.Dispose();
 		}
@@ -424,7 +474,11 @@ namespace RhinoCycles.Viewport
 
 		public override bool IsCompleted()
 		{
-			var rc = _available && _cycles.State == State.Rendering && _frameAvailable && _samples==_maxSamples;
+			bool rc = false;
+			lock (timerLock)
+			{
+				rc = _cycles.State == State.Rendering && _frameAvailable && _samples == _maxSamples;
+			}
 			return rc;
 		}
 
@@ -445,11 +499,16 @@ namespace RhinoCycles.Viewport
 
 		public override int LastRenderedPass()
 		{
-			return _samples;
+			int samplesLocal;
+			lock(timerLock)
+			{
+				samplesLocal = _samples;
+			}
+			return samplesLocal;
 		}
 		public override int HudLastRenderedPass()
 		{
-			return _samples;
+			return LastRenderedPass();
 		}
 
 		public override bool HudRendererPaused()

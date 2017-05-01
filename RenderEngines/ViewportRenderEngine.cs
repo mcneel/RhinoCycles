@@ -105,11 +105,11 @@ namespace RhinoCyclesCore.RenderEngines
 		/// </summary>
 		public event EventHandler<PassRenderedEventArgs> PassRendered;
 
-		public void DrawOpenGl()
+		public void DrawOpenGl(float alpha)
 		{
 			var width = RenderDimension.Width;
 			var height = RenderDimension.Height;
-			Session.RhinoDraw(width, height);
+			Session.RhinoDraw(width, height, alpha);
 		}
 
 		/// <summary>
@@ -193,7 +193,7 @@ namespace RhinoCyclesCore.RenderEngines
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsCpu ? RcCore.It.EngineSettings.Threads : 0),
 				ShadingSystem = ShadingSystem.SVM,
-				StartResolution = renderDevice.IsCpu ? 16 : 64,
+				StartResolution = RcCore.It.EngineSettings.StartResolution,
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
 				Background = false,

@@ -44,12 +44,16 @@ namespace RhinoCyclesCore
 			PolishFactor = PolishFactor;
 
 			ThrottleMs = ThrottleMs;
+			FadeInMs = FadeInMs;
 			Threads = Threads;
 			BumpDistance = BumpDistance;
 
 			SelectedDeviceStr = SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = IntermediateSelectedDeviceStr;
 			AllowSelectedDeviceOverride = AllowSelectedDeviceOverride;
+
+			UseStartResolution = UseStartResolution;
+			StartResolution = StartResolution;
 
 			MinBounce = MinBounce;
 			MaxBounce = MaxBounce;
@@ -118,12 +122,16 @@ namespace RhinoCyclesCore
 			PolishFactor = PolishFactorDefault;
 
 			ThrottleMs = ThrottleMsDefault;
+			FadeInMs = FadeInMsDefault;
 			Threads = ThreadsDefault;
 			BumpDistance = BumpDistanceDefault;
 
 			SelectedDeviceStr = SelectedDeviceStrDefault;
 			IntermediateSelectedDeviceStr = SelectedDeviceStrDefault;
 			AllowSelectedDeviceOverride = AllowSelectedDeviceOverrideDefault;
+
+			UseStartResolution = UseStartResolutionDefault;
+			StartResolution = StartResolutionDefault;
 
 			MinBounce = MinBounceDefault;
 			MaxBounce = MaxBounceDefault;
@@ -273,6 +281,17 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetInteger("rc_throttlems", value); }
 		}
 
+		public int FadeInMsDefault => 10;
+		/// <summary>
+		/// Speed of result fade-in. Higher values is slower fade in. In milliseconds.
+		/// Denotes time to wait between 1% increments towards full render result.
+		/// </summary>
+		public virtual int FadeInMs
+		{
+			get { return RcPlugIn.Settings.GetInteger("rc_fadeinms", FadeInMsDefault); }
+			set { RcPlugIn.Settings.SetInteger("rc_fadeinms", value); }
+		}
+
 		public int ThreadsDefault => Math.Max(1, Environment.ProcessorCount - 2);
 		/// <summary>
 		/// Set the amount of rendering threads to create. Especially useful for CPU rendering where
@@ -339,6 +358,20 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetBool("rc_allowselecteddeviceoverride", value); }
 		}
 
+		public bool UseStartResolutionDefault => true;
+		public bool UseStartResolution
+		{
+			get { return RcPlugIn.Settings.GetBool("rc_usestartresolution", UseStartResolutionDefault); }
+			set { RcPlugIn.Settings.SetBool("rc_usestartresolution", value); }
+		}
+
+		public int StartResolutionDefault => 64;
+		public int StartResolution
+		{
+			get { return UseStartResolution ? RcPlugIn.Settings.GetInteger("rc_startresolution", StartResolutionDefault) : int.MaxValue; }
+			set { RcPlugIn.Settings.SetInteger("rc_startresolution", value); }
+		}
+
 		public virtual IntegratorMethod IntegratorMethod { get; set; }
 		public int MinBounceDefault => 3;
 		public virtual int MinBounce
@@ -373,8 +406,8 @@ namespace RhinoCyclesCore
 		public int MaxTransmissionBounceDefault => 32;
 		public virtual int MaxTransmissionBounce
 		{
-			get { return RcPlugIn.Settings.GetInteger("rc_maxtransmission*gbounce", MaxTransmissionBounceDefault); }
-			set { RcPlugIn.Settings.SetInteger("rc_maxtransmission*gbounce", value); }
+			get { return RcPlugIn.Settings.GetInteger("rc_maxtransmissionbounce", MaxTransmissionBounceDefault); }
+			set { RcPlugIn.Settings.SetInteger("rc_maxtransmissionbounce", value); }
 		}
 		public int MaxVolumeBounceDefault => 32;
 		public virtual int MaxVolumeBounce
@@ -581,6 +614,10 @@ namespace RhinoCyclesCore
 		int MaxGlossyBounce { get; set; }
 		int MaxVolumeBounce { get; set; }
 		int MaxTransmissionBounce { get; set; }
+
+		bool UseStartResolution { get; set; }
+
+		int StartResolution { get; set; }
 
 		string SelectedDeviceStr { get; set; }
 
