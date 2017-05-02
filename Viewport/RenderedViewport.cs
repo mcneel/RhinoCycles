@@ -132,8 +132,10 @@ namespace RhinoCycles.Viewport
 			_cycles?.Continue();
 		}
 
+		private bool _showRenderDevice = false;
 		private void RenderedViewport_HudPlayProductNamePressed(object sender, EventArgs e)
 		{
+			_showRenderDevice = !_showRenderDevice;
 			RhinoApp.OutputDebugString("product name pressed\n");
 		}
 
@@ -482,12 +484,14 @@ namespace RhinoCycles.Viewport
 			return rc;
 		}
 
-    public override string HudProductName()
-    {
-      return Localization.LocalizeString("Cycles", 9);
-    }
+		public override string HudProductName()
+		{
+			var pn = Localization.LocalizeString("Cycles", 9);
+			if (_showRenderDevice) return $"{pn}@{_cycles.RenderDevice.NiceName}";
+			return pn;
+		}
 
-    public override string HudCustomStatusText()
+		public override string HudCustomStatusText()
 		{
 			return _status;
 		}

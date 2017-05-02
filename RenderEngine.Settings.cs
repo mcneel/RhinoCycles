@@ -47,7 +47,7 @@ namespace RhinoCyclesCore
 		}
 
 		private uint _oldIntegratorHash = 0;
-		protected ccl.Device RenderDevice { get; set; }
+		public ccl.Device RenderDevice { get; set; }
 		public void ViewportSettingsChangedHandler(object sender, ViewportSettingsChangedArgs e)
 		{
 			if(e.Settings.AllowSelectedDeviceOverride)
