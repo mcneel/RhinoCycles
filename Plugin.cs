@@ -49,10 +49,17 @@ namespace RhinoCycles
 
 			RhinoApp.Initialized += RhinoApp_Initialized;
 
-			if (RhinoApp.RunningOnVMWare())
+			if (RhinoApp.RunningOnVMWare() || RcCore.It.EngineSettings.OpenClDeviceType == 0)
 			{
-				CSycles.putenv("CYCLES_OPENCL_TEST", "NONE");
+				CSycles.debug_set_opencl_device_type(0);
 			}
+			else
+			{
+				CSycles.debug_set_opencl_device_type(RcCore.It.EngineSettings.OpenClDeviceType);
+			}
+			CSycles.debug_set_opencl_kernel(RcCore.It.EngineSettings.OpenClKernelType);
+			CSycles.debug_set_opencl_single_program(RcCore.It.EngineSettings.OpenClSingleProgram);
+
 			// code got moved to separate DLL so use that to register from.
 			var rccoreass = typeof(RcCore).Assembly;
 			RenderContent.RegisterContent(rccoreass, Id);
