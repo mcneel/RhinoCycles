@@ -70,5 +70,15 @@ namespace RhinoCyclesCore
 		/// shadows.
 		/// </summary>
 		public bool CastNoShadow { get; set; }
+
+		/// <summary>
+		/// Object is clipping object if set to true
+		/// </summary>
+		public bool Cutout { get; set; }
+
+		/// <summary>
+		/// Object ignores any clipping object if set to true
+		/// </summary>
+		public bool IgnoreCutout { get; set; }
 	}
 }

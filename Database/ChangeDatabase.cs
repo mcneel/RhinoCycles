@@ -436,6 +436,101 @@ namespace RhinoCyclesCore.Database
 			_environmentDatabase.SetGamma(PreProcessGamma);
 		}
 
+
+		private const uint ClippingPlaneMeshInstanceId = 2;
+		private readonly float cp_side_extension = 1.0E+7f;
+
+		private readonly Tuple<Guid, int> _clippingPlaneGuid = new Tuple<Guid, int>(new Guid("6A7DB550-7E42-4129-A36D-A4C8AAB06F4B"), 0);
+		private readonly Dictionary<Guid, Plane> ClippingPlanes = new Dictionary<Guid, Plane>(100);
+
+		protected override void ApplyClippingPlaneChanges(Guid[] deleted, List<ClippingPlane> addedOrModified)
+		{
+			foreach(var d in deleted)
+			{
+				ClippingPlanes.Remove(d);
+			}
+			foreach (var cp in addedOrModified)
+			{
+				if (cp.IsEnabled)
+					ClippingPlanes[cp.Id] = new Plane(cp.Plane);
+				else
+					ClippingPlanes.Remove(cp.Id);
+			}
+			var xext = new Interval(-cp_side_extension, cp_side_extension);
+			var zext = new Interval(0, cp_side_extension);
+			List<Brep> boxes = new List<Brep>(ClippingPlanes.Values.Count);
+			foreach (var p in ClippingPlanes.Values)
+			{
+				var tp = new Plane(p);
+				tp.Flip();
+				Box b = new Box(tp, xext, xext, zext);
+				boxes.Add(b.ToBrep());
+			}
+			if (boxes.Count < 1)
+			{
+				_objectDatabase.DeleteMesh(_clippingPlaneGuid.Item1);
+				var cob = _objectDatabase.FindObjectRelation(ClippingPlaneMeshInstanceId);
+				if (cob != null)
+				{
+					var delob = new CyclesObject { cob = cob };
+					_objectDatabase.DeleteObject(delob);
+				}
+			}
+			else
+			{
+				var simplified = Brep.CreateBooleanUnion(boxes, 0.0001);
+
+				if (simplified == null) simplified = boxes.ToArray();
+
+				var sbb = new BoundingBox(GetQueueSceneBoundingBox().GetCorners());
+				sbb.Inflate(0.5);
+				var sbbr = sbb.ToBrep();
+				var sbbl = new List<Brep>(1);
+				sbbl.Add(sbbr);
+
+				var bounded = Brep.CreateBooleanIntersection(simplified, sbbl, 0.0001);
+				if (bounded == null) bounded = boxes.ToArray();
+
+				var meshed =
+					(from s in bounded
+					 select Rhino.Geometry.Mesh.CreateFromBrep(s, mp)
+					 .Aggregate(
+						 new Rhino.Geometry.Mesh(),
+						 (workingMesh, next) => { workingMesh.Append(next); return workingMesh; }
+					 ))
+					.Aggregate(
+						new Rhino.Geometry.Mesh(),
+						(workingMesh, next) => { workingMesh.Append(next); return workingMesh; }
+						);
+				meshed.RebuildNormals();
+				var cpid = _clippingPlaneGuid;
+
+				Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
+
+				HandleMeshData(cpid.Item1, cpid.Item2, meshed);
+
+				var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
+
+				var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
+
+				var cyclesObject = new CyclesObject
+				{
+					matid = mat.RenderHash,
+					obid = ClippingPlaneMeshInstanceId,
+					meshid = cpid,
+					Transform = t,
+					Visible = ClippingPlanes.Count > 0,
+					CastShadow = false,
+					IsShadowCatcher = false,
+					Cutout = true,
+				};
+
+				_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
+				_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
+				_objectDatabase.AddOrUpdateObject(cyclesObject);
+			}
+		}
+
 		/// <summary>
 		/// Upload camera (viewport) changes to Cycles.
 		/// </summary>
@@ -987,7 +1082,7 @@ namespace RhinoCyclesCore.Database
 					m.SetCachedTextureCoordinates(texturemapping, ref tfm);
 				}
 
-				HandleMeshData(_groundplaneGuid.Item1, _groundplaneGuid.Item2, m);
+				HandleMeshData(gpid.Item1, gpid.Item2, m);
 
 				var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
 				var mat = gp.IsShadowOnly ? def : MaterialFromId( gp.MaterialId);
@@ -1001,7 +1096,8 @@ namespace RhinoCyclesCore.Database
 					Transform = t,
 					Visible = gp.Enabled,
 					CastShadow = false,
-					IsShadowCatcher = gp.IsShadowOnly
+					IsShadowCatcher = gp.IsShadowOnly,
+					IgnoreCutout = true,
 				};
 
 				_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, gpid, GroundPlaneMeshInstanceId);
@@ -1371,6 +1467,8 @@ namespace RhinoCyclesCore.Database
 					vis &= ~PathRay.Shadow;
 				}
 				cob.MeshLightNoCastShadow = ob.CastNoShadow;
+				cob.Cutout = ob.Cutout;
+				cob.IgnoreCutout = ob.IgnoreCutout;
 				cob.Visibility = vis;
 				cob.TagUpdate();
 			}
