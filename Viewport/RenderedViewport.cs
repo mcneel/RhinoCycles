@@ -287,8 +287,7 @@ namespace RhinoCycles.Viewport
 
 		public void RenderOffscreen(object o)
 		{
-			var mre = o as ModalRenderEngine;
-			if (mre != null)
+			if (o is ModalRenderEngine mre)
 			{
 				mre.Renderer();
 #if DEBUG
