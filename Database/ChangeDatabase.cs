@@ -1227,7 +1227,7 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
-		private readonly MeshingParameters mp = new MeshingParameters(0.1);
+		private readonly MeshingParameters mp = new MeshingParameters(0.1) { MinimumEdgeLength = 0.001, GridMinCount = 16, JaggedSeams = false };
 
 		private void HandleLinearLightAddOrModify(uint lightmeshinstanceid, RGLight ld)
 		{
@@ -1235,9 +1235,6 @@ namespace RhinoCyclesCore.Database
 			var p = new Plane(ld.Location, ld.Direction);
 			var circle = new Circle(p, ld.Width.Length);
 			var c = new Cylinder(circle, ld.Direction.Length);
-			mp.MinimumEdgeLength = 0.001;
-			mp.GridMinCount = 16;
-			mp.JaggedSeams = false;
 			var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(true, true), mp);
 			var mesh = new Rhino.Geometry.Mesh();
 			foreach (var im in m) mesh.Append(im);
