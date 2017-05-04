@@ -307,35 +307,38 @@ namespace RhinoCyclesCore
 							sky_color = simenv.BackgroundColor;
 						}
 
-						var skylight_copy = skylight_environment.MakeCopy() as RenderEnvironment;
-						if (skylight_copy != null)
+						if (!RcCore.It.EngineSettings.FullHdrSkylight)
 						{
-							var original_render_texture = skylight_copy.FindChild("texture");
-							if (original_render_texture != null)
+							var skylight_copy = skylight_environment.MakeCopy() as RenderEnvironment;
+							if (skylight_copy != null)
 							{
-								var resampler = RenderContentType.NewContentFromTypeId(new System.Guid("71D5FEEF-4144-4133-8C38-1EEF2BC851F1"));
-								resampler.Name = "RESAMPLER"; // give name so we can see in debug if it doesn't get freed properly.
-								var render_texture = original_render_texture.MakeCopy() as RenderTexture;
+								var original_render_texture = skylight_copy.FindChild("texture");
+								if (original_render_texture != null)
+								{
+									var resampler = RenderContentType.NewContentFromTypeId(new System.Guid("71D5FEEF-4144-4133-8C38-1EEF2BC851F1"));
+									resampler.Name = "RESAMPLER"; // give name so we can see in debug if it doesn't get freed properly.
+									var render_texture = original_render_texture.MakeCopy() as RenderTexture;
 
-								resampler.BeginChange(RenderContent.ChangeContexts.Ignore);
-								resampler.SetParameter("u-division-count", 64);
-								resampler.SetParameter("v-division-count", 64);
-								resampler.SetParameter("blur-on", true);
-								resampler.SetParameter("blur-radius", 0.2);
-								resampler.SetChild(render_texture, "texture");
-								resampler.EndChange();
+									resampler.BeginChange(RenderContent.ChangeContexts.Ignore);
+									resampler.SetParameter("u-division-count", 64);
+									resampler.SetParameter("v-division-count", 64);
+									resampler.SetParameter("blur-on", true);
+									resampler.SetParameter("blur-radius", 0.2);
+									resampler.SetChild(render_texture, "texture");
+									resampler.EndChange();
 
-								skylight_copy.BeginChange(RenderContent.ChangeContexts.Ignore);
-								skylight_copy.SetChild(resampler, "texture");
-								skylight_copy.EndChange();
+									skylight_copy.BeginChange(RenderContent.ChangeContexts.Ignore);
+									skylight_copy.SetChild(resampler, "texture");
+									skylight_copy.EndChange();
 
-								BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, Gamma, m_float_as_byte, false);
-								resampled = true;
+									BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, Gamma, m_float_as_byte, false);
+									resampled = true;
 
-								render_texture.Dispose();
-								resampler.Dispose();
+									render_texture.Dispose();
+									resampler.Dispose();
+								}
+								skylight_copy.Dispose();
 							}
-							skylight_copy.Dispose();
 						}
 					}
 					else

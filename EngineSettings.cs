@@ -102,6 +102,7 @@ namespace RhinoCyclesCore
 			OpenClDeviceType = OpenClDeviceType;
 			OpenClKernelType = OpenClKernelType;
 			OpenClSingleProgram = OpenClSingleProgram;
+			FullHdrSkylight = FullHdrSkylight;
 			SaveDebugImages = SaveDebugImages;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
 		}
@@ -183,6 +184,7 @@ namespace RhinoCyclesCore
 			OpenClDeviceType = OpenClDeviceTypeDefault;
 			OpenClKernelType = OpenClKernelTypeDefault;
 			OpenClSingleProgram = OpenClSingleProgramDefault;
+			FullHdrSkylight = FullHdrSkylightDefault;
 			SaveDebugImages = SaveDebugImagesDefault;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorldDefault;
 		}
@@ -594,6 +596,20 @@ namespace RhinoCyclesCore
 				}
 			}
 		}
+		public bool FullHdrSkylightDefault => false;
+		public bool FullHdrSkylight
+		{
+			get { return RcPlugIn.Settings.GetBool("FullHdrSkylight", FullHdrSkylightDefault); }
+			set
+			{
+				var old = FullHdrSkylight;
+				if (old != value)
+				{
+					RcPlugIn.Settings.SetBool("FullHdrSkylight", value);
+				}
+			}
+		}
+
 		public int OpenClKernelTypeDefault => -1;
 		public int OpenClKernelType
 		{
@@ -642,9 +658,12 @@ namespace RhinoCyclesCore
 	public interface IApplicationSettings
 	{
 		bool AllowViewportSettingsOverride { get; set; }
+
 		int OpenClDeviceType { get; set; }
 		bool OpenClSingleProgram { get; set; }
 		int OpenClKernelType { get; set; }
+
+		bool FullHdrSkylight { get; set; }
 	}
 
 	public interface IViewportSettings
