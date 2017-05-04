@@ -99,6 +99,9 @@ namespace RhinoCyclesCore
 
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverride;
+			OpenClDeviceType = OpenClDeviceType;
+			OpenClKernelType = OpenClKernelType;
+			OpenClSingleProgram = OpenClSingleProgram;
 			SaveDebugImages = SaveDebugImages;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
 		}
@@ -177,6 +180,9 @@ namespace RhinoCyclesCore
 
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverrideDefault;
+			OpenClDeviceType = OpenClDeviceTypeDefault;
+			OpenClKernelType = OpenClKernelTypeDefault;
+			OpenClSingleProgram = OpenClSingleProgramDefault;
 			SaveDebugImages = SaveDebugImagesDefault;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorldDefault;
 		}
@@ -558,6 +564,46 @@ namespace RhinoCyclesCore
 				var old = AllowViewportSettingsOverride;
 				if (old != value) {
 					RcPlugIn.Settings.SetBool("rc_allowviewportsettingsoverride", value);
+
+		public int OpenClDeviceTypeDefault => 0;
+		public int OpenClDeviceType
+		{
+			get { return RcPlugIn.Settings.GetInteger("OpenCLDeviceType", OpenClDeviceTypeDefault); }
+			set
+			{
+				var old = OpenClDeviceType;
+				if (old != value)
+				{
+					RcPlugIn.Settings.SetInteger("OpenCLDeviceType", value);
+					TriggerApplicationSettingsChanged();
+				}
+			}
+		}
+
+		public bool OpenClSingleProgramDefault => true;
+		public bool OpenClSingleProgram
+		{
+			get { return RcPlugIn.Settings.GetBool("OpenCLSingleProgram", OpenClSingleProgramDefault); }
+			set
+			{
+				var old = OpenClSingleProgram;
+				if (old != value)
+				{
+					RcPlugIn.Settings.SetBool("OpenCLSingleProgram", value);
+					TriggerApplicationSettingsChanged();
+				}
+			}
+		}
+		public int OpenClKernelTypeDefault => -1;
+		public int OpenClKernelType
+		{
+			get { return RcPlugIn.Settings.GetInteger("OpenCLKernelType", OpenClKernelTypeDefault); }
+			set
+			{
+				var old = OpenClKernelType;
+				if (old != value)
+				{
+					RcPlugIn.Settings.SetInteger("OpenCLKernelType", value);
 					TriggerApplicationSettingsChanged();
 				}
 			}
@@ -596,6 +642,9 @@ namespace RhinoCyclesCore
 	public interface IApplicationSettings
 	{
 		bool AllowViewportSettingsOverride { get; set; }
+		int OpenClDeviceType { get; set; }
+		bool OpenClSingleProgram { get; set; }
+		int OpenClKernelType { get; set; }
 	}
 
 	public interface IViewportSettings
