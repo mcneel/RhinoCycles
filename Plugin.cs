@@ -46,7 +46,6 @@ namespace RhinoCycles
 
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
-
 			RhinoApp.Initialized += RhinoApp_Initialized;
 
 			if (RhinoApp.RunningOnVMWare() || RcCore.It.EngineSettings.OpenClDeviceType == 0)
