@@ -101,6 +101,7 @@ namespace RhinoCyclesCore
 			AllowViewportSettingsOverride = AllowViewportSettingsOverride;
 			OpenClDeviceType = OpenClDeviceType;
 			OpenClKernelType = OpenClKernelType;
+			CPUSplitKernel = CPUSplitKernel;
 			OpenClSingleProgram = OpenClSingleProgram;
 			FullHdrSkylight = FullHdrSkylight;
 			SaveDebugImages = SaveDebugImages;
@@ -183,6 +184,7 @@ namespace RhinoCyclesCore
 			AllowViewportSettingsOverride = AllowViewportSettingsOverrideDefault;
 			OpenClDeviceType = OpenClDeviceTypeDefault;
 			OpenClKernelType = OpenClKernelTypeDefault;
+			CPUSplitKernel = CPUSplitKernelDefault;
 			OpenClSingleProgram = OpenClSingleProgramDefault;
 			FullHdrSkylight = FullHdrSkylightDefault;
 			SaveDebugImages = SaveDebugImagesDefault;
@@ -628,6 +630,20 @@ namespace RhinoCyclesCore
 				}
 			}
 		}
+		public bool CPUSplitKernelDefault => false;
+		public bool CPUSplitKernel
+		{
+			get { return RcPlugIn.Settings.GetBool("CPUSplitKernel", CPUSplitKernelDefault); }
+			set
+			{
+				var old = CPUSplitKernel;
+				if (old != value)
+				{
+					RcPlugIn.Settings.SetBool("CPUSplitKernel", value);
+					TriggerApplicationSettingsChanged();
+				}
+			}
+		}
 
 		private void TriggerApplicationSettingsChanged()
 		{
@@ -666,6 +682,8 @@ namespace RhinoCyclesCore
 		int OpenClDeviceType { get; set; }
 		bool OpenClSingleProgram { get; set; }
 		int OpenClKernelType { get; set; }
+
+		bool CPUSplitKernel { get; set; }
 
 		bool FullHdrSkylight { get; set; }
 	}

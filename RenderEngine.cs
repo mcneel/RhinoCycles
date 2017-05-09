@@ -243,13 +243,22 @@ namespace RhinoCyclesCore
 			Database.FilmUpdateTagged += Database_FilmUpdateTagged;
 		}
 
+		private void SetKernelFlags()
+		{
+			CSycles.debug_set_opencl_kernel(RcCore.It.EngineSettings.OpenClKernelType);
+			CSycles.debug_set_opencl_single_program(RcCore.It.EngineSettings.OpenClSingleProgram);
+			CSycles.debug_set_cpu_kernel(RcCore.It.EngineSettings.CPUSplitKernel);
+		}
+
 		public RenderEngine(Guid pluginId, uint docRuntimeSerialNumber, bool interactive)
 			: this (pluginId, docRuntimeSerialNumber, new ViewInfo(docRuntimeSerialNumber), null, interactive)
 		{
+			SetKernelFlags();
 		}
 
 		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, ViewInfo view, ViewportInfo vp, bool interactive)
 		{
+			SetKernelFlags();
 			PluginId = pluginId;
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			m_view = view;
@@ -262,6 +271,7 @@ namespace RhinoCyclesCore
 
 		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive)
 		{
+			SetKernelFlags();
 			PreviewEventArgs = previewEventArgs;
 			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs);
 

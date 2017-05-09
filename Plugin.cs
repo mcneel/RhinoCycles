@@ -59,6 +59,7 @@ namespace RhinoCycles
 			}
 			CSycles.debug_set_opencl_kernel(RcCore.It.EngineSettings.OpenClKernelType);
 			CSycles.debug_set_opencl_single_program(RcCore.It.EngineSettings.OpenClSingleProgram);
+			CSycles.debug_set_cpu_kernel(RcCore.It.EngineSettings.CPUSplitKernel);
 
 			// code got moved to separate DLL so use that to register from.
 			var rccoreass = typeof(RcCore).Assembly;
