@@ -73,7 +73,6 @@
     <Compile Include="Commands\ListDevices.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Settings\OptionsDialogCollapsibleSectionUIPanel.cs" />
-    <Compile Include="Settings\ApplicationSection.cs" />
     <Compile Include="Settings\ResetAllSection.cs" />
     <Compile Include="Settings\ViewportCollapsibleSectionUIPanel.cs" />
     <Compile Include="Settings\AddUserdataSection.cs" />

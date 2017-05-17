@@ -47,17 +47,14 @@ namespace RhinoCycles.Settings
 			m_holder = new EtoCollapsibleSectionHolder();
 		}
 
-		ApplicationSection m_applicationSection;
 		IntegratorSection m_integratorSection;
 		SessionSection m_sessionSection;
 		DeviceSection m_deviceSection;
 		private void InitializeLayout()
 		{
-			m_applicationSection = new ApplicationSection(true);
 			m_integratorSection = new IntegratorSection(true);
 			m_sessionSection = new SessionSection(true);
 			m_deviceSection = new DeviceSection(true);
-			m_holder.Add(m_applicationSection);
 			m_holder.Add(m_integratorSection);
 			m_holder.Add(m_sessionSection);
 			m_holder.Add(m_deviceSection);
@@ -73,7 +70,6 @@ namespace RhinoCycles.Settings
 
 		public void UpdateSections()
 		{
-			m_applicationSection.DisplayData();
 			m_deviceSection.DisplayData();
 			m_integratorSection.DisplayData();
 			m_sessionSection.DisplayData();
