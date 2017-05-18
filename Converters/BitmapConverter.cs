@@ -261,7 +261,7 @@ namespace RhinoCyclesCore.Converters
 			}
 
 
-			using (var textureEvaluator = renderTexture.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
+			using (var textureEvaluator = renderTexture.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping | RenderTexture.TextureEvaluatorFlags.DisableProjectionChange))
 			{
 				if (textureEvaluator == null)
 				{
