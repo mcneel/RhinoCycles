@@ -225,6 +225,7 @@ namespace RhinoCyclesCore.Shaders
 					_mapBg.outs.Vector.Connect(_bgEnvTexture.ins.Vector);
 					_mapBg.Rotation = m_original_background.bg.Transform.z;
 					_bgEnvTexture.outs.Color.Connect(_backgroundNode.ins.Color);
+					_backgroundNode.ins.Strength.Value = m_original_background.bg.Strength;
 				}
 				// or if gradient fill is needed, so lets do that.
 				else if (m_original_background.background_fill == BackgroundStyle.Gradient)
@@ -257,6 +258,7 @@ namespace RhinoCyclesCore.Shaders
 					_mapRefl.outs.Vector.Connect(_reflEnvTexture.ins.Vector);
 					_mapRefl.Rotation = m_original_background.refl.Transform.z;
 					_reflEnvTexture.outs.Color.Connect(_reflBg.ins.Color);
+					_reflBg.ins.Strength.Value = m_original_background.refl.Strength;
 				}
 				// connect sky env texture if texture exists
 				if (m_original_background.sky.HasTextureImage)
@@ -264,6 +266,7 @@ namespace RhinoCyclesCore.Shaders
 					_mapSky.outs.Vector.Connect(_skyEnvTexture.ins.Vector);
 					_mapSky.Rotation = m_original_background.sky.Transform.z;
 					_skyEnvTexture.outs.Color.Connect(_skyBg.ins.Color);
+					_skyBg.ins.Strength.Value = m_original_background.sky.Strength;
 				}
 
 				if (m_original_background.HasSky && m_original_background.skylight_enabled)

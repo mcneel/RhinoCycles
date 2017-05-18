@@ -41,6 +41,11 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public ccl.Transform Transform { get; set; }
 
+		/// <summary>
+		/// Strength of texture. Used in environment textures.
+		/// </summary>
+		public float Strength { get; set; }
+
 		public float BumpDistance
 		{
 			get

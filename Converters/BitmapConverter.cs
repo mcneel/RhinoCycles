@@ -239,9 +239,11 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			var rhinotfm = renderTexture.LocalMappingTransform;
-			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude");
+			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude;multiplier");
 			var azimob = renderTexture.GetParameter("azimuth");
 			var altob = renderTexture.GetParameter("altitude");
+			var multob = renderTexture.GetParameter("multiplier");
+			var mult = 1.0f;
 			if(azimob!=null && altob!=null) {
 				var azi = Convert.ToDouble(azimob);
 				var alti = Convert.ToDouble(altob);
@@ -251,6 +253,11 @@ namespace RhinoCyclesCore.Converters
 			} else
 			{
 				rhinotfm.M22 = 0.0;
+			}
+
+			if(multob!=null)
+			{
+				mult = (float)Convert.ToDouble(multob);
 			}
 
 
@@ -306,6 +313,7 @@ namespace RhinoCyclesCore.Converters
 				teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
 
 				teximg.Transform = t;
+				teximg.Strength = mult;
 			}
 		}
 
