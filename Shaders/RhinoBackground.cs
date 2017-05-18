@@ -44,6 +44,30 @@ namespace RhinoCyclesCore.Shaders
 			Rotation = RenderEngine.CreateFloat4(0.0, 0.0, 1.570796),
 		};
 
+		readonly MappingNode _mapBg = new MappingNode("bg")
+		{
+			Mapping = MappingNode.MappingType.Texture,
+			Translation = RenderEngine.CreateFloat4(0.0, 0.0, 0.0),
+			Scale = RenderEngine.CreateFloat4(1.0, 1.0, 1.0),
+			Rotation = RenderEngine.CreateFloat4(0.0, 0.0, 0.0),
+		};
+
+		readonly MappingNode _mapRefl = new MappingNode("refl")
+		{
+			Mapping = MappingNode.MappingType.Texture,
+			Translation = RenderEngine.CreateFloat4(0.0, 0.0, 0.0),
+			Scale = RenderEngine.CreateFloat4(1.0, 1.0, 1.0),
+			Rotation = RenderEngine.CreateFloat4(0.0, 0.0, 0.0),
+		};
+
+		readonly MappingNode _mapSky = new MappingNode("sky")
+		{
+			Mapping = MappingNode.MappingType.Texture,
+			Translation = RenderEngine.CreateFloat4(0.0, 0.0, 0.0),
+			Scale = RenderEngine.CreateFloat4(1.0, 1.0, 1.0),
+			Rotation = RenderEngine.CreateFloat4(0.0, 0.0, 0.0),
+		};
+
 		// the actual gradient node, used as factor for color ramp node
 		readonly GradientTextureNode _gradient = new GradientTextureNode { Gradient = GradientTextureNode.GradientType.Linear };
 
@@ -158,6 +182,11 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(_bgEnvTexture);
 				m_shader.AddNode(_reflEnvTexture);
 				m_shader.AddNode(_skyEnvTexture);
+				// add environment mapping nodes
+				m_shader.AddNode(_mapBg);
+				m_shader.AddNode(_mapRefl);
+				m_shader.AddNode(_mapSky);
+
 
 				// light paths
 				m_shader.AddNode(_lightpath);
@@ -186,9 +215,15 @@ namespace RhinoCyclesCore.Shaders
 
 				_max.outs.Value.Connect(_mixSkylightSwitch.ins.Fac);
 
+				_textureCoordinates.outs.Generated.Connect(_mapBg.ins.Vector);
+				_textureCoordinates.outs.Generated.Connect(_mapRefl.ins.Vector);
+				_textureCoordinates.outs.Generated.Connect(_mapSky.ins.Vector);
+
 				// if there is a bg texture, put that in bg color
 				if (m_original_background.bg.HasTextureImage && m_original_background.background_fill == BackgroundStyle.Environment && !m_original_background.PlanarProjection)
 				{
+					_mapBg.outs.Vector.Connect(_bgEnvTexture.ins.Vector);
+					_mapBg.Rotation = m_original_background.bg.Transform.z;
 					_bgEnvTexture.outs.Color.Connect(_backgroundNode.ins.Color);
 				}
 				// or if gradient fill is needed, so lets do that.
@@ -219,11 +254,15 @@ namespace RhinoCyclesCore.Shaders
 				// connect refl env texture if texture exists
 				if (m_original_background.refl.HasTextureImage)
 				{
+					_mapRefl.outs.Vector.Connect(_reflEnvTexture.ins.Vector);
+					_mapRefl.Rotation = m_original_background.refl.Transform.z;
 					_reflEnvTexture.outs.Color.Connect(_reflBg.ins.Color);
 				}
 				// connect sky env texture if texture exists
 				if (m_original_background.sky.HasTextureImage)
 				{
+					_mapSky.outs.Vector.Connect(_skyEnvTexture.ins.Vector);
+					_mapSky.Rotation = m_original_background.sky.Transform.z;
 					_skyEnvTexture.outs.Color.Connect(_skyBg.ins.Color);
 				}
 
