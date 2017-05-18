@@ -239,21 +239,19 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			var rhinotfm = renderTexture.LocalMappingTransform;
-			var rId = renderTexture.RenderHashWithoutLocalMapping;
+			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude");
 			var azimob = renderTexture.GetParameter("azimuth");
-			if(azimob!=null) {
-				var p = Convert.ToDouble(azimob);
-				rhinotfm.M22 = p;
+			var altob = renderTexture.GetParameter("altitude");
+			if(azimob!=null && altob!=null) {
+				var azi = Convert.ToDouble(azimob);
+				var alti = Convert.ToDouble(altob);
+				rhinotfm.M20 = alti;
+				rhinotfm.M21 = alti;
+				rhinotfm.M22 = azi;
 			} else
 			{
 				rhinotfm.M22 = 0.0;
 			}
-
-			// until fixed we rest the rhinotfm.M22 field again to 0.0, as the
-			// evaluator always evaluates the texture with azimuth, and we don't
-			// want that
-			// @todo FIXIT
-			rhinotfm.M22 = 0.0;
 
 
 			using (var textureEvaluator = renderTexture.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
