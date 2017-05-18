@@ -238,9 +238,23 @@ namespace RhinoCyclesCore.Converters
 				return;
 			}
 
-			var rId = renderTexture.RenderHashWithoutLocalMapping;
-
 			var rhinotfm = renderTexture.LocalMappingTransform;
+			var rId = renderTexture.RenderHashWithoutLocalMapping;
+			var azimob = renderTexture.GetParameter("azimuth");
+			if(azimob!=null) {
+				var p = Convert.ToDouble(azimob);
+				rhinotfm.M22 = p;
+			} else
+			{
+				rhinotfm.M22 = 0.0;
+			}
+
+			// until fixed we rest the rhinotfm.M22 field again to 0.0, as the
+			// evaluator always evaluates the texture with azimuth, and we don't
+			// want that
+			// @todo FIXIT
+			rhinotfm.M22 = 0.0;
+
 
 			using (var textureEvaluator = renderTexture.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
 			{
