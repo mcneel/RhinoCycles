@@ -28,11 +28,13 @@ namespace RhinoCyclesCore.RenderEngines
 {
 	public class ModalRenderEngine : RenderEngine
 	{
-		public bool CanRender => RhinoApp.InstallationTypeString.Equals("WIP");
+		public bool CanRender => capture || RhinoApp.InstallationTypeString.Equals("WIP");
 
+		private readonly bool capture = false;
 		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport)
 			: base(pluginId, doc.RuntimeSerialNumber, view, viewport, false)
 		{
+			capture = true;
 			ModalRenderEngineCommonConstruct();
 		}
 
