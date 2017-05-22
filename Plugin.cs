@@ -48,18 +48,6 @@ namespace RhinoCycles
 		{
 			RhinoApp.Initialized += RhinoApp_Initialized;
 
-			if (RhinoApp.RunningOnVMWare() || RcCore.It.EngineSettings.OpenClDeviceType == 0)
-			{
-				CSycles.debug_set_opencl_device_type(0);
-			}
-			else
-			{
-				CSycles.debug_set_opencl_device_type(RcCore.It.EngineSettings.OpenClDeviceType);
-			}
-			CSycles.debug_set_opencl_kernel(RcCore.It.EngineSettings.OpenClKernelType);
-			CSycles.debug_set_opencl_single_program(RcCore.It.EngineSettings.OpenClSingleProgram);
-			CSycles.debug_set_cpu_kernel(RcCore.It.EngineSettings.CPUSplitKernel);
-
 			// code got moved to separate DLL so use that to register from.
 			var rccoreass = typeof(RcCore).Assembly;
 			RenderContent.RegisterContent(rccoreass, Id);
@@ -81,6 +69,18 @@ namespace RhinoCycles
 			RcCore.It.DataUserPath = userPath;
 
 			CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
+
+			if (RhinoApp.RunningOnVMWare() || RcCore.It.EngineSettings.OpenClDeviceType == 0)
+			{
+				CSycles.debug_set_opencl_device_type(0);
+			}
+			else
+			{
+				CSycles.debug_set_opencl_device_type(RcCore.It.EngineSettings.OpenClDeviceType);
+			}
+			CSycles.debug_set_opencl_kernel(RcCore.It.EngineSettings.OpenClKernelType);
+			CSycles.debug_set_opencl_single_program(RcCore.It.EngineSettings.OpenClSingleProgram);
+			CSycles.debug_set_cpu_kernel(RcCore.It.EngineSettings.CPUSplitKernel);
 
 			RcCore.It.Initialised = false;
 			AsyncInitialise();
