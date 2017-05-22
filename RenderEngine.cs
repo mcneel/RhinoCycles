@@ -566,6 +566,7 @@ namespace RhinoCyclesCore
 		// handle material shader updates
 		protected void Database_MaterialShaderChanged(object sender, MaterialShaderUpdatedEventArgs e)
 		{
+			Converters.BitmapConverter.ReloadTextures(e.RcShader);
 			RecreateMaterialShader(e.RcShader, e.CclShader);
 			e.CclShader.Tag();
 		}

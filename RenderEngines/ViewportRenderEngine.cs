@@ -110,6 +110,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var width = RenderDimension.Width;
 			var height = RenderDimension.Height;
 			Session.RhinoDraw(width, height, alpha);
+			
 		}
 
 		/// <summary>

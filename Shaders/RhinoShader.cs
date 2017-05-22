@@ -30,6 +30,8 @@ namespace RhinoCyclesCore.Shaders
 		{
 			m_client = client;
 			m_original = intermediate;
+			if (m_original.Front != null) m_original.Front.Gamma = m_original.Gamma;
+			if (m_original.Back != null) m_original.Back.Gamma = m_original.Gamma;
 		}
 
 		protected RhinoShader(Client client, CyclesBackground intermediateBackground)

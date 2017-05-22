@@ -19,6 +19,7 @@ using Rhino.DocObjects;
 using Rhino.Render;
 using RhinoCyclesCore.Materials;
 using RhinoCyclesCore.Converters;
+using System.Collections.Generic;
 
 namespace RhinoCyclesCore
 {
@@ -340,6 +341,19 @@ namespace RhinoCyclesCore
 
 		public Shader Type { get; set; }
 
+		/// <summary>
+		/// A shader should override this function if it needs to reload textures.
+		/// 
+		/// Textures change after i.e. gamma changes.
+		/// </summary>
+		/// <param name="bytes"></param>
+		/// <param name="floats"></param>
+		public void ReloadTextures(Dictionary<uint, ByteBitmap> bytes, Dictionary<uint, FloatBitmap> floats)
+		{
+			_front?.ReloadTextures(bytes, floats);
+			_back?.ReloadTextures(bytes, floats);
+		}
+
 	}
 
 	public class ShaderBody
@@ -399,6 +413,68 @@ namespace RhinoCyclesCore
 
 			SimpleNoiseEnvironment,
 			XmlEnvironment,
+		}
+
+		/// <summary>
+		/// A shader should override this function if it needs to reload textures.
+		/// 
+		/// Textures change after i.e. gamma changes.
+		/// </summary>
+		/// <param name="bytes"></param>
+		/// <param name="floats"></param>
+		public void ReloadTextures(Dictionary<uint, ByteBitmap> bytes, Dictionary<uint, FloatBitmap> floats)
+		{
+
+			if (HasDiffuseTexture)
+			{
+				LoadOneTexture(DiffuseTexture, bytes, floats);
+			}
+			if (HasBumpTexture)
+			{
+				LoadOneTexture(BumpTexture, bytes, floats);
+			}
+			if (HasTransparencyTexture)
+			{
+				LoadOneTexture(TransparencyTexture, bytes, floats);
+			}
+			if (HasEnvironmentTexture)
+			{
+				LoadOneTexture(EnvironmentTexture, bytes, floats);
+			}
+			if (HasGiEnvTexture)
+			{
+				LoadOneTexture(GiEnvTexture, bytes, floats);
+			}
+			if (HasBgEnvTexture)
+			{
+				LoadOneTexture(BgEnvTexture, bytes, floats);
+			}
+			if (HasReflRefrEnvTexture)
+			{
+				LoadOneTexture(ReflRefrEnvTexture, bytes, floats);
+			}
+		}
+
+		static private void LoadOneTexture(CyclesTextureImage tex, Dictionary<uint, ByteBitmap> bytes, Dictionary<uint, FloatBitmap> floats)
+		{
+			uint rid;
+			if (uint.TryParse(tex.Name, out rid))
+			{
+				if (tex.HasByteImage)
+				{
+					if (bytes.ContainsKey(rid))
+					{
+						tex.TexByte = bytes[rid].Data;
+					}
+				}
+				else if (tex.HasFloatImage)
+				{
+					if (floats.ContainsKey(rid))
+					{
+						tex.TexFloat = floats[rid].Data;
+					}
+				}
+			}
 		}
 
 		/// <summary>

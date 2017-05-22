@@ -407,7 +407,7 @@ namespace RhinoCyclesCore.Database
 
 		public bool LinearWorkflowHasChanged { get; private set; }
 
-		public float PreProcessGamma => _linearWorkflow.PreProcessGamma;
+		public float PreProcessGamma => _linearWorkflow.PreProcessColors || _linearWorkflow.PreProcessTextures ? _linearWorkflow.PreProcessGamma : 1.0f;
 
 		public LinearWorkflow LinearWorkflow
 		{

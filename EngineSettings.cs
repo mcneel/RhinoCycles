@@ -207,8 +207,8 @@ namespace RhinoCyclesCore
 
 		public virtual bool SaveDebugImages
 		{
-			get { return RcPlugIn.Settings.GetBool("savedebugimages", SaveDebugImagesDefault); }
-			set { RcPlugIn.Settings.SetBool("savedebugimages", value); }
+			get { return RcPlugIn.Settings.GetBool("SaveDebugImages", SaveDebugImagesDefault); }
+			set { RcPlugIn.Settings.SetBool("SaveDebugImages", value); }
 		}
 
 		public bool FlushAtEndOfCreateWorldDefault => false;

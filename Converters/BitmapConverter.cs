@@ -34,6 +34,11 @@ namespace RhinoCyclesCore.Converters
 		static readonly private object bytelocker = new object();
 		static readonly private object floatlocker = new object();
 
+		public static void ReloadTextures(CyclesShader shader)
+		{
+			shader.ReloadTextures(ByteImagesNew, FloatImagesNew);
+		}
+
 		public static void ApplyGammaToTextures(float gamma)
 		{
 			lock (bytelocker)

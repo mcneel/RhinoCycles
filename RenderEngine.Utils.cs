@@ -20,9 +20,6 @@ using ccl;
 using ccl.ShaderNodes;
 using Rhino.Render;
 using RhinoCyclesCore.Core;
-#if DEBUG
-using System.Drawing.Imaging;
-#endif
 
 namespace RhinoCyclesCore
 {
