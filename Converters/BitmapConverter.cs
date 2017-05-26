@@ -249,8 +249,6 @@ namespace RhinoCyclesCore.Converters
 			var rot = renderTexture.GetRotation();
 			var rep = renderTexture.GetRepeat();
 			var tra = renderTexture.GetOffset();
-			Rhino.RhinoApp.OutputDebugString($"{rot} {rep} {tra} - {guid} ({nm})\n");
-			Rhino.RhinoApp.OutputDebugString($"{rhinotfm} - {guid} ({nm})\n");
 			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude;multiplier;rdk-texture-repeat;rdk-texture-offset;rdk-texture-rotation");
 			var azimob = renderTexture.GetParameter("azimuth");
 			var altob = renderTexture.GetParameter("altitude");
