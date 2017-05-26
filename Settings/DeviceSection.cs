@@ -304,9 +304,9 @@ namespace RhinoCycles.Settings
 			m_select = new Button { Text = Localization.LocalizeString("Activate device", 39), ToolTip = Localization.LocalizeString("Activate the selection as the new render device for this viewport.\nThis will restart the render session.", 40) };
 			m_useAppDevice = new Button { Text = Localization.LocalizeString("Use Application device", 41), ToolTip = Localization.LocalizeString("Use the render device as specified in the application settings.\nThis will restart the render session.", 42) };
 			m_tc = new TabControl();
-			m_tabpage_cpu = new GridDevicePage { Text = "  CPU", Image = RhinoCycles.Properties.Resources.CPU.ToEto(), ToolTip = Localization.LocalizeString("Show all the render devices in the CPU category.", 24)};
-			m_tabpage_cuda = new GridDevicePage { Text = "  CUDA", Image = RhinoCycles.Properties.Resources.CUDA.ToEto(), ToolTip = Localization.LocalizeString("Show all the render devices in the CUDA category.\nThese are the NVidia graphics and compute cards.", 25) };
-			m_tabpage_opencl = new GridDevicePage { Text = "  OpenCL", Image = RhinoCycles.Properties.Resources.OpenCL.ToEto(), ToolTip = Localization.LocalizeString("Show all the render devices in the OpenCL category.\nThese include all devices that support the OpenCL technology, including CPUs and most graphics cards.", 26) };
+			m_tabpage_cpu = new GridDevicePage { Text = "CPU", Image = RhinoCycles.Properties.Resources.CPU.ToEto().WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the CPU category.", 24)};
+			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", Image = RhinoCycles.Properties.Resources.CUDA.ToEto().WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the CUDA category.\nThese are the NVidia graphics and compute cards.", 25) };
+			m_tabpage_opencl = new GridDevicePage { Text = "OpenCL", Image = RhinoCycles.Properties.Resources.OpenCL.ToEto().WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the OpenCL category.\nThese include all devices that support the OpenCL technology, including CPUs and most graphics cards.", 26) };
 			m_tc.Pages.Add(m_tabpage_cpu);
 			m_tc.Pages.Add(m_tabpage_cuda);
 			m_tc.Pages.Add(m_tabpage_opencl);
