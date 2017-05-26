@@ -244,7 +244,14 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			var rhinotfm = renderTexture.LocalMappingTransform;
-			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude;multiplier");
+			var guid = renderTexture.TypeId;
+			var nm = renderTexture.TypeName;
+			var rot = renderTexture.GetRotation();
+			var rep = renderTexture.GetRepeat();
+			var tra = renderTexture.GetOffset();
+			Rhino.RhinoApp.OutputDebugString($"{rot} {rep} {tra} - {guid} ({nm})\n");
+			Rhino.RhinoApp.OutputDebugString($"{rhinotfm} - {guid} ({nm})\n");
+			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude;multiplier;rdk-texture-repeat;rdk-texture-offset;rdk-texture-rotation");
 			var azimob = renderTexture.GetParameter("azimuth");
 			var altob = renderTexture.GetParameter("altitude");
 			var multob = renderTexture.GetParameter("multiplier");
@@ -257,7 +264,17 @@ namespace RhinoCyclesCore.Converters
 				rhinotfm.M22 = azi;
 			} else
 			{
-				rhinotfm.M22 = 0.0;
+				rhinotfm.M00 = tra.X;
+				rhinotfm.M01 = tra.Y;
+				rhinotfm.M02 = tra.Z;
+
+				rhinotfm.M10 = rep.X;
+				rhinotfm.M11 = rep.Y;
+				rhinotfm.M12 = rep.Z;
+
+				rhinotfm.M20 = Rhino.RhinoMath.ToRadians(rot.X);
+				rhinotfm.M21 = Rhino.RhinoMath.ToRadians(rot.Y);
+				rhinotfm.M22 = Rhino.RhinoMath.ToRadians(rot.Z);
 			}
 
 			if(multob!=null)
@@ -266,7 +283,12 @@ namespace RhinoCyclesCore.Converters
 			}
 
 
-			using (var textureEvaluator = renderTexture.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping | RenderTexture.TextureEvaluatorFlags.DisableProjectionChange))
+			using (var textureEvaluator = 
+				renderTexture.CreateEvaluator(
+					RenderTexture.TextureEvaluatorFlags.DisableLocalMapping |
+					RenderTexture.TextureEvaluatorFlags.DisableProjectionChange |
+					RenderTexture.TextureEvaluatorFlags.DisableFiltering
+					))
 			{
 				if (textureEvaluator == null)
 				{
