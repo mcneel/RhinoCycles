@@ -771,6 +771,16 @@ namespace RhinoCyclesCore.Database
 				var meshes = cqm.GetMeshes();
 				var meshguid = cqm.Id();
 
+				var attr = cqm.Attributes;
+				if(attr!=null && attr.HasUserData)
+				{
+					Rhino.RhinoApp.OutputDebugString($"We have {attr.UserData.Count} userdata on mesh");
+					foreach(var ud in attr.UserData)
+					{
+						Rhino.RhinoApp.OutputDebugString($"{ud}");
+					}
+				}
+
 				var meshIndex = 0;
 
 				foreach(var meshdata in meshes)
