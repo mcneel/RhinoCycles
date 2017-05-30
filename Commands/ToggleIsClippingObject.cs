@@ -41,7 +41,7 @@ namespace RhinoCycles.Commands
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			var getObject = new GetObject();
-			getObject.SetCommandPrompt($"Pick objects to toggle IsClippingObject status for");
+			getObject.SetCommandPrompt("Pick objects to toggle IsClippingObject status for");
 			var getRc = getObject.Get();
 			if (getObject.CommandResult() != Result.Success) return getObject.CommandResult();
 			if (getRc == GetResult.Object)
@@ -57,6 +57,7 @@ namespace RhinoCycles.Commands
 					if (ud == null) ud = new RhinoCyclesData();
 					else ud.ToggleIsClippingObject();
 
+					RhinoApp.WriteLine($"The clipping object status for {o.Object().Name} is now {ud.IsClippingObject}");
 					roa.UserData.Add(ud);
 				}
 				return Result.Success;
