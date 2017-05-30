@@ -192,8 +192,7 @@ namespace RhinoCyclesCore.Database
 				foreach (var tup in _shaderDatabase.AllShaders)
 				{
 					var cclsh = tup.Item2;
-					var matsh = tup.Item1 as CyclesShader;
-					if (matsh != null)
+					if (tup.Item1 is CyclesShader matsh)
 					{
 						Rhino.RhinoApp.OutputDebugString($"Updating material {cclsh.Id}, old gamma {matsh.Gamma} new gamma ");
 						matsh.Gamma = PreProcessGamma;
@@ -201,8 +200,7 @@ namespace RhinoCyclesCore.Database
 						TriggerMaterialShaderChanged(matsh, cclsh);
 					}
 
-					var lgsh = tup.Item1 as CyclesLight;
-					if (lgsh != null)
+					if (tup.Item1 is CyclesLight lgsh)
 					{
 						Rhino.RhinoApp.OutputDebugString($"Updating light {cclsh.Id}, old gamma {lgsh.Gamma} new gamma ");
 						lgsh.Gamma = PreProcessGamma;
@@ -449,7 +447,8 @@ namespace RhinoCyclesCore.Database
 
 		protected override void ApplyClippingPlaneChanges(Guid[] deleted, List<ClippingPlane> addedOrModified)
 		{
-			foreach(var d in deleted)
+			SceneBoundingBox = GetQueueSceneBoundingBox();
+			foreach (var d in deleted)
 			{
 				ClippingPlanes.Remove(d);
 			}
@@ -460,78 +459,88 @@ namespace RhinoCyclesCore.Database
 				else
 					ClippingPlanes.Remove(cp.Id);
 			}
-			var xext = new Interval(-cp_side_extension, cp_side_extension);
-			var zext = new Interval(0, cp_side_extension);
-			List<Brep> boxes = new List<Brep>(ClippingPlanes.Values.Count);
-			foreach (var p in ClippingPlanes.Values)
+			CalculateClippingObjects();
+		}
+
+		public void CalculateClippingObjects()
+		{
+			if (sceneBoundingBoxDirty)
 			{
-				var tp = new Plane(p);
-				tp.Flip();
-				Box b = new Box(tp, xext, xext, zext);
-				boxes.Add(b.ToBrep());
-			}
-			if (boxes.Count < 1)
-			{
-				_objectDatabase.DeleteMesh(_clippingPlaneGuid.Item1);
-				var cob = _objectDatabase.FindObjectRelation(ClippingPlaneMeshInstanceId);
-				if (cob != null)
+				var xext = new Interval(-cp_side_extension, cp_side_extension);
+				var zext = new Interval(0, cp_side_extension);
+				List<Brep> boxes = new List<Brep>(ClippingPlanes.Values.Count);
+				foreach (var p in ClippingPlanes.Values)
 				{
-					var delob = new CyclesObject { cob = cob };
-					_objectDatabase.DeleteObject(delob);
+					var tp = new Plane(p);
+					tp.Flip();
+					Box b = new Box(tp, xext, xext, zext);
+					boxes.Add(b.ToBrep());
 				}
-			}
-			else
-			{
-				var simplified = Brep.CreateBooleanUnion(boxes, 0.0001);
-
-				if (simplified == null) simplified = boxes.ToArray();
-
-				var sbb = new BoundingBox(GetQueueSceneBoundingBox().GetCorners());
-				sbb.Inflate(0.5);
-				var sbbr = sbb.ToBrep();
-				var sbbl = new List<Brep>(1);
-				sbbl.Add(sbbr);
-
-				var bounded = Brep.CreateBooleanIntersection(simplified, sbbl, 0.0001);
-				if (bounded == null) bounded = boxes.ToArray();
-
-				var meshed =
-					(from s in bounded
-					 select Rhino.Geometry.Mesh.CreateFromBrep(s, mp)
-					 .Aggregate(
-						 new Rhino.Geometry.Mesh(),
-						 (workingMesh, next) => { workingMesh.Append(next); return workingMesh; }
-					 ))
-					.Aggregate(
-						new Rhino.Geometry.Mesh(),
-						(workingMesh, next) => { workingMesh.Append(next); return workingMesh; }
-						);
-				meshed.RebuildNormals();
-				var cpid = _clippingPlaneGuid;
-
-				Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
-
-				HandleMeshData(cpid.Item1, cpid.Item2, meshed, true);
-
-				var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
-
-				var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
-
-				var cyclesObject = new CyclesObject
+				if (boxes.Count < 1)
 				{
-					matid = mat.RenderHash,
-					obid = ClippingPlaneMeshInstanceId,
-					meshid = cpid,
-					Transform = t,
-					Visible = ClippingPlanes.Count > 0,
-					CastShadow = false,
-					IsShadowCatcher = false,
-					Cutout = true,
-				};
+					_objectDatabase.DeleteMesh(_clippingPlaneGuid.Item1);
+					var cob = _objectDatabase.FindObjectRelation(ClippingPlaneMeshInstanceId);
+					if (cob != null)
+					{
+						var delob = new CyclesObject { cob = cob };
+						_objectDatabase.DeleteObject(delob);
+					}
+				}
+				else
+				{
+					var simplified = Brep.CreateBooleanUnion(boxes, 0.0001);
 
-				_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
-				_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
-				_objectDatabase.AddOrUpdateObject(cyclesObject);
+					if (simplified == null) simplified = boxes.ToArray();
+
+					var sbb = SceneBoundingBox;
+					sbb.Inflate(0.5);
+					var sbbr = sbb.ToBrep();
+					var sbbl = new List<Brep>(1)
+						{
+							sbbr
+						};
+					var bounded = Brep.CreateBooleanIntersection(simplified, sbbl, 0.0001);
+					if (bounded == null) bounded = boxes.ToArray();
+
+					var meshed =
+						(from s in bounded
+						 select Rhino.Geometry.Mesh.CreateFromBrep(s, mp)
+						 .Aggregate(
+							 new Rhino.Geometry.Mesh(),
+							 (workingMesh, next) => { workingMesh.Append(next); return workingMesh; }
+						 ))
+						.Aggregate(
+							new Rhino.Geometry.Mesh(),
+							(workingMesh, next) => { workingMesh.Append(next); return workingMesh; }
+							);
+					meshed.RebuildNormals();
+					var cpid = _clippingPlaneGuid;
+
+					Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
+
+					HandleMeshData(cpid.Item1, cpid.Item2, meshed, true);
+
+					var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
+
+					var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
+
+					var cyclesObject = new CyclesObject
+					{
+						matid = mat.RenderHash,
+						obid = ClippingPlaneMeshInstanceId,
+						meshid = cpid,
+						Transform = t,
+						Visible = ClippingPlanes.Count > 0,
+						CastShadow = false,
+						IsShadowCatcher = false,
+						Cutout = true,
+					};
+
+					_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
+					_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
+					_objectDatabase.AddOrUpdateObject(cyclesObject);
+				}
+				sceneBoundingBoxDirty = false;
 			}
 		}
 
@@ -643,6 +652,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="viewInfo"></param>
 		protected override void ApplyViewChange(ViewInfo viewInfo)
 		{
+			SceneBoundingBox = GetQueueSceneBoundingBox();
 			if (!IsPreview && !viewInfo.Viewport.Id.Equals(ViewId)) return;
 
 			if (_wallpaperInitialized)
@@ -664,8 +674,7 @@ namespace RhinoCyclesCore.Database
 			var twopoint = false; // @todo add support for vp.IsTwoPointPerspectiveProjection;
 
 			// frustum values, used for two point
-			double frt, frb, frr, frl, frf, frn;
-			vp.GetFrustum(out frl, out frr, out frb, out frt, out frn, out frf);
+			vp.GetFrustum(out double frl, out double frr, out double frb, out double frt, out double frn, out double frf);
 
 			//sdd.WriteLine(String.Format(
 			//	"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
@@ -694,8 +703,7 @@ namespace RhinoCyclesCore.Database
 				"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
 				*/
 
-			int near, far;
-			var screenport = vp.GetScreenPort(out near, out far);
+			var screenport = vp.GetScreenPort(out int near, out int far);
 			var bottom = screenport.Bottom;
 			var top = screenport.Top;
 			var left = screenport.Left;
@@ -722,8 +730,7 @@ namespace RhinoCyclesCore.Database
 			var viewAspectratio = portrait ? h/(float)w : w/(float)h;
 
 			// get camera angles
-			double diagonal, vertical, horizontal;
-			vp.GetCameraAngles(out diagonal, out vertical, out horizontal);
+			vp.GetCameraAngles(out double diagonal, out double vertical, out double horizontal);
 
 			// convert rhino transform to ccsycles transform
 			var t = CclXformFromRhinoXform(rhinocam);
@@ -756,6 +763,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="added"></param>
 		protected override void ApplyMeshChanges(Guid[] deleted, List<CqMesh> added)
 		{
+			SceneBoundingBox = GetQueueSceneBoundingBox();
 			Rhino.RhinoApp.OutputDebugString($"ChangeDatabase ApplyMeshChanges, deleted {deleted.Length}\n");
 
 			foreach (var guid in deleted)
@@ -865,8 +873,28 @@ namespace RhinoCyclesCore.Database
 			return t;
 		}
 
+		private bool sceneBoundingBoxDirty;
+		private BoundingBox _sbb;
+
+		public BoundingBox SceneBoundingBox
+		{
+			get
+			{
+				return _sbb;
+			}
+			set
+			{
+				if(!_sbb.Equals(value))
+				{
+					sceneBoundingBoxDirty = true;
+					_sbb = value;
+				}
+			}
+		}
+
 		protected override void ApplyMeshInstanceChanges(List<uint> deleted, List<MeshInstance> addedOrChanged)
 		{
+			SceneBoundingBox = GetQueueSceneBoundingBox();
 			// helper list to ensure we don't add same material multiple times.
 			var addedmats = new List<uint>();
 
@@ -1303,6 +1331,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="lightChanges"></param>
 		protected override void ApplyLightChanges(List<CqLight> lightChanges)
 		{
+			SceneBoundingBox = GetQueueSceneBoundingBox();
 			// we don't necessarily get view changes prior to light changes, so
 			// the old _currentViewInfo could be null - at the end of a Flush
 			// it would be thrown away. Hence we now ask the ChangeQueue for the
@@ -1381,6 +1410,7 @@ namespace RhinoCyclesCore.Database
 
 		protected override void ApplyDynamicLightChanges(List<RGLight> dynamicLightChanges)
 		{
+			SceneBoundingBox = GetQueueSceneBoundingBox();
 			foreach (var light in dynamicLightChanges)
 			{
 				if (light.IsLinearLight)
@@ -1421,8 +1451,7 @@ namespace RhinoCyclesCore.Database
 			if (_environmentDatabase.BackgroundHasChanged)
 			{
 				Rhino.RhinoApp.OutputDebugString("Uploading background changes\n");
-				RhinoShader curbg;
-				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader, out curbg);
+				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader, out RhinoShader curbg);
 			}
 		}
 
