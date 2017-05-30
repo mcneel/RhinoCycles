@@ -28,13 +28,9 @@ namespace RhinoCyclesCore.RenderEngines
 {
 	public class ModalRenderEngine : RenderEngine
 	{
-		public bool CanRender => capture || RhinoApp.InstallationTypeString.Equals("WIP");
-
-		private readonly bool capture = false;
 		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport)
 			: base(pluginId, doc.RuntimeSerialNumber, view, viewport, false)
 		{
-			capture = true;
 			ModalRenderEngineCommonConstruct();
 		}
 
@@ -50,7 +46,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 		private void ModalRenderEngineCommonConstruct()
 		{
-			if (!CanRender) throw new ApplicationException("Modal rendering is supported only in Rhino WIP");
 			Client = new Client();
 			State = State.Rendering;
 
@@ -113,13 +108,6 @@ namespace RhinoCyclesCore.RenderEngines
 			var rw = cyclesEngine.RenderWindow;
 
 			if (rw == null) return; // we don't have a window to write to...
-
-			if (!CanRender)
-			{
-				RhinoApp.WriteLine("Cycles for Rhino works only in WIP");
-				rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Failed);
-				return;
-			}
 
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
