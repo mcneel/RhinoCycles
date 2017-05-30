@@ -25,14 +25,26 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Mesh Guid and mesh index
 		/// </summary>
-		public Tuple<Guid, int> MeshId;
+		public Tuple<Guid, int> MeshId { get; set; }
 		/// <summary>
 		/// Material renderhash
 		/// </summary>
-		public uint matid;
-		public float[] verts;
-		public int[] faces;
-		public float[] uvs;
-		public float[] vertex_normals;
+		public uint MatId { get; set; }
+		/// <summary>
+		/// float array with vertex data. Stride 3.
+		/// </summary>
+		public float[] Verts { get; set; }
+		/// <summary>
+		/// int array with face indices. Indices are into Verts
+		/// </summary>
+		public int[] Faces { get; set; }
+		/// <summary>
+		/// float array with UV coordinates. Stride 2.
+		/// </summary>
+		public float[] Uvs { get; set; }
+		/// <summary>
+		/// Float array with vertex normal data. Stride 3.
+		/// </summary>
+		public float[] VertexNormals { get; set; }
 	}
 }

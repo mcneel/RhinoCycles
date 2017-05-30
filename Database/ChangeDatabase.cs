@@ -312,11 +312,11 @@ namespace RhinoCyclesCore.Database
 					me = new CclMesh(_renderEngine.Client, shader);
 				}
 
-				me.Resize((uint)cyclesMesh.verts.Length/3, (uint)cyclesMesh.faces.Length/3);
+				me.Resize((uint)cyclesMesh.Verts.Length/3, (uint)cyclesMesh.Faces.Length/3);
 
 				// update status bar of render window.
 				var stat =
-					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.verts.Length/3}, t: {cyclesMesh.faces.Length/3} using shader {shid}]";
+					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.Verts.Length/3}, t: {cyclesMesh.Faces.Length/3} using shader {shid}]";
 				Rhino.RhinoApp.OutputDebugString($"\t\t{stat}\n");
 
 				// set progress, but without rendering percentage (hence the -1.0f)
@@ -346,21 +346,25 @@ namespace RhinoCyclesCore.Database
 		private bool UploadMeshData(CclMesh me, CyclesMesh cyclesMesh)
 		{
 			// set raw vertex data
-			me.SetVerts(ref cyclesMesh.verts);
+			var verts = cyclesMesh.Verts;
+			me.SetVerts(ref verts);
 			if (_renderEngine.CancelRender) return false;
 			// set the triangles
-			me.SetVertTris(ref cyclesMesh.faces, cyclesMesh.vertex_normals != null);
+			var faces = cyclesMesh.Faces;
+			me.SetVertTris(ref faces, cyclesMesh.VertexNormals != null);
 			if (_renderEngine.CancelRender) return false;
 			// set vertex normals
-			if (cyclesMesh.vertex_normals != null)
+			if (cyclesMesh.VertexNormals != null)
 			{
-				me.SetVertNormals(ref cyclesMesh.vertex_normals);
+				var vertex_normals = cyclesMesh.VertexNormals;
+				me.SetVertNormals(ref vertex_normals);
 			}
 			if (_renderEngine.CancelRender) return false;
 			// set uvs
-			if (cyclesMesh.uvs != null)
+			if (cyclesMesh.Uvs != null)
 			{
-				me.SetUvs(ref cyclesMesh.uvs);
+				var uvs = cyclesMesh.Uvs;
+				me.SetUvs(ref uvs);
 			}
 			// and finally tag for rebuilding
 			me.TagRebuild();
@@ -507,7 +511,7 @@ namespace RhinoCyclesCore.Database
 
 				Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
 
-				HandleMeshData(cpid.Item1, cpid.Item2, meshed);
+				HandleMeshData(cpid.Item1, cpid.Item2, meshed, true);
 
 				var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
 
@@ -772,12 +776,12 @@ namespace RhinoCyclesCore.Database
 				var meshguid = cqm.Id();
 
 				var attr = cqm.Attributes;
+				bool isClippingObject = false;
 				if(attr!=null && attr.HasUserData)
 				{
-					Rhino.RhinoApp.OutputDebugString($"We have {attr.UserData.Count} userdata on mesh");
-					foreach(var ud in attr.UserData)
+					if(attr.UserData.Find(typeof(RhinoCyclesData)) is RhinoCyclesData ud)
 					{
-						Rhino.RhinoApp.OutputDebugString($"{ud}");
+						isClippingObject = ud.IsClippingObject;
 					}
 				}
 
@@ -785,13 +789,13 @@ namespace RhinoCyclesCore.Database
 
 				foreach(var meshdata in meshes)
 				{
-					HandleMeshData(meshguid, meshIndex, meshdata);
+					HandleMeshData(meshguid, meshIndex, meshdata, isClippingObject);
 					meshIndex++;
 				}
 			}
 		}
 
-		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata)
+		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, bool isClippingObject)
 		{
 			Rhino.RhinoApp.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
 			// Get face indices flattened to an
@@ -834,13 +838,14 @@ namespace RhinoCyclesCore.Database
 			var cyclesMesh = new CyclesMesh
 			{
 				MeshId = meshid,
-				verts = meshdata.Vertices.ToFloatArray(),
-				faces = findices,
-				uvs = cmuv,
-				vertex_normals = rhvn,
-				matid = crc
+				Verts = meshdata.Vertices.ToFloatArray(),
+				Faces = findices,
+				Uvs = cmuv,
+				VertexNormals = rhvn,
+				MatId = crc,
 			};
 			_objectDatabase.AddMesh(cyclesMesh);
+			_objectDatabase.SetIsClippingObject(meshid, isClippingObject);
 		}
 
 		/// <summary>
@@ -920,7 +925,8 @@ namespace RhinoCyclesCore.Database
 				}
 
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
-				var ob = new CyclesObject {obid = a.InstanceId, meshid = meshid, Transform = CclXformFromRhinoXform(a.Transform), matid = a.MaterialId, CastShadow = a.CastShadows};
+				var cutout = _objectDatabase.MeshIsClippingObject(meshid);
+				var ob = new CyclesObject {obid = a.InstanceId, meshid = meshid, Transform = CclXformFromRhinoXform(a.Transform), matid = a.MaterialId, CastShadow = a.CastShadows, Cutout = cutout};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
 
 				var shaderchange = new CyclesObjectShader(a.InstanceId)
@@ -1092,7 +1098,7 @@ namespace RhinoCyclesCore.Database
 					m.SetCachedTextureCoordinates(texturemapping, ref tfm);
 				}
 
-				HandleMeshData(gpid.Item1, gpid.Item2, m);
+				HandleMeshData(gpid.Item1, gpid.Item2, m, false);
 
 				var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
 				var mat = gp.IsShadowOnly ? def : MaterialFromId( gp.MaterialId);
@@ -1353,7 +1359,7 @@ namespace RhinoCyclesCore.Database
 
 			HandleLightMaterial(ld);
 
-			HandleMeshData(ld.Id, 0, mesh);
+			HandleMeshData(ld.Id, 0, mesh, false);
 
 			var lightObject = new CyclesObject
 			{

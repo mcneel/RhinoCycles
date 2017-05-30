@@ -36,7 +36,12 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// record what meshid tuple corresponds to what cycles mesh
 		/// </summary>
-		private readonly Dictionary<Tuple<Guid, int>, CclMesh> _rhCclMeshes = new Dictionary<Tuple<Guid, int>, CclMesh>(); 
+		private readonly Dictionary<Tuple<Guid, int>, CclMesh> _rhCclMeshes = new Dictionary<Tuple<Guid, int>, CclMesh>();
+
+		/// <summary>
+		/// Record the clipping object status of MeshIds.
+		/// </summary>
+		private readonly Dictionary<Tuple<Guid, int>, bool> _rhCclMeshesCutout = new Dictionary<Tuple<Guid, int>, bool>();
 		/// <summary>
 		/// Record what meshinstanceid (objectid) points to what meshid
 		/// </summary>
@@ -170,6 +175,26 @@ namespace RhinoCyclesCore.Database
 		/// <param name="me"></param>
 		public void AddMesh(CyclesMesh me) {
 			_cqMeshChanges[me.MeshId] = me;
+		}
+
+		/// <summary>
+		/// Record the clipping object status of MeshId
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="status"></param>
+		public void SetIsClippingObject(Tuple<Guid, int> id, bool status)
+		{
+			_rhCclMeshesCutout[id] = status;
+		}
+
+		/// <summary>
+		/// Get the clipping object status for MeshId
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
+		public bool MeshIsClippingObject(Tuple<Guid, int> id)
+		{
+			return _rhCclMeshesCutout.ContainsKey(id) ? _rhCclMeshesCutout[id] : false;
 		}
 
 		/// <summary>

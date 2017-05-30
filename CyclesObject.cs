@@ -34,12 +34,12 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Id of InstanceAncestry
 		/// </summary>
-		public uint obid;
+		public uint obid { get; set; }
 
 		/// <summary>
 		/// Guid of the mesh this object references
 		/// </summary>
-		public Tuple<Guid, int> meshid;
+		public Tuple<Guid, int> meshid { get; set; }
 
 		/// <summary>
 		/// The transformation matrix for this object.

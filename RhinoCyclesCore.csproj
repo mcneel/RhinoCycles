@@ -86,6 +86,7 @@
     <Compile Include="Materials\SimpleBrickMaterial.cs" />
     <Compile Include="Materials\SimplePlasticMaterial.cs" />
     <Compile Include="Materials\TranslucentMaterial.cs" />
+    <Compile Include="RhinoCyclesData.cs" />
     <Compile Include="Measurement.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
