@@ -395,14 +395,23 @@ namespace RhinoCyclesCore
 		public void DisplayBuffer(uint sessionId, uint tx, uint ty, uint tw, uint th, PassType passtype, ref float[] pixels, int pixlen, int stride)
 		{
 			if (IsStopped) return;
-			if (passtype != PassType.Combined) return;
 			//(var width, var height) =  RenderDimension;
 			var width = RenderDimension.Width;
 			var height = RenderDimension.Height;
 			if (RenderWindow != null)
 			{
-				using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
+				using (RenderWindow.Channel channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA),
+					nx = RenderWindow.OpenChannel(RenderWindow.StandardChannels.NormalX),
+					ny = RenderWindow.OpenChannel(RenderWindow.StandardChannels.NormalY),
+					nz = RenderWindow.OpenChannel(RenderWindow.StandardChannels.NormalZ),
+					depth = RenderWindow.OpenChannel(RenderWindow.StandardChannels.DistanceFromCamera)
+					)
 				{
+					sdd.Assert(channel != null);
+					sdd.Assert(nx!= null);
+					sdd.Assert(ny!= null);
+					sdd.Assert(nz!= null);
+					sdd.Assert(depth!= null);
 					if (channel != null)
 					{
 						var rect = new Rectangle((int)tx, (int)ty, (int)tw, (int)th);
@@ -415,39 +424,51 @@ namespace RhinoCyclesCore
 								var g = stride > 1 ? pixels[i + 1] : 1.0f;
 								var b = stride > 2 ? pixels[i + 2] : 1.0f;
 								var a = stride > 3 ? pixels[i + 3] : 1.0f;
-								if(stride==1)
+								if (stride == 1)
 								{
 									g = b = r;
 								}
 								if (passtype != PassType.Combined) a = 1.0f;
+								a = 1.0f;
 
 								var c4_f = new Color4f(r, g, b, a);
-								channel.SetValue((int)tx + x, height - ((int)ty + y), c4_f);
+
+								var cox = (int)tx + x;
+								var coy = height - ((int)ty + y);
+								if (channel != null && passtype == PassType.Combined)
+								{
+									channel.SetValue(cox, coy, c4_f);
+								}
+								else if (nx!=null && ny!=null && nz!=null && passtype == PassType.Normal) {
+									nx.SetValue(cox, coy, r);
+									ny.SetValue(cox, coy, g);
+									nz.SetValue(cox, coy, b);
+								} else if(depth!=null && passtype == PassType.Depth)
+								{
+									depth.SetValue(cox, coy, r);
+								}
 							}
 						}
 						RenderWindow.InvalidateArea(rect);
 					}
 				}
 			}
-			else if (RenderBitmap is Bitmap rg)
+			else if (passtype == PassType.Combined && RenderBitmap is Bitmap rg)
 			{
-				uint buffer_size;
-				uint buffer_stride;
-				CSycles.session_get_buffer_info(Client.Id, sessionId, out buffer_size, out buffer_stride);
 				for (var x = 0; x < (int)tw; x++)
 				{
 					for (var y = 0; y < (int)th; y++)
 					{
-						var i = y * width * 4 + x * 4;
+						var i = y * width * stride + x * stride;
 						var r = pixels[i];
 						var g = pixels[i + 1];
 						var b = pixels[i + 2];
-						var a = pixels[i + 3];
+						var a = 1.0f; // pixels[i + 3];
 
 						r = Math.Min(Math.Abs(r), 1.0f);
 						g = Math.Min(Math.Abs(g), 1.0f);
 						b = Math.Min(Math.Abs(b), 1.0f);
-						a = Math.Min(Math.Abs(a), 1.0f);
+						//a = Math.Min(Math.Abs(a), 1.0f);
 
 						var c4_f = new Color4f(r, g, b, a);
 						rg.SetPixel((int)tx+x, height - ((int)ty+y), c4_f.AsSystemColor());
