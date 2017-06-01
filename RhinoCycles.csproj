@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props" Condition="Exists('..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -18,7 +19,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>$(RhinoBinDir)\$(Configuration)\Plug-ins\</OutputPath>
     <DefineConstants>TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,7 +29,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>$(RhinoBinDir)\$(Configuration)\Plug-ins\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -179,13 +180,12 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>Move /Y "$(TargetPath)" "$(TargetDir)$(ProjectName).rhp"
-Copy /Y "$(TargetDir)$(ProjectName)*.*" "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins"
-MkDir "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses"
-Copy /Y /A "$(ProjectDir)..\cycles\cycles\src\doc\license\*.txt" "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses"
-Copy /Y /A "$(ProjectDir)..\cycles\pthreads\COPYING" /A "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses\pthreads.txt"
-Copy /Y "$(ProjectDir)..\cycles\cycles\third_party\cuew\LICENSE" /A "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses\cuew.txt"
-Del "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses\CMakeLists.txt"
-Del "$(ProjectDir)..\..\..\..\$(OutDir)Plug-ins\RhinoCycles\licenses\OSL.txt"</PostBuildEvent>
+MkDir "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses"
+Copy /Y /A "$(ProjectDir)..\cycles\cycles\src\doc\license\*.txt" "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses"
+Copy /Y /A "$(ProjectDir)..\cycles\pthreads\COPYING" /A "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\pthreads.txt"
+Copy /Y "$(ProjectDir)..\cycles\cycles\third_party\cuew\LICENSE" /A "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\cuew.txt"
+Del "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\CMakeLists.txt"
+Del "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\OSL.txt"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
