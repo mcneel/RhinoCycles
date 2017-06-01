@@ -436,7 +436,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool DrawOpenGl()
 		{
-			int samplesLocal;
+			int samplesLocal = 0;
 			float alphaLocal;
 			lock(timerLock)
 			{
