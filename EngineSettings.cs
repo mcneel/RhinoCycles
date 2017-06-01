@@ -55,6 +55,9 @@ namespace RhinoCyclesCore
 			UseStartResolution = UseStartResolution;
 			StartResolution = StartResolution;
 
+			TileX = TileX;
+			TileY = TileY;
+
 			MinBounce = MinBounce;
 			MaxBounce = MaxBounce;
 
@@ -137,6 +140,9 @@ namespace RhinoCyclesCore
 
 			UseStartResolution = UseStartResolutionDefault;
 			StartResolution = StartResolutionDefault;
+
+			TileX = TileXDefault;
+			TileY = TileYDefault;
 
 			MinBounce = MinBounceDefault;
 			MaxBounce = MaxBounceDefault;
