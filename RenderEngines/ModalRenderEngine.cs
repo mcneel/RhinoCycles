@@ -54,10 +54,10 @@ namespace RhinoCyclesCore.RenderEngines
 			#region create callbacks for Cycles
 
 			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = UpdateRenderTileCallback;
+			m_update_render_tile_callback = null; // UpdateRenderTileCallback;
 			m_write_render_tile_callback = WriteRenderTileCallback;
 			m_test_cancel_callback = null;
-			m_display_update_callback = null;
+			m_display_update_callback = null; // DisplayUpdateHandler;
 
 			CSycles.log_to_stdout(false);
 
@@ -154,8 +154,7 @@ namespace RhinoCyclesCore.RenderEngines
 			// main render loop, including restarts
 			#region start the rendering loop, wait for it to complete, we're rendering now!
 
-			//cyclesEngine.Database.OneShot();
-			cyclesEngine.m_flush = false;
+			cyclesEngine.Database.Flush();
 			cyclesEngine.UploadData();
 
 			cyclesEngine.Session.PrepareRun();

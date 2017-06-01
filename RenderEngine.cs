@@ -24,6 +24,7 @@ using Rhino.DocObjects;
 using Rhino.Render;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
+using RhinoCyclesCore.ExtensionMethods;
 using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCyclesCore
@@ -151,15 +152,6 @@ namespace RhinoCyclesCore
 		/// Rhino and Cycles.
 		/// </summary>
 		public ChangeDatabase Database { get; set; }
-
-		/// <summary>
-		/// OpenCL doesn't properly support HDRi textures in the environment,
-		/// so read them as byte textures instead.
-		/// </summary>
-		public void SetFloatTextureAsByteTexture(bool floatAsByte)
-		{
-			Database.SetFloatTextureAsByteTexture(floatAsByte);
-		}
 
 		/// <summary>
 		/// Return true if any change has been received through the changequeue
@@ -400,35 +392,51 @@ namespace RhinoCyclesCore
 		/// <param name="ty"></param>
 		/// <param name="tw"></param>
 		/// <param name="th"></param>
-		public void DisplayBuffer(uint sessionId, uint tx, uint ty, uint tw, uint th)
+		public void DisplayBuffer(uint sessionId, uint tx, uint ty, uint tw, uint th, PassType passtype, ref float[] pixels, int pixlen, int stride)
 		{
 			if (IsStopped) return;
-			var start = DateTime.Now;
-			var rg = RenderBitmap;
+			if (passtype != PassType.Combined) return;
+			//(var width, var height) =  RenderDimension;
+			var width = RenderDimension.Width;
+			var height = RenderDimension.Height;
 			if (RenderWindow != null)
 			{
 				using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
 				{
 					if (channel != null)
 					{
-						var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
-						var size = Client.Scene.Camera.Size;
-						var rect = new Rectangle((int) tx, (int) ty, (int) tw, (int) th);
-						channel.SetValues(rect, size, pixelbuffer);
+						var rect = new Rectangle((int)tx, (int)ty, (int)tw, (int)th);
+						for (var x = 0; x < (int)tw; x++)
+						{
+							for (var y = 0; y < (int)th; y++)
+							{
+								var i = y * tw * stride + x * stride;
+								var r = pixels[i];
+								var g = stride > 1 ? pixels[i + 1] : 1.0f;
+								var b = stride > 2 ? pixels[i + 2] : 1.0f;
+								var a = stride > 3 ? pixels[i + 3] : 1.0f;
+								if(stride==1)
+								{
+									g = b = r;
+								}
+								if (passtype != PassType.Combined) a = 1.0f;
+
+								var c4_f = new Color4f(r, g, b, a);
+								channel.SetValue((int)tx + x, height - ((int)ty + y), c4_f);
+							}
+						}
 						RenderWindow.InvalidateArea(rect);
 					}
 				}
 			}
-			else if (rg != null)
+			else if (RenderBitmap is Bitmap rg)
 			{
 				uint buffer_size;
 				uint buffer_stride;
-				var width = RenderDimension.Width;
 				CSycles.session_get_buffer_info(Client.Id, sessionId, out buffer_size, out buffer_stride);
-				var pixels = CSycles.session_copy_buffer(Client.Id, sessionId, buffer_size);
-				for (var x = (int)tx; x < (int)(tx + tw); x++)
+				for (var x = 0; x < (int)tw; x++)
 				{
-					for (var y = (int)ty; y < (int)(ty + th); y++)
+					for (var y = 0; y < (int)th; y++)
 					{
 						var i = y * width * 4 + x * 4;
 						var r = pixels[i];
@@ -442,11 +450,10 @@ namespace RhinoCyclesCore
 						a = Math.Min(Math.Abs(a), 1.0f);
 
 						var c4_f = new Color4f(r, g, b, a);
-						rg.SetPixel(x, y, c4_f.AsSystemColor());
+						rg.SetPixel((int)tx+x, height - ((int)ty+y), c4_f.AsSystemColor());
 					}
 				}
 			}
-			var diff = (DateTime.Now - start).TotalMilliseconds;
 		}
 
 		/// <summary>
@@ -467,10 +474,10 @@ namespace RhinoCyclesCore
 		/// <param name="w"></param>
 		/// <param name="h"></param>
 		/// <param name="depth"></param>
-		public void WriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
+		public void WriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
 			if (IsStopped) return;
-			DisplayBuffer(sessionId, x, y, w, h);
+			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 		}
 
 		/// <summary>
@@ -482,10 +489,12 @@ namespace RhinoCyclesCore
 		/// <param name="w"></param>
 		/// <param name="h"></param>
 		/// <param name="depth"></param>
-		public void UpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
+		public void UpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
+#if UGH
 			if (IsStopped) return;
-			DisplayBuffer(sessionId, x, y, w, h);
+			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
+#endif
 		}
 
 		/// <summary>
@@ -552,7 +561,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		protected void SetCallbacks()
 		{
-			#region register callbacks with Cycles session
+#region register callbacks with Cycles session
 
 			Session.UpdateCallback = m_update_callback;
 			Session.UpdateTileCallback = m_update_render_tile_callback;
@@ -560,7 +569,7 @@ namespace RhinoCyclesCore
 			Session.TestCancelCallback = m_test_cancel_callback;
 			Session.DisplayUpdateCallback = m_display_update_callback;
 
-			#endregion
+#endregion
 		}
 
 		// handle material shader updates

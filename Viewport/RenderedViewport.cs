@@ -199,8 +199,6 @@ namespace RhinoCycles.Viewport
 
 				mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 
-				mre.SetFloatTextureAsByteTexture(false); // mre.Settings.RenderDeviceIsOpenCl);
-
 				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
 				_modalThread = new Thread(RenderOffscreen)
@@ -234,8 +232,6 @@ namespace RhinoCycles.Viewport
 			_cycles.RenderDimension = renderSize;
 
 			_maxSamples = RcCore.It.EngineSettings.Samples;
-
-			_cycles.SetFloatTextureAsByteTexture(false); // m_cycles.Settings.RenderDeviceIsOpenCl);
 
 			_startTime = DateTime.UtcNow; // use _startTime to time CreateWorld
 			_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session

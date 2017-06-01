@@ -46,17 +46,17 @@ namespace RhinoCyclesCore.RenderEngines
 #endregion
 		}
 
-		public void PreviewRendererUpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
+		public void PreviewRendererUpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
 			if (IsStopped || sample < 5 || (Session.Scene.Device.IsCpu && sample % 10 != 0)) return;
-			DisplayBuffer(sessionId, x, y, w, h);
+			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 			PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
 
-		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint depth, int startSample, int numSamples, int sample, int resolution)
+		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
 			if (IsStopped || sample < 5 || (Session.Scene.Device.IsCpu && sample % 10 != 0)) return;
-			DisplayBuffer(sessionId, x, y, w, h);
+			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 			PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
 		/// <summary>

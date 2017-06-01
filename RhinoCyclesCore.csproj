@@ -99,6 +99,7 @@
     <Compile Include="RenderEngine.Settings.cs" />
     <Compile Include="RenderEngine.Shaders.cs" />
     <Compile Include="RenderEngine.Utils.cs" />
+    <Compile Include="ExtensionMethods\RhinoCyclesExtensions.cs" />
     <Compile Include="Shaders\RhinoFullNxt.cs" />
     <Compile Include="Shaders\RhinoLight.cs" />
     <Compile Include="Shaders\RhinoBackground.cs" />
