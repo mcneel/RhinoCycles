@@ -227,7 +227,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="gamma"></param>
 		/// <param name="floatAsByte"></param>
 		/// <param name="planarProjection"></param>
-		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma, bool floatAsByte, bool planarProjection)
+		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma, bool planarProjection)
 		{
 			RenderTexture renderTexture = null;
 
@@ -321,7 +321,7 @@ namespace RhinoCyclesCore.Converters
 
 				var isLinear = teximg.IsLinear = renderTexture.IsLinear();
 
-				if (isFloat && !floatAsByte)
+				if (isFloat)
 				{
 					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, true, planarProjection, isLinear);
 					img.ApplyGamma(gamma);

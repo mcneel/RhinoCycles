@@ -34,12 +34,6 @@ namespace RhinoCyclesCore
 	public class CyclesBackground : IDisposable
 	{
 		/// <summary>
-		/// OpenCL doesn't properly support HDRi textures in the environment,
-		/// so read them as byte textures instead.
-		/// </summary>
-		public bool m_float_as_byte;
-
-		/// <summary>
 		/// True if ChangeQueue modified the background
 		/// </summary>
 		public bool modified { get; set; }
@@ -295,7 +289,7 @@ namespace RhinoCyclesCore
 						bg_color = Color.Empty;
 						bg.Clear();
 					}
-					BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg, Gamma, m_float_as_byte, PlanarProjection);
+					BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg, Gamma, PlanarProjection);
 					break;
 				case RenderEnvironment.Usage.Skylighting:
 					bool resampled = false;
@@ -331,7 +325,7 @@ namespace RhinoCyclesCore
 									skylight_copy.SetChild(resampler, "texture");
 									skylight_copy.EndChange();
 
-									BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, Gamma, m_float_as_byte, false);
+									BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_copy, sky, Gamma, false);
 									resampled = true;
 
 									render_texture.Dispose();
@@ -347,7 +341,7 @@ namespace RhinoCyclesCore
 						sky.Clear();
 					}
 					if (!resampled)
-						BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky, Gamma, m_float_as_byte, false);
+						BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky, Gamma, false);
 
 					break;
 				case RenderEnvironment.Usage.ReflectionAndRefraction:
@@ -364,7 +358,7 @@ namespace RhinoCyclesCore
 						refl_color = Color.Empty;
 						refl.Clear();
 					}
-					BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl, Gamma, m_float_as_byte, false);
+					BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl, Gamma, false);
 					break;
 			}
 		}

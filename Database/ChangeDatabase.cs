@@ -100,17 +100,6 @@ namespace RhinoCyclesCore.Database
 		private readonly bool _modalRenderer;
 
 		/// <summary>
-		/// This should be called with true to read texture as byte image instead
-		/// of float images. This is necessary currently for OpenCL environment
-		/// textures, as HDRi isn't properly supported there.
-		/// </summary>
-		/// <param name="floatAsByte"></param>
-		internal void SetFloatTextureAsByteTexture(bool floatAsByte)
-		{
-			_environmentDatabase.SetFloatTextureAsByteTexture(floatAsByte);
-		}
-
-		/// <summary>
 		/// Constructor for our changequeue implementation
 		/// </summary>
 		/// <param name="pluginId">Id of the plugin instantiating the render change queue</param>
