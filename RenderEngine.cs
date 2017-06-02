@@ -448,28 +448,6 @@ namespace RhinoCyclesCore
 					}
 				}
 			}
-			else if (passtype == PassType.Combined && RenderBitmap is Bitmap rg)
-			{
-				for (var x = 0; x < (int)tw; x++)
-				{
-					for (var y = 0; y < (int)th; y++)
-					{
-						var i = y * width * stride + x * stride;
-						var r = pixels[i];
-						var g = pixels[i + 1];
-						var b = pixels[i + 2];
-						var a = 1.0f; // pixels[i + 3];
-
-						r = Math.Min(Math.Abs(r), 1.0f);
-						g = Math.Min(Math.Abs(g), 1.0f);
-						b = Math.Min(Math.Abs(b), 1.0f);
-						//a = Math.Min(Math.Abs(a), 1.0f);
-
-						var c4_f = new Color4f(r, g, b, a);
-						rg.SetPixel((int)tx+x, height - ((int)ty+y), c4_f.AsSystemColor());
-					}
-				}
-			}
 		}
 
 		/// <summary>
