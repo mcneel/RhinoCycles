@@ -429,7 +429,7 @@ namespace RhinoCyclesCore
 								var c4_f = new Color4f(r, g, b, a);
 
 								var cox = (int)tx + x;
-								var coy = height - ((int)ty + y);
+								var coy = height - ((int)ty + y + 1);
 								if (channel != null && passtype == PassType.Combined)
 								{
 									channel.SetValue(cox, coy, c4_f);
