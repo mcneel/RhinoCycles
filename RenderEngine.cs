@@ -407,11 +407,6 @@ namespace RhinoCyclesCore
 					depth = RenderWindow.OpenChannel(RenderWindow.StandardChannels.DistanceFromCamera)
 					)
 				{
-					sdd.Assert(channel != null);
-					sdd.Assert(nx!= null);
-					sdd.Assert(ny!= null);
-					sdd.Assert(nz!= null);
-					sdd.Assert(depth!= null);
 					if (channel != null)
 					{
 						var rect = new Rectangle((int)tx, (int)ty, (int)tw, (int)th);
