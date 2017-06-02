@@ -20,6 +20,7 @@ using ccl;
 using Rhino.Render;
 using RhinoCyclesCore.Core;
 using sdd = System.Diagnostics.Debug;
+using System.Threading;
 
 namespace RhinoCyclesCore.RenderEngines
 {
@@ -89,9 +90,9 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(256, 256),
+				TileSize = new Size(RcCore.It.EngineSettings.TileX, RcCore.It.EngineSettings.TileY),
 				TileOrder = TileOrder.Center,
-				Threads = (uint)(renderDevice.IsCuda ? 0 : RcCore.It.EngineSettings.Threads),
+				Threads = 1,
 				ShadingSystem = ShadingSystem.SVM,
 				Background = true,
 				DisplayBufferLinear = true,
@@ -113,20 +114,35 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Database.Flush();
 			cyclesEngine.UploadData();
 
+			cyclesEngine.Session.PrepareRun();
+
 			// lets first reset session
-			cyclesEngine.Session.Reset((uint)size.Width, (uint)size.Height, (uint)samples);
+			cyclesEngine.Session.Reset(size.Width, size.Height, samples);
 			// then reset scene
 			cyclesEngine.Session.Scene.Reset();
 			// and actually start
-			// we're rendering again
-			cyclesEngine.Session.Start();
-			// ... aaaaand we wait
-			cyclesEngine.Session.Wait();
+			bool stillrendering = true;
+			var throttle = Math.Max(0, RcCore.It.EngineSettings.ThrottleMs);
+			while (stillrendering)
+			{
+				if (cyclesEngine.IsRendering)
+				{
+					stillrendering = cyclesEngine.Session.Sample();
+					Thread.Sleep(throttle);
+				}
+				else
+				{
+					break;
+				}
+				if (cyclesEngine.IsStopped) break;
+				if (cyclesEngine.CancelRender) break;
+			}
 
-			cyclesEngine.CancelRender = true;
-
+			cyclesEngine.Session.EndRun();
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Session.Destroy();
+
+			cyclesEngine.Database?.Dispose();
 		}
 
 	}
