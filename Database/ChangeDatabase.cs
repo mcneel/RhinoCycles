@@ -448,6 +448,7 @@ namespace RhinoCyclesCore.Database
 				else
 					ClippingPlanes.Remove(cp.Id);
 			}
+			sceneBoundingBoxDirty = true;
 			CalculateClippingObjects();
 		}
 
