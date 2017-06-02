@@ -50,7 +50,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public readonly object DisplayLock = new object();
 
-		protected CreatePreviewEventArgs PreviewEventArgs;
+		protected CreatePreviewEventArgs PreviewEventArgs { get; set; }
 
 		protected Guid PluginId = Guid.Empty;
 
