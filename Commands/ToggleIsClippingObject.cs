@@ -24,7 +24,6 @@ namespace RhinoCycles.Commands
 {
 
 	[System.Runtime.InteropServices.Guid("6e775e71-1006-463b-83e2-627a137f347d")]
-	[CommandStyle(Style.Hidden)]
 	public class ToggleIsClippingObject : Command
 	{
 		static ToggleIsClippingObject _instance;
