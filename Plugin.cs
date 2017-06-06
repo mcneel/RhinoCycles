@@ -25,10 +25,8 @@ using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.PlugIns;
 using Rhino.Render;
-using Rhino.UI;
 using RhinoCycles.Settings;
 using RhinoCyclesCore.Core;
-using RhinoWindows.Forms;
 using ObjectPropertiesPage = Rhino.UI.ObjectPropertiesPage;
 using RhinoCyclesCore;
 
