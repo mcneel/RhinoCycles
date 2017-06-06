@@ -112,11 +112,6 @@
     <Compile Include="RenderPipeline.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\Source\Eto.Wpf\Eto.Wpf - net45.csproj">
-      <Project>{63137fa0-ca55-11e3-9c1a-0800200c9a66}</Project>
-      <Name>Eto.Wpf - net45</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\Source\Eto\Eto - pcl.csproj">
       <Project>{35ef0a4e-2a1a-492c-8bed-106774ea09f2}</Project>
       <Name>Eto - pcl</Name>
