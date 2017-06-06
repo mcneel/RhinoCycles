@@ -6,7 +6,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7DB01F36-A1C2-49A0-8326-FF09FFC6ADF3}</ProjectGuid>
-    <OutputType>library</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RhinoCycles</RootNamespace>
     <AssemblyName>RhinoCycles</AssemblyName>
@@ -108,9 +108,14 @@
       <Name>RhinoCommon</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
+    <ProjectReference Condition="'$(OS)' == 'Windows_NT'" Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
       <Project>{78e5c303-7764-446e-baba-fdb410bd98e1}</Project>
       <Name>RhinoWindows</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Condition="'$(OS)' == 'Unix'" Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj">
+      <Project>{89edadb3-3d68-4c7e-85dc-62b95972e226}</Project>
+      <Name>RhinoMac</Name>
       <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\cycles\csycles\csycles.csproj">
@@ -165,7 +170,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>Move /Y "$(TargetPath)" "$(TargetDir)$(ProjectName).rhp"
+    <PostBuildEvent Condition="'$(OS)' == 'Windows_NT'">Move /Y "$(TargetPath)" "$(TargetDir)$(ProjectName).rhp"
 MkDir "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses"
 Copy /Y /A "$(ProjectDir)..\cycles\cycles\src\doc\license\*.txt" "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses"
 Copy /Y /A "$(ProjectDir)..\cycles\pthreads\COPYING" /A "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\pthreads.txt"
