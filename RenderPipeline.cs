@@ -34,11 +34,11 @@ namespace RhinoCycles
 		/// </summary>
 		readonly private ModalRenderEngine cyclesEngine;
 
-		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, ModalRenderEngine aRC)
+		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, ref AsyncRenderContext aRC)
 			: base(doc, mode, plugin, RenderSize(doc),
-					"RhinoCycles", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
+					"RhinoCycles", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false, ref aRC)
 		{
-			cyclesEngine = aRC;
+			cyclesEngine = (ModalRenderEngine)aRC;
 		}
 
 		public bool Cancel()

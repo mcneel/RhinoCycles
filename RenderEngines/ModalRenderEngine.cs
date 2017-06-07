@@ -156,6 +156,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 			cyclesEngine.Database.Flush();
 			cyclesEngine.UploadData();
+			cyclesEngine.Database.Dispose();
+			cyclesEngine.Database = null;
 
 			cyclesEngine.Session.PrepareRun();
 
@@ -193,8 +195,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Session.Destroy();
-
-			cyclesEngine.Database?.Dispose();
 
 			// set final status string and progress to 1.0f to signal completed render
 			cyclesEngine.SetProgress(rw,
