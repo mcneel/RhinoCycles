@@ -43,13 +43,6 @@ namespace RhinoCyclesCore
 	/// </summary>
 	public partial class RenderEngine : AsyncRenderContext
 	{
-		private readonly object _flushlock = new object();
-
-		/// <summary>
-		/// Lock object to protect buffer access.
-		/// </summary>
-		public readonly object DisplayLock = new object();
-
 		protected CreatePreviewEventArgs PreviewEventArgs { get; set; }
 
 		protected Guid PluginId = Guid.Empty;
@@ -130,18 +123,12 @@ namespace RhinoCyclesCore
 			get
 			{
 				bool flush;
-				lock (_flushlock)
-				{
-					flush = m_flush;
-				}
+				flush = m_flush;
 				return flush;
 			}
 			set
 			{
-				lock (_flushlock)
-				{
-					m_flush = value;
-				}
+				m_flush = value;
 			}
 		}
 
@@ -175,27 +162,23 @@ namespace RhinoCyclesCore
 
 			// We've been told we need to flush, so cancel current render
 			//State = State.Halted;
-			// acquire lock while flushing queue and uploading any data
-			lock (_flushlock)
+			// flush the queue
+			Database.Flush();
+
+			// if we've got actually changes we care about
+			// change state to signal need for uploading
+			if (HasSceneChanges())
 			{
-				// flush the queue
-				Database.Flush();
-
-				// if we've got actually changes we care about
-				// change state to signal need for uploading
-				if (HasSceneChanges())
-				{
-					Session?.Cancel("Scene changes detected.\n");
-					//if (!m_interactive) Session?.Cancel("Scene changes detected.\n");
-					//else {
-					//	// TODO: ensure ViewportRenderEngine doesn't set pause ever. Session?.SetPause(true);
-					//}
-					State = State.Uploading;
-				}
-
-				// reset flush flag directly, since we already have lock.
-				m_flush = false;
+				Session?.Cancel("Scene changes detected.\n");
+				//if (!m_interactive) Session?.Cancel("Scene changes detected.\n");
+				//else {
+				//	// TODO: ensure ViewportRenderEngine doesn't set pause ever. Session?.SetPause(true);
+				//}
+				State = State.Uploading;
 			}
+
+			// reset flush flag directly, since we already have lock.
+			m_flush = false;
 		}
 
 		protected readonly uint m_doc_serialnumber;
@@ -499,12 +482,9 @@ namespace RhinoCyclesCore
 			base.StopRendering();
 			if (RenderThread == null) return;
 
-			lock (DisplayLock)
-			{
-				System.Diagnostics.Debug.Assert(Session != null);
+			System.Diagnostics.Debug.Assert(Session != null);
 
-				StopTheRenderer();
-			}
+			StopTheRenderer();
 		}
 
 		public void Pause()
