@@ -107,6 +107,7 @@ namespace RhinoCyclesCore
 			CPUSplitKernel = CPUSplitKernel;
 			OpenClSingleProgram = OpenClSingleProgram;
 			FullHdrSkylight = FullHdrSkylight;
+			NoShadows = NoShadows;
 			SaveDebugImages = SaveDebugImages;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
 		}
@@ -193,6 +194,7 @@ namespace RhinoCyclesCore
 			CPUSplitKernel = CPUSplitKernelDefault;
 			OpenClSingleProgram = OpenClSingleProgramDefault;
 			FullHdrSkylight = FullHdrSkylightDefault;
+			NoShadows = NoShadowsDefault;
 			SaveDebugImages = SaveDebugImagesDefault;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorldDefault;
 		}
@@ -621,6 +623,19 @@ namespace RhinoCyclesCore
 				}
 			}
 		}
+		public bool NoShadowsDefault => false;
+		public bool NoShadows
+		{
+			get { return RcPlugIn.Settings.GetBool("NoShadows", NoShadowsDefault); }
+			set
+			{
+				var old = NoShadows;
+				if (old != value)
+				{
+					RcPlugIn.Settings.SetBool("NoShadows", value);
+				}
+			}
+		}
 
 		public int OpenClKernelTypeDefault => -1;
 		public int OpenClKernelType
@@ -692,6 +707,8 @@ namespace RhinoCyclesCore
 		bool CPUSplitKernel { get; set; }
 
 		bool FullHdrSkylight { get; set; }
+
+		bool NoShadows { get; set; }
 	}
 
 	public interface IViewportSettings

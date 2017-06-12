@@ -49,6 +49,7 @@
     </Compile>
     <Compile Include="Commands\ChangeSamples.cs" />
     <Compile Include="Commands\SelectMultiDevice.cs" />
+    <Compile Include="Commands\TestSetNoShadows.cs" />
     <Compile Include="Commands\ToggleIsClippingObject.cs" />
     <Compile Include="Commands\TestCreateMultiOpenCl.cs" />
     <Compile Include="Commands\TestCreateMultiCuda.cs" />

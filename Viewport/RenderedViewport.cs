@@ -388,6 +388,11 @@ namespace RhinoCycles.Viewport
 			_ResetRenderTime();
 		}
 
+		public void ToggleNoShadows()
+		{
+			_cycles?.ToggleNoShadows();
+		}
+
 		public void TriggerViewportSettingsChanged(IViewportSettings settings)
 		{
 			ViewportSettingsChanged?.Invoke(this, new ViewportSettingsChangedArgs(settings));

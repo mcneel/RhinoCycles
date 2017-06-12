@@ -78,7 +78,8 @@ namespace RhinoCyclesCore
 					SampleClampIndirect = RcCore.It.EngineSettings.SampleClampIndirect,
 					LightSamplingThreshold =  RcCore.It.EngineSettings.LightSamplingThreshold,
 					SamplingPattern = SamplingPattern.CMJ,
-					Seed = RcCore.It.EngineSettings.Seed
+					Seed = RcCore.It.EngineSettings.Seed,
+					NoShadows = RcCore.It.EngineSettings.NoShadows,
 				}
 				#endregion
 			};

@@ -239,6 +239,9 @@ namespace RhinoCyclesCore.RenderEngines
 					_needReset = false;
 					var size = RenderDimension;
 
+					Session.Scene.Integrator.NoShadows = RcCore.It.EngineSettings.NoShadows;
+					Session.Scene.Integrator.TagForUpdate();
+
 					// lets first reset session
 					Session.Reset(size.Width, size.Height, _samples);
 					// then reset scene
@@ -297,6 +300,11 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			_samples = samples;
 			Session?.SetSamples(samples);
+		}
+
+		public void ToggleNoShadows()
+		{
+			_needReset = true;
 		}
 	}
 
