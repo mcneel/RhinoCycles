@@ -1441,7 +1441,7 @@ namespace RhinoCyclesCore.Database
 			if (_environmentDatabase.BackgroundHasChanged)
 			{
 				Rhino.RhinoApp.OutputDebugString("Uploading background changes\n");
-				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader, out RhinoShader curbg);
+				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader);
 			}
 		}
 
