@@ -24,10 +24,14 @@ namespace RhinoCyclesCore.Core
 	{
 		#region helper functions to get relative path between two paths
 		private const int FileAttributeDirectory = 0x10;
+
+		[DllImport("shlwapi.dll", SetLastError = true)]
+		private static extern int PathRelativePathTo(StringBuilder pszPath,
+				string pszFrom, int dwAttrFrom, string pszTo, int dwAttrTo);
 		public static string GetRelativePath(string fromPath, string toPath)
 		{
 
-			var path = new StringBuilder();
+			var path = new StringBuilder(1024);
 			if (PathRelativePathTo(path,
 				fromPath, FileAttributeDirectory,
 				toPath, FileAttributeDirectory) == 0)
@@ -38,9 +42,21 @@ namespace RhinoCyclesCore.Core
 		}
 
 		[DllImport("shlwapi.dll", SetLastError = true)]
-		private static extern int PathRelativePathTo(StringBuilder pszPath,
-				string pszFrom, int dwAttrFrom, string pszTo, int dwAttrTo);
+		private static extern int PathCanonicalize(StringBuilder pszDest,
+				string pszSrc);
+		public static string GetCanonicalizedPath(string original)
+		{
+			var path = new StringBuilder(1024);
+			if (PathCanonicalize(path, original) == 0)
+			{
+				throw new ArgumentException($"Invalid original path: '{original}'");
+			}
+			return path.ToString();
+		}
+
 		#endregion
+
+
 
 
 		public void TriggerInitialisationCompleted(object sender)
