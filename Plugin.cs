@@ -136,8 +136,6 @@ namespace RhinoCycles
 			{
 				if (!RcCore.It.Initialised)
 				{
-					CSycles.debug_set_opencl_kernel(1);
-					CSycles.debug_set_opencl_single_program(true);
 					CSycles.initialise();
 					RcCore.It.Initialised = true;
 					RcCore.It.TriggerInitialisationCompleted(this);
