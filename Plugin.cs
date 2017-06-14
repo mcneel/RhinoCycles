@@ -61,8 +61,9 @@ namespace RhinoCycles
 			kernelPath = RcCore.GetRelativePath(appPath, kernelPath);
 			RcCore.It.KernelPathRelative = kernelPath;
 
-			var dataPath = RhinoApp.GetDataDirectory(true, true);
-			var userPath = Path.Combine(dataPath, "RhinoCycles", "data");
+			var dataPath = SettingsDirectory;
+			var userPath = Path.Combine(dataPath, "..", "data");
+			userPath = RcCore.GetCanonicalizedPath(userPath);
 
 			RcCore.It.DataUserPath = userPath;
 
