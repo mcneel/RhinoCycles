@@ -68,7 +68,7 @@ namespace RhinoCycles
 
 			CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
 
-			if (RhinoApp.RunningOnVMWare() || RcCore.It.EngineSettings.OpenClDeviceType == 0)
+			if (RhinoApp.RunningOnVMWare())
 			{
 				CSycles.debug_set_opencl_device_type(0);
 			}
