@@ -410,6 +410,7 @@ namespace RhinoCyclesCore
 			SimplePlastic,
 			SimpleMetal,
 			Emissive,
+			VertexColor,
 
 			SimpleNoiseEnvironment,
 			XmlEnvironment,

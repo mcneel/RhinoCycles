@@ -46,5 +46,10 @@ namespace RhinoCyclesCore
 		/// Float array with vertex normal data. Stride 3.
 		/// </summary>
 		public float[] VertexNormals { get; set; }
+
+		/// <summary>
+		/// Float array with vertex color data or null. Stride 3.
+		/// </summary>
+		public float[] VertexColors { get; set; }
 	}
 }

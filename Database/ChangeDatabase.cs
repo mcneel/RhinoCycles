@@ -37,6 +37,7 @@ using Rhino.Geometry;
 using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Shaders;
+using RhinoCyclesCore.ExtensionMethods;
 
 namespace RhinoCyclesCore.Database
 {
@@ -352,6 +353,12 @@ namespace RhinoCyclesCore.Database
 			{
 				var uvs = cyclesMesh.Uvs;
 				me.SetUvs(ref uvs);
+			}
+			// set vertex colors
+			if(cyclesMesh.VertexColors != null)
+			{
+				var vcs = cyclesMesh.VertexColors;
+				me.SetVertexColors(ref vcs);
 			}
 			// and finally tag for rebuilding
 			me.TagRebuild();
@@ -805,6 +812,23 @@ namespace RhinoCyclesCore.Database
 			// flattens to a float array.
 			var tc = meshdata.TextureCoordinates;
 			var rhuv = tc.ToFloatArray();
+			float[] rhvc = meshdata.VertexColors.ToFloatArray(meshdata.Vertices.Count);
+			float[] cmvc = rhvc != null ? new float[findices.Length * 3] : null;
+			if (cmvc != null)
+			{
+				for (var fi = 0; fi < findices.Length; fi++)
+				{
+					var fioffs = fi * 3;
+					var findex = findices[fi];
+					var findex2 = findex * 3;
+					var rhvcit = rhvc[findex2];
+					var rhvcit1 = rhvc[findex2 + 1];
+					var rhvcit2 = rhvc[findex2 + 2];
+					cmvc[fioffs] = rhvcit;
+					cmvc[fioffs + 1] = rhvcit1;
+					cmvc[fioffs + 2] = rhvcit2;
+				}
+			}
 
 			var vn = meshdata.Normals;
 			var rhvn = vn.ToFloatArray();
@@ -840,6 +864,7 @@ namespace RhinoCyclesCore.Database
 				Faces = findices,
 				Uvs = cmuv,
 				VertexNormals = rhvn,
+				VertexColors = cmvc,
 				MatId = crc,
 			};
 			_objectDatabase.AddMesh(cyclesMesh);
