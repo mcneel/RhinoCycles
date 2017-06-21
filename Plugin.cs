@@ -45,6 +45,7 @@ namespace RhinoCycles
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			RhinoApp.Initialized += RhinoApp_Initialized;
+			RcCore.It.InitializeResourceManager();
 
 			// code got moved to separate DLL so use that to register from.
 			var rccoreass = typeof(RcCore).Assembly;

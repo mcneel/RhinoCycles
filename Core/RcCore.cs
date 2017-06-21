@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -58,6 +59,10 @@ namespace RhinoCyclesCore.Core
 
 
 
+		public void InitializeResourceManager()
+		{
+			Properties.Resources.Culture = CultureInfo.InvariantCulture;
+		}
 
 		public void TriggerInitialisationCompleted(object sender)
 		{

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace RhinoCycles.Properties {
+namespace RhinoCyclesCore.Core.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace RhinoCycles.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("RhinoCycles.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("RhinoCyclesCore.Core.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -63,39 +63,9 @@ namespace RhinoCycles.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon CPU {
+        internal static System.Drawing.Icon Cycles_material {
             get {
-                object obj = ResourceManager.GetObject("CPU", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon CUDA {
-            get {
-                object obj = ResourceManager.GetObject("CUDA", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon Cycles_viewport_properties {
-            get {
-                object obj = ResourceManager.GetObject("Cycles_viewport_properties", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon OpenCL {
-            get {
-                object obj = ResourceManager.GetObject("OpenCL", resourceCulture);
+                object obj = ResourceManager.GetObject("Cycles_material", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }

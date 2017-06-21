@@ -27,7 +27,7 @@ namespace RhinoCyclesCore.Materials
 	{
 		public override bool Icon(Size size, out Bitmap bitmap)
 		{
-			var icon = new Icon(RhinoCycles.Properties.Resources.Cycles_material, size);
+			var icon = new Icon(Core.Properties.Resources.Cycles_material, size);
 			bitmap = icon.ToBitmap();
 			return bitmap!=null;
 		}

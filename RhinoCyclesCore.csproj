@@ -48,6 +48,11 @@
       <Link>Properties\version.cs</Link>
     </Compile>
     <Compile Include="BitmapImage.cs" />
+    <Compile Include="Core\Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Database\RenderSettingsDatabase.cs" />
     <Compile Include="EngineSettings.cs" />
     <Compile Include="Environments\XmlEnvironment.cs" />
@@ -90,11 +95,6 @@
     <Compile Include="Materials\TranslucentMaterial.cs" />
     <Compile Include="RhinoCyclesData.cs" />
     <Compile Include="Measurement.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="RenderEngine.cs" />
     <Compile Include="RenderEngine.UploadData.cs" />
     <Compile Include="RenderEngine.Settings.cs" />
@@ -111,8 +111,13 @@
     <Compile Include="RenderEngines\PreviewRenderEngine.cs" />
     <Compile Include="RenderEngines\ViewportRenderEngine.cs" />
     <Compile Include="RenderPipeline.cs" />
+    <EmbeddedResource Include="Core\Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <AppDesigner Include="Core\Properties\" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
     <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\Source\Eto\Eto - pcl.csproj">
       <Project>{35ef0a4e-2a1a-492c-8bed-106774ea09f2}</Project>
       <Name>Eto - pcl</Name>
@@ -128,14 +133,9 @@
       <Name>RhinoCommon</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Condition="'$(OS)' == 'Windows_NT'" Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
+    <ProjectReference Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
       <Project>{78e5c303-7764-446e-baba-fdb410bd98e1}</Project>
       <Name>RhinoWindows</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Condition="'$(OS)' == 'Unix'" Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj">
-      <Project>{89edadb3-3d68-4c7e-85dc-62b95972e226}</Project>
-      <Name>RhinoMac</Name>
       <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\cycles\csycles\csycles.csproj">
@@ -143,26 +143,34 @@
       <Name>csycles</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+  <ItemGroup Condition="'$(OS)' == 'Unix'">
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\Source\Eto\Eto - pcl.csproj">
+      <Project>{35ef0a4e-2a1a-492c-8bed-106774ea09f2}</Project>
+      <Name>Eto - pcl</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj">
+      <Project>{3d7c4cfa-38e3-46ed-a689-862a34f6656c}</Project>
+      <Name>Rhino.UI</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj">
+      <Project>{ed38373e-290c-4bde-acba-1601484e582a}</Project>
+      <Name>RhinoCommon</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\cycles\csycles\csycles.csproj">
+      <Project>{36396655-e087-4c00-990b-ce44f08e4fb2}</Project>
+      <Name>csycles</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj">
+      <Project>{89edadb3-3d68-4c7e-85dc-62b95972e226}</Project>
+      <Name>RhinoMac</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Icons\Cycles_material.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Icons\CPU.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Icons\CUDA.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Icons\OpenCL.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Icons\Cycles_viewport_properties.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

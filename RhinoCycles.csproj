@@ -169,6 +169,18 @@
       <Link>Localization\zh-twRhinoCycles.xml</Link>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\CPU.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\CUDA.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\OpenCL.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\Cycles_viewport_properties.ico" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT'">Move /Y "$(TargetPath)" "$(TargetDir)$(ProjectName).rhp"
