@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using Rhino.Render;
+using Rhino.DocObjects;
 
 namespace RhinoCyclesCore.Database
 {
@@ -25,12 +26,12 @@ namespace RhinoCyclesCore.Database
 	{
 		private static int _runningSerial;
 		private readonly int _serial;
-		public FocalBlur(RenderSettings rs)
+		public FocalBlur(ViewInfo vi)
 		{
 			_serial = _runningSerial++;
-			UseFocalBlur = rs.FocalBlurMode == RenderSettings.FocalBlurModes.Manual;
-			FocalDistance = (float)rs.FocalBlurDistance;
-			FocalAperture = (float)rs.FocalBlurAperture;
+			UseFocalBlur = vi.FocalBlurMode == ViewInfoFocalBlurModes.Manual;
+			FocalDistance = (float)vi.FocalBlurDistance;
+			FocalAperture = (float)vi.FocalBlurAperture;
 
 			if (!UseFocalBlur)
 			{
@@ -118,7 +119,7 @@ namespace RhinoCyclesCore.Database
 		private FocalBlur _focalBlur = new FocalBlur();
 		private bool _focalBlurModified;
 
-		public bool HandleBlur(RenderSettings rs)
+		public bool HandleBlur(ViewInfo rs)
 		{
 			var fb = new FocalBlur(rs);
 			var rc = false;

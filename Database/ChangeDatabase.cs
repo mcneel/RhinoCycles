@@ -649,6 +649,9 @@ namespace RhinoCyclesCore.Database
 		/// <param name="viewInfo"></param>
 		protected override void ApplyViewChange(ViewInfo viewInfo)
 		{
+			var fb = _cameraDatabase.HandleBlur(viewInfo);
+			if (_focalBlurInitialized && fb) return;
+			_focalBlurInitialized = true;
 			SceneBoundingBox = GetQueueSceneBoundingBox();
 			if (!IsPreview && !viewInfo.Viewport.Id.Equals(ViewId)) return;
 
@@ -1553,9 +1556,6 @@ namespace RhinoCyclesCore.Database
 		{
 			if (rs != null)
 			{
-				var fb = _cameraDatabase.HandleBlur(rs);
-				if (_focalBlurInitialized && fb) return;
-				_focalBlurInitialized = true;
 				_environmentDatabase.SetGamma(PreProcessGamma);
 				_environmentDatabase.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
 				if (rs.BackgroundStyle == BackgroundStyle.Environment)
