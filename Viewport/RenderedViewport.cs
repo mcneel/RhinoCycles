@@ -184,6 +184,7 @@ namespace RhinoCycles.Viewport
 			_started = true;
 			if (forCapture)
 			{
+				SetUseDrawOpenGl(false);
 				ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo);
 				_cycles = null;
 				_modal = mre;
