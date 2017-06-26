@@ -153,7 +153,7 @@ namespace RhinoCycles.Viewport
 		{
 		}
 
-		public override bool UseFastDraw() { return true; }
+		public override bool UseFastDraw() { return _cycles!=null && _modal==null; }
 
 		private Thread _modalThread;
 		private Thread _sw;
