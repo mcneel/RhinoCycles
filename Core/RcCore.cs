@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using Rhino;
 using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -58,6 +59,10 @@ namespace RhinoCyclesCore.Core
 		#endregion
 
 
+		public bool CanUseDrawOpenGl()
+		{
+			return !RhinoApp.RunningInRdp() && EngineSettings.UseDrawOpenGl;
+		}
 
 		public void InitializeResourceManager()
 		{

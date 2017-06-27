@@ -42,7 +42,7 @@ namespace RhinoCyclesCore.RenderEngines
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = null;
 			m_write_render_tile_callback = null;
-			if(RhinoApp.RunningInRdp())
+			if(!RcCore.It.CanUseDrawOpenGl())
 				m_write_render_tile_callback = WriteRenderTileCallback;
 			m_test_cancel_callback = null;
 			m_display_update_callback = null;
@@ -198,11 +198,11 @@ namespace RhinoCyclesCore.RenderEngines
 				ShadingSystem = ShadingSystem.SVM,
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
-				Background = RhinoApp.RunningInRdp(),
+				Background = !RcCore.It.CanUseDrawOpenGl(),
 				ProgressiveRefine = true,
 				Progressive = true,
 			};
-			if(!RhinoApp.RunningInRdp()) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
+			if(RcCore.It.CanUseDrawOpenGl()) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
 			#endregion
 
 			if (cyclesEngine.CancelRender) return;

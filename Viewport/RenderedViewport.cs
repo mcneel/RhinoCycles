@@ -42,7 +42,7 @@ namespace RhinoCycles.Viewport
 
 		public override Guid GUID => new Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181");
 
-		public override bool DrawOpenGl => !RhinoApp.RunningInRdp();
+		public override bool DrawOpenGl => RcCore.It.CanUseDrawOpenGl();
 
 		public override Type RealtimeDisplayModeType => typeof(RenderedViewport);
 
@@ -153,7 +153,7 @@ namespace RhinoCycles.Viewport
 		{
 		}
 
-		public override bool UseFastDraw() { return _cycles!=null && _modal==null && !RhinoApp.RunningInRdp(); }
+		public override bool UseFastDraw() { return _cycles!=null && _modal==null && RcCore.It.CanUseDrawOpenGl(); }
 
 		private Thread _modalThread;
 		private Thread _sw;
