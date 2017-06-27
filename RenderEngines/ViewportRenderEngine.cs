@@ -42,6 +42,8 @@ namespace RhinoCyclesCore.RenderEngines
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = null;
 			m_write_render_tile_callback = null;
+			if(RhinoApp.RunningInRdp())
+				m_write_render_tile_callback = WriteRenderTileCallback;
 			m_test_cancel_callback = null;
 			m_display_update_callback = null;
 			m_logger_callback = ViewportLoggerCallback;
@@ -194,13 +196,13 @@ namespace RhinoCyclesCore.RenderEngines
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsCpu ? RcCore.It.EngineSettings.Threads : 0),
 				ShadingSystem = ShadingSystem.SVM,
-				StartResolution = RcCore.It.EngineSettings.StartResolution,
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
-				Background = false,
+				Background = RhinoApp.RunningInRdp(),
 				ProgressiveRefine = true,
 				Progressive = true,
 			};
+			if(!RhinoApp.RunningInRdp()) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
 			#endregion
 
 			if (cyclesEngine.CancelRender) return;
