@@ -4,6 +4,21 @@ using Rhino.Geometry.Collections;
 
 namespace RhinoCyclesCore.ExtensionMethods
 {
+	public static class NumericExtensions
+	{
+		public static bool FuzzyEquals(this double orig, double test)
+		{
+			var rc = false;
+			rc = Math.Abs(orig - test) < 0.000001;
+			return rc;
+		}
+		public static bool FuzzyEquals(this float orig, float test)
+		{
+			var rc = false;
+			rc = Math.Abs(orig - test) < 0.000001;
+			return rc;
+		}
+	}
 	public static class SizeExtensions
 	{
 		public static void Deconstruct(this Size size, out int x, out int y)
