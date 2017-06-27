@@ -102,6 +102,7 @@ namespace RhinoCyclesCore
 
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverride;
+			UseDrawOpenGl = UseDrawOpenGl;
 			OpenClDeviceType = OpenClDeviceType;
 			OpenClKernelType = OpenClKernelType;
 			CPUSplitKernel = CPUSplitKernel;
@@ -189,6 +190,7 @@ namespace RhinoCyclesCore
 
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverrideDefault;
+			UseDrawOpenGl = UseDrawOpenGlDefault;
 			OpenClDeviceType = OpenClDeviceTypeDefault;
 			OpenClKernelType = OpenClKernelTypeDefault;
 			CPUSplitKernel = CPUSplitKernelDefault;
@@ -580,6 +582,18 @@ namespace RhinoCyclesCore
 				}
 			}
 		}
+		public bool UseDrawOpenGlDefault => true;
+		public virtual bool UseDrawOpenGl
+		{
+			get { return RcPlugIn.Settings.GetBool("UseDrawOpenGl", UseDrawOpenGlDefault); }
+			set {
+				var old = UseDrawOpenGl;
+				if (old != value) {
+					RcPlugIn.Settings.SetBool("UseDrawOpenGl", value);
+					TriggerApplicationSettingsChanged();
+				}
+			}
+		}
 
 		public int OpenClDeviceTypeDefault => 0;
 		public int OpenClDeviceType
@@ -699,6 +713,8 @@ namespace RhinoCyclesCore
 	public interface IApplicationSettings
 	{
 		bool AllowViewportSettingsOverride { get; set; }
+
+		bool UseDrawOpenGl { get; set; }
 
 		int OpenClDeviceType { get; set; }
 		bool OpenClSingleProgram { get; set; }
