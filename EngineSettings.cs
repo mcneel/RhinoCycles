@@ -573,11 +573,11 @@ namespace RhinoCyclesCore
 		public bool AllowViewportSettingsOverrideDefault => false;
 		public virtual bool AllowViewportSettingsOverride
 		{
-			get { return RcPlugIn.Settings.GetBool("allowviewportsettingsoverride", AllowViewportSettingsOverrideDefault); }
+			get { return RcPlugIn.Settings.GetBool("AllowViewportSettingsOverride", AllowViewportSettingsOverrideDefault); }
 			set {
 				var old = AllowViewportSettingsOverride;
 				if (old != value) {
-					RcPlugIn.Settings.SetBool("allowviewportsettingsoverride", value);
+					RcPlugIn.Settings.SetBool("AllowViewportSettingsOverride", value);
 					TriggerApplicationSettingsChanged();
 				}
 			}
