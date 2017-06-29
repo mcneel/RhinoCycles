@@ -186,16 +186,6 @@ namespace RhinoCyclesCore
 
 		public RhinoDoc Doc => RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
 
-		private readonly ViewportInfo m_vp;
-		public ViewportInfo ViewportInfo
-		{
-			get
-			{
-				if (m_vp != null) return m_vp;
-				return m_view.Viewport;
-			}
-		}
-
 		/// <summary>
 		/// Render engine implementations that need to keep track of views
 		/// for instance to signal when a frame is ready for that particular
@@ -236,7 +226,6 @@ namespace RhinoCyclesCore
 			PluginId = pluginId;
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			View = view;
-			m_vp = vp;
 			m_interactive = interactive;
 			Database = new ChangeDatabase(PluginId, this, m_doc_serialnumber, View, !m_interactive);
 
