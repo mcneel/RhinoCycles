@@ -182,7 +182,6 @@ namespace RhinoCyclesCore
 		}
 
 		protected readonly uint m_doc_serialnumber;
-		protected readonly ViewInfo m_view;
 		private readonly bool m_interactive;
 
 		public RhinoDoc Doc => RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
@@ -236,10 +235,10 @@ namespace RhinoCyclesCore
 			SetKernelFlags();
 			PluginId = pluginId;
 			m_doc_serialnumber = docRuntimeSerialnumber;
-			m_view = view;
+			View = view;
 			m_vp = vp;
 			m_interactive = interactive;
-			Database = new ChangeDatabase(PluginId, this, m_doc_serialnumber, m_view, !m_interactive);
+			Database = new ChangeDatabase(PluginId, this, m_doc_serialnumber, View, !m_interactive);
 
 			RegisterEventHandler();
 		}
