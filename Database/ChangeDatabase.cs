@@ -653,7 +653,7 @@ namespace RhinoCyclesCore.Database
 			if (_focalBlurInitialized && fb) return;
 			_focalBlurInitialized = true;
 			SceneBoundingBox = GetQueueSceneBoundingBox();
-			if (!IsPreview && !viewInfo.Viewport.Id.Equals(ViewId)) return;
+			if (!viewInfo.Viewport.Id.Equals(ViewId)) return;
 
 			if (_wallpaperInitialized)
 			{
