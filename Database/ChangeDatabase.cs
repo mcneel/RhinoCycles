@@ -450,7 +450,7 @@ namespace RhinoCyclesCore.Database
 			}
 			foreach (var cp in addedOrModified)
 			{
-				if (cp.IsEnabled)
+				if (cp.IsEnabled && cp.ViewIds.Contains(ViewId))
 					ClippingPlanes[cp.Id] = new Plane(cp.Plane);
 				else
 					ClippingPlanes.Remove(cp.Id);
