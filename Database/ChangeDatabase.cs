@@ -463,11 +463,56 @@ namespace RhinoCyclesCore.Database
 		{
 			if (sceneBoundingBoxDirty)
 			{
+				var sbb = SceneBoundingBox;
+				sbb.Inflate(0.1);
+				var sbbr = sbb.ToBrep();
+				sbb.Inflate(0.1);
+				var sbbbrep = sbb.ToBrep();
+				var sbbl = new List<Brep>(1)
+					{
+						sbbr
+					};
+
+				List<Plane> planes = new List<Plane>(10);
+				foreach(var pa in ClippingPlanes.Values)
+				{
+					int i = 0;
+					int dropab = 0; // -1: drop a, 0: drop neither, 1: drop b
+					foreach (var pb in planes)
+					{
+						if (pb.Normal.IsParallelTo(pa.Normal, Math.PI / 720.0) == 1)
+						{
+							if (pb.DistanceTo(pa.Origin) < 0.0)
+							{
+								dropab = -1;
+							}
+							else
+							{
+								dropab = 1;
+							}
+							break;
+						}
+						i++;
+					}
+					if (dropab == -1) continue;
+					if (dropab == 1)
+					{
+						planes.RemoveAt(i);
+					}
+					planes.Add(pa);
+				}
+
 				var xext = new Interval(-cp_side_extension, cp_side_extension);
 				var zext = new Interval(0, cp_side_extension);
 				List<Brep> boxes = new List<Brep>(ClippingPlanes.Values.Count);
-				foreach (var p in ClippingPlanes.Values)
+				foreach (var p in planes)
 				{
+					/*Curve[] crv;
+					Point3d[] pts;
+					if(Rhino.Geometry.Intersect.Intersection.BrepPlane(sbbbrep, p, 0.01, out crv, out pts))
+					{
+						p.Origin.CompareTo(p.Origin);
+					}*/
 					var tp = new Plane(p);
 					tp.Flip();
 					Box b = new Box(tp, xext, xext, zext);
@@ -485,23 +530,16 @@ namespace RhinoCyclesCore.Database
 				}
 				else
 				{
-					var simplified = Brep.CreateBooleanUnion(boxes, 0.0001);
+					var simplified = Brep.CreateBooleanUnion(boxes, 0.05);
 
 					if (simplified == null) simplified = boxes.ToArray();
 
-					var sbb = SceneBoundingBox;
-					sbb.Inflate(0.5);
-					var sbbr = sbb.ToBrep();
-					var sbbl = new List<Brep>(1)
-						{
-							sbbr
-						};
-					var bounded = Brep.CreateBooleanIntersection(simplified, sbbl, 0.0001);
-					if (bounded == null) bounded = boxes.ToArray();
+					var bounded = Brep.CreateBooleanIntersection(simplified, sbbl, 0.05);
+					if (bounded == null) bounded = simplified;
 
 					var meshed =
 						(from s in bounded
-						 select Rhino.Geometry.Mesh.CreateFromBrep(s, mp)
+						 select Rhino.Geometry.Mesh.CreateFromBrep(s, mpclipping)
 						 .Aggregate(
 							 new Rhino.Geometry.Mesh(),
 							 (workingMesh, next) => { workingMesh.Append(next); return workingMesh; }
@@ -1384,6 +1422,7 @@ namespace RhinoCyclesCore.Database
 		}
 
 		private readonly MeshingParameters mp = new MeshingParameters(0.1) { MinimumEdgeLength = 0.001, GridMinCount = 16, JaggedSeams = false };
+		private readonly MeshingParameters mpclipping = new MeshingParameters(0.1) { MinimumEdgeLength = 0.1, GridMinCount = 8, JaggedSeams = false };
 
 		private void HandleLinearLightAddOrModify(uint lightmeshinstanceid, RGLight ld)
 		{
@@ -1415,6 +1454,7 @@ namespace RhinoCyclesCore.Database
 				CastShadow = false,
 				IsShadowCatcher = false,
 				CastNoShadow = ld.ShadowIntensity < 0.00001,
+				IgnoreCutout = true,
 			};
 
 			_objectShaderDatabase.RecordRenderHashRelation(matid, ldid, lightmeshinstanceid);
