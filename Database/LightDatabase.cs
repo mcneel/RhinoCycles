@@ -36,6 +36,18 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		private readonly Dictionary<Guid, CclLight> _rhCclLights = new Dictionary<Guid, CclLight>();
 
+		public readonly Guid BackgroundLightGuid = new Guid("e9bb5342-bbd7-466a-8cd1-96f471e57e65");
+
+		public LightDatabase()
+		{
+			/*CyclesLight bgLight = new CyclesLight()
+			{
+				UseMis = true,
+				Type = ccl.LightType.Background,
+			};
+			AddLight(bgLight);*/
+		}
+
 		/// <summary>
 		/// Return true if any changes have been recorded by the ChangeQueue
 		/// </summary>
