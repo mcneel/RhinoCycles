@@ -26,6 +26,15 @@ namespace RhinoCyclesCore
 	/// </summary>
 	public class CyclesLight
 	{
+		public CyclesLight()
+		{
+			Co = new float4(0.0f);
+			Dir = new float4(0.0f);
+			AxisU = new float4(0.0f);
+			AxisV = new float4(0.0f);
+			DiffuseColor = new float4(0.0f);
+			Id = Guid.Empty;
+		}
 		public Light.Event Event { get; set; }
 		public LightType Type { get; set; }
 		/// <summary>
