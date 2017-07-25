@@ -1258,15 +1258,11 @@ namespace RhinoCyclesCore.Database
 
 				switch (l.Type)
 				{
-					case LightType.Area:
-						break;
-					case LightType.Point:
-						break;
 					case LightType.Spot:
 						light.SpotAngle = l.SpotAngle;
 						light.SpotSmooth = l.SpotSmooth;
 						break;
-					case LightType.Distant:
+					default:
 						break;
 				}
 
