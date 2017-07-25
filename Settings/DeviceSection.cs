@@ -300,7 +300,7 @@ namespace RhinoCycles.Settings
 
 		private void InitializeComponents()
 		{
-			m_reset = new Button { Text = Localization.LocalizeString("Reset device", 38), ToolTip = Localization.LocalizeString("Reset the current selection to that corresponding\nto the application-level render device selection.", 21) };
+			m_reset = new Button { Text = Localization.LocalizeString("Reset device", 38), ToolTip = Localization.LocalizeString("Reset render device to the selection made in application settings.", 21) };
 			m_select = new Button { Text = Localization.LocalizeString("Activate device", 39), ToolTip = Localization.LocalizeString("Activate the selection as the new render device for this viewport.\nThis will restart the render session.", 40) };
 			m_useAppDevice = new Button { Text = Localization.LocalizeString("Use Application device", 41), ToolTip = Localization.LocalizeString("Use the render device as specified in the application settings.\nThis will restart the render session.", 42) };
 			m_tc = new TabControl();
