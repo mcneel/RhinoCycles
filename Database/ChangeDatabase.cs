@@ -1272,9 +1272,12 @@ namespace RhinoCyclesCore.Database
 
 				l.Gamma = PreProcessGamma;
 
-				var lgsh = _renderEngine.CreateSimpleEmissionShader(l);
-				_renderEngine.Client.Scene.AddShader(lgsh);
-				_shaderDatabase.Add(l, lgsh);
+				var lgsh = l.Type!=LightType.Background ? _renderEngine.CreateSimpleEmissionShader(l) : _renderEngine.Session.Scene.Background.Shader;
+				if (l.Type != LightType.Background)
+				{
+					_renderEngine.Client.Scene.AddShader(lgsh);
+					_shaderDatabase.Add(l, lgsh);
+				}
 
 				if (_renderEngine.CancelRender) return;
 
