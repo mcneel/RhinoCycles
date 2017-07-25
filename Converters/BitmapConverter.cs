@@ -22,6 +22,7 @@ using System.Globalization;
 using Rhino.Geometry;
 using Rhino.Render;
 using RhinoCyclesCore.Core;
+using RhinoCyclesCore.ExtensionMethods;
 using Transform = ccl.Transform;
 
 namespace RhinoCyclesCore.Converters
@@ -249,11 +250,22 @@ namespace RhinoCyclesCore.Converters
 			var rot = renderTexture.GetRotation();
 			var rep = renderTexture.GetRepeat();
 			var tra = renderTexture.GetOffset();
-			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude;multiplier;rdk-texture-repeat;rdk-texture-offset;rdk-texture-rotation");
+			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude;multiplier;rdk-texture-repeat;rdk-texture-offset;rdk-texture-rotation;rdk-texture-adjust-multiplier");
 			var azimob = renderTexture.GetParameter("azimuth");
 			var altob = renderTexture.GetParameter("altitude");
 			var multob = renderTexture.GetParameter("multiplier");
+			var multadjob = renderTexture.GetParameter("rdk-texture-adjust-multiplier");
 			var mult = 1.0f;
+			var multadj = 1.0f;
+
+			if(multob!=null)
+			{
+				mult = (float)Convert.ToDouble(multob);
+			}
+			if(multadjob!=null)
+			{
+				multadj = (float)Convert.ToDouble(multadjob);
+			}
 			if(azimob!=null && altob!=null) {
 				var azi = Convert.ToDouble(azimob);
 				var alti = Convert.ToDouble(altob);
@@ -275,11 +287,17 @@ namespace RhinoCyclesCore.Converters
 				rhinotfm.M22 = Rhino.RhinoMath.ToRadians(rot.Z);
 			}
 
-			if(multob!=null)
-			{
-				mult = (float)Convert.ToDouble(multob);
-			}
+			Transform t = new Transform(
+				rhinotfm.ToFloatArray(true)
+				);
 
+			var restore = !multadj.FuzzyEquals(1.0f);
+
+			if (restore)
+			{
+				renderTexture.BeginChange(RenderContent.ChangeContexts.Ignore);
+				renderTexture.SetParameter("rdk-texture-adjust-multiplier", 1.0);
+			}
 
 			using (var textureEvaluator = 
 				renderTexture.CreateEvaluator(
@@ -313,10 +331,6 @@ namespace RhinoCyclesCore.Converters
 					teximg.TexHeight = teximg.TexWidth = 1024;
 				}
 
-				Transform t = new Transform(
-					rhinotfm.ToFloatArray(true)
-					);
-
 				var isFloat = renderTexture.IsHdrCapable();
 
 				var isLinear = teximg.IsLinear = renderTexture.IsLinear();
@@ -337,9 +351,14 @@ namespace RhinoCyclesCore.Converters
 				}
 				teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
 
-				teximg.Transform = t;
-				teximg.Strength = mult;
 			}
+			if(restore)
+			{
+				renderTexture.SetParameter("rdk-texture-adjust-multiplier", (double)multadj);
+				renderTexture.EndChange();
+			}
+			teximg.Transform = t;
+			teximg.Strength = mult * multadj;
 		}
 
 		public static ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
