@@ -109,6 +109,7 @@ namespace RhinoCyclesCore
 			OpenClSingleProgram = OpenClSingleProgram;
 			FullHdrSkylight = FullHdrSkylight;
 			NoShadows = NoShadows;
+			RaytracedClippingPlanes = NoShadows;
 			SaveDebugImages = SaveDebugImages;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
 		}
@@ -197,6 +198,7 @@ namespace RhinoCyclesCore
 			OpenClSingleProgram = OpenClSingleProgramDefault;
 			FullHdrSkylight = FullHdrSkylightDefault;
 			NoShadows = NoShadowsDefault;
+			RaytracedClippingPlanes = RaytracedClippingPlanesDefault;
 			SaveDebugImages = SaveDebugImagesDefault;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorldDefault;
 		}
@@ -650,6 +652,19 @@ namespace RhinoCyclesCore
 				}
 			}
 		}
+		public bool RaytracedClippingPlanesDefault => false;
+		public bool RaytracedClippingPlanes
+		{
+			get { return RcPlugIn.Settings.GetBool("RaytracedClippingPlanes", RaytracedClippingPlanesDefault); }
+			set
+			{
+				var old = RaytracedClippingPlanes;
+				if (old != value)
+				{
+					RcPlugIn.Settings.SetBool("RaytracedClippingPlanes", value);
+				}
+			}
+		}
 
 		public int OpenClKernelTypeDefault => -1;
 		public int OpenClKernelType
@@ -725,6 +740,8 @@ namespace RhinoCyclesCore
 		bool FullHdrSkylight { get; set; }
 
 		bool NoShadows { get; set; }
+
+		bool RaytracedClippingPlanes { get; set; }
 	}
 
 	public interface IViewportSettings

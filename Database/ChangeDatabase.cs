@@ -100,6 +100,8 @@ namespace RhinoCyclesCore.Database
 
 		private readonly bool _modalRenderer;
 
+		public bool SupportClippingPlanes { get; set; }
+
 		/// <summary>
 		/// Constructor for our changequeue implementation
 		/// </summary>
@@ -443,6 +445,13 @@ namespace RhinoCyclesCore.Database
 
 		protected override void ApplyClippingPlaneChanges(Guid[] deleted, List<ClippingPlane> addedOrModified)
 		{
+			if (!SupportClippingPlanes)
+			{
+				sceneBoundingBoxDirty = true;
+				ClippingPlanes.Clear();
+				return;
+			}
+
 			SceneBoundingBox = GetQueueSceneBoundingBox();
 			foreach (var d in deleted)
 			{

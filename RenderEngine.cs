@@ -45,8 +45,6 @@ namespace RhinoCyclesCore
 	{
 		protected CreatePreviewEventArgs PreviewEventArgs { get; set; }
 
-		protected Guid PluginId = Guid.Empty;
-
 		/// <summary>
 		/// Reference to the client representation of this render engine instance.
 		/// </summary>
@@ -93,6 +91,8 @@ namespace RhinoCyclesCore
 		/// Set to true when the render session should be cancelled - used for preview job cancellation
 		/// </summary>
 		public bool CancelRender { get; set; }
+
+		public bool SupportClippingPlanes { get; set; }
 
 		public int RenderedSamples;
 
@@ -223,21 +223,26 @@ namespace RhinoCyclesCore
 		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, ViewInfo view, ViewportInfo vp, bool interactive)
 		{
 			SetKernelFlags();
-			PluginId = pluginId;
+			SupportClippingPlanes = RcCore.It.EngineSettings.RaytracedClippingPlanes;
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			View = view;
 			m_interactive = interactive;
-			Database = new ChangeDatabase(PluginId, this, m_doc_serialnumber, View, !m_interactive);
-
+			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, !m_interactive)
+			{
+				SupportClippingPlanes = SupportClippingPlanes
+			};
 			RegisterEventHandler();
 		}
 
 		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive)
 		{
 			SetKernelFlags();
+			SupportClippingPlanes = RcCore.It.EngineSettings.RaytracedClippingPlanes;
 			PreviewEventArgs = previewEventArgs;
-			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs);
-
+			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs)
+			{
+				SupportClippingPlanes = SupportClippingPlanes
+			};
 			RegisterEventHandler();
 		}
 
