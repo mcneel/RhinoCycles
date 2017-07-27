@@ -51,11 +51,11 @@
     <Compile Include="Commands\SelectMultiDevice.cs" />
     <Compile Include="Commands\TestToggleRaytracedClippingPlanes.cs" />
     <Compile Include="Commands\TestSetNoShadows.cs" />
-    <Compile Include="Commands\ToggleIsClippingObject.cs" />
+    <Compile Include="Commands\TestToggleIsClippingObject.cs" />
     <Compile Include="Commands\TestCreateMultiOpenCl.cs" />
     <Compile Include="Commands\TestCreateMultiCuda.cs" />
     <Compile Include="Commands\TestAddViewportSettings.cs" />
-    <Compile Include="Commands\ShowCyclesViewportSettingsPanelToggle.cs" />
+    <Compile Include="Commands\TestShowCyclesViewportSettingsPanelToggle.cs" />
     <Compile Include="Commands\TestAddUserData.cs" />
     <Compile Include="Commands\TestSetBumpDistance.cs" />
     <Compile Include="Commands\TestSaveDebugImagesToggle.cs" />
