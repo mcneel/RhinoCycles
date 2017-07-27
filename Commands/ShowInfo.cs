@@ -22,6 +22,7 @@ using Rhino.Commands;
 namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("CB9C1C0D-83F6-4157-BD57-F2AD6093FF73")]
+	[CommandStyle(Style.Hidden)]
 	public class ShowInfo : Command
 	{
 		static ShowInfo _instance;

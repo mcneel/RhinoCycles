@@ -21,18 +21,19 @@ using Rhino.Commands;
 namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("FF25C46B-45E6-4BC1-8F74-489A248241D9")]
-	public class ShowCyclesViewportSettingsPanelToggle : Command
+	[CommandStyle(Style.Hidden)]
+	public class TestShowCyclesViewportSettingsPanelToggle : Command
 	{
-		static ShowCyclesViewportSettingsPanelToggle _instance;
-		public ShowCyclesViewportSettingsPanelToggle()
+		static TestShowCyclesViewportSettingsPanelToggle _instance;
+		public TestShowCyclesViewportSettingsPanelToggle()
 		{
 			if(_instance==null) _instance = this;
 		}
 
 		///<summary>The only instance of the ShowCyclesViewportSettingsPanelToggle command.</summary>
-		public static ShowCyclesViewportSettingsPanelToggle Instance => _instance;
+		public static TestShowCyclesViewportSettingsPanelToggle Instance => _instance;
 
-		public override string EnglishName => "ShowCyclesViewportSettingsPanelToggle";
+		public override string EnglishName => "TestShowCyclesViewportSettingsPanelToggle";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{

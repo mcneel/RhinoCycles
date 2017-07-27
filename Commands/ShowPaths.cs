@@ -22,6 +22,7 @@ using Rhino.Commands;
 namespace RhinoCycles.Commands
 {
 	[Guid("DC871C42-C401-4CCA-A57C-83863A027476")]
+	[CommandStyle(Style.Hidden)]
 	public class ShowPaths : Command
 	{
 		static ShowPaths _instance;

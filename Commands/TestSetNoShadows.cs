@@ -24,6 +24,7 @@ namespace RhinoCycles.Commands
 {
 
 	[System.Runtime.InteropServices.Guid("43242d45-c432-4450-944e-ab590ba3ad8b")]
+	[CommandStyle(Style.Hidden)]
 	public class TestSetNoShadows : Command
 	{
 		static TestSetNoShadows _instance;

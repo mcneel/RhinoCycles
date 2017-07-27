@@ -24,18 +24,19 @@ namespace RhinoCycles.Commands
 {
 
 	[System.Runtime.InteropServices.Guid("6e775e71-1006-463b-83e2-627a137f347d")]
-	public class ToggleIsClippingObject : Command
+	[CommandStyle(Style.Hidden)]
+	public class TestToggleIsClippingObject : Command
 	{
-		static ToggleIsClippingObject _instance;
-		public ToggleIsClippingObject()
+		static TestToggleIsClippingObject _instance;
+		public TestToggleIsClippingObject()
 		{
 			if(_instance==null) _instance = this;
 		}
 
 		///<summary>The only instance of the SetBumpStrength command.</summary>
-		public static ToggleIsClippingObject Instance => _instance;
+		public static TestToggleIsClippingObject Instance => _instance;
 
-		public override string EnglishName => "ToggleIsClippingObject";
+		public override string EnglishName => "TestToggleIsClippingObject";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
