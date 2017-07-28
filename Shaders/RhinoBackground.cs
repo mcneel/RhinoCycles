@@ -83,23 +83,8 @@ namespace RhinoCyclesCore.Shaders
 		{
 		}
 
-		public RhinoBackground(Client client, CyclesBackground intermediate, Shader existing, string name) : base(client, intermediate)
+		public RhinoBackground(Client client, CyclesBackground intermediate, Shader existing, string name) : base(client, intermediate, name, existing)
 		{
-			if (existing != null)
-			{
-				m_shader = existing;
-				m_shader.Recreate();
-			}
-			else
-			{
-				m_shader = new Shader(m_client, Shader.ShaderType.World)
-				{
-					UseMis = true,
-					UseTransparentShadow = true,
-					HeterogeneousVolume = false,
-					Name = name
-				};
-			}
 		}
 
 		public override Shader GetShader()

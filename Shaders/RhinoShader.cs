@@ -26,24 +26,48 @@ namespace RhinoCyclesCore.Shaders
 		protected CyclesLight m_original_light;
 
 		protected Client m_client;
-		protected RhinoShader(Client client, CyclesShader intermediate)
+
+		private void InitShader(string name, Shader existing, Shader.ShaderType shaderType)
+		{
+			if (existing != null)
+			{
+				m_shader = existing;
+				m_shader.Recreate();
+			}
+			else
+			{
+				m_shader = new Shader(m_client, shaderType)
+				{
+					UseMis = true,
+					UseTransparentShadow = true,
+					HeterogeneousVolume = false,
+					Name = name
+				};
+			}
+
+		}
+		protected RhinoShader(Client client, CyclesShader intermediate, string name, Shader existing)
 		{
 			m_client = client;
 			m_original = intermediate;
 			if (m_original.Front != null) m_original.Front.Gamma = m_original.Gamma;
 			if (m_original.Back != null) m_original.Back.Gamma = m_original.Gamma;
+			InitShader(name, existing, Shader.ShaderType.Material);
+
 		}
 
-		protected RhinoShader(Client client, CyclesBackground intermediateBackground)
+		protected RhinoShader(Client client, CyclesBackground intermediateBackground, string name, Shader existing)
 		{
 			m_client = client;
 			m_original_background = intermediateBackground;
+			InitShader(name, existing, Shader.ShaderType.World);
 		}
 
-		protected RhinoShader(Client client, CyclesLight intermediateLight)
+		protected RhinoShader(Client client, CyclesLight intermediateLight, string name, Shader existing)
 		{
 			m_client = client;
 			m_original_light = intermediateLight;
+			InitShader(name, existing, Shader.ShaderType.Material);
 		}
 
 		public void Reset()

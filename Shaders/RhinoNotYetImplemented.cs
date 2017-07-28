@@ -65,16 +65,8 @@ namespace RhinoCyclesCore.Shaders
 		/// <param name="client"></param>
 		/// <param name="intermediate"></param>
 		/// <param name="name"></param>
-		public RhinoNotYetImplemented(Client client, CyclesShader intermediate, string name) : base(client, intermediate)
+		public RhinoNotYetImplemented(Client client, CyclesShader intermediate, string name) : base(client, intermediate, name, null)
 		{
-			m_shader = new Shader(m_client, Shader.ShaderType.Material)
-			{
-				UseMis = true,
-				UseTransparentShadow = true,
-				HeterogeneousVolume = false,
-				Name = name
-			};
-			
 		}
 
 		public override Shader GetShader()

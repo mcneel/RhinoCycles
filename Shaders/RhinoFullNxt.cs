@@ -30,23 +30,8 @@ namespace RhinoCyclesCore.Shaders
 		{
 		}
 
-		public RhinoFullNxt(Client client, CyclesShader intermediate, Shader existing, string name) : base(client, intermediate)
+		public RhinoFullNxt(Client client, CyclesShader intermediate, Shader existing, string name) : base(client, intermediate, name, existing)
 		{
-			if (existing != null)
-			{
-				m_shader = existing;
-				m_shader.Recreate();
-			}
-			else
-			{
-				m_shader = new Shader(m_client, Shader.ShaderType.Material)
-				{
-					UseMis = true,
-					UseTransparentShadow = true,
-					HeterogeneousVolume = false,
-					Name = name
-				};
-			}
 		}
 
 		public override Shader GetShader()
