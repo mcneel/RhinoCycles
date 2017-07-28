@@ -21,6 +21,7 @@ namespace RhinoCycles.Commands
 {
 
 	[System.Runtime.InteropServices.Guid("7A5797C2-954B-49E4-8BEC-B507D476631E")]
+	[CommandStyle(Style.Hidden)]
 	public class TestToggleRaytracedClippingPlanes : Command
 	{
 		static TestToggleRaytracedClippingPlanes _instance;
