@@ -16,7 +16,6 @@ limitations under the License.
 
 using ccl;
 using ccl.ShaderNodes;
-using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore.Shaders
 {
