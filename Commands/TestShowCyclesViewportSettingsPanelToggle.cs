@@ -20,7 +20,7 @@ using Rhino.Commands;
 
 namespace RhinoCycles.Commands
 {
-	[System.Runtime.InteropServices.Guid("FF25C46B-45E6-4BC1-8F74-489A248241D9")]
+	[System.Runtime.InteropServices.Guid("ff25c46b-45e6-4bc1-8f74-489a248241d9")]
 	[CommandStyle(Style.Hidden)]
 	public class TestShowCyclesViewportSettingsPanelToggle : Command
 	{

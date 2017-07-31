@@ -55,7 +55,7 @@ namespace RhinoCycles.Commands
 			set { Dictionary.Set("Number", value); }
 		}
 	}
-	[System.Runtime.InteropServices.Guid("FBCE78A4-0AE9-41E4-AADE-FF4B9CCB1B64")]
+	[System.Runtime.InteropServices.Guid("fbce78a4-0ae9-41e4-aade-ff4b9ccb1b64")]
 	[CommandStyle(Style.Hidden)]
 	public class TestAddUserData : Command
 	{

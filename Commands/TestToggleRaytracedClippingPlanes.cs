@@ -20,7 +20,7 @@ using Rhino.Commands;
 namespace RhinoCycles.Commands
 {
 
-	[System.Runtime.InteropServices.Guid("7A5797C2-954B-49E4-8BEC-B507D476631E")]
+	[System.Runtime.InteropServices.Guid("7a5797c2-954b-49e4-8bec-b507d476631e")]
 	[CommandStyle(Style.Hidden)]
 	public class TestToggleRaytracedClippingPlanes : Command
 	{

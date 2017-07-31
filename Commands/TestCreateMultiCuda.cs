@@ -24,7 +24,7 @@ using System.Collections.Generic;
 
 namespace RhinoCycles.Commands
 {
-	[System.Runtime.InteropServices.Guid("75B0608F-DDC9-4377-BB32-99218F227A32")]
+	[System.Runtime.InteropServices.Guid("75b0608f-ddc9-4377-bb32-99218f227a32")]
 	[CommandStyle(Style.Hidden)]
 	public class TestCreateMultiCuda : Command
 	{

@@ -23,7 +23,7 @@ using Rhino.Input.Custom;
 
 namespace RhinoCycles.Commands
 {
-	[System.Runtime.InteropServices.Guid("15443AC7-3E43-4DDE-8705-529A2A672374")]
+	[System.Runtime.InteropServices.Guid("15443ac7-3e43-4dde-8705-529a2a672374")]
 	[CommandStyle(Style.Hidden)]
 	public class TestSetBumpDistance : Command
 	{

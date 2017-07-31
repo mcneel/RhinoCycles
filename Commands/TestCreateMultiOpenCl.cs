@@ -24,7 +24,7 @@ using System.Collections.Generic;
 
 namespace RhinoCycles.Commands
 {
-	[System.Runtime.InteropServices.Guid("91A01DA6-3B1F-4D34-BF86-3C011F1EF4FF")]
+	[System.Runtime.InteropServices.Guid("91a01da6-3b1f-4d34-bf86-3c011f1ef4ff")]
 	[CommandStyle(Style.Hidden)]
 	public class TestCreateMultiOpenCl : Command
 	{
