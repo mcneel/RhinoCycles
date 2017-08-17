@@ -514,7 +514,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public float4 DiffuseColor { get; set; }
+		public float4 DiffuseColor { get; set; } = new float4();
 
 		public bool HasOnlyDiffuseColor => !HasDiffuseTexture
 		                                   && !HasBumpTexture
@@ -548,19 +548,19 @@ namespace RhinoCyclesCore
 		                                      && !HasTransparency
 		                                      && !HasBumpTexture;
 
-		public float4 SpecularColor { get; set; }
+		public float4 SpecularColor { get; set; } = new float4();
 		public float4 SpecularColorGamma => SpecularColor ^ Gamma;
-		public float4 ReflectionColor { get; set; }
+		public float4 ReflectionColor { get; set; } = new float4();
 		public float4 ReflectionColorGamma => ReflectionColor ^ Gamma;
 		public float ReflectionRoughness { get; set; }
 		public float ReflectionRoughnessPow2 => ReflectionRoughness * ReflectionRoughness;
-		public float4 RefractionColor { get; set; }
+		public float4 RefractionColor { get; set; } = new float4();
 		public float4 RefractionColorGamma => RefractionColor ^ Gamma;
 		public float RefractionRoughness { get; set; }
 		public float RefractionRoughnessPow2 => RefractionRoughness * RefractionRoughness;
-		public float4 TransparencyColor { get; set; }
+		public float4 TransparencyColor { get; set; } = new float4();
 		public float4 TransparencyColorGamma => TransparencyColor ^ Gamma;
-		public float4 EmissionColor { get; set; }
+		public float4 EmissionColor { get; set; } = new float4();
 		public bool HasEmission => !EmissionColor.IsZero(false);
 
 		public CyclesTextureImage DiffuseTexture { get; set; }
@@ -578,17 +578,17 @@ namespace RhinoCyclesCore
 
 		public CyclesTextureImage GiEnvTexture { get; set; }
 		public bool HasGiEnvTexture => GiEnvTexture.HasTextureImage;
-		public float4 GiEnvColor { get; set; }
+		public float4 GiEnvColor { get; set; } = new float4();
 		public bool HasGiEnv => HasGiEnvTexture || GiEnvColor != null;
 
 		public CyclesTextureImage BgEnvTexture { get; set; }
 		public bool HasBgEnvTexture => BgEnvTexture.HasTextureImage;
-		public float4 BgEnvColor { get; set; }
+		public float4 BgEnvColor { get; set; } = new float4();
 		public bool HasBgEnv => HasBgEnvTexture || BgEnvColor != null;
 
 		public CyclesTextureImage ReflRefrEnvTexture { get; set; }
 		public bool HasReflRefrEnvTexture => ReflRefrEnvTexture.HasTextureImage;
-		public float4 ReflRefrEnvColor { get; set; }
+		public float4 ReflRefrEnvColor { get; set; } = new float4();
 		public bool HasReflRefrEnv => HasReflRefrEnvTexture || ReflRefrEnvColor != null;
 
 		public bool HasUV { get; set; }
