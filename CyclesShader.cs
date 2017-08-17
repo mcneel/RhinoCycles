@@ -65,6 +65,14 @@ namespace RhinoCyclesCore
 			return CreateShaderPart(_front, rm, gamma);
 		}
 
+		/// <summary>
+		/// Sets up a shader with Front set to a default ShaderBody. Used for CodeShader
+		/// </summary>
+		public void SetupShaderShim()
+		{
+			_front = new ShaderBody(Id);
+		}
+
 		public void FrontXmlShader(string name, ICyclesMaterial crm)
 		{
 			_front = new ShaderBody(Id)
