@@ -154,35 +154,40 @@ namespace RhinoCyclesCore.RenderEngines
 			// main render loop, including restarts
 			#region start the rendering loop, wait for it to complete, we're rendering now!
 
-			cyclesEngine.Database.Flush();
-			cyclesEngine.UploadData();
-			cyclesEngine.Database.Dispose();
+			if (cyclesEngine.CancelRender) return;
+
+			cyclesEngine.Database?.Flush();
+			var rc = cyclesEngine.UploadData();
+			cyclesEngine.Database?.Dispose();
 			cyclesEngine.Database = null;
 
-			cyclesEngine.Session.PrepareRun();
-
-			// lets first reset session
-			cyclesEngine.Session.Reset(size.Width, size.Height, _samples);
-			// then reset scene
-			cyclesEngine.Session.Scene.Reset();
-			// and actually start
-			bool stillrendering = true;
-			var throttle = Math.Max(0, RcCore.It.EngineSettings.ThrottleMs);
-			while (stillrendering)
+			if (rc)
 			{
-				if (cyclesEngine.IsRendering)
-				{
-					stillrendering = cyclesEngine.Session.Sample();
-					Thread.Sleep(throttle);
-				}
-				else
-				{
-					Thread.Sleep(100);
-				}
-				if (cyclesEngine.IsStopped) break;
-			}
+				cyclesEngine.Session.PrepareRun();
 
-			cyclesEngine.Session.EndRun();
+				// lets first reset session
+				cyclesEngine.Session.Reset(size.Width, size.Height, _samples);
+				// then reset scene
+				cyclesEngine.Session.Scene.Reset();
+				// and actually start
+				bool stillrendering = true;
+				var throttle = Math.Max(0, RcCore.It.EngineSettings.ThrottleMs);
+				while (stillrendering)
+				{
+					if (cyclesEngine.IsRendering)
+					{
+						stillrendering = cyclesEngine.Session.Sample();
+						Thread.Sleep(throttle);
+					}
+					else
+					{
+						Thread.Sleep(100);
+					}
+					if (cyclesEngine.IsStopped) break;
+				}
+
+				cyclesEngine.Session.EndRun();
+			}
 
 			cyclesEngine.CancelRender = true;
 			#endregion

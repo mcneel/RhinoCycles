@@ -36,6 +36,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		protected bool UploadData()
 		{
+
+			if (CancelRender) return false;
 			Database.CalculateClippingObjects();
 
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.1f, "Start data upload"));
