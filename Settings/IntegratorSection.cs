@@ -46,7 +46,6 @@ namespace RhinoCycles.Settings
 		private Label m_maximum;
 		private Label m_minimum;
 
-		private NumericStepper m_minbounce;
 		private NumericStepper m_maxbounce;
 
 		private Label m_maxdiffusebounce_lb;
@@ -93,7 +92,6 @@ namespace RhinoCycles.Settings
 				m_diffusesamples.Value = e.ViewportSettings.DiffuseSamples;
 				m_glossysamples.Value = e.ViewportSettings.GlossySamples;
 				m_transmissionsamples.Value = e.ViewportSettings.TransmissionSamples;
-				m_minbounce.Value = e.ViewportSettings.MinBounce;
 				m_maxbounce.Value = e.ViewportSettings.MaxBounce;
 				m_maxdiffusebounce.Value = e.ViewportSettings.MaxDiffuseBounce;
 				m_maxglossybounce.Value = e.ViewportSettings.MaxGlossyBounce;
@@ -173,16 +171,6 @@ namespace RhinoCycles.Settings
 			{
 				Text = Localization.LocalizeString("Minimum", 29),
 				VerticalAlignment = VerticalAlignment.Center,
-			};
-
-			m_minbounce = new NumericStepper()
-			{
-				Value = 0,
-				MaxValue = int.MaxValue,
-				MinValue = 0,
-				MaximumDecimalPlaces = 0,
-				Width = 75,
-				Tag = IntegratorSetting.MinBounce,
 			};
 
 			m_maximum = new Label()
@@ -284,7 +272,7 @@ namespace RhinoCycles.Settings
 				Rows =
 				{
 					new TableRow(new TableCell(m_minimum, true), new TableCell(m_maximum, true)),
-					new TableRow(m_minbounce, m_maxbounce),
+					new TableRow(m_maxbounce, null),
 					new TableRow(m_maxdiffusebounce_lb, m_maxdiffusebounce),
 					new TableRow(m_maxglossybounce_lb, m_maxglossybounce),
 					new TableRow(m_maxtransmissionbounce_lb, m_maxtransmissionbounce),
@@ -334,7 +322,6 @@ namespace RhinoCycles.Settings
 			m_diffusesamples.ValueChanged += M_seed_ValueChanged;
 			m_glossysamples.ValueChanged += M_seed_ValueChanged;
 			m_transmissionsamples.ValueChanged += M_seed_ValueChanged;
-			m_minbounce.ValueChanged += M_seed_ValueChanged;
 			m_maxbounce.ValueChanged += M_seed_ValueChanged;
 			m_maxdiffusebounce.ValueChanged += M_seed_ValueChanged;
 			m_maxglossybounce.ValueChanged += M_seed_ValueChanged;
@@ -348,7 +335,6 @@ namespace RhinoCycles.Settings
 			m_diffusesamples.ValueChanged -= M_seed_ValueChanged;
 			m_glossysamples.ValueChanged -= M_seed_ValueChanged;
 			m_transmissionsamples.ValueChanged -= M_seed_ValueChanged;
-			m_minbounce.ValueChanged -= M_seed_ValueChanged;
 			m_maxbounce.ValueChanged -= M_seed_ValueChanged;
 			m_maxdiffusebounce.ValueChanged -= M_seed_ValueChanged;
 			m_maxglossybounce.ValueChanged -= M_seed_ValueChanged;
@@ -411,9 +397,6 @@ namespace RhinoCycles.Settings
 					break;
 				case IntegratorSetting.TransmissionSamples:
 					vud.TransmissionSamples = (int)ns.Value;
-					break;
-				case IntegratorSetting.MinBounce:
-					vud.MinBounce = (int)ns.Value;
 					break;
 				case IntegratorSetting.MaxBounce:
 					vud.MaxBounce = (int)ns.Value;

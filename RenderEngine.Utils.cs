@@ -53,15 +53,12 @@ namespace RhinoCyclesCore
 				Integrator =
 				{
 					MaxBounce = RcCore.It.EngineSettings.MaxBounce,
-					MinBounce = RcCore.It.EngineSettings.MinBounce,
-					TransparentMinBounce = RcCore.It.EngineSettings.TransparentMinBounce,
 					TransparentMaxBounce = RcCore.It.EngineSettings.TransparentMaxBounce,
 					MaxDiffuseBounce = RcCore.It.EngineSettings.MaxDiffuseBounce,
 					MaxGlossyBounce = RcCore.It.EngineSettings.MaxGlossyBounce,
 					MaxTransmissionBounce = RcCore.It.EngineSettings.MaxTransmissionBounce,
 					MaxVolumeBounce = RcCore.It.EngineSettings.MaxVolumeBounce,
 					NoCaustics = RcCore.It.EngineSettings.NoCaustics,
-					TransparentShadows = RcCore.It.EngineSettings.TransparentShadows,
 					DiffuseSamples = RcCore.It.EngineSettings.DiffuseSamples,
 					GlossySamples = RcCore.It.EngineSettings.GlossySamples,
 					TransmissionSamples = RcCore.It.EngineSettings.TransmissionSamples,

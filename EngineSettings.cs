@@ -58,7 +58,6 @@ namespace RhinoCyclesCore
 			TileX = TileX;
 			TileY = TileY;
 
-			MinBounce = MinBounce;
 			MaxBounce = MaxBounce;
 
 			NoCaustics = NoCaustics;
@@ -96,9 +95,7 @@ namespace RhinoCyclesCore
 			SensorWidth = SensorWidth;
 			SensorHeight = SensorHeight;
 
-			TransparentMinBounce = TransparentMinBounce;
 			TransparentMaxBounce = TransparentMaxBounce;
-			TransparentShadows = TransparentShadows;
 
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverride;
@@ -147,7 +144,6 @@ namespace RhinoCyclesCore
 			TileX = TileXDefault;
 			TileY = TileYDefault;
 
-			MinBounce = MinBounceDefault;
 			MaxBounce = MaxBounceDefault;
 
 			NoCaustics = NoCausticsDefault;
@@ -185,9 +181,7 @@ namespace RhinoCyclesCore
 			SensorWidth = SensorWidthDefault;
 			SensorHeight = SensorHeightDefault;
 
-			TransparentMinBounce = TransparentMinBounceDefault;
 			TransparentMaxBounce = TransparentMaxBounceDefault;
-			TransparentShadows = TransparentShadowsDefault;
 
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverrideDefault;
@@ -395,12 +389,7 @@ namespace RhinoCyclesCore
 		}
 
 		public virtual IntegratorMethod IntegratorMethod { get; set; }
-		public int MinBounceDefault => 3;
-		public virtual int MinBounce
-		{
-			get { return RcPlugIn.Settings.GetInteger("minbounce", MinBounceDefault); }
-			set { RcPlugIn.Settings.SetInteger("minbounce", value); }
-		}
+
 		public int MaxBounceDefault => 128;
 		public virtual int MaxBounce
 		{
@@ -553,23 +542,11 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetDouble("sensorheight", value); }
 		}
 
-		public int TransparentMinBounceDefault => 128;
-		public virtual int TransparentMinBounce
-		{
-			get { return RcPlugIn.Settings.GetInteger("transparentminbounce", TransparentMinBounceDefault); }
-			set { RcPlugIn.Settings.SetInteger("transparentminbounce", value); }
-		}
 		public int TransparentMaxBounceDefault => 128;
 		public virtual int TransparentMaxBounce
 		{
 			get { return RcPlugIn.Settings.GetInteger("transparentmaxbounce", TransparentMaxBounceDefault); }
 			set { RcPlugIn.Settings.SetInteger("transparentmaxbounce", value); }
-		}
-		public bool TransparentShadowsDefault => true;
-		public virtual bool TransparentShadows
-		{
-			get { return RcPlugIn.Settings.GetBool("transparentshadows", TransparentShadowsDefault); }
-			set { RcPlugIn.Settings.SetBool("transparentshadows", value); }
 		}
 
 		public bool AllowViewportSettingsOverrideDefault => false;
@@ -709,7 +686,6 @@ namespace RhinoCyclesCore
 				rem = RhinoMath.CRC32(rem, DiffuseSamples);
 				rem = RhinoMath.CRC32(rem, GlossySamples);
 				rem = RhinoMath.CRC32(rem, TransmissionSamples);
-				rem = RhinoMath.CRC32(rem, MinBounce);
 				rem = RhinoMath.CRC32(rem, MaxBounce);
 				rem = RhinoMath.CRC32(rem, MaxDiffuseBounce);
 				rem = RhinoMath.CRC32(rem, MaxGlossyBounce);
@@ -754,7 +730,6 @@ namespace RhinoCyclesCore
 		int DiffuseSamples { get; set; }
 		int GlossySamples { get; set; }
 		int TransmissionSamples { get; set; }
-		int MinBounce { get; set; }
 		int MaxBounce { get; set; }
 		int MaxDiffuseBounce { get; set; }
 		int MaxGlossyBounce { get; set; }

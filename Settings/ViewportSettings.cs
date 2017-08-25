@@ -49,7 +49,6 @@ namespace RhinoCycles.Settings
 				DiffuseSamples = src.DiffuseSamples;
 				GlossySamples = src.GlossySamples;
 				TransmissionSamples = src.TransmissionSamples;
-				MinBounce = src.MinBounce;
 				MaxBounce = src.MaxBounce;
 				MaxDiffuseBounce = src.MaxDiffuseBounce;
 				MaxGlossyBounce = src.MaxGlossyBounce;
@@ -66,7 +65,6 @@ namespace RhinoCycles.Settings
 				rem = RhinoMath.CRC32(rem, DiffuseSamples);
 				rem = RhinoMath.CRC32(rem, GlossySamples);
 				rem = RhinoMath.CRC32(rem, TransmissionSamples);
-				rem = RhinoMath.CRC32(rem, MinBounce);
 				rem = RhinoMath.CRC32(rem, MaxBounce);
 				rem = RhinoMath.CRC32(rem, MaxDiffuseBounce);
 				rem = RhinoMath.CRC32(rem, MaxGlossyBounce);
@@ -159,12 +157,6 @@ namespace RhinoCycles.Settings
 		{
 			get { return UseThis ? Dictionary.GetInteger("transmissionsamples", RcCore.It.EngineSettings.TransmissionSamples) : RcCore.It.EngineSettings.TransmissionSamples; }
 			set { Dictionary.Set("transmissionsamples", value); }
-		}
-
-		public int MinBounce
-		{
-			get { return UseThis ? Dictionary.GetInteger("minbounce", RcCore.It.EngineSettings.MinBounce) : RcCore.It.EngineSettings.MinBounce; }
-			set { Dictionary.Set("minbounce", value); }
 		}
 
 		public int MaxBounce

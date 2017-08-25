@@ -47,7 +47,6 @@ namespace RhinoCycles.Commands
 
 			var showMaxPasses = new OptionToggle(RcCore.It.EngineSettings.ShowMaxPasses, "HideMaxPasses", "ShowMaxPasses");
 
-			var minBounce = new OptionInteger(RcCore.It.EngineSettings.MinBounce, 0, 500);
 			var maxBounce = new OptionInteger(RcCore.It.EngineSettings.MaxBounce, 0, 500);
 			var tileX = new OptionInteger(RcCore.It.EngineSettings.TileX, 0, 10000);
 			var tileY = new OptionInteger(RcCore.It.EngineSettings.TileY, 0, 10000);
@@ -69,9 +68,7 @@ namespace RhinoCycles.Commands
 			var sensorWidth = new OptionDouble(RcCore.It.EngineSettings.SensorWidth, 10.0, 100.0);
 			var sensorHeight = new OptionDouble(RcCore.It.EngineSettings.SensorHeight, 10.0, 100.0);
 
-			var transparentMinBounce = new OptionInteger(RcCore.It.EngineSettings.TransparentMinBounce, 0, 200);
 			var transparentMaxBounce = new OptionInteger(RcCore.It.EngineSettings.TransparentMaxBounce, 0, 200);
-			var transparentShadows = new OptionToggle(RcCore.It.EngineSettings.TransparentShadows, "NoTransparentShadows", "TransparentShadows");
 
 			var filterGlossy = new OptionDouble(RcCore.It.EngineSettings.FilterGlossy, 0.0, 100.0);
 			var sampleClampDirect = new OptionDouble(RcCore.It.EngineSettings.SampleClampDirect, 0.0, 100.0);
@@ -81,7 +78,6 @@ namespace RhinoCycles.Commands
 			var sampleAllLightsIndirect = new OptionToggle(RcCore.It.EngineSettings.SampleAllLightsIndirect, "no", "yes");
 
 			getNumber.AddOptionToggle("show_max_passes", ref showMaxPasses);
-			getNumber.AddOptionInteger("min_bounces", ref minBounce);
 			getNumber.AddOptionInteger("max_bounces", ref maxBounce);
 			getNumber.AddOptionInteger("tile_x", ref tileX);
 			getNumber.AddOptionInteger("tile_y", ref tileY);
@@ -92,9 +88,7 @@ namespace RhinoCycles.Commands
 			getNumber.AddOptionInteger("max_transmission_bounce", ref maxTransmissionBounce);
 			getNumber.AddOptionInteger("max_volume_bounce", ref maxVolumeBounce);
 
-			getNumber.AddOptionInteger("transparent_min_bounce", ref transparentMinBounce);
 			getNumber.AddOptionInteger("transparent_max_bounce", ref transparentMaxBounce);
-			getNumber.AddOptionToggle("transparent_shadows", ref transparentShadows);
 
 			getNumber.AddOptionInteger("aa_samples", ref aaSamples);
 			getNumber.AddOptionInteger("diffuse_samples", ref diffSamples);
@@ -120,12 +114,11 @@ namespace RhinoCycles.Commands
 				switch (getRc)
 				{
 					case GetResult.Number:
-						RhinoApp.WriteLine($"We got: {getNumber.Number()}, {minBounce.CurrentValue}, {maxBounce.CurrentValue}");
+						RhinoApp.WriteLine($"We got: {getNumber.Number()}, {maxBounce.CurrentValue}");
 						RcCore.It.EngineSettings.Samples = (int)getNumber.Number();
 						RcCore.It.EngineSettings.ShowMaxPasses = showMaxPasses.CurrentValue;
 						RcCore.It.EngineSettings.Seed = seed.CurrentValue;
 						RcCore.It.EngineSettings.MaxBounce = maxBounce.CurrentValue;
-						RcCore.It.EngineSettings.MinBounce = minBounce.CurrentValue;
 						RcCore.It.EngineSettings.TileX = tileX.CurrentValue;
 						RcCore.It.EngineSettings.TileY = tileY.CurrentValue;
 						RcCore.It.EngineSettings.NoCaustics = noCaustics.CurrentValue;
@@ -133,9 +126,7 @@ namespace RhinoCycles.Commands
 						RcCore.It.EngineSettings.MaxGlossyBounce = maxGlossyBounce.CurrentValue;
 						RcCore.It.EngineSettings.MaxTransmissionBounce = maxTransmissionBounce.CurrentValue;
 						RcCore.It.EngineSettings.MaxVolumeBounce = maxVolumeBounce.CurrentValue;
-						RcCore.It.EngineSettings.TransparentMinBounce = transparentMinBounce.CurrentValue;
 						RcCore.It.EngineSettings.TransparentMaxBounce = transparentMaxBounce.CurrentValue;
-						RcCore.It.EngineSettings.TransparentShadows = transparentShadows.CurrentValue;
 						RcCore.It.EngineSettings.AaSamples = aaSamples.CurrentValue;
 						RcCore.It.EngineSettings.DiffuseSamples = diffSamples.CurrentValue;
 						RcCore.It.EngineSettings.GlossySamples = glossySamples.CurrentValue;

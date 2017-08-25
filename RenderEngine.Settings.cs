@@ -32,7 +32,6 @@ namespace RhinoCyclesCore
 			DiffuseSamples,
 			GlossySamples,
 			TransmissionSamples,
-			MinBounce,
 			MaxBounce,
 			MaxDiffuseBounce,
 			MaxGlossyBounce,
@@ -67,7 +66,6 @@ namespace RhinoCyclesCore
 					integrator.Seed = e.Settings.Seed;
 					integrator.DiffuseSamples = e.Settings.DiffuseSamples;
 					integrator.GlossySamples = e.Settings.GlossySamples;
-					integrator.MinBounce = e.Settings.MinBounce;
 					integrator.MaxBounce = e.Settings.MaxBounce;
 					integrator.MaxDiffuseBounce = e.Settings.MaxDiffuseBounce;
 					integrator.MaxGlossyBounce = e.Settings.MaxGlossyBounce;

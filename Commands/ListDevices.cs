@@ -45,7 +45,7 @@ namespace RhinoCycles.Commands
 			RhinoApp.WriteLine("----------");
 			foreach (var dev in Device.Devices)
 			{
-				RhinoApp.WriteLine($"	Device {dev.Id}: {dev.Name} > {dev.Description} > {dev.Num} | {dev.DisplayDevice} | {dev.AdvancedShading} | {dev.PackImages} | {dev.Type}");
+				RhinoApp.WriteLine($"	Device {dev.Id}: {dev.Name} > {dev.Description} > {dev.Num} | {dev.DisplayDevice} | {dev.AdvancedShading} | {dev.Type}");
 			}
 			RhinoApp.WriteLine("----------");
 			return Result.Success;
