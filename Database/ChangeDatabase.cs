@@ -1165,7 +1165,7 @@ namespace RhinoCyclesCore.Database
 		{
 			var gpid = _groundplaneGuid;
 			var altitude = (float) (gp.Enabled ? gp.Altitude : 0.0);
-			altitude -= 1.0e-5f;
+			altitude -= 2.5e-4f;
 			if (!_dynamic)
 			{
 				Plane p = new Plane(Point3d.Origin, Vector3d.ZAxis);
