@@ -402,7 +402,7 @@ namespace RhinoCyclesCore.Shaders
 			var custom_alpha_cutter85 = new MixClosureNode("custom_alpha_cutter");
 			custom_alpha_cutter85.ins.Fac.Value = 0f;
 
-			var principledbsdf132 = new UberBsdfNode("principledbsdf");
+			var principledbsdf132 = new PrincipledBsdfNode("principledbsdf");
 			principledbsdf132.ins.BaseColor.Value = part.TransparencyColorGamma;
 			principledbsdf132.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 			principledbsdf132.ins.Metallic.Value = 0f;
@@ -417,8 +417,8 @@ namespace RhinoCyclesCore.Shaders
 			principledbsdf132.ins.Clearcoat.Value = 0f;
 			principledbsdf132.ins.ClearcoatGloss.Value = 0f;
 			principledbsdf132.ins.IOR.Value = part.IOR;
-			principledbsdf132.ins.Transparency.Value = part.Transparency;
-			principledbsdf132.ins.RefractionRoughness.Value = part.RefractionRoughnessPow2;
+			principledbsdf132.ins.Transmission.Value = part.Transparency;
+			principledbsdf132.ins.TransmissionRoughness.Value = part.RefractionRoughnessPow2;
 			principledbsdf132.ins.AnisotropicRotation.Value = 0f;
 			principledbsdf132.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
 			principledbsdf132.ins.ClearcoatNormal.Value = new ccl.float4(0f, 0f, 0f, 1f);
