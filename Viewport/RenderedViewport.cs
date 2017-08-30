@@ -74,6 +74,7 @@ namespace RhinoCycles.Viewport
 
 		public bool IsSynchronizing { get; private set; }
 
+		private bool _forCapture;
 		private ViewportRenderEngine _cycles;
 		private ModalRenderEngine _modal;
 
@@ -153,7 +154,7 @@ namespace RhinoCycles.Viewport
 		{
 		}
 
-		public override bool UseFastDraw() { return _cycles!=null && _modal==null && RcCore.It.CanUseDrawOpenGl(); }
+		public override bool UseFastDraw() { return !_forCapture && RcCore.It.CanUseDrawOpenGl(); }
 
 		private Thread _modalThread;
 		private Thread _sw;
@@ -182,6 +183,7 @@ namespace RhinoCycles.Viewport
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
 			_started = true;
+			_forCapture = forCapture;
 			if (forCapture)
 			{
 				SetUseDrawOpenGl(false);
