@@ -569,6 +569,7 @@ namespace RhinoCyclesCore
 		public float4 TransparencyColor { get; set; } = new float4();
 		public float4 TransparencyColorGamma => TransparencyColor ^ Gamma;
 		public float4 EmissionColor { get; set; } = new float4();
+		public float4 EmissionColorGamma => EmissionColor ^ Gamma;
 		public bool HasEmission => !EmissionColor.IsZero(false);
 
 		public CyclesTextureImage DiffuseTexture { get; set; }
