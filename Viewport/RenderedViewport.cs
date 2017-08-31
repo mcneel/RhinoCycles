@@ -490,7 +490,8 @@ namespace RhinoCycles.Viewport
 		public override string HudProductName()
 		{
 			var pn = Localization.LocalizeString("Cycles", 9);
-			if (_showRenderDevice) return $"{pn}@{_cycles.RenderDevice.NiceName}";
+			if (_showRenderDevice) pn = $"{pn}@{_cycles.RenderDevice.NiceName}";
+			if (!RcCore.It.CanUseDrawOpenGl()) pn = $"{pn} NoGL";
 			return pn;
 		}
 
