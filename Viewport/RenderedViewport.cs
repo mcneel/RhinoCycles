@@ -358,13 +358,14 @@ namespace RhinoCycles.Viewport
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
 		{
-			LinearWorkflow.PostProcessGamma = e.Lwf.PostProcessGamma;
+			var ppg = e.Lwf.PostProcessGamma;
+			LinearWorkflow.PostProcessGamma = ppg;
 			var rengine = _cycles ?? _modal as RenderEngine;
 
 			if (rengine == null) return;
 
 			var imageadjust = rengine.RenderWindow.GetAdjust();
-			imageadjust.Gamma = e.Lwf.PostProcessGamma;
+			imageadjust.Gamma = ppg;
 			rengine.RenderWindow.SetAdjust(imageadjust);
 		}
 
