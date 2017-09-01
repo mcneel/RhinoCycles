@@ -289,13 +289,20 @@ namespace RhinoCyclesCore.Shaders
 				weight_for_shadowray_coloured_shadow200.Operation = MathNode.Operations.Multiply;
 				weight_for_shadowray_coloured_shadow200.UseClamp = false;
 
-			var coloured_shadow_mix_custom237 = new MixClosureNode("coloured_shadow_mix_custom");
-				coloured_shadow_mix_custom237.ins.Fac.Value = 0f;
-
 			var diffuse_from_emission_color247 = new DiffuseBsdfNode("diffuse_from_emission_color");
 				diffuse_from_emission_color247.ins.Color.Value = part.EmissionColorGamma;
 				diffuse_from_emission_color247.ins.Roughness.Value = 0f;
 				diffuse_from_emission_color247.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
+
+			var shadeless_emission252 = new EmissionNode("shadeless_emission");
+				shadeless_emission252.ins.Color.Value = part.EmissionColorGamma;
+				shadeless_emission252.ins.Strength.Value = 1f;
+
+			var coloured_shadow_mix_custom237 = new MixClosureNode("coloured_shadow_mix_custom");
+				coloured_shadow_mix_custom237.ins.Fac.Value = 0f;
+
+			var diffuse_or_shadeless_emission253 = new MixClosureNode("diffuse_or_shadeless_emission");
+				diffuse_or_shadeless_emission253.ins.Fac.Value = 0f;
 
 			var invert_alpha191 = new MathSubtract("invert_alpha");
 				invert_alpha191.ins.Value1.Value = 1f;
@@ -419,8 +426,10 @@ namespace RhinoCyclesCore.Shaders
 			m_shader.AddNode(custom_environment_blend233);
 			m_shader.AddNode(coloured_shadow_trans_color234);
 			m_shader.AddNode(weight_for_shadowray_coloured_shadow200);
-			m_shader.AddNode(coloured_shadow_mix_custom237);
 			m_shader.AddNode(diffuse_from_emission_color247);
+			m_shader.AddNode(shadeless_emission252);
+			m_shader.AddNode(coloured_shadow_mix_custom237);
+			m_shader.AddNode(diffuse_or_shadeless_emission253);
 			m_shader.AddNode(invert_alpha191);
 			m_shader.AddNode(transparency_texture235);
 			m_shader.AddNode(transpluminance236);
@@ -488,6 +497,9 @@ namespace RhinoCyclesCore.Shaders
 			custom_environment_blend233.outs.Closure.Connect(coloured_shadow_mix_custom237.ins.Closure1);
 			coloured_shadow_trans_color234.outs.BSDF.Connect(coloured_shadow_mix_custom237.ins.Closure2);
 			weight_for_shadowray_coloured_shadow200.outs.Value.Connect(coloured_shadow_mix_custom237.ins.Fac);
+			diffuse_from_emission_color247.outs.BSDF.Connect(diffuse_or_shadeless_emission253.ins.Closure1);
+			shadeless_emission252.outs.Emission.Connect(diffuse_or_shadeless_emission253.ins.Closure2);
+			shadeless_on_cameraray246.outs.Value.Connect(diffuse_or_shadeless_emission253.ins.Fac);
 			diffuse_texture208.outs.Alpha.Connect(invert_alpha191.ins.Value2);
 			texcoord207.outs.UV.Connect(transparency_texture235.ins.Vector);
 			transparency_texture235.outs.Color.Connect(transpluminance236.ins.Color);
@@ -496,7 +508,7 @@ namespace RhinoCyclesCore.Shaders
 			invert_alpha191.outs.Value.Connect(toggle_diffuse_texture_alpha_usage203.ins.Value1);
 			transparency_texture_amount202.outs.Value.Connect(toggle_transparency_texture204.ins.Value2);
 			coloured_shadow_mix_custom237.outs.Closure.Connect(add_emission_to_final248.ins.Closure1);
-			diffuse_from_emission_color247.outs.BSDF.Connect(add_emission_to_final248.ins.Closure2);
+			diffuse_or_shadeless_emission253.outs.Closure.Connect(add_emission_to_final248.ins.Closure2);
 			toggle_diffuse_texture_alpha_usage203.outs.Value.Connect(add_diffuse_texture_alpha205.ins.Value1);
 			toggle_transparency_texture204.outs.Value.Connect(add_diffuse_texture_alpha205.ins.Value2);
 			add_emission_to_final248.outs.Closure.Connect(custom_alpha_cutter239.ins.Closure1);
