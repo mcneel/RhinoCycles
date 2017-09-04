@@ -36,17 +36,12 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// True if ChangeQueue modified the background
 		/// </summary>
-		public bool modified { get; set; }
-
-		/// <summary>
-		/// True if skylight is enabled
-		/// </summary>
-		public bool skylight_enabled;
+		public bool Modified { get; set; }
 
 		/// <summary>
 		/// Get background style.
 		/// </summary>
-		public BackgroundStyle background_fill = BackgroundStyle.SolidColor;
+		public BackgroundStyle BackgroundFill { get; set; } = BackgroundStyle.SolidColor;
 		/// <summary>
 		/// Solid color or top color for gradient
 		/// </summary>
@@ -58,34 +53,42 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Environment used for background (360deg environment)
 		/// </summary>
-		public RenderEnvironment background_environment;
+		public RenderEnvironment BackgroundEnvironment;
 		/// <summary>
 		/// Custom environment used for skylight. If not set, background_environment will be used.
 		/// </summary>
-		public RenderEnvironment skylight_environment;
+		public RenderEnvironment SkylightEnvironment;
 		/// <summary>
 		/// Custom environment to use for reflections. If not set, use background_environment,
 		/// solid color or gradient, whichever is used as background
 		/// </summary>
-		public RenderEnvironment reflection_environment;
+		public RenderEnvironment ReflectionEnvironment;
 
 		/// <summary>
 		/// Hold texture data for background (360deg)
 		/// </summary>
-		public CyclesTextureImage bg = new CyclesTextureImage();
+		public CyclesTextureImage BgTexture { get; set; } = new CyclesTextureImage();
 		/// <summary>
 		/// Background color, used if bg is no image
 		/// </summary>
-		public Color bg_color = Color.Empty;
-		
+		public Color BgColor { get; set; } = Color.Empty;
+		/// <summary>
+		/// True if bg env texture is available and background fill is set to Environment.
+		/// </summary>
+		public bool HasBgEnvTexture => BgTexture.HasTextureImage && BackgroundFill == BackgroundStyle.Environment;
+
+		public float BgStrength => HasBgEnvTexture ? BgTexture.Amount : 1.0f;
+
 		/// <summary>
 		/// Hold texture data for skylight
 		/// </summary>
-		public CyclesTextureImage sky = new CyclesTextureImage();
+		public CyclesTextureImage SkyTexture { get; set; } = new CyclesTextureImage();
 		/// <summary>
 		/// Sky color, used if sky has no image
 		/// </summary>
-		public Color sky_color = Color.Empty;
+		public Color SkyColor { get; set; } = Color.Empty;
+
+		public float SkyStrength => HasSkyEnvTexture ? SkyTexture.Amount : 1.0f;
 
 		private float gamma = 1.0f;
 		public float Gamma
@@ -94,43 +97,53 @@ namespace RhinoCyclesCore
 			set {
 				if (Math.Abs(value - gamma) > 0.00001f)
 				{
-					modified = true;
+					Modified = true;
 				}
 				gamma = value;
 			}
 		}
 
-		public string Xml = "";
+		public string Xml { get; set; } = ""; 
 
-		public bool PlanarProjection = false;
+		public bool PlanarProjection { get; set; } = false;
 
 		/// <summary>
 		/// True if skylight is used.
 		/// </summary>
-		public bool HasSky => sky.HasTextureImage || sky_color != Color.Empty;
+		public bool HasSky => HasSkyEnvTexture || SkyColor != Color.Empty;
+		public bool HasSkyEnvTexture => SkyTexture.HasTextureImage;
+		/// <summary>
+		/// True if skylight is enabled
+		/// </summary>
+		public bool SkylightEnabled { get; set; } = false;
 
 		/// <summary>
 		/// Hold texture data for reflection
 		/// </summary>
-		public CyclesTextureImage refl = new CyclesTextureImage();
+		public CyclesTextureImage ReflectionTexture { get; set; } = new CyclesTextureImage();
 		/// <summary>
 		/// Reflection color, used if refl has no image
 		/// </summary>
-		public Color refl_color = Color.Empty;
+		public Color ReflectionColor { get; set; } = Color.Empty;
 
 		/// <summary>
 		/// True if custom reflection env is used
 		/// </summary>
-		public bool HasRefl => refl.HasTextureImage || refl_color != Color.Empty;
+		public bool HasRefl => HasReflEnvTexture || ReflectionColor != Color.Empty;
+		public bool HasReflEnvTexture => ReflectionTexture.HasTextureImage;
+
+		public bool UseCustomReflectionEnvironment => HasRefl;
+
+		public float ReflStrength => HasReflEnvTexture ? ReflectionTexture.Amount : 1.0f;
 
 		/// <summary>
 		/// Hold texture data for wallpaper
 		/// </summary>
-		public CyclesTextureImage wallpaper = new CyclesTextureImage();
+		public CyclesTextureImage Wallpaper { get; set; } = new CyclesTextureImage();
 		/// <summary>
 		/// Solid bg color to show outside of wallpaper when not set to Stretch to Fit
 		/// </summary>
-		public Color wallpaper_solid = Color.Empty;
+		public Color WallpaperSolid { get; set; } = Color.Empty;
 
 		private readonly Guid id = Guid.NewGuid();
 		private bool m_old_hidden;
@@ -155,13 +168,13 @@ namespace RhinoCyclesCore
 			modifiedWallpaper |= m_old_hidden != view.WallpaperHidden | m_old_grayscale != view.ShowWallpaperInGrayScale;
 			modifiedWallpaper |= m_old_scaletofit != scaleToFit;
 			modifiedWallpaper |= !m_old_wallpaper.Equals(file);
-			modified |= modifiedWallpaper;
+			Modified |= modifiedWallpaper;
 
 			if (string.IsNullOrEmpty(file) || !File.Exists(file))
 			{
 				Rhino.RhinoApp.OutputDebugString($"{file} not found, clearing and returning\n");
-				wallpaper.Clear();
-				wallpaper_solid = color1;
+				Wallpaper.Clear();
+				WallpaperSolid = color1;
 				return;
 			}
 
@@ -252,17 +265,17 @@ namespace RhinoCyclesCore
 				}
 				var wallpaperbm = BitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaperbm.ApplyGamma(Gamma);
-				wallpaper.TexByte = wallpaperbm.Data;
+				Wallpaper.TexByte = wallpaperbm.Data;
 				if (RcCore.It.EngineSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
-				wallpaper.TexWidth = newBitmap.Width;
-				wallpaper.TexHeight = newBitmap.Height;
-				wallpaper.Name =
+				Wallpaper.TexWidth = newBitmap.Width;
+				Wallpaper.TexHeight = newBitmap.Height;
+				Wallpaper.Name =
 					$"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
 			}
 			catch (Exception e)
 			{
 				Rhino.RhinoApp.OutputDebugString($"wallpaper failure: {e.Message}.\n");
-				wallpaper.Clear();
+				Wallpaper.Clear();
 			}
 		}
 
@@ -276,55 +289,55 @@ namespace RhinoCyclesCore
 			{
 				case RenderEnvironment.Usage.Background:
 
-					if (background_environment != null)
+					if (BackgroundEnvironment != null)
 					{
-						simenv = background_environment.SimulateEnvironment(true);
+						simenv = BackgroundEnvironment.SimulateEnvironment(true);
 						if (simenv != null)
 						{
-							bg_color = simenv.BackgroundColor;
+							BgColor = simenv.BackgroundColor;
 						}
 					}
 					else
 					{
-						bg_color = Color.Empty;
-						bg.Clear();
+						BgColor = Color.Empty;
+						BgTexture.Clear();
 					}
-					BitmapConverter.EnvironmentBitmapFromEvaluator(background_environment, bg, Gamma, PlanarProjection);
+					BitmapConverter.EnvironmentBitmapFromEvaluator(BackgroundEnvironment, BgTexture, Gamma, PlanarProjection);
 					break;
 				case RenderEnvironment.Usage.Skylighting:
 					bool resampled = false;
-					if (skylight_environment != null)
+					if (SkylightEnvironment != null)
 					{
-						simenv = skylight_environment.SimulateEnvironment(true);
+						simenv = SkylightEnvironment.SimulateEnvironment(true);
 						if (simenv != null)
 						{
-							sky_color = simenv.BackgroundColor;
+							SkyColor = simenv.BackgroundColor;
 						}
 					}
 					else
 					{
-						sky_color = Color.Empty;
-						sky.Clear();
+						SkyColor = Color.Empty;
+						SkyTexture.Clear();
 					}
 					if (!resampled)
-						BitmapConverter.EnvironmentBitmapFromEvaluator(skylight_environment, sky, Gamma, false);
+						BitmapConverter.EnvironmentBitmapFromEvaluator(SkylightEnvironment, SkyTexture, Gamma, false);
 
 					break;
 				case RenderEnvironment.Usage.ReflectionAndRefraction:
-					if (reflection_environment != null)
+					if (ReflectionEnvironment != null)
 					{
-						simenv = reflection_environment.SimulateEnvironment(true);
+						simenv = ReflectionEnvironment.SimulateEnvironment(true);
 						if (simenv != null)
 						{
-							refl_color = simenv.BackgroundColor;
+							ReflectionColor = simenv.BackgroundColor;
 						}
 					}
 					else
 					{
-						refl_color = Color.Empty;
-						refl.Clear();
+						ReflectionColor = Color.Empty;
+						ReflectionTexture.Clear();
 					}
-					BitmapConverter.EnvironmentBitmapFromEvaluator(reflection_environment, refl, Gamma, false);
+					BitmapConverter.EnvironmentBitmapFromEvaluator(ReflectionEnvironment, ReflectionTexture, Gamma, false);
 					break;
 			}
 		}
@@ -334,15 +347,15 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public void Reset()
 		{
-			modified = false;
+			Modified = false;
 		}
 
 		public void Dispose()
 		{
-			refl.Clear();
-			bg.Clear();
-			sky.Clear();
-			wallpaper.Clear();
+			ReflectionTexture.Clear();
+			BgTexture.Clear();
+			SkyTexture.Clear();
+			Wallpaper.Clear();
 		}
 	}
 }

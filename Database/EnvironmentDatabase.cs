@@ -48,8 +48,8 @@ namespace RhinoCyclesCore.Database
 		/// <param name="enable">Set to true if enabled.</param>
 		public void SetSkylightEnabled(bool enable)
 		{
-			_cqBackground.modified |= _cqBackground.skylight_enabled != enable;
-			_cqBackground.skylight_enabled = enable;
+			_cqBackground.Modified |= _cqBackground.SkylightEnabled != enable;
+			_cqBackground.SkylightEnabled = enable;
 		}
 
 		/// <summary>
@@ -74,14 +74,14 @@ namespace RhinoCyclesCore.Database
 
 			var mod = false;
 
-			mod |= _cqBackground.background_fill != backgroundStyle;
-			_cqBackground.background_fill = backgroundStyle;
+			mod |= _cqBackground.BackgroundFill != backgroundStyle;
+			_cqBackground.BackgroundFill = backgroundStyle;
 			mod |= !_cqBackground.color1.Equals(color1);
 			_cqBackground.color1 = color1;
 			mod |= !_cqBackground.color2.Equals(color2);
 			_cqBackground.color2 = color2;
 
-			_cqBackground.modified |= mod;
+			_cqBackground.Modified |= mod;
 		}
 
 		public void BackgroundWallpaper(ViewInfo view, bool scaleToFit)
@@ -104,7 +104,7 @@ namespace RhinoCyclesCore.Database
 			switch (usage)
 			{
 				case RenderEnvironment.Usage.Background:
-					if (environment?.RenderHash == _cqBackground.background_environment?.RenderHash) return;
+					if (environment?.RenderHash == _cqBackground.BackgroundEnvironment?.RenderHash) return;
 					_cqBackground.Xml = "";
 					var xmlenv = (environment?.TopLevelParent as Materials.ICyclesMaterial);
 					if(xmlenv?.MaterialType == RhinoCyclesCore.ShaderBody.CyclesMaterial.XmlEnvironment || xmlenv?.MaterialType == RhinoCyclesCore.ShaderBody.CyclesMaterial.SimpleNoiseEnvironment)
@@ -112,7 +112,7 @@ namespace RhinoCyclesCore.Database
 						xmlenv.BakeParameters();
 						_cqBackground.Xml = xmlenv.MaterialXml;
 					}
-					_cqBackground.background_environment = environment;
+					_cqBackground.BackgroundEnvironment = environment;
 					if (environment != null)
 					{
 						var s = environment.GetParameter("background-projection") as IConvertible;
@@ -124,13 +124,13 @@ namespace RhinoCyclesCore.Database
 					}
 					break;
 				case RenderEnvironment.Usage.Skylighting:
-					_cqBackground.skylight_environment = environment;
+					_cqBackground.SkylightEnvironment = environment;
 					break;
 				case RenderEnvironment.Usage.ReflectionAndRefraction:
-					_cqBackground.reflection_environment = environment;
+					_cqBackground.ReflectionEnvironment = environment;
 					break;
 			}
-			_cqBackground.modified = true;
+			_cqBackground.Modified = true;
 		}
 
 		public void HandleEnvironments(RenderEnvironment.Usage usage)
@@ -141,7 +141,7 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// True if background has changed.
 		/// </summary>
-		public bool BackgroundHasChanged => _cqBackground.modified;
+		public bool BackgroundHasChanged => _cqBackground.Modified;
 
 		/// <summary>
 		/// Reset background changes.

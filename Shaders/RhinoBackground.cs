@@ -101,14 +101,14 @@ namespace RhinoCyclesCore.Shaders
 
 				var color1 = (m_original_background.color1.IsEmpty ? tst : RenderEngine.CreateFloat4(m_original_background.color1)) ^ m_original_background.Gamma;
 				var color2 = (m_original_background.color2.IsEmpty ? tst : RenderEngine.CreateFloat4(m_original_background.color2)) ^ m_original_background.Gamma;
-				var bgcolor = (m_original_background.bg_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.bg_color)) ^ m_original_background.Gamma;
-				var skycolor = (m_original_background.sky_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.sky_color)) ^ m_original_background.Gamma;
-				var reflcolor = (m_original_background.refl_color.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.refl_color)) ^ m_original_background.Gamma;
+				var bgcolor = (m_original_background.BgColor.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.BgColor)) ^ m_original_background.Gamma;
+				var skycolor = (m_original_background.SkyColor.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.SkyColor)) ^ m_original_background.Gamma;
+				var reflcolor = (m_original_background.ReflectionColor.IsEmpty ? black : RenderEngine.CreateFloat4(m_original_background.ReflectionColor)) ^ m_original_background.Gamma;
 
 				// our main background shader. With just this, and some color != black set we should get skylighting
 				// use the bgcolor from the background (360deg) environment if it is specified, instead.
 				_backgroundNode.ins.Strength.Value = 1.0f;
-				_backgroundNode.ins.Color.Value = (m_original_background.background_environment != null && m_original_background.background_fill==BackgroundStyle.Environment? bgcolor : color1);
+				_backgroundNode.ins.Color.Value = (m_original_background.BackgroundEnvironment != null && m_original_background.BackgroundFill==BackgroundStyle.Environment? bgcolor : color1);
 
 				#region skylight disabler/enabler nodes
 
@@ -132,23 +132,23 @@ namespace RhinoCyclesCore.Shaders
 
 				#region nodes for environment textures on bg/refl/skylight
 
-				if (m_original_background.wallpaper.HasTextureImage && m_original_background.background_fill == BackgroundStyle.WallpaperImage)
+				if (m_original_background.Wallpaper.HasTextureImage && m_original_background.BackgroundFill == BackgroundStyle.WallpaperImage)
 				{
-					RenderEngine.SetTextureImage(_bgEnvTexture, m_original_background.wallpaper);
+					RenderEngine.SetTextureImage(_bgEnvTexture, m_original_background.Wallpaper);
 				}
-				else if (m_original_background.bg.HasTextureImage)
+				else if (m_original_background.BgTexture.HasTextureImage)
 				{
-					RenderEngine.SetTextureImage(_bgEnvTexture, m_original_background.bg);
-				}
-
-				if (m_original_background.refl.HasTextureImage)
-				{
-					RenderEngine.SetTextureImage(_reflEnvTexture, m_original_background.refl);
+					RenderEngine.SetTextureImage(_bgEnvTexture, m_original_background.BgTexture);
 				}
 
-				if (m_original_background.sky.HasTextureImage)
+				if (m_original_background.ReflectionTexture.HasTextureImage)
 				{
-					RenderEngine.SetTextureImage(_skyEnvTexture, m_original_background.sky);
+					RenderEngine.SetTextureImage(_reflEnvTexture, m_original_background.ReflectionTexture);
+				}
+
+				if (m_original_background.SkyTexture.HasTextureImage)
+				{
+					RenderEngine.SetTextureImage(_skyEnvTexture, m_original_background.SkyTexture);
 				}
 
 				_skyBg.ins.Color.Value = skycolor;
@@ -205,15 +205,15 @@ namespace RhinoCyclesCore.Shaders
 				_textureCoordinates.outs.Generated.Connect(_mapSky.ins.Vector);
 
 				// if there is a bg texture, put that in bg color
-				if (m_original_background.bg.HasTextureImage && m_original_background.background_fill == BackgroundStyle.Environment && !m_original_background.PlanarProjection)
+				if (m_original_background.BgTexture.HasTextureImage && m_original_background.BackgroundFill == BackgroundStyle.Environment && !m_original_background.PlanarProjection)
 				{
 					_mapBg.outs.Vector.Connect(_bgEnvTexture.ins.Vector);
-					_mapBg.Rotation = m_original_background.bg.Transform.z;
+					_mapBg.Rotation = m_original_background.BgTexture.Transform.z;
 					_bgEnvTexture.outs.Color.Connect(_backgroundNode.ins.Color);
-					_backgroundNode.ins.Strength.Value = m_original_background.bg.Strength;
+					_backgroundNode.ins.Strength.Value = m_original_background.BgTexture.Strength;
 				}
 				// or if gradient fill is needed, so lets do that.
-				else if (m_original_background.background_fill == BackgroundStyle.Gradient)
+				else if (m_original_background.BackgroundFill == BackgroundStyle.Gradient)
 				{
 					// gradient is 'screen-based', so use window tex coordinates
 					_textureCoordinates.outs.Window.Connect(_mapping.ins.Vector);
@@ -231,36 +231,36 @@ namespace RhinoCyclesCore.Shaders
 					_bgEnvTexture.outs.Color.Connect(_backgroundNode.ins.Color);
 					_bgEnvTexture.Projection = TextureNode.EnvironmentProjection.Wallpaper;
 				}
-				else if (m_original_background.background_fill == BackgroundStyle.WallpaperImage && m_original_background.wallpaper.HasTextureImage)
+				else if (m_original_background.BackgroundFill == BackgroundStyle.WallpaperImage && m_original_background.Wallpaper.HasTextureImage)
 				{
 					_bgEnvTexture.outs.Color.Connect(_backgroundNode.ins.Color);
 					_bgEnvTexture.Projection = TextureNode.EnvironmentProjection.Wallpaper;
 				}
 
 				// connect refl env texture if texture exists
-				if (m_original_background.refl.HasTextureImage)
+				if (m_original_background.ReflectionTexture.HasTextureImage)
 				{
 					_mapRefl.outs.Vector.Connect(_reflEnvTexture.ins.Vector);
-					_mapRefl.Rotation = m_original_background.refl.Transform.z;
+					_mapRefl.Rotation = m_original_background.ReflectionTexture.Transform.z;
 					_reflEnvTexture.outs.Color.Connect(_reflBg.ins.Color);
-					_reflBg.ins.Strength.Value = m_original_background.refl.Strength;
+					_reflBg.ins.Strength.Value = m_original_background.ReflectionTexture.Strength;
 				}
 				// connect sky env texture if texture exists
-				if (m_original_background.sky.HasTextureImage)
+				if (m_original_background.SkyTexture.HasTextureImage)
 				{
 					_mapSky.outs.Vector.Connect(_skyEnvTexture.ins.Vector);
-					_mapSky.Rotation = m_original_background.sky.Transform.z;
+					_mapSky.Rotation = m_original_background.SkyTexture.Transform.z;
 					_skyEnvTexture.outs.Color.Connect(_skyBg.ins.Color);
-					_skyBg.ins.Strength.Value = m_original_background.sky.Strength;
+					_skyBg.ins.Strength.Value = m_original_background.SkyTexture.Strength;
 				}
 
-				if (m_original_background.HasSky && m_original_background.skylight_enabled)
+				if (m_original_background.HasSky && m_original_background.SkylightEnabled)
 				{
 					_skyBg.outs.Background.Connect(_mixSkylightSwitch.ins.Closure1);
 				}
 				else
 				{
-					if (m_original_background.skylight_enabled)
+					if (m_original_background.SkylightEnabled)
 					{
 						_mixBgAndRefl.outs.Closure.Connect(_mixSkylightSwitch.ins.Closure1);
 					}
