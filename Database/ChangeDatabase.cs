@@ -1620,6 +1620,11 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
+		protected override void ApplyDisplayPipelineAttributesChanges(DisplayPipelineAttributes displayPipelineAttributes)
+		{
+			Rhino.RhinoApp.OutputDebugString($"{displayPipelineAttributes.IsRealtimeRenderPreview} {displayPipelineAttributes.RealtimeRenderPasses}\n");
+		}
+
 		/// <summary>
 		/// Handle environment changes
 		/// </summary>
