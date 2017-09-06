@@ -233,6 +233,19 @@ namespace RhinoCyclesCore
 			};
 			RegisterEventHandler();
 		}
+		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, ViewInfo view, ViewportInfo vp, DisplayPipelineAttributes attributes)
+		{
+			SetKernelFlags();
+			SupportClippingPlanes = RcCore.It.EngineSettings.RaytracedClippingPlanes;
+			m_doc_serialnumber = docRuntimeSerialnumber;
+			View = view;
+			m_interactive = false;
+			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, attributes)
+			{
+				SupportClippingPlanes = SupportClippingPlanes
+			};
+			RegisterEventHandler();
+		}
 
 		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive)
 		{

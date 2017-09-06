@@ -34,6 +34,12 @@ namespace RhinoCyclesCore.RenderEngines
 			ModalRenderEngineCommonConstruct();
 		}
 
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport, Rhino.Display.DisplayPipelineAttributes attributes)
+			: base(pluginId, doc.RuntimeSerialNumber, view, viewport, attributes)
+		{
+			ModalRenderEngineCommonConstruct();
+		}
+
 		/// <summary>
 		/// Construct a new render engine
 		/// </summary>
@@ -97,6 +103,7 @@ namespace RhinoCyclesCore.RenderEngines
 		}
 
 		private int maxSamples;
+		public int requestedSamples { get; set; }
 
 		/// <summary>
 		/// Entry point for a new render process. This is to be done in a separate thread.
@@ -111,8 +118,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
-			_samples = RcCore.It.EngineSettings.Samples;
-			maxSamples = _samples;
+			requestedSamples = RcCore.It.EngineSettings.Samples;
+			maxSamples = requestedSamples;
 			cyclesEngine.TriggerCurrentViewportSettingsRequested();
 
 			#region pick a render device
@@ -124,13 +131,13 @@ namespace RhinoCyclesCore.RenderEngines
 			var scene = CreateScene(client, renderDevice, cyclesEngine);
 
 			cyclesEngine.TriggerCurrentViewportSettingsRequested();
-			maxSamples = _samples;
+			maxSamples = requestedSamples;
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
-				Samples = _samples,
+				Samples = requestedSamples,
 				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(RcCore.It.EngineSettings.TileX, RcCore.It.EngineSettings.TileY),
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsGpu ? 0 : RcCore.It.EngineSettings.Threads),
@@ -165,8 +172,10 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				cyclesEngine.Session.PrepareRun();
 
+				maxSamples = requestedSamples;
+
 				// lets first reset session
-				cyclesEngine.Session.Reset(size.Width, size.Height, _samples);
+				cyclesEngine.Session.Reset(size.Width, size.Height, requestedSamples);
 				// then reset scene
 				cyclesEngine.Session.Scene.Reset();
 				// and actually start

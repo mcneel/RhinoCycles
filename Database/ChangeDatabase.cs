@@ -118,6 +118,14 @@ namespace RhinoCyclesCore.Database
 			_modalRenderer = modal;
 		}
 
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes) : base(pluginId, doc, view, attributes)
+		{
+			_renderEngine = engine;
+			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
+			_shaderConverter = new ShaderConverter();
+			_modalRenderer = true;
+		}
+
 
 		/// <summary>
 		/// Constructor for our changequeue implementation
@@ -375,6 +383,7 @@ namespace RhinoCyclesCore.Database
 		{
 			_dynamic = false;
 			_currentViewInfo = null;
+			DisplayPipelineAttributesChanged = false;
 			ClearLinearWorkflow();
 			_environmentDatabase.ResetBackgroundChangeQueue();
 			_cameraDatabase.ResetViewChangeQueue();
@@ -399,7 +408,8 @@ namespace RhinoCyclesCore.Database
 				_lightDatabase.HasChanges() || 
 				_shaderDatabase.HasChanges() ||
 				_objectDatabase.HasChanges() ||
-				LinearWorkflowHasChanged;
+				LinearWorkflowHasChanged ||
+				DisplayPipelineAttributesChanged;
 		}
 
 
@@ -1620,9 +1630,28 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
+		public bool DisplayPipelineAttributesChanged { get; private set; }
+		public int RealtimePreviewPasses { get; private set; }
 		protected override void ApplyDisplayPipelineAttributesChanges(DisplayPipelineAttributes displayPipelineAttributes)
 		{
-			Rhino.RhinoApp.OutputDebugString($"{displayPipelineAttributes.IsRealtimeRenderPreview} {displayPipelineAttributes.RealtimeRenderPasses}\n");
+			if (displayPipelineAttributes.IsRealtimeRenderPreview)
+			{
+				DisplayPipelineAttributesChanged = true;
+				RealtimePreviewPasses = displayPipelineAttributes.RealtimeRenderPasses;
+				Rhino.RhinoApp.OutputDebugString($"{displayPipelineAttributes.IsRealtimeRenderPreview} {displayPipelineAttributes.RealtimeRenderPasses}\n");
+			}
+		}
+
+		public bool UploadDisplayPipelineAttributesChanges()
+		{
+			if(DisplayPipelineAttributesChanged && RealtimePreviewPasses>-1)
+			{
+				if (_renderEngine is RenderEngines.ModalRenderEngine mre)
+				{
+					mre.requestedSamples = RealtimePreviewPasses;
+				}
+			}
+			return true;
 		}
 
 		/// <summary>
