@@ -227,7 +227,7 @@ namespace RhinoCyclesCore
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			View = view;
 			m_interactive = interactive;
-			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, !m_interactive)
+			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, null, !m_interactive)
 			{
 				SupportClippingPlanes = SupportClippingPlanes
 			};
@@ -240,7 +240,7 @@ namespace RhinoCyclesCore
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			View = view;
 			m_interactive = false;
-			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, attributes)
+			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, attributes, false)
 			{
 				SupportClippingPlanes = SupportClippingPlanes
 			};

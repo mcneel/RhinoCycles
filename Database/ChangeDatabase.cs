@@ -102,28 +102,12 @@ namespace RhinoCyclesCore.Database
 
 		public bool SupportClippingPlanes { get; set; }
 
-		/// <summary>
-		/// Constructor for our changequeue implementation
-		/// </summary>
-		/// <param name="pluginId">Id of the plugin instantiating the render change queue</param>
-		/// <param name="engine">Reference to our render engine</param>
-		/// <param name="doc">Document runtime serial number</param>
-		/// <param name="view">Reference to the RhinoView for which this queue is created.</param>
-		/// <param name="modal">Set to true if rendering modal</param>
-		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, bool modal) : base(pluginId, doc, view, !modal)
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal) : base(pluginId, doc, view, attributes, !modal)
 		{
 			_renderEngine = engine;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
 			_shaderConverter = new ShaderConverter();
 			_modalRenderer = modal;
-		}
-
-		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes) : base(pluginId, doc, view, attributes)
-		{
-			_renderEngine = engine;
-			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
-			_shaderConverter = new ShaderConverter();
-			_modalRenderer = true;
 		}
 
 
