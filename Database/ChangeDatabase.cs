@@ -1618,11 +1618,11 @@ namespace RhinoCyclesCore.Database
 		public int RealtimePreviewPasses { get; private set; }
 		protected override void ApplyDisplayPipelineAttributesChanges(DisplayPipelineAttributes displayPipelineAttributes)
 		{
-			if (displayPipelineAttributes.IsRealtimeRenderPreview)
+			if (displayPipelineAttributes.ShowRealtimeRenderProgressBar)
 			{
 				DisplayPipelineAttributesChanged = true;
 				RealtimePreviewPasses = displayPipelineAttributes.RealtimeRenderPasses;
-				Rhino.RhinoApp.OutputDebugString($"{displayPipelineAttributes.IsRealtimeRenderPreview} {displayPipelineAttributes.RealtimeRenderPasses}\n");
+				Rhino.RhinoApp.OutputDebugString($"{displayPipelineAttributes.ShowRealtimeRenderProgressBar} {displayPipelineAttributes.RealtimeRenderPasses}\n");
 			}
 		}
 
