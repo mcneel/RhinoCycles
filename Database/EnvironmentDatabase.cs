@@ -76,10 +76,10 @@ namespace RhinoCyclesCore.Database
 
 			mod |= _cqBackground.BackgroundFill != backgroundStyle;
 			_cqBackground.BackgroundFill = backgroundStyle;
-			mod |= !_cqBackground.color1.Equals(color1);
-			_cqBackground.color1 = color1;
-			mod |= !_cqBackground.color2.Equals(color2);
-			_cqBackground.color2 = color2;
+			mod |= !_cqBackground.Color1.Equals(color1);
+			_cqBackground.Color1 = color1;
+			mod |= !_cqBackground.Color2.Equals(color2);
+			_cqBackground.Color2 = color2;
 
 			_cqBackground.Modified |= mod;
 		}

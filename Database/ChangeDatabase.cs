@@ -1607,11 +1607,7 @@ namespace RhinoCyclesCore.Database
 			{
 				_environmentDatabase.SetGamma(PreProcessGamma);
 				_environmentDatabase.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
-				if (rs.BackgroundStyle == BackgroundStyle.Environment)
-				{
-					UpdateAllEnvironments(RenderEnvironment.Usage.Background);
-				}
-				else if (rs.BackgroundStyle == BackgroundStyle.WallpaperImage)
+				if (rs.BackgroundStyle == BackgroundStyle.WallpaperImage)
 				{
 					var view = GetQueueView();
 					var y = string.IsNullOrEmpty(view.WallpaperFilename);

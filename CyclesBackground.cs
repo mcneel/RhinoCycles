@@ -33,6 +33,7 @@ namespace RhinoCyclesCore
 	/// </summary>
 	public class CyclesBackground : IDisposable
 	{
+		ccl.float4 _tst = new ccl.float4(1.0f, 0.5f, 0.25f);
 		/// <summary>
 		/// True if ChangeQueue modified the background
 		/// </summary>
@@ -45,11 +46,13 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Solid color or top color for gradient
 		/// </summary>
-		public Color color1;
+		public Color Color1 { get; set; } = Color.Empty;
+		public ccl.float4 Color1AsFloat4 => Color1.Equals(Color.Empty) ? _tst : RenderEngine.CreateFloat4(Color1) ^ Gamma;
 		/// <summary>
 		/// Bottom color for gradient
 		/// </summary>
-		public Color color2;
+		public Color Color2 { get; set; } = Color.Empty;
+		public ccl.float4 Color2AsFloat4 => Color2.Equals(Color.Empty) ? _tst : RenderEngine.CreateFloat4(Color2) ^ Gamma;
 		/// <summary>
 		/// Environment used for background (360deg environment)
 		/// </summary>
@@ -72,13 +75,17 @@ namespace RhinoCyclesCore
 		/// Background color, used if bg is no image
 		/// </summary>
 		public Color BgColor { get; set; } = Color.Empty;
+		public ccl.float4 BgColorAs4float => BgColor.Equals(Color.Empty) ? _tst : RenderEngine.CreateFloat4(BgColor) ^ Gamma;
 		/// <summary>
 		/// True if bg env texture is available and background fill is set to Environment.
 		/// </summary>
 		public bool HasBgEnvTexture => BgTexture.HasTextureImage && BackgroundFill == BackgroundStyle.Environment;
-		public float HasBgEnvTextureAsFloat => HasBgEnvTexture ? 1.0f : 0.0f;
+		public float HasBgEnvTextureAsFloat => HasBgEnvTexture || (Wallpaper.HasTextureImage && BackgroundFill == BackgroundStyle.WallpaperImage) ? 1.0f : 0.0f;
 
-		public float BgStrength => HasBgEnvTexture ? BgTexture.Amount : 1.0f;
+		public float BgStrength => HasBgEnvTexture ? BgTexture.Strength: 1.0f;
+
+		public bool UseGradient => BackgroundFill == BackgroundStyle.Gradient;
+		public float UseGradientAsFloat => UseGradient ? 1.0f : 0.0f;
 
 		/// <summary>
 		/// Hold texture data for skylight
@@ -88,8 +95,17 @@ namespace RhinoCyclesCore
 		/// Sky color, used if sky has no image
 		/// </summary>
 		public Color SkyColor { get; set; } = Color.Empty;
+		public ccl.float4 SkyColorAs4float =>
+			SkyColor.Equals(Color.Empty) ? 
+				((
+					(BackgroundFill == BackgroundStyle.SolidColor || BackgroundFill == BackgroundStyle.Gradient) &&
+					SkylightEnabled) ?
+					Color1AsFloat4: _tst
+				)
+			: RenderEngine.CreateFloat4(SkyColor) ^ Gamma;
 
-		public float SkyStrength => HasSkyEnvTexture ? SkyTexture.Amount : 1.0f;
+		public float UseSkyColorAsFloat => SkyColor.Equals(Color.Empty) ? 0.0f : 1.0f;
+		public float SkyStrength => SkylightEnabled ? ( HasSkyEnvTexture ? SkyTexture.Strength : BgStrength) : 0.0f;
 
 		private float gamma = 1.0f;
 		public float Gamma
@@ -128,6 +144,7 @@ namespace RhinoCyclesCore
 		/// Reflection color, used if refl has no image
 		/// </summary>
 		public Color ReflectionColor { get; set; } = Color.Empty;
+		public ccl.float4 ReflectionColorAs4float => ReflectionColor.Equals(Color.Empty) ? _tst : RenderEngine.CreateFloat4(ReflectionColor) ^ Gamma;
 
 		/// <summary>
 		/// True if custom reflection env is used
@@ -139,7 +156,7 @@ namespace RhinoCyclesCore
 		public bool UseCustomReflectionEnvironment => HasRefl;
 		public float UseCustomReflectionEnvironmentAsFloat => UseCustomReflectionEnvironment ? 1.0f : 0.0f;
 
-		public float ReflStrength => HasReflEnvTexture ? ReflectionTexture.Amount : 1.0f;
+		public float ReflStrength => HasReflEnvTexture ? ReflectionTexture.Strength: 1.0f;
 
 		/// <summary>
 		/// Hold texture data for wallpaper
@@ -179,7 +196,7 @@ namespace RhinoCyclesCore
 			{
 				Rhino.RhinoApp.OutputDebugString($"{file} not found, clearing and returning\n");
 				Wallpaper.Clear();
-				WallpaperSolid = color1;
+				WallpaperSolid = Color1;
 				return;
 			}
 
@@ -250,7 +267,7 @@ namespace RhinoCyclesCore
 				Bitmap newBitmap = new Bitmap(w, h);
 
 				var col = Color.Aqua;
-				if (color1 != Color.Empty) col = color1;
+				if (Color1 != Color.Empty) col = Color1;
 				var brush = new SolidBrush(col);
 				var p = new Point(x, y);
 				var bmsize = new Size(nw, nh);
