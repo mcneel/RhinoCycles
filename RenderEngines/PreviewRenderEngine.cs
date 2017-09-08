@@ -72,7 +72,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var client = cyclesEngine.Client;
 
 			var size = cyclesEngine.RenderDimension;
-			var samples = 500;
+			var samples = RcCore.It.EngineSettings.PreviewSamples;
 
 			#region pick a render device
 			var renderDevice = RcCore.It.EngineSettings.RenderDevice;

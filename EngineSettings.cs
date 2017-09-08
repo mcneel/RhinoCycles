@@ -109,6 +109,7 @@ namespace RhinoCyclesCore
 			RaytracedClippingPlanes = RaytracedClippingPlanes;
 			SaveDebugImages = SaveDebugImages;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
+			PreviewSamples = PreviewSamples;
 		}
 
 		public bool IgnoreQualityChanges { get; set; }
@@ -195,6 +196,7 @@ namespace RhinoCyclesCore
 			RaytracedClippingPlanes = RaytracedClippingPlanesDefault;
 			SaveDebugImages = SaveDebugImagesDefault;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorldDefault;
+			PreviewSamples = PreviewSamplesDefault;
 		}
 
 		public bool RenderDeviceIsCuda => RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
@@ -222,6 +224,14 @@ namespace RhinoCyclesCore
 		{
 			get { return RcPlugIn.Settings.GetBool("FlushAtEndOfCreateWorld", FlushAtEndOfCreateWorldDefault); }
 			set { RcPlugIn.Settings.SetBool("FlushAtEndOfCreateWorld", value); }
+		}
+
+		public int PreviewSamplesDefault => 50;
+		public virtual int PreviewSamples
+		{
+			get { return RcPlugIn.Settings.GetInteger("PreviewSamples", PreviewSamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("PreviewSamples", value); }
+
 		}
 
 		public bool ShowViewportPropertiesPanelDefault => false;
@@ -718,6 +728,8 @@ namespace RhinoCyclesCore
 		bool NoShadows { get; set; }
 
 		bool RaytracedClippingPlanes { get; set; }
+
+		int PreviewSamples { get; set; }
 	}
 
 	public interface IViewportSettings
