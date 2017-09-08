@@ -701,6 +701,7 @@ namespace RhinoCyclesCore
 				rem = RhinoMath.CRC32(rem, MaxGlossyBounce);
 				rem = RhinoMath.CRC32(rem, MaxVolumeBounce);
 				rem = RhinoMath.CRC32(rem, MaxTransmissionBounce);
+				rem = RhinoMath.CRC32(rem, TransparentMaxBounce);
 
 				return rem;
 			}
@@ -747,6 +748,7 @@ namespace RhinoCyclesCore
 		int MaxGlossyBounce { get; set; }
 		int MaxVolumeBounce { get; set; }
 		int MaxTransmissionBounce { get; set; }
+		int TransparentMaxBounce { get; set; }
 
 		bool UseStartResolution { get; set; }
 

@@ -43,9 +43,7 @@ namespace RhinoCycles.Settings
 		private Label m_transmissionsamples_lb;
 		private NumericStepper m_transmissionsamples;
 
-		private Label m_maximum;
-		private Label m_minimum;
-
+		private Label m_maxbounce_lb;
 		private NumericStepper m_maxbounce;
 
 		private Label m_maxdiffusebounce_lb;
@@ -59,6 +57,9 @@ namespace RhinoCycles.Settings
 
 		private Label m_maxtransmissionbounce_lb;
 		private NumericStepper m_maxtransmissionbounce;
+
+		private Label m_maxtranspbounce_lb;
+		private NumericStepper m_maxtranspbounce;
 
 		public override LocalizeStringPair Caption => m_caption;
 
@@ -97,6 +98,7 @@ namespace RhinoCycles.Settings
 				m_maxglossybounce.Value = e.ViewportSettings.MaxGlossyBounce;
 				m_maxvolumebounce.Value = e.ViewportSettings.MaxVolumeBounce;
 				m_maxtransmissionbounce.Value = e.ViewportSettings.MaxTransmissionBounce;
+				m_maxtranspbounce.Value = e.ViewportSettings.TransparentMaxBounce;
 				RegisterControlEvents();
 			}
 		}
@@ -167,15 +169,9 @@ namespace RhinoCycles.Settings
 				Tag = IntegratorSetting.TransmissionSamples,
 			};
 
-			m_minimum = new Label()
+			m_maxbounce_lb = new Label()
 			{
-				Text = Localization.LocalizeString("Minimum", 29),
-				VerticalAlignment = VerticalAlignment.Center,
-			};
-
-			m_maximum = new Label()
-			{
-				Text = Localization.LocalizeString("Maximum", 30),
+				Text = LOC.STR("Maximum bounces"),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -245,7 +241,7 @@ namespace RhinoCycles.Settings
 
 			m_maxtransmissionbounce_lb = new Label()
 			{
-				Text = ("Transmission"),
+				Text = LOC.STR("Transmission"),
 				ToolTip = Localization.LocalizeString("Maximum Transmission Bounces", 18),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
@@ -261,6 +257,23 @@ namespace RhinoCycles.Settings
 				Tag = IntegratorSetting.MaxTransmissionBounce,
 			};
 
+			m_maxtranspbounce_lb = new Label()
+			{
+				Text = LOC.STR("Transparency"),
+				ToolTip = LOC.STR("Maximum Transparency Bounces"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			m_maxtranspbounce = new NumericStepper()
+			{
+				Value = 0,
+				ToolTip = LOC.STR("Maximum Transparency Bounces"),
+				MinValue = 0,
+				MaximumDecimalPlaces = 0,
+				Width = 75,
+				Tag = IntegratorSetting.TransparentMaxBounce,
+			};
+
 		}
 
 
@@ -271,12 +284,12 @@ namespace RhinoCycles.Settings
 				Spacing = new Eto.Drawing.Size(1, 5),
 				Rows =
 				{
-					new TableRow(new TableCell(m_minimum, true), new TableCell(m_maximum, true)),
-					new TableRow(m_maxbounce, null),
+					new TableRow(m_maxbounce_lb, m_maxbounce),
 					new TableRow(m_maxdiffusebounce_lb, m_maxdiffusebounce),
 					new TableRow(m_maxglossybounce_lb, m_maxglossybounce),
 					new TableRow(m_maxtransmissionbounce_lb, m_maxtransmissionbounce),
 					new TableRow(m_maxvolumebounce_lb, m_maxvolumebounce),
+					new TableRow(m_maxtranspbounce_lb, m_maxtranspbounce),
 				}
 			};
 
@@ -285,7 +298,6 @@ namespace RhinoCycles.Settings
 				// Padding around the table
 				Padding = new Eto.Drawing.Padding(3, 5, 3, 0),
 				// Spacing between table cells
-				//Spacing = new Eto.Drawing.Size(15, 5),
 				HorizontalContentAlignment = HorizontalAlignment.Stretch,
 				Items =
 				{
@@ -299,9 +311,6 @@ namespace RhinoCycles.Settings
 							Rows = { new TableRow(new TableCell(m_seed, true)) }
 						}
 					}),
-					//new TableRow(m_diffusesamples_lb, m_diffusesamples),
-					//new TableRow(m_glossysamples_lb, m_glossysamples),
-					//new TableRow(m_transmissionsamples_lb, m_transmissionsamples),
 					TableLayout.Horizontal(10,
 						new GroupBox()
 						{
@@ -327,6 +336,7 @@ namespace RhinoCycles.Settings
 			m_maxglossybounce.ValueChanged += M_seed_ValueChanged;
 			m_maxvolumebounce.ValueChanged += M_seed_ValueChanged;
 			m_maxtransmissionbounce.ValueChanged += M_seed_ValueChanged;
+			m_maxtranspbounce.ValueChanged += M_seed_ValueChanged;
 		}
 
 		private void UnregisterControlEvents()
@@ -340,6 +350,7 @@ namespace RhinoCycles.Settings
 			m_maxglossybounce.ValueChanged -= M_seed_ValueChanged;
 			m_maxvolumebounce.ValueChanged -= M_seed_ValueChanged;
 			m_maxtransmissionbounce.ValueChanged -= M_seed_ValueChanged;
+			m_maxtranspbounce.ValueChanged -= M_seed_ValueChanged;
 		}
 
 
@@ -413,6 +424,11 @@ namespace RhinoCycles.Settings
 				case IntegratorSetting.MaxVolumeBounce:
 					vud.MaxVolumeBounce = (int)ns.Value;
 					break;
+				case IntegratorSetting.TransparentMaxBounce:
+					vud.TransparentMaxBounce = (int)ns.Value;
+					break;
+				default:
+					throw new ArgumentException("Unknown IntegratorSetting encountered");
 			}
 
 			if(!m_for_app) ChangeIntegratorSetting(setting, (int)ns.Value);

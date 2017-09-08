@@ -37,6 +37,7 @@ namespace RhinoCyclesCore
 			MaxGlossyBounce,
 			MaxTransmissionBounce,
 			MaxVolumeBounce,
+			TransparentMaxBounce,
 		}
 
 		public event EventHandler CurrentViewportSettingsRequested;
