@@ -106,7 +106,7 @@ namespace RhinoCyclesCore
 			OpenClSingleProgram = OpenClSingleProgram;
 			FullHdrSkylight = FullHdrSkylight;
 			NoShadows = NoShadows;
-			RaytracedClippingPlanes = NoShadows;
+			RaytracedClippingPlanes = RaytracedClippingPlanes;
 			SaveDebugImages = SaveDebugImages;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
 		}
