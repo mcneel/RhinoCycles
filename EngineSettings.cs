@@ -220,22 +220,22 @@ namespace RhinoCyclesCore
 		public bool FlushAtEndOfCreateWorldDefault => false;
 		public virtual bool FlushAtEndOfCreateWorld
 		{
-			get { return RcPlugIn.Settings.GetBool("flushatendofcreateworld", FlushAtEndOfCreateWorldDefault); }
-			set { RcPlugIn.Settings.SetBool("flushatendofcreateworld", value); }
+			get { return RcPlugIn.Settings.GetBool("FlushAtEndOfCreateWorld", FlushAtEndOfCreateWorldDefault); }
+			set { RcPlugIn.Settings.SetBool("FlushAtEndOfCreateWorld", value); }
 		}
 
 		public bool ShowViewportPropertiesPanelDefault => false;
 		public virtual bool ShowViewportPropertiesPanel
 		{
-			get { return RcPlugIn.Settings.GetBool("showviewproportiesdialog", ShowViewportPropertiesPanelDefault); }
-			set { RcPlugIn.Settings.SetBool("showviewproportiesdialog", value); }
+			get { return RcPlugIn.Settings.GetBool("ShowViewPropertiesDialog", ShowViewportPropertiesPanelDefault); }
+			set { RcPlugIn.Settings.SetBool("ShowViewPropertiesDialog", value); }
 		}
 
 		public bool VerboseDefault => false;
 		public virtual bool Verbose
 		{
-			get { return RcPlugIn.Settings.GetBool("verbose", VerboseDefault); }
-			set { RcPlugIn.Settings.SetBool("verbose", value); }
+			get { return RcPlugIn.Settings.GetBool("Verbose", VerboseDefault); }
+			set { RcPlugIn.Settings.SetBool("Verbose", value); }
 		}
 
 		public bool ShowMaxPassesDefault = false;
@@ -245,43 +245,43 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public virtual bool ShowMaxPasses
 		{
-			get { return RcPlugIn.Settings.GetBool("maxpasses", ShowMaxPassesDefault); }
-			set { RcPlugIn.Settings.SetBool("maxpasses", value); }
+			get { return RcPlugIn.Settings.GetBool("MaxPasses", ShowMaxPassesDefault); }
+			set { RcPlugIn.Settings.SetBool("MaxPasses", value); }
 		}
 
 		public float SpotlightFactorDefault => 40.0f;
 		public virtual float SpotlightFactor
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("spotlightfactor", SpotlightFactorDefault); }
-			set { RcPlugIn.Settings.SetDouble("spotlightfactor", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("SpotLightFactor", SpotlightFactorDefault); }
+			set { RcPlugIn.Settings.SetDouble("SpotLightFactor", value); }
 		}
 
 		public float PointlightFactorDefault => 40.0f;
 		public virtual float PointlightFactor
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("pointlightfactor", PointlightFactorDefault); }
-			set { RcPlugIn.Settings.SetDouble("pointlightfactor", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("PointLightFactor", PointlightFactorDefault); }
+			set { RcPlugIn.Settings.SetDouble("PointLightFactor", value); }
 		}
 
 		public float SunlightFactorDefault => 3.2f;
 		public virtual float SunlightFactor
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("sunlightfactor", SunlightFactorDefault); }
-			set { RcPlugIn.Settings.SetDouble("sunlightfactor", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("SunLightFactor", SunlightFactorDefault); }
+			set { RcPlugIn.Settings.SetDouble("SunLightFactor", value); }
 		}
 
 		public float ArealightFactorDefault => 17.2f;
 		public virtual float ArealightFactor
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("arealightfactor", ArealightFactorDefault); }
-			set { RcPlugIn.Settings.SetDouble("arealightfactor", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("AreaLightFactor", ArealightFactorDefault); }
+			set { RcPlugIn.Settings.SetDouble("AreaLightFactor", value); }
 		}
 
 		public float PolishFactorDefault => 0.09f;
 		public virtual float PolishFactor
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("polishfactor", PolishFactorDefault); }
-			set { RcPlugIn.Settings.SetDouble("polishfactor", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("PolishFactor", PolishFactorDefault); }
+			set { RcPlugIn.Settings.SetDouble("PolishFactor", value); }
 		}
 
 		public int ThrottleMsDefault => 10;
@@ -293,8 +293,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public virtual int ThrottleMs
 		{
-			get { return RcPlugIn.Settings.GetInteger("throttlems", ThrottleMsDefault); }
-			set { RcPlugIn.Settings.SetInteger("throttlems", value); }
+			get { return RcPlugIn.Settings.GetInteger("ThrottleMs", ThrottleMsDefault); }
+			set { RcPlugIn.Settings.SetInteger("ThrottleMs", value); }
 		}
 
 		public int FadeInMsDefault => 10;
@@ -304,8 +304,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public virtual int FadeInMs
 		{
-			get { return RcPlugIn.Settings.GetInteger("fadeinms", FadeInMsDefault); }
-			set { RcPlugIn.Settings.SetInteger("fadeinms", value); }
+			get { return RcPlugIn.Settings.GetInteger("FadeInMs", FadeInMsDefault); }
+			set { RcPlugIn.Settings.SetInteger("FadeInMs", value); }
 		}
 
 		public int ThreadsDefault => Math.Max(1, Environment.ProcessorCount - 2);
@@ -316,8 +316,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public virtual int Threads
 		{
-			get { return RcPlugIn.Settings.GetInteger("threads", ThreadsDefault); }
-			set { RcPlugIn.Settings.SetInteger("threads", value); }
+			get { return RcPlugIn.Settings.GetInteger("Threads", ThreadsDefault); }
+			set { RcPlugIn.Settings.SetInteger("Threads", value); }
 		}
 
 		public int TileXDefault => 128;
@@ -326,8 +326,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public virtual int TileX
 		{
-			get { return RcPlugIn.Settings.GetInteger("tilex", TileXDefault); }
-			set { RcPlugIn.Settings.SetInteger("tilex", value); }
+			get { return RcPlugIn.Settings.GetInteger("TileX", TileXDefault); }
+			set { RcPlugIn.Settings.SetInteger("TileX", value); }
 		}
 
 		public int TileYDefault => 128;
@@ -336,56 +336,56 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public virtual int TileY
 		{
-			get { return RcPlugIn.Settings.GetInteger("tiley", TileYDefault); }
-			set { RcPlugIn.Settings.SetInteger("tiley", value); }
+			get { return RcPlugIn.Settings.GetInteger("TileY", TileYDefault); }
+			set { RcPlugIn.Settings.SetInteger("TileY", value); }
 		}
 
 		public float BumpDistanceDefault => 0.01f;
 		public virtual float BumpDistance
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("bumpdistance", BumpDistanceDefault); }
-			set { RcPlugIn.Settings.SetDouble("bumpdistance", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("BumpDistance", BumpDistanceDefault); }
+			set { RcPlugIn.Settings.SetDouble("BumpDistance", value); }
 		}
 		public int SelectedDeviceDefault => -1;
 		[Obsolete("Device selection setting has changed to be a string to cope with multi-devices.")]
 		public virtual int SelectedDevice
 		{
-			get { return RcPlugIn.Settings.GetInteger("selecteddevice", SelectedDeviceDefault); }
-			set { RcPlugIn.Settings.SetInteger("selecteddevice", value); }
+			get { return RcPlugIn.Settings.GetInteger("SelectedDevice", SelectedDeviceDefault); }
+			set { RcPlugIn.Settings.SetInteger("SelectedDevice", value); }
 		}
 
 		public string SelectedDeviceStrDefault => "-1";
 		public virtual string SelectedDeviceStr
 		{
-			get { return RcPlugIn.Settings.GetString("selecteddevicestr", SelectedDeviceStrDefault); }
-			set { RcPlugIn.Settings.SetString("selecteddevicestr", value); }
+			get { return RcPlugIn.Settings.GetString("SelectedDeviceStr", SelectedDeviceStrDefault); }
+			set { RcPlugIn.Settings.SetString("SelectedDeviceStr", value); }
 		}
 
 		public virtual string IntermediateSelectedDeviceStr
 		{
-			get { return RcPlugIn.Settings.GetString("intermediateselecteddevicestr", SelectedDeviceStr); }
-			set { RcPlugIn.Settings.SetString("intermediateselecteddevicestr", value); }
+			get { return RcPlugIn.Settings.GetString("IntermediateSelectedDeviceStr", SelectedDeviceStr); }
+			set { RcPlugIn.Settings.SetString("IntermediateSelectedDeviceStr", value); }
 		}
 
 		public bool AllowSelectedDeviceOverrideDefault => false;
 		public virtual bool AllowSelectedDeviceOverride
 		{
-			get { return RcPlugIn.Settings.GetBool("allowselecteddeviceoverride", AllowSelectedDeviceOverrideDefault); }
-			set { RcPlugIn.Settings.SetBool("allowselecteddeviceoverride", value); }
+			get { return RcPlugIn.Settings.GetBool("AllowSelectedDeviceOverride", AllowSelectedDeviceOverrideDefault); }
+			set { RcPlugIn.Settings.SetBool("AllowSelectedDeviceOverride", value); }
 		}
 
 		public bool UseStartResolutionDefault => true;
 		public bool UseStartResolution
 		{
-			get { return RcPlugIn.Settings.GetBool("usestartresolution", UseStartResolutionDefault); }
-			set { RcPlugIn.Settings.SetBool("usestartresolution", value); }
+			get { return RcPlugIn.Settings.GetBool("UseStartResolution", UseStartResolutionDefault); }
+			set { RcPlugIn.Settings.SetBool("UseStartResolution", value); }
 		}
 
 		public int StartResolutionDefault => 64;
 		public int StartResolution
 		{
-			get { return UseStartResolution ? RcPlugIn.Settings.GetInteger("startresolution", StartResolutionDefault) : int.MaxValue; }
-			set { RcPlugIn.Settings.SetInteger("startresolution", value); }
+			get { return UseStartResolution ? RcPlugIn.Settings.GetInteger("StartResolution", StartResolutionDefault) : int.MaxValue; }
+			set { RcPlugIn.Settings.SetInteger("StartResolution", value); }
 		}
 
 		public virtual IntegratorMethod IntegratorMethod { get; set; }
@@ -393,160 +393,160 @@ namespace RhinoCyclesCore
 		public int MaxBounceDefault => 128;
 		public virtual int MaxBounce
 		{
-			get { return RcPlugIn.Settings.GetInteger("maxbounce", MaxBounceDefault); }
-			set { RcPlugIn.Settings.SetInteger("maxbounce", value); }
+			get { return RcPlugIn.Settings.GetInteger("MaxBounce", MaxBounceDefault); }
+			set { RcPlugIn.Settings.SetInteger("MaxBounce", value); }
 		}
 		public bool NoCausticsDefault => false;
 		public virtual bool NoCaustics
 		{
-			get { return RcPlugIn.Settings.GetBool("nocaustics", NoCausticsDefault); }
-			set { RcPlugIn.Settings.SetBool("nocaustics", value); }
+			get { return RcPlugIn.Settings.GetBool("NoCaustics", NoCausticsDefault); }
+			set { RcPlugIn.Settings.SetBool("NoCaustics", value); }
 		}
 		public int MaxDiffuseBounceDefault => 2;
 		public virtual int MaxDiffuseBounce
 		{
-			get { return RcPlugIn.Settings.GetInteger("maxdiffusebounce", MaxDiffuseBounceDefault); }
-			set { RcPlugIn.Settings.SetInteger("maxdiffusebounce", value); }
+			get { return RcPlugIn.Settings.GetInteger("MaxDiffuseBounce", MaxDiffuseBounceDefault); }
+			set { RcPlugIn.Settings.SetInteger("MaxDiffuseBounce", value); }
 		}
 		public int MaxGlossyBounceDefault => 32;
 		public virtual int MaxGlossyBounce
 		{
-			get { return RcPlugIn.Settings.GetInteger("maxglossybounce", MaxGlossyBounceDefault); }
-			set { RcPlugIn.Settings.SetInteger("maxglossybounce", value); }
+			get { return RcPlugIn.Settings.GetInteger("MaxGlossyBounce", MaxGlossyBounceDefault); }
+			set { RcPlugIn.Settings.SetInteger("MaxGlossyBounce", value); }
 		}
 		public int MaxTransmissionBounceDefault => 32;
 		public virtual int MaxTransmissionBounce
 		{
-			get { return RcPlugIn.Settings.GetInteger("maxtransmissionbounce", MaxTransmissionBounceDefault); }
-			set { RcPlugIn.Settings.SetInteger("maxtransmissionbounce", value); }
+			get { return RcPlugIn.Settings.GetInteger("MaxTransmissionBounce", MaxTransmissionBounceDefault); }
+			set { RcPlugIn.Settings.SetInteger("MaxTransmissionBounce", value); }
 		}
 		public int MaxVolumeBounceDefault => 32;
 		public virtual int MaxVolumeBounce
 		{
-			get { return RcPlugIn.Settings.GetInteger("maxglossybounce", MaxVolumeBounceDefault); }
-			set { RcPlugIn.Settings.SetInteger("maxglossybounce", value); }
+			get { return RcPlugIn.Settings.GetInteger("MaxVolumeBounce", MaxVolumeBounceDefault); }
+			set { RcPlugIn.Settings.SetInteger("MaxVolumeBounce", value); }
 		}
 		public int AaSamplesDefault => 8;
 		public virtual int AaSamples
 		{
-			get { return RcPlugIn.Settings.GetInteger("aasamples", AaSamplesDefault); }
-			set { RcPlugIn.Settings.SetInteger("aasamples", value); }
+			get { return RcPlugIn.Settings.GetInteger("AaSamples", AaSamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("AaSamples", value); }
 		}
 		public int DiffuseSamplesDefault => 128;
 		public virtual int DiffuseSamples
 		{
-			get { return RcPlugIn.Settings.GetInteger("diffusesamples", DiffuseSamplesDefault); }
-			set { RcPlugIn.Settings.SetInteger("diffusesamples", value); }
+			get { return RcPlugIn.Settings.GetInteger("DiffuseSamples", DiffuseSamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("DiffuseSamples", value); }
 		}
 		public int GlossySamplesDefault => 128;
 		public virtual int GlossySamples
 		{
-			get { return RcPlugIn.Settings.GetInteger("glossysamples", GlossySamplesDefault); }
-			set { RcPlugIn.Settings.SetInteger("glossysamples", value); }
+			get { return RcPlugIn.Settings.GetInteger("GlossySamples", GlossySamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("GlossySamples", value); }
 		}
 		public int TransmissionSamplesDefault => 128;
 		public virtual int TransmissionSamples
 		{
-			get { return RcPlugIn.Settings.GetInteger("transmissionsamples", TransmissionSamplesDefault); }
-			set { RcPlugIn.Settings.SetInteger("transmissionsamples", value); }
+			get { return RcPlugIn.Settings.GetInteger("TransmissionSamples", TransmissionSamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("TransmissionSamples", value); }
 		}
 		public int AoSamplesDefault => 2;
 		public virtual int AoSamples
 		{
-			get { return RcPlugIn.Settings.GetInteger("aosamples", AoSamplesDefault); }
-			set { RcPlugIn.Settings.SetInteger("aosamples", value); }
+			get { return RcPlugIn.Settings.GetInteger("AoSamples", AoSamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("AoSamples", value); }
 		}
 		public int MeshLightSamplesDefault => 2;
 		public virtual int MeshLightSamples
 		{
-			get { return RcPlugIn.Settings.GetInteger("meshlightsamples", MeshLightSamplesDefault); }
-			set { RcPlugIn.Settings.SetInteger("meshlightsamples", value); }
+			get { return RcPlugIn.Settings.GetInteger("MeshLightSamples", MeshLightSamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("MeshLightSamples", value); }
 		}
 		public int SubsurfaceSamplesDefault => 2;
 		public virtual int SubsurfaceSamples
 		{
-			get { return RcPlugIn.Settings.GetInteger("subsurfacesamples", SubsurfaceSamplesDefault); }
-			set { RcPlugIn.Settings.SetInteger("subsurfacesamples", value); }
+			get { return RcPlugIn.Settings.GetInteger("SubSurfaceSamples", SubsurfaceSamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("SubSurfaceSamples", value); }
 		}
 		public int VolumeSamplesDefault => 2;
 		public virtual int VolumeSamples
 		{
-			get { return RcPlugIn.Settings.GetInteger("volumesamples", VolumeSamplesDefault); }
-			set { RcPlugIn.Settings.SetInteger("volumesamples", value); }
+			get { return RcPlugIn.Settings.GetInteger("VolumeSamples", VolumeSamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("VolumeSamples", value); }
 		}
 		public int SamplesDefault => 1000;
 		public virtual int Samples
 		{
-			get { return RcPlugIn.Settings.GetInteger("samples", SamplesDefault); }
-			set { RcPlugIn.Settings.SetInteger("samples", value); }
+			get { return RcPlugIn.Settings.GetInteger("Samples", SamplesDefault); }
+			set { RcPlugIn.Settings.SetInteger("Samples", value); }
 		}
 
 		public int SeedDefault => 128;
 		public virtual int Seed
 		{
-			get { return RcPlugIn.Settings.GetInteger("seed", SeedDefault); }
-			set { RcPlugIn.Settings.SetInteger("seed", value); }
+			get { return RcPlugIn.Settings.GetInteger("Seed", SeedDefault); }
+			set { RcPlugIn.Settings.SetInteger("Seed", value); }
 		}
 		public virtual SamplingPattern SamplingPattern { get; set; }
 		public float FilterGlossyDefault => 0.5f;
 		public virtual float FilterGlossy
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("filterglossy", FilterGlossyDefault); }
-			set { RcPlugIn.Settings.SetDouble("filterglossy", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("FilterGlossy", FilterGlossyDefault); }
+			set { RcPlugIn.Settings.SetDouble("FilterGlossy", value); }
 		}
 
 		public float SampleClampDirectDefault => 1.0f;
 		public virtual float SampleClampDirect
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("sampleclampdirect", SampleClampDirectDefault); }
-			set { RcPlugIn.Settings.SetDouble("sampleclampdirect", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("SampleClampDirect", SampleClampDirectDefault); }
+			set { RcPlugIn.Settings.SetDouble("SampleClampDirect", value); }
 		}
 		public float SampleClampIndirectDefault => 5.0f;
 		public virtual float SampleClampIndirect
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("sampleclampindirect", SampleClampIndirectDefault); }
-			set { RcPlugIn.Settings.SetDouble("sampleclampindirect", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("SampleClampIndirect", SampleClampIndirectDefault); }
+			set { RcPlugIn.Settings.SetDouble("SampleClampIndirect", value); }
 		}
 
 		public float LightSamplingThresholdDefault => 0.05f;
 		public virtual float LightSamplingThreshold
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("lightsamplingthreshold", LightSamplingThresholdDefault); }
-			set { RcPlugIn.Settings.SetDouble("lightsamplingthreshold", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("LightSamplingThreshold", LightSamplingThresholdDefault); }
+			set { RcPlugIn.Settings.SetDouble("LightSamplingThreshold", value); }
 		}
 
 		public bool SampleAllLightsDefault => true;
 		public virtual bool SampleAllLights
 		{
-			get { return RcPlugIn.Settings.GetBool("samplealllights", SampleAllLightsDefault); }
-			set { RcPlugIn.Settings.SetBool("samplealllights", value); }
+			get { return RcPlugIn.Settings.GetBool("SampleAllLights", SampleAllLightsDefault); }
+			set { RcPlugIn.Settings.SetBool("SampleAllLights", value); }
 		}
 
 		public bool SampleAllLightsIndirectDefault => true;
 		public virtual bool SampleAllLightsIndirect
 		{
-			get { return RcPlugIn.Settings.GetBool("samplealllightsindirect", SampleAllLightsIndirectDefault); }
-			set { RcPlugIn.Settings.SetBool("samplealllightsindirect", value); }
+			get { return RcPlugIn.Settings.GetBool("SampleAllLightsIndirect", SampleAllLightsIndirectDefault); }
+			set { RcPlugIn.Settings.SetBool("SampleAllLightsIndirect", value); }
 		}
 
 		public float SensorWidthDefault => 32.0f;
 		public virtual float SensorWidth
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("sensorwidth", SensorWidthDefault); }
-			set { RcPlugIn.Settings.SetDouble("sensorwidth", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("SensorWidth", SensorWidthDefault); }
+			set { RcPlugIn.Settings.SetDouble("SensorWidth", value); }
 		}
 		public float SensorHeightDefault => 18.0f;
 		public virtual float SensorHeight
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble("sensorheight", SensorHeightDefault); }
-			set { RcPlugIn.Settings.SetDouble("sensorheight", value); }
+			get { return (float)RcPlugIn.Settings.GetDouble("SensorHeight", SensorHeightDefault); }
+			set { RcPlugIn.Settings.SetDouble("SensorHeight", value); }
 		}
 
 		public int TransparentMaxBounceDefault => 128;
 		public virtual int TransparentMaxBounce
 		{
-			get { return RcPlugIn.Settings.GetInteger("transparentmaxbounce", TransparentMaxBounceDefault); }
-			set { RcPlugIn.Settings.SetInteger("transparentmaxbounce", value); }
+			get { return RcPlugIn.Settings.GetInteger("TransparentMaxBounce", TransparentMaxBounceDefault); }
+			set { RcPlugIn.Settings.SetInteger("TransparentMaxBounce", value); }
 		}
 
 		public bool AllowViewportSettingsOverrideDefault => false;
