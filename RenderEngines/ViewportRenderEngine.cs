@@ -29,7 +29,7 @@ namespace RhinoCyclesCore.RenderEngines
 {
 	public class ViewportRenderEngine : RenderEngine
 	{
-		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, ViewInfo view) : base(pluginId, docRuntimeSerialNumber, view, null, true)
+		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, ViewInfo view, Rhino.Display.DisplayPipelineAttributes attr) : base(pluginId, docRuntimeSerialNumber, view, null, attr, true)
 		{
 			Client = new Client();
 			State = State.Rendering;
