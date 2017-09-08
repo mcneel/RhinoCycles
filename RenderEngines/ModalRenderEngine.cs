@@ -102,7 +102,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
-			requestedSamples = RcCore.It.EngineSettings.Samples;
+			requestedSamples = Attributes?.RealtimeRenderPasses ?? RcCore.It.EngineSettings.Samples;
 			maxSamples = requestedSamples;
 			cyclesEngine.TriggerCurrentViewportSettingsRequested();
 

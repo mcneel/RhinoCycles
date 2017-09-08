@@ -159,7 +159,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (rw == null) return;
 
 			_throttle = RcCore.It.EngineSettings.ThrottleMs;
-			_samples = RcCore.It.EngineSettings.Samples;
+			_samples = Attributes?.RealtimeRenderPasses ?? RcCore.It.EngineSettings.Samples;
 
 			#region pick a render device
 
