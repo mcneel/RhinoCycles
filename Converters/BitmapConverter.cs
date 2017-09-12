@@ -17,7 +17,6 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Globalization;
 using Rhino.Geometry;
 using Rhino.Render;
@@ -27,7 +26,7 @@ using Transform = ccl.Transform;
 
 namespace RhinoCyclesCore.Converters
 {
-	public class BitmapConverter
+	public static class BitmapConverter
 	{
 		static readonly internal Dictionary<uint, ByteBitmap> ByteImagesNew = new Dictionary<uint, ByteBitmap>();
 		static readonly internal Dictionary<uint, FloatBitmap> FloatImagesNew = new Dictionary<uint, FloatBitmap>();
@@ -220,6 +219,35 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
+		static private TextureEnvironmentMappingMode get_environment_mapping(RenderEnvironment rm)
+		{
+			var s = rm.GetParameter("background-projection") as IConvertible;
+			var proj = Convert.ToString(s, CultureInfo.InvariantCulture);
+
+			switch (proj) {
+			case "automatic":
+					return TextureEnvironmentMappingMode.Automatic;
+			case "box":
+					return TextureEnvironmentMappingMode.Box;
+			case "cubemap":
+					return TextureEnvironmentMappingMode.Cube;
+			case "emap":
+					return TextureEnvironmentMappingMode.EnvironmentMap;
+			case "horizontal-cross-cubemap":
+					return TextureEnvironmentMappingMode.HorizontalCrossCube;
+			case "vertical-cross-cubemap":
+					return TextureEnvironmentMappingMode.VerticalCrossCube;
+			case "hemispherical":
+					return TextureEnvironmentMappingMode.Hemispherical;
+			case "lightprobe":
+					return TextureEnvironmentMappingMode.LightProbe;
+			case "spherical":
+					return TextureEnvironmentMappingMode.Spherical;
+				default: // default (non existing planar)
+					return (TextureEnvironmentMappingMode)4;
+				}
+		}
+
 		/// <summary>
 		/// Get environment bitmap from texture evaluator
 		/// </summary>
@@ -227,12 +255,11 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="teximg"></param>
 		/// <param name="gamma"></param>
 		/// <param name="floatAsByte"></param>
-		/// <param name="planarProjection"></param>
-		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma, bool planarProjection)
+		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma)
 		{
 			RenderTexture renderTexture = null;
 
-			if(rm!=null)
+			if (rm != null)
 				renderTexture = rm.FindChild("texture") as RenderTexture;
 
 			if (renderTexture == null)
@@ -244,6 +271,8 @@ namespace RhinoCyclesCore.Converters
 				return;
 			}
 
+			var projection = get_environment_mapping(rm);
+			var planarProjection = (int)projection == 4;
 			var rhinotfm = renderTexture.LocalMappingTransform;
 			var guid = renderTexture.TypeId;
 			var nm = renderTexture.TypeName;
@@ -258,38 +287,14 @@ namespace RhinoCyclesCore.Converters
 			var mult = 1.0f;
 			var multadj = 1.0f;
 
-			if(multob!=null)
+			if (multob != null)
 			{
 				mult = (float)Convert.ToDouble(multob);
 			}
-			if(multadjob!=null)
+			if (multadjob != null)
 			{
 				multadj = (float)Convert.ToDouble(multadjob);
 			}
-			if(azimob!=null && altob!=null) {
-				var azi = Convert.ToDouble(azimob);
-				var alti = Convert.ToDouble(altob);
-				rhinotfm.M20 = alti;
-				rhinotfm.M21 = alti;
-				rhinotfm.M22 = azi;
-			} else
-			{
-				rhinotfm.M00 = tra.X;
-				rhinotfm.M01 = tra.Y;
-				rhinotfm.M02 = tra.Z;
-
-				rhinotfm.M10 = rep.X;
-				rhinotfm.M11 = rep.Y;
-				rhinotfm.M12 = rep.Z;
-
-				rhinotfm.M20 = Rhino.RhinoMath.ToRadians(rot.X);
-				rhinotfm.M21 = Rhino.RhinoMath.ToRadians(rot.Y);
-				rhinotfm.M22 = Rhino.RhinoMath.ToRadians(rot.Z);
-			}
-
-			Transform t = new Transform(
-				rhinotfm.ToFloatArray(true)
-				);
 
 			var restore = !multadj.FuzzyEquals(1.0f);
 
@@ -299,7 +304,7 @@ namespace RhinoCyclesCore.Converters
 				renderTexture.SetParameter("rdk-texture-adjust-multiplier", 1.0);
 			}
 
-			using (var textureEvaluator = 
+			using (var textureEvaluator =
 				renderTexture.CreateEvaluator(
 					RenderTexture.TextureEvaluatorFlags.DisableLocalMapping |
 					RenderTexture.TextureEvaluatorFlags.DisableProjectionChange |
@@ -352,11 +357,38 @@ namespace RhinoCyclesCore.Converters
 				teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
 
 			}
-			if(restore)
+			if (restore)
 			{
 				renderTexture.SetParameter("rdk-texture-adjust-multiplier", (double)multadj);
 				renderTexture.EndChange();
 			}
+			teximg.EnvProjectionMode = projection;
+			teximg.ProjectionMode = TextureProjectionMode.EnvironmentMap;
+
+			if (azimob != null && altob != null) {
+				var azi = Convert.ToDouble(azimob);
+				var alti = Convert.ToDouble(altob);
+				rhinotfm.M20 = alti;
+				rhinotfm.M21 = alti;
+				rhinotfm.M22 = azi;
+			} else
+			{
+				rhinotfm.M00 = tra.X;
+				rhinotfm.M01 = tra.Y;
+				rhinotfm.M02 = tra.Z;
+
+				rhinotfm.M10 = rep.X;
+				rhinotfm.M11 = rep.Y;
+				rhinotfm.M12 = rep.Z;
+
+				rhinotfm.M20 = Rhino.RhinoMath.ToRadians(rot.X);
+				rhinotfm.M21 = Rhino.RhinoMath.ToRadians(rot.Y);
+				rhinotfm.M22 = Rhino.RhinoMath.ToRadians(rot.Z);
+			}
+
+			Transform t = new Transform(
+				rhinotfm.ToFloatArray(true)
+				);
 			teximg.Transform = t;
 			teximg.Strength = mult * multadj;
 		}
@@ -369,7 +401,7 @@ namespace RhinoCyclesCore.Converters
 			{
 				for (var y = 0; y < pheight; y++)
 				{
-					Color px = bm.GetPixel(x, y);
+					Color px = bm.GetPixel(x, pheight - 1 - y);
 					var offset = x * 4 + pwidth * y * 4;
 					upixel[offset] = px.R;
 					upixel[offset + 1] = px.G;
@@ -380,9 +412,13 @@ namespace RhinoCyclesCore.Converters
 			return new ByteBitmap(id, upixel, pwidth, pheight, false);
 		}
 
-		private static byte[] ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment, bool planarProjection)
+
+		private static T[] ReadBitmapFromEvaluator<T>(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment, bool planarProjection)
 		{
-			var upixel = new byte[pwidth * pheight * 4];
+			if (typeof(T) != typeof(float) && typeof(T) != typeof(byte)) throw new ArgumentException($"ReadBitmapFromEvaluator doesn't supporte type {typeof(T)}");
+
+			var upixel = new T[pwidth * pheight * 4];
+
 			var halfpixelU = 0.5 / pwidth;
 			var halfpixelV = 0.5 / pheight;
 			var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
@@ -392,63 +428,28 @@ namespace RhinoCyclesCore.Converters
 				for (var y = 0; y < pheight; y++)
 				{
 					var fx = x / (float)pwidth + halfpixelU;
-					if (isEnvironment && !planarProjection) fx += 0.5f;
+					//if (isEnvironment && !planarProjection) fx += 0.5f;
 					var fy = y / (float)pheight + halfpixelV;
 					if (planarProjection) fy = 1.0f - fy;
+					//fy = 1.0f - fy;
 
 					// remember z can be !0.0 for volumetrics
 					var col4F = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), duvw, duvw);
+					var conv = col4F.ToArray<T>();
 					var offset = x * 4 + pwidth * y * 4;
-					upixel[offset] = (byte)(Math.Min(col4F.R, 1.0f) * 255.0f);
-					upixel[offset + 1] = (byte)(Math.Min(col4F.G, 1.0f) * 255.0f);
-					upixel[offset + 2] = (byte)(Math.Min(col4F.B, 1.0f) * 255.0f);
-					upixel[offset + 3] = (byte)(Math.Min(col4F.A, 1.0f) * 255.0f);
+					upixel[offset] = conv[0];
+					upixel[offset + 1] = conv[1];
+					upixel[offset + 2] = conv[2];
+					upixel[offset + 3] = conv[3];
 				}
 			}
 			return upixel;
 		}
 
-		/// <summary>
-		/// Read image as float array from texture evaluator.
-		/// </summary>
-		/// <param name="pwidth"></param>
-		/// <param name="pheight"></param>
-		/// <param name="textureEvaluator"></param>
-		/// <param name="isEnvironment"></param>
-		/// <param name="planarProjection"></param>
-		/// <returns></returns>
-		private static float[] ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnvironment, bool planarProjection)
-		{
-			var fpixel = new float[pwidth*pheight*4];
-			var halfpixelU = 0.5 / pwidth;
-			var halfpixelV = 0.5 / pheight;
-			var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
-
-			for (var x = 0; x < pwidth; x++)
-			{
-				for (var y = 0; y < pheight; y++)
-				{
-					var fx = x/(float) pwidth + halfpixelU;
-					if (isEnvironment && !planarProjection) fx += 0.5f;
-					var fy = y/(float) pheight + halfpixelV;
-					if (planarProjection) fy = 1.0f - fy;
-
-					// remember z can be !0.0 for volumetrics
-					var col4F = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), duvw, duvw);
-					var offset = x*4 + pwidth*y*4;
-					fpixel[offset] = col4F.R;
-					fpixel[offset + 1] = col4F.G;
-					fpixel[offset + 2] = col4F.B;
-					fpixel[offset + 3] = col4F.A;
-				}
-			}
-			return fpixel;
-		}
-
 		private static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnv, bool planarProjection, bool isLinear)
 		{
 			var read = ByteImagesNew.ContainsKey(rId);
-			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isEnv, planarProjection), pwidth, pheight, isLinear);
+			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadBitmapFromEvaluator<byte>(pwidth, pheight, textureEvaluator, isEnv, planarProjection), pwidth, pheight, isLinear);
 			if (!read)
 			{
 				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
@@ -464,7 +465,7 @@ namespace RhinoCyclesCore.Converters
 		private static FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isEnv, bool planarProjection, bool isLinear)
 		{
 			var read = FloatImagesNew.ContainsKey(rId);
-			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isEnv, planarProjection), pwidth, pheight, isLinear);
+			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadBitmapFromEvaluator<float>(pwidth, pheight, textureEvaluator, isEnv, planarProjection), pwidth, pheight, isLinear);
 			if (!read)
 			{
 				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();

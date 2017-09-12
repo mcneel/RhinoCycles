@@ -222,7 +222,7 @@ namespace RhinoCyclesCore
 						texture_coordinates.outs.EnvHemispherical.Connect(image_node.ins.Vector);
 						break;
 					default:
-						texture_coordinates.outs.EnvLightProbe.Connect(image_node.ins.Vector);
+						texture_coordinates.outs.EnvEmap.Connect(image_node.ins.Vector);
 						break;
 				}
 			}
