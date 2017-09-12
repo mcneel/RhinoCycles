@@ -114,5 +114,12 @@ namespace RhinoCyclesCore.Core
 		}
 
 		public static RcCore It { get; } = new RcCore();
+
+		public static void OutputDebugString(string msg)
+		{
+#if OUTPUTDEBUGSTRINGS
+			Rhino.RhinoApp.OutputDebugString(msg);
+#endif
+		}
 	}
 }

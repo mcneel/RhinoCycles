@@ -55,7 +55,7 @@ namespace RhinoCyclesCore.RenderEngines
 		}
 
 		public void ViewportLoggerCallback(string msg) {
-			Rhino.RhinoApp.OutputDebugString($"{msg}\n");
+			RcCore.OutputDebugString($"{msg}\n");
 		}
 
 

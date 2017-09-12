@@ -176,10 +176,9 @@ namespace RhinoCyclesCore.Shaders
 					sky_or_refl_color282.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Mix;
 					sky_or_refl_color282.UseClamp = false;
 
-				var inv_camera_ray258 = new MathSubtract("inv_camera_ray");
-					inv_camera_ray258.ins.Value1.Value = 1f;
-					inv_camera_ray258.Operation = MathNode.Operations.Subtract;
-					inv_camera_ray258.UseClamp = false;
+				var use_reflect_refract_when_glossy_and_reflection1882 = new MathMultiply("use_reflect_refract_when_glossy_and_reflection");
+					use_reflect_refract_when_glossy_and_reflection1882.Operation = MathNode.Operations.Multiply;
+					use_reflect_refract_when_glossy_and_reflection1882.UseClamp = false;
 
 				var bg_or_rest_color283 = new MixNode("bg_or_rest_color");
 					bg_or_rest_color283.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Mix;
@@ -223,7 +222,7 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(custom_refl_or_bg_color281);
 				m_shader.AddNode(light_path235);
 				m_shader.AddNode(sky_or_refl_color282);
-				m_shader.AddNode(inv_camera_ray258);
+				m_shader.AddNode(use_reflect_refract_when_glossy_and_reflection1882);
 				m_shader.AddNode(bg_or_rest_color283);
 				m_shader.AddNode(final_bg284);
 				
@@ -273,12 +272,12 @@ namespace RhinoCyclesCore.Shaders
 				factored_sky_color280.outs.Image.Connect(sky_or_refl_color282.ins.Color1);
 				custom_refl_or_bg_color281.outs.Color.Connect(sky_or_refl_color282.ins.Color2);
 				light_path235.outs.IsGlossyRay.Connect(sky_or_refl_color282.ins.Fac);
-				light_path235.outs.IsCameraRay.Connect(inv_camera_ray258.ins.Value2);
+				light_path235.outs.IsGlossyRay.Connect(use_reflect_refract_when_glossy_and_reflection1882.ins.Value1);
+				light_path235.outs.IsReflectionRay.Connect(use_reflect_refract_when_glossy_and_reflection1882.ins.Value2);
 				gradient_or_other288.outs.Color.Connect(bg_or_rest_color283.ins.Color1);
 				sky_or_refl_color282.outs.Color.Connect(bg_or_rest_color283.ins.Color2);
-				inv_camera_ray258.outs.Value.Connect(bg_or_rest_color283.ins.Fac);
+				use_reflect_refract_when_glossy_and_reflection1882.outs.Value.Connect(bg_or_rest_color283.ins.Fac);
 				bg_or_rest_color283.outs.Color.Connect(final_bg284.ins.Color);
-
 
 				// extra code
 

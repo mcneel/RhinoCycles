@@ -138,7 +138,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadObjectShaderChanges()
 		{
-			Rhino.RhinoApp.OutputDebugString($"Uploading object shader changes {_shaderDatabase.ObjectShaderChanges.Count}\n");
+			RcCore.OutputDebugString($"Uploading object shader changes {_shaderDatabase.ObjectShaderChanges.Count}\n");
 			foreach (var obshad in _shaderDatabase.ObjectShaderChanges)
 			{
 
@@ -178,17 +178,17 @@ namespace RhinoCyclesCore.Database
 					var cclsh = tup.Item2;
 					if (tup.Item1 is CyclesShader matsh)
 					{
-						Rhino.RhinoApp.OutputDebugString($"Updating material {cclsh.Id}, old gamma {matsh.Gamma} new gamma ");
+						RcCore.OutputDebugString($"Updating material {cclsh.Id}, old gamma {matsh.Gamma} new gamma ");
 						matsh.Gamma = PreProcessGamma;
-						Rhino.RhinoApp.OutputDebugString($"{matsh.Gamma}\n");
+						RcCore.OutputDebugString($"{matsh.Gamma}\n");
 						TriggerMaterialShaderChanged(matsh, cclsh);
 					}
 
 					if (tup.Item1 is CyclesLight lgsh)
 					{
-						Rhino.RhinoApp.OutputDebugString($"Updating light {cclsh.Id}, old gamma {lgsh.Gamma} new gamma ");
+						RcCore.OutputDebugString($"Updating light {cclsh.Id}, old gamma {lgsh.Gamma} new gamma ");
 						lgsh.Gamma = PreProcessGamma;
-						Rhino.RhinoApp.OutputDebugString($"{lgsh.Gamma}\n");
+						RcCore.OutputDebugString($"{lgsh.Gamma}\n");
 						TriggerLightShaderChanged(lgsh, cclsh);
 					}
 
@@ -240,7 +240,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadMeshChanges()
 		{
-			Rhino.RhinoApp.OutputDebugString("UploadMeshChanges\n");
+			RcCore.OutputDebugString("UploadMeshChanges\n");
 			// handle mesh deletes first
 			foreach (var meshDelete in _objectDatabase.MeshesToDelete)
 			{
@@ -248,7 +248,7 @@ namespace RhinoCyclesCore.Database
 
 				foreach (var cob in cobs)
 				{
-					Rhino.RhinoApp.OutputDebugString($"\tDeleting mesh {cob.Id}.{cob.Mesh.Id} ({meshDelete}\n");
+					RcCore.OutputDebugString($"\tDeleting mesh {cob.Id}.{cob.Mesh.Id} ({meshDelete}\n");
 					// remove mesh data
 					cob.Mesh.ClearData();
 					cob.Mesh.TagRebuild();
@@ -260,7 +260,7 @@ namespace RhinoCyclesCore.Database
 
 			var curmesh = 0;
 			var totalmeshes = _objectDatabase.MeshChanges.Count;
-			Rhino.RhinoApp.OutputDebugString($"\tUploading {totalmeshes} mesh changes\n");
+			RcCore.OutputDebugString($"\tUploading {totalmeshes} mesh changes\n");
 			foreach (var meshChange in _objectDatabase.MeshChanges)
 			{
 				var cyclesMesh = meshChange.Value;
@@ -299,7 +299,7 @@ namespace RhinoCyclesCore.Database
 				// update status bar of render window.
 				var stat =
 					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.Verts.Length/3}, t: {cyclesMesh.Faces.Length/3} using shader {shid}]";
-				Rhino.RhinoApp.OutputDebugString($"\t\t{stat}\n");
+				RcCore.OutputDebugString($"\t\t{stat}\n");
 
 				// set progress, but without rendering percentage (hence the -1.0f)
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
@@ -805,19 +805,19 @@ namespace RhinoCyclesCore.Database
 		protected override void ApplyMeshChanges(Guid[] deleted, List<CqMesh> added)
 		{
 			SceneBoundingBox = GetQueueSceneBoundingBox();
-			Rhino.RhinoApp.OutputDebugString($"ChangeDatabase ApplyMeshChanges, deleted {deleted.Length}\n");
+			RcCore.OutputDebugString($"ChangeDatabase ApplyMeshChanges, deleted {deleted.Length}\n");
 
 			foreach (var guid in deleted)
 			{
 				// only delete those that aren't listed in the added list
 				if (!(from mesh in added where mesh.Id() == guid select mesh).Any())
 				{
-					Rhino.RhinoApp.OutputDebugString($" record mesh deletion {guid}\n");
+					RcCore.OutputDebugString($" record mesh deletion {guid}\n");
 					_objectDatabase.DeleteMesh(guid);
 				}
 			}
 
-			Rhino.RhinoApp.OutputDebugString($"ChangeDatabase ApplyMeshChanges added {added.Count}\n");
+			RcCore.OutputDebugString($"ChangeDatabase ApplyMeshChanges added {added.Count}\n");
 
 			foreach (var cqm in added)
 			{
@@ -846,11 +846,11 @@ namespace RhinoCyclesCore.Database
 
 		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, bool isClippingObject)
 		{
-			Rhino.RhinoApp.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
+			RcCore.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
 			// Get face indices flattened to an
 			// integer array. The result will be triangulated faces.
 			var findices = meshdata.Faces.ToIntArray(true);
-			Rhino.RhinoApp.OutputDebugString($" .. {findices.Length/3}\n");
+			RcCore.OutputDebugString($" .. {findices.Length/3}\n");
 
 			// Get texture coordinates and
 			// flattens to a float array.
@@ -957,29 +957,29 @@ namespace RhinoCyclesCore.Database
 			// helper list to ensure we don't add same material multiple times.
 			var addedmats = new List<uint>();
 
-			Rhino.RhinoApp.OutputDebugString($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
+			RcCore.OutputDebugString($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
 			foreach (var dm in deleted)
 			{
-				Rhino.RhinoApp.OutputDebugString($"\ttold to DELETE {dm}\n");
+				RcCore.OutputDebugString($"\ttold to DELETE {dm}\n");
 			}
 			foreach (var aoc in addedOrChanged)
 			{
-				Rhino.RhinoApp.OutputDebugString($"\ttold to ADD {aoc.InstanceId}\n");
+				RcCore.OutputDebugString($"\ttold to ADD {aoc.InstanceId}\n");
 			}
-			Rhino.RhinoApp.OutputDebugString($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
+			RcCore.OutputDebugString($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
 			var inDeleted = from inst in addedOrChanged where deleted.Contains(inst.InstanceId) select inst;
 			var skipFromDeleted = (from inst in inDeleted where true select inst.InstanceId).ToList();
 
 			if (skipFromDeleted.Count > 0)
 			{
-				Rhino.RhinoApp.OutputDebugString($"\t{skipFromDeleted.Count} in both deleted and addedOrChanged!\n");
+				RcCore.OutputDebugString($"\t{skipFromDeleted.Count} in both deleted and addedOrChanged!\n");
 				foreach (var skip in skipFromDeleted)
 				{
-					Rhino.RhinoApp.OutputDebugString($"\t\t{skip} should not be deleted!\n");
+					RcCore.OutputDebugString($"\t\t{skip} should not be deleted!\n");
 				}
 			}
 			var realDeleted = (from dlt in deleted where !skipFromDeleted.Contains(dlt) select dlt).ToList();
-			Rhino.RhinoApp.OutputDebugString($"\tActually deleting {realDeleted.Count} mesh instances!\n");
+			RcCore.OutputDebugString($"\tActually deleting {realDeleted.Count} mesh instances!\n");
 			foreach (var d in realDeleted)
 			{
 					var cob = _objectDatabase.FindObjectRelation(d);
@@ -987,23 +987,23 @@ namespace RhinoCyclesCore.Database
 					{
 						var delob = new CyclesObject {cob = cob};
 						_objectDatabase.DeleteObject(delob);
-						Rhino.RhinoApp.OutputDebugString($"\tDeleting mesh instance {d} {cob.Id}\n");
+						RcCore.OutputDebugString($"\tDeleting mesh instance {d} {cob.Id}\n");
 					}
 					else
 					{
-						Rhino.RhinoApp.OutputDebugString($"\tMesh instance {d} has no object relation..\n");
+						RcCore.OutputDebugString($"\tMesh instance {d} has no object relation..\n");
 					}
 			}
 			var totalmeshes = addedOrChanged.Count;
 			var curmesh = 0;
-			Rhino.RhinoApp.OutputDebugString($"ApplyMeshInstanceChanges: Received {totalmeshes} mesh instance changes\n");
+			RcCore.OutputDebugString($"ApplyMeshInstanceChanges: Received {totalmeshes} mesh instance changes\n");
 			foreach (var a in addedOrChanged)
 			{
 				curmesh++;
 
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
-				Rhino.RhinoApp.OutputDebugString($"\tHandling mesh instance {curmesh}/{totalmeshes}. material {matid} ({mat.Name})\n");
+				RcCore.OutputDebugString($"\tHandling mesh instance {curmesh}/{totalmeshes}. material {matid} ({mat.Name})\n");
 
 				if (!addedmats.Contains(matid))
 				{
@@ -1024,7 +1024,7 @@ namespace RhinoCyclesCore.Database
 
 				if (shaderchange.Changed)
 				{
-					Rhino.RhinoApp.OutputDebugString(
+					RcCore.OutputDebugString(
 						$"\t\tsetting material, from old {shaderchange.OldShaderHash} to new {shaderchange.NewShaderHash}\n");
 
 					_shaderDatabase.AddObjectMaterialChange(shaderchange);
@@ -1059,7 +1059,7 @@ namespace RhinoCyclesCore.Database
 		private void HandleMaterialChangeOnObject(uint matid, uint obid)
 		{
 			var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(obid);
-			Rhino.RhinoApp.OutputDebugString($"handle material change on object {oldhash} {matid}\n");
+			RcCore.OutputDebugString($"handle material change on object {oldhash} {matid}\n");
 			// skip if no change in renderhash
 			if (oldhash != matid)
 			{
@@ -1069,7 +1069,7 @@ namespace RhinoCyclesCore.Database
 					OldShaderHash = oldhash
 				};
 
-				Rhino.RhinoApp.OutputDebugString($"\t-> for {o.Id} old material {o.OldShaderHash} new {o.NewShaderHash}\n");
+				RcCore.OutputDebugString($"\t-> for {o.Id} old material {o.OldShaderHash} new {o.NewShaderHash}\n");
 
 				_shaderDatabase.AddObjectMaterialChange(o);
 			}
@@ -1085,11 +1085,11 @@ namespace RhinoCyclesCore.Database
 			// list of material hashes
 			var distinctMats = new List<uint>();
 
-			Rhino.RhinoApp.OutputDebugString($"ApplyMaterialChanges: {mats.Count}\n");
+			RcCore.OutputDebugString($"ApplyMaterialChanges: {mats.Count}\n");
 
 			foreach (var mat in mats)
 			{
-				Rhino.RhinoApp.OutputDebugString($"\t[material {mat.Id}, {mat.MeshInstanceId}, {mat.MeshIndex}]\n");
+				RcCore.OutputDebugString($"\t[material {mat.Id}, {mat.MeshInstanceId}, {mat.MeshIndex}]\n");
 				var rm = MaterialFromId(mat.Id);
 
 				if (!distinctMats.Contains(mat.Id))
@@ -1119,7 +1119,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadShaderChanges()
 		{
-			Rhino.RhinoApp.OutputDebugString($"Uploading shader changes {_shaderDatabase.ShaderChanges.Count}\n");
+			RcCore.OutputDebugString($"Uploading shader changes {_shaderDatabase.ShaderChanges.Count}\n");
 			// map shaders. key is RenderHash
 			foreach (var shader in _shaderDatabase.ShaderChanges)
 			{
@@ -1227,7 +1227,7 @@ namespace RhinoCyclesCore.Database
 			var gpcrc = gp.Crc;
 			if (gpcrc == old_gp_crc && old_gp_enabled == gp.Enabled) return;
 
-			Rhino.RhinoApp.OutputDebugString("ApplyGroundPlaneChanges.\n");
+			RcCore.OutputDebugString("ApplyGroundPlaneChanges.\n");
 
 			old_gp_crc = gpcrc;
 			old_gp_enabled = gp.Enabled;
@@ -1511,7 +1511,7 @@ namespace RhinoCyclesCore.Database
 		{
 			if (_environmentDatabase.BackgroundHasChanged)
 			{
-				Rhino.RhinoApp.OutputDebugString("Uploading background changes\n");
+				RcCore.OutputDebugString("Uploading background changes\n");
 				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader);
 			}
 		}
@@ -1526,7 +1526,7 @@ namespace RhinoCyclesCore.Database
 			{
 				if (ob.cob != null)
 				{
-					Rhino.RhinoApp.OutputDebugString($"UploadObjectChanges: deleting object {ob.obid} {ob.cob.Id}\n");
+					RcCore.OutputDebugString($"UploadObjectChanges: deleting object {ob.obid} {ob.cob.Id}\n");
 					var cob = ob.cob;
 					// deleting we do (for now?) by marking object as hidden.
 					// we *don't* clear mesh data here, since that very mesh
@@ -1536,7 +1536,7 @@ namespace RhinoCyclesCore.Database
 				}
 			}
 
-			Rhino.RhinoApp.OutputDebugString($"UploadObjectChanges: adding/modifying objects {_objectDatabase.NewOrUpdatedObjects.Count}\n");
+			RcCore.OutputDebugString($"UploadObjectChanges: adding/modifying objects {_objectDatabase.NewOrUpdatedObjects.Count}\n");
 
 			// now combine objects and meshes, creating new objects when necessary
 			foreach (var ob in _objectDatabase.NewOrUpdatedObjects)
@@ -1561,7 +1561,7 @@ namespace RhinoCyclesCore.Database
 					_objectDatabase.RecordObjectIdMeshIdRelation(ob.obid, ob.meshid);
 				}
 
-				Rhino.RhinoApp.OutputDebugString($"\tadding/modifying object {ob.obid} {ob.meshid} {cob.Id}\n");
+				RcCore.OutputDebugString($"\tadding/modifying object {ob.obid} {ob.meshid} {cob.Id}\n");
 
 				// set mesh reference and other stuff
 				cob.Mesh = mesh;
@@ -1605,7 +1605,7 @@ namespace RhinoCyclesCore.Database
 				{
 					var view = GetQueueView();
 					var y = string.IsNullOrEmpty(view.WallpaperFilename);
-					Rhino.RhinoApp.OutputDebugString(
+					RcCore.OutputDebugString(
 						$"view has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}\n");
 					_environmentDatabase.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
 					_wallpaperInitialized = true;
@@ -1649,7 +1649,7 @@ namespace RhinoCyclesCore.Database
 			 * The earlier assumption that non-changing EnvironmentIdForUsage meant non-changing
 			 * environment instance is wrong. See http://mcneel.myjetbrains.com/youtrack/issue/RH-32418
 			 */
-			Rhino.RhinoApp.OutputDebugString($"ApplyEnvironmentChanges {usage}\n");
+			RcCore.OutputDebugString($"ApplyEnvironmentChanges {usage}\n");
 			_environmentDatabase.SetGamma(PreProcessGamma);
 			UpdateAllEnvironments(usage);
 		}
@@ -1687,7 +1687,7 @@ namespace RhinoCyclesCore.Database
 		protected override void NotifyBeginUpdates()
 		{
 			// nothing
-			Rhino.RhinoApp.OutputDebugString($"NotifyBeginUpdates {++_updateCounter}\n");
+			RcCore.OutputDebugString($"NotifyBeginUpdates {++_updateCounter}\n");
 		}
 
 		/// <summary>
@@ -1695,14 +1695,14 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		protected override void NotifyEndUpdates()
 		{
-			Rhino.RhinoApp.OutputDebugString($"NotifyEndUpdates {_updateCounter}\n");
+			RcCore.OutputDebugString($"NotifyEndUpdates {_updateCounter}\n");
 			_renderEngine.Flush = true;
 		}
 
 		private bool _dynamic = false;
 		protected override void NotifyDynamicUpdatesAreAvailable()
 		{
-			Rhino.RhinoApp.OutputDebugString("NotifyDynamicUpdatesAreAvailable\n");
+			RcCore.OutputDebugString("NotifyDynamicUpdatesAreAvailable\n");
 			_dynamic = true;
 			// nothing
 			//System.Diagnostics.Debug.WriteLine("dyn changes...");

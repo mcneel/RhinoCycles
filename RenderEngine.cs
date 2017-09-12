@@ -108,7 +108,7 @@ namespace RhinoCyclesCore
 		public event EventHandler ChangesReady;
 		public void TriggerChangesReady()
 		{
-			Rhino.RhinoApp.OutputDebugString("Triggering changes, changequeue applied everything\n");
+			RcCore.OutputDebugString("Triggering changes, changequeue applied everything\n");
 			ChangesReady?.Invoke(this, EventArgs.Empty);
 		}
 

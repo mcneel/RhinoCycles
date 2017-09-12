@@ -194,7 +194,7 @@ namespace RhinoCyclesCore
 
 			if (string.IsNullOrEmpty(file) || !File.Exists(file))
 			{
-				Rhino.RhinoApp.OutputDebugString($"{file} not found, clearing and returning\n");
+				RcCore.OutputDebugString($"{file} not found, clearing and returning\n");
 				Wallpaper.Clear();
 				WallpaperSolid = Color1;
 				return;
@@ -207,7 +207,7 @@ namespace RhinoCyclesCore
 			m_old_scaletofit = scaleToFit;
 			m_old_wallpaper = file ?? "";
 			var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(m_old_wallpaper));
-			Rhino.RhinoApp.OutputDebugString($"Handling wallpaper, reading {file}\n");
+			RcCore.OutputDebugString($"Handling wallpaper, reading {file}\n");
 			try
 			{
 				int near, far;
@@ -296,7 +296,7 @@ namespace RhinoCyclesCore
 			}
 			catch (Exception e)
 			{
-				Rhino.RhinoApp.OutputDebugString($"wallpaper failure: {e.Message}.\n");
+				RcCore.OutputDebugString($"wallpaper failure: {e.Message}.\n");
 				Wallpaper.Clear();
 			}
 		}
