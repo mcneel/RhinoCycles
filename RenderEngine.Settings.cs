@@ -82,8 +82,8 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		protected int _throttle = 10;
-		protected int _samples = 1;
+		protected int _throttle { get; set; } = 10;
+		protected int _samples { get; set; } = 1;
 
 		protected bool _needReset;
 	}

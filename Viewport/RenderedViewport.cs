@@ -150,8 +150,10 @@ namespace RhinoCycles.Viewport
 			RhinoApp.OutputDebugString("time pressed\n");
 		}
 
+		private DisplayPipelineAttributes Dpa { get; set; } = null;
 		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo, DisplayPipelineAttributes displayPipelineAttributes)
 		{
+			Dpa = displayPipelineAttributes;
 		}
 
 		public override bool UseFastDraw() { return !_forCapture && RcCore.It.CanUseDrawOpenGl(); }
@@ -180,6 +182,7 @@ namespace RhinoCycles.Viewport
 			}
 		}
 
+
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
 			_started = true;
@@ -187,7 +190,8 @@ namespace RhinoCycles.Viewport
 			if (forCapture)
 			{
 				SetUseDrawOpenGl(false);
-				ModalRenderEngine mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo);
+				var mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo, Dpa);
+
 				_cycles = null;
 				_modal = mre;
 
@@ -217,7 +221,7 @@ namespace RhinoCycles.Viewport
 			_frameAvailable = false;
 			_sameView = false;
 
-			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView);
+			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa);
 
 			_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			_cycles.RenderStarted += CyclesRenderStarted; // render engine tells us when it actually is rendering

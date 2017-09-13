@@ -40,6 +40,10 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 			Database.CalculateClippingObjects();
 
+			if (CancelRender) return false;
+
+			Database.UploadDisplayPipelineAttributesChanges();
+
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.1f, "Start data upload"));
 
 			if (CancelRender) return false;

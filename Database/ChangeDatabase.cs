@@ -102,15 +102,7 @@ namespace RhinoCyclesCore.Database
 
 		public bool SupportClippingPlanes { get; set; }
 
-		/// <summary>
-		/// Constructor for our changequeue implementation
-		/// </summary>
-		/// <param name="pluginId">Id of the plugin instantiating the render change queue</param>
-		/// <param name="engine">Reference to our render engine</param>
-		/// <param name="doc">Document runtime serial number</param>
-		/// <param name="view">Reference to the RhinoView for which this queue is created.</param>
-		/// <param name="modal">Set to true if rendering modal</param>
-		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, bool modal) : base(pluginId, doc, view, !modal)
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal) : base(pluginId, doc, view, attributes, !modal, !modal)
 		{
 			_renderEngine = engine;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
@@ -375,6 +367,7 @@ namespace RhinoCyclesCore.Database
 		{
 			_dynamic = false;
 			_currentViewInfo = null;
+			DisplayPipelineAttributesChanged = false;
 			ClearLinearWorkflow();
 			_environmentDatabase.ResetBackgroundChangeQueue();
 			_cameraDatabase.ResetViewChangeQueue();
@@ -399,7 +392,8 @@ namespace RhinoCyclesCore.Database
 				_lightDatabase.HasChanges() || 
 				_shaderDatabase.HasChanges() ||
 				_objectDatabase.HasChanges() ||
-				LinearWorkflowHasChanged;
+				LinearWorkflowHasChanged ||
+				DisplayPipelineAttributesChanged;
 		}
 
 
@@ -1618,6 +1612,30 @@ namespace RhinoCyclesCore.Database
 				}
 				_previousScaleBackgroundToFit = rs.ScaleBackgroundToFit;
 			}
+		}
+
+		public bool DisplayPipelineAttributesChanged { get; private set; }
+		public int RealtimePreviewPasses { get; private set; }
+		protected override void ApplyDisplayPipelineAttributesChanges(DisplayPipelineAttributes displayPipelineAttributes)
+		{
+			if (displayPipelineAttributes.ShowRealtimeRenderProgressBar)
+			{
+				DisplayPipelineAttributesChanged = true;
+				RealtimePreviewPasses = displayPipelineAttributes.RealtimeRenderPasses;
+				Rhino.RhinoApp.OutputDebugString($"{displayPipelineAttributes.ShowRealtimeRenderProgressBar} {displayPipelineAttributes.RealtimeRenderPasses}\n");
+			}
+		}
+
+		public bool UploadDisplayPipelineAttributesChanges()
+		{
+			if(DisplayPipelineAttributesChanged && RealtimePreviewPasses>-1)
+			{
+				if (_renderEngine is RenderEngines.ModalRenderEngine mre)
+				{
+					mre.requestedSamples = RealtimePreviewPasses;
+				}
+			}
+			return true;
 		}
 
 		/// <summary>

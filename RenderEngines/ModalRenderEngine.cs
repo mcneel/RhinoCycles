@@ -28,18 +28,8 @@ namespace RhinoCyclesCore.RenderEngines
 {
 	public class ModalRenderEngine : RenderEngine
 	{
-		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport)
-			: base(pluginId, doc.RuntimeSerialNumber, view, viewport, false)
-		{
-			ModalRenderEngineCommonConstruct();
-		}
-
-		/// <summary>
-		/// Construct a new render engine
-		/// </summary>
-		/// <param name="doc"></param>
-		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
-		public ModalRenderEngine(RhinoDoc doc, Guid pluginId) : base(pluginId, doc.RuntimeSerialNumber, false)
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport, Rhino.Display.DisplayPipelineAttributes attributes)
+			: base(pluginId, doc.RuntimeSerialNumber, view, viewport, attributes, false)
 		{
 			ModalRenderEngineCommonConstruct();
 		}
@@ -97,6 +87,7 @@ namespace RhinoCyclesCore.RenderEngines
 		}
 
 		private int maxSamples;
+		public int requestedSamples { get; set; }
 
 		/// <summary>
 		/// Entry point for a new render process. This is to be done in a separate thread.
@@ -111,8 +102,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
-			_samples = RcCore.It.EngineSettings.Samples;
-			maxSamples = _samples;
+			requestedSamples = Attributes?.RealtimeRenderPasses ?? RcCore.It.EngineSettings.Samples;
+			maxSamples = requestedSamples;
 			cyclesEngine.TriggerCurrentViewportSettingsRequested();
 
 			#region pick a render device
@@ -124,13 +115,13 @@ namespace RhinoCyclesCore.RenderEngines
 			var scene = CreateScene(client, renderDevice, cyclesEngine);
 
 			cyclesEngine.TriggerCurrentViewportSettingsRequested();
-			maxSamples = _samples;
+			maxSamples = requestedSamples;
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
-				Samples = _samples,
+				Samples = requestedSamples,
 				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(RcCore.It.EngineSettings.TileX, RcCore.It.EngineSettings.TileY),
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsGpu ? 0 : RcCore.It.EngineSettings.Threads),
@@ -165,8 +156,10 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				cyclesEngine.Session.PrepareRun();
 
+				maxSamples = requestedSamples;
+
 				// lets first reset session
-				cyclesEngine.Session.Reset(size.Width, size.Height, _samples);
+				cyclesEngine.Session.Reset(size.Width, size.Height, requestedSamples);
 				// then reset scene
 				cyclesEngine.Session.Scene.Reset();
 				// and actually start
