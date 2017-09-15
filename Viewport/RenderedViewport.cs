@@ -472,9 +472,17 @@ namespace RhinoCycles.Viewport
 
 		public override void ShutdownRenderer()
 		{
-			_runTimerForAlpha = false;
-			_cycles?.StopRendering();
-			_cycles?.Dispose();
+			if (_forCapture)
+			{
+				_modal?.StopRendering();
+				_modal?.Dispose();
+			}
+			else
+			{
+				_runTimerForAlpha = false;
+				_cycles?.StopRendering();
+				_cycles?.Dispose();
+			}
 		}
 
 		public override bool IsRendererStarted()
