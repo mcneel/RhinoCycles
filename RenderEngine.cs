@@ -469,9 +469,6 @@ namespace RhinoCyclesCore
 		override public void StopRendering()
 		{
 			base.StopRendering();
-			if (RenderThread == null) return;
-
-			System.Diagnostics.Debug.Assert(Session != null);
 
 			StopTheRenderer();
 		}
