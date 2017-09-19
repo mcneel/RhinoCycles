@@ -214,7 +214,7 @@ namespace RhinoCyclesCore
 			CSycles.debug_set_cpu_kernel(RcCore.It.EngineSettings.CPUSplitKernel);
 		}
 
-		public DisplayPipelineAttributes Attributes { get; set; } = null;
+		public DisplayPipelineAttributes Attributes => Database?.DisplayPipelineAttributes ?? null;
 		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, ViewInfo view, ViewportInfo vp, DisplayPipelineAttributes attributes, bool interactive)
 		{
 			SetKernelFlags();
@@ -222,7 +222,6 @@ namespace RhinoCyclesCore
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			View = view;
 			m_interactive = interactive;
-			Attributes = attributes;
 			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, attributes, !m_interactive)
 			{
 				SupportClippingPlanes = SupportClippingPlanes
