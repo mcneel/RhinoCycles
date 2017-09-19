@@ -219,14 +219,14 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		static private TextureEnvironmentMappingMode get_environment_mapping(RenderEnvironment rm)
+		static private TextureEnvironmentMappingMode get_environment_mapping(RenderEnvironment rm, RenderTexture renderTexture)
 		{
 			var s = rm.GetParameter("background-projection") as IConvertible;
 			var proj = Convert.ToString(s, CultureInfo.InvariantCulture);
 
 			switch (proj) {
 			case "automatic":
-					return TextureEnvironmentMappingMode.Automatic;
+					return renderTexture.GetEnvironmentMappingMode();
 			case "box":
 					return TextureEnvironmentMappingMode.Box;
 			case "cubemap":
@@ -271,7 +271,7 @@ namespace RhinoCyclesCore.Converters
 				return;
 			}
 
-			var projection = get_environment_mapping(rm);
+			var projection = get_environment_mapping(rm, renderTexture);
 			var planarProjection = (int)projection == 4;
 			var rhinotfm = renderTexture.LocalMappingTransform;
 			var guid = renderTexture.TypeId;
