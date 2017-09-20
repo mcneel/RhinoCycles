@@ -87,15 +87,6 @@ namespace RhinoCyclesCore
 		public bool UseGradient => BackgroundFill == BackgroundStyle.Gradient;
 		public float UseGradientAsFloat => UseGradient ? 1.0f : 0.0f;
 
-		public float EquirectangularAsFloat
-		{
-			get
-			{
-				//return HasBgEnvTexture && (BgTexture.EnvProjectionMode == /*TextureEnvironmentMappingMode.Automatic || */BgTexture.EnvProjectionMode ==TextureEnvironmentMappingMode.Spherical)? 1.0f : 0.0f;
-				return HasBgEnvTexture && (/*BgTexture.EnvProjectionMode == TextureEnvironmentMappingMode.Automatic || */ BgTexture.EnvProjectionMode ==TextureEnvironmentMappingMode.Spherical)? 1.0f : 0.0f;
-			}
-		}
-
 		/// <summary>
 		/// Hold texture data for skylight
 		/// </summary>
