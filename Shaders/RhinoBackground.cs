@@ -153,24 +153,28 @@ namespace RhinoCyclesCore.Shaders
 					factor_refl_b269.Operation = MathNode.Operations.Multiply;
 					factor_refl_b269.UseClamp = false;
 
-				var factored_refl_color271 = new CombineRgbNode("factored_refl_color");
-
-				var factored_sky_color276 = new CombineRgbNode("factored_sky_color");
-
-				var custom_refl_or_bg_color277 = new MixNode("custom_refl_or_bg_color");
-					custom_refl_or_bg_color277.ins.Fac.Value = m_original_background.UseCustomReflectionEnvironmentAsFloat;
-					custom_refl_or_bg_color277.BlendType = MixNode.BlendTypes.Mix;
-					custom_refl_or_bg_color277.UseClamp = false;
-
 				var light_path235 = new LightPathNode("light_path");
-
-				var sky_or_refl_color278 = new MixNode("sky_or_refl_color");
-					sky_or_refl_color278.BlendType = MixNode.BlendTypes.Mix;
-					sky_or_refl_color278.UseClamp = false;
 
 				var use_reflect_refract_when_glossy_and_reflection285 = new MathMultiply("use_reflect_refract_when_glossy_and_reflection");
 					use_reflect_refract_when_glossy_and_reflection285.Operation = MathNode.Operations.Multiply;
 					use_reflect_refract_when_glossy_and_reflection285.UseClamp = false;
+
+				var factored_refl_color271 = new CombineRgbNode("factored_refl_color");
+
+				var refl_env_when_enabled286 = new MathMultiply("refl_env_when_enabled");
+					refl_env_when_enabled286.ins.Value1.Value = m_original_background.UseCustomReflectionEnvironmentAsFloat;
+					refl_env_when_enabled286.Operation = MathNode.Operations.Multiply;
+					refl_env_when_enabled286.UseClamp = false;
+
+				var factored_sky_color276 = new CombineRgbNode("factored_sky_color");
+
+				var custom_refl_or_bg_color277 = new MixNode("custom_refl_or_bg_color");
+					custom_refl_or_bg_color277.BlendType = MixNode.BlendTypes.Mix;
+					custom_refl_or_bg_color277.UseClamp = false;
+
+				var sky_or_refl_color278 = new MixNode("sky_or_refl_color");
+					sky_or_refl_color278.BlendType = MixNode.BlendTypes.Mix;
+					sky_or_refl_color278.UseClamp = false;
 
 				var bg_or_rest_color279 = new MixNode("bg_or_rest_color");
 					bg_or_rest_color279.BlendType = MixNode.BlendTypes.Mix;
@@ -205,12 +209,13 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(factor_refl_r267);
 				m_shader.AddNode(factor_refl_g268);
 				m_shader.AddNode(factor_refl_b269);
+				m_shader.AddNode(light_path235);
+				m_shader.AddNode(use_reflect_refract_when_glossy_and_reflection285);
 				m_shader.AddNode(factored_refl_color271);
+				m_shader.AddNode(refl_env_when_enabled286);
 				m_shader.AddNode(factored_sky_color276);
 				m_shader.AddNode(custom_refl_or_bg_color277);
-				m_shader.AddNode(light_path235);
 				m_shader.AddNode(sky_or_refl_color278);
-				m_shader.AddNode(use_reflect_refract_when_glossy_and_reflection285);
 				m_shader.AddNode(bg_or_rest_color279);
 				m_shader.AddNode(final_bg280);
 				
@@ -245,22 +250,24 @@ namespace RhinoCyclesCore.Shaders
 				separate_refl_color270.outs.R.Connect(factor_refl_r267.ins.Value1);
 				separate_refl_color270.outs.G.Connect(factor_refl_g268.ins.Value1);
 				separate_refl_color270.outs.B.Connect(factor_refl_b269.ins.Value1);
+				light_path235.outs.IsGlossyRay.Connect(use_reflect_refract_when_glossy_and_reflection285.ins.Value1);
+				light_path235.outs.IsReflectionRay.Connect(use_reflect_refract_when_glossy_and_reflection285.ins.Value2);
 				factor_refl_r267.outs.Value.Connect(factored_refl_color271.ins.R);
 				factor_refl_g268.outs.Value.Connect(factored_refl_color271.ins.G);
 				factor_refl_b269.outs.Value.Connect(factored_refl_color271.ins.B);
+				use_reflect_refract_when_glossy_and_reflection285.outs.Value.Connect(refl_env_when_enabled286.ins.Value2);
 				factor_sky_r272.outs.Value.Connect(factored_sky_color276.ins.R);
 				factor_sky_g273.outs.Value.Connect(factored_sky_color276.ins.G);
 				factor_sky_b274.outs.Value.Connect(factored_sky_color276.ins.B);
 				gradient_or_other283.outs.Color.Connect(custom_refl_or_bg_color277.ins.Color1);
 				factored_refl_color271.outs.Image.Connect(custom_refl_or_bg_color277.ins.Color2);
+				refl_env_when_enabled286.outs.Value.Connect(custom_refl_or_bg_color277.ins.Fac);
 				factored_sky_color276.outs.Image.Connect(sky_or_refl_color278.ins.Color1);
 				custom_refl_or_bg_color277.outs.Color.Connect(sky_or_refl_color278.ins.Color2);
 				light_path235.outs.IsGlossyRay.Connect(sky_or_refl_color278.ins.Fac);
-				light_path235.outs.IsGlossyRay.Connect(use_reflect_refract_when_glossy_and_reflection285.ins.Value1);
-				light_path235.outs.IsReflectionRay.Connect(use_reflect_refract_when_glossy_and_reflection285.ins.Value2);
-				gradient_or_other283.outs.Color.Connect(bg_or_rest_color279.ins.Color1);
-				sky_or_refl_color278.outs.Color.Connect(bg_or_rest_color279.ins.Color2);
-				use_reflect_refract_when_glossy_and_reflection285.outs.Value.Connect(bg_or_rest_color279.ins.Fac);
+				sky_or_refl_color278.outs.Color.Connect(bg_or_rest_color279.ins.Color1);
+				gradient_or_other283.outs.Color.Connect(bg_or_rest_color279.ins.Color2);
+				light_path235.outs.IsCameraRay.Connect(bg_or_rest_color279.ins.Fac);
 				bg_or_rest_color279.outs.Color.Connect(final_bg280.ins.Color);
 
 				// extra code
