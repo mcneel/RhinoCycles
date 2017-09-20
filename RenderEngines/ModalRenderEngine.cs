@@ -53,34 +53,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#endregion
 		}
-		public void DisplayUpdateHandler(uint sessionId, int sample)
-		{
-			if (Session.IsPaused()) return;
-			// after first 10 frames have been rendered only update every third.
-			if (sample > 10 && sample < (RcCore.It.EngineSettings.Samples - 2) && sample % 3 != 0) return;
-			if (CancelRender) return;
-			if (State != State.Rendering) return;
-			// copy display buffer data into ccycles pixel buffer
-			Session.DrawNogl(RenderDimension.Width, RenderDimension.Height);
-			using (var channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA))
-			{
-				if (CancelRender) return;
-				if (channel != null)
-				{
-					if (CancelRender) return;
-					var pixelbuffer = new PixelBuffer(CSycles.session_get_buffer(Client.Id, sessionId));
-					var size = RenderDimension;
-					var rect = new Rectangle(0, 0, RenderDimension.Width, RenderDimension.Height);
-					if (CancelRender) return;
-					channel.SetValues(rect, size, pixelbuffer);
-				}
-			}
-			SaveRenderedBuffer(sample);
-
-			if (CancelRender || sample >= maxSamples) Session.Cancel("done");
-
-		}
-
 		private void MRE_Database_ViewChanged(object sender, Database.ChangeDatabase.ViewChangedEventArgs e)
 		{
 			//ViewCrc = e.Crc;
