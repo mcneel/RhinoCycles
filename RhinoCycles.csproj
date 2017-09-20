@@ -192,6 +192,7 @@ Copy /Y /A "$(ProjectDir)..\cycles\pthreads\COPYING" /A "$(RhinoBinDir)\$(Config
 Copy /Y "$(ProjectDir)..\cycles\cycles\third_party\cuew\LICENSE" /A "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\cuew.txt"
 Del "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\CMakeLists.txt"
 Del "$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\OSL.txt"</PostBuildEvent>
+    <PostBuildEvent Condition="'$(OS)' == 'Unix'">mv "$(TargetPath)" "$(TargetDir)$(ProjectName).rhp"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
