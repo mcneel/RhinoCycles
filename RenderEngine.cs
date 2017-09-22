@@ -395,7 +395,6 @@ namespace RhinoCyclesCore
 									g = b = r;
 								}
 								if (passtype != PassType.Combined) a = 1.0f;
-								a = 1.0f;
 
 								var c4_f = new Color4f(r, g, b, a);
 
