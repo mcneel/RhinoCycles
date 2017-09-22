@@ -45,7 +45,7 @@ namespace RhinoCycles.Settings
 			m_gv.Columns.Add(new GridColumn {
 				DataCell = new CheckBoxCell { Binding = Binding.Property<DeviceItem, bool?>(r => r.Selected) },
 				HeaderText = "Use",
-				Editable = true
+				Editable = false 
 			});
 			m_gv.Columns.Add(new GridColumn {
 				DataCell = new TextBoxCell { Binding = Binding.Property<DeviceItem, string>(r => r.Text) },
@@ -79,14 +79,27 @@ namespace RhinoCycles.Settings
 
 		public void RegisterEventHandlers()
 		{
+			m_gv.CellClick += M_gv_CellClick;
 			foreach(var di in m_col)
 			{
 				di.PropertyChanged += Di_PropertyChanged;
 			}
 		}
 
+		private void M_gv_CellClick(object sender, GridCellMouseEventArgs e)
+		{
+			if(e.Row>-1)
+			{
+				if(e.Item is DeviceItem i)
+				{
+					i.Selected = !i.Selected;
+				}
+			}
+		}
+
 		public void UnregisterEventHandlers()
 		{
+			m_gv.CellClick -= M_gv_CellClick;
 			foreach(var di in m_col)
 			{
 				di.PropertyChanged -= Di_PropertyChanged;
