@@ -110,6 +110,7 @@ namespace RhinoCyclesCore
 			scene.Background.AoDistance = 0.0f;
 			scene.Background.AoFactor = 0.0f;
 			scene.Background.Visibility = PathRay.AllVisibility;
+			scene.Background.Transparent = false;
 
 			#endregion
 
