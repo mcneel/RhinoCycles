@@ -1614,8 +1614,9 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
-		public bool DisplayPipelineAttributesChanged { get; private set; }
+		public bool DisplayPipelineAttributesChanged { get; private set; } = false;
 		public int RealtimePreviewPasses { get; private set; }
+		public bool TransparentBackground { get; private set; } = false;
 		protected override void ApplyDisplayPipelineAttributesChanges(DisplayPipelineAttributes displayPipelineAttributes)
 		{
 			if (displayPipelineAttributes.ShowRealtimeRenderProgressBar)
@@ -1624,16 +1625,20 @@ namespace RhinoCyclesCore.Database
 				RealtimePreviewPasses = displayPipelineAttributes.RealtimeRenderPasses;
 				Rhino.RhinoApp.OutputDebugString($"{displayPipelineAttributes.ShowRealtimeRenderProgressBar} {displayPipelineAttributes.RealtimeRenderPasses}\n");
 			}
+			bool trbg = TransparentBackground;
+			TransparentBackground = displayPipelineAttributes.FillMode == DisplayPipelineAttributes.FrameBufferFillMode.Transparent;
+			DisplayPipelineAttributesChanged |= trbg != TransparentBackground;
 		}
 
 		public bool UploadDisplayPipelineAttributesChanges()
 		{
-			if(DisplayPipelineAttributesChanged && RealtimePreviewPasses>-1)
+			if(DisplayPipelineAttributesChanged)
 			{
-				if (_renderEngine is RenderEngines.ModalRenderEngine mre)
+				if (RealtimePreviewPasses>-1 && _renderEngine is RenderEngines.ModalRenderEngine mre)
 				{
 					mre.requestedSamples = RealtimePreviewPasses;
 				}
+				_renderEngine.Session.Scene.Background.Transparent = TransparentBackground;
 			}
 			return true;
 		}
