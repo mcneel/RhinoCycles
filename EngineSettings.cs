@@ -54,6 +54,7 @@ namespace RhinoCyclesCore
 
 			UseStartResolution = UseStartResolution;
 			StartResolution = StartResolution;
+			PixelSize = PixelSize;
 
 			TileX = TileX;
 			TileY = TileY;
@@ -141,6 +142,7 @@ namespace RhinoCyclesCore
 
 			UseStartResolution = UseStartResolutionDefault;
 			StartResolution = StartResolutionDefault;
+			PixelSize = PixelSizeDefault;
 
 			TileX = TileXDefault;
 			TileY = TileYDefault;
@@ -396,6 +398,13 @@ namespace RhinoCyclesCore
 		{
 			get { return UseStartResolution ? RcPlugIn.Settings.GetInteger("StartResolution", StartResolutionDefault) : int.MaxValue; }
 			set { RcPlugIn.Settings.SetInteger("StartResolution", value); }
+		}
+
+		public int PixelSizeDefault => RenderEngine.OnDpi ? 3 : 1;
+		public int PixelSize
+		{
+			get { return RcPlugIn.Settings.GetInteger("PixelSize", PixelSizeDefault); }
+			set { RcPlugIn.Settings.SetInteger("PixelSize", value); }
 		}
 
 		public virtual IntegratorMethod IntegratorMethod { get; set; }
@@ -753,6 +762,8 @@ namespace RhinoCyclesCore
 		bool UseStartResolution { get; set; }
 
 		int StartResolution { get; set; }
+
+		int PixelSize { get; set; }
 
 		string SelectedDeviceStr { get; set; }
 

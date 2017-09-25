@@ -201,6 +201,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Background = !RcCore.It.CanUseDrawOpenGl(),
 				ProgressiveRefine = true,
 				Progressive = true,
+				PixelSize = RenderEngine.OnDpi ? RcCore.It.EngineSettings.PixelSize : 1,
 			};
 			if(RcCore.It.CanUseDrawOpenGl()) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
 			#endregion

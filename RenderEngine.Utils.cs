@@ -121,6 +121,15 @@ namespace RhinoCyclesCore
 		static public float4 CreateFloat4(byte x, byte y, byte z, byte w) { return new float4(x / 255.0f, y / 255.0f, z / 255.0f, w / 255.0f); }
 		static public float4 CreateFloat4(Color color) { return CreateFloat4(color.R, color.G, color.B, color.A); }
 
+		static public bool OnDpi
+		{
+			get
+			{
+				var sdpi = RhinoWindows.Forms.Dpi.ScreenDpi();
+				return sdpi > 96;
+			}
+		}
+
 		public static float DegToRad(float ang)
 		{
 			return ang * (float)Math.PI / 180.0f;

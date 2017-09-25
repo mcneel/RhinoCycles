@@ -193,5 +193,11 @@ namespace RhinoCycles.Settings
 			get { return UseThis ? Dictionary.GetInteger("TransparentMaxbounce", RcCore.It.EngineSettings.TransparentMaxBounce) : RcCore.It.EngineSettings.TransparentMaxBounce; }
 			set { Dictionary.Set("TransparentMaxbounce", value); }
 		}
+
+		public int PixelSize
+		{
+			get { return UseThis ? Dictionary.GetInteger("PixelSize", RcCore.It.EngineSettings.PixelSize) : RcCore.It.EngineSettings.PixelSize; }
+			set { Dictionary.Set("PixelSize", value); }
+		}
 	}
 }
