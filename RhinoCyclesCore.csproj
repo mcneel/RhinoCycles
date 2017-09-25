@@ -19,7 +19,8 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>$(RhinoBinDir)\$(Configuration)\Plug-ins\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants Condition="'$(OS)' == 'Windows_NT'">ON_RUNTIME_WIN;DEBUG;TRACE</DefineConstants>
+    <DefineConstants Condition="'$(OS)' == 'Unix'">DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -28,7 +29,8 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>$(RhinoBinDir)\$(Configuration)\Plug-ins\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants Condition="'$(OS)' == 'Windows_NT'">ON_RUNTIME_WIN;TRACE</DefineConstants>
+    <DefineConstants Condition="'$(OS)' == 'Unix'">TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>

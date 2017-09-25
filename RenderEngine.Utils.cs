@@ -125,8 +125,12 @@ namespace RhinoCyclesCore
 		{
 			get
 			{
+#if ON_RUNTIME_WIN
 				var sdpi = RhinoWindows.Forms.Dpi.ScreenDpi();
 				return sdpi > 96;
+#else
+				return false;
+#endif
 			}
 		}
 
