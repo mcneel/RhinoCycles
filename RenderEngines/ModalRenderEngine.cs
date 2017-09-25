@@ -28,6 +28,7 @@ namespace RhinoCyclesCore.RenderEngines
 {
 	public class ModalRenderEngine : RenderEngine
 	{
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId) : this(doc, pluginId, null, null, null) { }
 		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport, Rhino.Display.DisplayPipelineAttributes attributes)
 			: base(pluginId, doc.RuntimeSerialNumber, view, viewport, attributes, false)
 		{
@@ -102,6 +103,7 @@ namespace RhinoCyclesCore.RenderEngines
 				DisplayBufferLinear = true,
 				ProgressiveRefine = true,
 				Progressive = true,
+				PixelSize = 1,
 			};
 			#endregion
 
