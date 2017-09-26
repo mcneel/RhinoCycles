@@ -35,7 +35,7 @@ namespace RhinoCycles
 		readonly private ModalRenderEngine cyclesEngine;
 
 		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, ref AsyncRenderContext aRC)
-			: base(doc, mode, plugin, RenderSize(doc),
+			: base(doc, mode, plugin, RenderSize(doc, true),
 					"RhinoCycles", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false, ref aRC)
 		{
 			cyclesEngine = (ModalRenderEngine)aRC;
