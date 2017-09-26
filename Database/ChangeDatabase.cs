@@ -365,7 +365,6 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ResetChangeQueue()
 		{
-			_dynamic = false;
 			_currentViewInfo = null;
 			DisplayPipelineAttributesChanged = false;
 			ClearLinearWorkflow();
@@ -1696,11 +1695,9 @@ namespace RhinoCyclesCore.Database
 			_renderEngine.Flush = true;
 		}
 
-		private bool _dynamic = false;
 		protected override void NotifyDynamicUpdatesAreAvailable()
 		{
 			RcCore.OutputDebugString("NotifyDynamicUpdatesAreAvailable\n");
-			_dynamic = true;
 			// nothing
 			//System.Diagnostics.Debug.WriteLine("dyn changes...");
 		}
