@@ -1158,63 +1158,54 @@ namespace RhinoCyclesCore.Database
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
 			var gpid = _groundplaneGuid;
-			var altitude = (float) (gp.Enabled ? gp.Altitude : 0.0);
+			var altitude = (float)(gp.Enabled ? gp.Altitude : 0.0);
 			altitude -= 2.5e-4f;
-			if (!_dynamic)
+			Point3d pp = new Point3d(0.0, 0.0, altitude);
+			Plane p = new Plane(pp, Vector3d.ZAxis);
+			Plane pmap = new Plane(pp, Vector3d.ZAxis);
+			var xext = new Interval(-gp_side_extension, gp_side_extension);
+			var yext = new Interval(-gp_side_extension, gp_side_extension);
+			var smext = new Interval(0.0, 1.0);
+			var m = Rhino.Geometry.Mesh.CreateFromPlane(p, xext, yext, 100, 100);
+			m.Weld(0.1);
+
+			Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
+			var texscale = gp.TextureScale;
+			var tscale = Rhino.Geometry.Transform.Scale(p, texscale.X, texscale.Y, 1.0);
+			tfm *= tscale;
+			var motion = new Rhino.Geometry.Vector3d(gp.TextureOffset.X, gp.TextureOffset.Y, 0.0);
+			var ttrans = Rhino.Geometry.Transform.Translation(motion);
+			tfm *= ttrans;
+			var trot = Rhino.Geometry.Transform.Rotation(gp.TextureRotation, pp);
+			tfm *= trot;
+			var texturemapping = TextureMapping.CreatePlaneMapping(pmap, smext, smext, smext);
+			if (texturemapping != null)
 			{
-				Point3d pp = new Point3d(0.0, 0.0, altitude);
-				Plane p = new Plane(pp, Vector3d.ZAxis);
-				Plane pmap = new Plane(pp, Vector3d.ZAxis);
-				var xext = new Interval(-gp_side_extension, gp_side_extension);
-				var yext = new Interval(-gp_side_extension, gp_side_extension);
-				var smext = new Interval(0.0, 1.0);
-				var m = Rhino.Geometry.Mesh.CreateFromPlane(p, xext, yext, 100, 100);
-				m.Weld(0.1);
-
-				Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
-				var texscale = gp.TextureScale;
-				var tscale = Rhino.Geometry.Transform.Scale(p, texscale.X, texscale.Y, 1.0);
-				tfm *= tscale;
-				var motion = new Rhino.Geometry.Vector3d(gp.TextureOffset.X, gp.TextureOffset.Y, 0.0);
-				var ttrans = Rhino.Geometry.Transform.Translation(motion);
-				tfm *= ttrans;
-				var trot = Rhino.Geometry.Transform.Rotation(gp.TextureRotation, pp);
-				tfm *= trot;
-				var texturemapping = TextureMapping.CreatePlaneMapping(pmap, smext, smext, smext);
-				if (texturemapping != null)
-				{
-					m.SetTextureCoordinates(texturemapping, tfm, false);
-					m.SetCachedTextureCoordinates(texturemapping, ref tfm);
-				}
-
-				HandleMeshData(gpid.Item1, gpid.Item2, m, false);
-
-				var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
-				var mat = gp.IsShadowOnly ? def : MaterialFromId( gp.MaterialId);
-
-				var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
-				var cyclesObject = new CyclesObject
-				{
-					matid = mat.RenderHash,
-					obid = GroundPlaneMeshInstanceId,
-					meshid = gpid,
-					Transform = t,
-					Visible = gp.Enabled,
-					CastShadow = true,
-					IsShadowCatcher = gp.IsShadowOnly,
-					IgnoreCutout = true,
-				};
-
-				_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, gpid, GroundPlaneMeshInstanceId);
-				_objectDatabase.RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
-				_objectDatabase.AddOrUpdateObject(cyclesObject);
+				m.SetTextureCoordinates(texturemapping, tfm, false);
+				m.SetCachedTextureCoordinates(texturemapping, ref tfm);
 			}
-			else
+
+			HandleMeshData(gpid.Item1, gpid.Item2, m, false);
+
+			var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
+			var mat = gp.IsShadowOnly ? def : MaterialFromId(gp.MaterialId);
+
+			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
+			var cyclesObject = new CyclesObject
 			{
-				var t = ccl.Transform.Translate(0.0f, 0.0f, altitude);
-				CyclesObjectTransform cot = new CyclesObjectTransform(GroundPlaneMeshInstanceId, t);
-				_objectDatabase.AddDynamicObjectTransform(cot);
-			}
+				matid = mat.RenderHash,
+				obid = GroundPlaneMeshInstanceId,
+				meshid = gpid,
+				Transform = t,
+				Visible = gp.Enabled,
+				CastShadow = true,
+				IsShadowCatcher = gp.IsShadowOnly,
+				IgnoreCutout = true,
+			};
+
+			_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, gpid, GroundPlaneMeshInstanceId);
+			_objectDatabase.RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
+			_objectDatabase.AddOrUpdateObject(cyclesObject);
 		}
 
 		private uint old_gp_crc = 0;
