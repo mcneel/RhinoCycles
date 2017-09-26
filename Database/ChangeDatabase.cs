@@ -1162,8 +1162,9 @@ namespace RhinoCyclesCore.Database
 			altitude -= 2.5e-4f;
 			if (!_dynamic)
 			{
-				Plane p = new Plane(Point3d.Origin, Vector3d.ZAxis);
-				Plane pmap = new Plane(Point3d.Origin, Vector3d.ZAxis);
+				Point3d pp = new Point3d(0.0, 0.0, altitude);
+				Plane p = new Plane(pp, Vector3d.ZAxis);
+				Plane pmap = new Plane(pp, Vector3d.ZAxis);
 				var xext = new Interval(-gp_side_extension, gp_side_extension);
 				var yext = new Interval(-gp_side_extension, gp_side_extension);
 				var smext = new Interval(0.0, 1.0);
@@ -1177,7 +1178,7 @@ namespace RhinoCyclesCore.Database
 				var motion = new Rhino.Geometry.Vector3d(gp.TextureOffset.X, gp.TextureOffset.Y, 0.0);
 				var ttrans = Rhino.Geometry.Transform.Translation(motion);
 				tfm *= ttrans;
-				var trot = Rhino.Geometry.Transform.Rotation(gp.TextureRotation, Point3d.Origin);
+				var trot = Rhino.Geometry.Transform.Rotation(gp.TextureRotation, pp);
 				tfm *= trot;
 				var texturemapping = TextureMapping.CreatePlaneMapping(pmap, smext, smext, smext);
 				if (texturemapping != null)
@@ -1191,7 +1192,7 @@ namespace RhinoCyclesCore.Database
 				var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
 				var mat = gp.IsShadowOnly ? def : MaterialFromId( gp.MaterialId);
 
-				var t = ccl.Transform.Translate(0.0f, 0.0f, altitude);
+				var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 				var cyclesObject = new CyclesObject
 				{
 					matid = mat.RenderHash,
@@ -1199,7 +1200,7 @@ namespace RhinoCyclesCore.Database
 					meshid = gpid,
 					Transform = t,
 					Visible = gp.Enabled,
-					CastShadow = false,
+					CastShadow = true,
 					IsShadowCatcher = gp.IsShadowOnly,
 					IgnoreCutout = true,
 				};
