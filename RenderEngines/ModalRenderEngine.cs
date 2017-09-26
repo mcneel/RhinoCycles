@@ -28,7 +28,7 @@ namespace RhinoCyclesCore.RenderEngines
 {
 	public class ModalRenderEngine : RenderEngine
 	{
-		public ModalRenderEngine(RhinoDoc doc, Guid pluginId) : this(doc, pluginId, null, null, null) { }
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view) : this(doc, pluginId, view, null, null) { }
 		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport, Rhino.Display.DisplayPipelineAttributes attributes)
 			: base(pluginId, doc.RuntimeSerialNumber, view, viewport, attributes, false)
 		{
