@@ -209,6 +209,9 @@ namespace RhinoCyclesCore
 		{
 			get
 			{
+				if (!Device.IsValidDeviceString(SelectedDeviceStr))
+					SelectedDeviceStr = $"{Device.Default.Id}";
+				
 				return Device.DeviceFromString(SelectedDeviceStr);
 			}
 		}

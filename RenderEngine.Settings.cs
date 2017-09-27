@@ -52,11 +52,14 @@ namespace RhinoCyclesCore
 		{
 			if(e.Settings.AllowSelectedDeviceOverride)
 			{
-				RenderDevice = ccl.Device.DeviceFromString(e.Settings.SelectedDeviceStr);
+				if (ccl.Device.IsValidDeviceString(e.Settings.SelectedDeviceStr))
+					RenderDevice = ccl.Device.DeviceFromString(e.Settings.SelectedDeviceStr);
+				else
+					RenderDevice = ccl.Device.Default;
 			}
 			else
 			{
-				RenderDevice = ccl.Device.DeviceFromString(RcCore.It.EngineSettings.SelectedDeviceStr);
+				RenderDevice = RcCore.It.EngineSettings.RenderDevice;
 			}
 			if (Session != null && Session.Scene != null)
 			{
