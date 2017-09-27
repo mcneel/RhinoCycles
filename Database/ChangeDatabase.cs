@@ -1209,6 +1209,7 @@ namespace RhinoCyclesCore.Database
 
 		private uint old_gp_crc = 0;
 		private bool old_gp_enabled = false;
+		RenderMaterial gpShadowsOnlyMat = RenderContentType.NewContentFromTypeId(RenderMaterial.PlasterMaterialGuid) as RenderMaterial;
 		/// <summary>
 		/// Handle ground plane changes.
 		/// </summary>
@@ -1226,7 +1227,10 @@ namespace RhinoCyclesCore.Database
 			//System.Diagnostics.Debug.WriteLine("groundplane");
 			InitialiseGroundPlane(gp);
 
-			var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
+			Rhino.DocObjects.Material m = gpShadowsOnlyMat.SimulateMaterial(true);
+			m.DiffuseColor = Color.Black;
+
+			var def = m.RenderMaterial;
 			var mat = gp.IsShadowOnly ? def : MaterialFromId( gp.MaterialId);
 			HandleRenderMaterial(mat);
 
