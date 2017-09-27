@@ -242,10 +242,7 @@ namespace RhinoCycles.Settings
 			}
 			else
 			{
-				if (ccl.Device.IsValidDeviceString(vud.IntermediateSelectedDeviceStr))
-					rd = ccl.Device.DeviceFromString(vud.IntermediateSelectedDeviceStr);
-				else
-					rd = ccl.Device.FirstGpu;
+				rd = ccl.Device.DeviceFromString(ccl.Device.ValidDeviceString(vud.IntermediateSelectedDeviceStr));
 			}
 			return rd;
 		}
@@ -274,8 +271,7 @@ namespace RhinoCycles.Settings
 				IViewportSettings vud = Settings;
 				if (vud == null) return;
 				m_currentDevice = Settings.RenderDevice;
-				var validDeviceString = ccl.Device.IsValidDeviceString(vud.IntermediateSelectedDeviceStr);
-				m_newDevice = vud!=null ? (validDeviceString ? ccl.Device.DeviceFromString(vud.IntermediateSelectedDeviceStr) : ccl.Device.FirstGpu): m_currentDevice;
+				m_newDevice = vud!=null ? ccl.Device.DeviceFromString(ccl.Device.ValidDeviceString(vud.IntermediateSelectedDeviceStr)): m_currentDevice;
 				SuspendLayout();
 				UnRegisterControlEvents();
 				ShowDeviceData();
@@ -302,8 +298,7 @@ namespace RhinoCycles.Settings
 			if (e.ViewportSettings != null)
 			{
 				m_currentDevice = RcCore.It.EngineSettings.RenderDevice;
-				var isValidDeviceString = ccl.Device.IsValidDeviceString(e.ViewportSettings.SelectedDeviceStr);
-				m_newDevice = isValidDeviceString ? ccl.Device.DeviceFromString(e.ViewportSettings.SelectedDeviceStr) : ccl.Device.FirstGpu;
+				m_newDevice = ccl.Device.DeviceFromString(ccl.Device.ValidDeviceString(e.ViewportSettings.SelectedDeviceStr));
 				SuspendLayout();
 				UnRegisterControlEvents();
 				ShowDeviceData();

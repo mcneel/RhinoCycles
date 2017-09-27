@@ -52,10 +52,7 @@ namespace RhinoCyclesCore
 		{
 			if(e.Settings.AllowSelectedDeviceOverride)
 			{
-				if (ccl.Device.IsValidDeviceString(e.Settings.SelectedDeviceStr))
-					RenderDevice = ccl.Device.DeviceFromString(e.Settings.SelectedDeviceStr);
-				else
-					RenderDevice = ccl.Device.FirstGpu;
+				RenderDevice = ccl.Device.DeviceFromString(ccl.Device.ValidDeviceString(e.Settings.SelectedDeviceStr));
 			}
 			else
 			{
