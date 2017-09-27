@@ -210,7 +210,7 @@ namespace RhinoCyclesCore
 			get
 			{
 				if (!Device.IsValidDeviceString(SelectedDeviceStr))
-					SelectedDeviceStr = $"{Device.Default.Id}";
+					SelectedDeviceStr = $"{Device.FirstGpu.Id}";
 				
 				return Device.DeviceFromString(SelectedDeviceStr);
 			}

@@ -55,7 +55,7 @@ namespace RhinoCyclesCore
 				if (ccl.Device.IsValidDeviceString(e.Settings.SelectedDeviceStr))
 					RenderDevice = ccl.Device.DeviceFromString(e.Settings.SelectedDeviceStr);
 				else
-					RenderDevice = ccl.Device.Default;
+					RenderDevice = ccl.Device.FirstGpu;
 			}
 			else
 			{

@@ -109,7 +109,7 @@ namespace RhinoCycles.Settings
 			{
 				if(!ccl.Device.IsValidDeviceString(SelectedDeviceStr))
 				{
-					SelectedDeviceStr = $"{ccl.Device.Default.Id}";
+					SelectedDeviceStr = $"{ccl.Device.FirstGpu.Id}";
 				}
 				return ccl.Device.DeviceFromString(SelectedDeviceStr);
 			}
