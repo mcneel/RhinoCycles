@@ -40,12 +40,7 @@ namespace RhinoCyclesCore.Database
 
 		public LightDatabase()
 		{
-			/*CyclesLight bgLight = new CyclesLight()
-			{
-				UseMis = true,
-				Type = ccl.LightType.Background,
-			};
-			AddLight(bgLight);*/
+			UpdateBackgroundLight();
 		}
 
 		/// <summary>
@@ -54,7 +49,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns>true for changes, false otherwise</returns>
 		public bool HasChanges()
 		{
-			return _cqLightChanges.Any();
+			return bgLightPoked || _cqLightChanges.Any();
 		}
 
 		/// <summary>
@@ -62,6 +57,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ResetLightChangeQueue()
 		{
+			bgLightPoked = false;
 			_cqLightChanges.Clear();
 		}
 
@@ -108,6 +104,23 @@ namespace RhinoCyclesCore.Database
 				// get the CyclesLights for the Guids
 				var addLights = (from aid in addIds from ll in _cqLightChanges where aid == ll.Id select ll).ToList();
 				return addLights;
+			}
+		}
+
+		private bool bgLightPoked { get; set; } = false;
+		public void UpdateBackgroundLight()
+		{
+			if(!bgLightPoked)
+			{
+				CyclesLight bgLight = new CyclesLight()
+				{
+					Id = BackgroundLightGuid,
+					UseMis = true,
+					Strength = 1.0f,
+					Type = ccl.LightType.Background,
+				};
+				AddLight(bgLight);
+				bgLightPoked = true;
 			}
 		}
 

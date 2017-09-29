@@ -76,7 +76,7 @@ namespace RhinoCyclesCore.Database
 		/// The database responsible for keeping track of light changes and the relations between Rhino
 		/// and Cycles lights and their shaders.
 		/// </summary>
-		private readonly LightDatabase _lightDatabase = new LightDatabase();
+		private LightDatabase _lightDatabase { get; } = new LightDatabase();
 
 		/// <summary>
 		/// Database responsible for keeping track of background and environment changes and their
@@ -1313,7 +1313,13 @@ namespace RhinoCyclesCore.Database
 			foreach (var l in _lightDatabase.LightsToUpdate)
 			{
 				var existingL = _lightDatabase.ExistingLight(l.Id);
-				TriggerLightShaderChanged(l, existingL.Shader);
+				if(l.Type == LightType.Background)
+				{
+					existingL.Shader = _renderEngine.Session.Scene.Background.Shader;
+				} else
+				{
+					TriggerLightShaderChanged(l, existingL.Shader);
+				}
 
 				existingL.Type = l.Type;
 				existingL.Size = l.Size;
@@ -1377,6 +1383,11 @@ namespace RhinoCyclesCore.Database
 			shader.Type = CyclesShader.Shader.Diffuse;
 
 			_shaderDatabase.AddShader(shader);
+		}
+
+		public void UpdateBackgroundLight()
+		{
+			_lightDatabase.UpdateBackgroundLight();
 		}
 
 		/// <summary>
@@ -1584,6 +1595,7 @@ namespace RhinoCyclesCore.Database
 			//System.Diagnostics.Debug.WriteLine("{0}", skylight);
 			_environmentDatabase.SetSkylightEnabled(skylight.Enabled);
 			_environmentDatabase.SetGamma(PreProcessGamma);
+			_lightDatabase.UpdateBackgroundLight();
 		}
 
 
@@ -1606,6 +1618,7 @@ namespace RhinoCyclesCore.Database
 					_wallpaperInitialized = true;
 				}
 				_previousScaleBackgroundToFit = rs.ScaleBackgroundToFit;
+				_lightDatabase.UpdateBackgroundLight();
 			}
 		}
 
@@ -1677,6 +1690,7 @@ namespace RhinoCyclesCore.Database
 			}
 
 			_environmentDatabase.HandleEnvironments(usage);
+			_lightDatabase.UpdateBackgroundLight();
 		}
 
 		private static int _updateCounter = 0;
