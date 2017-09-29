@@ -260,14 +260,6 @@ namespace RhinoCyclesCore
 			return Database.IsPreview;
 		}
 
-		/// <summary>
-		/// Flush
-		/// </summary>
-		public void FlushIt()
-		{
-			Database.Flush();
-		}
-
 		public void TestCancel(uint sid)
 		{
 			if (IsStopped) return;
