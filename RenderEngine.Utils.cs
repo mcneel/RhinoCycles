@@ -97,7 +97,7 @@ namespace RhinoCyclesCore
 			};
 
 			var bgnode = new BackgroundNode("orig bg");
-			bgnode.ins.Color.Value = new float4(0.7f);
+			bgnode.ins.Color.Value = new float4(1.0f);
 			bgnode.ins.Strength.Value = 1.0f;
 
 			background_shader.AddNode(bgnode);
