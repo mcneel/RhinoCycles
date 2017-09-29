@@ -112,7 +112,7 @@ namespace RhinoCyclesCore.Converters
 			var strength = (float)(lg.Intensity * RcCore.It.EngineSettings.PointlightFactor * enabled);
 			var axisu = new float4(0.0f);
 			var axisv = new float4(0.0f);
-			var useMis = false;
+			var useMis = true;
 			var sizeU = 0.0f;
 			var sizeV = 0.0f;
 
