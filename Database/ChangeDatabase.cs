@@ -1573,7 +1573,8 @@ namespace RhinoCyclesCore.Database
 				cob.Mesh = mesh;
 				cob.Transform = ob.Transform;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
-				var vis = ob.Visible ? (ob.IsShadowCatcher ? PathRay.Camera | PathRay.Glossy | PathRay.Diffuse | PathRay.Transmit | PathRay.Transparent | PathRay.Shadow: PathRay.AllVisibility): PathRay.Hidden;
+				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
+				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;
 				if (ob.CastShadow == false)
 				{
 					vis &= ~PathRay.Shadow;
