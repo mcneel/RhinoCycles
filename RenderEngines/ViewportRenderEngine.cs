@@ -245,10 +245,8 @@ namespace RhinoCyclesCore.RenderEngines
 					Session.Scene.Integrator.NoShadows = RcCore.It.EngineSettings.NoShadows;
 					Session.Scene.Integrator.TagForUpdate();
 
-					// lets first reset session
+					// lets reset session
 					Session.Reset(size.Width, size.Height, _samples);
-					// then reset scene
-					Session.Scene.Reset();
 				}
 				if(cyclesEngine.IsRendering && cyclesEngine.Session.Sample()) {
 					cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(-1, View));
