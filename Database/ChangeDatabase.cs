@@ -102,7 +102,7 @@ namespace RhinoCyclesCore.Database
 
 		public bool SupportClippingPlanes { get; set; }
 
-		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal) : base(pluginId, doc, view, attributes, !modal, !modal)
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal) : base(pluginId, doc, view, attributes, true, !modal)
 		{
 			_renderEngine = engine;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
