@@ -84,6 +84,12 @@ namespace RhinoCyclesCore
 
 			if (CancelRender) return false;
 
+			// object changes (new ones, deleted ones)
+			Database.UploadObjectChanges();
+			UploadProgress?.Invoke(this, new UploadProgressEventArgs(1.0f, "Object changes uploaded"));
+
+			if (CancelRender) return false;
+
 			// shader changes on objects (replacement)
 			Database.UploadObjectShaderChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.9f, "Shader assignments uploaded"));
@@ -93,12 +99,6 @@ namespace RhinoCyclesCore
 			// light changes
 			Database.UploadLightChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.7f, "Lights uploaded"));
-
-			if (CancelRender) return false;
-
-			// object changes (new ones, deleted ones)
-			Database.UploadObjectChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(1.0f, "Object changes uploaded"));
 
 			if (CancelRender) return false;
 
