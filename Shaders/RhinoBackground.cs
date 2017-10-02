@@ -339,7 +339,9 @@ namespace RhinoCyclesCore.Shaders
 				if(m_original_background.HasReflEnvTexture)
 				{
 					RenderEngine.SetTextureImage(refl_env_texture256, m_original_background.ReflectionTexture);
-					refl_env_texture256.Rotation = m_original_background.ReflectionTexture.Transform.z;
+					var reflrot = m_original_background.ReflectionTexture.Transform.z;
+					reflrot.z += (float)	System.Math.PI;
+					refl_env_texture256.Rotation = reflrot;
 				}
 				if(m_original_background.HasSkyEnvTexture)
 				{
