@@ -101,6 +101,7 @@ namespace RhinoCyclesCore
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverride;
 			UseDrawOpenGl = UseDrawOpenGl;
+			UseFastDraw = UseFastDraw;
 			OpenClDeviceType = OpenClDeviceType;
 			OpenClKernelType = OpenClKernelType;
 			CPUSplitKernel = CPUSplitKernel;
@@ -189,6 +190,7 @@ namespace RhinoCyclesCore
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverrideDefault;
 			UseDrawOpenGl = UseDrawOpenGlDefault;
+			UseFastDraw = UseFastDrawDefault;
 			OpenClDeviceType = OpenClDeviceTypeDefault;
 			OpenClKernelType = OpenClKernelTypeDefault;
 			CPUSplitKernel = CPUSplitKernelDefault;
@@ -592,6 +594,17 @@ namespace RhinoCyclesCore
 				}
 			}
 		}
+		public bool UseFastDrawDefault => false;
+		public virtual bool UseFastDraw
+		{
+			get { return RcPlugIn.Settings.GetBool("UseFastDraw", UseFastDrawDefault); }
+			set {
+				var old = UseFastDraw;
+				if (old != value) {
+					RcPlugIn.Settings.SetBool("UseFastDraw", value);
+				}
+			}
+		}
 
 		public int OpenClDeviceTypeDefault => 2;
 		public int OpenClDeviceType
@@ -765,11 +778,14 @@ namespace RhinoCyclesCore
 
 		int PixelSize { get; set; }
 
+		bool UseFastDraw { get; set; }
+
 		string SelectedDeviceStr { get; set; }
 
 		string IntermediateSelectedDeviceStr { get; set; }
 
 		bool AllowSelectedDeviceOverride { get; }
+
 		Device RenderDevice { get; }
 
 		uint IntegratorHash { get; }

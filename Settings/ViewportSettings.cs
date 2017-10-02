@@ -199,5 +199,10 @@ namespace RhinoCycles.Settings
 			get { return UseThis ? Dictionary.GetInteger("PixelSize", RcCore.It.EngineSettings.PixelSize) : RcCore.It.EngineSettings.PixelSize; }
 			set { Dictionary.Set("PixelSize", value); }
 		}
+		public virtual bool UseFastDraw
+		{
+			get { return UseThis ? Dictionary.GetBool("UseFastDraw", RcCore.It.EngineSettings.UseFastDraw) : RcCore.It.EngineSettings.UseFastDraw; }
+			set { Dictionary.Set("UseFastDraw", value); }
+		}
 	}
 }

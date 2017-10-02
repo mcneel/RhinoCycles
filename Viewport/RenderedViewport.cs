@@ -156,7 +156,8 @@ namespace RhinoCycles.Viewport
 			Dpa = displayPipelineAttributes;
 		}
 
-		public override bool UseFastDraw() { return !_forCapture && RcCore.It.CanUseDrawOpenGl(); }
+		private bool _useFastDraw = false;
+		public override bool UseFastDraw() { return !_forCapture && RcCore.It.EngineSettings.UseFastDraw && RcCore.It.CanUseDrawOpenGl(); }
 
 		private Thread _modalThread;
 		private Thread _sw;
@@ -187,9 +188,11 @@ namespace RhinoCycles.Viewport
 		{
 			_started = true;
 			_forCapture = forCapture;
+			_useFastDraw = UseFastDraw();
 			if (forCapture)
 			{
 				SetUseDrawOpenGl(false);
+				_useFastDraw = UseFastDraw();
 				var mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo, Dpa);
 
 				_cycles = null;
@@ -249,11 +252,14 @@ namespace RhinoCycles.Viewport
 
 			_startTime = DateTime.UtcNow;
 			_lastTime = _startTime;
-			_sw = new Thread(TimerForAlpha)
+			if (_useFastDraw)
 			{
-				Name = "Cycles RenderedViewport Alpha Thread"
-			};
-			_sw.Start();
+				_sw = new Thread(TimerForAlpha)
+				{
+					Name = "Cycles RenderedViewport Alpha Thread"
+				};
+				_sw.Start();
+			}
 			_cycles.StartRenderThread(_cycles.Renderer, $"A cool Cycles viewport rendering thread {_serial}");
 
 			return true;
@@ -355,7 +361,7 @@ namespace RhinoCycles.Viewport
 			lock (timerLock)
 			{
 				_samples = -1;
-				_alpha = 0.0f;
+				if(_useFastDraw) _alpha = 0.0f;
 			}
 			IsSynchronizing = false;
 		}
@@ -450,14 +456,17 @@ namespace RhinoCycles.Viewport
 		public override bool DrawOpenGl()
 		{
 			int samplesLocal = 0;
-			float alphaLocal;
-			lock(timerLock)
+			float alphaLocal = 1.0f;
+			lock (timerLock)
 			{
 				samplesLocal = _samples;
-				alphaLocal = _alpha;
+				if (_useFastDraw)
+				{
+					alphaLocal = _alpha;
+				}
 			}
 			if (samplesLocal < 1) return false;
-			_cycles.DrawOpenGl(_alpha);
+			_cycles.DrawOpenGl(alphaLocal);
 			return true;
 		}
 
