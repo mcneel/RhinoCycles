@@ -1015,23 +1015,39 @@ namespace RhinoCyclesCore.Database
 				var ob = new CyclesObject {obid = a.InstanceId, meshid = meshid, Transform = CclXformFromRhinoXform(a.Transform), matid = a.MaterialId, CastShadow = a.CastShadows, Cutout = cutout};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
 
-				var shaderchange = new CyclesObjectShader(a.InstanceId)
-				{
-					OldShaderHash = oldhash,
-					NewShaderHash = a.MaterialId
-				};
+				HandleShaderChange(a.InstanceId, oldhash, a.MaterialId, meshid);
 
-				if (shaderchange.Changed)
-				{
-					RcCore.OutputDebugString(
-						$"\t\tsetting material, from old {shaderchange.OldShaderHash} to new {shaderchange.NewShaderHash}\n");
-
-					_shaderDatabase.AddObjectMaterialChange(shaderchange);
-
-					_objectShaderDatabase.RecordRenderHashRelation(a.MaterialId, meshid, a.InstanceId);
-					_objectDatabase.RecordObjectIdMeshIdRelation(a.InstanceId, meshid);
-				}
 				_objectDatabase.AddOrUpdateObject(ob);
+			}
+		}
+
+		/// <summary>
+		/// Record shader change if any change found
+		/// </summary>
+		/// <param name="obid">object id (meshinstance id)</param>
+		/// <param name="oldhash">render hash (material id) from previously used material</param>
+		/// <param name="newhash">render hash (material id) from new material</param>
+		/// <param name="meshid"> mesh id the materials are for. (guid * mesh index)</param>
+		public void HandleShaderChange(uint obid, uint oldhash, uint newhash, Tuple<Guid, int> meshid)
+		{
+			var shaderchange = new CyclesObjectShader(obid)
+			{
+				OldShaderHash = oldhash,
+				NewShaderHash = newhash
+			};
+
+			if (shaderchange.Changed)
+			{
+				RcCore.OutputDebugString(
+					$"\t\tsetting material, from old {shaderchange.OldShaderHash} to new {shaderchange.NewShaderHash}\n");
+
+				_shaderDatabase.AddObjectMaterialChange(shaderchange);
+
+				if (meshid != null)
+				{
+					_objectShaderDatabase.RecordRenderHashRelation(newhash, meshid, obid);
+					_objectDatabase.RecordObjectIdMeshIdRelation(obid, meshid);
+				}
 			}
 		}
 
@@ -1055,23 +1071,13 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		/// <param name="matid">RenderHash of material</param>
 		/// <param name="obid">MeshInstanceId</param>
-		private void HandleMaterialChangeOnObject(uint matid, uint obid)
+		/// <param name="meshid">mesh id (Guid * meshindex), can be null</param>
+		private void HandleMaterialChangeOnObject(uint matid, uint obid, Tuple<Guid, int> meshid)
 		{
 			var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(obid);
 			RcCore.OutputDebugString($"handle material change on object {oldhash} {matid}\n");
-			// skip if no change in renderhash
-			if (oldhash != matid)
-			{
-				var o = new CyclesObjectShader(obid)
-				{
-					NewShaderHash = matid,
-					OldShaderHash = oldhash
-				};
 
-				RcCore.OutputDebugString($"\t-> for {o.Id} old material {o.OldShaderHash} new {o.NewShaderHash}\n");
-
-				_shaderDatabase.AddObjectMaterialChange(o);
-			}
+			HandleShaderChange(obid, oldhash, matid, meshid);
 		}
 
 
@@ -1098,7 +1104,8 @@ namespace RhinoCyclesCore.Database
 
 				var obid = mat.MeshInstanceId;
 
-				HandleMaterialChangeOnObject(rm.RenderHash, obid);
+				// no mesh id here, but shouldn't be necessary either. Passing in null.
+				HandleMaterialChangeOnObject(rm.RenderHash, obid, null);
 			}
 
 			// list over material hashes, check if they exist. Create if new
@@ -1186,24 +1193,26 @@ namespace RhinoCyclesCore.Database
 
 			HandleMeshData(gpid.Item1, gpid.Item2, m, false);
 
+			var isshadowonly = gp.IsShadowOnly;
 			var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
-			var mat = gp.IsShadowOnly ? def : MaterialFromId(gp.MaterialId);
+			var mat = isshadowonly ? def : MaterialFromId(gp.MaterialId);
 
+			var matrenderhash = mat.RenderHash;
 			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 			var cyclesObject = new CyclesObject
 			{
-				matid = mat.RenderHash,
+				matid = matrenderhash,
 				obid = GroundPlaneMeshInstanceId,
 				meshid = gpid,
 				Transform = t,
 				Visible = gp.Enabled,
 				CastShadow = true,
-				IsShadowCatcher = gp.IsShadowOnly,
+				IsShadowCatcher = isshadowonly,
 				IgnoreCutout = true,
 			};
 
-			_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, gpid, GroundPlaneMeshInstanceId);
-			_objectDatabase.RecordObjectIdMeshIdRelation(GroundPlaneMeshInstanceId, gpid);
+			HandleShaderChange(GroundPlaneMeshInstanceId, gp.MaterialId, matrenderhash, gpid);
+
 			_objectDatabase.AddOrUpdateObject(cyclesObject);
 		}
 
@@ -1224,19 +1233,7 @@ namespace RhinoCyclesCore.Database
 			old_gp_crc = gpcrc;
 			old_gp_enabled = gp.Enabled;
 
-			//System.Diagnostics.Debug.WriteLine("groundplane");
 			InitialiseGroundPlane(gp);
-
-			Rhino.DocObjects.Material m = gpShadowsOnlyMat.SimulateMaterial(true);
-			m.DiffuseColor = Color.Black;
-
-			var def = m.RenderMaterial;
-			var mat = gp.IsShadowOnly ? def : MaterialFromId( gp.MaterialId);
-			HandleRenderMaterial(mat);
-
-			var obid = GroundPlaneMeshInstanceId;
-
-			HandleMaterialChangeOnObject(mat.RenderHash, obid);
 		}
 
 #endregion
@@ -1469,10 +1466,8 @@ namespace RhinoCyclesCore.Database
 				IgnoreCutout = true,
 			};
 
-			_objectShaderDatabase.RecordRenderHashRelation(matid, ldid, lightmeshinstanceid);
-			_objectDatabase.RecordObjectIdMeshIdRelation(lightmeshinstanceid, ldid);
 			_objectDatabase.AddOrUpdateObject(lightObject);
-			HandleMaterialChangeOnObject(matid, lightmeshinstanceid);
+			HandleMaterialChangeOnObject(matid, lightmeshinstanceid, ldid);
 		}
 
 		protected override void ApplyDynamicLightChanges(List<RGLight> dynamicLightChanges)
