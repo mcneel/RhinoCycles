@@ -165,9 +165,6 @@ namespace RhinoCycles.Viewport
 
 		private float _alpha = 0.0f;
 
-		private bool _stillDrawing = false;
-		private readonly object _drawLock = new object();
-
 		private bool _runTimerForAlpha = true;
 		public void TimerForAlpha ()
 		{
@@ -179,7 +176,7 @@ namespace RhinoCycles.Viewport
 					{
 						_alpha += 0.01f;
 						if (_alpha > 1.0f) _alpha = 1.0f;
-						SignalDisplayToRedraw();
+						SignalRedraw();
 					}
 				}
 				Thread.Sleep(_fadeInMs);
@@ -236,7 +233,6 @@ namespace RhinoCycles.Viewport
 			_cycles.PassRendered += CyclesPassRendered;
 			_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 			_cycles.UploadProgress += _cycles_UploadProgress;
-			_cycles.Database.ViewChanged += Database_ViewChanged;
 
 			ViewportSettingsChanged += _cycles.ViewportSettingsChangedHandler;
 			_cycles.CurrentViewportSettingsRequested += _cycles_CurrentViewportSettingsRequested;
@@ -269,19 +265,10 @@ namespace RhinoCycles.Viewport
 			return true;
 		}
 
-		private bool _viewChangeHandled = false;
-		private void Database_ViewChanged(object sender, ChangeDatabase.ViewChangedEventArgs e)
-		{
-			lock (timerLock)
-			{
-				_viewChangeHandled = false;
-			}
-		}
-
 		private void _cycles_UploadProgress(object sender, UploadProgressEventArgs e)
 		{
 			_status = e.Message;
-			SignalDisplayToRedraw();
+			if(!_cycles.CancelRender) SignalRedraw();
 		}
 
 		private void _cycles_CurrentViewportSettingsRequested(object sender, EventArgs e)
@@ -329,11 +316,11 @@ namespace RhinoCycles.Viewport
 				{
 					_samplesLocal = _samples;
 				}
-				if (_viewChangeHandled && !_sameView && _cycles.ViewSet)
+				if (!_sameView && _cycles.ViewSet)
 				{
 					_sameView = _cycles.Database.AreViewsEqual(view, _cycles.View);
 				}
-				return _frameAvailable && _sameView && _samplesLocal > -1;
+				return _frameAvailable && _sameView && _samplesLocal > 0;
 			}
 			if (_modal != null)
 			{
@@ -348,14 +335,10 @@ namespace RhinoCycles.Viewport
 		{
 			if (_cycles?.IsRendering ?? false)
 			{
-				lock(timerLock)
-				{
-					_viewChangeHandled = true;
-				}
 				_frameAvailable = true;
 				_lastTime = DateTime.UtcNow;
 
-				SignalDisplayToRedraw();
+				if(!_cycles.CancelRender) SignalRedraw();
 			}
 		}
 
@@ -432,39 +415,18 @@ namespace RhinoCycles.Viewport
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
 		{
 			//Rhino.RhinoApp.OutputDebugString($"{e.StatusText}\n");
-			//int samplesLocal;
+			int samplesLocal;
 			lock (timerLock)
 			{
 				_samples = e.Samples;
-				//samplesLocal = _samples;
+				samplesLocal = _samples;
 			}
 
 			if (_cycles?.IsWaiting ?? false) _status = "Paused";
 			else
 			{
-				_status = $"{e.Samples} - {e.StatusText}"; // e.Samples < 0 ? e.StatusText : ""; // "Updating Engine" : "";
-			}
-			SignalDisplayToRedraw();
-		}
-		
-		/// <summary>
-		/// Notify the realtime display integration system we have something new to draw.
-		/// 
-		/// This function uses a lock to see if we still have a pending draw request. If
-		/// that is the case a redraw won't be signalled.
-		/// </summary>
-		public void SignalDisplayToRedraw()
-		{
-			lock (_drawLock)
-			{
-				if (!_stillDrawing)
-				{
-					if (!_cycles.CancelRender)
-					{
-						_stillDrawing = true;
-						SignalRedraw();
-					}
-				}
+				_status = samplesLocal < 0 ? e.StatusText : ""; // "Updating Engine" : "";
+				if(!_cycles.CancelRender) SignalRedraw();
 			}
 		}
 
@@ -493,27 +455,19 @@ namespace RhinoCycles.Viewport
 
 		public override bool DrawOpenGl()
 		{
-			int samplesLocal = -1;
+			int samplesLocal = 0;
 			float alphaLocal = 1.0f;
-			bool rc = false;
-			lock (_drawLock)
+			lock (timerLock)
 			{
-				lock (timerLock)
+				samplesLocal = _samples;
+				if (_useFastDraw)
 				{
-					samplesLocal = _samples;
-					if (_useFastDraw)
-					{
-						alphaLocal = _alpha;
-					}
+					alphaLocal = _alpha;
 				}
-				if (samplesLocal > 0)
-				{
-					rc = true;
-					_cycles.DrawOpenGl(alphaLocal);
-				}
-				_stillDrawing = false;
-				return rc;
 			}
+			if (samplesLocal < 1) return false;
+			_cycles.DrawOpenGl(alphaLocal);
+			return true;
 		}
 
 		public override bool OnRenderSizeChanged(int width, int height)
