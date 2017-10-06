@@ -402,11 +402,18 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetInteger("StartResolution", value); }
 		}
 
-		public int PixelSizeDefault => RenderEngine.OnDpi ? 3 : 1;
+		public int PixelSizeDefault => RenderEngine.OnHighDpi ? 3 : 1;
 		public int PixelSize
 		{
 			get { return RcPlugIn.Settings.GetInteger("PixelSize", PixelSizeDefault); }
 			set { RcPlugIn.Settings.SetInteger("PixelSize", value); }
+		}
+
+		public float DpiScaleDefault => 1.0f;
+		public float DpiScale
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble("DpiScale", DpiScaleDefault); }
+			set { RcPlugIn.Settings.SetDouble("DpiScale", value); }
 		}
 
 		public virtual IntegratorMethod IntegratorMethod { get; set; }

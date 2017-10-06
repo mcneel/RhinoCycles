@@ -186,6 +186,8 @@ namespace RhinoCyclesCore.RenderEngines
 			#endregion
 
 			var scene = CreateScene(client, renderDevice, cyclesEngine);
+			var scaledPixelSize = ScaledPixelSize;
+			var pixelSize = Math.Max(1, (int)(scaledPixelSize * RcCore.It.EngineSettings.DpiScale));
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(client, renderDevice)
@@ -201,7 +203,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Background = !RcCore.It.CanUseDrawOpenGl(),
 				ProgressiveRefine = true,
 				Progressive = true,
-				PixelSize = RenderEngine.OnDpi ? RcCore.It.EngineSettings.PixelSize : 1,
+				PixelSize = pixelSize,
 			};
 			if(RcCore.It.CanUseDrawOpenGl()) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
 			#endregion

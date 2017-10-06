@@ -121,7 +121,45 @@ namespace RhinoCyclesCore
 		static public float4 CreateFloat4(byte x, byte y, byte z, byte w) { return new float4(x / 255.0f, y / 255.0f, z / 255.0f, w / 255.0f); }
 		static public float4 CreateFloat4(Color color) { return CreateFloat4(color.R, color.G, color.B, color.A); }
 
-		static public bool OnDpi
+		static public int ScaledPixelSize
+		{
+			get
+			{
+#if ON_RUNTIME_WIN
+				var sdpi = RhinoWindows.Forms.Dpi.ScaleInt(1);
+				return sdpi;
+#else
+				return 1;
+#endif
+			}
+
+		}
+		static public int DpiScale
+		{
+			get
+			{
+#if ON_RUNTIME_WIN
+				var sdpi = RhinoWindows.Forms.Dpi.DpiScale();
+				return sdpi;
+#else
+				return 1;
+#endif
+			}
+		}
+		static public int Dpi
+		{
+			get
+			{
+#if ON_RUNTIME_WIN
+				var sdpi = RhinoWindows.Forms.Dpi.ScreenDpi();
+				return sdpi;
+#else
+				return 72;
+#endif
+			}
+
+		}
+		static public bool OnHighDpi
 		{
 			get
 			{
