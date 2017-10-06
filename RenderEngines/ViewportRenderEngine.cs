@@ -186,7 +186,7 @@ namespace RhinoCyclesCore.RenderEngines
 			#endregion
 
 			var scene = CreateScene(client, renderDevice, cyclesEngine);
-			var scaledPixelSize = ScaledPixelSize;
+			var scaledPixelSize = Dpi / 72.0f;
 			var pixelSize = Math.Max(1, (int)(scaledPixelSize * RcCore.It.EngineSettings.DpiScale));
 
 			#region set up session parameters
