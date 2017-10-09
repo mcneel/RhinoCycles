@@ -168,6 +168,11 @@ namespace RhinoCyclesCore.Shaders
 
 				var factored_sky_color276 = new CombineRgbNode("factored_sky_color");
 
+				var non_camera_rays290 = new MathSubtract("non_camera_rays");
+					non_camera_rays290.ins.Value1.Value = 1f;
+					non_camera_rays290.Operation = MathNode.Operations.Subtract;
+					non_camera_rays290.UseClamp = false;
+
 				var camera_and_transmission294 = new MathAdd("camera_and_transmission");
 					camera_and_transmission294.Operation = MathNode.Operations.Add;
 					camera_and_transmission294.UseClamp = false;
@@ -187,7 +192,6 @@ namespace RhinoCyclesCore.Shaders
 					refl_bg_or_custom_env291.UseClamp = false;
 
 				var light_with_bg_or_sky289 = new MixNode("light_with_bg_or_sky");
-					light_with_bg_or_sky289.ins.Fac.Value = 0f;
 					light_with_bg_or_sky289.BlendType = MixNode.BlendTypes.Mix;
 					light_with_bg_or_sky289.UseClamp = false;
 
@@ -233,6 +237,7 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(factor_sky_g273);
 				m_shader.AddNode(factor_sky_b274);
 				m_shader.AddNode(factored_sky_color276);
+				m_shader.AddNode(non_camera_rays290);
 				m_shader.AddNode(camera_and_transmission294);
 				m_shader.AddNode(invert_refl_switch300);
 				m_shader.AddNode(invert_cam_and_transm292);
@@ -282,6 +287,7 @@ namespace RhinoCyclesCore.Shaders
 				factor_sky_r272.outs.Value.Connect(factored_sky_color276.ins.R);
 				factor_sky_g273.outs.Value.Connect(factored_sky_color276.ins.G);
 				factor_sky_b274.outs.Value.Connect(factored_sky_color276.ins.B);
+				light_path235.outs.IsCameraRay.Connect(non_camera_rays290.ins.Value2);
 				light_path235.outs.IsCameraRay.Connect(camera_and_transmission294.ins.Value1);
 				light_path235.outs.IsTransmissionRay.Connect(camera_and_transmission294.ins.Value2);
 				refl_env_when_enabled286.outs.Value.Connect(invert_refl_switch300.ins.Value2);
@@ -291,6 +297,7 @@ namespace RhinoCyclesCore.Shaders
 				refl_env_when_enabled286.outs.Value.Connect(refl_bg_or_custom_env291.ins.Fac);
 				gradient_or_other283.outs.Color.Connect(light_with_bg_or_sky289.ins.Color1);
 				factored_sky_color276.outs.Image.Connect(light_with_bg_or_sky289.ins.Color2);
+				non_camera_rays290.outs.Value.Connect(light_with_bg_or_sky289.ins.Fac);
 				invert_refl_switch300.outs.Value.Connect(if_not_cam_nor_transm_nor_glossyrefl301.ins.Value1);
 				invert_cam_and_transm292.outs.Value.Connect(if_not_cam_nor_transm_nor_glossyrefl301.ins.Value2);
 				refl_bg_or_custom_env291.outs.Color.Connect(mix295.ins.Color1);
