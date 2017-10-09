@@ -370,8 +370,8 @@ namespace RhinoCyclesCore.Converters
 			if (azimob != null && altob != null) {
 				var azi = Convert.ToDouble(azimob);
 				var alti = Convert.ToDouble(altob);
-				rhinotfm.M20 = alti;
-				rhinotfm.M21 = alti;
+				rhinotfm.M20 = -alti;
+				rhinotfm.M21 = 0; // -alti;
 				rhinotfm.M22 = azi;
 			} else
 			{
