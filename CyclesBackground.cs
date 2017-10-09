@@ -151,7 +151,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public bool HasRefl => HasReflEnvTexture || ReflectionColor != Color.Empty;
 		public bool HasReflEnvTexture => ReflectionTexture.HasTextureImage;
-		public float HasReflEnvTextureAsFloat => HasSkyEnvTexture ? 1.0f : 0.0f;
+		public float HasReflEnvTextureAsFloat => HasReflEnvTexture ? 1.0f : 0.0f;
 
 		public bool UseCustomReflectionEnvironment => HasRefl;
 		public float UseCustomReflectionEnvironmentAsFloat => UseCustomReflectionEnvironment ? 1.0f : 0.0f;
