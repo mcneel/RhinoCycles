@@ -367,7 +367,9 @@ namespace RhinoCyclesCore.Shaders
 				if(m_original_background.HasSkyEnvTexture)
 				{
 					RenderEngine.SetTextureImage(sky_env_texture257, m_original_background.SkyTexture);
-					sky_env_texture257.Rotation = m_original_background.SkyTexture.Transform.z;
+					var skyrot = m_original_background.SkyTexture.Transform.z;
+					skyrot.z += (float)	System.Math.PI;
+					sky_env_texture257.Rotation = skyrot;
 				}
 
 				final_bg280.outs.Background.Connect(m_shader.Output.ins.Surface);
