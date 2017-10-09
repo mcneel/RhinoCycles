@@ -432,7 +432,7 @@ namespace RhinoCyclesCore.Converters
 				{
 					var fx = x / (float)pwidth + halfpixelU;
 					var fy = y / (float)pheight + halfpixelV;
-					if (planarProjection) fy = 1.0f - fy;
+					//if (planarProjection) fy = 1.0f - fy;
 
 					// remember z can be !0.0 for volumetrics
 					var col4F = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), duvw, duvw);
