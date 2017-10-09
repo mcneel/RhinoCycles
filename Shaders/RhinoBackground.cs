@@ -319,40 +319,10 @@ namespace RhinoCyclesCore.Shaders
 				if (m_original_background.BackgroundFill == BackgroundStyle.Environment && m_original_background.HasBgEnvTexture)
 				{
 					RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.BgTexture);
-					switch(m_original_background.BgTexture.EnvProjectionMode)
-					{
-						case Rhino.Render.TextureEnvironmentMappingMode.Automatic:
-						case Rhino.Render.TextureEnvironmentMappingMode.EnvironmentMap:
-							bg_env_texture255.Projection = TextureNode.EnvironmentProjection.EnvironmentMap;
-							break;
-						case Rhino.Render.TextureEnvironmentMappingMode.Box:
-							bg_env_texture255.Projection = TextureNode.EnvironmentProjection.Box;
-							break;
-						case Rhino.Render.TextureEnvironmentMappingMode.LightProbe:
-							bg_env_texture255.Projection = TextureNode.EnvironmentProjection.LightProbe;
-							break;
-						case Rhino.Render.TextureEnvironmentMappingMode.Cube:
-							bg_env_texture255.Projection = TextureNode.EnvironmentProjection.CubeMap;
-							break;
-						case Rhino.Render.TextureEnvironmentMappingMode.HorizontalCrossCube:
-							bg_env_texture255.Projection = TextureNode.EnvironmentProjection.CubeMapHorizontal;
-							break;
-						case Rhino.Render.TextureEnvironmentMappingMode.VerticalCrossCube:
-							bg_env_texture255.Projection = TextureNode.EnvironmentProjection.CubeMapVertical;
-							break;
-						case Rhino.Render.TextureEnvironmentMappingMode.Hemispherical:
-							bg_env_texture255.Projection = TextureNode.EnvironmentProjection.Hemispherical;
-							break;
-						case Rhino.Render.TextureEnvironmentMappingMode.Spherical:
-							bg_env_texture255.Projection = TextureNode.EnvironmentProjection.Spherical;
-							break;
-						default:
-							bg_env_texture255.Projection = TextureNode.EnvironmentProjection.Wallpaper;
-							break;
-					}
+					_SetEnvironmentProjection(m_original_background.BgTexture, bg_env_texture255);
 					bg_env_texture255.Rotation = m_original_background.BgTexture.Transform.z;
 				}
-				if(m_original_background.BackgroundFill == BackgroundStyle.WallpaperImage && m_original_background.Wallpaper.HasTextureImage)
+				if (m_original_background.BackgroundFill == BackgroundStyle.WallpaperImage && m_original_background.Wallpaper.HasTextureImage)
 				{
 					RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.Wallpaper);
 					bg_env_texture255.Projection = TextureNode.EnvironmentProjection.Wallpaper;
@@ -360,16 +330,24 @@ namespace RhinoCyclesCore.Shaders
 				if(m_original_background.HasReflEnvTexture)
 				{
 					RenderEngine.SetTextureImage(refl_env_texture256, m_original_background.ReflectionTexture);
-					var reflrot = m_original_background.ReflectionTexture.Transform.z;
-					reflrot.z += (float)	System.Math.PI;
-					refl_env_texture256.Rotation = reflrot;
+					_SetEnvironmentProjection(m_original_background.ReflectionTexture, refl_env_texture256);
+					if ((int)m_original_background.ReflectionTexture.EnvProjectionMode != 4)
+					{
+						var reflrot = m_original_background.ReflectionTexture.Transform.z;
+						reflrot.z += (float)System.Math.PI;
+						refl_env_texture256.Rotation = reflrot;
+					}
 				}
 				if(m_original_background.HasSkyEnvTexture)
 				{
 					RenderEngine.SetTextureImage(sky_env_texture257, m_original_background.SkyTexture);
-					var skyrot = m_original_background.SkyTexture.Transform.z;
-					skyrot.z += (float)	System.Math.PI;
-					sky_env_texture257.Rotation = skyrot;
+					_SetEnvironmentProjection(m_original_background.SkyTexture, sky_env_texture257);
+					if ((int)m_original_background.SkyTexture.EnvProjectionMode != 4)
+					{
+						var skyrot = m_original_background.SkyTexture.Transform.z;
+						skyrot.z += (float)System.Math.PI;
+						sky_env_texture257.Rotation = skyrot;
+					}
 				}
 
 				final_bg280.outs.Background.Connect(m_shader.Output.ins.Surface);
@@ -382,5 +360,39 @@ namespace RhinoCyclesCore.Shaders
 			return m_shader;
 		}
 
+		private void _SetEnvironmentProjection(CyclesTextureImage img, EnvironmentTextureNode envtexture)
+		{
+			switch (img.EnvProjectionMode)
+			{
+				case Rhino.Render.TextureEnvironmentMappingMode.Automatic:
+				case Rhino.Render.TextureEnvironmentMappingMode.EnvironmentMap:
+					envtexture.Projection = TextureNode.EnvironmentProjection.EnvironmentMap;
+					break;
+				case Rhino.Render.TextureEnvironmentMappingMode.Box:
+					envtexture.Projection = TextureNode.EnvironmentProjection.Box;
+					break;
+				case Rhino.Render.TextureEnvironmentMappingMode.LightProbe:
+					envtexture.Projection = TextureNode.EnvironmentProjection.LightProbe;
+					break;
+				case Rhino.Render.TextureEnvironmentMappingMode.Cube:
+					envtexture.Projection = TextureNode.EnvironmentProjection.CubeMap;
+					break;
+				case Rhino.Render.TextureEnvironmentMappingMode.HorizontalCrossCube:
+					envtexture.Projection = TextureNode.EnvironmentProjection.CubeMapHorizontal;
+					break;
+				case Rhino.Render.TextureEnvironmentMappingMode.VerticalCrossCube:
+					envtexture.Projection = TextureNode.EnvironmentProjection.CubeMapVertical;
+					break;
+				case Rhino.Render.TextureEnvironmentMappingMode.Hemispherical:
+					envtexture.Projection = TextureNode.EnvironmentProjection.Hemispherical;
+					break;
+				case Rhino.Render.TextureEnvironmentMappingMode.Spherical:
+					envtexture.Projection = TextureNode.EnvironmentProjection.Spherical;
+					break;
+				default: // non-existing planar environment projection, value 4
+					envtexture.Projection = TextureNode.EnvironmentProjection.Wallpaper;
+					break;
+			}
+		}
 	}
 }
