@@ -1387,6 +1387,23 @@ namespace RhinoCyclesCore.Database
 			_lightDatabase.UpdateBackgroundLight();
 		}
 
+		private int _enabledLights = 0;
+		public void PushEnabledLight()
+		{
+			_enabledLights++;
+		}
+
+		public void PopEnabledLight()
+		{
+			_enabledLights--;
+			if (_enabledLights < 0) _enabledLights = 0;
+		}
+
+		public bool AnyActiveLights()
+		{
+			return _enabledLights > 0;
+		}
+
 		/// <summary>
 		/// Handle light changes
 		/// </summary>
@@ -1404,6 +1421,9 @@ namespace RhinoCyclesCore.Database
 
 			foreach (var light in lightChanges)
 			{
+				if (light.ChangeType == CqLight.Event.Deleted) PopEnabledLight();
+				else if (light.ChangeType == CqLight.Event.Added || light.ChangeType == CqLight.Event.Undeleted) PushEnabledLight();
+
 				if (light.Data.IsLinearLight)
 				{
 					uint lightmeshinstanceid = light.IdCrc;
@@ -1428,6 +1448,7 @@ namespace RhinoCyclesCore.Database
 					_lightDatabase.AddLight(cl);
 				}
 			}
+			_environmentDatabase.TagUpdate();
 		}
 
 		private readonly MeshingParameters mp = new MeshingParameters(0.1) { MinimumEdgeLength = 0.001, GridMinCount = 16, JaggedSeams = false };
@@ -1503,6 +1524,9 @@ namespace RhinoCyclesCore.Database
 			var cl = _shaderConverter.ConvertLight(sun, PreProcessGamma);
 			cl.Id = _sunGuid;
 			_lightDatabase.AddLight(cl);
+			if (sun.IsEnabled) PushEnabledLight();
+			else PopEnabledLight();
+			_environmentDatabase.TagUpdate();
 			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
 		}
 
@@ -1512,7 +1536,8 @@ namespace RhinoCyclesCore.Database
 		{
 			if (_environmentDatabase.BackgroundHasChanged)
 			{
-				RcCore.OutputDebugString("Uploading background changes\n");
+				_environmentDatabase.CyclesShader.EnabledLights = AnyActiveLights(); 
+				RcCore.OutputDebugString($"Uploading background changes, active lights: {_environmentDatabase.CyclesShader.EnabledLights}, sky {_environmentDatabase.CyclesShader.SkylightEnabled} skystrength {_environmentDatabase.CyclesShader.SkyStrength}\n");
 				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader);
 			}
 		}

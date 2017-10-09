@@ -144,6 +144,14 @@ namespace RhinoCyclesCore.Database
 		public bool BackgroundHasChanged => _cqBackground.Modified;
 
 		/// <summary>
+		/// Force update.
+		/// </summary>
+		public void TagUpdate()
+		{
+			_cqBackground.Modified = true;
+		}
+
+		/// <summary>
 		/// Reset background changes.
 		/// </summary>
 		public void ResetBackgroundChangeQueue()

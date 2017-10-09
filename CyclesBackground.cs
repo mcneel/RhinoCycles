@@ -87,6 +87,12 @@ namespace RhinoCyclesCore
 		public bool UseGradient => BackgroundFill == BackgroundStyle.Gradient;
 		public float UseGradientAsFloat => UseGradient ? 1.0f : 0.0f;
 
+		public bool EnabledLights { get; set; }
+		public float EnabledLightsAsFloat => EnabledLights ? 1.0f : 0.0f;
+		public float InvertEnabledLightsAsFloat => EnabledLights ? 0.0f: 1.0f;
+
+		public float NonSkyEnvStrengthFactor => !EnabledLights && SkylightEnabled ? SkyStrength : 1.0f;
+
 		/// <summary>
 		/// Hold texture data for skylight
 		/// </summary>
