@@ -345,23 +345,11 @@ namespace RhinoCyclesCore.Shaders
 				{
 					RenderEngine.SetTextureImage(refl_env_texture256, m_original_background.ReflectionTexture);
 					_SetEnvironmentProjection(m_original_background.ReflectionTexture, refl_env_texture256);
-					if ((int)m_original_background.ReflectionTexture.EnvProjectionMode != 4)
-					{
-						var reflrot = m_original_background.ReflectionTexture.Transform.z;
-						reflrot.z += (float)System.Math.PI;
-						refl_env_texture256.Rotation = reflrot;
-					}
 				}
 				if(m_original_background.HasSkyEnvTexture)
 				{
 					RenderEngine.SetTextureImage(sky_env_texture257, m_original_background.SkyTexture);
 					_SetEnvironmentProjection(m_original_background.SkyTexture, sky_env_texture257);
-					if ((int)m_original_background.SkyTexture.EnvProjectionMode != 4)
-					{
-						var skyrot = m_original_background.SkyTexture.Transform.z;
-						skyrot.z += (float)System.Math.PI;
-						sky_env_texture257.Rotation = skyrot;
-					}
 				}
 
 				final_bg280.outs.Background.Connect(m_shader.Output.ins.Surface);
