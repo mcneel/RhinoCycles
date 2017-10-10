@@ -311,16 +311,11 @@ namespace RhinoCycles.Viewport
 		{
 			if (_cycles != null)
 			{
-				int _samplesLocal;
-				lock(timerLock)
-				{
-					_samplesLocal = _samples;
-				}
 				if (!_sameView && _cycles.ViewSet)
 				{
 					_sameView = _cycles.Database.AreViewsEqual(view, _cycles.View);
 				}
-				return _frameAvailable && _sameView && _samplesLocal > 0;
+				return _frameAvailable && _sameView;
 			}
 			if (_modal != null)
 			{
@@ -335,10 +330,18 @@ namespace RhinoCycles.Viewport
 		{
 			if (_cycles?.IsRendering ?? false)
 			{
-				_frameAvailable = true;
-				_lastTime = DateTime.UtcNow;
+				lock (timerLock)
+				{
+					if (!IsSynchronizing)
+					{
+						if(_samples==-1)
+							_frameAvailable = true;
+						_samples = e.Sample;
+						_lastTime = DateTime.UtcNow;
 
-				if(!_cycles.CancelRender) SignalRedraw();
+						if (!_cycles.CancelRender) SignalRedraw();
+					}
+				}
 			}
 		}
 
@@ -347,23 +350,20 @@ namespace RhinoCycles.Viewport
 			lock (timerLock)
 			{
 				_samples = -1;
+				if(_useFastDraw) _alpha = 0.0f;
+				_frameAvailable = false;
+				_sameView = false;
+				IsSynchronizing = true;
 			}
-			_frameAvailable = false;
-			_sameView = false;
-			IsSynchronizing = true;
 		}
 
 		void CyclesSynchronized(object sender, EventArgs e)
 		{
 			_startTime = DateTime.UtcNow;
-			_frameAvailable = false;
-			_sameView = false;
 			lock (timerLock)
 			{
-				_samples = -1;
-				if(_useFastDraw) _alpha = 0.0f;
+				IsSynchronizing = false;
 			}
-			IsSynchronizing = false;
 		}
 
 		void DatabaseLinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
@@ -414,18 +414,10 @@ namespace RhinoCycles.Viewport
 
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
 		{
-			//Rhino.RhinoApp.OutputDebugString($"{e.StatusText}\n");
-			int samplesLocal;
-			lock (timerLock)
-			{
-				_samples = e.Samples;
-				samplesLocal = _samples;
-			}
-
 			if (_cycles?.IsWaiting ?? false) _status = "Paused";
 			else
 			{
-				_status = samplesLocal < 0 ? e.StatusText : ""; // "Updating Engine" : "";
+				_status = e.Samples < 0 ? e.StatusText : "";
 				if(!_cycles.CancelRender) SignalRedraw();
 			}
 		}
@@ -475,6 +467,7 @@ namespace RhinoCycles.Viewport
 			_startTime = DateTime.UtcNow;
 			_frameAvailable = false;
 			_sameView = false;
+			_samples = -1;
 
 			return true;
 		}

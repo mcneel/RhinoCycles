@@ -250,8 +250,12 @@ namespace RhinoCyclesCore.RenderEngines
 					// lets reset session
 					Session.Reset(size.Width, size.Height, _samples);
 				}
-				if(cyclesEngine.IsRendering && cyclesEngine.Session.Sample()) {
-					cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(-1, View));
+				if(cyclesEngine.IsRendering) {
+					var smpl = cyclesEngine.Session.Sample();
+					if (smpl>-1 && !Flush)
+					{
+						cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(smpl+1, View));
+					}
 				}
 				Thread.Sleep(_throttle);
 				if(!Locked && !CancelRender && !IsStopped && Flush) {

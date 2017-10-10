@@ -127,7 +127,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				if (cyclesEngine.IsRendering)
 				{
-					stillrendering = cyclesEngine.Session.Sample();
+					stillrendering = cyclesEngine.Session.Sample() > -1;
 					Thread.Sleep(throttle);
 				}
 				else
