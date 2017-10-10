@@ -257,9 +257,11 @@ namespace RhinoCyclesCore.RenderEngines
 						cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(smpl+1, View));
 					}
 				}
-				Thread.Sleep(_throttle);
 				if(!Locked && !CancelRender && !IsStopped && Flush) {
 					TriggerChangesReady();
+				} else
+				{
+					Thread.Sleep(_throttle);
 				}
 			}
 
