@@ -430,7 +430,7 @@ namespace RhinoCyclesCore
 			get { return RcPlugIn.Settings.GetBool("NoCaustics", NoCausticsDefault); }
 			set { RcPlugIn.Settings.SetBool("NoCaustics", value); }
 		}
-		public int MaxDiffuseBounceDefault => 2;
+		public int MaxDiffuseBounceDefault => 0;
 		public virtual int MaxDiffuseBounce
 		{
 			get { return RcPlugIn.Settings.GetInteger("MaxDiffuseBounce", MaxDiffuseBounceDefault); }
