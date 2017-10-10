@@ -1161,6 +1161,7 @@ namespace RhinoCyclesCore.Database
 		private const uint GroundPlaneMeshInstanceId = 1;
 
 		private readonly float gp_side_extension = 1.0E+6f;
+		private uint currentGpRenderMaterial = 0;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
 			var gpid = _groundplaneGuid;
@@ -1197,6 +1198,8 @@ namespace RhinoCyclesCore.Database
 			var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
 			var mat = isshadowonly ? def : MaterialFromId(gp.MaterialId);
 
+			HandleRenderMaterial(mat);
+
 			var matrenderhash = mat.RenderHash;
 			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 			var cyclesObject = new CyclesObject
@@ -1211,7 +1214,8 @@ namespace RhinoCyclesCore.Database
 				IgnoreCutout = true,
 			};
 
-			HandleShaderChange(GroundPlaneMeshInstanceId, gp.MaterialId, matrenderhash, gpid);
+			HandleShaderChange(GroundPlaneMeshInstanceId, currentGpRenderMaterial, matrenderhash, gpid);
+			currentGpRenderMaterial = matrenderhash;
 
 			_objectDatabase.AddOrUpdateObject(cyclesObject);
 		}
