@@ -333,7 +333,7 @@ namespace RhinoCyclesCore
 
 			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples>0 ? (RenderedSamples+1) : RenderedSamples));
 
-			if(!m_interactive) CheckFlushQueue();
+			//if(!m_interactive) CheckFlushQueue();
 		}
 
 		/// <summary>

@@ -59,6 +59,17 @@ namespace RhinoCyclesCore.RenderEngines
 			//ViewCrc = e.Crc;
 		}
 
+		public void SetCallbackForCapture()
+		{
+			m_write_render_tile_callback = ModalWriteRenderTileCallback;
+		}
+
+		public void ModalWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
+		{
+			if (IsStopped || (int)sample<(maxSamples)) return;
+			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
+		}
+
 		private int maxSamples;
 		public int requestedSamples { get; set; }
 
@@ -76,7 +87,6 @@ namespace RhinoCyclesCore.RenderEngines
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
 			requestedSamples = Attributes?.RealtimeRenderPasses ?? RcCore.It.EngineSettings.Samples;
-			maxSamples = requestedSamples;
 			cyclesEngine.TriggerCurrentViewportSettingsRequested();
 
 			#region pick a render device
@@ -129,8 +139,6 @@ namespace RhinoCyclesCore.RenderEngines
 			if (rc)
 			{
 				cyclesEngine.Session.PrepareRun();
-
-				maxSamples = requestedSamples;
 
 				// lets first reset session
 				cyclesEngine.Session.Reset(size.Width, size.Height, requestedSamples);
