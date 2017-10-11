@@ -791,6 +791,7 @@ namespace RhinoCyclesCore.Database
 				Height = h,
 				View = GetQueueView() // use GetQueueView to ensure we have a valid ViewInfo even after Flush
 			};
+			_renderEngine.View = null;
 			_cameraDatabase.AddViewChange(cyclesview);
 		}
 

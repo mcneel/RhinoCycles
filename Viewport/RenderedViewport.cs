@@ -72,6 +72,8 @@ namespace RhinoCycles.Viewport
 			}
 		}
 
+		public ViewInfo currentView = null;
+
 		public bool IsSynchronizing { get; private set; }
 
 		private bool _forCapture;
@@ -311,9 +313,9 @@ namespace RhinoCycles.Viewport
 		{
 			if (_cycles != null)
 			{
-				if (!_sameView && _cycles.ViewSet)
+				if (!_sameView && currentView!=null)
 				{
-					_sameView = _cycles.Database.AreViewsEqual(view, _cycles.View);
+					_sameView = _cycles.Database.AreViewsEqual(view, currentView);
 				}
 				return _frameAvailable && _sameView;
 			}
@@ -334,8 +336,11 @@ namespace RhinoCycles.Viewport
 				{
 					if (!IsSynchronizing)
 					{
-						if(_samples==-1)
+						if (_samples == -1)
+						{
+							currentView = e.View;
 							_frameAvailable = true;
+						}
 						_samples = e.Sample;
 						_lastTime = DateTime.UtcNow;
 
@@ -349,6 +354,7 @@ namespace RhinoCycles.Viewport
 		{
 			lock (timerLock)
 			{
+				currentView = null;
 				_samples = -1;
 				if(_useFastDraw) _alpha = 0.0f;
 				_frameAvailable = false;
@@ -447,19 +453,17 @@ namespace RhinoCycles.Viewport
 
 		public override bool DrawOpenGl()
 		{
-			int samplesLocal = 0;
 			float alphaLocal = 1.0f;
 			lock (timerLock)
 			{
-				samplesLocal = _samples;
 				if (_useFastDraw)
 				{
 					alphaLocal = _alpha;
 				}
+				if (!_frameAvailable) return false;
+				_cycles.DrawOpenGl(alphaLocal);
+				return true;
 			}
-			if (samplesLocal < 1) return false;
-			_cycles.DrawOpenGl(alphaLocal);
-			return true;
 		}
 
 		public override bool OnRenderSizeChanged(int width, int height)

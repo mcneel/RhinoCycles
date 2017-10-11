@@ -128,6 +128,7 @@ namespace RhinoCyclesCore
 			}
 			set
 			{
+				Session?.Cancel("Scene changes detected.\n");
 				m_flush = value;
 			}
 		}
