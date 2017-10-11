@@ -690,8 +690,6 @@ namespace RhinoCyclesCore.Database
 		protected override void ApplyViewChange(ViewInfo viewInfo)
 		{
 			var fb = _cameraDatabase.HandleBlur(viewInfo);
-			if (_focalBlurInitialized && fb) return;
-			_focalBlurInitialized = true;
 			SceneBoundingBox = GetQueueSceneBoundingBox();
 			if (!_modalRenderer && !viewInfo.Viewport.Id.Equals(ViewId)) return;
 
@@ -1626,7 +1624,6 @@ namespace RhinoCyclesCore.Database
 
 		private bool _previousScaleBackgroundToFit = false;
 		private bool _wallpaperInitialized = false;
-		private bool _focalBlurInitialized = false;
 		protected override void ApplyRenderSettingsChanges(RenderSettings rs)
 		{
 			if (rs != null)
