@@ -47,7 +47,10 @@ namespace RhinoCyclesCore
 		/// Solid color or top color for gradient
 		/// </summary>
 		public Color Color1 { get; set; } = Color.Empty;
-		public ccl.float4 Color1AsFloat4 => Color1.Equals(Color.Empty) ? _tst : RenderEngine.CreateFloat4(Color1) ^ Gamma;
+		public ccl.float4 Color1AsFloat4 =>
+			BackgroundFill == BackgroundStyle.Environment ?
+				BgColorAs4float : (Color1.Equals(Color.Empty) ?
+									_tst : RenderEngine.CreateFloat4(Color1) ^ Gamma);
 		/// <summary>
 		/// Bottom color for gradient
 		/// </summary>
