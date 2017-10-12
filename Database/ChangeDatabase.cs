@@ -1288,7 +1288,7 @@ namespace RhinoCyclesCore.Database
 					UseMis = l.UseMis,
 					CastShadow = l.CastShadow,
 					Samples = 1,
-					MaxBounces = 1024,
+					MaxBounces = 8,
 					SizeU = l.SizeU,
 					SizeV = l.SizeV,
 					AxisU = l.AxisU,
@@ -1328,7 +1328,7 @@ namespace RhinoCyclesCore.Database
 				existingL.UseMis = l.UseMis;
 				existingL.CastShadow = l.CastShadow;
 				existingL.Samples = 1;
-				existingL.MaxBounces = 1024;
+				existingL.MaxBounces = 8;
 				existingL.SizeU = l.SizeU;
 				existingL.SizeV = l.SizeV;
 				existingL.AxisU = l.AxisU;
