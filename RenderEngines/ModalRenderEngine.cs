@@ -59,8 +59,10 @@ namespace RhinoCyclesCore.RenderEngines
 			//ViewCrc = e.Crc;
 		}
 
+		bool capturing = false;
 		public void SetCallbackForCapture()
 		{
+			capturing = true;
 			m_write_render_tile_callback = ModalWriteRenderTileCallback;
 		}
 
@@ -175,14 +177,17 @@ namespace RhinoCyclesCore.RenderEngines
 
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Session.Destroy();
-
-			// set final status string and progress to 1.0f to signal completed render
-			cyclesEngine.SetProgress(rw,
-				$"Render ready {cyclesEngine.RenderedSamples + 1} samples, duration {cyclesEngine.TimeString}", 1.0f);
 			cyclesEngine.CancelRender = true;
 
-			// signal the render window we're done.
-			rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
+			if (!capturing)
+			{
+				// set final status string and progress to 1.0f to signal completed render
+				cyclesEngine.SetProgress(rw,
+					$"Render ready {cyclesEngine.RenderedSamples + 1} samples, duration {cyclesEngine.TimeString}", 1.0f);
+				// signal the render window we're done.
+				rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
+			}
+
 		}
 
 		public bool SupportsPause()
