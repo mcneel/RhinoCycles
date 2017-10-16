@@ -205,7 +205,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Progressive = true,
 				PixelSize = pixelSize,
 			};
-			if(RcCore.It.CanUseDrawOpenGl()) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
+			if(RcCore.It.CanUseDrawOpenGl() && RcCore.It.EngineSettings.UseStartResolution) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
 			#endregion
 
 			if (cyclesEngine.CancelRender) return;
