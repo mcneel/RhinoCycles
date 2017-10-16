@@ -93,6 +93,7 @@ namespace RhinoCyclesCore.Converters
 			RenderMaterial.StandardChildSlots textureType, Rhino.Geometry.Transform rhinotfm, uint rId, TextureEvaluator actualEvaluator,
 			TextureProjectionMode projectionMode, TextureEnvironmentMappingMode envProjectionMode, bool repeat)
 		{
+			bool canUse = actualEvaluator.Initialize();
 			int pheight;
 			int pwidth;
 			try
@@ -114,6 +115,8 @@ namespace RhinoCyclesCore.Converters
 				pwidth = 1024;
 			}
 
+			if(!canUse) { pheight = 1; pwidth = 1; }
+
 			Transform t = new Transform(
 				rhinotfm.ToFloatArray(true)
 				);
@@ -124,7 +127,7 @@ namespace RhinoCyclesCore.Converters
 
 			if (isFloat)
 			{
-				var img = RetrieveFloatsImg(rId, pwidth, pheight, actualEvaluator, false, isLinear, isImageBased);
+				var img = RetrieveFloatsImg(rId, pwidth, pheight, actualEvaluator, false, isLinear, isImageBased, canUse);
 				img.ApplyGamma(shader.Gamma);
 				switch (textureType)
 				{
@@ -152,7 +155,7 @@ namespace RhinoCyclesCore.Converters
 			}
 			else
 			{
-				var img = RetrieveBytesImg(rId, pwidth, pheight, actualEvaluator, false, isLinear, isImageBased);
+				var img = RetrieveBytesImg(rId, pwidth, pheight, actualEvaluator, false, isLinear, isImageBased, canUse);
 				img.ApplyGamma(shader.Gamma);
 				switch (textureType)
 				{
@@ -320,6 +323,7 @@ namespace RhinoCyclesCore.Converters
 					teximg.Name = "";
 					return;
 				}
+				bool canUse = textureEvaluator.Initialize();
 				try
 				{
 					int u, v, w;
@@ -336,6 +340,7 @@ namespace RhinoCyclesCore.Converters
 				{
 					teximg.TexHeight = teximg.TexWidth = 1024;
 				}
+				if(!canUse) { teximg.TexHeight = teximg.TexWidth = 1; }
 
 				var isFloat = renderTexture.IsHdrCapable();
 
@@ -344,14 +349,14 @@ namespace RhinoCyclesCore.Converters
 
 				if (isFloat)
 				{
-					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, planarProjection, isLinear, isImageBased);
+					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, planarProjection, isLinear, isImageBased, canUse);
 					img.ApplyGamma(gamma);
 					teximg.TexFloat = img.Data;
 					teximg.TexByte = null;
 				}
 				else
 				{
-					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, planarProjection, isLinear, isImageBased);
+					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, planarProjection, isLinear, isImageBased, canUse);
 					img.ApplyGamma(gamma);
 					teximg.TexByte = img.Data;
 					teximg.TexFloat = null;
@@ -415,7 +420,7 @@ namespace RhinoCyclesCore.Converters
 		}
 
 
-		private static T[] ReadBitmapFromEvaluator<T>(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool planarProjection, bool isImageBased)
+		private static T[] ReadBitmapFromEvaluator<T>(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool planarProjection, bool isImageBased, bool canUse)
 		{
 			if (typeof(T) != typeof(float) && typeof(T) != typeof(byte)) throw new ArgumentException($"ReadBitmapFromEvaluator doesn't supporte type {typeof(T)}");
 
@@ -425,6 +430,17 @@ namespace RhinoCyclesCore.Converters
 			var halfpixelV = 0.5 / pheight;
 			var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
 			if (isImageBased) duvw.X = duvw.Y = duvw.Z = 0.0;
+
+			if(!canUse)
+			{
+				Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+				var conv = c4f.ToArray<T>();
+				upixel[0] = conv[0];
+				upixel[1] = conv[1];
+				upixel[2] = conv[2];
+				upixel[3] = conv[3];
+				return upixel;
+			}
 
 			for (var x = 0; x < pwidth; x++)
 			{
@@ -447,10 +463,10 @@ namespace RhinoCyclesCore.Converters
 			return upixel;
 		}
 
-		private static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool planarProjection, bool isLinear, bool isImageBased)
+		private static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool planarProjection, bool isLinear, bool isImageBased, bool canUse)
 		{
 			var read = ByteImagesNew.ContainsKey(rId);
-			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadBitmapFromEvaluator<byte>(pwidth, pheight, textureEvaluator, planarProjection, isImageBased), pwidth, pheight, isLinear);
+			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadBitmapFromEvaluator<byte>(pwidth, pheight, textureEvaluator, planarProjection, isImageBased, canUse), pwidth, pheight, isLinear);
 			if (!read)
 			{
 				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
@@ -463,10 +479,10 @@ namespace RhinoCyclesCore.Converters
 			return img;
 		}
 
-		private static FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool planarProjection, bool isLinear, bool isImageBased)
+		private static FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool planarProjection, bool isLinear, bool isImageBased, bool canUse)
 		{
 			var read = FloatImagesNew.ContainsKey(rId);
-			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadBitmapFromEvaluator<float>(pwidth, pheight, textureEvaluator, planarProjection, isImageBased), pwidth, pheight, isLinear);
+			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadBitmapFromEvaluator<float>(pwidth, pheight, textureEvaluator, planarProjection, isImageBased, canUse), pwidth, pheight, isLinear);
 			if (!read)
 			{
 				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
