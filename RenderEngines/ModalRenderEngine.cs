@@ -178,6 +178,7 @@ namespace RhinoCyclesCore.RenderEngines
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Session.Destroy();
 			cyclesEngine.CancelRender = true;
+			cyclesEngine.State = State.Stopped;
 
 			if (!capturing)
 			{

@@ -502,7 +502,15 @@ namespace RhinoCycles.Viewport
 			bool rc = false;
 			lock (timerLock)
 			{
-				rc = _cycles.State == State.Rendering && _frameAvailable && _samples == _maxSamples;
+				if (_forCapture)
+				{
+					rc = _frameAvailable;
+				}
+				else
+				{
+					var state = _cycles?.State ?? State.Stopped;
+					rc = state == State.Rendering && _frameAvailable && _samples == _maxSamples;
+				}
 			}
 			return rc;
 		}
