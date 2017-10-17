@@ -167,6 +167,21 @@ namespace RhinoCyclesCore
 
 		public float ReflStrength => HasReflEnvTexture ? ReflectionTexture.Strength: 1.0f;
 
+		public bool NoCustomsWithSkylightEnabled
+		{
+			get
+			{
+				return !HasRefl && !HasSky && SkylightEnabled;
+			}
+		}
+		public bool NoCustomsWithSkylightDisabled
+		{
+			get
+			{
+				return !HasRefl && !HasSky && !SkylightEnabled;
+			}
+		}
+
 		/// <summary>
 		/// Hold texture data for wallpaper
 		/// </summary>
