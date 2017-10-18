@@ -510,7 +510,9 @@ namespace RhinoCycles.Viewport
 		public override string HudProductName()
 		{
 			var pn = Localization.LocalizeString("Cycles", 9);
-			if (_showRenderDevice) pn = $"{pn}@{_cycles.RenderDevice.NiceName}";
+			var cpu = _cycles.RenderDevice.IsCpu;
+			if (_showRenderDevice && !cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}";
+			else if (_showRenderDevice && cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}x{_cycles.ThreadCount}";
 			if (!RcCore.It.CanUseDrawOpenGl()) pn = $"{pn} NoGL";
 			return pn;
 		}

@@ -181,13 +181,14 @@ namespace RhinoCyclesCore.RenderEngines
 			var pixelSize = Math.Max(1, (int)(scaledPixelSize * RcCore.It.EngineSettings.DpiScale));
 
 			#region set up session parameters
+			ThreadCount = (renderDevice.IsCpu ? RcCore.It.EngineSettings.Threads : 0);
 			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
 				Samples = (int)_samples,
 				TileSize = renderDevice.IsCpu ? new Size(32, 32) : new Size(RcCore.It.EngineSettings.TileX, RcCore.It.EngineSettings.TileY),
 				TileOrder = TileOrder.Center,
-				Threads = (uint)(renderDevice.IsCpu ? RcCore.It.EngineSettings.Threads : 0),
+				Threads = (uint)ThreadCount,
 				ShadingSystem = ShadingSystem.SVM,
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,

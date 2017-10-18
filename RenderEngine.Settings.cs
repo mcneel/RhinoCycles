@@ -46,6 +46,7 @@ namespace RhinoCyclesCore
 			CurrentViewportSettingsRequested?.Invoke(this, EventArgs.Empty);
 		}
 
+		public int ThreadCount { get; set; } = 0;
 		private uint _oldIntegratorHash = 0;
 		public ccl.Device RenderDevice { get; set; }
 		public void ViewportSettingsChangedHandler(object sender, ViewportSettingsChangedArgs e)
