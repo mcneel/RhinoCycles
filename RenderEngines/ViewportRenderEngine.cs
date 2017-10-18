@@ -36,8 +36,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 			Database.ViewChanged += Database_ViewChanged;
 
-			ChangesReady += ViewportRenderEngine_ChangesReady;
-
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = null;
@@ -68,12 +66,6 @@ namespace RhinoCyclesCore.RenderEngines
 			Client?.Dispose();
 			base.Dispose(isDisposing);
 			_disposed = true;
-		}
-
-		private void ViewportRenderEngine_ChangesReady(object sender, EventArgs e)
-		{
-			CheckFlushQueue();
-			Synchronize();
 		}
 
 		void Database_ViewChanged(object sender, ChangeDatabase.ViewChangedEventArgs e)
@@ -147,14 +139,13 @@ namespace RhinoCyclesCore.RenderEngines
 		/// </summary>
 		public void Renderer()
 		{
-			var cyclesEngine = this;
 			Locked = false;
 
 			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
 			var vpi = vi.Viewport;
 
-			var client = cyclesEngine.Client;
-			var rw = cyclesEngine.RenderWindow;
+			var client = Client;
+			var rw = RenderWindow;
 
 			if (rw == null) return;
 
@@ -185,7 +176,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#endregion
 
-			var scene = CreateScene(client, renderDevice, cyclesEngine);
+			var scene = CreateScene(client, renderDevice, this);
 			var scaledPixelSize = Dpi / 72.0f;
 			var pixelSize = Math.Max(1, (int)(scaledPixelSize * RcCore.It.EngineSettings.DpiScale));
 
@@ -208,35 +199,36 @@ namespace RhinoCyclesCore.RenderEngines
 			if(RcCore.It.CanUseDrawOpenGl() && RcCore.It.EngineSettings.UseStartResolution) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
 			#endregion
 
-			if (cyclesEngine.CancelRender) return;
+			if (CancelRender) return;
 
 			#region create session for scene
-			cyclesEngine.Session = new Session(client, sessionParams, scene);
+			Session = new Session(client, sessionParams, scene);
 			#endregion
 
 			TriggerCurrentViewportSettingsRequested();
 
 			// register callbacks before starting any rendering
-			cyclesEngine.SetCallbacks();
+			SetCallbacks();
 
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
-			cyclesEngine.CheckFlushQueue();
-			if (!cyclesEngine.CancelRender)
+			CheckFlushQueue();
+			if (!CancelRender)
 			{
-				cyclesEngine.Synchronize();
+				Synchronize();
+				Flush = false;
 			}
 
-			if (!cyclesEngine.CancelRender)
+			if (!CancelRender)
 			{
-				cyclesEngine.Session.PrepareRun();
+				Session.PrepareRun();
 			}
 
 			#endregion
 
 			// We've got Cycles rendering now, notify anyone who cares
-			cyclesEngine.RenderStarted?.Invoke(cyclesEngine, new RenderStartedEventArgs(!cyclesEngine.CancelRender));
+			RenderStarted?.Invoke(this, new RenderStartedEventArgs(!CancelRender));
 
 			while (!IsStopped)
 			{
@@ -250,24 +242,49 @@ namespace RhinoCyclesCore.RenderEngines
 					// lets reset session
 					Session.Reset(size.Width, size.Height, _samples);
 				}
-				if(cyclesEngine.IsRendering) {
-					var smpl = cyclesEngine.Session.Sample();
+				if(IsRendering) {
+					var smpl = Session.Sample();
 					if (smpl>-1 && !Flush)
 					{
-						cyclesEngine.PassRendered?.Invoke(cyclesEngine, new PassRenderedEventArgs(smpl+1, View));
+						PassRendered?.Invoke(this, new PassRenderedEventArgs(smpl+1, View));
 					}
 				}
-				if(!Locked && !CancelRender && !IsStopped && Flush) {
-					TriggerChangesReady();
-				} else
+				if (!Locked && !CancelRender && !IsStopped && Flush)
+				{
+					CheckFlushQueue();
+					Synchronize();
+					Flush = false;
+				}
+				else
 				{
 					Thread.Sleep(_throttle);
 				}
 			}
 
-			cyclesEngine.Session.EndRun();
+			Session.EndRun();
+			Session.Destroy();
+		}
 
-			cyclesEngine.Session.Destroy();
+		/// <summary>
+		/// Check if we should change render engine status. If the changequeue
+		/// has notified us of any changes Flush will be true. If we're rendering
+		/// then move to State.Halted and cancel our current render progress.
+		/// </summary>
+		public void CheckFlushQueue()
+		{
+			if (State == State.Waiting) Continue();
+			if (State != State.Rendering || Database == null) return;
+
+			// flush the queue
+			Database.Flush();
+
+			// if we've got actually changes we care about
+			// change state to signal need for uploading
+			if (HasSceneChanges())
+			{
+				Session?.Cancel("Scene changes detected.\n");
+				State = State.Uploading;
+			}
 		}
 
 		public event EventHandler Synchronized;
@@ -293,8 +310,6 @@ namespace RhinoCyclesCore.RenderEngines
 				{
 					State = State.Rendering;
 					_needReset = true;
-
-					m_flush = false;
 				}
 
 				if (CancelRender)

@@ -105,13 +105,6 @@ namespace RhinoCyclesCore
 		protected CSycles.DisplayUpdateCallback m_display_update_callback;
 		protected CSycles.LoggerCallback m_logger_callback;
 
-		public event EventHandler ChangesReady;
-		public void TriggerChangesReady()
-		{
-			RcCore.OutputDebugString("Triggering changes, changequeue applied everything\n");
-			ChangesReady?.Invoke(this, EventArgs.Empty);
-		}
-
 		protected bool m_flush;
 		/// <summary>
 		/// Flag set to true when a flush on the changequeue is needed.
@@ -122,9 +115,7 @@ namespace RhinoCyclesCore
 		{
 			get
 			{
-				bool flush;
-				flush = m_flush;
-				return flush;
+				return m_flush;
 			}
 			set
 			{
@@ -145,42 +136,11 @@ namespace RhinoCyclesCore
 		/// Return true if any change has been received through the changequeue
 		/// </summary>
 		/// <returns>true if any changes have been received.</returns>
-		private bool HasSceneChanges()
+		protected bool HasSceneChanges()
 		{
 			return Database.HasChanges();
 		}
 
-		/// <summary>
-		/// Check if we should change render engine status. If the changequeue
-		/// has notified us of any changes Flush will be true. If we're rendering
-		/// then move to State.Halted and cancel our current render progress.
-		/// </summary>
-		public void CheckFlushQueue()
-		{
-			if (State == State.Waiting) Continue();
-			// not rendering, nor flush needed, bail
-			if (State != State.Rendering || Database == null || !Flush) return;
-
-			// We've been told we need to flush, so cancel current render
-			//State = State.Halted;
-			// flush the queue
-			Database.Flush();
-
-			// if we've got actually changes we care about
-			// change state to signal need for uploading
-			if (HasSceneChanges())
-			{
-				Session?.Cancel("Scene changes detected.\n");
-				//if (!m_interactive) Session?.Cancel("Scene changes detected.\n");
-				//else {
-				//	// TODO: ensure ViewportRenderEngine doesn't set pause ever. Session?.SetPause(true);
-				//}
-				State = State.Uploading;
-			}
-
-			// reset flush flag directly, since we already have lock.
-			m_flush = false;
-		}
 
 		protected readonly uint m_doc_serialnumber;
 		private readonly bool m_interactive;
