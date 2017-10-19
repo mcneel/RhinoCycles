@@ -1632,6 +1632,9 @@ namespace RhinoCyclesCore.Database
 		{
 			if (rs != null)
 			{
+				var trbg = TransparentBackground;
+				TransparentBackground = rs.TransparentBackground;
+				DisplayPipelineAttributesChanged |= trbg |= TransparentBackground;
 				_environmentDatabase.SetGamma(PreProcessGamma);
 				_environmentDatabase.SetBackgroundData(rs.BackgroundStyle, rs.BackgroundColorTop, rs.BackgroundColorBottom);
 				if (rs.BackgroundStyle == BackgroundStyle.WallpaperImage)

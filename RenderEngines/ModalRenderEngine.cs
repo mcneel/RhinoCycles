@@ -145,7 +145,7 @@ namespace RhinoCyclesCore.RenderEngines
 				// lets first reset session
 				cyclesEngine.Session.Reset(size.Width, size.Height, requestedSamples);
 				// then reset scene
-				cyclesEngine.Session.Scene.Reset();
+				//cyclesEngine.Session.Scene.Reset();
 				// and actually start
 				bool stillrendering = true;
 				var throttle = Math.Max(0, RcCore.It.EngineSettings.ThrottleMs);
