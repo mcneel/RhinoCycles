@@ -1652,7 +1652,7 @@ namespace RhinoCyclesCore.Database
 		}
 
 		public bool DisplayPipelineAttributesChanged { get; private set; } = false;
-		public int RealtimePreviewPasses { get; private set; }
+		public int RealtimePreviewPasses { get; private set; } = -1;
 		public bool TransparentBackground { get; private set; } = false;
 		protected override void ApplyDisplayPipelineAttributesChanges(DisplayPipelineAttributes displayPipelineAttributes)
 		{
