@@ -709,7 +709,7 @@ namespace RhinoCyclesCore.Database
 			var lenslength = vp.Camera35mmLensLength;
 
 			// lets see if we need to do magic for two-point perspective
-			var twopoint = false; // @todo add support for vp.IsTwoPointPerspectiveProjection;
+			var twopoint = vp.IsTwoPointPerspectiveProjection;
 
 			// frustum values, used for two point
 			vp.GetFrustum(out double frl, out double frr, out double frb, out double frt, out double frn, out double frf);
@@ -718,14 +718,17 @@ namespace RhinoCyclesCore.Database
 			//	"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
 
 			// distance between top and bottom of frustum
-			var dist = frt - frb;
-			var disthalf = dist/2.0f;
+			var rhino_frustum_height = frt - frb;
 
-			// if we have a disthalf and twopoint, adjust frustum top and bottom
-			if (twopoint && Math.Abs(dist) >= 0.001)
+			// if we have a frustum height and twopoint, adjust frustum by scaling it
+			if (twopoint && rhino_frustum_height >= 0.001)
 			{
-				frt = disthalf;
-				frb = -disthalf;
+				var cycles_frustum_height = 2.0;
+				var frustum_scale_factor = cycles_frustum_height / rhino_frustum_height;
+				frb = frustum_scale_factor * frb;
+				frt = frustum_scale_factor * frt;
+				frl = frustum_scale_factor * frl;
+				frr = frustum_scale_factor * frr;
 				//System.Diagnostics.Debug.WriteLine(String.Format(
 				//	"ADJUSTED Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
 			}
