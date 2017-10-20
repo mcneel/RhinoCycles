@@ -664,6 +664,10 @@ namespace RhinoCyclesCore.Database
 
 			var ha = newSize.Width > newSize.Height ? view.Horizontal: view.Vertical;
 
+			// use always horizontal angle for 2 point perspective
+			if (view.TwoPoint)
+				ha = view.Horizontal;
+
 			var angle = (float) Math.Atan(Math.Tan(ha)/view.ViewAspectRatio) * 2.0f;
 
 			//System.Diagnostics.Debug.WriteLine("size: {0}, matrix: {1}, angle: {2}, Sensorsize: {3}x{4}", size, view.Transform, angle, Settings.SensorHeight, Settings.SensorWidth);
