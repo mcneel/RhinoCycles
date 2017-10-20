@@ -59,16 +59,16 @@ namespace RhinoCyclesCore.RenderEngines
 			//ViewCrc = e.Crc;
 		}
 
-		bool capturing = false;
+		//bool capturing = false;
 		public void SetCallbackForCapture()
 		{
-			capturing = true;
+			//capturing = true;
 			m_write_render_tile_callback = ModalWriteRenderTileCallback;
 		}
 
 		public void ModalWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
-			if (IsStopped || (int)sample<(maxSamples)) return;
+			if (IsStopped || (int)sample<(maxSamples) && passtype!=PassType.Combined) return;
 			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 		}
 
@@ -180,7 +180,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.CancelRender = true;
 			cyclesEngine.State = State.Stopped;
 
-			if (!capturing)
+			//if (!capturing)
 			{
 				// set final status string and progress to 1.0f to signal completed render
 				cyclesEngine.SetProgress(rw,
