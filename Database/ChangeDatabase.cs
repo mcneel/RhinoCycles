@@ -662,13 +662,8 @@ namespace RhinoCyclesCore.Database
 
 			TriggerViewChanged(view.View, oldSize!=newSize, newSize);
 
-			var ha = newSize.Width > newSize.Height ? view.Horizontal: view.Vertical;
-
-			// use always horizontal angle for 2 point perspective
-			if (view.TwoPoint)
-				ha = view.Horizontal;
-
-			var angle = (float) Math.Atan(Math.Tan(ha)/view.ViewAspectRatio) * 2.0f;
+			// Pick smaller of the angles
+			var angle = newSize.Width > newSize.Height ? (float)view.Vertical * 2.0f : (float)view.Horizontal * 2.0f;
 
 			//System.Diagnostics.Debug.WriteLine("size: {0}, matrix: {1}, angle: {2}, Sensorsize: {3}x{4}", size, view.Transform, angle, Settings.SensorHeight, Settings.SensorWidth);
 
@@ -721,14 +716,27 @@ namespace RhinoCyclesCore.Database
 			//sdd.WriteLine(String.Format(
 			//	"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
 
-			// distance between top and bottom of frustum
-			var rhino_frustum_height = frt - frb;
-
-			// if we have a frustum height and twopoint, adjust frustum by scaling it
-			if (twopoint && rhino_frustum_height >= 0.001)
+			// For 2 point perspective frustum needs to be scaled
+			if (twopoint)
 			{
-				var cycles_frustum_height = 2.0;
-				var frustum_scale_factor = cycles_frustum_height / rhino_frustum_height;
+				// Rhino frustum dimensions
+				var rhino_frustum_height = frt - frb;
+				var rhino_frustum_width = frr - frl;
+
+				var frustum_scale_factor = 1.0;
+				if (rhino_frustum_width >= rhino_frustum_height)
+				{
+					// Use Cycles frustum height of 2 so that Cycles frustum width is at least 2
+					var cycles_frustum_height = 2.0;
+					frustum_scale_factor = cycles_frustum_height / rhino_frustum_height;
+				}
+				else
+				{
+					// Use Cycles frustum width of 2 so that Cycles frustum height is at least 2
+					var cycles_frustum_width = 2.0;
+					frustum_scale_factor = cycles_frustum_width / rhino_frustum_width;
+				}
+
 				frb = frustum_scale_factor * frb;
 				frt = frustum_scale_factor * frt;
 				frl = frustum_scale_factor * frl;
@@ -771,11 +779,16 @@ namespace RhinoCyclesCore.Database
 				w = RenderDimension.Width;
 				h = RenderDimension.Height;
 			}
-			var portrait = w < h;
-			var viewAspectratio = portrait ? h/(float)w : w/(float)h;
+			var viewAspectratio = (float)w / (float)h;
 
 			// get camera angles
 			vp.GetCameraAngles(out double diagonal, out double vertical, out double horizontal);
+
+			if (twopoint)
+			{
+				// Calculate vertical camera angle for 2 point perspective by horizontal camera angle and view aspect ratio.
+				vertical = Math.Atan(Math.Tan(horizontal) / viewAspectratio);
+			}
 
 			// convert rhino transform to ccsycles transform
 			var t = CclXformFromRhinoXform(rhinocam);
