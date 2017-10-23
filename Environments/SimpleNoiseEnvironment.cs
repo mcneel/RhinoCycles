@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using System;
 using System.Runtime.InteropServices;
 using Rhino.Render;
 using RhinoCyclesCore.Materials;
@@ -89,5 +90,7 @@ namespace RhinoCyclesCore.Environments
 		}
 
 		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.SimpleNoiseEnvironment;
+
+		public bool GetShader(ccl.Shader sh) { throw new InvalidOperationException("SimpleNoiseEnvironment is XML based"); }
 	}
 }

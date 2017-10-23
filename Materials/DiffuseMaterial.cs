@@ -18,6 +18,7 @@ using System.Runtime.InteropServices;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
+using System;
 
 namespace RhinoCyclesCore.Materials
 {
@@ -86,5 +87,7 @@ namespace RhinoCyclesCore.Materials
 					color.R, color.G, color.B);
 			}
 		}
+
+		public bool GetShader(ccl.Shader sh) { throw new InvalidOperationException("Material is XML based"); }
 	}
 }

@@ -17,6 +17,7 @@ limitations under the License.
 using System.Runtime.InteropServices;
 using Rhino.Display;
 using Rhino.Render;
+using System;
 
 namespace RhinoCyclesCore.Materials
 {
@@ -89,5 +90,7 @@ namespace RhinoCyclesCore.Materials
 		}
 
 		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.Translucent;
+
+		public bool GetShader(ccl.Shader sh) { throw new InvalidOperationException("Material is XML based"); }
 	}
 }

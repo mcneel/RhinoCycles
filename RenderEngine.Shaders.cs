@@ -38,6 +38,10 @@ namespace RhinoCyclesCore
 					case ShaderBody.CyclesMaterial.FlakedCarPaint:
 						sh = CreateCyclesShaderFromXml(shader.Front);
 						break;
+					case ShaderBody.CyclesMaterial.CustomRenderMaterial:
+						sh = new CclShader(Client, CclShader.ShaderType.Material);
+						shader.Front.Crm.GetShader(sh);
+						break;
 					default:
 						sh = CreateCyclesShaderFromRhinoV6BasicMat(shader);
 						break;

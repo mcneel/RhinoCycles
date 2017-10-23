@@ -117,5 +117,7 @@ namespace RhinoCyclesCore.Materials
 					);
 			}
 		}
+
+		public bool GetShader(ccl.Shader sh) { throw new InvalidOperationException("Material is XML based"); }
 	}
 }

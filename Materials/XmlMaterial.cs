@@ -18,6 +18,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using Rhino.DocObjects;
 using Rhino.Render;
+using System;
 
 namespace RhinoCyclesCore.Materials
 {
@@ -93,5 +94,7 @@ namespace RhinoCyclesCore.Materials
 				return XmlString;
 			}
 		}
+
+		public bool GetShader(ccl.Shader sh) { throw new InvalidOperationException("Material is XML based"); }
 	}
 }

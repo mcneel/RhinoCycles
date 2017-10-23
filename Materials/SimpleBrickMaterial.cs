@@ -16,6 +16,7 @@ limitations under the License.
 
 using Rhino.Display;
 using Rhino.Render;
+using System;
 
 namespace RhinoCyclesCore.Materials
 {
@@ -125,5 +126,7 @@ namespace RhinoCyclesCore.Materials
 				return nodegraph;
 			}
 		}
+
+		public bool GetShader(ccl.Shader sh) { throw new InvalidOperationException("Material is XML based"); }
 	}
 }

@@ -329,11 +329,22 @@ namespace RhinoCyclesCore
 			}
 			else
 			{
-				crm.BakeParameters();
-				shb.Crm = crm;
-				shb.CyclesMaterialType = ShaderBody.CyclesMaterial.Xml;
-				shb.Gamma = gamma;
-				shb.Name = rm.Name ?? "some cycles material";
+				if (crm.MaterialType == ShaderBody.CyclesMaterial.CustomRenderMaterial)
+				{
+					crm.BakeParameters();
+					shb.Crm = crm;
+					shb.CyclesMaterialType = ShaderBody.CyclesMaterial.CustomRenderMaterial;
+					shb.Gamma = gamma;
+					shb.Name = rm.Name ?? "Cycles custom material";
+				}
+				else
+				{
+					crm.BakeParameters();
+					shb.Crm = crm;
+					shb.CyclesMaterialType = ShaderBody.CyclesMaterial.Xml;
+					shb.Gamma = gamma;
+					shb.Name = rm.Name ?? "some cycles material";
+				}
 			}
 			return true;
 		}
@@ -404,6 +415,7 @@ namespace RhinoCyclesCore
 			No,
 
 			Xml,
+			CustomRenderMaterial,
 
 			Brick,
 			Test,

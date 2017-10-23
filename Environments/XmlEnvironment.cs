@@ -17,6 +17,7 @@ limitations under the License.
 using System.Runtime.InteropServices;
 using RhinoCyclesCore.Materials;
 using Rhino.Render;
+using System;
 
 namespace RhinoCyclesCore.Environments
 {
@@ -61,5 +62,7 @@ namespace RhinoCyclesCore.Environments
 		}
 
 		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.XmlEnvironment;
+
+		public bool GetShader(ccl.Shader sh) { throw new InvalidOperationException("XmlEnvironment is XML based"); }
 	}
 }

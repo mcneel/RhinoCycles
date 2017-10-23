@@ -38,6 +38,13 @@ namespace RhinoCyclesCore.Materials
 		string MaterialXml { get; }
 
 		/// <summary>
+		/// Get the pre-made shader tree. Used by custom Cycles material implementations that don't use XML.
+		/// </summary>
+		/// <param name="sh">Shader to fill</param>
+		/// <returns>true when ok.</returns>
+		bool GetShader(ccl.Shader sh);
+
+		/// <summary>
 		/// Set the gamma to use when serializing to XML.
 		/// </summary>
 		float Gamma { get; set; }
