@@ -106,7 +106,6 @@ namespace RhinoCyclesCore
 			OpenClKernelType = OpenClKernelType;
 			CPUSplitKernel = CPUSplitKernel;
 			OpenClSingleProgram = OpenClSingleProgram;
-			FullHdrSkylight = FullHdrSkylight;
 			NoShadows = NoShadows;
 			RaytracedClippingPlanes = RaytracedClippingPlanes;
 			SaveDebugImages = SaveDebugImages;
@@ -195,7 +194,6 @@ namespace RhinoCyclesCore
 			OpenClKernelType = OpenClKernelTypeDefault;
 			CPUSplitKernel = CPUSplitKernelDefault;
 			OpenClSingleProgram = OpenClSingleProgramDefault;
-			FullHdrSkylight = FullHdrSkylightDefault;
 			NoShadows = NoShadowsDefault;
 			RaytracedClippingPlanes = RaytracedClippingPlanesDefault;
 			SaveDebugImages = SaveDebugImagesDefault;
@@ -388,7 +386,7 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetBool("AllowSelectedDeviceOverride", value); }
 		}
 
-		public bool UseStartResolutionDefault => true;
+		public bool UseStartResolutionDefault => RenderEngine.OnHighDpi ? true : false;
 		public bool UseStartResolution
 		{
 			get { return RcPlugIn.Settings.GetBool("UseStartResolution", UseStartResolutionDefault); }
@@ -418,7 +416,7 @@ namespace RhinoCyclesCore
 
 		public virtual IntegratorMethod IntegratorMethod { get; set; }
 
-		public int MaxBounceDefault => 128;
+		public int MaxBounceDefault => 32;
 		public virtual int MaxBounce
 		{
 			get { return RcPlugIn.Settings.GetInteger("MaxBounce", MaxBounceDefault); }
@@ -430,7 +428,7 @@ namespace RhinoCyclesCore
 			get { return RcPlugIn.Settings.GetBool("NoCaustics", NoCausticsDefault); }
 			set { RcPlugIn.Settings.SetBool("NoCaustics", value); }
 		}
-		public int MaxDiffuseBounceDefault => 0;
+		public int MaxDiffuseBounceDefault => 2;
 		public virtual int MaxDiffuseBounce
 		{
 			get { return RcPlugIn.Settings.GetInteger("MaxDiffuseBounce", MaxDiffuseBounceDefault); }
@@ -642,19 +640,6 @@ namespace RhinoCyclesCore
 				}
 			}
 		}
-		public bool FullHdrSkylightDefault => false;
-		public bool FullHdrSkylight
-		{
-			get { return RcPlugIn.Settings.GetBool("FullHdrSkylight", FullHdrSkylightDefault); }
-			set
-			{
-				var old = FullHdrSkylight;
-				if (old != value)
-				{
-					RcPlugIn.Settings.SetBool("FullHdrSkylight", value);
-				}
-			}
-		}
 		public bool NoShadowsDefault => false;
 		public bool NoShadows
 		{
@@ -752,8 +737,6 @@ namespace RhinoCyclesCore
 		int OpenClKernelType { get; set; }
 
 		bool CPUSplitKernel { get; set; }
-
-		bool FullHdrSkylight { get; set; }
 
 		bool NoShadows { get; set; }
 
