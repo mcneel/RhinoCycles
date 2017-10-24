@@ -285,7 +285,7 @@ namespace RhinoCyclesCore
 				{
 					var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
 
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, rm, difftex, RenderMaterial.StandardChildSlots.Diffuse);
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, difftex, RenderMaterial.StandardChildSlots.Diffuse);
 					if (shb.HasDiffuseTexture)
 					{
 						shb.DiffuseTexture.UseAlpha = difftexAlpha;
@@ -296,7 +296,7 @@ namespace RhinoCyclesCore
 				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump))
 				{
 					var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, rm, bumptex, RenderMaterial.StandardChildSlots.Bump);
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, bumptex, RenderMaterial.StandardChildSlots.Bump);
 					if (shb.HasBumpTexture)
 					{
 						shb.BumpTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) / 100.0f, 1.0f);
@@ -306,7 +306,7 @@ namespace RhinoCyclesCore
 				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency))
 				{
 					var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, rm, transtex,
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, transtex,
 						RenderMaterial.StandardChildSlots.Transparency);
 					if (shb.HasTransparencyTexture)
 					{
@@ -317,7 +317,7 @@ namespace RhinoCyclesCore
 				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment))
 				{
 					var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, rm, envtex,
+					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, envtex,
 						RenderMaterial.StandardChildSlots.Environment);
 					if (shb.HasEnvironmentTexture)
 					{
