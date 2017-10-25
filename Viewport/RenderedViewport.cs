@@ -158,6 +158,7 @@ namespace RhinoCycles.Viewport
 		}
 
 		private bool _useFastDraw = false;
+		private bool _useOpenGl = false;
 		public override bool UseFastDraw() { return !_forCapture && RcCore.It.EngineSettings.UseFastDraw && RcCore.It.CanUseDrawOpenGl(); }
 
 		private Thread _modalThread;
@@ -190,9 +191,11 @@ namespace RhinoCycles.Viewport
 			_started = true;
 			_forCapture = forCapture;
 			_useFastDraw = UseFastDraw();
-			SetUseDrawOpenGl(RcCore.It.CanUseDrawOpenGl());
+			_useOpenGl = RcCore.It.CanUseDrawOpenGl();
+			SetUseDrawOpenGl(_useOpenGl);
 			if (forCapture)
 			{
+				_useOpenGl = false;
 				SetUseDrawOpenGl(false);
 				_useFastDraw = UseFastDraw();
 				var mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo, Dpa);
@@ -202,6 +205,8 @@ namespace RhinoCycles.Viewport
 				_modal = mre;
 
 				var rs = new Size(w, h);
+
+				renderWindow.SetSize(rs);
 
 				mre.RenderWindow = renderWindow;
 
@@ -225,6 +230,8 @@ namespace RhinoCycles.Viewport
 			_fadeInMs = RcCore.It.EngineSettings.FadeInMs;
 
 			_frameAvailable = false;
+
+			if (!_useOpenGl) renderWindow.SetSize(new Size(w, h));
 
 			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa);
 
