@@ -52,7 +52,7 @@ namespace RhinoCyclesCore.Shaders
 				var bg_color_or_texture259 = new MixNode("bg_color_or_texture");
 					bg_color_or_texture259.ins.Color1.Value = m_original_background.Color1AsFloat4;
 					bg_color_or_texture259.ins.Fac.Value = m_original_background.HasBgEnvTextureAsFloat;
-					bg_color_or_texture259.BlendType = MixNode.BlendTypes.Mix;
+					bg_color_or_texture259.BlendType = MixNode.BlendTypes.Blend;
 					bg_color_or_texture259.UseClamp = false;
 
 				var separate_bg_color265 = new SeparateRgbNode("separate_bg_color");
@@ -95,7 +95,7 @@ namespace RhinoCyclesCore.Shaders
 
 				var gradient_or_other280 = new MixNode("gradient_or_other");
 					gradient_or_other280.ins.Fac.Value = m_original_background.UseGradientAsFloat;
-					gradient_or_other280.BlendType = MixNode.BlendTypes.Mix;
+					gradient_or_other280.BlendType = MixNode.BlendTypes.Blend;
 					gradient_or_other280.UseClamp = false;
 
 				var maximum306 = new MathMaximum("maximum");
@@ -114,7 +114,7 @@ namespace RhinoCyclesCore.Shaders
 				var refl_color_or_texture260 = new MixNode("refl_color_or_texture");
 					refl_color_or_texture260.ins.Color1.Value = m_original_background.ReflectionColorAs4float;
 					refl_color_or_texture260.ins.Fac.Value = m_original_background.HasReflEnvTextureAsFloat;
-					refl_color_or_texture260.BlendType = MixNode.BlendTypes.Mix;
+					refl_color_or_texture260.BlendType = MixNode.BlendTypes.Blend;
 					refl_color_or_texture260.UseClamp = false;
 
 				var separate_refl_color270 = new SeparateRgbNode("separate_refl_color");
@@ -151,7 +151,7 @@ namespace RhinoCyclesCore.Shaders
 				var skycolor_or_final_bg281 = new MixNode("skycolor_or_final_bg");
 					skycolor_or_final_bg281.ins.Color2.Value = m_original_background.SkyColorAs4float;
 					skycolor_or_final_bg281.ins.Fac.Value = m_original_background.UseSkyColorAsFloat;
-					skycolor_or_final_bg281.BlendType = MixNode.BlendTypes.Mix;
+					skycolor_or_final_bg281.BlendType = MixNode.BlendTypes.Blend;
 					skycolor_or_final_bg281.UseClamp = false;
 
 				var sky_env_texture257 = new EnvironmentTextureNode("sky_env_texture");
@@ -163,7 +163,7 @@ namespace RhinoCyclesCore.Shaders
 
 				var sky_color_or_texture258 = new MixNode("sky_color_or_texture");
 					sky_color_or_texture258.ins.Fac.Value = m_original_background.HasSkyEnvTextureAsFloat;
-					sky_color_or_texture258.BlendType = MixNode.BlendTypes.Mix;
+					sky_color_or_texture258.BlendType = MixNode.BlendTypes.Blend;
 					sky_color_or_texture258.UseClamp = false;
 
 				var separate_sky_color275 = new SeparateRgbNode("separate_sky_color");
@@ -208,11 +208,11 @@ namespace RhinoCyclesCore.Shaders
 					invert_cam_and_transm289.UseClamp = false;
 
 				var refl_bg_or_custom_env288 = new MixNode("refl_bg_or_custom_env");
-					refl_bg_or_custom_env288.BlendType = MixNode.BlendTypes.Mix;
+					refl_bg_or_custom_env288.BlendType = MixNode.BlendTypes.Blend;
 					refl_bg_or_custom_env288.UseClamp = false;
 
 				var light_with_bg_or_sky286 = new MixNode("light_with_bg_or_sky");
-					light_with_bg_or_sky286.BlendType = MixNode.BlendTypes.Mix;
+					light_with_bg_or_sky286.BlendType = MixNode.BlendTypes.Blend;
 					light_with_bg_or_sky286.UseClamp = false;
 
 				var if_not_cam_nor_transm_nor_glossyrefl298 = new MathMultiply("if_not_cam_nor_transm_nor_glossyrefl");
@@ -220,7 +220,7 @@ namespace RhinoCyclesCore.Shaders
 					if_not_cam_nor_transm_nor_glossyrefl298.UseClamp = false;
 
 				var mix292 = new MixNode("mix");
-					mix292.BlendType = MixNode.BlendTypes.Mix;
+					mix292.BlendType = MixNode.BlendTypes.Blend;
 					mix292.UseClamp = false;
 
 				var final_bg277 = new BackgroundNode("final_bg");
