@@ -190,6 +190,7 @@ namespace RhinoCycles.Viewport
 			_started = true;
 			_forCapture = forCapture;
 			_useFastDraw = UseFastDraw();
+			SetUseDrawOpenGl(RcCore.It.CanUseDrawOpenGl());
 			if (forCapture)
 			{
 				SetUseDrawOpenGl(false);
@@ -510,6 +511,7 @@ namespace RhinoCycles.Viewport
 		public override string HudProductName()
 		{
 			if (_cycles == null) return "-";
+			if (_cycles.RenderDevice == null) return "?";
 			var pn = Localization.LocalizeString("Cycles", 9);
 			var cpu = _cycles.RenderDevice.IsCpu;
 			if (_showRenderDevice && !cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}";
