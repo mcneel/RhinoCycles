@@ -127,7 +127,7 @@ namespace RhinoCyclesCore.Shaders
 
 			var diffuse_base_color_through_alpha247 = new MixNode("diffuse_base_color_through_alpha");
 				diffuse_base_color_through_alpha247.ins.Color1.Value = part.BaseColor;
-				diffuse_base_color_through_alpha247.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Mix;
+				diffuse_base_color_through_alpha247.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
 				diffuse_base_color_through_alpha247.UseClamp = false;
 
 			var bump214 = new BumpNode("bump");
@@ -151,7 +151,7 @@ namespace RhinoCyclesCore.Shaders
 				attenuated_reflection_color217.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
 				attenuated_reflection_color217.ins.Color2.Value = part.ReflectionColorGamma;
 				attenuated_reflection_color217.ins.Fac.Value = part.Reflectivity;
-				attenuated_reflection_color217.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Mix;
+				attenuated_reflection_color217.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
 				attenuated_reflection_color217.UseClamp = false;
 
 			var fresnel_based_on_constant218 = new FresnelNode("fresnel_based_on_constant");
@@ -173,7 +173,7 @@ namespace RhinoCyclesCore.Shaders
 				fresnel_reflection_if_reflection_used198.UseClamp = false;
 
 			var select_reflection_or_fresnel_reflection221 = new MixNode("select_reflection_or_fresnel_reflection");
-				select_reflection_or_fresnel_reflection221.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Mix;
+				select_reflection_or_fresnel_reflection221.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
 				select_reflection_or_fresnel_reflection221.UseClamp = false;
 
 			var shadeless222 = new MixClosureNode("shadeless");
@@ -187,7 +187,7 @@ namespace RhinoCyclesCore.Shaders
 				attennuated_refraction_color225.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
 				attennuated_refraction_color225.ins.Color2.Value = part.TransparencyColorGamma;
 				attennuated_refraction_color225.ins.Fac.Value = part.Transparency;
-				attennuated_refraction_color225.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Mix;
+				attennuated_refraction_color225.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
 				attennuated_refraction_color225.UseClamp = false;
 
 			var refraction226 = new RefractionBsdfNode("refraction");
@@ -220,7 +220,7 @@ namespace RhinoCyclesCore.Shaders
 			var attenuated_environment_color232 = new MixNode("attenuated_environment_color");
 				attenuated_environment_color232.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
 				attenuated_environment_color232.ins.Fac.Value = part.EnvironmentTexture.Amount;
-				attenuated_environment_color232.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Mix;
+				attenuated_environment_color232.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
 				attenuated_environment_color232.UseClamp = false;
 
 			var diffuse_glossy_and_refraction233 = new MixClosureNode("diffuse_glossy_and_refraction");
