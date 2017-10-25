@@ -40,7 +40,7 @@ namespace RhinoCyclesCore.RenderEngines
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = null;
 			m_write_render_tile_callback = null;
-			if(!RcCore.It.CanUseDrawOpenGl())
+			if(!UsingOpenGl)
 				m_write_render_tile_callback = WriteRenderTileCallback;
 			m_test_cancel_callback = null;
 			m_display_update_callback = null;
@@ -107,6 +107,8 @@ namespace RhinoCyclesCore.RenderEngines
 			
 		}
 
+		private bool UsingOpenGl { get; } = RcCore.It.CanUseDrawOpenGl();
+
 		/// <summary>
 		/// Set new size for the internal RenderWindow object.
 		/// </summary>
@@ -114,6 +116,7 @@ namespace RhinoCyclesCore.RenderEngines
 		/// <param name="h">Height in pixels</param>
 		public void SetRenderSize(int w, int h)
 		{
+			if (UsingOpenGl) return;
 			RenderWindow?.SetSize(new Size(w, h));
 		}
 
