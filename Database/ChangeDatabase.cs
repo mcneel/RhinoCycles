@@ -671,7 +671,8 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.Matrix = view.Transform;
 			scene.Camera.Type = view.Projection;
 			scene.Camera.Fov = angle;
-			scene.Camera.FarClip = 1.0E+14f; // gp_side_extension;
+			//scene.Camera.NearClip = (float)view.Near;
+			scene.Camera.FarClip = (float)view.Far; // 1.0E+14f; // gp_side_extension;
 			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
 			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
 
@@ -809,6 +810,8 @@ namespace RhinoCyclesCore.Database
 				TwoPoint = twopoint,
 				Width = w,
 				Height = h,
+				Near = frn,
+				Far = frf,
 				View = GetQueueView() // use GetQueueView to ensure we have a valid ViewInfo even after Flush
 			};
 			_renderEngine.View = null;
