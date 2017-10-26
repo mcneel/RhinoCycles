@@ -28,6 +28,9 @@ namespace RhinoCyclesCore
 		public double ViewAspectRatio { get; set; }
 		public CameraType Projection { get; set; }
 
+		public double Near { get; set; }
+		public double Far { get; set; }
+
 		public int Width { get; set; }
 		public int Height { get; set; }
 
