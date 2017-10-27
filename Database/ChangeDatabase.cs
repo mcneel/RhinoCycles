@@ -811,7 +811,7 @@ namespace RhinoCyclesCore.Database
 				Width = w,
 				Height = h,
 				Near = frn,
-				Far = frf,
+				Far = frf > 1.0E+10f ? frf : 1.0E+10f,
 				View = GetQueueView() // use GetQueueView to ensure we have a valid ViewInfo even after Flush
 			};
 			_renderEngine.View = null;

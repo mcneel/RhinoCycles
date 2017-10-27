@@ -110,6 +110,7 @@ namespace RhinoCyclesCore.Database
 		private bool bgLightPoked { get; set; } = false;
 		public void UpdateBackgroundLight()
 		{
+#if USEBGLIGHT
 			if(!bgLightPoked)
 			{
 				CyclesLight bgLight = new CyclesLight()
@@ -122,6 +123,7 @@ namespace RhinoCyclesCore.Database
 				AddLight(bgLight);
 				bgLightPoked = true;
 			}
+#endif
 		}
 
 		/// <summary>
