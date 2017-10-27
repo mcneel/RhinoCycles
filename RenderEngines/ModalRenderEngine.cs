@@ -89,6 +89,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
 			requestedSamples = Attributes?.RealtimeRenderPasses ?? RcCore.It.EngineSettings.Samples;
+			requestedSamples = (requestedSamples < 1) ? RcCore.It.EngineSettings.Samples : requestedSamples;
 			cyclesEngine.TriggerCurrentViewportSettingsRequested();
 
 			#region pick a render device
