@@ -371,11 +371,13 @@ namespace RhinoCyclesCore.Shaders
 				{
 					RenderEngine.SetTextureImage(refl_env_texture256, m_original_background.ReflectionTexture);
 					_SetEnvironmentProjection(m_original_background.ReflectionTexture, refl_env_texture256);
+					refl_env_texture256.Rotation = m_original_background.ReflectionTexture.Transform.z;
 				}
 				if(m_original_background.HasSkyEnvTexture)
 				{
 					RenderEngine.SetTextureImage(sky_env_texture257, m_original_background.SkyTexture);
 					_SetEnvironmentProjection(m_original_background.SkyTexture, sky_env_texture257);
+					sky_env_texture257.Rotation = m_original_background.SkyTexture.Transform.z;
 				}
 
 				if (m_original_background.NoCustomsWithSkylightEnabled)
