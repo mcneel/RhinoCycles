@@ -54,7 +54,8 @@ namespace RhinoCyclesCore
 
 			UseStartResolution = UseStartResolution;
 			StartResolution = StartResolution;
-			PixelSize = PixelSize;
+
+			DpiScale = DpiScale;
 
 			TileX = TileX;
 			TileY = TileY;
@@ -142,7 +143,8 @@ namespace RhinoCyclesCore
 
 			UseStartResolution = UseStartResolutionDefault;
 			StartResolution = StartResolutionDefault;
-			PixelSize = PixelSizeDefault;
+
+			DpiScale = DpiScaleDefault;
 
 			TileX = TileXDefault;
 			TileY = TileYDefault;
@@ -398,13 +400,6 @@ namespace RhinoCyclesCore
 		{
 			get { return UseStartResolution ? RcPlugIn.Settings.GetInteger("StartResolution", StartResolutionDefault) : int.MaxValue; }
 			set { RcPlugIn.Settings.SetInteger("StartResolution", value); }
-		}
-
-		public int PixelSizeDefault => RenderEngine.OnHighDpi ? 3 : 1;
-		public int PixelSize
-		{
-			get { return RcPlugIn.Settings.GetInteger("PixelSize", PixelSizeDefault); }
-			set { RcPlugIn.Settings.SetInteger("PixelSize", value); }
 		}
 
 		public float DpiScaleDefault => 1.0f;
@@ -740,6 +735,8 @@ namespace RhinoCyclesCore
 
 		bool NoShadows { get; set; }
 
+		float DpiScale { get; set; }
+
 		bool RaytracedClippingPlanes { get; set; }
 
 		int PreviewSamples { get; set; }
@@ -765,8 +762,6 @@ namespace RhinoCyclesCore
 		bool UseStartResolution { get; set; }
 
 		int StartResolution { get; set; }
-
-		int PixelSize { get; set; }
 
 		bool UseFastDraw { get; set; }
 
