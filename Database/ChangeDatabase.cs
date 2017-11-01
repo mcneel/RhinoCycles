@@ -96,17 +96,20 @@ namespace RhinoCyclesCore.Database
 
 		#endregion
 
-		private readonly ShaderConverter _shaderConverter;
+		private readonly ShaderConverter _shaderConverter = new ShaderConverter();
 
 		private readonly bool _modalRenderer;
 
 		public bool SupportClippingPlanes { get; set; }
 
+		public uint Blades { get; } = RcCore.It.EngineSettings.Blades;
+		public float BladesRotation { get; } = RcCore.It.EngineSettings.BladesRotation;
+		public float ApertureRatio { get; } = RcCore.It.EngineSettings.ApertureRatio;
+
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal) : base(pluginId, doc, view, attributes, true, !modal)
 		{
 			_renderEngine = engine;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
-			_shaderConverter = new ShaderConverter();
 			_modalRenderer = modal;
 		}
 
@@ -122,7 +125,6 @@ namespace RhinoCyclesCore.Database
 			_renderEngine = engine;
 			_modalRenderer = true;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
-			_shaderConverter = new ShaderConverter();
 		}
 
 		protected override void Dispose(bool isDisposing)
@@ -646,6 +648,9 @@ namespace RhinoCyclesCore.Database
 			var scene = _renderEngine.Session.Scene;
 			scene.Camera.FocalDistance = fb.FocalDistance;
 			scene.Camera.ApertureSize = fb.FocalAperture;
+			scene.Camera.Blades = Blades;
+			scene.Camera.BladesRotation = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
+			scene.Camera.ApertureRatio = (float)Rhino.RhinoMath.ToRadians(ApertureRatio);
 
 		}
 
@@ -671,6 +676,10 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.Matrix = view.Transform;
 			scene.Camera.Type = view.Projection;
 			scene.Camera.Fov = angle;
+			scene.Camera.BladesRotation = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
+			scene.Camera.ApertureRatio = (float)Rhino.RhinoMath.ToRadians(ApertureRatio);
+			scene.Camera.Blades = Blades;
+
 			//scene.Camera.NearClip = (float)view.Near;
 			scene.Camera.FarClip = (float)view.Far; // 1.0E+14f; // gp_side_extension;
 			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
