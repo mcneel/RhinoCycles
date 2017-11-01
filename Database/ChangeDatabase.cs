@@ -650,7 +650,7 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.ApertureSize = fb.FocalAperture;
 			scene.Camera.Blades = Blades;
 			scene.Camera.BladesRotation = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
-			scene.Camera.ApertureRatio = (float)Rhino.RhinoMath.ToRadians(ApertureRatio);
+			scene.Camera.ApertureRatio = ApertureRatio;
 
 		}
 
@@ -677,7 +677,7 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.Type = view.Projection;
 			scene.Camera.Fov = angle;
 			scene.Camera.BladesRotation = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
-			scene.Camera.ApertureRatio = (float)Rhino.RhinoMath.ToRadians(ApertureRatio);
+			scene.Camera.ApertureRatio = ApertureRatio;
 			scene.Camera.Blades = Blades;
 
 			//scene.Camera.NearClip = (float)view.Near;
