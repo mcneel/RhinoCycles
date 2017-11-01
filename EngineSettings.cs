@@ -94,6 +94,10 @@ namespace RhinoCyclesCore
 			SampleAllLights = SampleAllLights;
 			SampleAllLightsIndirect = SampleAllLightsIndirect;
 
+			Blades = Blades;
+			BladesRotation = BladesRotation;
+			ApertureRatio = ApertureRatio;
+
 			SensorWidth = SensorWidth;
 			SensorHeight = SensorHeight;
 
@@ -182,6 +186,10 @@ namespace RhinoCyclesCore
 
 			SampleAllLights = SampleAllLightsDefault;
 			SampleAllLightsIndirect = SampleAllLightsIndirectDefault;
+
+			Blades = BladesDefault;
+			BladesRotation = BladesRotationDefault;
+			ApertureRatio = ApertureRatioDefault;
 
 			SensorWidth = SensorWidthDefault;
 			SensorHeight = SensorHeightDefault;
@@ -548,6 +556,26 @@ namespace RhinoCyclesCore
 		{
 			get { return RcPlugIn.Settings.GetBool("SampleAllLightsIndirect", SampleAllLightsIndirectDefault); }
 			set { RcPlugIn.Settings.SetBool("SampleAllLightsIndirect", value); }
+		}
+
+		public uint BladesDefault => 0;
+		public virtual uint Blades
+		{
+			get { return (uint)RcPlugIn.Settings.GetInteger("Blades", (int)BladesDefault); }
+			set { RcPlugIn.Settings.SetInteger("Blades", (int)value); }
+		}
+
+		public float BladesRotationDefault => 0.0f;
+		public virtual float BladesRotation
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble("BladesRotation", BladesRotationDefault); }
+			set { RcPlugIn.Settings.SetDouble("BladesRotation", value); }
+		}
+		public float ApertureRatioDefault => 1.0f;
+		public virtual float ApertureRatio
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble("ApertureRatio", ApertureRatioDefault); }
+			set { RcPlugIn.Settings.SetDouble("ApertureRatio", value); }
 		}
 
 		public float SensorWidthDefault => 32.0f;
