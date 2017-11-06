@@ -718,7 +718,7 @@ namespace RhinoCyclesCore.Database
 			var lenslength = vp.Camera35mmLensLength;
 
 			// lets see if we need to do magic for two-point perspective
-			var twopoint = vp.IsTwoPointPerspectiveProjection;
+			var twopoint = vp.IsTwoPointPerspectiveProjection || vp.IsPerspectiveProjection;
 
 			// frustum values, used for two point
 			vp.GetFrustum(out double frl, out double frr, out double frb, out double frt, out double frn, out double frf);
