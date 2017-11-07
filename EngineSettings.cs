@@ -406,8 +406,8 @@ namespace RhinoCyclesCore
 		public int StartResolutionDefault => 64;
 		public int StartResolution
 		{
-			get { return UseStartResolution ? RcPlugIn.Settings.GetInteger("StartResolution", StartResolutionDefault) : int.MaxValue; }
-			set { RcPlugIn.Settings.SetInteger("StartResolution", value); }
+			get { return RcPlugIn.Settings.GetInteger("StartResolution", StartResolutionDefault); }
+			set { if (value < 1) value = 1;  RcPlugIn.Settings.SetInteger("StartResolution", value); }
 		}
 
 		public float DpiScaleDefault => 1.0f;
