@@ -86,6 +86,7 @@ namespace RhinoCycles.Viewport
 		private string _status = "";
 
 		private int _fadeInMs = 10;
+		private bool _okOgl = false;
 
 		public RenderedViewport()
 		{
@@ -101,6 +102,11 @@ namespace RhinoCycles.Viewport
 			HudStatusTextPressed += RenderedViewport_HudPlayStatusTextPressed;
 			HudTimePressed += RenderedViewport_HudPlayTimePressed;
 			MaxPassesChanged += RenderedViewport_MaxPassesChanged;
+		}
+
+		public override void PostConstruct()
+		{
+			_okOgl = OpenGlVersion() >= 33;
 		}
 
 		private void RenderedViewport_MaxPassesChanged(object sender, HudMaxPassesChangedEventArgs e)
@@ -159,7 +165,7 @@ namespace RhinoCycles.Viewport
 
 		private bool _useFastDraw = false;
 		private bool _useOpenGl = false;
-		public override bool UseFastDraw() { return !_forCapture && RcCore.It.EngineSettings.UseFastDraw && RcCore.It.CanUseDrawOpenGl(); }
+		public override bool UseFastDraw() { return !_forCapture && _okOgl && RcCore.It.EngineSettings.UseFastDraw && RcCore.It.CanUseDrawOpenGl(); }
 
 		private Thread _modalThread;
 		private Thread _sw;
@@ -191,7 +197,7 @@ namespace RhinoCycles.Viewport
 			_started = true;
 			_forCapture = forCapture;
 			_useFastDraw = UseFastDraw();
-			_useOpenGl = RcCore.It.CanUseDrawOpenGl();
+			_useOpenGl = RcCore.It.CanUseDrawOpenGl() && _okOgl;
 			SetUseDrawOpenGl(_useOpenGl);
 			if (forCapture)
 			{
