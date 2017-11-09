@@ -58,7 +58,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 
 		private bool _disposed;
-		protected override void Dispose(bool isDisposing)
+		public override void Dispose(bool isDisposing)
 		{
 			if (_disposed) return;
 
