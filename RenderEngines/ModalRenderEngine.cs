@@ -186,6 +186,7 @@ namespace RhinoCyclesCore.RenderEngines
 				// signal the render window we're done.
 				rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 			}
+			cyclesEngine.CancelRender = true;
 
 		}
 
