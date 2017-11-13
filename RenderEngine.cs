@@ -41,9 +41,11 @@ namespace RhinoCyclesCore
 	/// <summary>
 	/// The actual render engine, ready for asynchronous work in Rhino.
 	/// </summary>
-	public partial class RenderEngine : AsyncRenderContext
+	public partial class RenderEngine
 	{
 		protected CreatePreviewEventArgs PreviewEventArgs { get; set; }
+
+		public RenderWindow RenderWindow { get; set; }
 
 		/// <summary>
 		/// Reference to the client representation of this render engine instance.
@@ -417,10 +419,8 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Called when user presses the stop render button.
 		/// </summary>
-		override public void StopRendering()
+		public void StopRendering()
 		{
-			base.StopRendering();
-
 			StopTheRenderer();
 		}
 
@@ -432,6 +432,17 @@ namespace RhinoCyclesCore
 		public void Continue()
 		{
 			State = State.Rendering;
+		}
+
+		public Thread RenderThread { get; set; } = null;
+		public bool StartRenderThread(ThreadStart threadStart, string threadName)
+		{
+		  RenderThread = new Thread(threadStart)
+		  {
+			Name = threadName
+		  };
+		  RenderThread.Start();
+		  return true;
 		}
 
 		private void StopTheRenderer()
@@ -453,7 +464,8 @@ namespace RhinoCyclesCore
 			Database?.Dispose();
 			Database = null;
 
-			JoinRenderThread();
+			RenderThread?.Join();
+			RenderThread = null;
 		}
 
 		/// <summary>
@@ -506,6 +518,10 @@ namespace RhinoCyclesCore
 		protected void Database_LinearWorkflowChanged(object sender, LinearWorkflowChangedEventArgs e)
 		{
 		}
+
+		public virtual void Dispose() { Dispose(true); }
+
+		public virtual void Dispose(bool isDisposing) { }
 	}
 
 }
