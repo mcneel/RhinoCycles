@@ -371,12 +371,21 @@ namespace RhinoCyclesCore.Converters
 			teximg.EnvProjectionMode = projection;
 			teximg.ProjectionMode = TextureProjectionMode.EnvironmentMap;
 
-			if (azimob != null && altob != null) {
+			if ((int)projection != 4 && azimob != null && altob != null) {
 				var azi = Convert.ToDouble(azimob);
 				var alti = Convert.ToDouble(altob);
-				rhinotfm.M20 = -alti;
-				rhinotfm.M21 = 0; // -alti;
-				rhinotfm.M22 = azi;
+
+				rhinotfm.M00 = tra.X;
+				rhinotfm.M01 = tra.Y;
+				rhinotfm.M02 = tra.Z;
+
+				rhinotfm.M10 = rep.X;
+				rhinotfm.M11 = rep.Y;
+				rhinotfm.M12 = rep.Z;
+
+				rhinotfm.M20 = alti;
+				rhinotfm.M21 = 0; // alti;
+				rhinotfm.M22 = azi + (-Rhino.RhinoMath.ToRadians(rot.Z));
 			} else
 			{
 				rhinotfm.M00 = tra.X;

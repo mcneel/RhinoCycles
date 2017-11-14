@@ -360,6 +360,8 @@ namespace RhinoCyclesCore.Shaders
 				{
 					RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.BgTexture);
 					_SetEnvironmentProjection(m_original_background.BgTexture, bg_env_texture255);
+					bg_env_texture255.Translation = m_original_background.BgTexture.Transform.x;
+					bg_env_texture255.Scale = m_original_background.BgTexture.Transform.y;
 					bg_env_texture255.Rotation = m_original_background.BgTexture.Transform.z;
 				}
 				if (m_original_background.BackgroundFill == BackgroundStyle.WallpaperImage && m_original_background.Wallpaper.HasTextureImage)
@@ -371,12 +373,16 @@ namespace RhinoCyclesCore.Shaders
 				{
 					RenderEngine.SetTextureImage(refl_env_texture256, m_original_background.ReflectionTexture);
 					_SetEnvironmentProjection(m_original_background.ReflectionTexture, refl_env_texture256);
+					refl_env_texture256.Translation = m_original_background.ReflectionTexture.Transform.x;
+					refl_env_texture256.Scale = m_original_background.ReflectionTexture.Transform.y;
 					refl_env_texture256.Rotation = m_original_background.ReflectionTexture.Transform.z;
 				}
 				if(m_original_background.HasSkyEnvTexture)
 				{
 					RenderEngine.SetTextureImage(sky_env_texture257, m_original_background.SkyTexture);
 					_SetEnvironmentProjection(m_original_background.SkyTexture, sky_env_texture257);
+					sky_env_texture257.Translation = m_original_background.SkyTexture.Transform.x;
+					sky_env_texture257.Scale = m_original_background.SkyTexture.Transform.y;
 					sky_env_texture257.Rotation = m_original_background.SkyTexture.Transform.z;
 				}
 
