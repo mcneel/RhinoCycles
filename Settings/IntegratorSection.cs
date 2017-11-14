@@ -171,7 +171,7 @@ namespace RhinoCycles.Settings
 
 			m_maxbounce_lb = new Label()
 			{
-				Text = LOC.STR("Maximum bounces"),
+				Text = Localization.LocalizeString("Maximum bounces", 22),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
@@ -241,7 +241,7 @@ namespace RhinoCycles.Settings
 
 			m_maxtransmissionbounce_lb = new Label()
 			{
-				Text = LOC.STR("Transmission"),
+				Text = Localization.LocalizeString("Transmission", 23),
 				ToolTip = Localization.LocalizeString("Maximum Transmission Bounces", 18),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
@@ -259,15 +259,15 @@ namespace RhinoCycles.Settings
 
 			m_maxtranspbounce_lb = new Label()
 			{
-				Text = LOC.STR("Transparency"),
-				ToolTip = LOC.STR("Maximum Transparency Bounces"),
+				Text = Localization.LocalizeString("Transparency", 29),
+				ToolTip = Localization.LocalizeString("Maximum Transparency Bounces", 30),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 
 			m_maxtranspbounce = new NumericStepper()
 			{
 				Value = 0,
-				ToolTip = LOC.STR("Maximum Transparency Bounces"),
+				ToolTip = Localization.LocalizeString("Maximum Transparency Bounces", 37),
 				MinValue = 0,
 				MaximumDecimalPlaces = 0,
 				Width = 75,
