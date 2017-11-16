@@ -98,10 +98,9 @@ namespace RhinoCyclesCore.Converters
 			int pwidth;
 			try
 			{
-				int u, v, w;
-				renderTexture.PixelSize(out u, out v, out w);
-				pheight = u;
-				pwidth = v;
+				renderTexture.PixelSize(out int u, out int v, out int w);
+				pwidth = u;
+				pheight = v;
 			}
 			catch (Exception)
 			{
