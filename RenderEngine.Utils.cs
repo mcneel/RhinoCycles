@@ -203,6 +203,7 @@ namespace RhinoCyclesCore
 			shader.AddNode(tfm);
 
 			image_node.Projection = TextureNode.TextureProjection.Flat;
+			image_node.Interpolation = InterpolationType.Cubic;
 
 			if (texture.ProjectionMode == TextureProjectionMode.WcsBox)
 			{

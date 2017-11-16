@@ -337,16 +337,16 @@ namespace RhinoCyclesCore.Shaders
 				principledbsdf242.ins.Subsurface.Value = 0f;
 				principledbsdf242.ins.SubsurfaceRadius.Value = new ccl.float4(0f, 0f, 0f, 1f);
 				principledbsdf242.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
-				principledbsdf242.ins.Metallic.Value = 0f;
-				principledbsdf242.ins.Specular.Value = 0f;
-				principledbsdf242.ins.SpecularTint.Value = 0f;
+				principledbsdf242.ins.Metallic.Value = part.Metallic;
+				principledbsdf242.ins.Specular.Value = part.Specular;
+				principledbsdf242.ins.SpecularTint.Value = part.SpecularTint;
 				principledbsdf242.ins.Roughness.Value = part.ReflectionRoughnessPow2;
 				principledbsdf242.ins.Anisotropic.Value = 0f;
 				principledbsdf242.ins.AnisotropicRotation.Value = 0f;
-				principledbsdf242.ins.Sheen.Value = 0f;
-				principledbsdf242.ins.SheenTint.Value = 0f;
-				principledbsdf242.ins.Clearcoat.Value = 0f;
-				principledbsdf242.ins.ClearcoatGloss.Value = 0f;
+				principledbsdf242.ins.Sheen.Value = part.Sheen;
+				principledbsdf242.ins.SheenTint.Value = part.SheenTint;
+				principledbsdf242.ins.Clearcoat.Value = part.ClearCoat;
+				principledbsdf242.ins.ClearcoatGloss.Value = part.ClearCoatGloss;
 				principledbsdf242.ins.IOR.Value = part.IOR;
 				principledbsdf242.ins.Transmission.Value = part.Transparency;
 				principledbsdf242.ins.TransmissionRoughness.Value = part.RefractionRoughnessPow2;
@@ -528,7 +528,9 @@ namespace RhinoCyclesCore.Shaders
 				RenderEngine.SetProjectionMode(m_shader, part.EnvironmentTexture, environment_texture230, texcoord209);
 			}
 
-			if (part.CyclesMaterialType == ShaderBody.CyclesMaterial.Glass) return coloured_shadow_mix_glass_principled243;
+			if (part.CyclesMaterialType == ShaderBody.CyclesMaterial.Glass
+				|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.SimplePlastic
+				|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.SimpleMetal) return coloured_shadow_mix_glass_principled243;
 			return custom_alpha_cutter241;
 		}
 
