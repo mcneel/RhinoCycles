@@ -117,6 +117,7 @@ namespace RhinoCyclesCore
 				imnode.Width = (uint) texture.TexWidth;
 				imnode.Height = (uint) texture.TexHeight;
 			}
+			imnode.Interpolation = InterpolationType.Cubic;
 		}
 
 		internal static void SetTextureImage(EnvironmentTextureNode envnode, CyclesTextureImage texture)

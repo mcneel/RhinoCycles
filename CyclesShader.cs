@@ -203,7 +203,6 @@ namespace RhinoCyclesCore
 				var rcl = m.ReflectionColor;
 				var rfcl = m.TransparentColor;
 				var emcl = m.EmissionColor;
-				var polish = (float)m.ReflectionGlossiness;
 				var reflectivity = (float)m.Reflectivity;
 				var metalic = 0f;
 				var shine = (float)(m.Shine / Material.MaxShine);
@@ -254,7 +253,7 @@ namespace RhinoCyclesCore
 				shb.DiffuseColor = col;
 				shb.SpecularColor = spec;
 				shb.ReflectionColor = refl;
-				shb.ReflectionRoughness = (float)m.ReflectionGlossiness; // polish;
+				shb.ReflectionRoughness = (float)m.ReflectionGlossiness;
 				shb.RefractionColor = refr;
 				shb.RefractionRoughness = (float)m.RefractionGlossiness;
 				shb.TransparencyColor = transp;
@@ -265,7 +264,7 @@ namespace RhinoCyclesCore
 				shb.IOR = (float)m.IndexOfRefraction;
 				shb.Roughness = (float)m.ReflectionGlossiness;
 				shb.Reflectivity = reflectivity;
-				shb.Metalic = metalic;
+				shb.Metallic = metalic;
 				shb.Transparency = (float)m.Transparency;
 				shb.Shine = shine;
 				shb.Gloss = (float)m.ReflectionGlossiness;
@@ -517,9 +516,9 @@ namespace RhinoCyclesCore
 				float4 c = DiffuseColor;
 				switch (CyclesMaterialType)
 				{
-					//case CyclesMaterial.SimpleMetal:
-					//	c = ReflectionColor;
-					//	break;
+					case CyclesMaterial.SimpleMetal:
+						c = ReflectionColor;
+						break;
 					case CyclesMaterial.Glass:
 						c = TransparencyColor;
 						break;
@@ -618,8 +617,15 @@ namespace RhinoCyclesCore
 		public float IOR { get; set; }
 		public float Roughness { get; set; }
 		public float Reflectivity { get; set; }
-		public float Metalic { get; set; }
-		public bool NoMetalic => Math.Abs(Metalic) < 0.00001f;
+		public float Specular => Reflectivity;
+		public float SpecularTint => ReflectivityInverse;
+		public float ReflectivityInverse => 1.0f - Reflectivity;
+		public float Sheen => Reflectivity;
+		public float SheenTint => ReflectivityInverse;
+		public float ClearCoat => NoMetalic ? Reflectivity : 0.0f;
+		public float ClearCoatGloss => ClearCoat;
+		public float Metallic { get; set; }
+		public bool NoMetalic => Math.Abs(Metallic) < 0.00001f;
 		public float Shine { get; set; }
 		public float Gloss { get; set; }
 		public float Transparency { get; set; }
