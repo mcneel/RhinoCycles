@@ -185,7 +185,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#endregion
 
-			var scene = CreateScene(client, renderDevice, this);
 			var scaledPixelSize = Dpi / 72.0f;
 			var pixelSize = Math.Max(1, (int)(scaledPixelSize * RcCore.It.EngineSettings.DpiScale));
 
@@ -212,8 +211,12 @@ namespace RhinoCyclesCore.RenderEngines
 			if (CancelRender) return;
 
 			#region create session for scene
-			Session = new Session(client, sessionParams, scene);
+			Session = new Session(client, sessionParams);
 			#endregion
+
+			var scene = CreateScene(client, Session, renderDevice, this);
+
+			Session.Scene = scene;
 
 			TriggerCurrentViewportSettingsRequested();
 

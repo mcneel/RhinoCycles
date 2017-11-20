@@ -83,8 +83,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (cyclesEngine.CancelRender) return;
 
-			var scene = CreateScene(client, renderDevice, cyclesEngine);
-
 			#region set up session parameters
 			var sessionParams = new SessionParameters(client, renderDevice)
 			{
@@ -104,8 +102,10 @@ namespace RhinoCyclesCore.RenderEngines
 			if (cyclesEngine.CancelRender) return;
 
 #region create session for scene
-			cyclesEngine.Session = new Session(client, sessionParams, scene);
+			cyclesEngine.Session = new Session(client, sessionParams);
 #endregion
+
+			var scene = CreateScene(client, cyclesEngine.Session, renderDevice, cyclesEngine);
 
 			// register callbacks before starting any rendering
 			cyclesEngine.SetCallbacks();
