@@ -18,7 +18,6 @@ using System.Runtime.InteropServices;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
-using Utilities = ccl.Utilities;
 using System;
 
 namespace RhinoCyclesCore.Materials
@@ -158,7 +157,7 @@ namespace RhinoCyclesCore.Materials
 				}
 
 				return string.Format(
-					Utilities.Instance.NumberFormatInfo,
+					ccl.Utilities.Instance.NumberFormatInfo,
 					"<transparent_bsdf color=\"1 1 1\" name=\"transp\" />" +
 					"<emission color=\"{0} {1} {2}\" name=\"emission\" />" +
 					"<light_falloff name=\"lfo\" strength=\"{3}\" smooth=\"{4}\" />" +
