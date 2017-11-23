@@ -38,7 +38,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="rm">Material to convert to CyclesShader</param>
 		/// <param name="gamma">gamma to use for this shader</param>
 		/// <returns>The CyclesShader</returns>
-		internal CyclesShader CreateCyclesShader(RenderMaterial rm, float gamma)
+		public CyclesShader CreateCyclesShader(RenderMaterial rm, float gamma)
 		{
 			var mid = rm.RenderHash;
 			var shader = new CyclesShader(mid);
