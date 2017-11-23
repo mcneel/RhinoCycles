@@ -18,7 +18,6 @@ using System.Runtime.InteropServices;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
-using Utilities = ccl.Utilities;
 using System;
 
 namespace RhinoCyclesCore.Materials
@@ -136,7 +135,7 @@ namespace RhinoCyclesCore.Materials
 				var shine2 = Color4f.ApplyGamma(CoatColor2, Gamma);
 
 				var nodegraph = string.Format(
-					Utilities.Instance.NumberFormatInfo,
+					ccl.Utilities.Instance.NumberFormatInfo,
 					"<voronoi_texture name=\"voronoi\" coloring=\"Cells\" scale=\"{0}\" />" +
 					"<layer_weight name=\"layer1\" blend=\"0.5\" />" +
 					"<layer_weight name=\"layer2\" blend=\"0.5\" />" +

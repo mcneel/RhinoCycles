@@ -16,6 +16,7 @@ limitations under the License.
 
 using ccl;
 using ccl.ShaderNodes;
+using ccl.ShaderNodes.Sockets;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -33,7 +34,7 @@ namespace RhinoCyclesCore.Shaders
 		{
 		}
 
-		public override Shader GetShader()
+		public ClosureSocket GetClosureSocket()
 		{
 			if (m_original.DisplayMaterial)
 			{
@@ -61,16 +62,24 @@ namespace RhinoCyclesCore.Shaders
 				frontclosure.Connect(flipper.ins.Closure1);
 				backclosure.Connect(flipper.ins.Closure2);
 
-				flipper.outs.Closure.Connect(m_shader.Output.ins.Surface);
+				//flipper.outs.Closure.Connect(m_shader.Output.ins.Surface);
+				return flipper.GetClosureSocket();
 			}
 			else
 			{
 				var last = GetShaderPart(m_original.Front);
 				var lastclosure = last.GetClosureSocket();
 
-				lastclosure.Connect(m_shader.Output.ins.Surface);
+				//lastclosure.Connect(m_shader.Output.ins.Surface);
+				return lastclosure;
 			}
 
+		}
+
+		public override Shader GetShader()
+		{
+			var lc = GetClosureSocket();
+			lc.Connect(m_shader.Output.ins.Surface);
 
 			m_shader.FinalizeGraph();
 

@@ -108,6 +108,7 @@
     <Compile Include="Shaders\RhinoBackground.cs" />
     <Compile Include="Shaders\RhinoNotYetImplemented.cs" />
     <Compile Include="Shaders\RhinoShader.cs" />
+    <Compile Include="Utilities.cs" />
     <Compile Include="ViewPlane.cs" />
     <Compile Include="RenderEngines\ModalRenderEngine.cs" />
     <Compile Include="RenderEngines\PreviewRenderEngine.cs" />

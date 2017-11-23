@@ -18,7 +18,6 @@ using System;
 using System.Runtime.InteropServices;
 using Rhino.Render;
 using RhinoCyclesCore.Materials;
-using Utilities = ccl.Utilities;
 
 namespace RhinoCyclesCore.Environments
 {
@@ -78,7 +77,7 @@ namespace RhinoCyclesCore.Environments
 		public string MaterialXml
 		{
 			get {
-				var nodegraph = string.Format(Utilities.Instance.NumberFormatInfo,
+				var nodegraph = string.Format(ccl.Utilities.Instance.NumberFormatInfo,
 					"<noise_texture name=\"nt\" scale=\"{0}\" detail=\"{1}\" distortion=\"{2}\" />" +
 					"<background name=\"bg\" strength=\"{3}\" />" +
 					"<connect from=\"nt color\" to=\"bg color\" />" +
