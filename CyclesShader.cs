@@ -330,6 +330,7 @@ namespace RhinoCyclesCore
 			{
 				if (crm.MaterialType == ShaderBody.CyclesMaterial.CustomRenderMaterial)
 				{
+					crm.Gamma = gamma;
 					crm.BakeParameters();
 					shb.Crm = crm;
 					shb.CyclesMaterialType = ShaderBody.CyclesMaterial.CustomRenderMaterial;
@@ -338,6 +339,7 @@ namespace RhinoCyclesCore
 				}
 				else
 				{
+					crm.Gamma = gamma;
 					crm.BakeParameters();
 					shb.Crm = crm;
 					shb.CyclesMaterialType = ShaderBody.CyclesMaterial.Xml;
