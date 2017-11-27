@@ -35,6 +35,7 @@ namespace RhinoCyclesCore.RenderEngines
 			State = State.Rendering;
 
 			Database.ViewChanged += Database_ViewChanged;
+			BeginChangesNotified += ViewportRenderEngine_BeginChangesNotified;
 
 #region create callbacks for Cycles
 			m_update_callback = UpdateCallback;
@@ -50,6 +51,11 @@ namespace RhinoCyclesCore.RenderEngines
 			//CSycles.set_logger(Client.Id, m_logger_callback);
 #endregion
 			
+		}
+
+		private void ViewportRenderEngine_BeginChangesNotified(object sender, EventArgs e)
+		{
+			Session?.Cancel("Begin changes notification");
 		}
 
 		public void ViewportLoggerCallback(string msg) {
@@ -257,6 +263,7 @@ namespace RhinoCyclesCore.RenderEngines
 				{
 					CheckFlushQueue();
 					Synchronize();
+					_needReset = true;
 					Flush = false;
 				}
 				else
