@@ -126,6 +126,14 @@ namespace RhinoCyclesCore
 			}
 		}
 
+		public void TriggerBeginChangesNotified()
+		{
+			BeginChangesNotified?.Invoke(this, EventArgs.Empty);
+		}
+		public event EventHandler<EventArgs> BeginChangesNotified;
+
+
+
 		/// <summary>
 		/// Our instance of the change queue. This is our access point for all
 		/// data. The ChangeQueue mechanism will push data to it, record it

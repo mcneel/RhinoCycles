@@ -1760,6 +1760,7 @@ namespace RhinoCyclesCore.Database
 		{
 			// nothing
 			RcCore.OutputDebugString($"NotifyBeginUpdates {++_updateCounter}\n");
+			_renderEngine.TriggerBeginChangesNotified();
 		}
 
 		/// <summary>
