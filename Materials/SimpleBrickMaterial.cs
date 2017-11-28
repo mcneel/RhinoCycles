@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using ccl.ShaderNodes.Sockets;
 using Rhino.Display;
 using Rhino.Render;
 using System;
@@ -126,7 +127,21 @@ namespace RhinoCyclesCore.Materials
 				return nodegraph;
 			}
 		}
-
-		public bool GetShader(ccl.Shader sh) { throw new InvalidOperationException("Material is XML based"); }
+		public bool GetShader(ccl.Shader sh, bool finalize)
+		{
+			try
+			{
+				ccl.Shader.ShaderFromXml(sh, MaterialXml, finalize);
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+			return true;
+		}
+		public ClosureSocket GetClosureSocket(ccl.Shader sh)
+		{
+			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
+		}
 	}
 }
