@@ -23,11 +23,11 @@ namespace RhinoCyclesCore.Shaders
 	public class RhinoBackground : RhinoShader
 	{
 
-		public RhinoBackground(Client client, CyclesBackground intermediate, Shader existing) : this(client, intermediate, existing, "background")
+		public RhinoBackground(Client client, CyclesBackground intermediate, Shader existing) : this(client, intermediate, existing, "background", true)
 		{
 		}
 
-		public RhinoBackground(Client client, CyclesBackground intermediate, Shader existing, string name) : base(client, intermediate, name, existing)
+		public RhinoBackground(Client client, CyclesBackground intermediate, Shader existing, string name, bool recreate) : base(client, intermediate, name, existing, recreate)
 		{
 		}
 
@@ -36,7 +36,7 @@ namespace RhinoCyclesCore.Shaders
 			if (!string.IsNullOrEmpty(m_original_background.Xml))
 			{
 				var xml = m_original_background.Xml;
-				Shader.ShaderFromXml(ref m_shader, xml);
+				Shader.ShaderFromXml(m_shader, xml, true);
 			}
 			else
 			{

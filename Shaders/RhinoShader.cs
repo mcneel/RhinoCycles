@@ -27,12 +27,12 @@ namespace RhinoCyclesCore.Shaders
 
 		protected Client m_client;
 
-		private void InitShader(string name, Shader existing, Shader.ShaderType shaderType)
+		private void InitShader(string name, Shader existing, Shader.ShaderType shaderType, bool recreate)
 		{
 			if (existing != null)
 			{
 				m_shader = existing;
-				m_shader.Recreate();
+				if(recreate) m_shader.Recreate();
 			}
 			else
 			{
@@ -46,28 +46,28 @@ namespace RhinoCyclesCore.Shaders
 			}
 
 		}
-		protected RhinoShader(Client client, CyclesShader intermediate, string name, Shader existing)
+		protected RhinoShader(Client client, CyclesShader intermediate, string name, Shader existing, bool recreate)
 		{
 			m_client = client;
 			m_original = intermediate;
 			if (m_original.Front != null) m_original.Front.Gamma = m_original.Gamma;
 			if (m_original.Back != null) m_original.Back.Gamma = m_original.Gamma;
-			InitShader(name, existing, Shader.ShaderType.Material);
+			InitShader(name, existing, Shader.ShaderType.Material, recreate);
 
 		}
 
-		protected RhinoShader(Client client, CyclesBackground intermediateBackground, string name, Shader existing)
+		protected RhinoShader(Client client, CyclesBackground intermediateBackground, string name, Shader existing, bool recreate)
 		{
 			m_client = client;
 			m_original_background = intermediateBackground;
-			InitShader(name, existing, Shader.ShaderType.World);
+			InitShader(name, existing, Shader.ShaderType.World, recreate);
 		}
 
-		protected RhinoShader(Client client, CyclesLight intermediateLight, string name, Shader existing)
+		protected RhinoShader(Client client, CyclesLight intermediateLight, string name, Shader existing, bool recreate)
 		{
 			m_client = client;
 			m_original_light = intermediateLight;
-			InitShader(name, existing, Shader.ShaderType.Material);
+			InitShader(name, existing, Shader.ShaderType.Material, recreate);
 		}
 
 		public void Reset()

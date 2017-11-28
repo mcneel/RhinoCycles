@@ -19,6 +19,7 @@ using System.Runtime.InteropServices;
 using Rhino.DocObjects;
 using Rhino.Render;
 using System;
+using ccl.ShaderNodes.Sockets;
 
 namespace RhinoCyclesCore.Materials
 {
@@ -94,7 +95,21 @@ namespace RhinoCyclesCore.Materials
 				return XmlString;
 			}
 		}
-
-		public bool GetShader(ccl.Shader sh) { throw new InvalidOperationException("Material is XML based"); }
+		public bool GetShader(ccl.Shader sh, bool finalize)
+		{
+			try
+			{
+				ccl.Shader.ShaderFromXml(sh, MaterialXml, finalize);
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+			return true;
+		}
+		public ClosureSocket GetClosureSocket(ccl.Shader sh)
+		{
+			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
+		}
 	}
 }
