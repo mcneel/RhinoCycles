@@ -196,13 +196,7 @@ namespace RhinoCyclesCore
 				var invcol = new ccl.ShaderNodes.InvertNode();
 				var normalmapnode = new ccl.ShaderNodes.NormalMapNode();
 				sh.AddNode(imtexnode);
-				if (teximg.HasByteImage)
-					imtexnode.ByteImage = teximg.TexByte;
-				else
-					imtexnode.FloatImage = teximg.TexFloat;
-				imtexnode.Filename = teximg.Name;
-				imtexnode.Width = (uint)teximg.TexWidth;
-				imtexnode.Height = (uint)teximg.TexHeight;
+				RenderEngine.SetTextureImage(imtexnode, teximg);
 				imtexnode.Extension = teximg.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
 				imtexnode.ColorSpace = ccl.ShaderNodes.TextureNode.TextureColorSpace.None;
 				imtexnode.Projection = ccl.ShaderNodes.TextureNode.TextureProjection.Flat;

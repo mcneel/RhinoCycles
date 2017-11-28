@@ -22,11 +22,11 @@ namespace RhinoCyclesCore.Shaders
 	public class RhinoLight : RhinoShader
 	{
 
-		public RhinoLight(Client client, CyclesLight intermediate, Shader existing) : this(client, intermediate, existing, "light")
+		public RhinoLight(Client client, CyclesLight intermediate, Shader existing) : this(client, intermediate, existing, "light", true)
 		{
 		}
 
-		public RhinoLight(Client client, CyclesLight intermediate, Shader existing, string name) : base(client, intermediate, name, existing)
+		public RhinoLight(Client client, CyclesLight intermediate, Shader existing, string name, bool recreate) : base(client, intermediate, name, existing, recreate)
 		{
 		}
 

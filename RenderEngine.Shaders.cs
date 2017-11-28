@@ -40,7 +40,7 @@ namespace RhinoCyclesCore
 						break;
 					case ShaderBody.CyclesMaterial.CustomRenderMaterial:
 						sh = new CclShader(Client, CclShader.ShaderType.Material);
-						shader.Front.Crm.GetShader(sh);
+						shader.Front.Crm.GetShader(sh, true);
 						break;
 					default:
 						sh = CreateCyclesShaderFromRhinoV6BasicMat(shader);
@@ -68,7 +68,7 @@ namespace RhinoCyclesCore
 						break;
 					case ShaderBody.CyclesMaterial.CustomRenderMaterial:
 						sh = new CclShader(Client, CclShader.ShaderType.Material);
-						shader.Front.Crm.GetShader(sh);
+						shader.Front.Crm.GetShader(sh, true);
 						break;
 					default:
 						sh = RecreateCyclesShaderFromRhinoV6BasicMat(shader, existing);
@@ -89,7 +89,7 @@ namespace RhinoCyclesCore
 				Name = shader.Name ?? $"V6 Basic Material {shader.Id}"
 			};
 
-			CclShader.ShaderFromXml(ref sh, shader.Crm.MaterialXml);
+			CclShader.ShaderFromXml(sh, shader.Crm.MaterialXml, true);
 
 			return sh;
 		}
@@ -97,7 +97,7 @@ namespace RhinoCyclesCore
 		internal CclShader RecreateCyclesShaderFromXml(ShaderBody shader, CclShader existing)
 		{
 			existing.Recreate();
-			CclShader.ShaderFromXml(ref existing, shader.Crm.MaterialXml);
+			CclShader.ShaderFromXml(existing, shader.Crm.MaterialXml, true);
 			return existing;
 		}
 

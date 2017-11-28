@@ -65,7 +65,7 @@ namespace RhinoCyclesCore.Shaders
 		/// <param name="client"></param>
 		/// <param name="intermediate"></param>
 		/// <param name="name"></param>
-		public RhinoNotYetImplemented(Client client, CyclesShader intermediate, string name) : base(client, intermediate, name, null)
+		public RhinoNotYetImplemented(Client client, CyclesShader intermediate, string name) : base(client, intermediate, name, null, true)
 		{
 		}
 
