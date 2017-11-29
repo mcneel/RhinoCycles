@@ -4,6 +4,7 @@ using Rhino.Render;
 using RhinoCyclesCore.ExtensionMethods;
 using RhinoCyclesCore.Materials;
 using System;
+using System.Globalization;
 using static Rhino.Render.RenderContent;
 
 namespace RhinoCyclesCore
@@ -135,36 +136,58 @@ namespace RhinoCyclesCore
 				{
 					var canuse = eval.Initialize();
 
-					rt.PixelSize(out int width, out int height, out int depth);
+					int pwidth;
+					int pheight;
+
 					if (!canuse)
 					{
-						width = height = 1;
+						pwidth = pheight = 1;
 					}
-					if (width == 0 || height == 0)
+					else
 					{
-						width = height = 1024;
+						try
+						{
+							rt.PixelSize(out int width, out int height, out int depth);
+							if (width == 0 || height == 0)
+							{
+								pwidth = pheight = 1024;
+							}
+							else
+							{
+								pwidth = width;
+								pheight = height;
+							}
+						}
+						catch
+						{
+							pwidth = pheight = 1024;
+						}
 					}
+
 
 					Transform t = new Transform(
 						rhinotfm.ToFloatArray(true)
 						);
 					var imgbased = rt.IsImageBased();
 					var linear = rt.IsLinear();
-					if (rt.IsHdrCapable())
+					var isFloat = rt.IsHdrCapable();
+					if (isFloat)
 					{
-						var img = RhinoCyclesCore.Converters.BitmapConverter.RetrieveFloatsImg(rid, width, height, eval, linear, imgbased, canuse);
+						var img = Converters.BitmapConverter.RetrieveFloatsImg(rid, pwidth, pheight, eval, linear, imgbased, canuse);
 						img.ApplyGamma(rm.Gamma);
 						tex.TexFloat = img.Data;
+						tex.TexByte = null;
 					}
 					else
 					{
-						var img = RhinoCyclesCore.Converters.BitmapConverter.RetrieveBytesImg(rid, width, height, eval, linear, imgbased, canuse);
+						var img = Converters.BitmapConverter.RetrieveBytesImg(rid, pwidth, pheight, eval, linear, imgbased, canuse);
 						img.ApplyGamma(rm.Gamma);
 						tex.TexByte = img.Data;
+						tex.TexFloat = null;
 					}
-					tex.TexWidth = width;
-					tex.TexHeight = height;
-					tex.Name = $"{rid}";
+					tex.TexWidth = pwidth;
+					tex.TexHeight = pheight;
+					tex.Name = rid.ToString(CultureInfo.InvariantCulture);
 					tex.IsLinear = linear;
 					tex.ProjectionMode = projectionMode;
 					tex.EnvProjectionMode = envProjectionMode;
