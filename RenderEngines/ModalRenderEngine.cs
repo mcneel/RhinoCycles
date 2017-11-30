@@ -168,11 +168,11 @@ namespace RhinoCyclesCore.RenderEngines
 			}
 			#endregion
 
-			/*if (RcCore.It.EngineSettings.SaveDebugImages)
+			if (RcCore.It.EngineSettings.SaveDebugImages)
 			{
 				var tmpf = $"{Environment.GetEnvironmentVariable("TEMP")}\\RC_modal_renderer.png";
 				cyclesEngine.RenderWindow.SaveRenderImageAs(tmpf, true);
-			}*/
+			}
 
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Session.Destroy();
