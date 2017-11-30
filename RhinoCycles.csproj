@@ -50,6 +50,7 @@
     <Compile Include="Commands\ChangeSamples.cs" />
     <Compile Include="Commands\SelectMultiDevice.cs" />
     <Compile Include="Commands\ClearTextureMemory.cs" />
+    <Compile Include="Commands\SetAdvancedOptions.cs" />
     <Compile Include="Commands\TestCleanupRhinoCyclesSettings.cs" />
     <Compile Include="Commands\TestToggleRaytracedClippingPlanes.cs" />
     <Compile Include="Commands\TestSetNoShadows.cs" />
