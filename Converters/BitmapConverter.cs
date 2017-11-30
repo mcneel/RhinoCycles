@@ -39,6 +39,12 @@ namespace RhinoCyclesCore.Converters
 			shader.ReloadTextures(ByteImagesNew, FloatImagesNew);
 		}
 
+		public static void ClearTextureMemory()
+		{
+			ByteImagesNew.Clear();
+			FloatImagesNew.Clear();
+		}
+
 		public static void ApplyGammaToTextures(float gamma)
 		{
 			lock (bytelocker)
