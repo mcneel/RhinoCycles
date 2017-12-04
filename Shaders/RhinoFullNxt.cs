@@ -17,6 +17,7 @@ limitations under the License.
 using ccl;
 using ccl.ShaderNodes;
 using ccl.ShaderNodes.Sockets;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -82,11 +83,19 @@ namespace RhinoCyclesCore.Shaders
 
 		public override Shader GetShader()
 		{
-			var lc = GetClosureSocket();
-			lc.Connect(m_shader.Output.ins.Surface);
-
+			if (RcCore.It.EngineSettings.DebugSimpleShaders)
+			{
+				ccl.ShaderNodes.DiffuseBsdfNode diff = new DiffuseBsdfNode("x");
+				diff.ins.Color.Value = new float4(0.8f);
+				m_shader.AddNode(diff);
+				diff.outs.BSDF.Connect(m_shader.Output.ins.Surface);
+			}
+			else
+			{
+				var lc = GetClosureSocket();
+				lc.Connect(m_shader.Output.ins.Surface);
+			}
 			m_shader.FinalizeGraph();
-
 			return m_shader;
 		}
 
