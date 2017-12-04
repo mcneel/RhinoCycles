@@ -17,6 +17,7 @@ limitations under the License.
 using ccl;
 using ccl.ShaderNodes;
 using Rhino.Display;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -33,7 +34,19 @@ namespace RhinoCyclesCore.Shaders
 
 		public override Shader GetShader()
 		{
-			if (!string.IsNullOrEmpty(m_original_background.Xml))
+			if(RcCore.It.EngineSettings.DebugSimpleShaders)
+			{
+				var bg = new BackgroundNode();
+				bg.ins.Color.Value = new float4(0.7f);
+				bg.ins.Strength.Value = 1.0f;
+
+				m_shader.AddNode(bg);
+
+				bg.outs.Background.Connect(m_shader.Output.ins.Surface);
+				//m_shader.FinalizeGraph();
+				//m_shader.Tag();
+			}
+			else if (!string.IsNullOrEmpty(m_original_background.Xml))
 			{
 				var xml = m_original_background.Xml;
 				Shader.ShaderFromXml(m_shader, xml, true);
