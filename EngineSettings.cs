@@ -114,6 +114,7 @@ namespace RhinoCyclesCore
 			NoShadows = NoShadows;
 			RaytracedClippingPlanes = RaytracedClippingPlanes;
 			SaveDebugImages = SaveDebugImages;
+			DebugSimpleShaders = DebugSimpleShaders;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
 			PreviewSamples = PreviewSamples;
 		}
@@ -207,6 +208,7 @@ namespace RhinoCyclesCore
 			NoShadows = NoShadowsDefault;
 			RaytracedClippingPlanes = RaytracedClippingPlanesDefault;
 			SaveDebugImages = SaveDebugImagesDefault;
+			DebugSimpleShaders = DebugSimpleShadersDefault;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorldDefault;
 			PreviewSamples = PreviewSamplesDefault;
 		}
@@ -229,6 +231,14 @@ namespace RhinoCyclesCore
 		{
 			get { return RcPlugIn.Settings.GetBool("SaveDebugImages", SaveDebugImagesDefault); }
 			set { RcPlugIn.Settings.SetBool("SaveDebugImages", value); }
+		}
+
+		public bool DebugSimpleShadersDefault => false;
+
+		public virtual bool DebugSimpleShaders
+		{
+			get { return RcPlugIn.Settings.GetBool("DebugSimpleShaders", DebugSimpleShadersDefault); }
+			set { RcPlugIn.Settings.SetBool("DebugSimpleShaders", value); }
 		}
 
 		public bool FlushAtEndOfCreateWorldDefault => false;
