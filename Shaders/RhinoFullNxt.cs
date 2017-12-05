@@ -362,7 +362,7 @@ namespace RhinoCyclesCore.Shaders
 				principledbsdf242.ins.Metallic.Value = part.Metallic;
 				principledbsdf242.ins.Specular.Value = part.Specular;
 				principledbsdf242.ins.SpecularTint.Value = part.SpecularTint;
-				principledbsdf242.ins.Roughness.Value = part.ReflectionRoughnessPow2;
+				principledbsdf242.ins.Roughness.Value = part.ReflectionRoughness;
 				principledbsdf242.ins.Anisotropic.Value = 0f;
 				principledbsdf242.ins.AnisotropicRotation.Value = 0f;
 				principledbsdf242.ins.Sheen.Value = part.Sheen;
@@ -371,7 +371,7 @@ namespace RhinoCyclesCore.Shaders
 				principledbsdf242.ins.ClearcoatGloss.Value = part.ClearCoatGloss;
 				principledbsdf242.ins.IOR.Value = part.IOR;
 				principledbsdf242.ins.Transmission.Value = part.Transparency;
-				principledbsdf242.ins.TransmissionRoughness.Value = part.RefractionRoughnessPow2;
+				principledbsdf242.ins.TransmissionRoughness.Value = part.RefractionRoughness;
 				principledbsdf242.ins.Tangent.Value = new ccl.float4(0f, 0f, 0f, 1f);
 
 			var coloured_shadow_mix_glass_principled243 = new MixClosureNode("coloured_shadow_mix_glass_principled");
