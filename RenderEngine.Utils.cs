@@ -178,6 +178,29 @@ namespace RhinoCyclesCore
 			return ang * (float)Math.PI / 180.0f;
 		}
 
+		public static Size TileSize()
+		{
+			var tilex = RcCore.It.EngineSettings.TileX;
+			var tiley = RcCore.It.EngineSettings.TileY;
+			if(RcCore.It.EngineSettings.RenderDeviceIsOpenCl)
+			{
+				if (tilex < 1024) tilex = 1024;
+				if (tiley < 1024) tiley = 1024;
+			}
+			else if (RcCore.It.EngineSettings.RenderDeviceIsCuda)
+			{
+				if (tilex < 256) tilex = 256;
+				if (tiley < 256) tiley = 256;
+			}
+			else if (RcCore.It.EngineSettings.RenderDevice.IsCpu)
+			{
+				tilex = 32;
+				tiley = 32;
+			}
+
+			return new Size(tilex, tiley);
+		}
+
 		/// <summary>
 		/// Set image texture node and link up with correct TextureCoordinateNode output based on
 		/// texture ProjectionMode.
