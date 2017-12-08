@@ -36,10 +36,11 @@ namespace RhinoCyclesCore
 		/// create a ccl.Scene
 		/// </summary>
 		/// <param name="client">Client to create scene for</param>
-		/// <param name="render_device">Render device to use</param>
+		/// <param name="session">Session this scene is created for</param>
+		/// <param name="render_device">Render device this scene is created for</param>
 		/// <param name="cycles_engine">Engine instance to create for</param>
 		/// <returns></returns>
-		protected static Scene CreateScene(Client client, Device render_device,
+		protected static Scene CreateScene(Client client, Session session, Device render_device,
 			RenderEngine cycles_engine)
 		{
 			#region set up scene parameters
@@ -47,7 +48,7 @@ namespace RhinoCyclesCore
 			#endregion
 
 			#region create scene
-			var scene = new Scene(client, scene_params, render_device)
+			var scene = new Scene(client, scene_params, session)
 			{
 				#region integrator settings
 				Integrator =

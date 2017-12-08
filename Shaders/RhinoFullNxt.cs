@@ -86,7 +86,7 @@ namespace RhinoCyclesCore.Shaders
 			if (RcCore.It.EngineSettings.DebugSimpleShaders)
 			{
 				ccl.ShaderNodes.DiffuseBsdfNode diff = new DiffuseBsdfNode("x");
-				diff.ins.Color.Value = new float4(0.8f);
+				diff.ins.Color.Value = new float4(0.8f, 0.6f, 0.5f, 1.0f);
 				m_shader.AddNode(diff);
 				diff.outs.BSDF.Connect(m_shader.Output.ins.Surface);
 			}

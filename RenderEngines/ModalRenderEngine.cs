@@ -98,7 +98,6 @@ namespace RhinoCyclesCore.RenderEngines
 			if (RcCore.It.EngineSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
 			#endregion
-			var scene = CreateScene(client, renderDevice, cyclesEngine);
 
 			cyclesEngine.TriggerCurrentViewportSettingsRequested();
 			maxSamples = requestedSamples;
@@ -123,8 +122,10 @@ namespace RhinoCyclesCore.RenderEngines
 			if (cyclesEngine.CancelRender) return;
 
 			#region create session for scene
-			cyclesEngine.Session = new Session(client, sessionParams, scene);
+			cyclesEngine.Session = new Session(client, sessionParams);
 			#endregion
+
+			var scene = CreateScene(client, Session, renderDevice, cyclesEngine);
 
 			// register callbacks before starting any rendering
 			cyclesEngine.SetCallbacks();
