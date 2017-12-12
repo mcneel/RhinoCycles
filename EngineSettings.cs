@@ -115,6 +115,7 @@ namespace RhinoCyclesCore
 			RaytracedClippingPlanes = RaytracedClippingPlanes;
 			SaveDebugImages = SaveDebugImages;
 			DebugSimpleShaders = DebugSimpleShaders;
+			DebugNoOverrideTileSize = DebugNoOverrideTileSize;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
 			PreviewSamples = PreviewSamples;
 		}
@@ -209,6 +210,7 @@ namespace RhinoCyclesCore
 			RaytracedClippingPlanes = RaytracedClippingPlanesDefault;
 			SaveDebugImages = SaveDebugImagesDefault;
 			DebugSimpleShaders = DebugSimpleShadersDefault;
+			DebugNoOverrideTileSize = DebugNoOverrideTileSizeDefault;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorldDefault;
 			PreviewSamples = PreviewSamplesDefault;
 		}
@@ -239,6 +241,14 @@ namespace RhinoCyclesCore
 		{
 			get { return RcPlugIn.Settings.GetBool("DebugSimpleShaders", DebugSimpleShadersDefault); }
 			set { RcPlugIn.Settings.SetBool("DebugSimpleShaders", value); }
+		}
+
+		public bool DebugNoOverrideTileSizeDefault => false;
+
+		public virtual bool DebugNoOverrideTileSize
+		{
+			get { return RcPlugIn.Settings.GetBool("DebugNoOverrideTileSize", DebugNoOverrideTileSizeDefault); }
+			set { RcPlugIn.Settings.SetBool("DebugNoOverrideTileSize", value); }
 		}
 
 		public bool FlushAtEndOfCreateWorldDefault => false;
