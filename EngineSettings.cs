@@ -654,7 +654,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public int OpenClDeviceTypeDefault => 2;
+		public int OpenClDeviceTypeDefault => 4;
 		public int OpenClDeviceType
 		{
 			get { return RcPlugIn.Settings.GetInteger("OpenCLDeviceType", OpenClDeviceTypeDefault); }
