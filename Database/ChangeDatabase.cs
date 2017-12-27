@@ -1261,6 +1261,7 @@ namespace RhinoCyclesCore.Database
 		protected override void ApplyGroundPlaneChanges(CqGroundPlane gp)
 		{
 			var gpcrc = gp.Crc;
+			if (old_gp_crc == 0 && !gp.Enabled) return;
 			if (gpcrc == old_gp_crc && old_gp_enabled == gp.Enabled) return;
 
 			RcCore.OutputDebugString("ApplyGroundPlaneChanges.\n");
