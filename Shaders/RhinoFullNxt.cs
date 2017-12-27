@@ -355,6 +355,7 @@ namespace RhinoCyclesCore.Shaders
 			var custom_alpha_cutter241 = new MixClosureNode("custom_alpha_cutter");
 
 			var principledbsdf242 = new PrincipledBsdfNode("principledbsdf");
+				principledbsdf242.Distribution = PrincipledBsdfNode.Distributions.Multiscatter_GGX;
 				principledbsdf242.ins.BaseColor.Value = part.BaseColor;
 				principledbsdf242.ins.Subsurface.Value = 0f;
 				principledbsdf242.ins.SubsurfaceRadius.Value = new ccl.float4(0f, 0f, 0f, 1f);
