@@ -40,7 +40,7 @@ namespace RhinoCyclesCore
 		/// <param name="render_device">Render device this scene is created for</param>
 		/// <param name="cycles_engine">Engine instance to create for</param>
 		/// <returns></returns>
-		protected static Scene CreateScene(Client client, Session session, Device render_device,
+		protected static /*Scene*/ void CreateScene(Client client, Session session, Device render_device,
 			RenderEngine cycles_engine)
 		{
 			#region set up scene parameters
@@ -115,7 +115,8 @@ namespace RhinoCyclesCore
 
 			#endregion
 
-			return scene;
+			session.Scene = scene;
+			//return scene;
 		}
 
 		static public float4 CreateFloat4(double x, double y, double z) { return new float4((float)x, (float)y, (float)z, 0.0f); }

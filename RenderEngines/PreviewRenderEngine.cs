@@ -105,7 +105,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session = new Session(client, sessionParams);
 #endregion
 
-			var scene = CreateScene(client, cyclesEngine.Session, renderDevice, cyclesEngine);
+			CreateScene(client, cyclesEngine.Session, renderDevice, cyclesEngine);
 
 			// register callbacks before starting any rendering
 			cyclesEngine.SetCallbacks();
