@@ -214,9 +214,7 @@ namespace RhinoCyclesCore.RenderEngines
 			Session = new Session(client, sessionParams);
 			#endregion
 
-			var scene = CreateScene(client, Session, renderDevice, this);
-
-			Session.Scene = scene;
+			CreateScene(client, Session, renderDevice, this);
 
 			TriggerCurrentViewportSettingsRequested();
 
