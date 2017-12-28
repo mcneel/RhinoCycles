@@ -96,7 +96,9 @@ namespace RhinoCycles.Commands
 							var v = opt.Value;
 							var k = opt.Key;
 							var pinf = v.Item1;
+#if DEBUG
 							string msg ="";
+#endif
 							if(pinf.PropertyType == typeof(bool))
 							{
 								var blopt = v.Item2 as OptionToggle;
