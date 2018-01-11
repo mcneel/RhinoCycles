@@ -1629,6 +1629,7 @@ namespace RhinoCyclesCore.Database
 				cob.Mesh = mesh;
 				cob.Transform = ob.Transform;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
+				cob.IsBlockInstance = true;
 				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
 				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;
 				if (ob.CastShadow == false)
@@ -1776,6 +1777,8 @@ namespace RhinoCyclesCore.Database
 		protected override void NotifyDynamicUpdatesAreAvailable()
 		{
 			RcCore.OutputDebugString("NotifyDynamicUpdatesAreAvailable\n");
+			_renderEngine.TriggerBeginChangesNotified();
+			_renderEngine.Flush = true;
 			// nothing
 			//System.Diagnostics.Debug.WriteLine("dyn changes...");
 		}
