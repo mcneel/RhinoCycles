@@ -232,7 +232,7 @@ namespace RhinoCyclesCore.Database
 				if (cob == null) continue;
 
 				cob.Transform = cot.Transform;
-				cob.Mesh.TagRebuild();
+				cob.Mesh?.TagRebuild();
 				cob.TagUpdate();
 			}
 		}
@@ -250,10 +250,10 @@ namespace RhinoCyclesCore.Database
 
 				foreach (var cob in cobs)
 				{
-					RcCore.OutputDebugString($"\tDeleting mesh {cob.Id}.{cob.Mesh.Id} ({meshDelete}\n");
+					RcCore.OutputDebugString($"\tDeleting mesh {cob.Id}.{cob.Mesh?.Id} ({meshDelete}\n");
 					// remove mesh data
-					cob.Mesh.ClearData();
-					cob.Mesh.TagRebuild();
+					cob.Mesh?.ClearData();
+					cob.Mesh?.TagRebuild();
 					// hide object containing the mesh
 					cob.Visibility = PathRay.Hidden;
 					cob.TagUpdate();
@@ -1629,6 +1629,7 @@ namespace RhinoCyclesCore.Database
 				cob.Mesh = mesh;
 				cob.Transform = ob.Transform;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
+				cob.IsBlockInstance = true;
 				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
 				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;
 				if (ob.CastShadow == false)
@@ -1776,6 +1777,8 @@ namespace RhinoCyclesCore.Database
 		protected override void NotifyDynamicUpdatesAreAvailable()
 		{
 			RcCore.OutputDebugString("NotifyDynamicUpdatesAreAvailable\n");
+			_renderEngine.TriggerBeginChangesNotified();
+			_renderEngine.Flush = true;
 			// nothing
 			//System.Diagnostics.Debug.WriteLine("dyn changes...");
 		}
