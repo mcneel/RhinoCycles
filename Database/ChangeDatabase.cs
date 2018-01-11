@@ -232,7 +232,7 @@ namespace RhinoCyclesCore.Database
 				if (cob == null) continue;
 
 				cob.Transform = cot.Transform;
-				cob.Mesh.TagRebuild();
+				cob.Mesh?.TagRebuild();
 				cob.TagUpdate();
 			}
 		}
@@ -250,10 +250,10 @@ namespace RhinoCyclesCore.Database
 
 				foreach (var cob in cobs)
 				{
-					RcCore.OutputDebugString($"\tDeleting mesh {cob.Id}.{cob.Mesh.Id} ({meshDelete}\n");
+					RcCore.OutputDebugString($"\tDeleting mesh {cob.Id}.{cob.Mesh?.Id} ({meshDelete}\n");
 					// remove mesh data
-					cob.Mesh.ClearData();
-					cob.Mesh.TagRebuild();
+					cob.Mesh?.ClearData();
+					cob.Mesh?.TagRebuild();
 					// hide object containing the mesh
 					cob.Visibility = PathRay.Hidden;
 					cob.TagUpdate();
