@@ -16,6 +16,7 @@ limitations under the License.
 
 using Rhino;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -25,35 +26,52 @@ namespace RhinoCyclesCore.Core
 	public sealed class RcCore
 	{
 		#region helper functions to get relative path between two paths
-		private const int FileAttributeDirectory = 0x10;
-
-		[DllImport("shlwapi.dll", SetLastError = true)]
-		private static extern int PathRelativePathTo(StringBuilder pszPath,
-				string pszFrom, int dwAttrFrom, string pszTo, int dwAttrTo);
 		public static string GetRelativePath(string fromPath, string toPath)
 		{
-
-			var path = new StringBuilder(1024);
-			if (PathRelativePathTo(path,
-				fromPath, FileAttributeDirectory,
-				toPath, FileAttributeDirectory) == 0)
+			bool hit = false;
+			int l = 1;
+			// find length of common path.
+			if (toPath.StartsWith(fromPath))
 			{
-				throw new ArgumentException("Paths must have a common prefix");
-			}
-			return path.ToString();
-		}
+				hit = true;
+				l = fromPath.Length + 1;
+			} else {
+				while (!hit)
+				{
+					if (l > fromPath.Length) break;
 
-		[DllImport("shlwapi.dll", SetLastError = true)]
-		private static extern int PathCanonicalize(StringBuilder pszDest,
-				string pszSrc);
-		public static string GetCanonicalizedPath(string original)
-		{
-			var path = new StringBuilder(1024);
-			if (PathCanonicalize(path, original) == 0)
-			{
-				throw new ArgumentException($"Invalid original path: '{original}'");
+					string ss = fromPath.Substring(0, l);
+					if (!toPath.StartsWith(ss))
+					{
+						hit = true;
+						break;
+					}
+					l++;
+				}
 			}
-			return path.ToString();
+
+			if (!hit) throw new ArgumentException("Paths must have common start");
+
+			// we found a hit, now determine the relative jump
+			string remainder = fromPath.Substring(l - 1);
+			string toremainder = toPath.Substring(l - 1);
+			var sp = remainder.Split(System.IO.Path.DirectorySeparatorChar);
+			List<string> relp = new List<string>(sp);
+			relp = relp.FindAll(x => x.Length > 0);
+			for(int i = 0; i < relp.Count; i++)
+			{
+				relp[i] = "..";
+			}
+
+			// add the path of the remainder in toPath
+			relp.Add(toremainder);
+
+			// combine into final relative path.
+			var relpstr = System.IO.Path.Combine(relp.ToArray());
+			// add a dot if string starts with a directory separator
+			if (relpstr.StartsWith(System.IO.Path.DirectorySeparatorChar.ToString())) relpstr = "." + relpstr;
+
+			return relpstr;
 		}
 
 		#endregion
