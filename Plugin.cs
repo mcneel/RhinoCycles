@@ -64,7 +64,7 @@ namespace RhinoCycles
 
 			var dataPath = SettingsDirectory;
 			var userPath = Path.Combine(dataPath, "..", "data");
-			userPath = RcCore.GetCanonicalizedPath(userPath);
+			userPath = Path.GetFullPath(userPath);
 
 			RcCore.It.DataUserPath = userPath;
 
