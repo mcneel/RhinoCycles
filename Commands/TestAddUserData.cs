@@ -24,6 +24,7 @@ using Rhino.DocObjects.Custom;
 
 namespace RhinoCycles.Commands
 {
+	[System.Runtime.InteropServices.Guid ("E18E7D7B-D7C2-491A-B791-7259F0C5F210")]
 	public class RcTestUserData : UserDictionary
 	{
 		public RcTestUserData()
