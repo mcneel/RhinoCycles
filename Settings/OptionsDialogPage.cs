@@ -24,7 +24,7 @@ namespace RhinoCycles.Settings
 {
 	public class OptionsDialogPage : Rhino.UI.OptionsDialogPage
 	{
-		public OptionsDialogPage() : base(Localization.LocalizeString("Cycles", 7))
+    public OptionsDialogPage() : base("Cycles")
 		{
 			CollapsibleSectionHolder = new OptionsDialogCollapsibleSectionUIPanel();
 		}
@@ -33,6 +33,14 @@ namespace RhinoCycles.Settings
 
 		public override bool ShowApplyButton => false;
 		public override bool ShowDefaultsButton => true;
+    public override string LocalPageTitle => Localization.LocalizeString ("Cycles", 7);
+
+    public override Image PageImage {
+      get {
+        var icon = Properties.Resources.Cycles_viewport_properties;
+        return icon.ToBitmap ();
+      }
+    }
 
 		public override void OnDefaults()
 		{
