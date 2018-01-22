@@ -1,7 +1,7 @@
 /**
 Copyright 2014-2017 Robert McNeel and Associates
 
-Licensed under the Apache License, Version 2.0 (the "License");
+Licensed under the Apache License, Version 2.0(the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
@@ -42,53 +42,53 @@ namespace RhinoCycles
 
 		private ViewportPropertiesPage m_page;
 
+		private bool pluginLoaded = false;
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
-			RhinoApp.Initialized += RhinoApp_Initialized;
-			RcCore.It.InitializeResourceManager();
+			if(!pluginLoaded) {
+				pluginLoaded = true;
+				RhinoApp.Initialized += RhinoApp_Initialized;
+				RcCore.It.InitializeResourceManager();
 
-			// code got moved to separate DLL so use that to register from.
-			var rccoreass = typeof(RcCore).Assembly;
-			RenderContent.RegisterContent(rccoreass, Id);
+				// code got moved to separate DLL so use that to register from.
+				var rccoreass = typeof(RcCore).Assembly;
+				RenderContent.RegisterContent(rccoreass, Id);
 
-			RenderContent.ContentFieldChanged += RenderContentOnContentFieldChanged;
+				RenderContent.ContentFieldChanged += RenderContentOnContentFieldChanged;
 
-			var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
-			RcCore.It.PluginPath = path;
-			var kernelPath = Path.Combine(path, "RhinoCycles");
-			RcCore.It.KernelPath = kernelPath;
-			var appPath = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
-			RcCore.It.AppPath = appPath;
-			kernelPath = RcCore.GetRelativePath(appPath, kernelPath);
-			RcCore.It.KernelPathRelative = kernelPath;
+				var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
+				RcCore.It.PluginPath = path;
+				var kernelPath = Path.Combine(path, "RhinoCycles");
+				RcCore.It.KernelPath = kernelPath;
+				var appPath = Path.GetDirectoryName(Assembly.GetCallingAssembly().Location);
+				RcCore.It.AppPath = appPath;
+				kernelPath = RcCore.GetRelativePath(appPath, kernelPath);
+				RcCore.It.KernelPathRelative = kernelPath;
 
-			var dataPath = SettingsDirectory;
-			var userPath = Path.Combine(dataPath, "..", "data");
-			userPath = Path.GetFullPath(userPath);
+				var dataPath = SettingsDirectory;
+				var userPath = Path.Combine(dataPath, "..", "data");
+				userPath = Path.GetFullPath(userPath);
 
-			RcCore.It.DataUserPath = userPath;
+				RcCore.It.DataUserPath = userPath;
 
-			CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
+				CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
 
-			if (RhinoApp.RunningOnVMWare())
-			{
-				CSycles.debug_set_opencl_device_type(0);
+				if(RhinoApp.RunningOnVMWare()) {
+					CSycles.debug_set_opencl_device_type(0);
+				} else {
+					CSycles.debug_set_opencl_device_type(RcCore.It.EngineSettings.OpenClDeviceType);
+				}
+				CSycles.debug_set_opencl_kernel(RcCore.It.EngineSettings.OpenClKernelType);
+				CSycles.debug_set_opencl_single_program(RcCore.It.EngineSettings.OpenClSingleProgram);
+				CSycles.debug_set_cpu_kernel(RcCore.It.EngineSettings.CPUSplitKernel);
+
+				RcCore.It.Initialised = false;
+				AsyncInitialise();
+
+				m_page = new ViewportPropertiesPage();
+
+				RhinoView.SetActive += RhinoView_SetActive;
 			}
-			else
-			{
-				CSycles.debug_set_opencl_device_type(RcCore.It.EngineSettings.OpenClDeviceType);
-			}
-			CSycles.debug_set_opencl_kernel(RcCore.It.EngineSettings.OpenClKernelType);
-			CSycles.debug_set_opencl_single_program(RcCore.It.EngineSettings.OpenClSingleProgram);
-			CSycles.debug_set_cpu_kernel(RcCore.It.EngineSettings.CPUSplitKernel);
-
-			RcCore.It.Initialised = false;
-			AsyncInitialise();
-
-			m_page = new ViewportPropertiesPage();
-
-			RhinoView.SetActive += RhinoView_SetActive;
-
 			return LoadReturnCode.Success;
 		}
 
@@ -99,11 +99,11 @@ namespace RhinoCycles
 
 		public static IViewportSettings GetActiveViewportSettings()
 		{
-			if (RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return null;
+			if(RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return null;
 
 			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
 			var vpi = vi.Viewport;
-			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
+			var vud = vpi.UserData.Find(typeof(ViewportSettings)) as ViewportSettings;
 
 			return vud;
 		}
@@ -111,8 +111,8 @@ namespace RhinoCycles
 		{
 			var vi = new ViewInfo(e.View.ActiveViewport);
 			var vpi = vi.Viewport;
-			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
-			if (vud != null)
+			var vud = vpi.UserData.Find(typeof(ViewportSettings)) as ViewportSettings;
+			if(vud != null)
 			{
 				m_page.UserDataAvailable(vud);
 			}
@@ -134,9 +134,9 @@ namespace RhinoCycles
 		/// </summary>
 		public void InitialiseCSycles()
 		{
-			lock (InitialiseLock)
+			lock(InitialiseLock)
 			{
-				if (!RcCore.It.Initialised)
+				if(!RcCore.It.Initialised)
 				{
 					CSycles.initialise();
 					RcCore.It.Initialised = true;
