@@ -466,10 +466,17 @@ namespace RhinoCyclesCore.Converters
 					var col4F = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), duvw, duvw);
 					var conv = col4F.ToArray<T>();
 					var offset = x * 4 + pwidth * y * 4;
+#if ON_RUNTIME_WIN
 					upixel[offset] = conv[0];
 					upixel[offset + 1] = conv[1];
 					upixel[offset + 2] = conv[2];
 					upixel[offset + 3] = conv[3];
+#else
+					upixel[offset] = conv[2];
+					upixel[offset + 1] = conv[1];
+					upixel[offset + 2] = conv[0];
+					upixel[offset + 3] = conv[3];
+#endif
 				}
 			}
 			return upixel;
