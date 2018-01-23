@@ -121,9 +121,9 @@
     <AppDesigner Include="Core\Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\Source\Eto\Eto - pcl.csproj">
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj">
       <Project>{35ef0a4e-2a1a-492c-8bed-106774ea09f2}</Project>
-      <Name>Eto - pcl</Name>
+      <Name>Eto</Name>
       <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj">
