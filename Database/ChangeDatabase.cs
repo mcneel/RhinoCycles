@@ -105,6 +105,7 @@ namespace RhinoCyclesCore.Database
 		public uint Blades { get; } = RcCore.It.EngineSettings.Blades;
 		public float BladesRotation { get; } = RcCore.It.EngineSettings.BladesRotation;
 		public float ApertureRatio { get; } = RcCore.It.EngineSettings.ApertureRatio;
+		public float ApertureFactor { get; } = RcCore.It.EngineSettings.ApertureFactor;
 
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal) : base(pluginId, doc, view, attributes, true, !modal)
 		{
@@ -647,7 +648,7 @@ namespace RhinoCyclesCore.Database
 		{
 			var scene = _renderEngine.Session.Scene;
 			scene.Camera.FocalDistance = fb.FocalDistance;
-			scene.Camera.ApertureSize = fb.FocalAperture;
+			scene.Camera.ApertureSize = fb.FocalAperture * ApertureFactor;
 			scene.Camera.Blades = Blades;
 			scene.Camera.BladesRotation = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
 			scene.Camera.ApertureRatio = ApertureRatio;
