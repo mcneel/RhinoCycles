@@ -215,7 +215,7 @@ namespace RhinoCyclesCore
 					case ProbableMaterial.Glass:
 					case ProbableMaterial.Gem:
 						metalic = 0f;
-						mattype = ShaderBody.CyclesMaterial.Glass;
+						mattype = m.IndexOfRefraction < 1.001 ? ShaderBody.CyclesMaterial.Diffuse : ShaderBody.CyclesMaterial.Glass;
 						break;
 					case ProbableMaterial.Metal:
 						metalic = 1.0f;
