@@ -97,6 +97,7 @@ namespace RhinoCyclesCore
 			Blades = Blades;
 			BladesRotation = BladesRotation;
 			ApertureRatio = ApertureRatio;
+			ApertureFactor = ApertureFactor;
 
 			SensorWidth = SensorWidth;
 			SensorHeight = SensorHeight;
@@ -192,6 +193,7 @@ namespace RhinoCyclesCore
 			Blades = BladesDefault;
 			BladesRotation = BladesRotationDefault;
 			ApertureRatio = ApertureRatioDefault;
+			ApertureFactor = ApertureFactorDefault;
 
 			SensorWidth = SensorWidthDefault;
 			SensorHeight = SensorHeightDefault;
@@ -596,6 +598,12 @@ namespace RhinoCyclesCore
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble("ApertureRatio", ApertureRatioDefault); }
 			set { RcPlugIn.Settings.SetDouble("ApertureRatio", value); }
+		}
+		public float ApertureFactorDefault => 0.1f;
+		public virtual float ApertureFactor
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble("ApertureFactor", ApertureFactorDefault); }
+			set { RcPlugIn.Settings.SetDouble("ApertureFactor", value); }
 		}
 
 		public float SensorWidthDefault => 32.0f;
