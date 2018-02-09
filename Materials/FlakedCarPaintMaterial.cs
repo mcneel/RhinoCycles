@@ -24,6 +24,7 @@ using ccl.ShaderNodes.Sockets;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("5C717BA9-C033-48D1-A03A-CC2E8A49E540")]
+	[CustomRenderContent(IsPrivate=true)]
 	public class FlakedCarPaintMaterial : RenderMaterial, ICyclesMaterial
 	{
 		public override string TypeName => "Cycles Flaked Car Paint Material (DEV)";
