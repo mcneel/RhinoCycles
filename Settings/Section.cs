@@ -28,14 +28,17 @@ namespace RhinoCycles.Settings
 	{
 		protected int m_table_padding = 10;
 
+		public readonly uint m_doc_serialnumber = 0;
+
 		protected readonly bool m_for_app = false;
 		/// <summary>
 		/// Constructor
 		/// </summary>
 		/// <param name="for_app">Pass in 'true' if sections display application settings. 'false' means
 		/// viewport-specific settings.</param>
-		public Section(bool for_app) {
+		public Section(bool for_app, uint doc_serial) {
 			m_for_app = for_app;
+			m_doc_serialnumber = doc_serial;
 		}
 
 		/// <summary>
@@ -49,7 +52,7 @@ namespace RhinoCycles.Settings
 				IViewportSettings vud;
 				if (!m_for_app && RcCore.It.EngineSettings.AllowViewportSettingsOverride)
 				{
-					vud = Plugin.GetActiveViewportSettings();
+					vud = Plugin.GetActiveViewportSettings(m_doc_serialnumber);
 				}
 				else
 				{

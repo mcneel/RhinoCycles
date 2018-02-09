@@ -42,7 +42,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public AddUserdataSection(bool for_app) : base(for_app)
+		public AddUserdataSection(bool for_app, uint doc_serial) : base(for_app, doc_serial)
 		{
 			m_caption = new LocalizeStringPair("Override View-specific Cycles settings", Localization.LocalizeString("Override View-specific Cycles settings", 1));
 			InitializeComponents();
@@ -105,17 +105,20 @@ namespace RhinoCycles.Settings
 
 		private void OnButtonClick(object sender, EventArgs e)
 		{
-			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
-			var vpi = vi.Viewport;
-
-			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
-
-			if (vud == null)
+			if (RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber) is RhinoDoc doc)
 			{
-				var nvud = new ViewportSettings();
-				vpi.UserData.Add(nvud);
+				var vi = new ViewInfo(doc.Views.ActiveView.ActiveViewport);
+				var vpi = vi.Viewport;
+
+				var vud = vpi.UserData.Find(typeof(ViewportSettings)) as ViewportSettings;
+
+				if (vud == null)
+				{
+					var nvud = new ViewportSettings();
+					vpi.UserData.Add(nvud);
+				}
+				ViewDataChanged?.Invoke(this, EventArgs.Empty);
 			}
-			ViewDataChanged?.Invoke(this, EventArgs.Empty);
 		}
 
 	}

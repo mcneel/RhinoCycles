@@ -46,7 +46,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public SessionSection(bool for_app) : base(for_app)
+		public SessionSection(bool for_app, uint doc_serial) : base(for_app, doc_serial)
 		{
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
 			m_caption = new LocalizeStringPair("Session settings", Localization.LocalizeString("Session settings", 5));
@@ -159,9 +159,9 @@ namespace RhinoCycles.Settings
 			vud.Samples = (int)m_samples.Value;
 			vud.ThrottleMs = (int)m_throttlems.Value;
 
-			if (!m_for_app)
+			if (!m_for_app && RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber) is RhinoDoc doc)
 			{
-				var rvp = RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
+				var rvp = doc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
 				if (rvp == null) return;
 
 				rvp.TriggerViewportSettingsChanged(vud);

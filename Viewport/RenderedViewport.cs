@@ -54,6 +54,8 @@ namespace RhinoCycles.Viewport
 		private static int _runningSerial;
 		private readonly int _serial;
 
+		private uint _docSerialNumber;
+
 		private bool _started;
 		private bool _frameAvailable;
 
@@ -160,6 +162,7 @@ namespace RhinoCycles.Viewport
 		private DisplayPipelineAttributes Dpa { get; set; } = null;
 		public override void CreateWorld(RhinoDoc doc, ViewInfo viewInfo, DisplayPipelineAttributes displayPipelineAttributes)
 		{
+			_docSerialNumber = doc.RuntimeSerialNumber;
 			Dpa = displayPipelineAttributes;
 		}
 
@@ -194,6 +197,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
+			_docSerialNumber = doc.RuntimeSerialNumber;
 			_started = true;
 			_forCapture = forCapture;
 			_useFastDraw = UseFastDraw();
@@ -291,7 +295,7 @@ namespace RhinoCycles.Viewport
 			IViewportSettings vud;
 			if (RcCore.It.EngineSettings.AllowViewportSettingsOverride)
 			{
-				vud = Plugin.GetActiveViewportSettings();
+				vud = Plugin.GetActiveViewportSettings(_docSerialNumber);
 				if(vud==null) vud = RcCore.It.EngineSettings;
 			} else
 			{
@@ -405,7 +409,7 @@ namespace RhinoCycles.Viewport
 
 		public void ChangeSamples(int samples)
 		{
-			var vud = Plugin.GetActiveViewportSettings();
+			var vud = Plugin.GetActiveViewportSettings(_docSerialNumber);
 			if (vud == null) vud = RcCore.It.EngineSettings;
 			if(vud!=null)
 			{

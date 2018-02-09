@@ -40,7 +40,7 @@ namespace RhinoCycles
 		/// </summary>
 		public override PlugInLoadTime LoadTime => PlugInLoadTime.AtStartup;
 
-		private ViewportPropertiesPage m_page;
+		private Dictionary<uint, ViewportPropertiesPage> m_propertiesPages = new Dictionary<uint, ViewportPropertiesPage>();
 
 		private bool pluginLoaded = false;
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
@@ -85,8 +85,6 @@ namespace RhinoCycles
 				RcCore.It.Initialised = false;
 				AsyncInitialise();
 
-				m_page = new ViewportPropertiesPage();
-
 				RhinoView.SetActive += RhinoView_SetActive;
 			}
 			return LoadReturnCode.Success;
@@ -97,22 +95,31 @@ namespace RhinoCycles
 			RcCore.It.AppInitialised = true;
 		}
 
-		public static IViewportSettings GetActiveViewportSettings()
+		public static IViewportSettings GetActiveViewportSettings(uint doc_serial)
 		{
-			if(RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return null;
+			if (RhinoDoc.FromRuntimeSerialNumber(doc_serial) is RhinoDoc doc && doc.Views.ActiveView != null)
+			{
 
-			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
-			var vpi = vi.Viewport;
-			var vud = vpi.UserData.Find(typeof(ViewportSettings)) as ViewportSettings;
+				var vi = new ViewInfo(doc.Views.ActiveView.ActiveViewport);
+				var vpi = vi.Viewport;
+				var vud = vpi.UserData.Find(typeof(ViewportSettings)) as ViewportSettings;
 
-			return vud;
+				return vud;
+			}
+			return null;
 		}
 		private void RhinoView_SetActive(object sender, ViewEventArgs e)
 		{
+			if (e.View.Document == null) return;
+
+			var sn = e.View.Document.RuntimeSerialNumber;
+			if (!m_propertiesPages.ContainsKey(sn)) return;
+
+			var m_page = m_propertiesPages[sn];
+
 			var vi = new ViewInfo(e.View.ActiveViewport);
 			var vpi = vi.Viewport;
-			var vud = vpi.UserData.Find(typeof(ViewportSettings)) as ViewportSettings;
-			if(vud != null)
+			if (vpi.UserData.Find(typeof(ViewportSettings)) is ViewportSettings vud)
 			{
 				m_page.UserDataAvailable(vud);
 			}
@@ -165,14 +172,18 @@ namespace RhinoCycles
 			base.OptionsDialogPages(pages);
 		}
 
-		/*protected override void DocumentPropertiesDialogPages(RhinoDoc doc, List<Rhino.UI.OptionsDialogPage> pages)
-		{
-			base.DocumentPropertiesDialogPages(doc, pages);
-		}*/
 		protected override void ObjectPropertiesPages(List<ObjectPropertiesPage> pages)
 		{
-			pages.Add(m_page);
-			base.ObjectPropertiesPages(pages);
+			if (RhinoDoc.ActiveDoc == null) return;
+			var sn = RhinoDoc.ActiveDoc.RuntimeSerialNumber;
+
+			if(!m_propertiesPages.ContainsKey(sn))
+			{
+				var prop_page = new ViewportPropertiesPage(sn);
+				m_propertiesPages.Add(sn, prop_page);
+				pages.Add(prop_page);
+				base.ObjectPropertiesPages(pages);
+			}
 		}
 	}
 }

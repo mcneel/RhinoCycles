@@ -70,7 +70,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public IntegratorSection(bool for_app) : base(for_app)
+		public IntegratorSection(bool for_app, uint doc_serial) : base(for_app, doc_serial)
 		{
 			m_caption = new LocalizeStringPair("Integrator settings", Localization.LocalizeString("Integrator settings", 3));
 			InitializeComponents();
@@ -356,19 +356,19 @@ namespace RhinoCycles.Settings
 
 		private void ChangeIntegratorSetting(IntegratorSetting setting, int value)
 		{
-			if (!m_for_app)
+			if (!m_for_app && RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber) is RhinoDoc doc)
 			{
-				var rvp = RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
+				var rvp = doc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
 				if (rvp == null) return;
-				var vud = Plugin.GetActiveViewportSettings();
+				var vud = Plugin.GetActiveViewportSettings(m_doc_serialnumber);
 				if (vud == null) return;
 
 				rvp.TriggerViewportSettingsChanged(vud);
 			} else
 			{
-				if(!RcCore.It.EngineSettings.AllowViewportSettingsOverride)
+				if(!RcCore.It.EngineSettings.AllowViewportSettingsOverride && RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber) is RhinoDoc appdoc)
 				{
-					foreach(var v in RhinoDoc.ActiveDoc.Views)
+					foreach(var v in appdoc.Views)
 					{
 						var rvp = v.RealtimeDisplayMode as RenderedViewport;
 						if (rvp == null) continue;

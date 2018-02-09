@@ -213,7 +213,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public DeviceSection(bool for_app) : base(for_app)
+		public DeviceSection(bool for_app, uint doc_serial) : base(for_app, doc_serial)
 		{
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
 			m_caption = new LocalizeStringPair("Device settings", Localization.LocalizeString("Device settings", 14));
@@ -225,7 +225,7 @@ namespace RhinoCycles.Settings
 
 		protected override void OnShown(EventArgs e)
 		{
-			var vud = Plugin.GetActiveViewportSettings();
+			var vud = Plugin.GetActiveViewportSettings(m_doc_serialnumber);
 			var rd = ActiveDevice(vud);
 			if (rd.IsCpu) m_tc.SelectedPage = m_tabpage_cpu;
 			if (rd.IsCuda || rd.IsMultiCuda) m_tc.SelectedPage = m_tabpage_cuda;
@@ -398,7 +398,7 @@ namespace RhinoCycles.Settings
 
 		private void HandleResetClick(object sender, EventArgs e)
 		{
-			var vud = Plugin.GetActiveViewportSettings();
+			var vud = Plugin.GetActiveViewportSettings(m_doc_serialnumber);
 			if (vud != null)
 			{
 				vud.SelectedDeviceStr = RcCore.It.EngineSettings.SelectedDeviceStr;

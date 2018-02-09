@@ -34,11 +34,14 @@ namespace RhinoCycles.Settings
 			}
 		}
 
+		private uint docSerialNumber = 0;
+
 		/// <summary>
 		/// Public constructor
 		/// </summary>
-		public ViewportCollapsibleSectionUIPanel()
+		public ViewportCollapsibleSectionUIPanel(uint docSerial)
 		{
+			docSerialNumber = docSerial;
 			InitializeComponents();
 			InitializeLayout();
 			RcCore.It.EngineSettings.ApplicationSettingsChanged += EngineSettings_ApplicationSettingsChanged;
@@ -65,10 +68,10 @@ namespace RhinoCycles.Settings
 		private void InitializeComponents()
 		{
 			m_holder = new EtoCollapsibleSectionHolder();
-			m_addUserDataSection = new AddUserdataSection(false);
-			m_integratorSection = new IntegratorSection(false);
-			m_sessionSection = new SessionSection(false);
-			m_deviceSection = new DeviceSection(false);
+			m_addUserDataSection = new AddUserdataSection(false, docSerialNumber);
+			m_integratorSection = new IntegratorSection(false, docSerialNumber);
+			m_sessionSection = new SessionSection(false, docSerialNumber);
+			m_deviceSection = new DeviceSection(false, docSerialNumber);
 		}
 
 		private void InitializeLayout()

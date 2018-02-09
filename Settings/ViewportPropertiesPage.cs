@@ -24,9 +24,11 @@ namespace RhinoCycles.Settings
 {
 	public class ViewportPropertiesPage : ObjectPropertiesPage
 	{
-		public ViewportPropertiesPage()
+		private uint docSerialNumber = 0;
+		public ViewportPropertiesPage(uint docserial)
 		{
-			CollapsibleSectionHolder = new ViewportCollapsibleSectionUIPanel();
+			docSerialNumber = docserial;
+			CollapsibleSectionHolder = new ViewportCollapsibleSectionUIPanel(docSerialNumber);
 			CollapsibleSectionHolder.ViewDataChanged += CollapsibleSectionHolder_ViewDataChanged;
 		}
 
@@ -38,18 +40,20 @@ namespace RhinoCycles.Settings
 
 		private void CollapsibleSectionHolder_ViewDataChanged(object sender, EventArgs e)
 		{
-			if (RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return;
+			if (RhinoDoc.FromRuntimeSerialNumber(docSerialNumber) is RhinoDoc doc && doc.Views.ActiveView!=null)
+			{
 
-			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
-			var vpi = vi.Viewport;
-			var vud = vpi.UserData.Find(typeof (ViewportSettings)) as ViewportSettings;
-			if (vud != null)
-			{
-				UserDataAvailable(vud);
-			}
-			else
-			{
-				NoUserDataAvailable();
+				var vi = new ViewInfo(doc.Views.ActiveView.ActiveViewport);
+				var vpi = vi.Viewport;
+				var vud = vpi.UserData.Find(typeof(ViewportSettings)) as ViewportSettings;
+				if (vud != null)
+				{
+					UserDataAvailable(vud);
+				}
+				else
+				{
+					NoUserDataAvailable();
+				}
 			}
 		}
 
@@ -74,12 +78,16 @@ namespace RhinoCycles.Settings
 
 	  public override bool ShouldDisplay(ObjectPropertiesPageEventArgs e)
 	  {
-			if (RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return false;
+			if (RhinoDoc.FromRuntimeSerialNumber(docSerialNumber) is RhinoDoc doc && doc.Views.ActiveView != null)
+			{
 
-			if (!RhinoCyclesCore.Core.RcCore.It.EngineSettings.AllowViewportSettingsOverride) return false;
+				if (!RhinoCyclesCore.Core.RcCore.It.EngineSettings.AllowViewportSettingsOverride) return false;
 
-			var dm = RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode as Viewport.RenderedViewport;
-			return dm != null;
+				var dm = doc.Views.ActiveView.RealtimeDisplayMode as Viewport.RenderedViewport;
+				return dm != null;
+			}
+
+			return false;
 		}
 
 		private ViewportCollapsibleSectionUIPanel CollapsibleSectionHolder { get; }

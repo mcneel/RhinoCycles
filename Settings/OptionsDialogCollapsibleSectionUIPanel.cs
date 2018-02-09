@@ -52,9 +52,9 @@ namespace RhinoCycles.Settings
 		DeviceSection m_deviceSection;
 		private void InitializeLayout()
 		{
-			m_integratorSection = new IntegratorSection(true);
-			m_sessionSection = new SessionSection(true);
-			m_deviceSection = new DeviceSection(true);
+			m_integratorSection = new IntegratorSection(true, 0);
+			m_sessionSection = new SessionSection(true, 0);
+			m_deviceSection = new DeviceSection(true, 0);
 			m_holder.Add(m_integratorSection);
 			m_holder.Add(m_sessionSection);
 			m_holder.Add(m_deviceSection);

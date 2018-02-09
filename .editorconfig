@@ -6,5 +6,5 @@ root = true
 # use tabs by default for everything
 [*]
 indent_style = tab
-indent_size = 4
-tab_size = 4
+indent_size = 2
+tab_size = 2
