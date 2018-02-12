@@ -53,8 +53,14 @@ namespace RhinoCyclesCore.RenderEngines
 			
 		}
 
+		private bool _sessionCancelFlagged = false;
 		private void ViewportRenderEngine_BeginChangesNotified(object sender, EventArgs e)
 		{
+			if (IsUploading)
+			{
+				_sessionCancelFlagged = true;
+				return;
+			}
 			Session?.Cancel("Begin changes notification");
 		}
 
@@ -262,6 +268,11 @@ namespace RhinoCyclesCore.RenderEngines
 				}
 				if (!Locked && !CancelRender && !IsStopped && Flush)
 				{
+					if (_sessionCancelFlagged)
+					{
+						_sessionCancelFlagged = false;
+						Session?.Cancel("Changes detected");
+					}
 					CheckFlushQueue();
 					Synchronize();
 					_needReset = true;
