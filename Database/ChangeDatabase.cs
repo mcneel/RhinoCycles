@@ -564,9 +564,10 @@ namespace RhinoCyclesCore.Database
 
 					var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 
+					var crc = mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "");
 					var cyclesObject = new CyclesObject
 					{
-						matid = mat.RenderHash,
+						matid = crc,
 						obid = ClippingPlaneMeshInstanceId,
 						meshid = cpid,
 						Transform = t,
@@ -576,7 +577,7 @@ namespace RhinoCyclesCore.Database
 						Cutout = true,
 					};
 
-					_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
+					_objectShaderDatabase.RecordRenderHashRelation(crc, cpid, ClippingPlaneMeshInstanceId);
 					_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
 					_objectDatabase.AddOrUpdateObject(cyclesObject);
 				}
@@ -1091,9 +1092,9 @@ namespace RhinoCyclesCore.Database
 		/// <param name="mat"></param>
 		private void HandleRenderMaterial(RenderMaterial mat)
 		{
-			if (_shaderDatabase.HasShader(mat.RenderHash)) return;
+			if (_shaderDatabase.HasShader(mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, ""))) return;
 
-			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
+			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, ""));
 			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, PreProcessGamma);
 			_shaderDatabase.AddShader(sh);
 		}
@@ -1137,7 +1138,7 @@ namespace RhinoCyclesCore.Database
 				var obid = mat.MeshInstanceId;
 
 				// no mesh id here, but shouldn't be necessary either. Passing in null.
-				HandleMaterialChangeOnObject(rm.RenderHash, obid, null);
+				HandleMaterialChangeOnObject(rm.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, ""), obid, null);
 			}
 
 			// list over material hashes, check if they exist. Create if new
@@ -1232,7 +1233,7 @@ namespace RhinoCyclesCore.Database
 
 			HandleRenderMaterial(mat);
 
-			var matrenderhash = mat.RenderHash;
+			var matrenderhash = mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "");
 			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 			var cyclesObject = new CyclesObject
 			{
