@@ -40,7 +40,7 @@ namespace RhinoCyclesCore.Converters
 		/// <returns>The CyclesShader</returns>
 		public CyclesShader CreateCyclesShader(RenderMaterial rm, float gamma)
 		{
-			var mid = rm.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "");
+			var mid = rm.RenderHash;
 			var shader = new CyclesShader(mid);
 
 			shader.Type = CyclesShader.Shader.Diffuse;
