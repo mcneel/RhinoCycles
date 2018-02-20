@@ -44,7 +44,7 @@ namespace RhinoCyclesCore
 			RenderEngine cycles_engine)
 		{
 			#region set up scene parameters
-			var scene_params = new SceneParameters(client, ShadingSystem.SVM, BvhType.Static, false, render_device.IsCpu || render_device.IsOpenCl || render_device.IsMultiOpenCl, false);
+			var scene_params = new SceneParameters(client, ShadingSystem.SVM, BvhType.Static, false, /*render_device.IsCpu || render_device.IsOpenCl || render_device.IsMultiOpenCl*/ true, false);
 			#endregion
 
 			#region create scene

@@ -270,13 +270,13 @@ namespace RhinoCyclesCore.RenderEngines
 				{
 					if (_sessionCancelFlagged)
 					{
-						_sessionCancelFlagged = false;
 						Session?.Cancel("Changes detected");
 					}
 					CheckFlushQueue();
 					Synchronize();
 					_needReset = true;
 					Flush = false;
+					_sessionCancelFlagged = false;
 				}
 				else
 				{
