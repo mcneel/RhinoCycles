@@ -53,10 +53,11 @@ namespace RhinoCyclesCore.RenderEngines
 			
 		}
 
+		private bool _bvhUploaded = false;
 		private bool _sessionCancelFlagged = false;
 		private void ViewportRenderEngine_BeginChangesNotified(object sender, EventArgs e)
 		{
-			if (IsUploading)
+			if (IsUploading || !_bvhUploaded)
 			{
 				_sessionCancelFlagged = true;
 				return;
@@ -142,6 +143,8 @@ namespace RhinoCyclesCore.RenderEngines
 			}
 		}
 
+		//bool _firstDone = false;
+
 		/// <summary>
 		/// Event gets fired when the renderer has started.
 		/// </summary>
@@ -156,7 +159,8 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			Locked = false;
 
-			var vi = new ViewInfo(RhinoDoc.ActiveDoc.Views.ActiveView.ActiveViewport);
+			var doc = RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
+			var vi = new ViewInfo(doc.Views.ActiveView.ActiveViewport);
 			var vpi = vi.Viewport;
 
 			var client = Client;
@@ -266,6 +270,7 @@ namespace RhinoCyclesCore.RenderEngines
 						PassRendered?.Invoke(this, new PassRenderedEventArgs(smpl+1, View));
 					}
 				}
+				_bvhUploaded = true;
 				if (!Locked && !CancelRender && !IsStopped && Flush)
 				{
 					if (_sessionCancelFlagged)
@@ -305,7 +310,9 @@ namespace RhinoCyclesCore.RenderEngines
 			// change state to signal need for uploading
 			if (HasSceneChanges())
 			{
-				Session?.Cancel("Scene changes detected.\n");
+				if (Database.HasBvhChanges()) {
+					_bvhUploaded = false;
+				}
 				State = State.Uploading;
 			}
 		}

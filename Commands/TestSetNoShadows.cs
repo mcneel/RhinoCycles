@@ -40,12 +40,12 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			if (RhinoDoc.ActiveDoc == null || RhinoDoc.ActiveDoc.Views.ActiveView == null) return Result.Nothing;
+			if (doc == null || doc.Views.ActiveView == null) return Result.Nothing;
 
 			var oldval = RhinoCyclesCore.Core.RcCore.It.EngineSettings.NoShadows;
 			RhinoCyclesCore.Core.RcCore.It.EngineSettings.NoShadows = !oldval;
 
-			if(RhinoDoc.ActiveDoc.Views.ActiveView.RealtimeDisplayMode is RhinoCycles.Viewport.RenderedViewport rdp)
+			if(doc.Views.ActiveView.RealtimeDisplayMode is RhinoCycles.Viewport.RenderedViewport rdp)
 			{
 				rdp.ToggleNoShadows();
 				RhinoApp.WriteLine($"Set NoShadows from {oldval} to {RhinoCyclesCore.Core.RcCore.It.EngineSettings.NoShadows}");
