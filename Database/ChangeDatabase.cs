@@ -398,6 +398,12 @@ namespace RhinoCyclesCore.Database
 				DisplayPipelineAttributesChanged;
 		}
 
+		public bool HasBvhChanges()
+		{
+			return
+				_objectDatabase.MeshChanges.Count > 0 ||
+				_objectDatabase.NewOrUpdatedObjects.Count > 0;
+		}
 
 		private LinearWorkflow _linearWorkflow = new LinearWorkflow();
 
