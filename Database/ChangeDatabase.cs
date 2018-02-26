@@ -1050,7 +1050,7 @@ namespace RhinoCyclesCore.Database
 
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				var cutout = _objectDatabase.MeshIsClippingObject(meshid);
-				var ob = new CyclesObject {obid = a.InstanceId, meshid = meshid, Transform = CclXformFromRhinoXform(a.Transform), matid = a.MaterialId, CastShadow = a.CastShadows, Cutout = cutout};
+				var ob = new CyclesObject { obid = a.InstanceId, meshid = meshid, Transform = CclXformFromRhinoXform(a.Transform), matid = matid, CastShadow = a.CastShadows, Cutout = cutout/*, Shader = _shaderDatabase.GetShaderIdForMatId(matid) */};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
 
 				HandleShaderChange(a.InstanceId, oldhash, a.MaterialId, meshid);
@@ -1647,6 +1647,7 @@ namespace RhinoCyclesCore.Database
 				cob.Cutout = ob.Cutout;
 				cob.IgnoreCutout = ob.IgnoreCutout;
 				cob.Visibility = vis;
+				cob.Shader = _shaderDatabase.GetShaderIdForMatId(ob.matid); // ob.Shader;
 				cob.TagUpdate();
 			}
 		}

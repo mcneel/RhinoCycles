@@ -56,6 +56,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public bool Visible { get; set; }
 
+		public uint Shader { get; set; }
+
 		public bool CastShadow { get; set; }
 
 		/// <summary>
