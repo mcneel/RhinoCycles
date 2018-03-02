@@ -153,7 +153,10 @@ namespace RhinoCyclesCore.Database
 					var oldShader = _shaderDatabase.GetShaderFromHash(obshad.OldShaderHash);
 					if (newShader != null)
 					{
-						cob.Mesh?.ReplaceShader(newShader);
+						cob.Shader = _shaderDatabase.GetShaderIdForMatId(obshad.NewShaderHash); // ob.Shader;
+						cob.Shader = this._renderEngine.Client.Scene.GetShaderSceneId(newShader);
+			//Scene.GetShaderSceneId(Shader));
+						//cob.Mesh?.ReplaceShader(newShader);
 						newShader.Tag();
 					}
 					oldShader?.Tag();
@@ -312,7 +315,7 @@ namespace RhinoCyclesCore.Database
 
 				// if we re-uploaded mesh data, we need to make sure the shader
 				// information doesn't get lost.
-				if (!newme) me.ReplaceShader(shader);
+				//if (!newme) me.ReplaceShader(shader);
 
 				// don't forget to record this new mesh
 				if(newme) _objectDatabase.RecordObjectMeshRelation(cyclesMesh.MeshId, me);
@@ -1053,7 +1056,7 @@ namespace RhinoCyclesCore.Database
 				var ob = new CyclesObject { obid = a.InstanceId, meshid = meshid, Transform = CclXformFromRhinoXform(a.Transform), matid = matid, CastShadow = a.CastShadows, Cutout = cutout/*, Shader = _shaderDatabase.GetShaderIdForMatId(matid) */};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
 
-				HandleShaderChange(a.InstanceId, oldhash, a.MaterialId, meshid);
+				HandleShaderChange(a.InstanceId, oldhash, matid, meshid);
 
 				_objectDatabase.AddOrUpdateObject(ob);
 			}
@@ -1143,7 +1146,7 @@ namespace RhinoCyclesCore.Database
 				var obid = mat.MeshInstanceId;
 
 				// no mesh id here, but shouldn't be necessary either. Passing in null.
-				HandleMaterialChangeOnObject(rm.RenderHash, obid, null);
+				HandleMaterialChangeOnObject(mat.Id, obid, null);
 			}
 
 			// list over material hashes, check if they exist. Create if new
