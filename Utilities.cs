@@ -132,7 +132,7 @@ namespace RhinoCyclesCore
 			{
 				SimulatedTexture st = textureEvaluator == null ? rt.SimulatedTexture(RenderTexture.TextureGeneration.Disallow) : null;
 				using (
-					var eval = textureEvaluator ?? RenderTexture.NewBitmapTexture(st).CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
+					var eval = textureEvaluator ?? RenderTexture.NewBitmapTexture(st, rt.DocumentAssoc).CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
 				{
 					var canuse = eval.Initialize();
 
