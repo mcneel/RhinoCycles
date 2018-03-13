@@ -52,6 +52,7 @@
     <Compile Include="Commands\SelectMultiDevice.cs" />
     <Compile Include="Commands\ClearTextureMemory.cs" />
     <Compile Include="Commands\SetAdvancedOptions.cs" />
+    <Compile Include="Commands\TestDeviceEqualityCrash.cs" />
     <Compile Include="Commands\TestCleanupRhinoCyclesSettings.cs" />
     <Compile Include="Commands\TestToggleRaytracedClippingPlanes.cs" />
     <Compile Include="Commands\TestSetNoShadows.cs" />
@@ -191,12 +192,12 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
-      <MakeDir Directories="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" />
-      <Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" OverwriteReadOnlyFiles="True" />
-      <Copy SourceFiles="$(ProjectDir)..\cycles\cycles\third_party\cuew\LICENSE" DestinationFiles="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\cuew.txt" OverwriteReadOnlyFiles="True" />
-      <Copy SourceFiles="$(ProjectDir)..\cycles\pthreads\COPYING" DestinationFiles="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\pthreads.txt" OverwriteReadOnlyFiles="True" />
-      <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\CMakeLists.txt" />
-      <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\OSL.txt" />
+    <MakeDir Directories="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" />
+    <Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" OverwriteReadOnlyFiles="True" />
+    <Copy SourceFiles="$(ProjectDir)..\cycles\cycles\third_party\cuew\LICENSE" DestinationFiles="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\cuew.txt" OverwriteReadOnlyFiles="True" />
+    <Copy SourceFiles="$(ProjectDir)..\cycles\pthreads\COPYING" DestinationFiles="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\pthreads.txt" OverwriteReadOnlyFiles="True" />
+    <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\CMakeLists.txt" />
+    <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\OSL.txt" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
