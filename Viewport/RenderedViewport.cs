@@ -108,7 +108,7 @@ namespace RhinoCycles.Viewport
 
 		public override void PostConstruct()
 		{
-			_okOgl = OpenGlVersion() >= 33;
+			_okOgl = OpenGlVersion() >= 40;
 		}
 
 		private void RenderedViewport_MaxPassesChanged(object sender, HudMaxPassesChangedEventArgs e)
