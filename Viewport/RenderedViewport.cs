@@ -255,7 +255,7 @@ namespace RhinoCycles.Viewport
 
 			ViewportSettingsChanged += _cycles.ViewportSettingsChangedHandler;
 			_cycles.CurrentViewportSettingsRequested += _cycles_CurrentViewportSettingsRequested;
-			var renderSize = Rhino.Render.RenderPipeline.RenderSize(doc);
+			var renderSize = new Size(w, h); //Rhino.Render.RenderPipeline.RenderSize(doc);
 
 			_cycles.RenderWindow = renderWindow;
 			_cycles.RenderDimension = renderSize;
