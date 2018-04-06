@@ -14,19 +14,19 @@ namespace RhinoCyclesCore
 		public static void TexturedSlot(RenderMaterial rm, string slotname, Color4f defaultColor, string prompt)
 		{
 			rm.Fields.AddTextured(slotname, defaultColor, prompt);
-			var textureOn = rm.Fields.Add($"{slotname}-on", false);
+			/*var textureOn = rm.Fields.Add($"{slotname}-on", false);
 			rm.BindParameterToField(slotname, "texture-on", textureOn, ChangeContexts.UI);
 			var textureamount = rm.Fields.Add($"{slotname}-amount", 100.0);
-			rm.BindParameterToField(slotname, "texture-amount", textureamount, ChangeContexts.UI);
+			rm.BindParameterToField(slotname, "texture-amount", textureamount, ChangeContexts.UI);*/
 		}
 
 		public static void TexturedSlot(RenderMaterial rm, string slotname, float defaultValue, string prompt)
 		{
 			rm.Fields.AddTextured(slotname, defaultValue, prompt);
-			var baseTextureOn = rm.Fields.Add($"{slotname}-on", false);
+			/*var baseTextureOn = rm.Fields.Add($"{slotname}-on", false);
 			rm.BindParameterToField(slotname, "texture-on", baseTextureOn, ChangeContexts.UI);
 			var baseTextureAmount = rm.Fields.Add($"{slotname}-amount", 100.0);
-			rm.BindParameterToField(slotname, "texture-amount", baseTextureAmount, ChangeContexts.UI);
+			rm.BindParameterToField(slotname, "texture-amount", baseTextureAmount, ChangeContexts.UI);*/
 		}
 		public static Tuple<bool, float4, bool, float> HandleTexturedColor(RenderMaterial rm, string slotname, CyclesTextureImage tex)
 		{
@@ -39,20 +39,28 @@ namespace RhinoCyclesCore
 				rc = c.ToFloat4();
 				success = true;
 			}
-			if (rm.Fields.TryGetValue($"{slotname}-on", out bool texon))
+			var texAmountConv = rm.GetChildSlotParameter(slotname, "texture-amount") as IConvertible;
+			if (texAmountConv!=null)
 			{
-				onness = texon;
-				if (onness)
-				{
-					if (rm.FindChild(slotname) is RenderTexture rt)
+				float texamount = Convert.ToSingle(texAmountConv);
+				amount = texamount / 100.0f;
+			}
+
+			var texOnnessConv = rm.GetChildSlotParameter(slotname, "texture-on") as IConvertible;
+			if (texOnnessConv != null)
+			{
+				bool texon = Convert.ToBoolean(texOnnessConv);
+				if(texon) {
+					onness = texon;
+					if (onness)
 					{
-						HandleRenderTexture(rm as ICyclesMaterial, rt, tex);
+						if (rm.FindChild(slotname) is RenderTexture rt)
+						{
+							HandleRenderTexture(rm as ICyclesMaterial, rt, tex);
+							tex.Amount = amount;
+						}
 					}
 				}
-			}
-			if (rm.Fields.TryGetValue($"{slotname}-amount", out float texamount))
-			{
-				amount = texamount;
 			}
 
 			return new Tuple<bool, float4, bool, float>(success, rc, onness, amount);
@@ -98,20 +106,28 @@ namespace RhinoCyclesCore
 				rc = c;
 				success = true;
 			}
-			if (rm.Fields.TryGetValue($"{slotname}-on", out bool texon))
+			var texAmountConv = rm.GetChildSlotParameter("base", "texture-amount") as IConvertible;
+			if (texAmountConv!=null)
 			{
-				onness = texon;
-				if (onness)
-				{
-					if (rm.FindChild(slotname) is RenderTexture rt)
+				float texamount = Convert.ToSingle(texAmountConv);
+				amount = texamount / 100.0f;
+			}
+
+			var texOnnessConv = rm.GetChildSlotParameter("base", "texture-on") as IConvertible;
+			if (texOnnessConv != null)
+			{
+				bool texon = Convert.ToBoolean(texOnnessConv);
+				if(texon) {
+					onness = texon;
+					if (onness)
 					{
-						HandleRenderTexture(rm as ICyclesMaterial, rt, tex);
+						if (rm.FindChild(slotname) is RenderTexture rt)
+						{
+							HandleRenderTexture(rm as ICyclesMaterial, rt, tex);
+							tex.Amount = amount;
+						}
 					}
 				}
-			}
-			if (rm.Fields.TryGetValue($"{slotname}-amount", out float texamount))
-			{
-				amount = texamount;
 			}
 
 			return new Tuple<bool, float, bool, float>(success, rc, onness, amount);
@@ -196,29 +212,39 @@ namespace RhinoCyclesCore
 				}
 			}
 		}
-		public static void GraphForSlot(Shader sh, bool IsOn, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco)
+		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco)
 		{
-			GraphForSlot(sh, IsOn, teximg, sock, texco, true, false, false);
+			GraphForSlot(sh, valueSocket, IsOn, teximg, sock, texco, false, false, false);
 		}
 
-		public static void GraphForSlot(Shader sh, bool IsOn, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw)
+		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw)
 		{
-			GraphForSlot(sh, IsOn, teximg, sock, texco, toBw, false, false);
+			GraphForSlot(sh, valueSocket, IsOn, teximg, sock, texco, toBw, false, false);
 		}
 
-		public static void GraphForSlot(Shader sh, bool IsOn, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap)
+		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap)
 		{
-			GraphForSlot(sh, IsOn, teximg, sock, texco, toBw, normalMap, false);
+			GraphForSlot(sh, valueSocket, IsOn, teximg, sock, texco, toBw, normalMap, false);
 		}
 
-		public static void GraphForSlot(Shader sh, bool IsOn, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap, bool invert)
+		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap, bool invert)
 		{
 			if (IsOn && teximg.HasTextureImage)
 			{
 				var imtexnode = new ccl.ShaderNodes.ImageTextureNode();
 				var invcol = new ccl.ShaderNodes.InvertNode();
 				var normalmapnode = new ccl.ShaderNodes.NormalMapNode();
+				var tobwnode = new ccl.ShaderNodes.RgbToBwNode();
+
+				var mixerNode = new ccl.ShaderNodes.MixNode();
+
+				mixerNode.ins.Fac.Value = teximg.Amount;
+
+				sh.AddNode(mixerNode);
 				sh.AddNode(imtexnode);
+
+				valueSocket.Connect(mixerNode.ins.Color1);
+
 				RenderEngine.SetTextureImage(imtexnode, teximg);
 				imtexnode.Extension = teximg.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
 				imtexnode.ColorSpace = ccl.ShaderNodes.TextureNode.TextureColorSpace.None;
@@ -228,7 +254,7 @@ namespace RhinoCyclesCore
 				{
 					sh.AddNode(normalmapnode);
 					imtexnode.outs.Color.Connect(normalmapnode.ins.Color);
-					normalmapnode.outs.Normal.Connect(sock);
+					normalmapnode.outs.Normal.Connect(mixerNode.ins.Color2);
 				}
 				else
 				{
@@ -236,14 +262,27 @@ namespace RhinoCyclesCore
 					{
 						sh.AddNode(invcol);
 						imtexnode.outs.Color.Connect(invcol.ins.Color);
+
 						invcol.ins.Fac.Value = 1.0f;
-						invcol.outs.Color.Connect(sock);
+						invcol.outs.Color.Connect(mixerNode.ins.Color2);
+
 					}
 					else
 					{
-						imtexnode.outs.Color.Connect(sock);
+						ccl.ShaderNodes.Sockets.ISocket outsock = imtexnode.outs.Color;
+						if(toBw) {
+							sh.AddNode(tobwnode);
+							outsock.Connect(tobwnode.ins.Color);
+							outsock = tobwnode.outs.Val;
+						}
+						outsock.Connect(mixerNode.ins.Color2);
 					}
 				}
+				mixerNode.outs.Color.Connect(sock);
+			}
+			else
+			{
+				valueSocket.Connect(sock);
 			}
 		}
 	}
