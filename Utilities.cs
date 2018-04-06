@@ -14,18 +14,18 @@ namespace RhinoCyclesCore
 		public static void TexturedSlot(RenderMaterial rm, string slotname, Color4f defaultColor, string prompt)
 		{
 			rm.Fields.AddTextured(slotname, defaultColor, prompt);
-			var textureOn = rm.Fields.Add($"{slotname}-texture-on", false);
+			var textureOn = rm.Fields.Add($"{slotname}-on", false);
 			rm.BindParameterToField(slotname, "texture-on", textureOn, ChangeContexts.UI);
-			var textureamount = rm.Fields.Add($"{slotname}-texture-amount", 100.0);
+			var textureamount = rm.Fields.Add($"{slotname}-amount", 100.0);
 			rm.BindParameterToField(slotname, "texture-amount", textureamount, ChangeContexts.UI);
 		}
 
 		public static void TexturedSlot(RenderMaterial rm, string slotname, float defaultValue, string prompt)
 		{
 			rm.Fields.AddTextured(slotname, defaultValue, prompt);
-			var baseTextureOn = rm.Fields.Add($"{slotname}-texture-on", false);
+			var baseTextureOn = rm.Fields.Add($"{slotname}-on", false);
 			rm.BindParameterToField(slotname, "texture-on", baseTextureOn, ChangeContexts.UI);
-			var baseTextureAmount = rm.Fields.Add($"{slotname}-texture-amount", 100.0);
+			var baseTextureAmount = rm.Fields.Add($"{slotname}-amount", 100.0);
 			rm.BindParameterToField(slotname, "texture-amount", baseTextureAmount, ChangeContexts.UI);
 		}
 		public static Tuple<bool, float4, bool, float> HandleTexturedColor(RenderMaterial rm, string slotname, CyclesTextureImage tex)
@@ -39,7 +39,7 @@ namespace RhinoCyclesCore
 				rc = c.ToFloat4();
 				success = true;
 			}
-			if (rm.Fields.TryGetValue($"{slotname}-texture-on", out bool texon))
+			if (rm.Fields.TryGetValue($"{slotname}-on", out bool texon))
 			{
 				onness = texon;
 				if (onness)
@@ -50,7 +50,7 @@ namespace RhinoCyclesCore
 					}
 				}
 			}
-			if (rm.Fields.TryGetValue($"{slotname}-texture-amount", out float texamount))
+			if (rm.Fields.TryGetValue($"{slotname}-amount", out float texamount))
 			{
 				amount = texamount;
 			}
@@ -69,7 +69,7 @@ namespace RhinoCyclesCore
 				rc = c.ToFloat4();
 				success = true;
 			}
-			if (rm.Fields.TryGetValue($"{slotname}-texture-on", out bool texon))
+			if (rm.Fields.TryGetValue($"{slotname}-on", out bool texon))
 			{
 				onness = texon;
 				if (onness)
@@ -80,7 +80,7 @@ namespace RhinoCyclesCore
 					}
 				}
 			}
-			if (rm.Fields.TryGetValue($"{slotname}-texture-amount", out float texamount))
+			if (rm.Fields.TryGetValue($"{slotname}-amount", out float texamount))
 			{
 				amount = texamount;
 			}
@@ -98,7 +98,7 @@ namespace RhinoCyclesCore
 				rc = c;
 				success = true;
 			}
-			if (rm.Fields.TryGetValue($"{slotname}-texture-on", out bool texon))
+			if (rm.Fields.TryGetValue($"{slotname}-on", out bool texon))
 			{
 				onness = texon;
 				if (onness)
@@ -109,7 +109,7 @@ namespace RhinoCyclesCore
 					}
 				}
 			}
-			if (rm.Fields.TryGetValue($"{slotname}-texture-amount", out float texamount))
+			if (rm.Fields.TryGetValue($"{slotname}-amount", out float texamount))
 			{
 				amount = texamount;
 			}
