@@ -119,6 +119,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns>Cycles shader scene id</returns>
 		public uint GetShaderIdForMatId(uint id)
 		{
+			if (!_rhCclSceneShaderIds.ContainsKey(id)) return 0;
 			return _rhCclSceneShaderIds[id];
 		}
 
