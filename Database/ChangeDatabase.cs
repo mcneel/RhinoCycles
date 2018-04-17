@@ -661,6 +661,7 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.Blades = Blades;
 			scene.Camera.BladesRotation = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
 			scene.Camera.ApertureRatio = ApertureRatio;
+			scene.Camera.Update();
 
 		}
 
