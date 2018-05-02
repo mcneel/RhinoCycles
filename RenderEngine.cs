@@ -192,9 +192,12 @@ namespace RhinoCyclesCore
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			View = view;
 			m_interactive = interactive;
+			var doc = RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
 			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, attributes, !m_interactive)
 			{
-				SupportClippingPlanes = SupportClippingPlanes
+				SupportClippingPlanes = SupportClippingPlanes,
+				ModelAbsoluteTolerance = doc.ModelAbsoluteTolerance,
+				ModelAngleToleranceRadians = doc.ModelAngleToleranceRadians
 			};
 			RegisterEventHandler();
 		}

@@ -38,6 +38,7 @@ using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Shaders;
 using RhinoCyclesCore.ExtensionMethods;
+using Rhino.Collections;
 
 namespace RhinoCyclesCore.Database
 {
@@ -443,10 +444,9 @@ namespace RhinoCyclesCore.Database
 
 
 		private const uint ClippingPlaneMeshInstanceId = 2;
-		private readonly float cp_side_extension = 1.0E+7f;
 
 		private readonly Tuple<Guid, int> _clippingPlaneGuid = new Tuple<Guid, int>(new Guid("6A7DB550-7E42-4129-A36D-A4C8AAB06F4B"), 0);
-		private readonly Dictionary<Guid, Plane> ClippingPlanes = new Dictionary<Guid, Plane>(100);
+		private readonly Dictionary<Guid, Plane> ClippingPlanes = new Dictionary<Guid, Plane>(16);
 
 		protected override void ApplyClippingPlaneChanges(Guid[] deleted, List<ClippingPlane> addedOrModified)
 		{
@@ -477,122 +477,98 @@ namespace RhinoCyclesCore.Database
 		{
 			if (sceneBoundingBoxDirty)
 			{
+#if DOCAMCLIP
+				var camplane = Plane.WorldXY;
+				camplane.Transform(CurrentTransform?.ToRhinoTransform() ?? Rhino.Geometry.Transform.Identity);
+				Interval interval = new Interval(-0.1, 0.1);
+				Interval biginterval = new Interval(-50, 50);
+				var camera = new Box(camplane, interval, interval, interval);
+				var cammesh = Rhino.Geometry.Mesh.CreateFromBox(camera, 1, 1, 1);
+#endif
+
+				var absol = ModelAbsoluteTolerance;
+				var anglerad = ModelAngleToleranceRadians;
 				var sbb = SceneBoundingBox;
 				sbb.Inflate(0.1);
-				var sbbr = sbb.ToBrep();
-				sbb.Inflate(0.1);
-				var sbbbrep = sbb.ToBrep();
-				var sbbl = new List<Brep>(1)
-					{
-						sbbr
-					};
+				var brsbb = sbb.ToBrep();
+				List<Brep> parts = new List<Brep>(8);
 
-				List<Plane> planes = new List<Plane>(10);
-				foreach(var pa in ClippingPlanes.Values)
+				foreach (var cp in ClippingPlanes)
 				{
-					int i = 0;
-					int dropab = 0; // -1: drop a, 0: drop neither, 1: drop b
-					foreach (var pb in planes)
+					Rhino.Geometry.Intersect.Intersection.BrepPlane(brsbb, cp.Value, absol, out Curve[] crvs, out Point3d[] pts);
+					if (crvs != null)
 					{
-						if (pb.Normal.IsParallelTo(pa.Normal, Math.PI / 720.0) == 1)
+						CurveList crvl = new CurveList(crvs);
+						var b = Brep.CreatePlanarBreps(crvl, absol);
+						if (b.Length == 1)
 						{
-							if (pb.DistanceTo(pa.Origin) < 0.0)
+
+							var theb = b[0];
+
+							var prts = brsbb.Split(theb, absol);
+							foreach (var prt in prts)
 							{
-								dropab = -1;
+								var clprt = prt.CapPlanarHoles(absol);
+								if (clprt != null)
+								{
+									var pln = new PolyCurve();
+									foreach (var crv in crvs)
+									{
+										pln.AppendSegment(crv);
+									}
+									var pl = pln.ToPolyline(absol, anglerad, 0, double.MaxValue).ToPolyline();
+									var cent = pl.CenterPoint();
+									var norm = theb.Faces[0].NormalAt(0, 0);
+									var volprop = VolumeMassProperties.Compute(clprt);
+									var pp = new Vector3d(volprop.Centroid - cent);
+									if ((pp * norm) < 0) parts.Add(clprt);
+								}
 							}
-							else
-							{
-								dropab = 1;
-							}
-							break;
 						}
-						i++;
-					}
-					if (dropab == -1) continue;
-					if (dropab == 1)
-					{
-						planes.RemoveAt(i);
-					}
-					planes.Add(pa);
-				}
-
-				var xext = new Interval(-cp_side_extension, cp_side_extension);
-				var zext = new Interval(0, cp_side_extension);
-				List<Brep> boxes = new List<Brep>(ClippingPlanes.Values.Count);
-				foreach (var p in planes)
-				{
-					/*Curve[] crv;
-					Point3d[] pts;
-					if(Rhino.Geometry.Intersect.Intersection.BrepPlane(sbbbrep, p, 0.01, out crv, out pts))
-					{
-						p.Origin.CompareTo(p.Origin);
-					}*/
-					var tp = new Plane(p);
-					tp.Flip();
-					Box b = new Box(tp, xext, xext, zext);
-					boxes.Add(b.ToBrep());
-				}
-				if (boxes.Count < 1)
-				{
-					_objectDatabase.DeleteMesh(_clippingPlaneGuid.Item1);
-					var cob = _objectDatabase.FindObjectRelation(ClippingPlaneMeshInstanceId);
-					if (cob != null)
-					{
-						var delob = new CyclesObject { cob = cob };
-						_objectDatabase.DeleteObject(delob);
 					}
 				}
-				else
+				var volbrep = Brep.CreateBooleanUnion(parts, absol);
+				Rhino.Geometry.Mesh final = new Rhino.Geometry.Mesh();
+				foreach (var vb in volbrep)
 				{
-					var simplified = Brep.CreateBooleanUnion(boxes, 0.05);
+					var volmeshes = Rhino.Geometry.Mesh.CreateFromBrep(vb, MeshingParameters.FastRenderMesh);
 
-					if (simplified == null) simplified = boxes.ToArray();
-
-					var bounded = Brep.CreateBooleanIntersection(simplified, sbbl, 0.05);
-					if (bounded == null) bounded = simplified;
-
-					var meshed =
-						(from s in bounded
-						 select Rhino.Geometry.Mesh.CreateFromBrep(s, mpclipping)
-						 .Aggregate(
-							 new Rhino.Geometry.Mesh(),
-							 (workingMesh, next) => { workingMesh.Append(next); return workingMesh; }
-						 ))
-						.Aggregate(
-							new Rhino.Geometry.Mesh(),
-							(workingMesh, next) => { workingMesh.Append(next); return workingMesh; }
-							);
-					meshed.RebuildNormals();
-					var cpid = _clippingPlaneGuid;
-
-					Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
-
-					HandleMeshData(cpid.Item1, cpid.Item2, meshed, true);
-
-					var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
-
-					var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
-
-					var cyclesObject = new CyclesObject
+					foreach (var vm in volmeshes)
 					{
-						matid = mat.RenderHash,
-						obid = ClippingPlaneMeshInstanceId,
-						meshid = cpid,
-						Transform = t,
-						Visible = ClippingPlanes.Count > 0,
-						CastShadow = false,
-						IsShadowCatcher = false,
-						Cutout = true,
-					};
-
-					_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
-					_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
-					_objectDatabase.AddOrUpdateObject(cyclesObject);
+						final.Append(vm);
+					}
 				}
+				var cpid = _clippingPlaneGuid;
+				Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
+
+				HandleMeshData(cpid.Item1, cpid.Item2, final, true);
+
+				var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
+
+				var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
+
+				var cyclesObject = new CyclesObject
+				{
+					matid = mat.RenderHash,
+					obid = ClippingPlaneMeshInstanceId,
+					meshid = cpid,
+					Transform = t,
+					Visible = ClippingPlanes.Count > 0,
+					CastShadow = false,
+					IsShadowCatcher = false,
+					Cutout = true,
+				};
+
+				_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
+				_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
+				_objectDatabase.AddOrUpdateObject(cyclesObject);
 				sceneBoundingBoxDirty = false;
 			}
 		}
 
+#if DOCAMCLIP
+		public ccl.Transform CurrentTransform { get; set; } = null;
+#endif
 		/// <summary>
 		/// Upload camera (viewport) changes to Cycles.
 		/// </summary>
@@ -603,6 +579,10 @@ namespace RhinoCyclesCore.Database
 			var view = _cameraDatabase.LatestView();
 			if(view!=null)
 			{
+#if DOCAMCLIP
+				CurrentTransform = view.Transform;
+				sceneBoundingBoxDirty = true; // flag for recalc of clipping volume
+#endif
 				UploadCamera(view);
 			}
 			var fb = _cameraDatabase.GetBlur();
@@ -812,15 +792,16 @@ namespace RhinoCyclesCore.Database
 			}
 
 			// convert rhino transform to ccsycles transform
-			var t = CclXformFromRhinoXform(rhinocam);
+			var rt = rhinocam.ToCyclesTransform();
 			// then convert to Cycles orientation
-			t = t * ccl.Transform.RhinoToCyclesCam;
+			var t = rt * ccl.Transform.RhinoToCyclesCam;
 
 			// ready, lets push our data
 			var cyclesview = new CyclesView
 			{
 				LensLength = lenslength,
 				Transform = t,
+				RhinoTransform = rt,
 				Diagonal =  diagonal,
 				Vertical = vertical,
 				Horizontal = horizontal,
@@ -956,23 +937,6 @@ namespace RhinoCyclesCore.Database
 			_objectDatabase.SetIsClippingObject(meshid, isClippingObject);
 		}
 
-		/// <summary>
-		/// Convert a Rhino.Geometry.Transform to ccl.Transform
-		/// </summary>
-		/// <param name="rt">Rhino.Geometry.Transform</param>
-		/// <returns>ccl.Transform</returns>
-		static ccl.Transform CclXformFromRhinoXform(Rhino.Geometry.Transform rt)
-		{
-			var t = new ccl.Transform(
-				(float) rt.M00, (float) rt.M01, (float) rt.M02, (float) rt.M03,
-				(float) rt.M10, (float) rt.M11, (float) rt.M12, (float) rt.M13,
-				(float) rt.M20, (float) rt.M21, (float) rt.M22, (float) rt.M23,
-				(float) rt.M30, (float) rt.M31, (float) rt.M32, (float) rt.M33
-				);
-
-			return t;
-		}
-
 		private bool sceneBoundingBoxDirty;
 		private BoundingBox _sbb;
 
@@ -991,6 +955,9 @@ namespace RhinoCyclesCore.Database
 				}
 			}
 		}
+
+		public double ModelAbsoluteTolerance { get; set; }
+		public double ModelAngleToleranceRadians { get; set; }
 
 		protected override void ApplyMeshInstanceChanges(List<uint> deleted, List<MeshInstance> addedOrChanged)
 		{
@@ -1054,7 +1021,7 @@ namespace RhinoCyclesCore.Database
 
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				var cutout = _objectDatabase.MeshIsClippingObject(meshid);
-				var ob = new CyclesObject { obid = a.InstanceId, meshid = meshid, Transform = CclXformFromRhinoXform(a.Transform), matid = matid, CastShadow = a.CastShadows, Cutout = cutout/*, Shader = _shaderDatabase.GetShaderIdForMatId(matid) */};
+				var ob = new CyclesObject { obid = a.InstanceId, meshid = meshid, Transform = a.Transform.ToCyclesTransform(), matid = matid, CastShadow = a.CastShadows, Cutout = cutout};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
 
 				HandleShaderChange(a.InstanceId, oldhash, matid, meshid);
@@ -1093,7 +1060,7 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
-		#region SHADERS
+#region SHADERS
 
 		/// <summary>
 		/// Handle RenderMaterial - will queue new shader if necessary
@@ -1294,7 +1261,7 @@ namespace RhinoCyclesCore.Database
 			foreach (var dot in dynamicObjectTransforms)
 			{
 				//System.Diagnostics.Debug.WriteLine("DynObXform {0}", dot.MeshInstanceId);
-				var cot = new CyclesObjectTransform(dot.MeshInstanceId, CclXformFromRhinoXform(dot.Transform));
+				var cot = new CyclesObjectTransform(dot.MeshInstanceId, dot.Transform.ToCyclesTransform());
 				_objectDatabase.AddDynamicObjectTransform(cot);
 			}
 		}
@@ -1651,7 +1618,8 @@ namespace RhinoCyclesCore.Database
 				cob.Cutout = ob.Cutout;
 				cob.IgnoreCutout = ob.IgnoreCutout;
 				cob.Visibility = vis;
-				cob.Shader = _shaderDatabase.GetShaderIdForMatId(ob.matid); // ob.Shader;
+				cob.Shader = _shaderDatabase.GetShaderIdForMatId(ob.matid);
+				//cob.Cutout = false;
 				cob.TagUpdate();
 			}
 		}
