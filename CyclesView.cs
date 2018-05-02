@@ -21,6 +21,7 @@ namespace RhinoCyclesCore
 	public class CyclesView
 	{
 		public Transform Transform { get; set; }
+		public Transform RhinoTransform { get; set; }
 		public double LensLength { get; set; }
 		public double Diagonal { get; set; }
 		public double Vertical { get; set; }
