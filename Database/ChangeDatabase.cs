@@ -475,7 +475,7 @@ namespace RhinoCyclesCore.Database
 
 		public void CalculateClippingObjects()
 		{
-			if (sceneBoundingBoxDirty)
+			if (SupportClippingPlanes && sceneBoundingBoxDirty)
 			{
 #if DOCAMCLIP
 				var camplane = Plane.WorldXY;
@@ -528,40 +528,43 @@ namespace RhinoCyclesCore.Database
 					}
 				}
 				var volbrep = Brep.CreateBooleanUnion(parts, absol);
-				Rhino.Geometry.Mesh final = new Rhino.Geometry.Mesh();
-				foreach (var vb in volbrep)
+				if (volbrep != null)
 				{
-					var volmeshes = Rhino.Geometry.Mesh.CreateFromBrep(vb, MeshingParameters.FastRenderMesh);
-
-					foreach (var vm in volmeshes)
+					Rhino.Geometry.Mesh final = new Rhino.Geometry.Mesh();
+					foreach (var vb in volbrep)
 					{
-						final.Append(vm);
+						var volmeshes = Rhino.Geometry.Mesh.CreateFromBrep(vb, MeshingParameters.FastRenderMesh);
+
+						foreach (var vm in volmeshes)
+						{
+							final.Append(vm);
+						}
 					}
+					var cpid = _clippingPlaneGuid;
+					Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
+
+					HandleMeshData(cpid.Item1, cpid.Item2, final, true);
+
+					var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
+
+					var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
+
+					var cyclesObject = new CyclesObject
+					{
+						matid = mat.RenderHash,
+						obid = ClippingPlaneMeshInstanceId,
+						meshid = cpid,
+						Transform = t,
+						Visible = ClippingPlanes.Count > 0,
+						CastShadow = false,
+						IsShadowCatcher = false,
+						Cutout = true,
+					};
+
+					_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
+					_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
+					_objectDatabase.AddOrUpdateObject(cyclesObject);
 				}
-				var cpid = _clippingPlaneGuid;
-				Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
-
-				HandleMeshData(cpid.Item1, cpid.Item2, final, true);
-
-				var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
-
-				var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
-
-				var cyclesObject = new CyclesObject
-				{
-					matid = mat.RenderHash,
-					obid = ClippingPlaneMeshInstanceId,
-					meshid = cpid,
-					Transform = t,
-					Visible = ClippingPlanes.Count > 0,
-					CastShadow = false,
-					IsShadowCatcher = false,
-					Cutout = true,
-				};
-
-				_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
-				_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
-				_objectDatabase.AddOrUpdateObject(cyclesObject);
 				sceneBoundingBoxDirty = false;
 			}
 		}
