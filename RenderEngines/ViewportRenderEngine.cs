@@ -352,7 +352,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void ChangeSamples(int samples)
 		{
-			_samples = samples;
+			_samples = Math.Max(1, samples);
 			Session?.SetSamples(samples);
 		}
 
