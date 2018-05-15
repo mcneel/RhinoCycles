@@ -529,7 +529,7 @@ namespace RhinoCyclesCore
 		public virtual int Samples
 		{
 			get { return RcPlugIn.Settings.GetInteger("Samples", SamplesDefault); }
-			set { RcPlugIn.Settings.SetInteger("Samples", value); }
+			set { RcPlugIn.Settings.SetInteger("Samples", Math.Max(1, value)); }
 		}
 
 		public int SeedDefault => 128;
