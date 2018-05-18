@@ -45,8 +45,8 @@ namespace RhinoCyclesCore.RenderEngines
 			#region create callbacks for Cycles
 
 			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = null; // UpdateRenderTileCallback;
-			m_write_render_tile_callback = WriteRenderTileCallback;
+			m_update_render_tile_callback = UpdateRenderTileCallback;
+			m_write_render_tile_callback = RenderWindowWriteRenderTileCallback;
 			m_test_cancel_callback = null;
 			m_display_update_callback = null; // DisplayUpdateHandler;
 
@@ -64,7 +64,7 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			capturing = true;
 			m_update_render_tile_callback = null;
-			m_update_callback = null;
+			//m_update_callback = null;
 			m_logger_callback = null;
 			m_write_render_tile_callback = ModalWriteRenderTileCallback;
 		}
@@ -72,6 +72,11 @@ namespace RhinoCyclesCore.RenderEngines
 		public void ModalWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
 			if (!IsRendering || (int)sample<(maxSamples) || passtype!=PassType.Combined) return;
+			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
+		}
+		public void RenderWindowWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
+		{
+			if (!IsRendering || (sample > 10 && (int)sample < (maxSamples - 1)) || passtype!=PassType.Combined) return;
 			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 		}
 
@@ -117,7 +122,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Background = true,
 				DisplayBufferLinear = false,
 				ProgressiveRefine = true,
-				Progressive = false,
+				Progressive = true,
 				PixelSize = 1,
 			};
 			#endregion
