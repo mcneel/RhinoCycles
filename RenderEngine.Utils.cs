@@ -192,8 +192,8 @@ namespace RhinoCyclesCore
 				}
 				else if (RcCore.It.EngineSettings.RenderDeviceIsCuda)
 				{
-					if (tilex < 256) tilex = 256;
-					if (tiley < 256) tiley = 256;
+					if (tilex < 512) tilex = 512;
+					if (tiley < 512) tiley = 512;
 				}
 				else if (RcCore.It.EngineSettings.RenderDevice.IsCpu)
 				{
