@@ -46,7 +46,7 @@ namespace RhinoCycles.Commands
 				{
 					var getNumber = new GetInteger();
 					getNumber.SetLowerLimit(1, true);
-					getNumber.SetDefaultInteger(rvp.HudMaximumPasses()+100);
+					getNumber.SetDefaultInteger(rvp.MaxPasses+100);
 					getNumber.SetCommandPrompt("Set new sample count");
 					var getRc = getNumber.Get();
 					if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
