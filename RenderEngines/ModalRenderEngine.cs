@@ -76,7 +76,8 @@ namespace RhinoCyclesCore.RenderEngines
 		}
 		public void RenderWindowWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
-			if (!IsRendering || (sample > 10 && (int)sample < (maxSamples - 1)) || passtype!=PassType.Combined) return;
+			if (!IsRendering) return;
+			if (sample > 10 && (sample < maxSamples - 1) && sample % 20 != 0) return;
 			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 		}
 
