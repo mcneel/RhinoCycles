@@ -61,7 +61,7 @@ namespace RhinoCycles.Viewport
 
 		private bool _locked;
 
-		private bool Locked
+		new private bool Locked
 		{
 			get
 			{
@@ -542,7 +542,7 @@ namespace RhinoCycles.Viewport
 			return _status;
 		}
 
-		public override int HudMaximumPasses()
+		protected override int HudMaximumPasses()
 		{
 			return _maxSamples;
 		}
@@ -561,13 +561,13 @@ namespace RhinoCycles.Viewport
 			return LastRenderedPass();
 		}
 
-		public override bool HudRendererPaused()
+		protected override bool HudRendererPaused()
 		{
 			var st = _cycles?.State ?? State.Stopped;
 			return st==State.Waiting || _status.Equals("Idle");
 		}
 
-		public override bool HudRendererLocked()
+		protected override bool HudRendererLocked()
 		{
 			return Locked;
 		}

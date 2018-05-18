@@ -45,8 +45,8 @@ namespace RhinoCyclesCore.RenderEngines
 			#region create callbacks for Cycles
 
 			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = null; // UpdateRenderTileCallback;
-			m_write_render_tile_callback = WriteRenderTileCallback;
+			m_update_render_tile_callback = UpdateRenderTileCallback;
+			m_write_render_tile_callback = RenderWindowWriteRenderTileCallback;
 			m_test_cancel_callback = null;
 			m_display_update_callback = null; // DisplayUpdateHandler;
 
@@ -63,12 +63,21 @@ namespace RhinoCyclesCore.RenderEngines
 		public void SetCallbackForCapture()
 		{
 			capturing = true;
+			m_update_render_tile_callback = null;
+			//m_update_callback = null;
+			m_logger_callback = null;
 			m_write_render_tile_callback = ModalWriteRenderTileCallback;
 		}
 
 		public void ModalWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
-			if (IsStopped || (int)sample<(maxSamples) && passtype!=PassType.Combined) return;
+			if (!IsRendering || (int)sample<(maxSamples) || passtype!=PassType.Combined) return;
+			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
+		}
+		public void RenderWindowWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
+		{
+			if (!IsRendering) return;
+			if (sample > 10 && (sample < maxSamples - 1) && sample % 20 != 0) return;
 			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 		}
 
@@ -112,7 +121,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Threads = (uint)(renderDevice.IsGpu ? 0 : RcCore.It.EngineSettings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				Background = true,
-				DisplayBufferLinear = true,
+				DisplayBufferLinear = false,
 				ProgressiveRefine = true,
 				Progressive = true,
 				PixelSize = 1,
@@ -156,12 +165,8 @@ namespace RhinoCyclesCore.RenderEngines
 					if (cyclesEngine.IsRendering)
 					{
 						stillrendering = cyclesEngine.Session.Sample() > -1;
-						Thread.Sleep(throttle);
 					}
-					else
-					{
-						Thread.Sleep(100);
-					}
+					Thread.Sleep(throttle);
 					if (cyclesEngine.IsStopped) break;
 				}
 

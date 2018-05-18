@@ -405,7 +405,7 @@ namespace RhinoCyclesCore
 		/// <param name="depth"></param>
 		public void WriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
-			if (IsStopped) return;
+			if (IsStopped || passtype!=PassType.Combined) return;
 			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 		}
 
@@ -420,10 +420,8 @@ namespace RhinoCyclesCore
 		/// <param name="depth"></param>
 		public void UpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
-#if UGH
 			if (IsStopped) return;
 			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
-#endif
 		}
 
 		/// <summary>
