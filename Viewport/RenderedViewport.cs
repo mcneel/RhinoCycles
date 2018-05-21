@@ -61,7 +61,7 @@ namespace RhinoCycles.Viewport
 
 		private bool _locked;
 
-		new private bool Locked
+		private bool IsLocked
 		{
 			get
 			{
@@ -123,12 +123,12 @@ namespace RhinoCycles.Viewport
 
 		private void RenderedViewport_HudUnlockButtonPressed(object sender, EventArgs e)
 		{
-			Locked = false;
+			IsLocked = false;
 		}
 
 		private void RenderedViewport_HudLockButtonPressed(object sender, EventArgs e)
 		{
-			Locked = true;
+			IsLocked = true;
 		}
 
 		private void RenderedViewport_HudPauseButtonPressed(object sender, EventArgs e)
@@ -542,7 +542,7 @@ namespace RhinoCycles.Viewport
 			return _status;
 		}
 
-		protected override int HudMaximumPasses()
+		public override int HudMaximumPasses()
 		{
 			return _maxSamples;
 		}
@@ -561,15 +561,15 @@ namespace RhinoCycles.Viewport
 			return LastRenderedPass();
 		}
 
-		protected override bool HudRendererPaused()
+		public override bool HudRendererPaused()
 		{
 			var st = _cycles?.State ?? State.Stopped;
 			return st==State.Waiting || _status.Equals("Idle");
 		}
 
-		protected override bool HudRendererLocked()
+		public override bool HudRendererLocked()
 		{
-			return Locked;
+			return IsLocked;
 		}
 
 		public override bool HudShowMaxPasses()
