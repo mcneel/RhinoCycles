@@ -1624,6 +1624,9 @@ namespace RhinoCyclesCore.Database
 				}
 				cob.MeshLightNoCastShadow = ob.CastNoShadow;
 				cob.Cutout = ob.Cutout;
+				if (ob.Cutout) {
+					vis = PathRay.Camera;
+				}
 				cob.IgnoreCutout = ob.IgnoreCutout;
 				cob.Visibility = vis;
 				cob.Shader = _shaderDatabase.GetShaderIdForMatId(ob.matid);
@@ -1748,7 +1751,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		protected override void NotifyBeginUpdates()
 		{
-			// nothing
+			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
 			RcCore.OutputDebugString($"NotifyBeginUpdates {++_updateCounter}\n");
 			_renderEngine.TriggerBeginChangesNotified();
 		}
@@ -1758,12 +1761,14 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		protected override void NotifyEndUpdates()
 		{
+			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
 			RcCore.OutputDebugString($"NotifyEndUpdates {_updateCounter}\n");
 			_renderEngine.Flush = true;
 		}
 
 		protected override void NotifyDynamicUpdatesAreAvailable()
 		{
+			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
 			RcCore.OutputDebugString("NotifyDynamicUpdatesAreAvailable\n");
 			_renderEngine.TriggerBeginChangesNotified();
 			_renderEngine.Flush = true;
