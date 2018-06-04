@@ -493,78 +493,83 @@ namespace RhinoCyclesCore.Database
 				var brsbb = sbb.ToBrep();
 				List<Brep> parts = new List<Brep>(8);
 
-				foreach (var cp in ClippingPlanes)
+				if (brsbb != null) // Apparently it can happen that we get an invalid scene BB, thus no good brep.
 				{
-					Rhino.Geometry.Intersect.Intersection.BrepPlane(brsbb, cp.Value, absol, out Curve[] crvs, out Point3d[] pts);
-					if (crvs != null)
+					foreach (var cp in ClippingPlanes)
 					{
-						CurveList crvl = new CurveList(crvs);
-						var b = Brep.CreatePlanarBreps(crvl, absol);
-						if (b.Length == 1)
+						Rhino.Geometry.Intersect.Intersection.BrepPlane(brsbb, cp.Value, absol, out Curve[] crvs, out Point3d[] pts);
+						if (crvs != null && crvs.Count() > 0)
 						{
-
-							var theb = b[0];
-
-							var prts = brsbb.Split(theb, absol);
-							foreach (var prt in prts)
+							CurveList crvl = new CurveList(crvs);
+							var b = Brep.CreatePlanarBreps(crvl, absol);
+							if (b.Length == 1)
 							{
-								var clprt = prt.CapPlanarHoles(absol);
-								if (clprt != null)
+
+								var theb = b[0];
+
+								var prts = brsbb.Split(theb, absol);
+								foreach (var prt in prts)
 								{
-									var pln = new PolyCurve();
-									foreach (var crv in crvs)
+									var clprt = prt.CapPlanarHoles(absol);
+									if (clprt != null)
 									{
-										pln.AppendSegment(crv);
+										var pln = new PolyCurve();
+										foreach (var crv in crvs)
+										{
+											pln.AppendSegment(crv);
+										}
+										var pl = pln.ToPolyline(absol, anglerad, 0, double.MaxValue).ToPolyline();
+										var cent = pl.CenterPoint();
+										var norm = theb.Faces[0].NormalAt(0, 0);
+										var volprop = VolumeMassProperties.Compute(clprt);
+										var pp = new Vector3d(volprop.Centroid - cent);
+										if ((pp * norm) < 0) parts.Add(clprt);
 									}
-									var pl = pln.ToPolyline(absol, anglerad, 0, double.MaxValue).ToPolyline();
-									var cent = pl.CenterPoint();
-									var norm = theb.Faces[0].NormalAt(0, 0);
-									var volprop = VolumeMassProperties.Compute(clprt);
-									var pp = new Vector3d(volprop.Centroid - cent);
-									if ((pp * norm) < 0) parts.Add(clprt);
 								}
 							}
 						}
 					}
-				}
-				var volbrep = Brep.CreateBooleanUnion(parts, absol);
-				if (volbrep != null)
-				{
-					Rhino.Geometry.Mesh final = new Rhino.Geometry.Mesh();
-					foreach (var vb in volbrep)
+					var volbrep = Brep.CreateBooleanUnion(parts, absol);
+					if (volbrep != null)
 					{
-						var volmeshes = Rhino.Geometry.Mesh.CreateFromBrep(vb, MeshingParameters.FastRenderMesh);
-
-						foreach (var vm in volmeshes)
+						Rhino.Geometry.Mesh final = new Rhino.Geometry.Mesh();
+						foreach (var vb in volbrep)
 						{
-							final.Append(vm);
+							var volmeshes = Rhino.Geometry.Mesh.CreateFromBrep(vb, MeshingParameters.FastRenderMesh);
+
+							foreach (var vm in volmeshes)
+							{
+								final.Append(vm);
+							}
 						}
+						var cpid = _clippingPlaneGuid;
+						Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
+
+						HandleMeshData(cpid.Item1, cpid.Item2, final, true);
+
+						var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
+
+						var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
+
+						var cyclesObject = new CyclesObject
+						{
+							matid = mat.RenderHash,
+							obid = ClippingPlaneMeshInstanceId,
+							meshid = cpid,
+							Transform = t,
+							Visible = ClippingPlanes.Count > 0,
+							CastShadow = false,
+							CastNoShadow = true,
+							IsShadowCatcher = false,
+							Cutout = true,
+						};
+
+						_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
+						_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
+						_objectDatabase.AddOrUpdateObject(cyclesObject);
 					}
-					var cpid = _clippingPlaneGuid;
-					Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
-
-					HandleMeshData(cpid.Item1, cpid.Item2, final, true);
-
-					var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
-
-					var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
-
-					var cyclesObject = new CyclesObject
-					{
-						matid = mat.RenderHash,
-						obid = ClippingPlaneMeshInstanceId,
-						meshid = cpid,
-						Transform = t,
-						Visible = ClippingPlanes.Count > 0,
-						CastShadow = false,
-						IsShadowCatcher = false,
-						Cutout = true,
-					};
-
-					_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
-					_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
-					_objectDatabase.AddOrUpdateObject(cyclesObject);
 				}
+				
 				sceneBoundingBoxDirty = false;
 			}
 		}
@@ -1619,6 +1624,9 @@ namespace RhinoCyclesCore.Database
 				}
 				cob.MeshLightNoCastShadow = ob.CastNoShadow;
 				cob.Cutout = ob.Cutout;
+				if (ob.Cutout) {
+					vis = PathRay.Camera;
+				}
 				cob.IgnoreCutout = ob.IgnoreCutout;
 				cob.Visibility = vis;
 				cob.Shader = _shaderDatabase.GetShaderIdForMatId(ob.matid);
@@ -1743,7 +1751,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		protected override void NotifyBeginUpdates()
 		{
-			// nothing
+			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
 			RcCore.OutputDebugString($"NotifyBeginUpdates {++_updateCounter}\n");
 			_renderEngine.TriggerBeginChangesNotified();
 		}
@@ -1753,12 +1761,14 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		protected override void NotifyEndUpdates()
 		{
+			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
 			RcCore.OutputDebugString($"NotifyEndUpdates {_updateCounter}\n");
 			_renderEngine.Flush = true;
 		}
 
 		protected override void NotifyDynamicUpdatesAreAvailable()
 		{
+			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
 			RcCore.OutputDebugString("NotifyDynamicUpdatesAreAvailable\n");
 			_renderEngine.TriggerBeginChangesNotified();
 			_renderEngine.Flush = true;
