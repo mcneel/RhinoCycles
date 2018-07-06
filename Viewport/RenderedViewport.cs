@@ -42,7 +42,8 @@ namespace RhinoCycles.Viewport
 
 		public override Guid GUID => new Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181");
 
-		public override bool DrawOpenGl => RcCore.It.CanUseDrawOpenGl();
+		public override bool DrawOpenGl =>
+			RcCore.It.CanUseDrawOpenGl();
 
 		public override Type RealtimeDisplayModeType => typeof(RenderedViewport);
 
@@ -109,6 +110,7 @@ namespace RhinoCycles.Viewport
 		public override void PostConstruct()
 		{
 			_okOgl = OpenGlVersion() >= 40;
+			SetUseDrawOpenGl(RcCore.It.CanUseDrawOpenGl() && _okOgl);
 		}
 
 		private void RenderedViewport_MaxPassesChanged(object sender, HudMaxPassesChangedEventArgs e)
@@ -243,7 +245,7 @@ namespace RhinoCycles.Viewport
 
 			if (!_useOpenGl) renderWindow.SetSize(new Size(w, h));
 
-			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa);
+			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa, _useOpenGl);
 
 			_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			_cycles.RenderStarted += CyclesRenderStarted; // render engine tells us when it actually is rendering
@@ -533,7 +535,7 @@ namespace RhinoCycles.Viewport
 			var cpu = _cycles.RenderDevice.IsCpu;
 			if (_showRenderDevice && !cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}";
 			else if (_showRenderDevice && cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}x{_cycles.ThreadCount}";
-			if (!RcCore.It.CanUseDrawOpenGl()) pn = $"{pn} NoGL";
+			if (!RcCore.It.CanUseDrawOpenGl() || !_okOgl) pn = $"{pn} NoGL";
 			return pn;
 		}
 

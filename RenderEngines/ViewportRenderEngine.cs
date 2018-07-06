@@ -29,8 +29,9 @@ namespace RhinoCyclesCore.RenderEngines
 {
 	public class ViewportRenderEngine : RenderEngine
 	{
-		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, ViewInfo view, Rhino.Display.DisplayPipelineAttributes attr) : base(pluginId, docRuntimeSerialNumber, view, null, attr, true)
+		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, ViewInfo view, Rhino.Display.DisplayPipelineAttributes attr, bool useOpenGl) : base(pluginId, docRuntimeSerialNumber, view, null, attr, true)
 		{
+			UsingOpenGl = useOpenGl;
 			Client = new Client();
 			State = State.Rendering;
 
@@ -120,7 +121,7 @@ namespace RhinoCyclesCore.RenderEngines
 			
 		}
 
-		private bool UsingOpenGl { get; } = RcCore.It.CanUseDrawOpenGl();
+		private bool UsingOpenGl { get; set; }
 
 		/// <summary>
 		/// Set new size for the internal RenderWindow object.
@@ -210,12 +211,12 @@ namespace RhinoCyclesCore.RenderEngines
 				ShadingSystem = ShadingSystem.SVM,
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
-				Background = !RcCore.It.CanUseDrawOpenGl(),
+				Background = !UsingOpenGl,
 				ProgressiveRefine = true,
 				Progressive = true,
 				PixelSize = pixelSize,
 			};
-			if(RcCore.It.CanUseDrawOpenGl() && RcCore.It.EngineSettings.UseStartResolution) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
+			if(UsingOpenGl && RcCore.It.EngineSettings.UseStartResolution) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
 			#endregion
 
 			if (CancelRender) return;
