@@ -34,6 +34,7 @@ namespace RhinoCycles.Settings
 		public override bool ShowApplyButton => false;
 		public override bool ShowDefaultsButton => true;
 		public override string LocalPageTitle => Localization.LocalizeString("Cycles", 7);
+		public override void OnHelp () => RhinoHelp.Show("options/cycles.htm");
 
 		public override Image PageImage {
 			get {
