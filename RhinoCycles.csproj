@@ -115,16 +115,6 @@
       <Name>RhinoCommon</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Condition="'$(OS)' == 'Windows_NT'" Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
-      <Project>{78e5c303-7764-446e-baba-fdb410bd98e1}</Project>
-      <Name>RhinoWindows</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Condition="'$(OS)' == 'Unix'" Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj">
-      <Project>{89edadb3-3d68-4c7e-85dc-62b95972e226}</Project>
-      <Name>RhinoMac</Name>
-      <Private>False</Private>
-    </ProjectReference>
     <ProjectReference Include="..\cycles\csycles\csycles.csproj">
       <Project>{36396655-e087-4c00-990b-ce44f08e4fb2}</Project>
       <Name>csycles</Name>
@@ -136,7 +126,26 @@
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <Choose>
+    <When Condition="'$(OS)' == 'Windows_NT'">
+      <ItemGroup>
+        <ProjectReference Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
+          <Project>{78e5c303-7764-446e-baba-fdb410bd98e1}</Project>
+          <Name>RhinoWindows</Name>
+          <Private>False</Private>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(OS)' == 'Unix'">
+      <ItemGroup>
+        <ProjectReference Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj">
+          <Project>{89edadb3-3d68-4c7e-85dc-62b95972e226}</Project>
+          <Name>RhinoMac</Name>
+          <Private>False</Private>
+        </ProjectReference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\cs-cz\XML\cs-czRhinoCycles.xml">
       <Link>Localization\cs-czRhinoCycles.xml</Link>
