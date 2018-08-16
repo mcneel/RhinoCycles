@@ -22,6 +22,7 @@ using Rhino.Commands;
 namespace RhinoCycles.Commands
 {
 	[Guid("701e9844-10c5-4891-ade0-a18bceea550d")]
+	[CommandStyle(Style.Hidden)]
 	public class TestDeviceEqualityCrash : Command
 	{
 		static TestDeviceEqualityCrash _instance;
