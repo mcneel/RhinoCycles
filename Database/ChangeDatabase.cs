@@ -165,6 +165,7 @@ namespace RhinoCyclesCore.Database
 					_objectShaderDatabase.ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
 				}
 			}
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Object shaders handled", -1.0f);
 		}
 
 		public event EventHandler<LinearWorkflowChangedEventArgs> LinearWorkflowChanged;
@@ -203,6 +204,7 @@ namespace RhinoCyclesCore.Database
 
 				TriggerLinearWorkflowUploaded();
 				TriggerFilmUpdateTagged();
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Gamma handled", -1.0f);
 			}
 		}
 
@@ -324,6 +326,7 @@ namespace RhinoCyclesCore.Database
 
 				curmesh++;
 			}
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Mesh changes done", -1.0f);
 		}
 
 		/// <summary>
@@ -438,6 +441,7 @@ namespace RhinoCyclesCore.Database
 		protected override void ApplyLinearWorkflowChanges(Rhino.Render.LinearWorkflow lw)
 		{
 			sdd.WriteLine($"LinearWorkflow {lw.PreProcessColors} {lw.PreProcessTextures} {lw.PostProcessFrameBuffer} {lw.PreProcessGamma} {lw.PostProcessGammaReciprocal}");
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Apply linear workflow", -1.0f);
 			LinearWorkflow = lw;
 			_environmentDatabase.SetGamma(PreProcessGamma);
 		}
@@ -650,6 +654,7 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.BladesRotation = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
 			scene.Camera.ApertureRatio = ApertureRatio;
 			scene.Camera.Update();
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Focal blur handled", -1.0f);
 
 		}
 
@@ -687,6 +692,7 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.SensorHeight = RcCore.It.EngineSettings.SensorHeight;
 			scene.Camera.SensorWidth = RcCore.It.EngineSettings.SensorWidth;
 			scene.Camera.Update();
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Camera changes handled", -1.0f);
 		}
 
 		public Size RenderDimension { get; set; }
@@ -837,20 +843,28 @@ namespace RhinoCyclesCore.Database
 			SceneBoundingBox = GetQueueSceneBoundingBox();
 			RcCore.OutputDebugString($"ChangeDatabase ApplyMeshChanges, deleted {deleted.Length}\n");
 
+			var totaldeletes = deleted.Length;
+			var curdelete = 0;
 			foreach (var guid in deleted)
 			{
+				curdelete++;
 				// only delete those that aren't listed in the added list
 				if (!(from mesh in added where mesh.Id() == guid select mesh).Any())
 				{
 					RcCore.OutputDebugString($" record mesh deletion {guid}\n");
+					_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Delete mesh {curdelete}/{totaldeletes}", -1.0f);
 					_objectDatabase.DeleteMesh(guid);
 				}
 			}
 
 			RcCore.OutputDebugString($"ChangeDatabase ApplyMeshChanges added {added.Count}\n");
+			var totaladds = added.Count;
+			var curadd = 0;
 
 			foreach (var cqm in added)
 			{
+				curadd++;
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Handle mesh {curadd}/{totaladds}", -1.0f);
 				var meshes = cqm.GetMeshes();
 				var meshguid = cqm.Id();
 
@@ -996,8 +1010,12 @@ namespace RhinoCyclesCore.Database
 			}
 			var realDeleted = (from dlt in deleted where !skipFromDeleted.Contains(dlt) select dlt).ToList();
 			RcCore.OutputDebugString($"\tActually deleting {realDeleted.Count} mesh instances!\n");
+			var totaldel = realDeleted.Count;
+			var curdel = 0;
 			foreach (var d in realDeleted)
 			{
+				curdel++;
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Delete mesh instance {curdel}/{totaldel}", -1.0f);
 					var cob = _objectDatabase.FindObjectRelation(d);
 					if (cob != null)
 					{
@@ -1019,7 +1037,9 @@ namespace RhinoCyclesCore.Database
 
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
-				RcCore.OutputDebugString($"\tHandling mesh instance {curmesh}/{totalmeshes}. material {matid} ({mat.Name})\n");
+				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes}. material {mat.Name}\n";
+				RcCore.OutputDebugString(stat);
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
 
 				if (!addedmats.Contains(matid))
 				{
@@ -1108,9 +1128,16 @@ namespace RhinoCyclesCore.Database
 			var distinctMats = new List<uint>();
 
 			RcCore.OutputDebugString($"ApplyMaterialChanges: {mats.Count}\n");
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Apply materials", -1.0f);
+
+			var totalmats = mats.Count;
+			var curmat = 0;
 
 			foreach (var mat in mats)
 			{
+				curmat++;
+
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Apply material {curmat}/{totalmats}", -1.0f);
 				RcCore.OutputDebugString($"\t[material {mat.Id}, {mat.MeshInstanceId}, {mat.MeshIndex}]\n");
 				var rm = MaterialFromId(mat.Id);
 
@@ -1125,9 +1152,13 @@ namespace RhinoCyclesCore.Database
 				HandleMaterialChangeOnObject(mat.Id, obid, null);
 			}
 
+			totalmats = distinctMats.Count;
+			curmat = 0;
 			// list over material hashes, check if they exist. Create if new
 			foreach (var distinct in distinctMats)
 			{
+				curmat++;
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Apply distinct material {curmat}/{totalmats}", -1.0f);
 				var existing = _shaderDatabase.GetShaderFromHash(distinct);
 				if (existing == null)
 				{
@@ -1143,10 +1174,15 @@ namespace RhinoCyclesCore.Database
 		public void UploadShaderChanges()
 		{
 			RcCore.OutputDebugString($"Uploading shader changes {_shaderDatabase.ShaderChanges.Count}\n");
+			var totalshaders = _shaderDatabase.ShaderChanges.Count;
+			var curshader = 0;
 			// map shaders. key is RenderHash
 			foreach (var shader in _shaderDatabase.ShaderChanges)
 			{
+				curshader++;
 				if (_renderEngine.CancelRender) return;
+
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Uploading shader {curshader}/{totalshaders}", -1.0f);
 
 				shader.Gamma = PreProcessGamma;
 
@@ -1160,6 +1196,7 @@ namespace RhinoCyclesCore.Database
 
 				sh.Tag();
 			}
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Shaders handled", -1.0f);
 		}
 
 #endregion SHADERS
@@ -1251,6 +1288,7 @@ namespace RhinoCyclesCore.Database
 			if (gpcrc == old_gp_crc && old_gp_enabled == gp.Enabled) return;
 
 			RcCore.OutputDebugString("ApplyGroundPlaneChanges.\n");
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Apply groundplane", -1.0f);
 
 			old_gp_crc = gpcrc;
 			old_gp_enabled = gp.Enabled;
@@ -1368,6 +1406,7 @@ namespace RhinoCyclesCore.Database
 				}
 				existingL.TagUpdate();
 			}
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Lights handled", -1.0f);
 		}
 
 		private uint LinearLightMaterialCRC(Rhino.Geometry.Light ll)
@@ -1440,6 +1479,8 @@ namespace RhinoCyclesCore.Database
 			// with a view to force it to be a single-view only ChangeQueue.
 			// See #RH-32345 and #RH-32356
 			var v = GetQueueView();
+
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Apply lights", -1.0f);
 
 			foreach (var light in lightChanges)
 			{
@@ -1560,6 +1601,7 @@ namespace RhinoCyclesCore.Database
 			{
 				_environmentDatabase.CyclesShader.EnabledLights = AnyActiveLights(); 
 				RcCore.OutputDebugString($"Uploading background changes, active lights: {_environmentDatabase.CyclesShader.EnabledLights}, sky {_environmentDatabase.CyclesShader.SkylightEnabled} skystrength {_environmentDatabase.CyclesShader.SkyStrength}\n");
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Handling Environment changes", -1.0f);
 				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader);
 			}
 		}
@@ -1586,9 +1628,14 @@ namespace RhinoCyclesCore.Database
 
 			RcCore.OutputDebugString($"UploadObjectChanges: adding/modifying objects {_objectDatabase.NewOrUpdatedObjects.Count}\n");
 
+			var totalobcount = _objectDatabase.NewOrUpdatedObjects.Count;
+			var curcount = 0;
+
 			// now combine objects and meshes, creating new objects when necessary
 			foreach (var ob in _objectDatabase.NewOrUpdatedObjects)
 			{
+				curcount++;
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"handling object {curcount}/{totalobcount}", -1.0f);
 				// mesh for this object id
 				var mesh = _objectDatabase.FindMeshRelation(ob.meshid);
 
@@ -1633,6 +1680,7 @@ namespace RhinoCyclesCore.Database
 				//cob.Cutout = false;
 				cob.TagUpdate();
 			}
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Objects handled", -1.0f);
 		}
 
 		/// <summary>
@@ -1714,6 +1762,7 @@ namespace RhinoCyclesCore.Database
 			 * environment instance is wrong. See http://mcneel.myjetbrains.com/youtrack/issue/RH-32418
 			 */
 			RcCore.OutputDebugString($"ApplyEnvironmentChanges {usage}\n");
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Apply environment {usage}", -1.0f);
 			_environmentDatabase.SetGamma(PreProcessGamma);
 			UpdateAllEnvironments(usage);
 		}

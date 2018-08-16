@@ -477,13 +477,14 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
-		/// Set progress to RenderWindow, if it is not null.
+		/// Set progress to HUD if exists. Also set to RenderWindow, if it is not null.
 		/// </summary>
 		/// <param name="rw"></param>
 		/// <param name="msg"></param>
 		/// <param name="progress"></param>
 		public void SetProgress(RenderWindow rw, string msg, float progress)
 		{
+			TriggerStatusTextUpdated(new StatusTextEventArgs(msg, progress, progress < 0 ? -1 : 0));
 			rw?.SetProgress(msg, progress);
 		}
 
