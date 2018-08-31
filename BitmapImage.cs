@@ -122,7 +122,7 @@ namespace RhinoCyclesCore
 						}
 					}
 				}
-				var tmpfhdr = $"{Environment.GetEnvironmentVariable("TEMP")}\\byte_{name}.exr";
+				var tmpfhdr = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"byte_{name}.exr");
 				rw.SaveRenderImageAs(tmpfhdr, true);
 			}
 		}
@@ -165,7 +165,7 @@ namespace RhinoCyclesCore
 						}
 					}
 				}
-				var tmpfhdr = $"{Environment.GetEnvironmentVariable("TEMP")}\\float_{name}.exr";
+				var tmpfhdr = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"float_{ name}.exr");
 				rw.SaveRenderImageAs(tmpfhdr, true);
 			}
 		}

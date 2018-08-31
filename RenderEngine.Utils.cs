@@ -28,7 +28,7 @@ namespace RhinoCyclesCore
 		public void SaveRenderedBuffer(int sample)
 		{
 			if (!RcCore.It.EngineSettings.SaveDebugImages) return;
-			var tmpf = $"{Environment.GetEnvironmentVariable("TEMP")}\\RC_{sample.ToString("D5")}.png";
+			var tmpf = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"RC_{ sample.ToString("D5")}.png");
 			RenderWindow.SaveDibAsBitmap(tmpf);
 		}
 
