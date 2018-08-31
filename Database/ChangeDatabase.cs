@@ -1237,7 +1237,8 @@ namespace RhinoCyclesCore.Database
 			var motion = new Rhino.Geometry.Vector3d(gp.TextureOffset.X, gp.TextureOffset.Y, 0.0);
 			var ttrans = Rhino.Geometry.Transform.Translation(motion);
 			tfm *= ttrans;
-			var trot = Rhino.Geometry.Transform.Rotation(Rhino.RhinoMath.ToRadians(gp.TextureRotation), pp);
+			var rad = Rhino.RhinoMath.ToRadians(gp.TextureRotation);
+			var trot = Rhino.Geometry.Transform.Rotation(rad, pp);
 			tfm *= trot;
 			var texturemapping = TextureMapping.CreatePlaneMapping(pmap, smext, smext, smext);
 			if (texturemapping != null)
