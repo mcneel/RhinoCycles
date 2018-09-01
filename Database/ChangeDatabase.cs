@@ -1231,15 +1231,15 @@ namespace RhinoCyclesCore.Database
 			m.Weld(0.1);
 
 			Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
-			var texscale = gp.TextureScale;
-			var tscale = Rhino.Geometry.Transform.Scale(p, texscale.X, texscale.Y, 1.0);
-			tfm *= tscale;
 			var motion = new Rhino.Geometry.Vector3d(gp.TextureOffset.X, gp.TextureOffset.Y, 0.0);
 			var ttrans = Rhino.Geometry.Transform.Translation(motion);
 			tfm *= ttrans;
 			var rad = Rhino.RhinoMath.ToRadians(gp.TextureRotation);
 			var trot = Rhino.Geometry.Transform.Rotation(rad, pp);
 			tfm *= trot;
+			var texscale = gp.TextureScale;
+			var tscale = Rhino.Geometry.Transform.Scale(p, texscale.X, texscale.Y, 1.0);
+			tfm *= tscale;
 			var texturemapping = TextureMapping.CreatePlaneMapping(pmap, smext, smext, smext);
 			if (texturemapping != null)
 			{
