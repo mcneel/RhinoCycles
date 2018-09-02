@@ -25,10 +25,31 @@ namespace RhinoCyclesCore
 {
 	partial class RenderEngine
 	{
+		/// <summary>
+		/// Construct a full path name to the temp folder for
+		/// McNeel/Rhino/VERSIONNR
+		/// </summary>
+		/// <returns>The full path.</returns>
+		/// <param name="fileName">File name.</param>
+		public static string TempPathForFile(string fileName)
+		{
+			var tmpfhdr = System.IO.Path.Combine(
+				new [] {
+					System.IO.Path.GetTempPath(),
+					"McNeel",
+					"Rhino",
+					$"V{Rhino.RhinoApp.Version.Major}",
+					fileName
+				}
+			);
+
+			return tmpfhdr;
+		}
+
 		public void SaveRenderedBuffer(int sample)
 		{
 			if (!RcCore.It.EngineSettings.SaveDebugImages) return;
-			var tmpf = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"RC_{ sample.ToString("D5")}.png");
+			var tmpf = TempPathForFile($"RC_{ sample.ToString("D5")}.png");
 			RenderWindow.SaveDibAsBitmap(tmpf);
 		}
 

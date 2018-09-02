@@ -176,7 +176,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (RcCore.It.EngineSettings.SaveDebugImages)
 			{
-				var tmpf = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"RC_modal_renderer.png");
+				var tmpf = RenderEngine.TempPathForFile($"RC_modal_renderer.png");
 				cyclesEngine.RenderWindow.SaveRenderImageAs(tmpf, true);
 			}
 
