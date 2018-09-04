@@ -649,7 +649,8 @@ namespace RhinoCyclesCore.Database
 		{
 			var scene = _renderEngine.Session.Scene;
 			scene.Camera.FocalDistance = fb.FocalDistance;
-			scene.Camera.ApertureSize = fb.FocalAperture * ApertureFactor;
+			var unitscale = (float)Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Millimeters, ModelUnitSystem);
+			scene.Camera.ApertureSize = (fb.FocalAperture < 0.00001f ? 0.0f : (fb.LensLength * unitscale) / fb.FocalAperture);
 			scene.Camera.Blades = Blades;
 			scene.Camera.BladesRotation = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
 			scene.Camera.ApertureRatio = ApertureRatio;
@@ -980,6 +981,7 @@ namespace RhinoCyclesCore.Database
 
 		public double ModelAbsoluteTolerance { get; set; }
 		public double ModelAngleToleranceRadians { get; set; }
+		public Rhino.UnitSystem ModelUnitSystem { get; set; }
 
 		protected override void ApplyMeshInstanceChanges(List<uint> deleted, List<MeshInstance> addedOrChanged)
 		{

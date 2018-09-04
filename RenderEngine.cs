@@ -197,7 +197,8 @@ namespace RhinoCyclesCore
 			{
 				SupportClippingPlanes = SupportClippingPlanes,
 				ModelAbsoluteTolerance = doc.ModelAbsoluteTolerance,
-				ModelAngleToleranceRadians = doc.ModelAngleToleranceRadians
+				ModelAngleToleranceRadians = doc.ModelAngleToleranceRadians,
+				ModelUnitSystem = doc.ModelUnitSystem
 			};
 			RegisterEventHandler();
 		}
