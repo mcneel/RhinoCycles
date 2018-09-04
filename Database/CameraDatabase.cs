@@ -32,11 +32,14 @@ namespace RhinoCyclesCore.Database
 			UseFocalBlur = vi.FocalBlurMode == ViewInfoFocalBlurModes.Manual;
 			FocalDistance = (float)vi.FocalBlurDistance;
 			FocalAperture = (float)vi.FocalBlurAperture;
+			LensLength = (float)vi.Viewport.Camera35mmLensLength;
+
 
 			if (!UseFocalBlur)
 			{
 				FocalAperture = 0.0f;
 				FocalDistance = 10.0f;
+				LensLength = 50.0f;
 			}
 		}
 
@@ -46,11 +49,14 @@ namespace RhinoCyclesCore.Database
 			UseFocalBlur = false;
 			FocalDistance = 10.0f;
 			FocalAperture = 0.0f;
+			LensLength = 50.0f;
 		}
 
 		public bool UseFocalBlur { get; set; }
 		public float FocalDistance { get; set; }
 		public float FocalAperture { get; set; }
+
+		public float LensLength { get; set; }
 
 		public override bool Equals(object obj)
 		{
