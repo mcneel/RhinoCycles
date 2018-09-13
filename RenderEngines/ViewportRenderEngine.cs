@@ -301,8 +301,8 @@ namespace RhinoCyclesCore.RenderEngines
 		/// </summary>
 		public void CheckFlushQueue()
 		{
+			if (this==null || State != State.Rendering || Database == null) return;
 			if (State == State.Waiting) Continue();
-			if (State != State.Rendering || Database == null) return;
 
 			// flush the queue
 			Database.Flush();
