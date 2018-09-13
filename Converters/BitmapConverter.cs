@@ -231,7 +231,14 @@ namespace RhinoCyclesCore.Converters
 		static private TextureEnvironmentMappingMode get_environment_mapping(RenderEnvironment rm, RenderTexture renderTexture)
 		{
 			var s = rm.GetParameter("background-projection") as IConvertible;
-			var proj = Convert.ToString(s, CultureInfo.InvariantCulture);
+			string proj = "";
+			if (s == null) {
+				SimulatedEnvironment simenv = rm.SimulateEnvironment(true);
+				proj = SimulatedEnvironment.StringFromProjection(simenv.BackgroundProjection);
+			}
+			else {
+				proj = Convert.ToString(s, CultureInfo.InvariantCulture);
+			}
 
 			switch (proj) {
 			case "automatic":
