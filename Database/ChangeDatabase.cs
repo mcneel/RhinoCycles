@@ -860,9 +860,11 @@ namespace RhinoCyclesCore.Database
 			RcCore.OutputDebugString($"ChangeDatabase ApplyMeshChanges added {added.Count}\n");
 			var totaladds = added.Count;
 			var curadd = 0;
+			if (_renderEngine.CancelRender) return;
 
 			foreach (var cqm in added)
 			{
+			if (_renderEngine.CancelRender) return;
 				curadd++;
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Handle mesh {curadd}/{totaladds}", -1.0f);
 				var meshes = cqm.GetMeshes();
@@ -877,11 +879,13 @@ namespace RhinoCyclesCore.Database
 						isClippingObject = ud.IsClippingObject;
 					}
 				}
+				if (_renderEngine.CancelRender) return;
 
 				var meshIndex = 0;
 
 				foreach(var meshdata in meshes)
 				{
+					if (_renderEngine.CancelRender) return;
 					HandleMeshData(meshguid, meshIndex, meshdata, isClippingObject);
 					meshIndex++;
 				}
@@ -890,6 +894,7 @@ namespace RhinoCyclesCore.Database
 
 		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, bool isClippingObject)
 		{
+			if (_renderEngine.CancelRender) return;
 			RcCore.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
 			// Get face indices flattened to an
 			// integer array. The result will be triangulated faces.
@@ -906,6 +911,7 @@ namespace RhinoCyclesCore.Database
 			{
 				for (var fi = 0; fi < findices.Length; fi++)
 				{
+					if (_renderEngine.CancelRender) return;
 					var fioffs = fi * 3;
 					var findex = findices[fi];
 					var findex2 = findex * 3;
@@ -921,12 +927,14 @@ namespace RhinoCyclesCore.Database
 			var vn = meshdata.Normals;
 			var rhvn = vn.ToFloatArray();
 
+			if (_renderEngine.CancelRender) return;
 			// now convert UVs: from vertex indexed array to per face per vertex
 			var cmuv = rhuv.Length > 0 ? new float[findices.Length * 2] : null;
 			if (cmuv != null)
 			{
 				for (var fi = 0; fi < findices.Length; fi++)
 				{
+					if (_renderEngine.CancelRender) return;
 					var fioffs = fi * 2;
 					var findex = findices[fi];
 					var findex2 = findex * 2;
@@ -941,6 +949,7 @@ namespace RhinoCyclesCore.Database
 
 			var crc = _objectShaderDatabase.FindRenderHashForMeshId(meshid);
 			if (crc == uint.MaxValue) crc = 0;
+			if (_renderEngine.CancelRender) return;
 
 			// now we have everything we need
 			// so we can create a CyclesMesh that the
@@ -996,6 +1005,7 @@ namespace RhinoCyclesCore.Database
 			{
 				RcCore.OutputDebugString($"\ttold to ADD {aoc.InstanceId}\n");
 			}
+			if (_renderEngine.CancelRender) return;
 			RcCore.OutputDebugString($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
 			var inDeleted = from inst in addedOrChanged where deleted.Contains(inst.InstanceId) select inst;
 			var skipFromDeleted = (from inst in inDeleted where true select inst.InstanceId).ToList();
@@ -1015,6 +1025,7 @@ namespace RhinoCyclesCore.Database
 			foreach (var d in realDeleted)
 			{
 				curdel++;
+				if (_renderEngine.CancelRender) return;
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Delete mesh instance {curdel}/{totaldel}", -1.0f);
 					var cob = _objectDatabase.FindObjectRelation(d);
 					if (cob != null)
@@ -1034,6 +1045,8 @@ namespace RhinoCyclesCore.Database
 			foreach (var a in addedOrChanged)
 			{
 				curmesh++;
+
+				if (_renderEngine.CancelRender) return;
 
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
