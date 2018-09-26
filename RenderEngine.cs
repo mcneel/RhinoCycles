@@ -469,12 +469,12 @@ namespace RhinoCyclesCore
 			// signal our cycles session to stop rendering.
 			Session?.Cancel("Render stop called.\n");
 
+			RenderThread?.Join();
+			RenderThread = null;
+
 			// get rid of our change queue
 			Database?.Dispose();
 			Database = null;
-
-			RenderThread?.Join();
-			RenderThread = null;
 		}
 
 		/// <summary>
