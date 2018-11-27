@@ -112,14 +112,7 @@ namespace RhinoCyclesCore.Materials
 				simulatedMaterial.ReflectionColor = color.AsSystemColor();
 		}
 
-		public override Material SimulateMaterial(bool isForDataOnly)
-		{
-			var m = base.SimulateMaterial(isForDataOnly);
 
-			SimulateMaterial(ref m, isForDataOnly);
-
-			return m;
-		}
 
 		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.FlakedCarPaint;
 

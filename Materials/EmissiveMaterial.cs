@@ -114,14 +114,7 @@ namespace RhinoCyclesCore.Materials
 
 		}
 
-		public override Material SimulateMaterial(bool isForDataOnly)
-		{
-			var m = base.SimulateMaterial(isForDataOnly);
 
-			SimulateMaterial(ref m, isForDataOnly);
-
-			return m;
-		}
 
 
 		public string MaterialXml
