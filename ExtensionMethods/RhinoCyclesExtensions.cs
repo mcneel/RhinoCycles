@@ -98,7 +98,7 @@ namespace RhinoCyclesCore.ExtensionMethods
 	{
 		public static float[] ToFloatArray(this ccl.Transform t)
 		{
-			var f = new float[16];
+			var f = new float[12];
 			f[0] = t.x.x;
 			f[1] = t.x.y;
 			f[2] = t.x.z;
@@ -113,11 +113,6 @@ namespace RhinoCyclesCore.ExtensionMethods
 			f[9] = t.z.y;
 			f[10] = t.z.z;
 			f[11] = t.z.w;
-
-			f[12] = t.w.x;
-			f[13] = t.w.y;
-			f[14] = t.w.z;
-			f[15] = t.w.w;
 
 			return f;
 		}
@@ -139,10 +134,10 @@ namespace RhinoCyclesCore.ExtensionMethods
 			rt.M22 = t.z.z;
 			rt.M23 = t.z.w;
 
-			rt.M30 = t.w.x;
-			rt.M31 = t.w.y;
-			rt.M32 = t.w.z;
-			rt.M33 = t.w.w;
+			rt.M30 = 0.0f;
+			rt.M31 = 0.0f;
+			rt.M32 = 0.0f;
+			rt.M33 = 0.0f;
 
 			return rt;
 		}
@@ -157,8 +152,7 @@ namespace RhinoCyclesCore.ExtensionMethods
 			var t = new ccl.Transform(
 				(float) rt.M00, (float) rt.M01, (float) rt.M02, (float) rt.M03,
 				(float) rt.M10, (float) rt.M11, (float) rt.M12, (float) rt.M13,
-				(float) rt.M20, (float) rt.M21, (float) rt.M22, (float) rt.M23,
-				(float) rt.M30, (float) rt.M31, (float) rt.M32, (float) rt.M33
+				(float) rt.M20, (float) rt.M21, (float) rt.M22, (float) rt.M23
 				);
 
 			return t;
