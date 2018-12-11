@@ -209,7 +209,7 @@ namespace RhinoCyclesCore.Shaders
 			var shadeless221 = new MixClosureNode("shadeless");
 
 			var glossy222 = new GlossyBsdfNode("glossy");
-				glossy222.ins.Roughness.Value = part.ReflectionRoughnessPow2;
+				glossy222.ins.Roughness.Value = part.ReflectionRoughness;
 
 			var reflection_factor223 = new SeparateRgbNode("reflection_factor");
 
@@ -221,7 +221,7 @@ namespace RhinoCyclesCore.Shaders
 				attennuated_refraction_color224.UseClamp = false;
 
 			var refraction225 = new RefractionBsdfNode("refraction");
-				refraction225.ins.Roughness.Value = part.RefractionRoughnessPow2;
+				refraction225.ins.Roughness.Value = part.RefractionRoughness;
 				refraction225.ins.IOR.Value = part.IOR;
 				refraction225.Distribution = RefractionBsdfNode.RefractionDistribution.GGX;
 
@@ -262,7 +262,7 @@ namespace RhinoCyclesCore.Shaders
 
 			var invert_roughness199 = new MathSubtract("invert_roughness");
 				invert_roughness199.ins.Value1.Value = 1f;
-				invert_roughness199.ins.Value2.Value = part.RefractionRoughnessPow2;
+				invert_roughness199.ins.Value2.Value = part.RefractionRoughness;
 				invert_roughness199.Operation = MathNode.Operations.Subtract;
 				invert_roughness199.UseClamp = false;
 
