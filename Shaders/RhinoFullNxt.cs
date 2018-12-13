@@ -209,7 +209,7 @@ namespace RhinoCyclesCore.Shaders
 			var shadeless221 = new MixClosureNode("shadeless");
 
 			var glossy222 = new GlossyBsdfNode("glossy");
-				glossy222.ins.Roughness.Value = part.ReflectionRoughnessPow2;
+				glossy222.ins.Roughness.Value = part.ReflectionRoughness;
 
 			var reflection_factor223 = new SeparateRgbNode("reflection_factor");
 
@@ -221,7 +221,7 @@ namespace RhinoCyclesCore.Shaders
 				attennuated_refraction_color224.UseClamp = false;
 
 			var refraction225 = new RefractionBsdfNode("refraction");
-				refraction225.ins.Roughness.Value = part.RefractionRoughnessPow2;
+				refraction225.ins.Roughness.Value = part.RefractionRoughness;
 				refraction225.ins.IOR.Value = part.IOR;
 				refraction225.Distribution = RefractionBsdfNode.RefractionDistribution.GGX;
 
@@ -262,7 +262,7 @@ namespace RhinoCyclesCore.Shaders
 
 			var invert_roughness199 = new MathSubtract("invert_roughness");
 				invert_roughness199.ins.Value1.Value = 1f;
-				invert_roughness199.ins.Value2.Value = part.RefractionRoughnessPow2;
+				invert_roughness199.ins.Value2.Value = part.RefractionRoughness;
 				invert_roughness199.Operation = MathNode.Operations.Subtract;
 				invert_roughness199.UseClamp = false;
 
@@ -459,10 +459,10 @@ namespace RhinoCyclesCore.Shaders
 			bump_texture_to_bw212.outs.Val.Connect(bump213.ins.Height);
 			bump_amount196.outs.Value.Connect(bump213.ins.Strength);
 			diffuse_base_color_through_alpha246.outs.Color.Connect(final_diffuse214.ins.Color);
-			bump213.outs.Normal.Connect(final_diffuse214.ins.Normal);
+			if(part.BumpTexture.Amount > 0.0f) bump213.outs.Normal.Connect(final_diffuse214.ins.Normal);
 			diffuse_base_color_through_alpha246.outs.Color.Connect(shadeless_bsdf215.ins.Color);
 			light_path234.outs.IsCameraRay.Connect(shadeless_on_cameraray248.ins.Value1);
-			bump213.outs.Normal.Connect(fresnel_based_on_constant217.ins.Normal);
+			if(part.BumpTexture.Amount > 0.0f) bump213.outs.Normal.Connect(fresnel_based_on_constant217.ins.Normal);
 			fresnel_based_on_constant217.outs.Fac.Connect(fresnel_reflection219.ins.R);
 			simple_reflection218.outs.Image.Connect(select_reflection_or_fresnel_reflection220.ins.Color1);
 			fresnel_reflection219.outs.Image.Connect(select_reflection_or_fresnel_reflection220.ins.Color2);
@@ -471,10 +471,10 @@ namespace RhinoCyclesCore.Shaders
 			shadeless_bsdf215.outs.Emission.Connect(shadeless221.ins.Closure2);
 			shadeless_on_cameraray248.outs.Value.Connect(shadeless221.ins.Fac);
 			attenuated_reflection_color216.outs.Color.Connect(glossy222.ins.Color);
-			bump213.outs.Normal.Connect(glossy222.ins.Normal);
+			if(part.BumpTexture.Amount > 0.0f) bump213.outs.Normal.Connect(glossy222.ins.Normal);
 			select_reflection_or_fresnel_reflection220.outs.Color.Connect(reflection_factor223.ins.Image);
 			attennuated_refraction_color224.outs.Color.Connect(refraction225.ins.Color);
-			bump213.outs.Normal.Connect(refraction225.ins.Normal);
+			if(part.BumpTexture.Amount > 0.0f) bump213.outs.Normal.Connect(refraction225.ins.Normal);
 			shadeless221.outs.Closure.Connect(diffuse_plus_glossy226.ins.Closure1);
 			glossy222.outs.BSDF.Connect(diffuse_plus_glossy226.ins.Closure2);
 			reflection_factor223.outs.R.Connect(diffuse_plus_glossy226.ins.Fac);
@@ -519,8 +519,8 @@ namespace RhinoCyclesCore.Shaders
 			add_emission_to_final250.outs.Closure.Connect(custom_alpha_cutter241.ins.Closure1);
 			transparent240.outs.BSDF.Connect(custom_alpha_cutter241.ins.Closure2);
 			add_diffuse_texture_alpha207.outs.Value.Connect(custom_alpha_cutter241.ins.Fac);
-			bump213.outs.Normal.Connect(principledbsdf242.ins.Normal);
-			bump213.outs.Normal.Connect(principledbsdf242.ins.ClearcoatNormal);
+			if(part.BumpTexture.Amount > 0.0f) bump213.outs.Normal.Connect(principledbsdf242.ins.Normal);
+			if(part.BumpTexture.Amount > 0.0f) bump213.outs.Normal.Connect(principledbsdf242.ins.ClearcoatNormal);
 			principledbsdf242.outs.BSDF.Connect(coloured_shadow_mix_glass_principled243.ins.Closure1);
 			coloured_shadow_trans_color236.outs.BSDF.Connect(coloured_shadow_mix_glass_principled243.ins.Closure2);
 			weight_for_shadowray_coloured_shadow202.outs.Value.Connect(coloured_shadow_mix_glass_principled243.ins.Fac);
