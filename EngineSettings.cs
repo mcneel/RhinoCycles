@@ -546,13 +546,13 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetDouble("FilterGlossy", value); }
 		}
 
-		public float SampleClampDirectDefault => 0.0f;
+		public float SampleClampDirectDefault => 3.0f;
 		public virtual float SampleClampDirect
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble("SampleClampDirect", SampleClampDirectDefault); }
 			set { RcPlugIn.Settings.SetDouble("SampleClampDirect", value); }
 		}
-		public float SampleClampIndirectDefault => 0.0f;
+		public float SampleClampIndirectDefault => 3.0f;
 		public virtual float SampleClampIndirect
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble("SampleClampIndirect", SampleClampIndirectDefault); }
