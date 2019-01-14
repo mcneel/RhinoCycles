@@ -92,6 +92,11 @@ namespace RhinoCyclesCore.ExtensionMethods
 		{
 			return RenderEngine.CreateFloat4(cl.R, cl.G, cl.B);
 		}
+
+		public static Rhino.Display.Color4f ToColor4f(this ccl.float4 cl)
+		{
+			return new Rhino.Display.Color4f(cl.x, cl.y, cl.z, cl.w);
+		}
 	}
 
 	public static class CclTransformExtensions

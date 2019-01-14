@@ -20,6 +20,7 @@ using Rhino.Render;
 using RhinoCyclesCore.Materials;
 using RhinoCyclesCore.Converters;
 using System.Collections.Generic;
+using Rhino.Display;
 
 namespace RhinoCyclesCore
 {
@@ -185,166 +186,224 @@ namespace RhinoCyclesCore
 
 		private bool CreateShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
-			var crm = rm as ICyclesMaterial;
-			ShaderBody.CyclesMaterial mattype = ShaderBody.CyclesMaterial.No;
-			if (crm == null)
+			var pbrbasecol = new NamedValue("pbr-base-color", rm.GetParameter("pbr-base-color"));
+			if (pbrbasecol.Value != null)
 			{
-				// always simulate material, need to know now myself
-				// what to read out from the simulated material to
-				// populate my own material descriptions.
-				var m = rm.SimulateMaterial(true);
-				// figure out what type of material we are.
-				//var probemat = GuessMaterialFromSmell(rm);
-				var probemat = WhatMaterial(rm, m);
-
+				shb.IsPbr = true;
 				rm.BeginChange(RenderContent.ChangeContexts.Ignore);
-				var dcl = m.DiffuseColor;
-				var scl = m.SpecularColor;
-				var rcl = m.ReflectionColor;
-				var rfcl = m.TransparentColor;
-				var emcl = m.EmissionColor;
-				var reflectivity = (float)m.Reflectivity;
-				var metalic = 0f;
-				var shine = (float)(m.Shine / Material.MaxShine);
-
-				switch (probemat)
-				{
-					case ProbableMaterial.Plaster:
-						mattype = ShaderBody.CyclesMaterial.Diffuse;
-						break;
-					case ProbableMaterial.Glass:
-					case ProbableMaterial.Gem:
-						metalic = 0f;
-						mattype = m.IndexOfRefraction < 1.001 ? ShaderBody.CyclesMaterial.Diffuse : ShaderBody.CyclesMaterial.Glass;
-						break;
-					case ProbableMaterial.Metal:
-						metalic = 1.0f;
-						mattype = ShaderBody.CyclesMaterial.SimpleMetal;
-						break;
-					case ProbableMaterial.Plastic:
-						//polish = reflectivity;
-						//shine = polish;
-						//reflectivity = 0f;
-						metalic = 0f;
-						mattype = ShaderBody.CyclesMaterial.SimplePlastic;
-						break;
-					case ProbableMaterial.Paint:
-						mattype = ShaderBody.CyclesMaterial.Paint;
-						break;
-					case ProbableMaterial.Custom:
-						mattype = ShaderBody.CyclesMaterial.No;
-						break;
-				}
-
-				var difftexAlpha = m.AlphaTransparency;
-
-				var col = RenderEngine.CreateFloat4(dcl.R, dcl.G, dcl.B, 255);
-				var spec = RenderEngine.CreateFloat4(scl.R, scl.G, scl.B, 255);
-				var refl = RenderEngine.CreateFloat4(rcl.R, rcl.G, rcl.B, 255);
-				var transp = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
-				var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
-				var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
-
-				//shb.Type = CyclesShader.Shader.Diffuse,
-				shb.CyclesMaterialType = mattype;
-
-				shb.Shadeless = m.DisableLighting;
-
-				shb.DiffuseColor = col;
-				shb.SpecularColor = spec;
-				shb.ReflectionColor = refl;
-				shb.ReflectionRoughness = (float)m.ReflectionGlossiness;
-				shb.RefractionColor = refr;
-				shb.RefractionRoughness = (float)m.RefractionGlossiness;
-				shb.TransparencyColor = transp;
-				shb.EmissionColor = emis;
-
-
-				shb.FresnelIOR = (float)m.FresnelIndexOfRefraction;
-				shb.IOR = (float)m.IndexOfRefraction;
-				shb.Roughness = (float)m.ReflectionGlossiness;
-				shb.Reflectivity = reflectivity;
-				shb.Metallic = metalic;
-				shb.Transparency = (float)m.Transparency;
-				shb.Shine = shine;
-				shb.Gloss = (float)m.ReflectionGlossiness;
-
-				shb.FresnelReflections = m.FresnelReflections;
-
+				shb.Name = rm.Name ?? "";
 				shb.Gamma = gamma;
-
-				shb.Name = m.Name ?? "";
-
-				shb.DiffuseTexture.Amount = 0.0f;
-				shb.BumpTexture.Amount = 0.0f;
-				shb.TransparencyTexture.Amount = 0.0f;
-				shb.EnvironmentTexture.Amount = 0.0f;
-
-				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse))
-				{
-					var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
-
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, difftex, RenderMaterial.StandardChildSlots.Diffuse);
-					if (shb.HasDiffuseTexture)
-					{
-						shb.DiffuseTexture.UseAlpha = difftexAlpha;
-						shb.DiffuseTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) / 100.0f, 1.0f);
-					}
-				}
-
-				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump))
-				{
-					var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, bumptex, RenderMaterial.StandardChildSlots.Bump);
-					if (shb.HasBumpTexture)
-					{
-						shb.BumpTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) / 100.0f, 1.0f);
-					}
-				}
-
-				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency))
-				{
-					var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, transtex,
-						RenderMaterial.StandardChildSlots.Transparency);
-					if (shb.HasTransparencyTexture)
-					{
-						shb.TransparencyTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Transparency) / 100.0f, 1.0f);
-					}
-				}
-
-				if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment))
-				{
-					var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
-					BitmapConverter.MaterialBitmapFromEvaluator(ref shb, envtex,
-						RenderMaterial.StandardChildSlots.Environment);
-					if (shb.HasEnvironmentTexture)
-					{
-						shb.EnvironmentTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) / 100.0f, 1.0f);
-					}
-				}
-
+				rm.HandleTexturedValue(Pbr.BaseColor, shb.PbrBase);
+				Utilities.HandleRenderTexture(shb.PbrBase.Texture, shb.PbrBaseTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Metallic, shb.PbrMetallic);
+				Utilities.HandleRenderTexture(shb.PbrMetallic.Texture, shb.PbrMetallicTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Subsurface, shb.PbrSubsurface);
+				Utilities.HandleRenderTexture(shb.PbrSubsurface.Texture, shb.PbrSubsurfaceTexture, gamma);
+				rm.HandleTexturedValue(Pbr.SubsurfaceScatteringColor, shb.PbrSubsurfaceColor);
+				Utilities.HandleRenderTexture(shb.PbrSubsurfaceColor.Texture, shb.PbrSubsurfaceColorTexture, gamma);
+				rm.HandleTexturedValue(Pbr.SubsurfaceScatteringRadius, shb.PbrSubsurfaceRadius);
+				Utilities.HandleRenderTexture(shb.PbrSubsurfaceRadius.Texture, shb.PbrSubsurfaceRadiusTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Roughness, shb.PbrRoughness);
+				Utilities.HandleRenderTexture(shb.PbrRoughness.Texture, shb.PbrRoughnessTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Specular, shb.PbrSpecular);
+				Utilities.HandleRenderTexture(shb.PbrSpecular.Texture, shb.PbrSpecularTexture, gamma);
+				rm.HandleTexturedValue(Pbr.SpecularTint, shb.PbrSpecularTint);
+				Utilities.HandleRenderTexture(shb.PbrSpecularTint.Texture, shb.PbrSpecularTintTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Anisotropic, shb.PbrAnisotropic);
+				Utilities.HandleRenderTexture(shb.PbrAnisotropic.Texture, shb.PbrAnisotropicTexture, gamma);
+				rm.HandleTexturedValue(Pbr.AnisotropicRotation, shb.PbrAnisotropicRotation);
+				Utilities.HandleRenderTexture(shb.PbrAnisotropicRotation.Texture, shb.PbrAnisotropicRotationTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Sheen, shb.PbrSheen);
+				Utilities.HandleRenderTexture(shb.PbrSheen.Texture, shb.PbrSheenTexture, gamma);
+				rm.HandleTexturedValue(Pbr.SheenTint, shb.PbrSheenTint);
+				Utilities.HandleRenderTexture(shb.PbrSheenTint.Texture, shb.PbrSheenTintTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Clearcoat, shb.PbrClearcoat);
+				Utilities.HandleRenderTexture(shb.PbrClearcoat.Texture, shb.PbrClearcoatTexture, gamma);
+				rm.HandleTexturedValue(Pbr.ClearcoatRoughness, shb.PbrClearcoatRoughness);
+				Utilities.HandleRenderTexture(shb.PbrClearcoatRoughness.Texture, shb.PbrClearcoatRoughnessTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Opacity, shb.PbrTransmission);
+				Utilities.HandleRenderTexture(shb.PbrTransmission.Texture, shb.PbrTransmissionTexture, gamma);
+				rm.HandleTexturedValue(Pbr.OpacityIor, shb.PbrIor);
+				Utilities.HandleRenderTexture(shb.PbrIor.Texture, shb.PbrIorTexture, gamma);
+				rm.HandleTexturedValue(Pbr.OpacityRoughness, shb.PbrTransmissionRoughness);
+				Utilities.HandleRenderTexture(shb.PbrTransmissionRoughness.Texture, shb.PbrTransmissionRoughnessTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Normal, shb.PbrNormal);
+				Utilities.HandleRenderTexture(shb.PbrNormal.Texture, shb.PbrNormalTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Emission, shb.PbrEmission);
+				Utilities.HandleRenderTexture(shb.PbrEmission.Texture, shb.PbrEmissionTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Bump, shb.PbrBump);
+				Utilities.HandleRenderTexture(shb.PbrBump.Texture, shb.PbrBumpTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Displacement, shb.PbrDisplacement);
+				Utilities.HandleRenderTexture(shb.PbrDisplacement.Texture, shb.PbrDisplacementTexture, gamma);
+				rm.HandleTexturedValue(Pbr.Smudge, shb.PbrSmudge);
+				Utilities.HandleRenderTexture(shb.PbrSmudge.Texture, shb.PbrSmudgeTexture, gamma);
+				rm.HandleTexturedValue(Pbr.AmbientOcclusion, shb.PbrAmbientOcclusion);
+				Utilities.HandleRenderTexture(shb.PbrAmbientOcclusion.Texture, shb.PbrAmbientOcclusionTexture, gamma);
 				rm.EndChange();
 			}
 			else
 			{
-				if (crm.MaterialType == ShaderBody.CyclesMaterial.CustomRenderMaterial)
+				var crm = rm as ICyclesMaterial;
+				ShaderBody.CyclesMaterial mattype = ShaderBody.CyclesMaterial.No;
+				if (crm == null)
 				{
-					crm.Gamma = gamma;
-					crm.BakeParameters();
-					shb.Crm = crm;
-					shb.CyclesMaterialType = ShaderBody.CyclesMaterial.CustomRenderMaterial;
+					// always simulate material, need to know now myself
+					// what to read out from the simulated material to
+					// populate my own material descriptions.
+					var m = rm.SimulateMaterial(true);
+					// figure out what type of material we are.
+					//var probemat = GuessMaterialFromSmell(rm);
+					var probemat = WhatMaterial(rm, m);
+
+					rm.BeginChange(RenderContent.ChangeContexts.Ignore);
+					var dcl = m.DiffuseColor;
+					var scl = m.SpecularColor;
+					var rcl = m.ReflectionColor;
+					var rfcl = m.TransparentColor;
+					var emcl = m.EmissionColor;
+					var reflectivity = (float)m.Reflectivity;
+					var metalic = 0f;
+					var shine = (float)(m.Shine / Material.MaxShine);
+
+					switch (probemat)
+					{
+						case ProbableMaterial.Plaster:
+							mattype = ShaderBody.CyclesMaterial.Diffuse;
+							break;
+						case ProbableMaterial.Glass:
+						case ProbableMaterial.Gem:
+							metalic = 0f;
+							mattype = m.IndexOfRefraction < 1.001 ? ShaderBody.CyclesMaterial.Diffuse : ShaderBody.CyclesMaterial.Glass;
+							break;
+						case ProbableMaterial.Metal:
+							metalic = 1.0f;
+							mattype = ShaderBody.CyclesMaterial.SimpleMetal;
+							break;
+						case ProbableMaterial.Plastic:
+							//polish = reflectivity;
+							//shine = polish;
+							//reflectivity = 0f;
+							metalic = 0f;
+							mattype = ShaderBody.CyclesMaterial.SimplePlastic;
+							break;
+						case ProbableMaterial.Paint:
+							mattype = ShaderBody.CyclesMaterial.Paint;
+							break;
+						case ProbableMaterial.Custom:
+							mattype = ShaderBody.CyclesMaterial.No;
+							break;
+					}
+
+					var difftexAlpha = m.AlphaTransparency;
+
+					var col = RenderEngine.CreateFloat4(dcl.R, dcl.G, dcl.B, 255);
+					var spec = RenderEngine.CreateFloat4(scl.R, scl.G, scl.B, 255);
+					var refl = RenderEngine.CreateFloat4(rcl.R, rcl.G, rcl.B, 255);
+					var transp = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
+					var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
+					var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
+
+					//shb.Type = CyclesShader.Shader.Diffuse,
+					shb.CyclesMaterialType = mattype;
+
+					shb.Shadeless = m.DisableLighting;
+
+					shb.DiffuseColor = col;
+					shb.SpecularColor = spec;
+					shb.ReflectionColor = refl;
+					shb.ReflectionRoughness = (float)m.ReflectionGlossiness;
+					shb.RefractionColor = refr;
+					shb.RefractionRoughness = (float)m.RefractionGlossiness;
+					shb.TransparencyColor = transp;
+					shb.EmissionColor = emis;
+
+
+					shb.FresnelIOR = (float)m.FresnelIndexOfRefraction;
+					shb.IOR = (float)m.IndexOfRefraction;
+					shb.Roughness = (float)m.ReflectionGlossiness;
+					shb.Reflectivity = reflectivity;
+					shb.Metallic = metalic;
+					shb.Transparency = (float)m.Transparency;
+					shb.Shine = shine;
+					shb.Gloss = (float)m.ReflectionGlossiness;
+
+					shb.FresnelReflections = m.FresnelReflections;
+
 					shb.Gamma = gamma;
-					shb.Name = rm.Name ?? "Cycles custom material";
+
+					shb.Name = m.Name ?? "";
+
+					shb.DiffuseTexture.Amount = 0.0f;
+					shb.BumpTexture.Amount = 0.0f;
+					shb.TransparencyTexture.Amount = 0.0f;
+					shb.EnvironmentTexture.Amount = 0.0f;
+
+					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse))
+					{
+						var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
+
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, difftex, RenderMaterial.StandardChildSlots.Diffuse);
+						if (shb.HasDiffuseTexture)
+						{
+							shb.DiffuseTexture.UseAlpha = difftexAlpha;
+							shb.DiffuseTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) / 100.0f, 1.0f);
+						}
+					}
+
+					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump))
+					{
+						var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, bumptex, RenderMaterial.StandardChildSlots.Bump);
+						if (shb.HasBumpTexture)
+						{
+							shb.BumpTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) / 100.0f, 1.0f);
+						}
+					}
+
+					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency))
+					{
+						var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, transtex,
+							RenderMaterial.StandardChildSlots.Transparency);
+						if (shb.HasTransparencyTexture)
+						{
+							shb.TransparencyTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Transparency) / 100.0f, 1.0f);
+						}
+					}
+
+					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment))
+					{
+						var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
+						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, envtex,
+							RenderMaterial.StandardChildSlots.Environment);
+						if (shb.HasEnvironmentTexture)
+						{
+							shb.EnvironmentTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) / 100.0f, 1.0f);
+						}
+					}
+
+					rm.EndChange();
 				}
 				else
 				{
 					crm.Gamma = gamma;
 					crm.BakeParameters();
-					shb.Crm = crm;
-					shb.CyclesMaterialType = ShaderBody.CyclesMaterial.Xml;
-					shb.Gamma = gamma;
-					shb.Name = rm.Name ?? "some cycles material";
+					if (crm.MaterialType == ShaderBody.CyclesMaterial.CustomRenderMaterial)
+					{
+						shb.Crm = crm;
+						shb.CyclesMaterialType = ShaderBody.CyclesMaterial.CustomRenderMaterial;
+						shb.Gamma = gamma;
+						shb.Name = rm.Name ?? "Cycles custom material";
+					}
+					else
+					{
+						crm.Gamma = gamma;
+						crm.BakeParameters();
+						shb.Crm = crm;
+						shb.CyclesMaterialType = ShaderBody.CyclesMaterial.Xml;
+						shb.Gamma = gamma;
+						shb.Name = rm.Name ?? "some cycles material";
+					}
 				}
 			}
 			return true;
@@ -378,6 +437,108 @@ namespace RhinoCyclesCore
 
 	public class ShaderBody
 	{
+		#region PBR style parameters
+		public bool IsPbr { get; set; }
+
+		public TexturedColor PbrBase = new TexturedColor(Pbr.BaseColor, Color4f.White, false, 0.0f);
+		public CyclesTextureImage PbrBaseTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrMetallic = new TexturedFloat(Pbr.Metallic, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrMetallicTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrSubsurface = new TexturedFloat(Pbr.Subsurface, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrSubsurfaceTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedColor PbrSubsurfaceColor= new TexturedColor(Pbr.SubsurfaceScatteringColor, Color4f.White, false, 0.0f);
+		public CyclesTextureImage PbrSubsurfaceColorTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedColor PbrSubsurfaceRadius = new TexturedColor(Pbr.SubsurfaceScatteringRadius, Color4f.White, false, 0.0f);
+		public CyclesTextureImage PbrSubsurfaceRadiusTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrSpecular = new TexturedFloat(Pbr.Specular, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrSpecularTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrSpecularTint = new TexturedFloat(Pbr.SpecularTint, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrSpecularTintTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrRoughness = new TexturedFloat(Pbr.Roughness, 0.0f, false, 1.0f);
+		public CyclesTextureImage PbrRoughnessTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrAnisotropic = new TexturedFloat(Pbr.Anisotropic, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrAnisotropicTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrAnisotropicRotation = new TexturedFloat(Pbr.AnisotropicRotation, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrAnisotropicRotationTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrSheen = new TexturedFloat(Pbr.Sheen, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrSheenTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrSheenTint = new TexturedFloat(Pbr.SheenTint, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrSheenTintTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrClearcoat = new TexturedFloat(Pbr.Clearcoat, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrClearcoatTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrClearcoatRoughness = new TexturedFloat(Pbr.ClearcoatRoughness, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrClearcoatRoughnessTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrIor = new TexturedFloat(Pbr.OpacityIor, 1.0f, false, 0.0f);
+		public CyclesTextureImage PbrIorTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrTransmission = new TexturedFloat(Pbr.Opacity, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrTransmissionTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedFloat PbrTransmissionRoughness = new TexturedFloat(Pbr.OpacityRoughness, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrTransmissionRoughnessTexture = new CyclesTextureImage();
+
+		public TexturedColor PbrNormal = new TexturedColor(Pbr.Normal, Color4f.Black, false, 0.0f);
+		public CyclesTextureImage PbrNormalTexture = new CyclesTextureImage();
+
+		public TexturedFloat PbrSmudge = new TexturedFloat(Pbr.Smudge, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrSmudgeTexture = new CyclesTextureImage();
+		public TexturedFloat PbrAmbientOcclusion = new TexturedFloat(Pbr.AmbientOcclusion, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrAmbientOcclusionTexture = new CyclesTextureImage();
+
+		public TexturedColor PbrEmission = new TexturedColor(Pbr.Emission, Color4f.Black, false, 0.0f);
+		public CyclesTextureImage PbrEmissionTexture = new CyclesTextureImage();
+		public TexturedColor PbrBump = new TexturedColor(Pbr.Bump, Color4f.Black, false, 0.0f);
+		public CyclesTextureImage PbrBumpTexture = new CyclesTextureImage();
+		public TexturedColor PbrDisplacement = new TexturedColor(Pbr.Displacement, Color4f.Black, false, 0.0f);
+		public CyclesTextureImage PbrDisplacementTexture = new CyclesTextureImage();
+
+		#endregion
 
 		public uint Id { get; }
 
@@ -479,8 +640,7 @@ namespace RhinoCyclesCore
 
 		static private void LoadOneTexture(CyclesTextureImage tex, Dictionary<uint, ByteBitmap> bytes, Dictionary<uint, FloatBitmap> floats)
 		{
-			uint rid;
-			if (uint.TryParse(tex.Name, out rid))
+			if (uint.TryParse(tex.Name, out uint rid))
 			{
 				if (tex.HasByteImage)
 				{
