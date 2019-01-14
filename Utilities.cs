@@ -83,20 +83,16 @@ namespace RhinoCyclesCore
 				rc = c.ToFloat4();
 				success = true;
 			}
-			if (rm.Fields.TryGetValue($"{slotname}-on", out bool texon))
-			{
-				onness = texon;
-				if (onness)
-				{
-					if (rm.FindChild(slotname) is RenderMaterial rt)
-					{
-						rmchild = rt;
-					}
-				}
+			var texamount = rm.GetChildSlotParameter(slotname, "texture-amount") as IConvertible;
+			if(texamount != null) {
+				amount = Convert.ToSingle(texamount) / 100.0f;
 			}
-			if (rm.Fields.TryGetValue($"{slotname}-amount", out float texamount))
-			{
-				amount = texamount;
+			var texon = rm.GetChildSlotParameter(slotname, "texture-on") as IConvertible;
+			if(texon != null) {
+				onness = Convert.ToBoolean(texon);
+			}
+			if(rm.FindChild(slotname) is RenderMaterial rt) {
+				rmchild = rt;
 			}
 
 			return new Tuple<bool, float4, bool, float, RenderMaterial>(success, rc, onness, amount, rmchild);
