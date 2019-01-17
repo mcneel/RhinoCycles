@@ -21,6 +21,7 @@ using RhinoCyclesCore.Materials;
 using RhinoCyclesCore.Converters;
 using System.Collections.Generic;
 using Rhino.Display;
+using Pbr = Rhino.Render.PhysicallyBasedMaterial.ParametersNames;
 
 namespace RhinoCyclesCore
 {
