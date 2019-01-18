@@ -21,6 +21,7 @@ using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
 using ccl.ShaderNodes.Sockets;
+using RhinoCyclesCore.ExtensionMethods;
 
 namespace RhinoCyclesCore.Materials
 {
@@ -28,44 +29,41 @@ namespace RhinoCyclesCore.Materials
 	[CustomRenderContent(IsPrivate=true)]
 	public class GlassMaterial : RenderMaterial, ICyclesMaterial
 	{
+		private static readonly string _Color = "glass_color";
+		private static readonly string _Frost = "frost-amount";
+		private static readonly string _Ior = "ior";
 		public override string TypeName => "Cycles Glass";
 
 		public override string TypeDescription => "Cycles Glass Material";
 
 		public float Gamma { get; set; }
 
-		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.Glass;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.CustomRenderMaterial;
 
-		private Color4f Color { get; set; }
-		private float Frost { get; set; }
-		private float Ior { get; set; }
+		TexturedColor Color = new TexturedColor(_Color, Color4f.White, false, 0.0f);
+		CyclesTextureImage ColorTexture = new CyclesTextureImage();
+		TexturedFloat Frost = new TexturedFloat(_Frost, 0.0f, false, 0.0f);
+		CyclesTextureImage FrostTexture = new CyclesTextureImage();
+		TexturedFloat Ior = new TexturedFloat(_Ior, 1.45f, false, 0.0f);
+		CyclesTextureImage IorTexture = new CyclesTextureImage();
+
 
 		public GlassMaterial()
 		{
-			Color = Color4f.White;
-			Fields.Add("glass_color", Color, "Glass Color");
-			Frost = 0.0f;
-			Fields.Add("frost-amount", Frost, "Frost");
-			Ior = 1.45f;
-			Fields.Add("ior", Ior, "IOR");
+			Utilities.TexturedSlot(this, _Color, Color4f.White, "Color");
+			Utilities.TexturedSlot(this, _Frost, 0.0f, "Frost");
+			Utilities.TexturedSlot(this, _Ior, 1.45f, "IOR");
+			ModifyRenderContentStyles(RenderContentStyles.None, RenderContentStyles.TextureSummary);
 		}
 
 		public void BakeParameters()
 		{
-			Color4f col;
-			if (Fields.TryGetValue("glass_color", out col))
-			{
-				Color = col;
-			}
-			float val;
-			if (Fields.TryGetValue("frost-amount", out val))
-			{
-				Frost = val;
-			}
-			if (Fields.TryGetValue("ior", out val))
-			{
-				Ior = val;
-			}
+			HandleTexturedValue(_Color, Color);
+			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, Gamma);
+			HandleTexturedValue(_Frost, Frost);
+			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, Gamma);
+			HandleTexturedValue(_Color, Color);
+			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -77,86 +75,64 @@ namespace RhinoCyclesCore.Materials
 		{
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
 
+			BakeParameters();
+
 			simulatedMaterial.Reflectivity = 1.0;
 			simulatedMaterial.Transparency = 1.0;
 			simulatedMaterial.FresnelReflections = true;
 			simulatedMaterial.DiffuseColor = System.Drawing.Color.Black;
 
-			Color4f color;
-			if (Fields.TryGetValue("glass_color", out color))
-				simulatedMaterial.TransparentColor = color.AsSystemColor();
+			simulatedMaterial.TransparentColor = Color.Value.AsSystemColor();
 
-			float f;
-			if (Fields.TryGetValue("frost-amount", out f))
-			{
-				simulatedMaterial.ReflectionGlossiness = f;
-				simulatedMaterial.RefractionGlossiness = f;
-			}
-			if (Fields.TryGetValue("ior", out f))
-			{
-				simulatedMaterial.IndexOfRefraction = f;
-			}
+			simulatedMaterial.ReflectionGlossiness = Frost.Value;
+			simulatedMaterial.RefractionGlossiness = Frost.Value;
+			simulatedMaterial.IndexOfRefraction = Ior.Value;
 
 			simulatedMaterial.Name = Name;
 
 
 		}
 
-		public override Material SimulateMaterial(bool isForDataOnly)
-		{
-			var m = base.SimulateMaterial(isForDataOnly);
-
-			SimulateMaterial(ref m, isForDataOnly);
-
-			return m;
-		}
-
-
-		public string MaterialXml
-		{
-			get
-			{
-
-				float frost = (float)Math.Pow(Frost, 2);
-
-				Color4f color = Color4f.ApplyGamma(Color, Gamma);
-
-				return string.Format(
-					ccl.Utilities.Instance.NumberFormatInfo,
-					"<transparent_bsdf color=\"{0} {1} {2}\" name=\"transp\" />" +
-					"<glass_bsdf color=\"{0} {1} {2}\" roughness=\"{3}\" ior=\"{4}\" name=\"glass\" />" +
-					"<light_path name=\"lp\" />" +
-					"<math type=\"Maximum\" name=\"max\" />" +
-					"<mix_closure name=\"mix\" />" +
-
-					"<connect from=\"transp bsdf\" to=\"mix closure2\" />" +
-					"<connect from=\"glass bsdf\" to=\"mix closure1\" />" +
-					"<connect from=\"lp isshadowray\" to=\"max value1\" />" +
-					"<connect from=\"lp isreflectionray\" to=\"max value2\" />" +
-					"<connect from=\"max value\" to=\"mix fac\" />" +
-					"<connect from=\"mix closure\" to=\"output surface\" />" +
-					"",
-					
-					color.R, color.G, color.B,
-					frost,
-					Ior);
-			}
-		}
+		public string MaterialXml => throw new InvalidOperationException("Cycles Glass is not an XML-material");
+		ClosureSocket outsocket = null;
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
-			try
-			{
-				ccl.Shader.ShaderFromXml(sh, MaterialXml, finalize);
-			}
-			catch (Exception)
-			{
-				return false;
-			}
+			ccl.ShaderNodes.TransparentBsdfNode transp = new ccl.ShaderNodes.TransparentBsdfNode("transp");
+			ccl.ShaderNodes.PrincipledBsdfNode glass = new ccl.ShaderNodes.PrincipledBsdfNode("glass");
+			ccl.ShaderNodes.LightPathNode lp = new ccl.ShaderNodes.LightPathNode("lp");
+			ccl.ShaderNodes.MathMaximum max = new ccl.ShaderNodes.MathMaximum("max");
+			ccl.ShaderNodes.MixClosureNode mix = new ccl.ShaderNodes.MixClosureNode("mix");
+			ccl.ShaderNodes.TextureCoordinateNode texco = new ccl.ShaderNodes.TextureCoordinateNode("texco");
+
+			sh.AddNode(transp);
+			sh.AddNode(glass);
+			sh.AddNode(lp);
+			sh.AddNode(max);
+			sh.AddNode(mix);
+			sh.AddNode(texco);
+
+			glass.ins.Transmission.Value = 1.0f;
+
+			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, glass.ins.BaseColor, texco);
+			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, transp.ins.Color, texco);
+			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.TransmissionRoughness, texco);
+			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.IOR, texco);
+
+			transp.outs.BSDF.Connect(mix.ins.Closure2);
+			glass.outs.BSDF.Connect(mix.ins.Closure1);
+			lp.outs.IsShadowRay.Connect(max.ins.Value1);
+			lp.outs.IsReflectionRay.Connect(max.ins.Value2);
+			max.outs.Value.Connect(mix.ins.Fac);
+			mix.outs.Closure.Connect(sh.Output.ins.Surface);
+
+			outsocket = mix.outs.Closure;
+
+			if (finalize) sh.FinalizeGraph();
 			return true;
 		}
 		public ClosureSocket GetClosureSocket(ccl.Shader sh)
 		{
-			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
+			return outsocket ?? sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
 	}
 }

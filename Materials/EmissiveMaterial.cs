@@ -126,7 +126,7 @@ namespace RhinoCyclesCore.Materials
 		}
 
 
-		public string MaterialXml => throw new InvalidOperationException("EmissiveMaterial is not an XMl-based material");
+		public string MaterialXml => throw new InvalidOperationException("Cycles Emissive is not an XMl-based material");
 
 		ClosureSocket outsocket = null;
 
@@ -186,7 +186,7 @@ namespace RhinoCyclesCore.Materials
 		}
 		public ClosureSocket GetClosureSocket(ccl.Shader sh)
 		{
-			return outsocket != null ? outsocket : sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
+			return outsocket ?? sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
 	}
 }
