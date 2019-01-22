@@ -20,6 +20,7 @@ using Rhino.DocObjects;
 using Rhino.Render;
 using System;
 using ccl.ShaderNodes.Sockets;
+using RhinoCyclesCore.ExtensionMethods;
 
 namespace RhinoCyclesCore.Materials
 {
@@ -27,59 +28,65 @@ namespace RhinoCyclesCore.Materials
 	[CustomRenderContent(IsPrivate=true)]
 	public class EmissiveMaterial : RenderMaterial, ICyclesMaterial
 	{
+
+		private static readonly string _Emissive = "emission_color";
+		private static readonly string _Strength = "strength";
+		private static readonly string _Falloff = "falloff";
+		private static readonly string _Smooth = "smooth";
+		private static readonly string _Hide = "hide";
+
+
 		public override string TypeName => "Cycles Emissive";
 
-		public override string TypeDescription => "Cycles Emissive Material (no falloff)";
+		public override string TypeDescription => "Cycles Emissive Material";
 
 		public float Gamma { get; set; }
 
-		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.Emissive;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.CustomRenderMaterial;
 
 		private float Strength { get; set; }
-		private Color4f Emission { get; set; }
+		//private Color4f Emission { get; set; }
 		private int Falloff { get; set; }
 		private float Smooth { get; set; }
 		private bool Hide { get; set; }
 
+		TexturedColor Emission = new TexturedColor(_Emissive, Color4f.White, false, 0.0f);
+		CyclesTextureImage EmissionTexture = new CyclesTextureImage();
+
 		public EmissiveMaterial()
 		{
-			Emission = Color4f.White;
-			Fields.Add("emission_color", Color4f.White, "Emissive Color");
+			/*Emission = Color4f.White;
+			Fields.Add("emission_color", Color4f.White, "Emissive Color");*/
+			Utilities.TexturedSlot(this, _Emissive, Color4f.White, "Emissive Color");
 			Strength = 1.0f;
-			Fields.Add("strength", 1.0f, "Strength");
+			Fields.Add(_Strength, 1.0f, "Strength");
 			Falloff = 0;
-			Fields.Add("falloff", 0, "Fall-off");
+			Fields.Add(_Falloff, 1, "Fall-off");
 			Smooth = 0.0f;
-			Fields.Add("smooth", 0.0f, "Smooth");
+			Fields.Add(_Smooth, 0.1f, "Smooth");
 			Hide = false;
-			Fields.Add("hide", true, "Hide");
+			Fields.Add(_Hide, true, "Hide");
 
+			ModifyRenderContentStyles(RenderContentStyles.None, RenderContentStyles.TextureSummary);
 		}
 
 		public void BakeParameters()
 		{
-			Color4f color;
-			if (Fields.TryGetValue("emission_color", out color))
-			{
-				Emission = color;
-			}
-			float strength;
-			if (Fields.TryGetValue("strength", out strength))
+			HandleTexturedValue(_Emissive, Emission);
+			Utilities.HandleRenderTexture(Emission.Texture, EmissionTexture);
+			if (Fields.TryGetValue(_Strength, out float strength))
 			{
 				Strength = strength;
 			}
-			int falloff;
-			if (Fields.TryGetValue("falloff", out falloff))
+			if (Fields.TryGetValue(_Falloff, out int falloff))
 			{
 				Falloff = falloff;
 			}
-			float smooth;
-			if (Fields.TryGetValue("smooth", out smooth))
+			if (Fields.TryGetValue(_Smooth, out float smooth))
 			{
 				Smooth = smooth;
 			}
-			bool hide;
-			if (Fields.TryGetValue("hide", out hide))
+			if (Fields.TryGetValue(_Hide, out bool hide))
 			{
 				Hide = hide;
 			}
@@ -92,22 +99,17 @@ namespace RhinoCyclesCore.Materials
 
 		public override void SimulateMaterial(ref Material simulatedMaterial, bool forDataOnly)
 		{
+			BakeParameters();
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
-			Color4f color;
 
 			simulatedMaterial.Reflectivity = 0.0;
 			simulatedMaterial.Transparency = 0.0;
 			simulatedMaterial.FresnelReflections = false;
-			if (Fields.TryGetValue("emission_color", out color))
-				simulatedMaterial.EmissionColor = color.AsSystemColor();
-				simulatedMaterial.DiffuseColor = color.AsSystemColor();
+			simulatedMaterial.EmissionColor = Emission.Value.AsSystemColor();
+			simulatedMaterial.DiffuseColor = Emission.Value.AsSystemColor();
 
 
-			float f;
-			if (Fields.TryGetValue("strength", out f))
-			{
-				simulatedMaterial.RefractionGlossiness = f;
-			}
+			simulatedMaterial.RefractionGlossiness = Strength;
 
 			simulatedMaterial.Name = Name;
 
@@ -124,73 +126,67 @@ namespace RhinoCyclesCore.Materials
 		}
 
 
-		public string MaterialXml
-		{
-			get
-			{
-				Color4f color = Color4f.ApplyGamma(Emission, Gamma);
+		public string MaterialXml => throw new InvalidOperationException("Cycles Emissive is not an XMl-based material");
 
-				string falloff;
-				switch(Falloff)
-				{
-					case 0:
-						falloff = "constant";
-						break;
-					case 1:
-						falloff = "linear";
-						break;
-					default:
-						falloff = "quadratic";
-						break;
-				}
+		ClosureSocket outsocket = null;
 
-				var hidepart = "";
-				if(Hide)
-				{
-					hidepart = 
-					"<connect from=\"emission emission\" to=\"mix closure1\" />" +
-					"<connect from=\"lp iscameraray\" to=\"mix fac\" />" +
-					"<connect from=\"mix closure\" to=\"output surface\" />";
-				} else
-				{
-					hidepart =
-					"<connect from=\"emission emission\" to=\"output surface\" />";
-				}
-
-				return string.Format(
-					ccl.Utilities.Instance.NumberFormatInfo,
-					"<transparent_bsdf color=\"1 1 1\" name=\"transp\" />" +
-					"<emission color=\"{0} {1} {2}\" name=\"emission\" />" +
-					"<light_falloff name=\"lfo\" strength=\"{3}\" smooth=\"{4}\" />" +
-					"<light_path name=\"lp\" />" +
-					"<mix_closure name=\"mix\" />" +
-
-					"<connect from=\"transp bsdf\" to=\"mix closure2\" />" +
-					"<connect from=\"lfo {5}\" to=\"emission strength\" />" +
-					"{6}",
-					
-					color.R, color.G, color.B,
-					Strength / 100.0f,
-					Smooth,
-					falloff,
-					hidepart);
-			}
-		}
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
-			try
-			{
-				ccl.Shader.ShaderFromXml(sh, MaterialXml, finalize);
+			ccl.ShaderNodes.TransparentBsdfNode transp = new ccl.ShaderNodes.TransparentBsdfNode("transp");
+
+			ccl.ShaderNodes.EmissionNode emission = new ccl.ShaderNodes.EmissionNode("emission");
+			ccl.ShaderNodes.LightFalloffNode lfo = new ccl.ShaderNodes.LightFalloffNode("lfo");
+			ccl.ShaderNodes.LightPathNode lp = new ccl.ShaderNodes.LightPathNode("lp");
+			ccl.ShaderNodes.MixClosureNode mix = new ccl.ShaderNodes.MixClosureNode("mix");
+
+			ccl.ShaderNodes.TextureCoordinateNode texco = new ccl.ShaderNodes.TextureCoordinateNode("texco");
+
+			sh.AddNode(transp);
+			sh.AddNode(emission);
+			sh.AddNode(lfo);
+			sh.AddNode(lp);
+			sh.AddNode(mix);
+			sh.AddNode(texco);
+
+			transp.ins.Color.Value = new ccl.float4(1.0f);
+
+			Utilities.PbrGraphForSlot(sh, Emission, EmissionTexture, emission.ins.Color, texco);
+
+			lfo.ins.Strength.Value = Falloff > 1 ? Strength : Strength / 100.0f;
+			lfo.ins.Smooth.Value = Smooth;
+
+			switch(Falloff) {
+				case 0:
+					lfo.outs.Constant.Connect(emission.ins.Strength);
+					break;
+				case 1:
+					lfo.outs.Linear.Connect(emission.ins.Strength);
+					break;
+				default:
+					lfo.outs.Quadratic.Connect(emission.ins.Strength);
+					break;
 			}
-			catch (Exception)
-			{
-				return false;
+
+			transp.outs.BSDF.Connect(mix.ins.Closure2);
+
+			if(Hide) {
+				emission.outs.Emission.Connect(mix.ins.Closure1);
+				lp.outs.IsCameraRay.Connect(mix.ins.Fac);
+				mix.outs.Closure.Connect(sh.Output.ins.Surface);
+				outsocket = mix.outs.Closure;
 			}
+			else {
+				emission.outs.Emission.Connect(sh.Output.ins.Surface);
+				outsocket = emission.outs.Emission;
+			}
+
+			if (finalize) sh.FinalizeGraph();
+
 			return true;
 		}
 		public ClosureSocket GetClosureSocket(ccl.Shader sh)
 		{
-			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
+			return outsocket ?? sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
 	}
 }

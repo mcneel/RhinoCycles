@@ -27,25 +27,28 @@ namespace RhinoCyclesCore.Materials
 	[CustomRenderContent(IsPrivate=true)]
 	public class DiffuseMaterial : RenderMaterial, ICyclesMaterial
 	{
+		private static readonly string _Diffuse = "diffuse";
 		public override string TypeName => "Cycles Diffuse";
 
 		public override string TypeDescription => "Cycles Diffuse color only material (plaster)";
 
 		public float Gamma { get; set; }
 
-		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.Diffuse;
+		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.CustomRenderMaterial;
 
-		private Color4f Diffuse { get; set; }
+		TexturedColor Diffuse = new TexturedColor(_Diffuse, Color4f.White, false, 0.0f);
+		CyclesTextureImage DiffuseTexture = new CyclesTextureImage();
 
 		public DiffuseMaterial()
 		{
-			Fields.Add("diffuse", Color4f.White, "Color");
+			Utilities.TexturedSlot(this, _Diffuse, Color4f.White, "Diffuse");
+			ModifyRenderContentStyles(RenderContentStyles.None, RenderContentStyles.TextureSummary);
 		}
 
 		public void BakeParameters()
 		{
-			Color4f color;
-			Diffuse = Fields.TryGetValue("diffuse", out color) ? color : Color4f.White;
+			HandleTexturedValue(_Diffuse, Diffuse);
+			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -57,52 +60,36 @@ namespace RhinoCyclesCore.Materials
 		{
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
 
+			BakeParameters();
 
-			Color4f color;
-			if (Fields.TryGetValue("diffuse", out color))
-				simulatedMaterial.DiffuseColor = color.AsSystemColor();
+			simulatedMaterial.DiffuseColor = Diffuse.Value.AsSystemColor();
+			if(Diffuse.On && Diffuse.Texture!=null && DiffuseTexture.HasTextureImage) {
+				simulatedMaterial.SetBitmapTexture(Diffuse.Texture.SimulatedTexture(RenderTexture.TextureGeneration.Disallow).Texture());
+			}
 
 			simulatedMaterial.Name = Name;
 		}
 
-		public override Material SimulateMaterial(bool isForDataOnly)
-		{
-			var m = base.SimulateMaterial(isForDataOnly);
-
-			SimulateMaterial(ref m, isForDataOnly);
-
-			return m;
-		}
-
-		public string MaterialXml
-		{
-			get
-			{
-				Color4f color = Color4f.ApplyGamma(Diffuse, Gamma);
-
-				return string.Format(
-					ccl.Utilities.Instance.NumberFormatInfo,
-					"<diffuse_bsdf color=\"{0} {1} {2}\" name=\"diff\"/>" +
-					"<connect from=\"diff bsdf\" to=\"output surface\" />" +
-					"",
-					color.R, color.G, color.B);
-			}
-		}
+		public string MaterialXml => throw new InvalidOperationException("Cycles Diffuse is not an XMl-based material");
+		ClosureSocket outsocket = null;
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
-			try
-			{
-				ccl.Shader.ShaderFromXml(sh, MaterialXml, finalize);
-			}
-			catch (Exception)
-			{
-				return false;
-			}
+			ccl.ShaderNodes.DiffuseBsdfNode diffuse = new ccl.ShaderNodes.DiffuseBsdfNode("diffuse");
+			ccl.ShaderNodes.TextureCoordinateNode texco = new ccl.ShaderNodes.TextureCoordinateNode("texco");
+			sh.AddNode(diffuse);
+			sh.AddNode(texco);
+
+			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, diffuse.ins.Color, texco);
+
+			diffuse.outs.BSDF.Connect(sh.Output.ins.Surface);
+			outsocket = diffuse.outs.BSDF;
+
+			if (finalize) sh.FinalizeGraph();
 			return true;
 		}
 		public ClosureSocket GetClosureSocket(ccl.Shader sh)
 		{
-			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
+			return outsocket ?? sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
 	}
 }
