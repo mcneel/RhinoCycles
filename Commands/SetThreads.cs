@@ -24,6 +24,7 @@ using Rhino.Input.Custom;
 namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("e677727c-41a7-42aa-9422-1faf387f3f66")]
+	[CommandStyle(Style.Hidden)]
 	public class SetThreads : Command
 	{
 		static SetThreads _instance;

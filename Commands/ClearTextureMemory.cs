@@ -20,6 +20,7 @@ using Rhino.Commands;
 namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("b1a17785-71a3-4194-aaf7-fccac37ef716")]
+	[CommandStyle(Style.Hidden)]
 	public class ClearTextureMemory : Command
 	{
 		static ClearTextureMemory _instance;
