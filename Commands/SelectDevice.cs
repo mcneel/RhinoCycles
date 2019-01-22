@@ -24,6 +24,7 @@ using Rhino.Input.Custom;
 namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("32D6D91A-779D-42D5-B76C-2974D5DBD7CA")]
+	[CommandStyle(Style.Hidden)]
 	public class SelectDevice : Command
 	{
 		static SelectDevice _instance;

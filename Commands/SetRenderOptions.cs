@@ -26,6 +26,7 @@ namespace RhinoCycles.Commands
 {
 
 	[Guid("3F09C94E-26BC-4CD5-8315-9F71F4F04DA1")]
+	[CommandStyle(Style.Hidden)]
 	public class SetRenderOptions : Command
 	{
 		private static SetRenderOptions _gThecommand;
