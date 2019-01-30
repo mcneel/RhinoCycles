@@ -252,6 +252,7 @@ namespace RhinoCyclesCore
 					// what to read out from the simulated material to
 					// populate my own material descriptions.
 					var m = rm.SimulateMaterial(true);
+					var backuprm = RenderMaterial.CreateBasicMaterial(m);
 					// figure out what type of material we are.
 					//var probemat = GuessMaterialFromSmell(rm);
 					var probemat = WhatMaterial(rm, m);
@@ -339,10 +340,9 @@ namespace RhinoCyclesCore
 					shb.TransparencyTexture.Amount = 0.0f;
 					shb.EnvironmentTexture.Amount = 0.0f;
 
-					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse))
+					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse) || backuprm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse))
 					{
-						var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
-
+						var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
 						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, difftex, RenderMaterial.StandardChildSlots.Diffuse);
 						if (shb.HasDiffuseTexture)
 						{
@@ -351,9 +351,9 @@ namespace RhinoCyclesCore
 						}
 					}
 
-					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump))
+					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump) || backuprm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump))
 					{
-						var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
+						var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
 						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, bumptex, RenderMaterial.StandardChildSlots.Bump);
 						if (shb.HasBumpTexture)
 						{
@@ -361,9 +361,9 @@ namespace RhinoCyclesCore
 						}
 					}
 
-					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency))
+					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency) || backuprm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency))
 					{
-						var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
+						var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
 						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, transtex,
 							RenderMaterial.StandardChildSlots.Transparency);
 						if (shb.HasTransparencyTexture)
@@ -372,9 +372,9 @@ namespace RhinoCyclesCore
 						}
 					}
 
-					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment))
+					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment) || backuprm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment))
 					{
-						var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
+						var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
 						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, envtex,
 							RenderMaterial.StandardChildSlots.Environment);
 						if (shb.HasEnvironmentTexture)
