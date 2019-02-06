@@ -342,27 +342,31 @@ namespace RhinoCyclesCore
 
 					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse) || backuprm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Diffuse))
 					{
+						var useorig = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse) != null;
 						var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
 						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, difftex, RenderMaterial.StandardChildSlots.Diffuse);
 						if (shb.HasDiffuseTexture)
 						{
+							shb.CyclesMaterialType = ShaderBody.CyclesMaterial.No;
 							shb.DiffuseTexture.UseAlpha = difftexAlpha;
-							shb.DiffuseTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) / 100.0f, 1.0f);
+							shb.DiffuseTexture.Amount = (float)Math.Min(useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) / 100.0f, 1.0f);
 						}
 					}
 
 					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump) || backuprm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Bump))
 					{
+						var useorig = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump) != null;
 						var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
 						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, bumptex, RenderMaterial.StandardChildSlots.Bump);
 						if (shb.HasBumpTexture)
 						{
-							shb.BumpTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) / 100.0f, 1.0f);
+							shb.BumpTexture.Amount = (float)Math.Min(useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) / 100.0f, 1.0f);
 						}
 					}
 
 					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency) || backuprm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Transparency))
 					{
+						var useorig = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency) != null;
 						var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
 						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, transtex,
 							RenderMaterial.StandardChildSlots.Transparency);
@@ -374,12 +378,13 @@ namespace RhinoCyclesCore
 
 					if (rm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment) || backuprm.GetTextureOnFromUsage(RenderMaterial.StandardChildSlots.Environment))
 					{
+						var useorig = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment) != null;
 						var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
 						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, envtex,
 							RenderMaterial.StandardChildSlots.Environment);
 						if (shb.HasEnvironmentTexture)
 						{
-							shb.EnvironmentTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) / 100.0f, 1.0f);
+							shb.EnvironmentTexture.Amount = (float)Math.Min(useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) / 100.0f, 1.0f);
 						}
 					}
 
