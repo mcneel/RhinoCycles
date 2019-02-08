@@ -154,13 +154,11 @@ namespace RhinoCyclesCore.Database
 					var oldShader = _shaderDatabase.GetShaderFromHash(obshad.OldShaderHash);
 					if (newShader != null)
 					{
-						cob.Shader = _shaderDatabase.GetShaderIdForMatId(obshad.NewShaderHash); // ob.Shader;
+						cob.Shader = _shaderDatabase.GetShaderIdForMatId(obshad.NewShaderHash);
 						cob.Shader = this._renderEngine.Client.Scene.GetShaderSceneId(newShader);
-			//Scene.GetShaderSceneId(Shader));
-						//cob.Mesh?.ReplaceShader(newShader);
 						newShader.Tag();
 					}
-					oldShader?.Tag();
+					oldShader?.Tag(false); // tag old shader to be no longer used (on this object)
 					cob.TagUpdate();
 					_objectShaderDatabase.ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
 				}
