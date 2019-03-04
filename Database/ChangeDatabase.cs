@@ -1445,13 +1445,14 @@ namespace RhinoCyclesCore.Database
 			var emissive = new Materials.EmissiveMaterial();
 			Color4f color = new Color4f(rgl.Diffuse);
 			emissive.BeginChange(RenderContent.ChangeContexts.Ignore);
+			emissive.Name = rgl.Name;
 			emissive.Gamma = PreProcessGamma;
 			emissive.SetParameter("emission_color", color);
 			emissive.SetParameter("strength", (float)rgl.Intensity * (rgl.IsEnabled ? 1 : 0));
 			emissive.EndChange();
 			emissive.BakeParameters();
 			var shader = new CyclesShader(matid);
-			shader.FrontXmlShader(rgl.Name, emissive);
+			shader.CreateFrontShader(emissive, PreProcessGamma);
 			shader.Type = CyclesShader.Shader.Diffuse;
 
 			_shaderDatabase.AddShader(shader);
