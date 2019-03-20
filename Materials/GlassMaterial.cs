@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -87,10 +87,7 @@ namespace RhinoCyclesCore.Materials
 			simulatedMaterial.ReflectionGlossiness = Frost.Value;
 			simulatedMaterial.RefractionGlossiness = Frost.Value;
 			simulatedMaterial.IndexOfRefraction = Ior.Value;
-
 			simulatedMaterial.Name = Name;
-
-
 		}
 
 		public string MaterialXml => throw new InvalidOperationException("Cycles Glass is not an XML-material");

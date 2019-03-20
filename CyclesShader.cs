@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -190,6 +190,13 @@ namespace RhinoCyclesCore
 			var pbrbasecol = new NamedValue("pbr-base-color", rm.GetParameter("pbr-base-color"));
 			if (pbrbasecol.Value != null)
 			{
+				// always simulate material, need to know now myself
+				// what to read out from the simulated material to
+				// populate my own material descriptions.
+				var m = rm.SimulatedMaterial(true);
+				// figure out what type of material we are.
+				//var probemat = GuessMaterialFromSmell(rm);
+				var probemat = WhatMaterial(rm, m);
 				shb.IsPbr = true;
 				rm.BeginChange(RenderContent.ChangeContexts.Ignore);
 				shb.Name = rm.Name ?? "";
@@ -251,7 +258,7 @@ namespace RhinoCyclesCore
 					// always simulate material, need to know now myself
 					// what to read out from the simulated material to
 					// populate my own material descriptions.
-					var m = rm.SimulateMaterial(true);
+					var m = rm.SimulatedMaterial(true);
 					var backuprm = RenderMaterial.CreateBasicMaterial(m);
 					// figure out what type of material we are.
 					//var probemat = GuessMaterialFromSmell(rm);

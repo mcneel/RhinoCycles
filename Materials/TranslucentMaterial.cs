@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,13 +60,11 @@ namespace RhinoCyclesCore.Materials
 
 			simulatedMaterial.DiffuseColor = Diffuse.Value.AsSystemColor();
 			if(Diffuse.On && Diffuse.Texture!=null && DiffuseTexture.HasTextureImage) {
-				simulatedMaterial.SetBitmapTexture(Diffuse.Texture.SimulatedTexture(RenderTexture.TextureGeneration.Disallow).Texture());
+				simulatedMaterial.SetTexture(Diffuse.Texture.SimulatedTexture(RenderTexture.TextureGeneration.Disallow).Texture(), Rhino.DocObjects.TextureType.Bitmap);
 			}
 		}
 
-
 		public string MaterialXml => throw new InvalidOperationException("Cycles Translucent is not an XMl-based material");
-
 
 		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.CustomRenderMaterial;
 		ClosureSocket outsocket = null;
