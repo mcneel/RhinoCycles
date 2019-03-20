@@ -93,8 +93,8 @@ namespace RhinoCyclesCore.Shaders
 				var factored_bg_color266 = new CombineRgbNode("factored_bg_color");
 
 				var gradient_colorramp279 = new ColorRampNode("gradient_colorramp");
-					gradient_colorramp279.ColorBand.Stops.Add(new ColorStop() {Color=new ccl.float4(0.9411765f, 0.5803922f, 0.07843138f, 1f), Position=0f});
-					gradient_colorramp279.ColorBand.Stops.Add(new ColorStop() {Color=new ccl.float4(0.5019608f, 0f, 0f, 1f), Position=1f});
+					gradient_colorramp279.ColorBand.Stops.Add(new ccl.ShaderNodes.ColorStop() {Color=new ccl.float4(0.9411765f, 0.5803922f, 0.07843138f, 1f), Position=0f});
+					gradient_colorramp279.ColorBand.Stops.Add(new ccl.ShaderNodes.ColorStop() {Color=new ccl.float4(0.5019608f, 0f, 0f, 1f), Position=1f});
 
 				var light_path235 = new LightPathNode("light_path");
 

@@ -28,6 +28,7 @@ using System;
 namespace RhinoCycles.Commands
 {
 	[Guid("ededf48b-dd86-4329-a08d-dc762b8c4adf")]
+	[CommandStyle(Style.Hidden)]
 	public class SetAdvancedOptions : Command
 	{
 		private static SetAdvancedOptions _gThecommand;

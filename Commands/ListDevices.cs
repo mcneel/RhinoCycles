@@ -22,6 +22,7 @@ using Rhino.Commands;
 namespace RhinoCycles.Commands
 {
 	[Guid("9e91d7ea-7990-471f-a944-ad9ececcc88b")]
+	[CommandStyle(Style.Hidden)]
 	public class ListDevices : Command
 	{
 		static ListDevices _instance;

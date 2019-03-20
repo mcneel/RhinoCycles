@@ -25,6 +25,7 @@ using RhinoCycles.Viewport;
 namespace RhinoCycles.Commands
 {
 	[Guid("168C2084-CDA8-469E-BE98-4E0E8B8BD607")]
+	[CommandStyle(Style.Hidden)]
 	public class ChangeSamples : Command
 	{
 		static ChangeSamples _instance;

@@ -154,13 +154,11 @@ namespace RhinoCyclesCore.Database
 					var oldShader = _shaderDatabase.GetShaderFromHash(obshad.OldShaderHash);
 					if (newShader != null)
 					{
-						cob.Shader = _shaderDatabase.GetShaderIdForMatId(obshad.NewShaderHash); // ob.Shader;
+						cob.Shader = _shaderDatabase.GetShaderIdForMatId(obshad.NewShaderHash);
 						cob.Shader = this._renderEngine.Client.Scene.GetShaderSceneId(newShader);
-			//Scene.GetShaderSceneId(Shader));
-						//cob.Mesh?.ReplaceShader(newShader);
 						newShader.Tag();
 					}
-					oldShader?.Tag();
+					oldShader?.Tag(false); // tag old shader to be no longer used (on this object)
 					cob.TagUpdate();
 					_objectShaderDatabase.ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
 				}
@@ -1447,13 +1445,14 @@ namespace RhinoCyclesCore.Database
 			var emissive = new Materials.EmissiveMaterial();
 			Color4f color = new Color4f(rgl.Diffuse);
 			emissive.BeginChange(RenderContent.ChangeContexts.Ignore);
+			emissive.Name = rgl.Name;
 			emissive.Gamma = PreProcessGamma;
 			emissive.SetParameter("emission_color", color);
 			emissive.SetParameter("strength", (float)rgl.Intensity * (rgl.IsEnabled ? 1 : 0));
 			emissive.EndChange();
 			emissive.BakeParameters();
 			var shader = new CyclesShader(matid);
-			shader.FrontXmlShader(rgl.Name, emissive);
+			shader.CreateFrontShader(emissive, PreProcessGamma);
 			shader.Type = CyclesShader.Shader.Diffuse;
 
 			_shaderDatabase.AddShader(shader);

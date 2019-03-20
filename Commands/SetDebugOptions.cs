@@ -23,6 +23,7 @@ using Rhino.Input.Custom;
 namespace RhinoCycles.Commands
 {
 	[System.Runtime.InteropServices.Guid("0AB57C1A-7FDB-4C36-85D8-807E6A606389")]
+	[CommandStyle(Style.Hidden)]
 	public class SetDebugOptions : Command
 	{
 		private static SetDebugOptions _gThecommand;

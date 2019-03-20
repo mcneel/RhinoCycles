@@ -170,7 +170,7 @@ namespace RhinoCycles.Viewport
 
 		private bool _useFastDraw = false;
 		private bool _useOpenGl = false;
-		public override bool UseFastDraw() { return !_forCapture && _okOgl && RcCore.It.EngineSettings.UseFastDraw && RcCore.It.CanUseDrawOpenGl(); }
+		public override bool UseFastDraw() { return !_forCapture && _okOgl && (_cycles?.RenderDevice.IsCpu ?? false || RcCore.It.EngineSettings.UseFastDraw) && RcCore.It.CanUseDrawOpenGl(); }
 
 		private Thread _modalThread;
 		private Thread _sw;

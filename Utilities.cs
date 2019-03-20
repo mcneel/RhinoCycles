@@ -6,6 +6,7 @@ using RhinoCyclesCore.Materials;
 using System;
 using System.Globalization;
 using static Rhino.Render.RenderContent;
+using Pbr = Rhino.Render.PhysicallyBasedMaterial.ParametersNames;
 
 namespace RhinoCyclesCore
 {
