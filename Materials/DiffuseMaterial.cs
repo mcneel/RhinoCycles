@@ -64,7 +64,7 @@ namespace RhinoCyclesCore.Materials
 
 			simulatedMaterial.DiffuseColor = Diffuse.Value.AsSystemColor();
 			if(Diffuse.On && Diffuse.Texture!=null && DiffuseTexture.HasTextureImage) {
-				simulatedMaterial.SetBitmapTexture(Diffuse.Texture.SimulatedTexture(RenderTexture.TextureGeneration.Disallow).Texture());
+				simulatedMaterial.SetTexture(Diffuse.Texture.SimulatedTexture(RenderTexture.TextureGeneration.Disallow).Texture(), TextureType.Bitmap);
 			}
 
 			simulatedMaterial.Name = Name;
