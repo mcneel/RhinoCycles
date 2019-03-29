@@ -78,6 +78,18 @@ namespace RhinoCyclesCore.Converters
 			var rId = renderTexture.RenderHashWithoutLocalMapping;
 
 			var rhinotfm = renderTexture.LocalMappingTransform;
+			var rotationvec = renderTexture.GetRotation();
+			var repeatvec = renderTexture.GetRepeat();
+			var offsetvec = renderTexture.GetOffset();
+
+			//var newrhinotfm = Rhino.Geometry.Transform.Identity;
+			//newrhinotfm.
+
+			Transform tt = new Transform(
+				(float)offsetvec.X, (float)offsetvec.Y, (float)offsetvec.Z, 0.0f,
+				(float)repeatvec.X, (float)repeatvec.Y, (float)repeatvec.Z, 0.0f,
+				(float)rotationvec.X, (float)rotationvec.Y, (float)rotationvec.Z, 0.0f
+			);
 
 			var projectionMode = renderTexture.GetProjectionMode();
 			var envProjectionMode = renderTexture.GetInternalEnvironmentMappingMode();
@@ -89,7 +101,7 @@ namespace RhinoCyclesCore.Converters
 				using (
 					var actualEvaluator = textureEvaluator ?? RenderTexture.NewBitmapTexture(st, renderTexture.DocumentAssoc).CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
 				{
-					InternalMaterialBitmapFromEvaluator(shader, renderTexture, textureType, rhinotfm, rId, actualEvaluator, projectionMode, envProjectionMode, repeat);
+					InternalMaterialBitmapFromEvaluator(shader, renderTexture, textureType, tt.ToRhinoTransform(), rId, actualEvaluator, projectionMode, envProjectionMode, repeat);
 
 				}
 			}
@@ -122,9 +134,7 @@ namespace RhinoCyclesCore.Converters
 
 			if(!canUse) { pheight = 1; pwidth = 1; }
 
-			Transform t = new Transform(
-				rhinotfm.ToFloatArray(true)
-				);
+			Transform t = rhinotfm.ToCyclesTransform();
 
 			var isFloat = renderTexture.IsHdrCapable();
 			var isLinear = renderTexture.IsLinear();

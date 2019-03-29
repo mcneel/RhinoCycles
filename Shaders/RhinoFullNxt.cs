@@ -169,7 +169,14 @@ namespace RhinoCyclesCore.Shaders
 				return addemissive;
 				
 			} else {
-				var texcoord209 = new TextureCoordinateNode("texcoord");
+				// NOTE: need to add separate texture coordinate nodes for each channel, since different channels
+				// can have different texture mappings with different transform matrices. Using only the one would
+				// result in only one transform being applied and the rest will appear untouched.
+				// See https://mcneel.myjetbrains.com/youtrack/issue/RH-51531
+				var texcoord209 = new TextureCoordinateNode("texcoord for diff map");
+				var texcoord209bump = new TextureCoordinateNode("texcoord for bump map");
+				var texcoord209env = new TextureCoordinateNode("texcoord for envmap");
+				var texcoord209transp = new TextureCoordinateNode("texcoord for transp map");
 
 				var invert_transparency192 = new MathSubtract("invert_transparency");
 				invert_transparency192.ins.Value1.Value = 1f;
@@ -447,6 +454,9 @@ namespace RhinoCyclesCore.Shaders
 
 
 				m_shader.AddNode(texcoord209);
+				m_shader.AddNode(texcoord209bump);
+				m_shader.AddNode(texcoord209env);
+				m_shader.AddNode(texcoord209transp);
 				m_shader.AddNode(invert_transparency192);
 				m_shader.AddNode(weight_diffuse_amount_by_transparency_inv193);
 				m_shader.AddNode(diff_tex_amount_multiplied_with_inv_transparency309);
@@ -519,7 +529,7 @@ namespace RhinoCyclesCore.Shaders
 				diffuse_texture210.outs.Color.Connect(diffuse_base_color_through_alpha308.ins.Color2);
 				diff_tex_weighted_alpha_for_basecol_mix310.outs.Value.Connect(diffuse_base_color_through_alpha308.ins.Fac);
 				weight_diffuse_amount_by_transparency_inv193.outs.Value.Connect(use_alpha_weighted_with_modded_amount195.ins.Value2);
-				texcoord209.outs.UV.Connect(bump_texture211.ins.Vector);
+				texcoord209bump.outs.UV.Connect(bump_texture211.ins.Vector);
 				bump_texture211.outs.Color.Connect(bump_texture_to_bw212.ins.Color);
 				diffuse_base_color_through_alpha308.outs.Color.Connect(diffuse_base_color_through_alpha246.ins.Color1);
 				diffuse_texture210.outs.Color.Connect(diffuse_base_color_through_alpha246.ins.Color2);
@@ -548,7 +558,7 @@ namespace RhinoCyclesCore.Shaders
 				reflection_factor223.outs.R.Connect(diffuse_plus_glossy226.ins.Fac);
 				shadeless221.outs.Closure.Connect(blend_in_transparency227.ins.Closure1);
 				refraction225.outs.BSDF.Connect(blend_in_transparency227.ins.Closure2);
-				texcoord209.outs.EnvEmap.Connect(separate_envmap_texco228.ins.Vector);
+				texcoord209env.outs.EnvEmap.Connect(separate_envmap_texco228.ins.Vector);
 				separate_envmap_texco228.outs.Y.Connect(flip_sign_envmap_texco_y198.ins.Value1);
 				separate_envmap_texco228.outs.X.Connect(recombine_envmap_texco229.ins.X);
 				flip_sign_envmap_texco_y198.outs.Value.Connect(recombine_envmap_texco229.ins.Y);
@@ -574,7 +584,7 @@ namespace RhinoCyclesCore.Shaders
 				diffuse_texture210.outs.Alpha.Connect(max_of_texalpha_or_usealpha307.ins.Value1);
 				one_if_usealphatransp_turned_off306.outs.Value.Connect(max_of_texalpha_or_usealpha307.ins.Value2);
 				max_of_texalpha_or_usealpha307.outs.Value.Connect(invert_alpha194.ins.Value2);
-				texcoord209.outs.UV.Connect(transparency_texture237.ins.Vector);
+				texcoord209transp.outs.UV.Connect(transparency_texture237.ins.Vector);
 				transparency_texture237.outs.Color.Connect(transpluminance238.ins.Color);
 				transpluminance238.outs.Val.Connect(invert_luminence203.ins.Value2);
 				invert_luminence203.outs.Value.Connect(transparency_texture_amount204.ins.Value1);
@@ -595,6 +605,12 @@ namespace RhinoCyclesCore.Shaders
 
 				/* extra code */
 
+				if (part.HasTransparencyTexture)
+				{
+					RenderEngine.SetTextureImage(transparency_texture237, part.TransparencyTexture);
+					RenderEngine.SetProjectionMode(m_shader, part.TransparencyTexture, transparency_texture237, texcoord209transp);
+				}
+
 				if (part.HasDiffuseTexture)
 				{
 					RenderEngine.SetTextureImage(diffuse_texture210, part.DiffuseTexture);
@@ -604,19 +620,13 @@ namespace RhinoCyclesCore.Shaders
 				if (part.HasBumpTexture)
 				{
 					RenderEngine.SetTextureImage(bump_texture211, part.BumpTexture);
-					RenderEngine.SetProjectionMode(m_shader, part.BumpTexture, bump_texture211, texcoord209);
-				}
-
-				if (part.HasTransparencyTexture)
-				{
-					RenderEngine.SetTextureImage(transparency_texture237, part.TransparencyTexture);
-					RenderEngine.SetProjectionMode(m_shader, part.TransparencyTexture, transparency_texture237, texcoord209);
+					RenderEngine.SetProjectionMode(m_shader, part.BumpTexture, bump_texture211, texcoord209bump);
 				}
 
 				if (part.HasEnvironmentTexture)
 				{
 					RenderEngine.SetTextureImage(environment_texture230, part.EnvironmentTexture);
-					RenderEngine.SetProjectionMode(m_shader, part.EnvironmentTexture, environment_texture230, texcoord209);
+					RenderEngine.SetProjectionMode(m_shader, part.EnvironmentTexture, environment_texture230, texcoord209env);
 				}
 
 				if (part.CyclesMaterialType == ShaderBody.CyclesMaterial.Glass
