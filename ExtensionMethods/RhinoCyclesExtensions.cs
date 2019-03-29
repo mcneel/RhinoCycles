@@ -162,5 +162,28 @@ namespace RhinoCyclesCore.ExtensionMethods
 
 			return t;
 		}
+
+		/// <summary>
+		/// Extract scale vector from ccl.Transform
+		/// </summary>
+		/// <param name="t">ccl.Transform to extract scale vector from</param>
+		/// <returns>ccl.float4 that is the scale vector for this transform</returns>
+		public static ccl.float4 ScaleVector(this ccl.Transform t)
+		{
+				ccl.float4 sx = new ccl.float4(t.x.x,t.y.x,t.z.x);
+				ccl.float4 sy = new ccl.float4(t.x.y,t.y.y,t.z.y);
+				ccl.float4 sz = new ccl.float4(t.x.z,t.y.z,t.z.z);
+				return new ccl.float4(sx.Length(), sy.Length(), sz.Length());
+		}
+
+		/// <summary>
+		/// Extract translate vector from ccl.Transform
+		/// </summary>
+		/// <param name="t">ccl.Transform to extract translate vector from</param>
+		/// <returns>ccl.float4 that is the translate vector for this transform</returns>
+		public static ccl.float4 TranslateVector(this ccl.Transform t)
+		{
+			return new ccl.float4(t.x.w, t.y.w, t.z.w);
+		}
 	}
 }

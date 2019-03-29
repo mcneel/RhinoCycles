@@ -20,6 +20,7 @@ using ccl;
 using ccl.ShaderNodes;
 using Rhino.Render;
 using RhinoCyclesCore.Core;
+using RhinoCyclesCore.ExtensionMethods;
 
 namespace RhinoCyclesCore
 {
@@ -245,11 +246,18 @@ namespace RhinoCyclesCore
 
 			texture_coordinates.UseTransform = false;
 
-			var tfm = new MatrixMathNode("texture transform" + g.ToString())
+			/*var tfm = new MatrixMathNode("texture transform" + g.ToString())
 			{
 				Transform = texture.Transform
 			};
-			shader.AddNode(tfm);
+			shader.AddNode(tfm);*/
+			float4 t = texture.Transform.x;
+			image_node.Translation = t;
+			image_node.Translation.z = 0;
+			image_node.Translation.w = 1;
+			image_node.Scale.x = 1.0f / texture.Transform.y.x;
+			image_node.Scale.y = 1.0f / texture.Transform.y.y;
+			image_node.Rotation.z = -1.0f * DegToRad(texture.Transform.z.z);
 
 			image_node.Projection = TextureNode.TextureProjection.Flat;
 			image_node.Interpolation = InterpolationType.Cubic;
@@ -257,18 +265,20 @@ namespace RhinoCyclesCore
 			if (texture.ProjectionMode == TextureProjectionMode.WcsBox)
 			{
 				texture_coordinates.UseTransform = true;
-				texture_coordinates.outs.WcsBox.Connect(tfm.ins.Vector);
-				tfm.outs.Vector.Connect(image_node.ins.Vector);
+				texture_coordinates.outs.WcsBox.Connect(image_node.ins.Vector);
+				//texture_coordinates.outs.WcsBox.Connect(tfm.ins.Vector);
+				//tfm.outs.Vector.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.Wcs)
 			{
 				texture_coordinates.UseTransform = true;
-				texture_coordinates.outs.Object.Connect(tfm.ins.Vector);
-				tfm.outs.Vector.Connect(image_node.ins.Vector);
+				texture_coordinates.outs.Object.Connect(image_node.ins.Vector);
+				//texture_coordinates.outs.Object.Connect(tfm.ins.Vector);
+				//tfm.outs.Vector.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.Screen)
 			{
-				SeparateXyzNode sepvec = new SeparateXyzNode();
+				/*SeparateXyzNode sepvec = new SeparateXyzNode();
 				CombineXyzNode combvec = new CombineXyzNode();
 				MathNode inverty = new MathNode {Operation = MathNode.Operations.Subtract};
 				inverty.ins.Value1.Value = 1.0f;
@@ -287,12 +297,14 @@ namespace RhinoCyclesCore
 				combvec.outs.Vector.Connect(tfm.ins.Vector);
 
 				tfm.Transform = tfm.Transform;
-				tfm.outs.Vector.Connect(image_node.ins.Vector);
+				tfm.outs.Vector.Connect(image_node.ins.Vector);*/
+				texture_coordinates.outs.Window.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.View)
 			{
-				texture_coordinates.outs.Camera.Connect(tfm.ins.Vector);
-				tfm.outs.Vector.Connect(image_node.ins.Vector);
+				texture_coordinates.outs.Camera.Connect(image_node.ins.Vector);
+				//texture_coordinates.outs.Camera.Connect(tfm.ins.Vector);
+				//tfm.outs.Vector.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.EnvironmentMap)
 			{
@@ -330,8 +342,14 @@ namespace RhinoCyclesCore
 			}
 			else
 			{
-				texture_coordinates.outs.UV.Connect(tfm.ins.Vector);
-				tfm.outs.Vector.Connect(image_node.ins.Vector);
+				/*float4 s = texture.Transform.ScaleVector();
+				float4 tv = texture.Transform.TranslateVector() * -1;
+				image_node.Scale.x = 1.0f / s.x;
+				image_node.Scale.y = 1.0f / s.y;
+				image_node.Scale.z = 1.0f / s.z;
+				image_node.Scale.w = 1;
+				image_node.Translation = tv;*/
+				texture_coordinates.outs.UV.Connect(image_node.ins.Vector);
 			}
 		}
 	}

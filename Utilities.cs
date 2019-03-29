@@ -142,7 +142,17 @@ namespace RhinoCyclesCore
 			if (rt == null) return;
 			uint rid = rt.RenderHashWithoutLocalMapping;
 
-			var rhinotfm = rt.LocalMappingTransform;
+			var rotationvec = rt.GetRotation();
+			var repeatvec = rt.GetRepeat();
+			var offsetvec = rt.GetOffset();
+
+			Transform tt = new Transform(
+				(float)offsetvec.X, (float)offsetvec.Y, (float)offsetvec.Z,
+				(float)repeatvec.X, (float)repeatvec.Y, (float)repeatvec.Z,
+				(float)rotationvec.X, (float)rotationvec.Y, (float)rotationvec.Z,
+				0.0f, 0.0f, 0.0f
+			);
+
 
 			var projectionMode = rt.GetProjectionMode();
 			var envProjectionMode = rt.GetInternalEnvironmentMappingMode();
@@ -185,9 +195,6 @@ namespace RhinoCyclesCore
 					}
 
 
-					Transform t = new Transform(
-						rhinotfm.ToFloatArray(true)
-						);
 					var imgbased = rt.IsImageBased();
 					var linear = rt.IsLinear();
 					var isFloat = rt.IsHdrCapable();
@@ -211,7 +218,7 @@ namespace RhinoCyclesCore
 					tex.IsLinear = linear;
 					tex.ProjectionMode = projectionMode;
 					tex.EnvProjectionMode = envProjectionMode;
-					tex.Transform = t;
+					tex.Transform = tt;
 					tex.Repeat = repeat;
 				}
 			}
