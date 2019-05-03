@@ -148,7 +148,9 @@ namespace RhinoCyclesCore.Shaders
 				Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrNormal, part.PbrNormalTexture, principled.ins.Normal, texco);
+
+				//ALB - removed specific normal maps from PBR definition.  Normal maps share a slot with bump like the rest of Rhino
+				//Utilities.PbrGraphForSlot(m_shader, part.PbrNormal, part.PbrNormalTexture, principled.ins.Normal, texco);
 				if (part.PbrBump.On && part.PbrBumpTexture.HasTextureImage)
 				{
 					var bump = new ccl.ShaderNodes.BumpNode("bump");

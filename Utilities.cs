@@ -255,7 +255,9 @@ namespace RhinoCyclesCore
 			if(valsock == null) {
 				throw new UnrecognizedTexturedSlotType($"Type tried is {t}");
 			}
-			GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, sock, texco, false, slot.Name.Equals(Pbr.Normal));
+
+			//ALB - removed specific normal maps from PBR definition.  Normal maps share a slot with bump like the rest of Rhino
+			//GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, sock, texco, false, slot.Name.Equals(Pbr.Normal));
 		}
 
 		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco)
