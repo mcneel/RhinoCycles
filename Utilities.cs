@@ -257,7 +257,7 @@ namespace RhinoCyclesCore
 			}
 
 			//ALB - removed specific normal maps from PBR definition.  Normal maps share a slot with bump like the rest of Rhino
-			//GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, sock, texco, false, slot.Name.Equals(Pbr.Normal));
+			GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, sock, texco, false, false);
 		}
 
 		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco)
