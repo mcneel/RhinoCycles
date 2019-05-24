@@ -228,8 +228,8 @@ namespace RhinoCyclesCore
 				Utilities.HandleRenderTexture(shb.PbrIor.Texture, shb.PbrIorTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.OpacityRoughness, shb.PbrTransmissionRoughness);
 				Utilities.HandleRenderTexture(shb.PbrTransmissionRoughness.Texture, shb.PbrTransmissionRoughnessTexture, 1.0f);
-				rm.HandleTexturedValue(Pbr.Normal, shb.PbrNormal);
-				Utilities.HandleRenderTexture(shb.PbrNormal.Texture, shb.PbrNormalTexture, 1.0f);
+				//rm.HandleTexturedValue(Pbr.Normal, shb.PbrNormal);
+				//Utilities.HandleRenderTexture(shb.PbrNormal.Texture, shb.PbrNormalTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.Emission, shb.PbrEmission);
 				Utilities.HandleRenderTexture(shb.PbrEmission.Texture, shb.PbrEmissionTexture, gamma);
 				rm.HandleTexturedValue(Pbr.Bump, shb.PbrBump);
@@ -529,8 +529,8 @@ namespace RhinoCyclesCore
 		public TexturedFloat PbrTransmissionRoughness = new TexturedFloat(Pbr.OpacityRoughness, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrTransmissionRoughnessTexture = new CyclesTextureImage();
 
-		public TexturedColor PbrNormal = new TexturedColor(Pbr.Normal, Color4f.Black, false, 0.0f);
-		public CyclesTextureImage PbrNormalTexture = new CyclesTextureImage();
+		//public TexturedColor PbrNormal = new TexturedColor(Pbr.Normal, Color4f.Black, false, 0.0f);
+		//public CyclesTextureImage PbrNormalTexture = new CyclesTextureImage();
 
 		public TexturedFloat PbrSmudge = new TexturedFloat(Pbr.Smudge, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrSmudgeTexture = new CyclesTextureImage();

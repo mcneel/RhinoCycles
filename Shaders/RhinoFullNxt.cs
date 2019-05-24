@@ -148,15 +148,20 @@ namespace RhinoCyclesCore.Shaders
 				Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrNormal, part.PbrNormalTexture, principled.ins.Normal, texco);
+				//Utilities.PbrGraphForSlot(m_shader, part.PbrNormal, part.PbrNormalTexture, principled.ins.Normal, texco);
 				if (part.PbrBump.On && part.PbrBumpTexture.HasTextureImage)
 				{
-					var bump = new ccl.ShaderNodes.BumpNode("bump");
-					m_shader.AddNode(bump);
-					Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height, texco, true);
-					bump.ins.Strength.Value = part.PbrBump.Amount; // * 10;
-					bump.ins.Distance.Value = RcCore.It.EngineSettings.BumpDistance;
-					bump.outs.Normal.Connect(principled.ins.Normal);
+					if (!part.PbrBumpTexture.IsNormalMap)
+					{
+						var bump = new ccl.ShaderNodes.BumpNode("bump");
+						m_shader.AddNode(bump);
+						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height, texco, true);
+						bump.ins.Strength.Value = part.PbrBump.Amount;
+						bump.ins.Distance.Value = RcCore.It.EngineSettings.BumpDistance;
+						bump.outs.Normal.Connect(principled.ins.Normal);
+					} else {
+						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal, texco, false, true, false);
+					}
 				}
 
 				principled.outs.BSDF.Connect(addemissive.ins.Closure1);

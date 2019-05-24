@@ -216,6 +216,7 @@ namespace RhinoCyclesCore
 					tex.TexHeight = pheight;
 					tex.Name = rid.ToString(CultureInfo.InvariantCulture);
 					tex.IsLinear = linear;
+					tex.IsNormalMap = rt.IsNormalMap();
 					tex.ProjectionMode = projectionMode;
 					tex.EnvProjectionMode = envProjectionMode;
 					tex.Transform = tt;
@@ -300,7 +301,7 @@ namespace RhinoCyclesCore
 				if (normalMap)
 				{
 					// ideally we calculate the tangents and switch to Tangent space here.
-					normalmapnode.SpaceType = ccl.ShaderNodes.NormalMapNode.Space.Object;
+					normalmapnode.SpaceType = ccl.ShaderNodes.NormalMapNode.Space.World;
 					sh.AddNode(normalmapnode);
 					imtexnode.outs.Color.Connect(normalmapnode.ins.Color);
 					normalmapnode.ins.Strength.Value = amount;
