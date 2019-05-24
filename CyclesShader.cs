@@ -234,9 +234,6 @@ namespace RhinoCyclesCore
 				rm.HandleTexturedValue(Pbr.OpacityIor, shb.PbrIor);
 				Utilities.HandleRenderTexture(shb.PbrIor.Texture, shb.PbrIorTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.OpacityRoughness, shb.PbrTransmissionRoughness);
-				//ALB - removed specific normal maps from PBR definition.  Normal maps share a slot with bump like the rest of Rhino
-				//rm.HandleTexturedValue(Pbr.Normal, shb.PbrNormal);
-				//Utilities.HandleRenderTexture(shb.PbrNormal.Texture, shb.PbrNormalTexture, gamma);
 				Utilities.HandleRenderTexture(shb.PbrTransmissionRoughness.Texture, shb.PbrTransmissionRoughnessTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.Emission, shb.PbrEmission);
 				Utilities.HandleRenderTexture(shb.PbrEmission.Texture, shb.PbrEmissionTexture, gamma);
@@ -536,10 +533,6 @@ namespace RhinoCyclesCore
 
 		public TexturedFloat PbrTransmissionRoughness = new TexturedFloat(Pbr.OpacityRoughness, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrTransmissionRoughnessTexture = new CyclesTextureImage();
-
-		//ALB - removed specific normal maps from PBR definition.  Normal maps share a slot with bump like the rest of Rhino
-		//public TexturedColor PbrNormal = new TexturedColor(Pbr.Normal, Color4f.Black, false, 0.0f);
-		//public CyclesTextureImage PbrNormalTexture = new CyclesTextureImage();
 
 		public TexturedFloat PbrSmudge = new TexturedFloat(Pbr.Smudge, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrSmudgeTexture = new CyclesTextureImage();

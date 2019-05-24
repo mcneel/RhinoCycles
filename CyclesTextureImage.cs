@@ -33,6 +33,8 @@ namespace RhinoCyclesCore
 
 		public bool IsLinear { get; set; }
 
+		public bool IsNormalMap { get; set; } = false;
+
 		/// <summary>
 		/// transformations on texture space. Vectors used are:
 		/// Transform.x = translate
