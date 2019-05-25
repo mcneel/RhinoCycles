@@ -349,7 +349,7 @@ namespace RhinoCyclesCore
 						{
 							shb.CyclesMaterialType = ShaderBody.CyclesMaterial.No;
 							shb.DiffuseTexture.UseAlpha = difftexAlpha;
-							shb.DiffuseTexture.Amount = (float)Math.Min(useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) / 100.0f, 1.0f);
+							shb.DiffuseTexture.Amount = (float)Math.Min((useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Diffuse) / 100.0f), 1.0f);
 						}
 					}
 
@@ -360,7 +360,7 @@ namespace RhinoCyclesCore
 						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, bumptex, RenderMaterial.StandardChildSlots.Bump);
 						if (shb.HasBumpTexture)
 						{
-							shb.BumpTexture.Amount = (float)Math.Min(useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) / 100.0f, 1.0f);
+							shb.BumpTexture.Amount = (float)Math.Min((useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) / 100.0f), 1.0f);
 						}
 					}
 
@@ -372,7 +372,7 @@ namespace RhinoCyclesCore
 							RenderMaterial.StandardChildSlots.Transparency);
 						if (shb.HasTransparencyTexture)
 						{
-							shb.TransparencyTexture.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Transparency) / 100.0f, 1.0f);
+							shb.TransparencyTexture.Amount = (float)Math.Min((useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Transparency) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Transparency) / 100.0f), 1.0f);
 						}
 					}
 
@@ -384,7 +384,7 @@ namespace RhinoCyclesCore
 							RenderMaterial.StandardChildSlots.Environment);
 						if (shb.HasEnvironmentTexture)
 						{
-							shb.EnvironmentTexture.Amount = (float)Math.Min(useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) / 100.0f, 1.0f);
+							shb.EnvironmentTexture.Amount = (float)Math.Min((useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Environment) / 100.0f), 1.0f);
 						}
 					}
 
