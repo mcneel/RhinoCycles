@@ -222,14 +222,14 @@ namespace RhinoCyclesCore
 				Utilities.HandleRenderTexture(shb.PbrClearcoat.Texture, shb.PbrClearcoatTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.ClearcoatRoughness, shb.PbrClearcoatRoughness);
 				Utilities.HandleRenderTexture(shb.PbrClearcoatRoughness.Texture, shb.PbrClearcoatRoughnessTexture, 1.0f);
+				rm.HandleTexturedValue(Pbr.ClearcoatBump, shb.PbrClearcoatBump);
+				Utilities.HandleRenderTexture(shb.PbrClearcoatBump.Texture, shb.PbrClearcoatBumpTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.Opacity, shb.PbrTransmission);
 				Utilities.HandleRenderTexture(shb.PbrTransmission.Texture, shb.PbrTransmissionTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.OpacityIor, shb.PbrIor);
 				Utilities.HandleRenderTexture(shb.PbrIor.Texture, shb.PbrIorTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.OpacityRoughness, shb.PbrTransmissionRoughness);
 				Utilities.HandleRenderTexture(shb.PbrTransmissionRoughness.Texture, shb.PbrTransmissionRoughnessTexture, 1.0f);
-				//rm.HandleTexturedValue(Pbr.Normal, shb.PbrNormal);
-				//Utilities.HandleRenderTexture(shb.PbrNormal.Texture, shb.PbrNormalTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.Emission, shb.PbrEmission);
 				Utilities.HandleRenderTexture(shb.PbrEmission.Texture, shb.PbrEmissionTexture, gamma);
 				rm.HandleTexturedValue(Pbr.Bump, shb.PbrBump);
@@ -516,6 +516,11 @@ namespace RhinoCyclesCore
 
 		/*****/
 
+		public TexturedColor PbrClearcoatBump = new TexturedColor(Pbr.ClearcoatBump, Color4f.Black, false, 0.0f);
+		public CyclesTextureImage PbrClearcoatBumpTexture = new CyclesTextureImage();
+
+		/*****/
+
 		public TexturedFloat PbrIor = new TexturedFloat(Pbr.OpacityIor, 1.0f, false, 0.0f);
 		public CyclesTextureImage PbrIorTexture = new CyclesTextureImage();
 
@@ -528,9 +533,6 @@ namespace RhinoCyclesCore
 
 		public TexturedFloat PbrTransmissionRoughness = new TexturedFloat(Pbr.OpacityRoughness, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrTransmissionRoughnessTexture = new CyclesTextureImage();
-
-		//public TexturedColor PbrNormal = new TexturedColor(Pbr.Normal, Color4f.Black, false, 0.0f);
-		//public CyclesTextureImage PbrNormalTexture = new CyclesTextureImage();
 
 		public TexturedFloat PbrSmudge = new TexturedFloat(Pbr.Smudge, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrSmudgeTexture = new CyclesTextureImage();

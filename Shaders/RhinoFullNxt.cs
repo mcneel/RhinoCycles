@@ -105,10 +105,17 @@ namespace RhinoCyclesCore.Shaders
 				var principled = new PrincipledBsdfNode("pbr_principled");
 				var texco = new TextureCoordinateNode("pbr_texco");
 				var basewithao = new MixNode("pbr_basewithao");
+				var aoamount = new MixNode("pbr_aoamount");
 				var aotex = new ImageTextureNode("pbr_aotex");
+
+				aoamount.BlendType = MixNode.BlendTypes.Blend;
+				aoamount.ins.Color1.Value = Rhino.Display.Color4f.Black.ToFloat4();
+				aoamount.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
+				aoamount.ins.Fac.Value = 1.0f;
 				basewithao.BlendType = MixNode.BlendTypes.Multiply;
-				basewithao.ins.Fac.Value = part.PbrAmbientOcclusion.Amount * 0.5f;
+				basewithao.ins.Fac.Value = 0.5f;
 				basewithao.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
+
 
 				var emissive = new EmissionNode("pbr_emission");
 				emissive.ins.Strength.Value = 1.0f;
@@ -119,15 +126,19 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(addemissive);
 				m_shader.AddNode(principled);
 				m_shader.AddNode(basewithao);
-				m_shader.AddNode(aotex);
 
 				if(part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasTextureImage) {
+					m_shader.AddNode(aotex);
+					m_shader.AddNode(aoamount);
+
 					RenderEngine.SetTextureImage(aotex, part.PbrAmbientOcclusionTexture);
 					aotex.Extension = part.PbrAmbientOcclusionTexture.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
 					aotex.ColorSpace = TextureNode.TextureColorSpace.None;
 					aotex.Projection = TextureNode.TextureProjection.Flat;
 					RenderEngine.SetProjectionMode(m_shader, part.PbrAmbientOcclusionTexture, aotex, texco);
-					aotex.outs.Color.Connect(basewithao.ins.Color2);
+					aotex.outs.Color.Connect(aoamount.ins.Color2);
+					aoamount.ins.Fac.Value = part.PbrAmbientOcclusion.Amount;
+					aoamount.outs.Color.Connect(basewithao.ins.Color2);
 				}
 
 				Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1, texco);
@@ -148,7 +159,6 @@ namespace RhinoCyclesCore.Shaders
 				Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation, texco);
-				//Utilities.PbrGraphForSlot(m_shader, part.PbrNormal, part.PbrNormalTexture, principled.ins.Normal, texco);
 				if (part.PbrBump.On && part.PbrBumpTexture.HasTextureImage)
 				{
 					if (!part.PbrBumpTexture.IsNormalMap)
@@ -161,6 +171,20 @@ namespace RhinoCyclesCore.Shaders
 						bump.outs.Normal.Connect(principled.ins.Normal);
 					} else {
 						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal, texco, false, true, false);
+					}
+				}
+				if (part.PbrClearcoatBump.On && part.PbrClearcoatBumpTexture.HasTextureImage)
+				{
+					if (!part.PbrClearcoatBumpTexture.IsNormalMap)
+					{
+						var bump = new ccl.ShaderNodes.BumpNode("clearcoat_bump");
+						m_shader.AddNode(bump);
+						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height, texco, true);
+						bump.ins.Strength.Value = part.PbrClearcoatBump.Amount;
+						bump.ins.Distance.Value = RcCore.It.EngineSettings.BumpDistance;
+						bump.outs.Normal.Connect(principled.ins.ClearcoatNormal);
+					} else {
+						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal, texco, false, true, false);
 					}
 				}
 
