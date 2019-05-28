@@ -229,6 +229,8 @@ namespace RhinoCyclesCore
 				Utilities.HandleRenderTexture(shb.PbrClearcoat.Texture, shb.PbrClearcoatTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.ClearcoatRoughness, shb.PbrClearcoatRoughness);
 				Utilities.HandleRenderTexture(shb.PbrClearcoatRoughness.Texture, shb.PbrClearcoatRoughnessTexture, 1.0f);
+				rm.HandleTexturedValue(Pbr.ClearcoatBump, shb.PbrClearcoatBump);
+				Utilities.HandleRenderTexture(shb.PbrClearcoatBump.Texture, shb.PbrClearcoatBumpTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.Opacity, shb.PbrTransmission);
 				Utilities.HandleRenderTexture(shb.PbrTransmission.Texture, shb.PbrTransmissionTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.OpacityIor, shb.PbrIor);
@@ -518,6 +520,11 @@ namespace RhinoCyclesCore
 
 		public TexturedFloat PbrClearcoatRoughness = new TexturedFloat(Pbr.ClearcoatRoughness, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrClearcoatRoughnessTexture = new CyclesTextureImage();
+
+		/*****/
+
+		public TexturedColor PbrClearcoatBump = new TexturedColor(Pbr.ClearcoatBump, Color4f.Black, false, 0.0f);
+		public CyclesTextureImage PbrClearcoatBumpTexture = new CyclesTextureImage();
 
 		/*****/
 
