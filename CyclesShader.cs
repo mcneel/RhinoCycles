@@ -319,9 +319,10 @@ namespace RhinoCyclesCore
 					shb.TransparencyColor = transp;
 					shb.EmissionColor = emis;
 
+					var transp_used = m.Transparency > 0.001;
 
 					shb.FresnelIOR = (float)m.FresnelIndexOfRefraction;
-					shb.IOR = (float)m.IndexOfRefraction;
+					shb.IOR = transp_used ? (float)m.IndexOfRefraction : 1.0f;
 					shb.Roughness = (float)m.ReflectionGlossiness;
 					shb.Reflectivity = reflectivity;
 					shb.Metallic = metalic;
