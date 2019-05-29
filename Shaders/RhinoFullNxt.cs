@@ -202,10 +202,11 @@ namespace RhinoCyclesCore.Shaders
 				// can have different texture mappings with different transform matrices. Using only the one would
 				// result in only one transform being applied and the rest will appear untouched.
 				// See https://mcneel.myjetbrains.com/youtrack/issue/RH-51531
-				var texcoord84 = new TextureCoordinateNode("texcoord_for_diff_map");
-				var texcoord84bump = new TextureCoordinateNode("texcoord_for_bump_map");
+
+				var texcoord84 = new TextureCoordinateNode("texcoord_for_diff");
+				var texcoord84bump = new TextureCoordinateNode("texcoord_for_bump");
 				var texcoord84env = new TextureCoordinateNode("texcoord_for_envmap");
-				var texcoord84transp = new TextureCoordinateNode("texcoord_for_transp_map");
+				var texcoord84transp = new TextureCoordinateNode("texcoord_for_transp");
 
 				var invert_transparency68 = new MathSubtract("invert_transparency");
 					invert_transparency68.ins.Value1.Value = 1f;
@@ -458,10 +459,10 @@ namespace RhinoCyclesCore.Shaders
 
 				var custom_alpha_cutter116 = new MixClosureNode("custom_alpha_cutter");
 
-				var mix_diffuse_and_transparency_color202 = new MixNode("mix_diffuse_and_transparency_color");
-					mix_diffuse_and_transparency_color202.ins.Fac.Value = part.Transparency;
-					mix_diffuse_and_transparency_color202.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
-					mix_diffuse_and_transparency_color202.UseClamp = false;
+				var mix_diffuse_and_transparency_color187 = new MixNode("mix_diffuse_and_transparency_color");
+					mix_diffuse_and_transparency_color187.ins.Fac.Value = part.Transparency;
+					mix_diffuse_and_transparency_color187.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
+					mix_diffuse_and_transparency_color187.UseClamp = false;
 
 				var principledbsdf117 = new PrincipledBsdfNode("principledbsdf");
 					principledbsdf117.ins.Subsurface.Value = 0f;
@@ -482,10 +483,13 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.TransmissionRoughness.Value = part.RefractionRoughnessPow2;
 					principledbsdf117.ins.Tangent.Value = new ccl.float4(0f, 0f, 0f, 1f);
 
-				var coloured_shadow_trans_color1694 = new TransparentBsdfNode("coloured_shadow_trans_color");
+				var custom_environment_blend195 = new MixClosureNode("custom_environment_blend");
+					custom_environment_blend195.ins.Fac.Value = part.EnvironmentTexture.Amount;
+
+				var coloured_shadow_trans_color_for_principled188 = new TransparentBsdfNode("coloured_shadow_trans_color_for_principled");
 
 				var coloured_shadow_mix_glass_principled118 = new MixClosureNode("coloured_shadow_mix_glass_principled");
-				
+
 				m_shader.AddNode(texcoord84);
 				m_shader.AddNode(texcoord84bump);
 				m_shader.AddNode(texcoord84env);
@@ -549,9 +553,10 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(transparent115);
 				m_shader.AddNode(add_diffuse_texture_alpha83);
 				m_shader.AddNode(custom_alpha_cutter116);
-				m_shader.AddNode(mix_diffuse_and_transparency_color202);
+				m_shader.AddNode(mix_diffuse_and_transparency_color187);
 				m_shader.AddNode(principledbsdf117);
-				m_shader.AddNode(coloured_shadow_trans_color1694);
+				m_shader.AddNode(custom_environment_blend195);
+				m_shader.AddNode(coloured_shadow_trans_color_for_principled188);
 				m_shader.AddNode(coloured_shadow_mix_glass_principled118);
 				
 
@@ -564,7 +569,7 @@ namespace RhinoCyclesCore.Shaders
 				diffuse_texture85.outs.Color.Connect(diffuse_base_color_through_alpha180.ins.Color2);
 				diff_tex_weighted_alpha_for_basecol_mix182.outs.Value.Connect(diffuse_base_color_through_alpha180.ins.Fac);
 				weight_diffuse_amount_by_transparency_inv69.outs.Value.Connect(use_alpha_weighted_with_modded_amount71.ins.Value2);
-				texcoord84bump.outs.UV.Connect(bump_texture86.ins.Vector);
+				texcoord84.outs.UV.Connect(bump_texture86.ins.Vector);
 				bump_texture86.outs.Color.Connect(bump_texture_to_bw87.ins.Color);
 				diffuse_base_color_through_alpha180.outs.Color.Connect(diffuse_base_color_through_alpha120.ins.Color1);
 				diffuse_texture85.outs.Color.Connect(diffuse_base_color_through_alpha120.ins.Color2);
@@ -593,7 +598,7 @@ namespace RhinoCyclesCore.Shaders
 				reflection_factor98.outs.R.Connect(diffuse_plus_glossy101.ins.Fac);
 				shadeless96.outs.Closure.Connect(blend_in_transparency102.ins.Closure1);
 				refraction100.outs.BSDF.Connect(blend_in_transparency102.ins.Closure2);
-				texcoord84env.outs.EnvEmap.Connect(separate_envmap_texco103.ins.Vector);
+				texcoord84.outs.EnvEmap.Connect(separate_envmap_texco103.ins.Vector);
 				separate_envmap_texco103.outs.Y.Connect(flip_sign_envmap_texco_y74.ins.Value1);
 				separate_envmap_texco103.outs.X.Connect(recombine_envmap_texco104.ins.X);
 				flip_sign_envmap_texco_y74.outs.Value.Connect(recombine_envmap_texco104.ins.Y);
@@ -619,7 +624,7 @@ namespace RhinoCyclesCore.Shaders
 				diffuse_texture85.outs.Alpha.Connect(max_of_texalpha_or_usealpha179.ins.Value1);
 				one_if_usealphatransp_turned_off178.outs.Value.Connect(max_of_texalpha_or_usealpha179.ins.Value2);
 				max_of_texalpha_or_usealpha179.outs.Value.Connect(invert_alpha70.ins.Value2);
-				texcoord84transp.outs.UV.Connect(transparency_texture112.ins.Vector);
+				texcoord84.outs.UV.Connect(transparency_texture112.ins.Vector);
 				transparency_texture112.outs.Color.Connect(transpluminance113.ins.Color);
 				transpluminance113.outs.Val.Connect(invert_luminence79.ins.Value2);
 				invert_luminence79.outs.Value.Connect(transparency_texture_amount80.ins.Value1);
@@ -632,14 +637,16 @@ namespace RhinoCyclesCore.Shaders
 				add_emission_to_final124.outs.Closure.Connect(custom_alpha_cutter116.ins.Closure1);
 				transparent115.outs.BSDF.Connect(custom_alpha_cutter116.ins.Closure2);
 				add_diffuse_texture_alpha83.outs.Value.Connect(custom_alpha_cutter116.ins.Fac);
-				diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_transparency_color202.ins.Color1);
-				attennuated_refraction_color99.outs.Color.Connect(mix_diffuse_and_transparency_color202.ins.Color2);
-				mix_diffuse_and_transparency_color202.outs.Color.Connect(principledbsdf117.ins.BaseColor);
+				diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
+				attennuated_refraction_color99.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color2);
+				mix_diffuse_and_transparency_color187.outs.Color.Connect(principledbsdf117.ins.BaseColor);
 				if (part.BumpTexture.Amount > 0.0f) bump88.outs.Normal.Connect(principledbsdf117.ins.Normal);
 				if (part.BumpTexture.Amount > 0.0f) bump88.outs.Normal.Connect(principledbsdf117.ins.ClearcoatNormal);
-				mix_diffuse_and_transparency_color202.outs.Color.Connect(coloured_shadow_trans_color1694.ins.Color);
-				principledbsdf117.outs.BSDF.Connect(coloured_shadow_mix_glass_principled118.ins.Closure1);
-				coloured_shadow_trans_color1694.outs.BSDF.Connect(coloured_shadow_mix_glass_principled118.ins.Closure2);
+				principledbsdf117.outs.BSDF.Connect(custom_environment_blend195.ins.Closure1);
+				environment_map_diffuse108.outs.BSDF.Connect(custom_environment_blend195.ins.Closure2);
+				mix_diffuse_and_transparency_color187.outs.Color.Connect(coloured_shadow_trans_color_for_principled188.ins.Color);
+				custom_environment_blend195.outs.Closure.Connect(coloured_shadow_mix_glass_principled118.ins.Closure1);
+				coloured_shadow_trans_color_for_principled188.outs.BSDF.Connect(coloured_shadow_mix_glass_principled118.ins.Closure2);
 				weight_for_shadowray_coloured_shadow78.outs.Value.Connect(coloured_shadow_mix_glass_principled118.ins.Fac);
 
 				/* extra code */
