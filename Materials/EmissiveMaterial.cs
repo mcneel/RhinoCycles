@@ -29,9 +29,9 @@ namespace RhinoCyclesCore.Materials
 	public class EmissiveMaterial : RenderMaterial, ICyclesMaterial
 	{
 
-		private static readonly string _Emissive = "emission_color";
-		private static readonly string _Strength = "strength";
-		private static readonly string _Falloff = "falloff";
+		public static readonly string _Emissive = "emission_color";
+		public static readonly string _Strength = "strength";
+		public static readonly string _Falloff = "falloff";
 		private static readonly string _Smooth = "smooth";
 		private static readonly string _Hide = "hide";
 

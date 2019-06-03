@@ -143,7 +143,11 @@ namespace RhinoCyclesCore.Converters
 			if (isFloat)
 			{
 				var img = RetrieveFloatsImg(rId, pwidth, pheight, actualEvaluator, isLinear, isImageBased, canUse);
-				img.ApplyGamma(shader.Gamma);
+				if (textureType == RenderMaterial.StandardChildSlots.Diffuse
+					|| textureType == RenderMaterial.StandardChildSlots.Environment)
+				{
+					img.ApplyGamma(shader.Gamma);
+				}
 				switch (textureType)
 				{
 					case RenderMaterial.StandardChildSlots.Diffuse:
@@ -171,7 +175,11 @@ namespace RhinoCyclesCore.Converters
 			else
 			{
 				var img = RetrieveBytesImg(rId, pwidth, pheight, actualEvaluator, isLinear, isImageBased, canUse);
-				img.ApplyGamma(shader.Gamma);
+				if (textureType == RenderMaterial.StandardChildSlots.Diffuse
+					|| textureType == RenderMaterial.StandardChildSlots.Environment)
+				{
+					img.ApplyGamma(shader.Gamma);
+				}
 				switch (textureType)
 				{
 					case RenderMaterial.StandardChildSlots.Diffuse:
