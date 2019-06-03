@@ -1,6 +1,7 @@
 ﻿using ccl;
 using Rhino.Display;
 using Rhino.Render;
+using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
 using RhinoCyclesCore.Materials;
 using System;
@@ -301,10 +302,10 @@ namespace RhinoCyclesCore
 				if (normalMap)
 				{
 					// ideally we calculate the tangents and switch to Tangent space here.
-					normalmapnode.SpaceType = ccl.ShaderNodes.NormalMapNode.Space.World;
+					normalmapnode.SpaceType = ccl.ShaderNodes.NormalMapNode.Space.Tangent;
 					sh.AddNode(normalmapnode);
 					imtexnode.outs.Color.Connect(normalmapnode.ins.Color);
-					normalmapnode.ins.Strength.Value = amount;
+					normalmapnode.ins.Strength.Value = amount * RcCore.It.EngineSettings.NormalStrengthFactor;
 					normalmapnode.outs.Normal.Connect(sock);
 				}
 				else

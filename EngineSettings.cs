@@ -40,6 +40,7 @@ namespace RhinoCyclesCore
 			SpotlightFactor = SpotlightFactor;
 			PointlightFactor = PointlightFactor;
 			SunlightFactor = SunlightFactor;
+			LinearlightFactor = LinearlightFactor;
 			ArealightFactor = ArealightFactor;
 			PolishFactor = PolishFactor;
 
@@ -47,6 +48,7 @@ namespace RhinoCyclesCore
 			FadeInMs = FadeInMs;
 			Threads = Threads;
 			BumpDistance = BumpDistance;
+			NormalStrengthFactor = NormalStrengthFactor;
 
 			SelectedDeviceStr = SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = IntermediateSelectedDeviceStr;
@@ -136,6 +138,7 @@ namespace RhinoCyclesCore
 			SpotlightFactor = SpotlightFactorDefault;
 			PointlightFactor = PointlightFactorDefault;
 			SunlightFactor = SunlightFactorDefault;
+			LinearlightFactor = LinearlightFactorDefault;
 			ArealightFactor = ArealightFactorDefault;
 			PolishFactor = PolishFactorDefault;
 
@@ -143,6 +146,7 @@ namespace RhinoCyclesCore
 			FadeInMs = FadeInMsDefault;
 			Threads = ThreadsDefault;
 			BumpDistance = BumpDistanceDefault;
+			NormalStrengthFactor = NormalStrengthFactorDefault;
 
 			SelectedDeviceStr = SelectedDeviceStrDefault;
 			IntermediateSelectedDeviceStr = SelectedDeviceStrDefault;
@@ -313,6 +317,13 @@ namespace RhinoCyclesCore
 			get { return (float)RcPlugIn.Settings.GetDouble("SunLightFactor", SunlightFactorDefault); }
 			set { RcPlugIn.Settings.SetDouble("SunLightFactor", value); }
 		}
+		public float LinearlightFactorDefault => 10.0f;
+		public virtual float LinearlightFactor
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble("LinearLightFactor", LinearlightFactorDefault); }
+			set { RcPlugIn.Settings.SetDouble("LinearLightFactor", value); }
+		}
+
 
 		public float ArealightFactorDefault => 17.2f;
 		public virtual float ArealightFactor
@@ -382,6 +393,13 @@ namespace RhinoCyclesCore
 		{
 			get { return RcPlugIn.Settings.GetInteger("TileY", TileYDefault); }
 			set { RcPlugIn.Settings.SetInteger("TileY", value); }
+		}
+
+		public float NormalStrengthFactorDefault => 2.0f;
+		public virtual float NormalStrengthFactor
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble("NormalStrengthFactor", NormalStrengthFactorDefault); }
+			set { RcPlugIn.Settings.SetDouble("NormalStrengthFactor", value); }
 		}
 
 		public float BumpDistanceDefault => 0.01f;

@@ -362,6 +362,8 @@ namespace RhinoCyclesCore.Database
 				var vcs = cyclesMesh.VertexColors;
 				me.SetVertexColors(ref vcs);
 			}
+			// compute tangent space
+			me.AttrTangentSpace();
 			// and finally tag for rebuilding
 			me.TagRebuild();
 			return true;
@@ -547,7 +549,7 @@ namespace RhinoCyclesCore.Database
 						var cpid = _clippingPlaneGuid;
 						Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
 
-						HandleMeshData(cpid.Item1, cpid.Item2, final, true);
+						HandleMeshData(cpid.Item1, cpid.Item2, final, true, uint.MaxValue);
 
 						var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
 
@@ -885,13 +887,13 @@ namespace RhinoCyclesCore.Database
 				foreach(var meshdata in meshes)
 				{
 					if (_renderEngine.CancelRender) return;
-					HandleMeshData(meshguid, meshIndex, meshdata, isClippingObject);
+					HandleMeshData(meshguid, meshIndex, meshdata, isClippingObject, uint.MaxValue);
 					meshIndex++;
 				}
 			}
 		}
 
-		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, bool isClippingObject)
+		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, bool isClippingObject, uint linearlightMatId)
 		{
 			if (_renderEngine.CancelRender) return;
 			RcCore.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
@@ -946,7 +948,7 @@ namespace RhinoCyclesCore.Database
 
 			var meshid = new Tuple<Guid, int>(meshguid, meshIndex);
 
-			var crc = _objectShaderDatabase.FindRenderHashForMeshId(meshid);
+			var crc = linearlightMatId==uint.MaxValue ? _objectShaderDatabase.FindRenderHashForMeshId(meshid) : linearlightMatId;
 			if (crc == uint.MaxValue) crc = 0;
 			if (_renderEngine.CancelRender) return;
 
@@ -1260,7 +1262,7 @@ namespace RhinoCyclesCore.Database
 				m.SetCachedTextureCoordinates(texturemapping, ref tfm);
 			}
 
-			HandleMeshData(gpid.Item1, gpid.Item2, m, false);
+			HandleMeshData(gpid.Item1, gpid.Item2, m, false, uint.MaxValue);
 
 			var isshadowonly = gp.IsShadowOnly;
 			var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
@@ -1437,9 +1439,8 @@ namespace RhinoCyclesCore.Database
 			return crc;
 		}
 
-		private void HandleLightMaterial(Rhino.Geometry.Light rgl)
+		private void HandleLightMaterial(Rhino.Geometry.Light rgl, uint matid)
 		{
-			var matid = LinearLightMaterialCRC(rgl);
 			if (_shaderDatabase.HasShader(matid)) return;
 
 			var emissive = new Materials.EmissiveMaterial();
@@ -1447,8 +1448,9 @@ namespace RhinoCyclesCore.Database
 			emissive.BeginChange(RenderContent.ChangeContexts.Ignore);
 			emissive.Name = rgl.Name;
 			emissive.Gamma = PreProcessGamma;
-			emissive.SetParameter("emission_color", color);
-			emissive.SetParameter("strength", (float)rgl.Intensity * (rgl.IsEnabled ? 1 : 0));
+			emissive.SetParameter(Materials.EmissiveMaterial._Emissive, color);
+			emissive.SetParameter(Materials.EmissiveMaterial._Falloff, 0);
+			emissive.SetParameter(Materials.EmissiveMaterial._Strength, (float)rgl.Intensity * RcCore.It.EngineSettings.LinearlightFactor * (rgl.IsEnabled ? 1 : 0));
 			emissive.EndChange();
 			emissive.BakeParameters();
 			var shader = new CyclesShader(matid);
@@ -1534,9 +1536,8 @@ namespace RhinoCyclesCore.Database
 
 		private void HandleLinearLightAddOrModify(uint lightmeshinstanceid, RGLight ld)
 		{
-			var brepf = ld.HasBrepForm;
 			var p = new Plane(ld.Location, ld.Direction);
-			var circle = new Circle(p, ld.Width.Length);
+			var circle = new Circle(p, ld.Width.Length*0.5);
 			var c = new Cylinder(circle, ld.Direction.Length);
 			var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(true, true), mp);
 			var mesh = new Rhino.Geometry.Mesh();
@@ -1548,9 +1549,9 @@ namespace RhinoCyclesCore.Database
 
 			var matid = LinearLightMaterialCRC(ld);
 
-			HandleLightMaterial(ld);
+			HandleLightMaterial(ld, matid);
 
-			HandleMeshData(ld.Id, 0, mesh, false);
+			HandleMeshData(ld.Id, 0, mesh, false, matid);
 
 			var lightObject = new CyclesObject
 			{
