@@ -395,7 +395,7 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetInteger("TileY", value); }
 		}
 
-		public float NormalStrengthFactorDefault => 2.0f;
+		public float NormalStrengthFactorDefault => 1.0f;
 		public virtual float NormalStrengthFactor
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble("NormalStrengthFactor", NormalStrengthFactorDefault); }
