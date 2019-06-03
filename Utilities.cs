@@ -236,7 +236,7 @@ namespace RhinoCyclesCore
 		/// <param name="teximg"></param>
 		/// <param name="sock"></param>
 		/// <param name="texco"></param>
-		public static void PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco)
+		public static void PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool invert = false)
 		{
 			Type t = typeof(T);
 			ccl.ShaderNodes.Sockets.ISocket valsock = null;
@@ -245,21 +245,41 @@ namespace RhinoCyclesCore
 				ccl.ShaderNodes.ValueNode vn = new ccl.ShaderNodes.ValueNode($"input value for {slot.Name}");
 				sh.AddNode(vn);
 				vn.Value = (float)(object)slot.Value;
-				valsock = vn.outs.Value;
+				if (invert)
+				{
+					ccl.ShaderNodes.MathSubtract invval = new ccl.ShaderNodes.MathSubtract($"invert value for {slot.Name}");
+					invval.ins.Value1.Value = 1.0f;
+					sh.AddNode(invval);
+					vn.outs.Value.Connect(invval.ins.Value2);
+					valsock = invval.outs.Value;
+				}
+				else
+				{
+					valsock = vn.outs.Value;
+				}
 			}
 			else if (t == typeof(Color4f))
 			{
 				ccl.ShaderNodes.ColorNode cn = new ccl.ShaderNodes.ColorNode($"input color for {slot.Name}");
 				sh.AddNode(cn);
 				cn.Value = ((Color4f)(object)slot.Value).ToFloat4();
-				valsock = cn.outs.Color;
+				if (invert)
+				{
+					ccl.ShaderNodes.InvertNode invcol = new ccl.ShaderNodes.InvertNode($"invert input color for {slot.Name}");
+					invcol.ins.Fac.Value = 1.0f;
+					sh.AddNode(invcol);
+					cn.outs.Color.Connect(invcol.ins.Color);
+					valsock = invcol.outs.Color;
+				}
+				else
+				{
+					valsock = cn.outs.Color;
+				}
 			}
 			if(valsock == null) {
 				throw new UnrecognizedTexturedSlotType($"Type tried is {t}");
 			}
-
-			//ALB - removed specific normal maps from PBR definition.  Normal maps share a slot with bump like the rest of Rhino
-			GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, sock, texco, false, false);
+			GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, sock, texco, false, false, invert);
 		}
 
 		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco)
