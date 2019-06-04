@@ -1676,6 +1676,7 @@ namespace RhinoCyclesCore.Database
 
 				// set mesh reference and other stuff
 				cob.Mesh = mesh;
+				cob.RandomId = ob.obid;
 				cob.Transform = ob.Transform;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				cob.IsBlockInstance = true;
