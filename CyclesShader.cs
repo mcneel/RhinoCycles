@@ -243,8 +243,6 @@ namespace RhinoCyclesCore
 				Utilities.HandleRenderTexture(shb.PbrBump.Texture, shb.PbrBumpTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.Displacement, shb.PbrDisplacement);
 				Utilities.HandleRenderTexture(shb.PbrDisplacement.Texture, shb.PbrDisplacementTexture, 1.0f);
-				rm.HandleTexturedValue(Pbr.Smudge, shb.PbrSmudge);
-				Utilities.HandleRenderTexture(shb.PbrSmudge.Texture, shb.PbrSmudgeTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.AmbientOcclusion, shb.PbrAmbientOcclusion);
 				Utilities.HandleRenderTexture(shb.PbrAmbientOcclusion.Texture, shb.PbrAmbientOcclusionTexture, 1.0f);
 				rm.EndChange();
@@ -542,8 +540,6 @@ namespace RhinoCyclesCore
 		public TexturedFloat PbrTransmissionRoughness = new TexturedFloat(Pbr.OpacityRoughness, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrTransmissionRoughnessTexture = new CyclesTextureImage();
 
-		public TexturedFloat PbrSmudge = new TexturedFloat(Pbr.Smudge, 0.0f, false, 0.0f);
-		public CyclesTextureImage PbrSmudgeTexture = new CyclesTextureImage();
 		public TexturedFloat PbrAmbientOcclusion = new TexturedFloat(Pbr.AmbientOcclusion, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrAmbientOcclusionTexture = new CyclesTextureImage();
 
