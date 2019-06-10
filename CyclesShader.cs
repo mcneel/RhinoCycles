@@ -467,7 +467,7 @@ namespace RhinoCyclesCore
 
 		/*****/
 
-		public TexturedColor PbrSubsurfaceRadius = new TexturedColor(Pbr.SubsurfaceScatteringRadius, Color4f.White, false, 0.0f);
+		public TexturedFloat PbrSubsurfaceRadius = new TexturedFloat(Pbr.SubsurfaceScatteringRadius, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrSubsurfaceRadiusTexture = new CyclesTextureImage();
 
 		/*****/
