@@ -49,6 +49,7 @@ namespace RhinoCyclesCore
 			Threads = Threads;
 			BumpDistance = BumpDistance;
 			NormalStrengthFactor = NormalStrengthFactor;
+			BumpStrengthFactor = BumpStrengthFactor;
 
 			SelectedDeviceStr = SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = IntermediateSelectedDeviceStr;
@@ -147,6 +148,7 @@ namespace RhinoCyclesCore
 			Threads = ThreadsDefault;
 			BumpDistance = BumpDistanceDefault;
 			NormalStrengthFactor = NormalStrengthFactorDefault;
+			BumpStrengthFactor = BumpStrengthFactorDefault;
 
 			SelectedDeviceStr = SelectedDeviceStrDefault;
 			IntermediateSelectedDeviceStr = SelectedDeviceStrDefault;
@@ -400,6 +402,13 @@ namespace RhinoCyclesCore
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble("NormalStrengthFactor", NormalStrengthFactorDefault); }
 			set { RcPlugIn.Settings.SetDouble("NormalStrengthFactor", value); }
+		}
+
+		public float BumpStrengthFactorDefault => 1.0f;
+		public virtual float BumpStrengthFactor
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble("BumpStrengthFactor", BumpStrengthFactorDefault); }
+			set { RcPlugIn.Settings.SetDouble("BumpStrengthFactor", value); }
 		}
 
 		public float BumpDistanceDefault => 0.01f;

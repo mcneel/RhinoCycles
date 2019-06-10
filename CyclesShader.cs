@@ -236,8 +236,10 @@ namespace RhinoCyclesCore
 				Utilities.HandleRenderTexture(shb.PbrBump.Texture, shb.PbrBumpTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.Displacement, shb.PbrDisplacement);
 				Utilities.HandleRenderTexture(shb.PbrDisplacement.Texture, shb.PbrDisplacementTexture, 1.0f);
-				rm.HandleTexturedValue(Pbr.Smudge, shb.PbrSmudge);
+				rm.HandleTexturedValue("smudge", shb.PbrSmudge);
 				Utilities.HandleRenderTexture(shb.PbrSmudge.Texture, shb.PbrSmudgeTexture, 1.0f);
+				rm.HandleTexturedValue("scratch", shb.PbrScratch);
+				Utilities.HandleRenderTexture(shb.PbrScratch.Texture, shb.PbrScratchTexture, 1.0f);
 				rm.HandleTexturedValue(Pbr.AmbientOcclusion, shb.PbrAmbientOcclusion);
 				Utilities.HandleRenderTexture(shb.PbrAmbientOcclusion.Texture, shb.PbrAmbientOcclusionTexture, 1.0f);
 				rm.EndChange();
@@ -535,8 +537,6 @@ namespace RhinoCyclesCore
 		public TexturedFloat PbrTransmissionRoughness = new TexturedFloat(Pbr.OpacityRoughness, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrTransmissionRoughnessTexture = new CyclesTextureImage();
 
-		public TexturedFloat PbrSmudge = new TexturedFloat(Pbr.Smudge, 0.0f, false, 0.0f);
-		public CyclesTextureImage PbrSmudgeTexture = new CyclesTextureImage();
 		public TexturedFloat PbrAmbientOcclusion = new TexturedFloat(Pbr.AmbientOcclusion, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrAmbientOcclusionTexture = new CyclesTextureImage();
 
@@ -546,6 +546,11 @@ namespace RhinoCyclesCore
 		public CyclesTextureImage PbrBumpTexture = new CyclesTextureImage();
 		public TexturedColor PbrDisplacement = new TexturedColor(Pbr.Displacement, Color4f.Black, false, 0.0f);
 		public CyclesTextureImage PbrDisplacementTexture = new CyclesTextureImage();
+
+		public TexturedFloat PbrSmudge = new TexturedFloat("smudge", 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrSmudgeTexture = new CyclesTextureImage();
+		public TexturedFloat PbrScratch = new TexturedFloat("scratch", 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrScratchTexture = new CyclesTextureImage();
 
 		#endregion
 

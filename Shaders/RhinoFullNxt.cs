@@ -108,12 +108,17 @@ namespace RhinoCyclesCore.Shaders
 				var aoamount = new MixNode("pbr_aoamount");
 				var aotex = new ImageTextureNode("pbr_aotex");
 
+				var roughwithsmudge = new MixNode("pbr_roughwithsmudge");
+				var smudgetex = new ImageTextureNode("pbr_smudgetex");
+				var bumpwithscratch = new BumpNode("pbr_bumpwithscratch");
+				var scratchtex = new ImageTextureNode("pbr_scratchtex");
+
 				aoamount.BlendType = MixNode.BlendTypes.Blend;
 				aoamount.ins.Color1.Value = Rhino.Display.Color4f.Black.ToFloat4();
 				aoamount.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
 				aoamount.ins.Fac.Value = 1.0f;
 				basewithao.BlendType = MixNode.BlendTypes.Multiply;
-				basewithao.ins.Fac.Value = 0.5f;
+				basewithao.ins.Fac.Value = 1.0f;
 				basewithao.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
 
 
@@ -141,6 +146,8 @@ namespace RhinoCyclesCore.Shaders
 					aoamount.outs.Color.Connect(basewithao.ins.Color2);
 				}
 
+
+
 				Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1, texco);
 				basewithao.outs.Color.Connect(principled.ins.BaseColor);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic, texco);
@@ -159,6 +166,30 @@ namespace RhinoCyclesCore.Shaders
 				Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation, texco);
+				
+				if (part.PbrSmudge.On && part.PbrSmudge.Amount > 0.001)
+				{
+					m_shader.AddNode(smudgetex);
+					m_shader.AddNode(roughwithsmudge);
+
+					roughwithsmudge.BlendType = MixNode.BlendTypes.Screen;
+					roughwithsmudge.ins.Fac.Value = part.PbrSmudge.Amount;
+					RenderEngine.SetTextureImage(smudgetex, part.PbrSmudgeTexture);
+					smudgetex.Extension = part.PbrSmudgeTexture.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
+					smudgetex.ColorSpace = TextureNode.TextureColorSpace.None;
+					smudgetex.Projection = TextureNode.TextureProjection.Flat;
+					RenderEngine.SetProjectionMode(m_shader, part.PbrSmudgeTexture, smudgetex, texco);
+
+					var curcon = principled.ins.Roughness.ConnectionFrom;
+					if(curcon!=null) {
+						curcon.Connect(roughwithsmudge.ins.Color1);
+						smudgetex.outs.Color.Connect(roughwithsmudge.ins.Color2);
+						roughwithsmudge.outs.Color.Connect(principled.ins.Roughness);
+					} else {
+						smudgetex.outs.Color.Connect(principled.ins.Roughness);
+					}
+				}
+				
 				if (part.PbrBump.On && part.PbrBumpTexture.HasTextureImage)
 				{
 					if (!part.PbrBumpTexture.IsNormalMap)
@@ -185,6 +216,30 @@ namespace RhinoCyclesCore.Shaders
 						bump.outs.Normal.Connect(principled.ins.ClearcoatNormal);
 					} else {
 						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal, texco, false, true, false);
+					}
+				}
+
+				if (part.PbrScratch.On && part.PbrScratch.Amount > 0.001)
+				{
+					m_shader.AddNode(scratchtex);
+					m_shader.AddNode(bumpwithscratch);
+
+					bumpwithscratch.ins.Distance.Value = RcCore.It.EngineSettings.BumpDistance;
+					bumpwithscratch.ins.Strength.Value = part.PbrScratch.Amount * RcCore.It.EngineSettings.BumpStrengthFactor;
+					RenderEngine.SetTextureImage(scratchtex, part.PbrScratchTexture);
+					scratchtex.Extension = part.PbrScratchTexture.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
+					scratchtex.ColorSpace = TextureNode.TextureColorSpace.None;
+					scratchtex.Projection = TextureNode.TextureProjection.Flat;
+					RenderEngine.SetProjectionMode(m_shader, part.PbrScratchTexture, scratchtex, texco);
+					scratchtex.outs.Color.Connect(bumpwithscratch.ins.Height);
+
+					var curcon = principled.ins.Normal.ConnectionFrom;
+					if(curcon!=null) {
+						
+						curcon.Connect(bumpwithscratch.ins.Normal);
+						bumpwithscratch.outs.Normal.Connect(principled.ins.Normal);
+					} else {
+						bumpwithscratch.outs.Normal.Connect(principled.ins.Normal);
 					}
 				}
 
