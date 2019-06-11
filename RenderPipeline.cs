@@ -36,7 +36,7 @@ namespace RhinoCycles
 
 		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, ModalRenderEngine aRC)
 			: base(doc, mode, plugin, RenderSize(doc, true),
-					"Cycles for Rhino", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
+					"Rhino Render", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
 		{
 			cyclesEngine = (ModalRenderEngine)aRC;
 		}
