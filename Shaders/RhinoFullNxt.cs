@@ -375,7 +375,7 @@ namespace RhinoCyclesCore.Shaders
 				var shadeless96 = new MixClosureNode("shadeless");
 
 				var glossy97 = new GlossyBsdfNode("glossy");
-					glossy97.ins.Roughness.Value = part.ReflectionRoughnessPow2;
+					glossy97.ins.Roughness.Value = part.ReflectionRoughness;
 
 				var reflection_factor98 = new SeparateRgbNode("reflection_factor");
 
@@ -428,7 +428,7 @@ namespace RhinoCyclesCore.Shaders
 
 				var invert_roughness75 = new MathSubtract("invert_roughness");
 					invert_roughness75.ins.Value1.Value = 1f;
-					invert_roughness75.ins.Value2.Value = part.RefractionRoughnessPow2;
+					invert_roughness75.ins.Value2.Value = part.RefractionRoughness;
 					invert_roughness75.Operation = MathNode.Operations.Subtract;
 					invert_roughness75.UseClamp = false;
 
@@ -532,7 +532,7 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.Metallic.Value = part.Metallic;
 					principledbsdf117.ins.Specular.Value = part.Specular;
 					principledbsdf117.ins.SpecularTint.Value = part.SpecularTint;
-					principledbsdf117.ins.Roughness.Value = part.ReflectionRoughnessPow2;
+					principledbsdf117.ins.Roughness.Value = part.ReflectionRoughness;
 					principledbsdf117.ins.Anisotropic.Value = 0f;
 					principledbsdf117.ins.AnisotropicRotation.Value = 0f;
 					principledbsdf117.ins.Sheen.Value = part.Sheen;
@@ -541,7 +541,7 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.ClearcoatGloss.Value = part.ClearCoatGloss;
 					principledbsdf117.ins.IOR.Value = part.IOR;
 					principledbsdf117.ins.Transmission.Value = part.Transparency;
-					principledbsdf117.ins.TransmissionRoughness.Value = part.RefractionRoughnessPow2;
+					principledbsdf117.ins.TransmissionRoughness.Value = part.RefractionRoughness;
 					principledbsdf117.ins.Tangent.Value = new ccl.float4(0f, 0f, 0f, 1f);
 
 				var custom_environment_blend195 = new MixClosureNode("custom_environment_blend");
