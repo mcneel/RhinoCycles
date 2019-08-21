@@ -29,6 +29,7 @@ using RhinoCycles.Settings;
 using RhinoCyclesCore.Core;
 using ObjectPropertiesPage = Rhino.UI.ObjectPropertiesPage;
 using RhinoCyclesCore;
+using Rhino.UI;
 
 namespace RhinoCycles
 {
@@ -171,8 +172,7 @@ namespace RhinoCycles
 			pages.Add(optionsPage);
 			base.OptionsDialogPages(pages);
 		}
-
-		protected override void ObjectPropertiesPages(List<ObjectPropertiesPage> pages)
+		protected override void ObjectPropertiesPages(ObjectPropertiesPageCollection collection)
 		{
 			if (RhinoDoc.ActiveDoc == null) return;
 			var sn = RhinoDoc.ActiveDoc.RuntimeSerialNumber;
@@ -181,8 +181,7 @@ namespace RhinoCycles
 			{
 				var prop_page = new ViewportPropertiesPage(sn);
 				m_propertiesPages.Add(sn, prop_page);
-				pages.Add(prop_page);
-				base.ObjectPropertiesPages(pages);
+				collection.Add(prop_page);
 			}
 		}
 	}
