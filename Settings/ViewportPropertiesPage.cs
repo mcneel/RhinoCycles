@@ -22,7 +22,7 @@ using System.Drawing;
 
 namespace RhinoCycles.Settings
 {
-	public class ViewportPropertiesPage : ObjectPropertiesPage
+	public class ViewportPropertiesPage : ObjectPropertiesPage, IDisposable
 	{
 		private uint docSerialNumber = 0;
 		public ViewportPropertiesPage(uint docserial)
@@ -30,6 +30,22 @@ namespace RhinoCycles.Settings
 			docSerialNumber = docserial;
 			CollapsibleSectionHolder = new ViewportCollapsibleSectionUIPanel(docSerialNumber);
 			CollapsibleSectionHolder.ViewDataChanged += CollapsibleSectionHolder_ViewDataChanged;
+			Rhino.Display.RhinoView.SetActive += RhinoViewSetActive;
+		}
+
+		void RhinoViewSetActive(object sender, Rhino.Display.ViewEventArgs e)
+		{
+			var vi = new ViewInfo(e.View.ActiveViewport);
+			var vpi = vi.Viewport;
+			if (vpi.UserData.Find(typeof(ViewportSettings)) is ViewportSettings vud)
+				UserDataAvailable(vud);
+			else
+				NoUserDataAvailable();
+		}
+
+		public void Dispose()
+		{
+			Rhino.Display.RhinoView.SetActive -= RhinoViewSetActive;
 		}
 
 		public override bool OnActivate(bool active)

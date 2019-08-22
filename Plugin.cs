@@ -21,14 +21,13 @@ using System.Reflection;
 using System.Threading;
 using ccl;
 using Rhino;
-using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.PlugIns;
 using Rhino.Render;
 using RhinoCycles.Settings;
 using RhinoCyclesCore.Core;
-using ObjectPropertiesPage = Rhino.UI.ObjectPropertiesPage;
 using RhinoCyclesCore;
+using Rhino.UI;
 
 namespace RhinoCycles
 {
@@ -39,8 +38,6 @@ namespace RhinoCycles
 		/// available even when RhinoCycles isn't the current renderer
 		/// </summary>
 		public override PlugInLoadTime LoadTime => PlugInLoadTime.AtStartup;
-
-		private Dictionary<uint, ViewportPropertiesPage> m_propertiesPages = new Dictionary<uint, ViewportPropertiesPage>();
 
 		private bool pluginLoaded = false;
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
@@ -84,8 +81,6 @@ namespace RhinoCycles
 
 				RcCore.It.Initialised = false;
 				AsyncInitialise();
-
-				RhinoView.SetActive += RhinoView_SetActive;
 			}
 			return LoadReturnCode.Success;
 		}
@@ -107,26 +102,6 @@ namespace RhinoCycles
 				return vud;
 			}
 			return null;
-		}
-		private void RhinoView_SetActive(object sender, ViewEventArgs e)
-		{
-			if (e.View.Document == null) return;
-
-			var sn = e.View.Document.RuntimeSerialNumber;
-			if (!m_propertiesPages.ContainsKey(sn)) return;
-
-			var m_page = m_propertiesPages[sn];
-
-			var vi = new ViewInfo(e.View.ActiveViewport);
-			var vpi = vi.Viewport;
-			if (vpi.UserData.Find(typeof(ViewportSettings)) is ViewportSettings vud)
-			{
-				m_page.UserDataAvailable(vud);
-			}
-			else
-			{
-				m_page.NoUserDataAvailable();
-			}
 		}
 
 		private static readonly object InitialiseLock = new object();
@@ -172,18 +147,9 @@ namespace RhinoCycles
 			base.OptionsDialogPages(pages);
 		}
 
-		protected override void ObjectPropertiesPages(List<ObjectPropertiesPage> pages)
+		protected override void ObjectPropertiesPages(ObjectPropertiesPageCollection collection)
 		{
-			if (RhinoDoc.ActiveDoc == null) return;
-			var sn = RhinoDoc.ActiveDoc.RuntimeSerialNumber;
-
-			if(!m_propertiesPages.ContainsKey(sn))
-			{
-				var prop_page = new ViewportPropertiesPage(sn);
-				m_propertiesPages.Add(sn, prop_page);
-				pages.Add(prop_page);
-				base.ObjectPropertiesPages(pages);
-			}
+			collection.Add(new ViewportPropertiesPage(collection.DocumentRuntimeSerailNumber));
 		}
 	}
 }
