@@ -32,6 +32,8 @@ using CqSkylight = Rhino.Render.ChangeQueue.Skylight;
 using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;
 using CclObject = ccl.Object;
+using CclClippingPlane = ccl.ClippingPlane;
+using CqClippingPlane = Rhino.Render.ChangeQueue.ClippingPlane;
 using RGLight = Rhino.Geometry.Light;
 using Rhino.Geometry;
 using RhinoCyclesCore.Converters;
@@ -451,136 +453,52 @@ namespace RhinoCyclesCore.Database
 
 		private readonly Tuple<Guid, int> _clippingPlaneGuid = new Tuple<Guid, int>(new Guid("6A7DB550-7E42-4129-A36D-A4C8AAB06F4B"), 0);
 		private readonly Dictionary<Guid, Plane> ClippingPlanes = new Dictionary<Guid, Plane>(16);
+		private bool HasClippingPlaneChanges = false;
 
-		protected override void ApplyClippingPlaneChanges(Guid[] deleted, List<ClippingPlane> addedOrModified)
+		protected override void ApplyClippingPlaneChanges(Guid[] deleted, List<CqClippingPlane> addedOrModified)
 		{
 			if (!SupportClippingPlanes)
 			{
-				sceneBoundingBoxDirty = true;
 				ClippingPlanes.Clear();
 				return;
 			}
 
-			SceneBoundingBox = GetQueueSceneBoundingBox();
 			foreach (var d in deleted)
 			{
 				ClippingPlanes.Remove(d);
+				HasClippingPlaneChanges = true;
 			}
 			foreach (var cp in addedOrModified)
 			{
 				if (cp.IsEnabled && cp.ViewIds.Contains(ViewId))
-					ClippingPlanes[cp.Id] = new Plane(cp.Plane);
-				else
-					ClippingPlanes.Remove(cp.Id);
-			}
-			sceneBoundingBoxDirty = true;
-			CalculateClippingObjects();
-		}
-
-		public void CalculateClippingObjects()
-		{
-			if (SupportClippingPlanes && sceneBoundingBoxDirty)
-			{
-#if DOCAMCLIP
-				var camplane = Plane.WorldXY;
-				camplane.Transform(CurrentTransform?.ToRhinoTransform() ?? Rhino.Geometry.Transform.Identity);
-				Interval interval = new Interval(-0.1, 0.1);
-				Interval biginterval = new Interval(-50, 50);
-				var camera = new Box(camplane, interval, interval, interval);
-				var cammesh = Rhino.Geometry.Mesh.CreateFromBox(camera, 1, 1, 1);
-#endif
-
-				var absol = ModelAbsoluteTolerance;
-				var anglerad = ModelAngleToleranceRadians;
-				var sbb = SceneBoundingBox;
-				sbb.Inflate(0.1);
-				var brsbb = sbb.ToBrep();
-				List<Brep> parts = new List<Brep>(8);
-
-				if (brsbb != null) // Apparently it can happen that we get an invalid scene BB, thus no good brep.
 				{
-					foreach (var cp in ClippingPlanes)
-					{
-						Rhino.Geometry.Intersect.Intersection.BrepPlane(brsbb, cp.Value, absol, out Curve[] crvs, out Point3d[] pts);
-						if (crvs != null && crvs.Count() > 0)
-						{
-							CurveList crvl = new CurveList(crvs);
-							var b = Brep.CreatePlanarBreps(crvl, absol);
-							if (b.Length == 1)
-							{
-
-								var theb = b[0];
-
-								var prts = brsbb.Split(theb, absol);
-								foreach (var prt in prts)
-								{
-									var clprt = prt.CapPlanarHoles(absol);
-									if (clprt != null)
-									{
-										var pln = new PolyCurve();
-										foreach (var crv in crvs)
-										{
-											pln.AppendSegment(crv);
-										}
-										var pl = pln.ToPolyline(absol, anglerad, 0, double.MaxValue).ToPolyline();
-										var cent = pl.CenterPoint();
-										var norm = theb.Faces[0].NormalAt(0, 0);
-										var volprop = VolumeMassProperties.Compute(clprt);
-										var pp = new Vector3d(volprop.Centroid - cent);
-										if ((pp * norm) < 0) parts.Add(clprt);
-									}
-								}
-							}
-						}
-					}
-					var volbrep = Brep.CreateBooleanUnion(parts, absol);
-					if (volbrep != null)
-					{
-						Rhino.Geometry.Mesh final = new Rhino.Geometry.Mesh();
-						foreach (var vb in volbrep)
-						{
-							var volmeshes = Rhino.Geometry.Mesh.CreateFromBrep(vb, MeshingParameters.FastRenderMesh);
-
-							foreach (var vm in volmeshes)
-							{
-								final.Append(vm);
-							}
-						}
-						var cpid = _clippingPlaneGuid;
-						Rhino.Geometry.Transform tfm = Rhino.Geometry.Transform.Identity;
-
-						HandleMeshData(cpid.Item1, cpid.Item2, final, true, uint.MaxValue);
-
-						var mat = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
-
-						var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
-
-						var cyclesObject = new CyclesObject
-						{
-							matid = mat.RenderHash,
-							obid = ClippingPlaneMeshInstanceId,
-							meshid = cpid,
-							Transform = t,
-							Visible = ClippingPlanes.Count > 0,
-							CastShadow = false,
-							CastNoShadow = true,
-							IsShadowCatcher = false,
-							Cutout = true,
-						};
-
-						_objectShaderDatabase.RecordRenderHashRelation(mat.RenderHash, cpid, ClippingPlaneMeshInstanceId);
-						_objectDatabase.RecordObjectIdMeshIdRelation(ClippingPlaneMeshInstanceId, cpid);
-						_objectDatabase.AddOrUpdateObject(cyclesObject);
-					}
+					ClippingPlanes[cp.Id] = new Plane(cp.Plane);
 				}
-				
-				sceneBoundingBoxDirty = false;
+				else
+				{
+					ClippingPlanes.Remove(cp.Id);
+				}
+				HasClippingPlaneChanges = true;
 			}
 		}
 
-#if DOCAMCLIP
-		public ccl.Transform CurrentTransform { get; set; } = null;
-#endif
+		/// <summary>
+		/// Upload clipping plane equations to Cycles.
+		/// </summary>
+		public void UploadClippingPlaneChanges()
+		{
+			if (HasClippingPlaneChanges)
+			{
+				_renderEngine.Client.Scene.ClearClippingPlanes();
+				foreach (var cp in ClippingPlanes)
+				{
+					var equation = new float4(cp.Value.GetPlaneEquation());
+					var cclcp = new CclClippingPlane(_renderEngine.Client, equation);
+				}
+				HasClippingPlaneChanges = false;
+			}
+		}
+
 		/// <summary>
 		/// Upload camera (viewport) changes to Cycles.
 		/// </summary>
@@ -591,10 +509,6 @@ namespace RhinoCyclesCore.Database
 			var view = _cameraDatabase.LatestView();
 			if(view!=null)
 			{
-#if DOCAMCLIP
-				CurrentTransform = view.Transform;
-				sceneBoundingBoxDirty = true; // flag for recalc of clipping volume
-#endif
 				UploadCamera(view);
 			}
 			var fb = _cameraDatabase.GetBlur();
@@ -705,7 +619,6 @@ namespace RhinoCyclesCore.Database
 		protected override void ApplyViewChange(ViewInfo viewInfo)
 		{
 			var fb = _cameraDatabase.HandleBlur(viewInfo);
-			SceneBoundingBox = GetQueueSceneBoundingBox();
 			if (!_modalRenderer && !viewInfo.Viewport.Id.Equals(ViewId)) return;
 
 			if (_wallpaperInitialized)
@@ -841,7 +754,6 @@ namespace RhinoCyclesCore.Database
 		/// <param name="added"></param>
 		protected override void ApplyMeshChanges(Guid[] deleted, List<CqMesh> added)
 		{
-			SceneBoundingBox = GetQueueSceneBoundingBox();
 			RcCore.OutputDebugString($"ChangeDatabase ApplyMeshChanges, deleted {deleted.Length}\n");
 
 			var totaldeletes = deleted.Length;
@@ -969,32 +881,12 @@ namespace RhinoCyclesCore.Database
 			_objectDatabase.SetIsClippingObject(meshid, isClippingObject);
 		}
 
-		private bool sceneBoundingBoxDirty;
-		private BoundingBox _sbb;
-
-		public BoundingBox SceneBoundingBox
-		{
-			get
-			{
-				return _sbb;
-			}
-			set
-			{
-				if(!_sbb.Equals(value))
-				{
-					sceneBoundingBoxDirty = true;
-					_sbb = value;
-				}
-			}
-		}
-
 		public double ModelAbsoluteTolerance { get; set; }
 		public double ModelAngleToleranceRadians { get; set; }
 		public Rhino.UnitSystem ModelUnitSystem { get; set; }
 
 		protected override void ApplyMeshInstanceChanges(List<uint> deleted, List<MeshInstance> addedOrChanged)
 		{
-			SceneBoundingBox = GetQueueSceneBoundingBox();
 			// helper list to ensure we don't add same material multiple times.
 			var addedmats = new List<uint>();
 
@@ -1488,7 +1380,6 @@ namespace RhinoCyclesCore.Database
 		/// <param name="lightChanges"></param>
 		protected override void ApplyLightChanges(List<CqLight> lightChanges)
 		{
-			SceneBoundingBox = GetQueueSceneBoundingBox();
 			// we don't necessarily get view changes prior to light changes, so
 			// the old _currentViewInfo could be null - at the end of a Flush
 			// it would be thrown away. Hence we now ask the ChangeQueue for the
@@ -1572,7 +1463,6 @@ namespace RhinoCyclesCore.Database
 
 		protected override void ApplyDynamicLightChanges(List<RGLight> dynamicLightChanges)
 		{
-			SceneBoundingBox = GetQueueSceneBoundingBox();
 			foreach (var light in dynamicLightChanges)
 			{
 				if (light.IsLinearLight)

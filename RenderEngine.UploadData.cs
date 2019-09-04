@@ -45,6 +45,8 @@ namespace RhinoCyclesCore
 
 			if (CancelRender) return false;
 
+			Database.UploadClippingPlaneChanges();
+
 			// linear workflow & gamma changes
 			Database.UploadGammaChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.2f, "Linear workflow (gamma changes) uploaded"));
@@ -66,12 +68,6 @@ namespace RhinoCyclesCore
 			// viewport changes
 			Database.UploadCameraChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.5f, "Viewport uploaded"));
-
-			// (re-) calculate clipping objects after camera changes
-			// so that we can take the camera "clipping volume" into
-			// account.
-			if (CancelRender) return false;
-			Database.CalculateClippingObjects();
 
 			if (CancelRender) return false;
 
