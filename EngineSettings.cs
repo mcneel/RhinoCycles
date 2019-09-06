@@ -116,7 +116,6 @@ namespace RhinoCyclesCore
 			CPUSplitKernel = CPUSplitKernel;
 			OpenClSingleProgram = OpenClSingleProgram;
 			NoShadows = NoShadows;
-			RaytracedClippingPlanes = RaytracedClippingPlanes;
 			SaveDebugImages = SaveDebugImages;
 			DebugSimpleShaders = DebugSimpleShaders;
 			DebugNoOverrideTileSize = DebugNoOverrideTileSize;
@@ -215,7 +214,6 @@ namespace RhinoCyclesCore
 			CPUSplitKernel = CPUSplitKernelDefault;
 			OpenClSingleProgram = OpenClSingleProgramDefault;
 			NoShadows = NoShadowsDefault;
-			RaytracedClippingPlanes = RaytracedClippingPlanesDefault;
 			SaveDebugImages = SaveDebugImagesDefault;
 			DebugSimpleShaders = DebugSimpleShadersDefault;
 			DebugNoOverrideTileSize = DebugNoOverrideTileSizeDefault;
@@ -266,7 +264,7 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetBool("FlushAtEndOfCreateWorld", value); }
 		}
 
-		public int PreviewSamplesDefault => 50;
+		public int PreviewSamplesDefault => 150;
 		public virtual int PreviewSamples
 		{
 			get { return RcPlugIn.Settings.GetInteger("PreviewSamples", PreviewSamplesDefault); }
@@ -731,20 +729,6 @@ namespace RhinoCyclesCore
 				}
 			}
 		}
-		public bool RaytracedClippingPlanesDefault => false;
-		public bool RaytracedClippingPlanes
-		{
-			get { return RcPlugIn.Settings.GetBool("RaytracedClippingPlanes", RaytracedClippingPlanesDefault); }
-			set
-			{
-				var old = RaytracedClippingPlanes;
-				if (old != value)
-				{
-					RcPlugIn.Settings.SetBool("RaytracedClippingPlanes", value);
-				}
-			}
-		}
-
 		public int OpenClKernelTypeDefault => -1;
 		public int OpenClKernelType
 		{
@@ -819,8 +803,6 @@ namespace RhinoCyclesCore
 		bool NoShadows { get; set; }
 
 		float DpiScale { get; set; }
-
-		bool RaytracedClippingPlanes { get; set; }
 
 		int PreviewSamples { get; set; }
 	}

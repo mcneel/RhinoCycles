@@ -54,7 +54,6 @@
     <Compile Include="Commands\SetAdvancedOptions.cs" />
     <Compile Include="Commands\TestDeviceEqualityCrash.cs" />
     <Compile Include="Commands\TestCleanupRhinoCyclesSettings.cs" />
-    <Compile Include="Commands\TestToggleRaytracedClippingPlanes.cs" />
     <Compile Include="Commands\TestSetNoShadows.cs" />
     <Compile Include="Commands\TestToggleIsClippingObject.cs" />
     <Compile Include="Commands\TestCreateMultiOpenCl.cs" />

@@ -103,8 +103,6 @@ namespace RhinoCyclesCore.Database
 
 		private readonly bool _modalRenderer;
 
-		public bool SupportClippingPlanes { get; set; }
-
 		public uint Blades { get; } = RcCore.It.EngineSettings.Blades;
 		public float BladesRotation { get; } = RcCore.It.EngineSettings.BladesRotation;
 		public float ApertureRatio { get; } = RcCore.It.EngineSettings.ApertureRatio;
@@ -457,12 +455,6 @@ namespace RhinoCyclesCore.Database
 
 		protected override void ApplyClippingPlaneChanges(Guid[] deleted, List<CqClippingPlane> addedOrModified)
 		{
-			if (!SupportClippingPlanes)
-			{
-				ClippingPlanes.Clear();
-				return;
-			}
-
 			foreach (var d in deleted)
 			{
 				ClippingPlanes.Remove(d);

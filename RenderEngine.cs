@@ -94,8 +94,6 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public bool CancelRender { get; set; }
 
-		public bool SupportClippingPlanes { get; set; }
-
 		public int RenderedSamples;
 
 		public string TimeString;
@@ -188,14 +186,12 @@ namespace RhinoCyclesCore
 		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, ViewInfo view, ViewportInfo vp, DisplayPipelineAttributes attributes, bool interactive)
 		{
 			SetKernelFlags();
-			SupportClippingPlanes = RcCore.It.EngineSettings.RaytracedClippingPlanes;
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			View = view;
 			m_interactive = interactive;
 			var doc = RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
 			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, attributes, !m_interactive)
 			{
-				SupportClippingPlanes = SupportClippingPlanes,
 				ModelAbsoluteTolerance = doc.ModelAbsoluteTolerance,
 				ModelAngleToleranceRadians = doc.ModelAngleToleranceRadians,
 				ModelUnitSystem = doc.ModelUnitSystem
@@ -206,12 +202,8 @@ namespace RhinoCyclesCore
 		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive)
 		{
 			SetKernelFlags();
-			SupportClippingPlanes = RcCore.It.EngineSettings.RaytracedClippingPlanes;
 			PreviewEventArgs = previewEventArgs;
-			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs)
-			{
-				SupportClippingPlanes = SupportClippingPlanes
-			};
+			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs);
 			RegisterEventHandler();
 		}
 
