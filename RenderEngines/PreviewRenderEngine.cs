@@ -49,15 +49,11 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void PreviewRendererUpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
-			/*if (IsStopped || sample < 5 || (Session.Scene.Device.IsCpu && sample % 10 != 0)) return;
-			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
-			PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
-			*/
 		}
 
 		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
-			if (IsStopped || (sample > 5 && Session.Scene.Device.IsCpu && sample % 10 != 0)) return;
+			if (IsStopped) return;
 			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 			PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
@@ -75,7 +71,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var samples = RcCore.It.EngineSettings.PreviewSamples;
 
 			#region pick a render device
-			var renderDevice = RcCore.It.EngineSettings.RenderDevice;
+			var renderDevice = Device.Default;
 
 			if (RcCore.It.EngineSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
