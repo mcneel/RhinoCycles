@@ -29,12 +29,12 @@ namespace RhinoCyclesCore
 	{
 		public static void TexturedSlot(RenderMaterial rm, string slotname, Color4f defaultColor, string prompt)
 		{
-			rm.Fields.AddTextured(slotname, defaultColor, prompt);
+			rm.Fields.AddTextured(slotname, defaultColor, prompt, false);
 		}
 
 		public static void TexturedSlot(RenderMaterial rm, string slotname, float defaultValue, string prompt)
 		{
-			rm.Fields.AddTextured(slotname, defaultValue, prompt);
+			rm.Fields.AddTextured(slotname, defaultValue, prompt, false);
 		}
 		public static Tuple<bool, float4, bool, float> HandleTexturedColor(RenderMaterial rm, string slotname, CyclesTextureImage tex)
 		{
