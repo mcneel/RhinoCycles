@@ -377,6 +377,7 @@ namespace RhinoCyclesCore.Database
 		{
 			_currentViewInfo = null;
 			DisplayPipelineAttributesChanged = false;
+			HasClippingPlaneChanges = false;
 			ClearLinearWorkflow();
 			_environmentDatabase.ResetBackgroundChangeQueue();
 			_cameraDatabase.ResetViewChangeQueue();
@@ -396,6 +397,7 @@ namespace RhinoCyclesCore.Database
 		public bool HasChanges()
 		{
 			return
+				HasClippingPlaneChanges ||
 				_cameraDatabase.HasChanges() ||
 				_environmentDatabase.BackgroundHasChanged ||
 				_lightDatabase.HasChanges() || 
@@ -453,6 +455,12 @@ namespace RhinoCyclesCore.Database
 		private readonly Dictionary<Guid, Plane> ClippingPlanes = new Dictionary<Guid, Plane>(16);
 		private bool HasClippingPlaneChanges = false;
 
+		protected override void ApplyDynamicClippingPlaneChanges(List<CqClippingPlane> changed)
+		{
+			HandleClippingPlaneChanges(changed, true);
+			_renderEngine.Flush = true;
+		}
+
 		protected override void ApplyClippingPlaneChanges(Guid[] deleted, List<CqClippingPlane> addedOrModified)
 		{
 			foreach (var d in deleted)
@@ -460,9 +468,14 @@ namespace RhinoCyclesCore.Database
 				ClippingPlanes.Remove(d);
 				HasClippingPlaneChanges = true;
 			}
+			HandleClippingPlaneChanges(addedOrModified, false);
+		}
+
+		private void HandleClippingPlaneChanges(List<CqClippingPlane> addedOrModified, bool isDynamic)
+		{
 			foreach (var cp in addedOrModified)
 			{
-				if (cp.IsEnabled && cp.ViewIds.Contains(ViewId))
+				if (cp.IsEnabled && (isDynamic || cp.ViewIds.Contains(ViewId)))
 				{
 					ClippingPlanes[cp.Id] = new Plane(cp.Plane);
 				}
@@ -1210,6 +1223,7 @@ namespace RhinoCyclesCore.Database
 				var cot = new CyclesObjectTransform(dot.MeshInstanceId, dot.Transform.ToCyclesTransform());
 				_objectDatabase.AddDynamicObjectTransform(cot);
 			}
+			_renderEngine.Flush = true;
 		}
 
 #region LIGHT & SUN
@@ -1719,7 +1733,7 @@ namespace RhinoCyclesCore.Database
 			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
 			RcCore.OutputDebugString("NotifyDynamicUpdatesAreAvailable\n");
 			_renderEngine.TriggerBeginChangesNotified();
-			_renderEngine.Flush = true;
+			//_renderEngine.Flush = true;
 			// nothing
 			//System.Diagnostics.Debug.WriteLine("dyn changes...");
 		}
