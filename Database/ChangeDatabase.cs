@@ -41,6 +41,7 @@ using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Shaders;
 using RhinoCyclesCore.ExtensionMethods;
 using Rhino.Collections;
+using System.Text;
 
 namespace RhinoCyclesCore.Database
 {
@@ -127,6 +128,7 @@ namespace RhinoCyclesCore.Database
 			_renderEngine = engine;
 			_modalRenderer = true;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
+			_environmentDatabase.CyclesShader.PreviewBg = engine is RenderEngines.PreviewRenderEngine;
 		}
 
 		protected override void Dispose(bool isDisposing)
@@ -1753,6 +1755,16 @@ namespace RhinoCyclesCore.Database
 		protected override bool ProvideOriginalObject()
 		{
 			return true;
+		}
+
+		public override string ToString()
+		{
+			StringBuilder sb = new StringBuilder("ChangeDatabase:");
+			var props = typeof(ChangeDatabase).GetProperties();
+			foreach(var prop in props) {
+				sb.Append($"\t{prop.Name} := {prop.GetValue(this)}\n");
+			}
+			return sb.ToString();
 		}
 	}
 }

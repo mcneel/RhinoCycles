@@ -19,6 +19,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Text;
 using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
@@ -38,6 +39,8 @@ namespace RhinoCyclesCore
 		/// True if ChangeQueue modified the background
 		/// </summary>
 		public bool Modified { get; set; }
+
+		public bool PreviewBg { get; set; } = false;
 
 		/// <summary>
 		/// Get background style.
@@ -399,6 +402,21 @@ namespace RhinoCyclesCore
 			BgTexture.Clear();
 			SkyTexture.Clear();
 			Wallpaper.Clear();
+		}
+
+		public override string ToString()
+		{
+			StringBuilder sb = new StringBuilder("CyclesBackground:");
+			var props = typeof(CyclesBackground).GetProperties();
+			foreach(var prop in props) {
+				sb.Append($"\t{prop.Name} := {prop.GetValue(this)}\n");
+			}
+			sb.Append("---------\n");
+			if(HasBgEnvTexture && BgTexture.HasFloatImage) {
+				var tenperc = BgTexture.TexFloat.Length / 10;
+				sb.Append($"\t --> {BgTexture.TexFloat[tenperc]}");
+			}
+			return sb.ToString();
 		}
 	}
 }

@@ -88,10 +88,12 @@ namespace RhinoCyclesCore.RenderEngines
 				TileOrder = TileOrder.Center,
 				Threads = 1,
 				ShadingSystem = ShadingSystem.SVM,
-				Background = true,
+				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
+				Background = true,
 				ProgressiveRefine = true,
 				Progressive = true,
+				PixelSize = 1,
 			};
 #endregion
 

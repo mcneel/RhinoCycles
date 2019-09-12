@@ -83,5 +83,28 @@ namespace RhinoCyclesCore
 			UseAlpha = false;
 			Amount = 0.0f;
 		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <returns></returns>
+		public override string ToString()
+		{
+			System.Text.StringBuilder sb = new System.Text.StringBuilder($"{typeof(CyclesTextureImage).Name}:");
+			var props = typeof(CyclesTextureImage).GetProperties();
+			foreach (var prop in props)
+			{
+				sb.Append($"{prop.Name} := {prop.GetValue(this)}, ");
+			}
+			if (HasFloatImage)
+			{
+				sb.Append($"{TexFloat[0]}|{TexFloat[1]}|{TexFloat[2]}|{TexFloat[3]}");
+				var mid = TexFloat.Length / 2;
+				sb.Append($"{TexFloat[mid]}|{TexFloat[mid + 1]}|{TexFloat[mid + 2]}|{TexFloat[mid + 3]}");
+				var end = TexFloat.Length - 4;
+				sb.Append($"{TexFloat[end]}|{TexFloat[end + 1]}|{TexFloat[end + 2]}|{TexFloat[end + 3]}");
+			}
+			return sb.ToString();
+		}
 	}
 }
