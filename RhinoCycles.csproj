@@ -84,18 +84,9 @@
     <Compile Include="Settings\ViewportPropertiesPage.cs" />
     <Compile Include="Settings\ViewportSettings.cs" />
     <Compile Include="Viewport\RenderedViewport.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
@@ -184,16 +175,16 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Icons\CPU.ico" />
+    <EmbeddedResource Include="Icons\CPU.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Icons\CUDA.ico" />
+    <EmbeddedResource Include="Icons\CUDA.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Icons\OpenCL.ico" />
+    <EmbeddedResource Include="Icons\OpenCL.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Icons\Cycles_viewport_properties.ico" />
+    <EmbeddedResource Include="Icons\Cycles_viewport_properties.ico" />
   </ItemGroup>
   <ItemGroup>
     <LicenseFiles Include="$(ProjectDir)..\cycles\cycles\src\doc\license\*.txt" />
