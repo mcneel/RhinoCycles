@@ -38,7 +38,7 @@ namespace RhinoCycles.Settings
 
 		public override Image PageImage {
 			get {
-				var icon = Icon.FromHandle(Eto.Drawing.Icon.FromResource("RhinoCycles.Icons.Cycles_viewport_properties.ico").WithSize(16, 16).NativeHandle);
+				var icon = Properties.IconResources.Cycles_viewport_properties;
 				return icon.ToBitmap();
 			}
 		}

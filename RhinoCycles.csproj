@@ -72,6 +72,11 @@
     <Compile Include="Commands\SetRenderOptions.cs" />
     <Compile Include="Commands\ListDevices.cs" />
     <Compile Include="Plugin.cs" />
+    <Compile Include="Properties\IconResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IconResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Settings\OptionsDialogCollapsibleSectionUIPanel.cs" />
     <Compile Include="Settings\ResetAllSection.cs" />
     <Compile Include="Settings\ViewportCollapsibleSectionUIPanel.cs" />
@@ -173,6 +178,10 @@
     <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\zh-tw\XML\zh-twRhinoCycles.xml">
       <Link>Localization\zh-twRhinoCycles.xml</Link>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\IconResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>IconResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Icons\CPU.ico" />
@@ -188,6 +197,9 @@
   </ItemGroup>
   <ItemGroup>
     <LicenseFiles Include="$(ProjectDir)..\cycles\cycles\src\doc\license\*.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Icons\Cycles_material.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="BeforeBuild">
