@@ -148,10 +148,9 @@ namespace RhinoCyclesCore
 			var offsetvec = rt.GetOffset();
 
 			Transform tt = new Transform(
-				(float)offsetvec.X, (float)offsetvec.Y, (float)offsetvec.Z,
-				(float)repeatvec.X, (float)repeatvec.Y, (float)repeatvec.Z,
-				(float)rotationvec.X, (float)rotationvec.Y, (float)rotationvec.Z,
-				0.0f, 0.0f, 0.0f
+				(float)offsetvec.X, (float)offsetvec.Y, (float)offsetvec.Z, 0.0f,
+				(float)repeatvec.X, (float)repeatvec.Y, (float)repeatvec.Z, 0.0f,
+				(float)rotationvec.X, (float)rotationvec.Y, (float)rotationvec.Z, 0.0f
 			);
 
 
