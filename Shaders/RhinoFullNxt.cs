@@ -113,6 +113,8 @@ namespace RhinoCyclesCore.Shaders
 				var bumpwithscratch = new BumpNode("pbr_bumpwithscratch");
 				var scratchtex = new ImageTextureNode("pbr_scratchtex");
 
+				var tangent = new TangentNode("tangents");
+
 				aoamount.BlendType = MixNode.BlendTypes.Blend;
 				aoamount.ins.Color1.Value = Rhino.Display.Color4f.Black.ToFloat4();
 				aoamount.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
@@ -131,6 +133,7 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(addemissive);
 				m_shader.AddNode(principled);
 				m_shader.AddNode(basewithao);
+				m_shader.AddNode(tangent);
 
 				if(part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasTextureImage) {
 					m_shader.AddNode(aotex);
@@ -250,6 +253,9 @@ namespace RhinoCyclesCore.Shaders
 					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, emissive.ins.Color, texco);
 					emissive.outs.Emission.Connect(addemissive.ins.Closure2);
 				}
+
+				tangent.outs.Tangent.Connect(principled.ins.Tangent);
+
 				return addemissive;
 				
 			} else {
