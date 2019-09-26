@@ -22,6 +22,7 @@ using RhinoCyclesCore.Converters;
 using System.Collections.Generic;
 using Rhino.Display;
 using Pbr = Rhino.Render.RenderMaterial.PhysicallyBased.ChildSlotNames;
+using RhinoCyclesCore.ExtensionMethods;
 
 namespace RhinoCyclesCore
 {
@@ -202,6 +203,7 @@ namespace RhinoCyclesCore
 				shb.Name = rm.Name ?? "";
 				shb.Gamma = gamma;
 				rm.HandleTexturedValue(Pbr.BaseColor, shb.PbrBase);
+				shb.PbrBase.Value = (shb.PbrBase.Value.ToFloat4() ^ gamma).ToColor4f();
 				Utilities.HandleRenderTexture(shb.PbrBase.Texture, shb.PbrBaseTexture, gamma);
 				rm.HandleTexturedValue(Pbr.Metallic, shb.PbrMetallic);
 				Utilities.HandleRenderTexture(shb.PbrMetallic.Texture, shb.PbrMetallicTexture, 1.0f);
