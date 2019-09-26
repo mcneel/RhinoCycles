@@ -158,6 +158,15 @@ namespace RhinoCyclesCore
 			var envProjectionMode = rt.GetInternalEnvironmentMappingMode();
 			var repeat = rt.GetWrapType() == TextureWrapType.Repeating;
 
+			var alternate = false;
+			{
+				var alternateob = rt.GetParameter("mirror-alternate-tiles");
+				if (alternateob != null)
+				{
+					alternate = Convert.ToBoolean(alternateob);
+				}
+			}
+
 			using (var textureEvaluator = rt.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
 			{
 				SimulatedTexture st = textureEvaluator == null ? rt.SimulatedTexture(RenderTexture.TextureGeneration.Disallow) : null;
@@ -221,6 +230,7 @@ namespace RhinoCyclesCore
 					tex.EnvProjectionMode = envProjectionMode;
 					tex.Transform = tt;
 					tex.Repeat = repeat;
+					tex.AlternateTiles = alternate;
 				}
 			}
 		}
@@ -319,6 +329,7 @@ namespace RhinoCyclesCore
 				imtexnode.Extension = teximg.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
 				imtexnode.ColorSpace = ccl.ShaderNodes.TextureNode.TextureColorSpace.None;
 				imtexnode.Projection = ccl.ShaderNodes.TextureNode.TextureProjection.Flat;
+				imtexnode.AlternateTiles = teximg.AlternateTiles;
 				RenderEngine.SetProjectionMode(sh, teximg, imtexnode, texco);
 				if (normalMap)
 				{

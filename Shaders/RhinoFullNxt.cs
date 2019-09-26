@@ -275,6 +275,7 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(normalmap);
 				// NOTE THAT NORMALMAP NODE IS OUTSIDE OF GH DEFINITION ADDED
 
+
 				var invert_transparency68 = new MathSubtract("invert_transparency");
 					invert_transparency68.ins.Value1.Value = 1f;
 					invert_transparency68.ins.Value2.Value = part.Transparency;
@@ -297,6 +298,7 @@ namespace RhinoCyclesCore.Shaders
 					diffuse_texture85.Interpolation = InterpolationType.Smart;
 					diffuse_texture85.UseAlpha = true;
 					diffuse_texture85.IsLinear = false;
+					diffuse_texture85.AlternateTiles = part.DiffuseTexture.AlternateTiles;
 
 				var diff_tex_weighted_alpha_for_basecol_mix182 = new MathMultiply("diff_tex_weighted_alpha_for_basecol_mix");
 					diff_tex_weighted_alpha_for_basecol_mix182.Operation = MathNode.Operations.Multiply;
@@ -319,6 +321,7 @@ namespace RhinoCyclesCore.Shaders
 					bump_texture86.Interpolation = InterpolationType.Smart;
 					bump_texture86.UseAlpha = true;
 					bump_texture86.IsLinear = false;
+					bump_texture86.AlternateTiles = part.BumpTexture.AlternateTiles;
 
 				var bump_texture_to_bw87 = new RgbToBwNode("bump_texture_to_bw");
 
@@ -418,6 +421,7 @@ namespace RhinoCyclesCore.Shaders
 					environment_texture105.Interpolation = InterpolationType.Smart;
 					environment_texture105.UseAlpha = true;
 					environment_texture105.IsLinear = false;
+					environment_texture105.AlternateTiles = part.EnvironmentTexture.AlternateTiles;
 
 				var attenuated_environment_color106 = new MixNode("attenuated_environment_color");
 					attenuated_environment_color106.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
@@ -492,6 +496,7 @@ namespace RhinoCyclesCore.Shaders
 					transparency_texture112.Interpolation = InterpolationType.Smart;
 					transparency_texture112.UseAlpha = true;
 					transparency_texture112.IsLinear = false;
+					transparency_texture112.AlternateTiles = part.TransparencyTexture.AlternateTiles;
 
 				var transpluminance113 = new RgbToLuminanceNode("transpluminance");
 

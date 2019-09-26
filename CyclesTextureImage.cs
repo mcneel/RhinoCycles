@@ -28,6 +28,7 @@ namespace RhinoCyclesCore
 		public int TexHeight;
 		public string Name;
 		public bool UseAlpha;
+		public bool AlternateTiles;
 		public float UseAlphaAsFloat => UseAlpha ? 1.0f : 0.0f;
 		public float Amount { get; set; }
 

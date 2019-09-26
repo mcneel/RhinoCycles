@@ -139,6 +139,13 @@ namespace RhinoCyclesCore.Converters
 			var isFloat = renderTexture.IsHdrCapable();
 			var isLinear = renderTexture.IsLinear();
 			var isImageBased = renderTexture.IsImageBased();
+			var alternateob= renderTexture.GetParameter("mirror-alternate-tiles");
+			var alternate = false;
+
+			if (alternateob != null)
+			{
+				alternate = Convert.ToBoolean(alternateob);
+			}
 
 			if (isFloat)
 			{
@@ -214,6 +221,7 @@ namespace RhinoCyclesCore.Converters
 					shader.DiffuseTexture.Transform = t;
 					shader.DiffuseTexture.Repeat = repeat;
 					shader.DiffuseTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+					shader.DiffuseTexture.AlternateTiles = alternate;
 					break;
 				case RenderMaterial.StandardChildSlots.Bump:
 					shader.BumpTexture.TexWidth = pwidth;
@@ -223,6 +231,7 @@ namespace RhinoCyclesCore.Converters
 					shader.BumpTexture.Transform = t;
 					shader.BumpTexture.Repeat = repeat;
 					shader.BumpTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+					shader.BumpTexture.AlternateTiles = alternate;
 					break;
 				case RenderMaterial.StandardChildSlots.Transparency:
 					shader.TransparencyTexture.TexWidth = pwidth;
@@ -232,6 +241,7 @@ namespace RhinoCyclesCore.Converters
 					shader.TransparencyTexture.Transform = t;
 					shader.TransparencyTexture.Repeat = repeat;
 					shader.TransparencyTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+					shader.TransparencyTexture.AlternateTiles = alternate;
 					break;
 				case RenderMaterial.StandardChildSlots.Environment:
 					shader.EnvironmentTexture.TexWidth = pwidth;
@@ -242,6 +252,7 @@ namespace RhinoCyclesCore.Converters
 					shader.EnvironmentTexture.Transform = t;
 					shader.EnvironmentTexture.Repeat = repeat;
 					shader.EnvironmentTexture.Name = rId.ToString(CultureInfo.InvariantCulture);
+					shader.EnvironmentTexture.AlternateTiles = alternate;
 					break;
 			}
 		}
