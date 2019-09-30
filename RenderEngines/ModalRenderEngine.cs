@@ -28,12 +28,17 @@ namespace RhinoCyclesCore.RenderEngines
 {
 	public class ModalRenderEngine : RenderEngine
 	{
-		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view) : this(doc, pluginId, view, null, null) { }
-		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport, Rhino.Display.DisplayPipelineAttributes attributes)
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, bool isProductRender) : this(doc, pluginId, view, null, null, isProductRender) { }
+		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport, Rhino.Display.DisplayPipelineAttributes attributes, bool isProductRender)
 			: base(pluginId, doc.RuntimeSerialNumber, view, viewport, attributes, false)
 		{
+			IsProductRender = isProductRender;
+			Quality = doc.RenderSettings.AntialiasLevel;
 			ModalRenderEngineCommonConstruct();
 		}
+
+		AntialiasLevel Quality { get; set; }
+		public bool IsProductRender { get; set; }
 
 		private void ModalRenderEngineCommonConstruct()
 		{
@@ -97,14 +102,38 @@ namespace RhinoCyclesCore.RenderEngines
 
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
-			requestedSamples = Attributes?.RealtimeRenderPasses ?? RcCore.It.EngineSettings.Samples;
-			requestedSamples = (requestedSamples < 1) ? RcCore.It.EngineSettings.Samples : requestedSamples;
+
+			EngineSettings engineSettings = null;
+
+			if(!IsProductRender) {
+				engineSettings = RcCore.It.EngineSettings;
+			} else {
+				switch(Quality)
+				{
+					case AntialiasLevel.Draft:
+						engineSettings = new DraftPresetEngineSettings();
+						break;
+					case AntialiasLevel.Good:
+						engineSettings = new GoodPresetEngineSettings();
+						break;
+					case AntialiasLevel.High:
+						engineSettings = new FinalPresetEngineSettings();
+						break;
+					case AntialiasLevel.None:
+					default:
+						engineSettings = new LowPresetEngineSettings();
+						break;
+				}
+			}
+
+			requestedSamples = Attributes?.RealtimeRenderPasses ?? engineSettings.Samples;
+			requestedSamples = (requestedSamples < 1) ? engineSettings.Samples : requestedSamples;
 			cyclesEngine.TriggerCurrentViewportSettingsRequested();
 
 			#region pick a render device
-			var renderDevice = RcCore.It.EngineSettings.RenderDevice;
+			var renderDevice = engineSettings.RenderDevice;
 
-			if (RcCore.It.EngineSettings.Verbose) sdd.WriteLine(
+			if (engineSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
 			#endregion
 
@@ -118,7 +147,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Samples = requestedSamples,
 				TileSize = TileSize(),
 				TileOrder = TileOrder.Center,
-				Threads = (uint)(renderDevice.IsGpu ? 0 : RcCore.It.EngineSettings.Threads),
+				Threads = (uint)(renderDevice.IsGpu ? 0 : engineSettings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				Background = true,
 				DisplayBufferLinear = false,
@@ -134,7 +163,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session = new Session(client, sessionParams);
 			#endregion
 
-			CreateScene(client, Session, renderDevice, cyclesEngine);
+			CreateScene(client, Session, renderDevice, cyclesEngine, engineSettings);
 
 			// register callbacks before starting any rendering
 			cyclesEngine.SetCallbacks();
@@ -159,7 +188,7 @@ namespace RhinoCyclesCore.RenderEngines
 				//cyclesEngine.Session.Scene.Reset();
 				// and actually start
 				bool stillrendering = true;
-				var throttle = Math.Max(0, RcCore.It.EngineSettings.ThrottleMs);
+				var throttle = Math.Max(0, engineSettings.ThrottleMs);
 				while (stillrendering)
 				{
 					if (cyclesEngine.IsRendering)
@@ -174,7 +203,7 @@ namespace RhinoCyclesCore.RenderEngines
 			}
 			#endregion
 
-			if (RcCore.It.EngineSettings.SaveDebugImages)
+			if (engineSettings.SaveDebugImages)
 			{
 				var tmpf = RenderEngine.TempPathForFile($"RC_modal_renderer.png");
 				cyclesEngine.RenderWindow.SaveRenderImageAs(tmpf, true);

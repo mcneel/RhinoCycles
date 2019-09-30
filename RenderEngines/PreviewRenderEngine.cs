@@ -103,7 +103,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session = new Session(client, sessionParams);
 #endregion
 
-			CreateScene(client, cyclesEngine.Session, renderDevice, cyclesEngine);
+			CreateScene(client, cyclesEngine.Session, renderDevice, cyclesEngine, RcCore.It.EngineSettings);
 
 			// register callbacks before starting any rendering
 			cyclesEngine.SetCallbacks();

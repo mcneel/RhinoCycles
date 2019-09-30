@@ -56,6 +56,10 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Database\RenderSettingsDatabase.cs" />
+    <Compile Include="DraftPresetEnginesSettings.cs" />
+    <Compile Include="GoodPresetEnginesSettings.cs" />
+    <Compile Include="FinalPresetEnginesSettings.cs" />
+    <Compile Include="LowPresetEnginesSettings.cs" />
     <Compile Include="EngineSettings.cs" />
     <Compile Include="Environments\XmlEnvironment.cs" />
     <Compile Include="Materials\VertexColorMaterial.cs" />

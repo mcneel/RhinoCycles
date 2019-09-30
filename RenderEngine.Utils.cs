@@ -63,7 +63,7 @@ namespace RhinoCyclesCore
 		/// <param name="cycles_engine">Engine instance to create for</param>
 		/// <returns></returns>
 		protected static /*Scene*/ void CreateScene(Client client, Session session, Device render_device,
-			RenderEngine cycles_engine)
+			RenderEngine cycles_engine, EngineSettings engineSettings)
 		{
 			#region set up scene parameters
 			var scene_params = new SceneParameters(client, ShadingSystem.SVM, BvhType.Static, false, /*render_device.IsCpu || render_device.IsOpenCl || render_device.IsMultiOpenCl*/ true, false);
@@ -75,31 +75,31 @@ namespace RhinoCyclesCore
 				#region integrator settings
 				Integrator =
 				{
-					MaxBounce = RcCore.It.EngineSettings.MaxBounce,
-					TransparentMaxBounce = RcCore.It.EngineSettings.TransparentMaxBounce,
-					MaxDiffuseBounce = RcCore.It.EngineSettings.MaxDiffuseBounce,
-					MaxGlossyBounce = RcCore.It.EngineSettings.MaxGlossyBounce,
-					MaxTransmissionBounce = RcCore.It.EngineSettings.MaxTransmissionBounce,
-					MaxVolumeBounce = RcCore.It.EngineSettings.MaxVolumeBounce,
-					NoCaustics = RcCore.It.EngineSettings.NoCaustics,
-					DiffuseSamples = RcCore.It.EngineSettings.DiffuseSamples,
-					GlossySamples = RcCore.It.EngineSettings.GlossySamples,
-					TransmissionSamples = RcCore.It.EngineSettings.TransmissionSamples,
-					AoSamples = RcCore.It.EngineSettings.AoSamples,
-					MeshLightSamples = RcCore.It.EngineSettings.MeshLightSamples,
-					SubsurfaceSamples = RcCore.It.EngineSettings.SubsurfaceSamples,
-					VolumeSamples = RcCore.It.EngineSettings.VolumeSamples,
-					AaSamples = RcCore.It.EngineSettings.AaSamples,
-					FilterGlossy = RcCore.It.EngineSettings.FilterGlossy,
-					IntegratorMethod = RcCore.It.EngineSettings.IntegratorMethod,
-					SampleAllLightsDirect = RcCore.It.EngineSettings.SampleAllLights,
-					SampleAllLightsIndirect = RcCore.It.EngineSettings.SampleAllLightsIndirect,
-					SampleClampDirect = RcCore.It.EngineSettings.SampleClampDirect,
-					SampleClampIndirect = RcCore.It.EngineSettings.SampleClampIndirect,
-					LightSamplingThreshold =  RcCore.It.EngineSettings.LightSamplingThreshold,
+					MaxBounce = engineSettings.MaxBounce,
+					TransparentMaxBounce = engineSettings.TransparentMaxBounce,
+					MaxDiffuseBounce = engineSettings.MaxDiffuseBounce,
+					MaxGlossyBounce = engineSettings.MaxGlossyBounce,
+					MaxTransmissionBounce = engineSettings.MaxTransmissionBounce,
+					MaxVolumeBounce = engineSettings.MaxVolumeBounce,
+					NoCaustics = engineSettings.NoCaustics,
+					DiffuseSamples = engineSettings.DiffuseSamples,
+					GlossySamples = engineSettings.GlossySamples,
+					TransmissionSamples = engineSettings.TransmissionSamples,
+					AoSamples = engineSettings.AoSamples,
+					MeshLightSamples = engineSettings.MeshLightSamples,
+					SubsurfaceSamples = engineSettings.SubsurfaceSamples,
+					VolumeSamples = engineSettings.VolumeSamples,
+					AaSamples = engineSettings.AaSamples,
+					FilterGlossy = engineSettings.FilterGlossy,
+					IntegratorMethod = engineSettings.IntegratorMethod,
+					SampleAllLightsDirect = engineSettings.SampleAllLights,
+					SampleAllLightsIndirect = engineSettings.SampleAllLightsIndirect,
+					SampleClampDirect = engineSettings.SampleClampDirect,
+					SampleClampIndirect = engineSettings.SampleClampIndirect,
+					LightSamplingThreshold =  engineSettings.LightSamplingThreshold,
 					SamplingPattern = SamplingPattern.CMJ,
-					Seed = RcCore.It.EngineSettings.Seed,
-					NoShadows = RcCore.It.EngineSettings.NoShadows,
+					Seed = engineSettings.Seed,
+					NoShadows = engineSettings.NoShadows,
 				}
 				#endregion
 			};

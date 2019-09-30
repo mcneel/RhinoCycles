@@ -210,7 +210,7 @@ namespace RhinoCycles.Viewport
 				_useOpenGl = false;
 				SetUseDrawOpenGl(false);
 				_useFastDraw = UseFastDraw();
-				var mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo, Dpa);
+				var mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo, Dpa, false);
 				mre.SetCallbackForCapture();
 
 				_cycles = null;

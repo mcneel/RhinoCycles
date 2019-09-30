@@ -444,21 +444,21 @@ namespace RhinoCyclesCore
 		}
 
 		public bool UseStartResolutionDefault => RenderEngine.OnHighDpi ? true : false;
-		public bool UseStartResolution
+		public virtual bool UseStartResolution
 		{
 			get { return RcPlugIn.Settings.GetBool("UseStartResolution", UseStartResolutionDefault); }
 			set { RcPlugIn.Settings.SetBool("UseStartResolution", value); }
 		}
 
 		public int StartResolutionDefault => 64;
-		public int StartResolution
+		public virtual int StartResolution
 		{
 			get { return RcPlugIn.Settings.GetInteger("StartResolution", StartResolutionDefault); }
 			set { if (value < 1) value = 1;  RcPlugIn.Settings.SetInteger("StartResolution", value); }
 		}
 
 		public float DpiScaleDefault => 1.0f;
-		public float DpiScale
+		public virtual float DpiScale
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble("DpiScale", DpiScaleDefault); }
 			set { RcPlugIn.Settings.SetDouble("DpiScale", value); }
@@ -688,7 +688,7 @@ namespace RhinoCyclesCore
 		}
 
 		public int OpenClDeviceTypeDefault => 4;
-		public int OpenClDeviceType
+		public virtual int OpenClDeviceType
 		{
 			get { return RcPlugIn.Settings.GetInteger("OpenCLDeviceType", OpenClDeviceTypeDefault); }
 			set
@@ -703,7 +703,7 @@ namespace RhinoCyclesCore
 		}
 
 		public bool OpenClSingleProgramDefault => true;
-		public bool OpenClSingleProgram
+		public virtual bool OpenClSingleProgram
 		{
 			get { return RcPlugIn.Settings.GetBool("OpenCLSingleProgram", OpenClSingleProgramDefault); }
 			set
@@ -717,7 +717,7 @@ namespace RhinoCyclesCore
 			}
 		}
 		public bool NoShadowsDefault => false;
-		public bool NoShadows
+		public virtual bool NoShadows
 		{
 			get { return RcPlugIn.Settings.GetBool("NoShadows", NoShadowsDefault); }
 			set
@@ -730,7 +730,7 @@ namespace RhinoCyclesCore
 			}
 		}
 		public int OpenClKernelTypeDefault => -1;
-		public int OpenClKernelType
+		public virtual int OpenClKernelType
 		{
 			get { return RcPlugIn.Settings.GetInteger("OpenCLKernelType", OpenClKernelTypeDefault); }
 			set
@@ -744,7 +744,7 @@ namespace RhinoCyclesCore
 			}
 		}
 		public bool CPUSplitKernelDefault => false;
-		public bool CPUSplitKernel
+		public virtual bool CPUSplitKernel
 		{
 			get { return RcPlugIn.Settings.GetBool("CPUSplitKernel", CPUSplitKernelDefault); }
 			set
