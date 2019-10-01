@@ -38,7 +38,7 @@ namespace RhinoCycles
 			: base(doc, mode, plugin, RenderSize(doc, true),
 					"Rhino Render", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
 		{
-			cyclesEngine = (ModalRenderEngine)aRC;
+			cyclesEngine = aRC;
 		}
 
 		public bool Cancel()

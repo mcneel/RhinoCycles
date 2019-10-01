@@ -264,7 +264,7 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetBool("FlushAtEndOfCreateWorld", value); }
 		}
 
-		public int PreviewSamplesDefault => 150;
+		public int PreviewSamplesDefault => 250;
 		public virtual int PreviewSamples
 		{
 			get { return RcPlugIn.Settings.GetInteger("PreviewSamples", PreviewSamplesDefault); }

@@ -235,7 +235,8 @@ namespace RhinoCyclesCore
 				if (PreviewEventArgs.Cancel)
 				{
 					CancelRender = true;
-					Session.Cancel("Preview Cancelled");
+					State = State.Stopped;
+					Session?.Cancel("Preview Cancelled");
 				}
 			}
 		}

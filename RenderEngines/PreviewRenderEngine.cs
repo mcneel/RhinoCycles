@@ -54,9 +54,12 @@ namespace RhinoCyclesCore.RenderEngines
 		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
 			if (IsStopped) return;
+			if (sample % 50 != 0 && sample + 1 < PreviewSamples) return;
 			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 			PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
+
+		public int PreviewSamples { get; set; }
 		/// <summary>
 		/// Renderer entry point for preview rendering
 		/// </summary>
@@ -66,9 +69,11 @@ namespace RhinoCyclesCore.RenderEngines
 			var cyclesEngine = (PreviewRenderEngine)oPipe;
 
 			var client = cyclesEngine.Client;
+			var threads = (uint)Math.Max(1, Environment.ProcessorCount - 1);
 
 			var size = cyclesEngine.RenderDimension;
 			var samples = RcCore.It.EngineSettings.PreviewSamples;
+			cyclesEngine.PreviewSamples = samples;
 
 			#region pick a render device
 			var renderDevice = Device.Default;
@@ -84,9 +89,9 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = TileSize(),
-				TileOrder = TileOrder.Center,
-				Threads = 1,
+				TileSize = new Size(16, 16),
+				TileOrder = TileOrder.HilbertSpiral,
+				Threads = threads,
 				ShadingSystem = ShadingSystem.SVM,
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
