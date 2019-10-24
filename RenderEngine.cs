@@ -472,9 +472,6 @@ namespace RhinoCyclesCore
 			RenderThread?.Join();
 			RenderThread = null;
 
-			// get rid of our change queue
-			Database?.Dispose();
-			Database = null;
 		}
 
 		/// <summary>

@@ -193,6 +193,9 @@ namespace RhinoCyclesCore.RenderEngines
 				rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 			}
 			cyclesEngine.CancelRender = true;
+			// get rid of our change queue
+			cyclesEngine.Database?.Dispose();
+			cyclesEngine.Database = null;
 
 		}
 

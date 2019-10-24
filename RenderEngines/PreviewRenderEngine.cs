@@ -142,7 +142,9 @@ namespace RhinoCyclesCore.RenderEngines
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Session.Destroy();
 
+			// get rid of our change queue
 			cyclesEngine.Database?.Dispose();
+			cyclesEngine.Database = null;
 		}
 
 	}

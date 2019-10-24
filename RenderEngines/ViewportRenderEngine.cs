@@ -77,6 +77,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (_disposed) return;
 
 			Database?.Dispose();
+			Database = null;
 			Client?.Dispose();
 			base.Dispose(isDisposing);
 			_disposed = true;
