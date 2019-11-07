@@ -390,13 +390,17 @@ namespace RhinoCycles.Viewport
 		{
 			var ppg = e.Lwf.PostProcessGamma;
 			LinearWorkflow.PostProcessGamma = ppg;
-			var rengine = _cycles ?? _modal as RenderEngine;
+			//var rengine = _cycles ?? _modal as RenderEngine;
 
-			if (rengine == null) return;
+			//if (rengine == null) return;
 
-			var imageadjust = rengine.RenderWindow.GetAdjust();
+			//ALB 2019.11.7 - I can't find a case where this is actually used in a real way.  It is not called when
+			//doing a rendering, it is called from Raytraced, but it is always just setting the gamma to 1.0 (presumably because
+			//gamma correction is done later in a shader in the viewport), and I can't get the previews to work at the moment.
+			//If it turns out I have broken preview gamma, we need to find another way to fix this without using Get/SetAdjust
+			/*var imageadjust = rengine.RenderWindow.GetAdjust();
 			imageadjust.Gamma = ppg;
-			rengine.RenderWindow.SetAdjust(imageadjust);
+			rengine.RenderWindow.SetAdjust(imageadjust);*/
 		}
 
 		void CyclesRenderStarted(object sender, ViewportRenderEngine.RenderStartedEventArgs e)
