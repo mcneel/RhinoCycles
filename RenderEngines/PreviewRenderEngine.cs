@@ -26,6 +26,7 @@ namespace RhinoCyclesCore.RenderEngines
 {
 	public class PreviewRenderEngine : RenderEngine
 	{
+		int m_sample_count = -1;
 
 		/// <summary>
 		/// Construct a render engine for preview rendering
@@ -54,10 +55,22 @@ namespace RhinoCyclesCore.RenderEngines
 		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
 			if (IsStopped) return;
-			if (sample % 50 != 0 && sample + 1 < PreviewSamples) return;
-			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
-			PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
+			
+		  DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
+	  }
+
+		public void SignalUpdate(int sample)
+		{
+			if (sample > 10 && sample % 50 != 0 && (sample + 2) < PreviewSamples) 
+				return;
+
+			if (sample > 1 && m_sample_count != sample)
+			{
+				PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
+				m_sample_count = sample;
+			}
 		}
+
 
 		public int PreviewSamples { get; set; }
 		/// <summary>
@@ -130,7 +143,9 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				if (cyclesEngine.IsRendering)
 				{
-					stillrendering = cyclesEngine.Session.Sample() > -1;
+					var sample = cyclesEngine.Session.Sample();
+					stillrendering = sample > -1;
+					cyclesEngine.SignalUpdate(sample);
 					Thread.Sleep(throttle);
 				}
 				else
