@@ -19,6 +19,7 @@ using ccl.ShaderNodes;
 using ccl.ShaderNodes.Sockets;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
+using System;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -200,7 +201,8 @@ namespace RhinoCyclesCore.Shaders
 						var bump = new ccl.ShaderNodes.BumpNode("bump");
 						m_shader.AddNode(bump);
 						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height, texco, true);
-						bump.ins.Strength.Value = part.PbrBump.Amount;
+						bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.EngineSettings.BumpStrengthFactor;
+						bump.Invert = part.PbrBump.Amount < 0.0f;
 						bump.ins.Distance.Value = RcCore.It.EngineSettings.BumpDistance;
 						bump.outs.Normal.Connect(principled.ins.Normal);
 					} else {
@@ -228,7 +230,8 @@ namespace RhinoCyclesCore.Shaders
 					m_shader.AddNode(bumpwithscratch);
 
 					bumpwithscratch.ins.Distance.Value = RcCore.It.EngineSettings.BumpDistance;
-					bumpwithscratch.ins.Strength.Value = part.PbrScratch.Amount * RcCore.It.EngineSettings.BumpStrengthFactor;
+					bumpwithscratch.ins.Strength.Value = Math.Abs(part.PbrScratch.Amount) * RcCore.It.EngineSettings.BumpStrengthFactor;
+					bumpwithscratch.Invert = part.PbrScratch.Amount < 0.0f;
 					RenderEngine.SetTextureImage(scratchtex, part.PbrScratchTexture);
 					scratchtex.Extension = part.PbrScratchTexture.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
 					scratchtex.ColorSpace = TextureNode.TextureColorSpace.None;
