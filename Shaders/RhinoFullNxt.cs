@@ -216,7 +216,8 @@ namespace RhinoCyclesCore.Shaders
 						var bump = new ccl.ShaderNodes.BumpNode("clearcoat_bump");
 						m_shader.AddNode(bump);
 						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height, texco, true);
-						bump.ins.Strength.Value = part.PbrClearcoatBump.Amount;
+						bump.ins.Strength.Value = Math.Abs(part.PbrClearcoatBump.Amount) * RcCore.It.EngineSettings.BumpStrengthFactor;
+						bump.Invert = part.PbrClearcoatBump.Amount < 0.0f;
 						bump.ins.Distance.Value = RcCore.It.EngineSettings.BumpDistance;
 						bump.outs.Normal.Connect(principled.ins.ClearcoatNormal);
 					} else {
