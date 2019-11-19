@@ -325,9 +325,9 @@ namespace RhinoCyclesCore
 		public void DisplayBuffer(uint sessionId, uint tx, uint ty, uint tw, uint th, PassType passtype, ref float[] pixels, int pixlen, int stride)
 		{
 			if (IsStopped) return;
-			//(var width, var height) =  RenderDimension;
-			var width = RenderDimension.Width;
-			var height = RenderDimension.Height;
+			(var width, var height) =  RenderDimension;
+			//var width = RenderDimension.Width;
+			//var height = RenderDimension.Height;
 			if (RenderWindow != null)
 			{
 				using (RenderWindow.Channel channel = RenderWindow.OpenChannel(RenderWindow.StandardChannels.RGBA),

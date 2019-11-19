@@ -36,7 +36,6 @@ namespace RhinoCyclesCore
 		/// </summary>
 		protected bool UploadData()
 		{
-
 			if (CancelRender) return false;
 
 			Database.UploadDisplayPipelineAttributesChanges();
@@ -105,7 +104,6 @@ namespace RhinoCyclesCore
 			Database.ResetChangeQueue();
 
 			if (CancelRender) return false;
-
 			return true;
 		}
 	}

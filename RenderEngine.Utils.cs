@@ -66,7 +66,15 @@ namespace RhinoCyclesCore
 			RenderEngine cycles_engine, EngineSettings engineSettings)
 		{
 			#region set up scene parameters
-			var scene_params = new SceneParameters(client, ShadingSystem.SVM, BvhType.Static, false, /*render_device.IsCpu || render_device.IsOpenCl || render_device.IsMultiOpenCl*/ true, false);
+			BvhLayout bvhLayout = BvhLayout.Default;
+			if(render_device.IsOptix) {
+				bvhLayout = BvhLayout.OptiX;
+			}
+			/*else if (render_device.IsCpu) {
+				bvhLayout = BvhLayout.Embree;
+			}
+			*/
+			var scene_params = new SceneParameters(client, ShadingSystem.SVM, BvhType.Static, false, bvhLayout, false);
 			#endregion
 
 			#region create scene
@@ -97,18 +105,18 @@ namespace RhinoCyclesCore
 					SampleClampDirect = engineSettings.SampleClampDirect,
 					SampleClampIndirect = engineSettings.SampleClampIndirect,
 					LightSamplingThreshold =  engineSettings.LightSamplingThreshold,
-					SamplingPattern = SamplingPattern.CMJ,
+					SamplingPattern = SamplingPattern.Sobol,
 					Seed = engineSettings.Seed,
 					NoShadows = engineSettings.NoShadows,
 				}
 				#endregion
 			};
+			#endregion
 
 			scene.Film.SetFilter(FilterType.Gaussian, 1.5f);
 			scene.Film.Exposure = 1.0f;
 			scene.Film.Update();
 
-			#endregion
 
 			#region background shader
 
@@ -138,7 +146,6 @@ namespace RhinoCyclesCore
 			#endregion
 
 			session.Scene = scene;
-			//return scene;
 		}
 
 		static public float4 CreateFloat4(double x, double y, double z) { return new float4((float)x, (float)y, (float)z, 0.0f); }
