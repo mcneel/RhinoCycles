@@ -58,6 +58,14 @@ namespace RhinoCyclesCore.Converters
 					var back = rm.FirstChild.NextSibling as RenderMaterial;
 					shader.CreateBackShader(back, gamma);
 				}
+				if(shader.Front == null) {
+					RenderMaterial defrm = RenderMaterial.CreateBasicMaterial(null);
+					shader.CreateFrontShader(defrm, gamma);
+				}
+				if(shader.Back == null) {
+					RenderMaterial defrm = RenderMaterial.CreateBasicMaterial(null);
+					shader.CreateBackShader(defrm, gamma);
+				}
 			}
 			else
 			{
