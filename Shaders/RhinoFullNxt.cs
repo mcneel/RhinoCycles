@@ -257,6 +257,11 @@ namespace RhinoCyclesCore.Shaders
 					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, emissive.ins.Color, texco);
 					emissive.outs.Emission.Connect(addemissive.ins.Closure2);
 				}
+				else if(!part.PbrEmission.Value.Equals(Rhino.Display.Color4f.Black))
+				{
+					emissive.ins.Color.Value = part.PbrEmission.Value.ToFloat4();
+					emissive.outs.Emission.Connect(addemissive.ins.Closure2);
+				}
 
 				tangent.outs.Tangent.Connect(principled.ins.Tangent);
 
