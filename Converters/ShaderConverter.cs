@@ -41,36 +41,35 @@ namespace RhinoCyclesCore.Converters
 		public CyclesShader CreateCyclesShader(RenderMaterial rm, float gamma)
 		{
 			var mid = rm.RenderHash;
-			var shader = new CyclesShader(mid);
+			var shader = new CyclesShader(mid)
+			{
+				Type = CyclesShader.Shader.Diffuse
+			};
 
-			shader.Type = CyclesShader.Shader.Diffuse;
-
-			RenderMaterial front;
 			if (rm.TypeId.Equals(realtimDisplaMaterialId))
 			{
-				if (rm.FirstChild?.ChildSlotName?.Equals("front") ?? false)
+				if (rm.FindChild("front") is RenderMaterial front)
 				{
-					front = rm.FirstChild as RenderMaterial;
 					shader.CreateFrontShader(front, gamma);
 				}
-				if (rm.FirstChild?.NextSibling?.ChildSlotName?.Equals("back") ?? false)
+				if (rm.FindChild("back") is RenderMaterial back)
 				{
-					var back = rm.FirstChild.NextSibling as RenderMaterial;
 					shader.CreateBackShader(back, gamma);
 				}
-				if(shader.Front == null) {
-					RenderMaterial defrm = RenderMaterial.CreateBasicMaterial(null);
-					shader.CreateFrontShader(defrm, gamma);
-				}
-				if(shader.Back == null) {
-					RenderMaterial defrm = RenderMaterial.CreateBasicMaterial(null);
-					shader.CreateBackShader(defrm, gamma);
+				/* Now ensure we have a valid front part of the shader. When a
+				 * double-sided material is added without having a front material
+				 * set this can be necessary. */
+				if (shader.Front == null)
+				{
+					using (RenderMaterial defrm = RenderMaterial.CreateBasicMaterial(null))
+					{
+						shader.CreateFrontShader(defrm, gamma);
+					}
 				}
 			}
 			else
 			{
-				front = rm;
-				shader.CreateFrontShader(front, gamma);
+				shader.CreateFrontShader(rm, gamma);
 			}
 
 			return shader;
