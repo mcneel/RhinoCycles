@@ -20,6 +20,13 @@ using Light = Rhino.Render.ChangeQueue.Light;
 
 namespace RhinoCyclesCore
 {
+
+	public enum CyclesLightFalloff {
+		Constant,
+		Linear,
+		Quadratic
+	};
+
 	/// <summary>
 	/// Intermediate class used for converting rhino light sources 
 	/// to Cycles light sources.
@@ -34,9 +41,13 @@ namespace RhinoCyclesCore
 			AxisV = new float4(0.0f);
 			DiffuseColor = new float4(0.0f);
 			Id = Guid.Empty;
+
 		}
 		public Light.Event Event { get; set; }
 		public LightType Type { get; set; }
+
+		public CyclesLightFalloff Falloff { get; set; } = CyclesLightFalloff.Linear;
+
 		/// <summary>
 		/// Location of light in world
 		/// </summary>

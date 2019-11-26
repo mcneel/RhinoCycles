@@ -16,14 +16,13 @@ limitations under the License.
 
 using System;
 using ccl;
+using Rhino;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
 using RhinoCyclesCore.Core;
-using RhinoCyclesCore.Materials;
 using Light = Rhino.Render.ChangeQueue.Light;
-using Material = Rhino.DocObjects.Material;
 
 namespace RhinoCyclesCore.Converters
 {
@@ -111,17 +110,30 @@ namespace RhinoCyclesCore.Converters
 		/// <returns><c>CyclesLight</c></returns>
 		internal CyclesLight ConvertLight(Rhino.Geometry.Light lg, float gamma)
 		{
-			var enabled = lg.IsEnabled ? 1.0 : 0.0;
+			var enabled = lg.IsEnabled ? 1.0f : 0.0f;
 
 			var spotangle = 0.0;
 			var smooth = 0.0;
 			var size = 0.0f;
-			var strength = (float)(lg.Intensity * RcCore.It.EngineSettings.PointlightFactor * enabled);
+			var strength = (float)(lg.Intensity * RcCore.It.EngineSettings.PointlightFactor);
 			var axisu = new float4(0.0f);
 			var axisv = new float4(0.0f);
 			var useMis = true;
 			var sizeU = 0.0f;
 			var sizeV = 0.0f;
+
+			CyclesLightFalloff lfalloff;
+			switch (lg.AttenuationType) {
+				case Rhino.Geometry.Light.Attenuation.Constant:
+					lfalloff = CyclesLightFalloff.Constant;
+					break;
+				case Rhino.Geometry.Light.Attenuation.Linear:
+					lfalloff = CyclesLightFalloff.Linear;
+					break;
+				default:
+					lfalloff = CyclesLightFalloff.Quadratic;
+					break;
+			}
 
 			var co = RenderEngine.CreateFloat4(lg.Location.X, lg.Location.Y, lg.Location.Z);
 			var dir = RenderEngine.CreateFloat4(lg.Direction.X, lg.Direction.Y, lg.Direction.Z);
@@ -131,7 +143,7 @@ namespace RhinoCyclesCore.Converters
 			if (lg.IsDirectionalLight)
 			{
 				lt = LightType.Distant;
-				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.SunlightFactor * enabled);
+				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.SunlightFactor);
 				//size = 0.01f;
 			}
 			else if (lg.IsSpotLight)
@@ -139,13 +151,13 @@ namespace RhinoCyclesCore.Converters
 				lt = LightType.Spot;
 				spotangle = lg.SpotAngleRadians * 2;
 				smooth = 1.0 / Math.Max(lg.HotSpot, 0.001f) - 1.0;
-				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.SpotlightFactor * enabled);
+				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.SpotlightFactor);
 			}
 			else if (lg.IsRectangularLight)
 			{
 				lt = LightType.Area;
 
-				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.ArealightFactor * enabled);
+				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.ArealightFactor);
 
 				var width = lg.Width;
 				var length = lg.Length;
@@ -172,6 +184,8 @@ namespace RhinoCyclesCore.Converters
 				throw new Exception("Linear light handled in wrong place. Contact developer nathan@mcneel.com");
 			}
 
+			strength *= enabled;
+
 			var clight = new CyclesLight
 				{
 					Type = lt,
@@ -192,6 +206,8 @@ namespace RhinoCyclesCore.Converters
 					SpotSmooth = (float)smooth,
 
 					Strength = strength,
+
+					Falloff = lfalloff,
 
 					CastShadow = lg.ShadowIntensity > 0.0,
 

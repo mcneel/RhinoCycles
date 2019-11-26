@@ -50,7 +50,18 @@ namespace RhinoCyclesCore.Shaders
 
 				m_shader.AddNode(falloffnode);
 
-				falloffnode.outs.Constant.Connect(emnode.ins.Strength);
+				switch(m_original_light.Falloff) {
+					case CyclesLightFalloff.Constant:
+						falloffnode.outs.Constant.Connect(emnode.ins.Strength);
+						break;
+					case CyclesLightFalloff.Linear:
+						falloffnode.outs.Linear.Connect(emnode.ins.Strength);
+						break;
+					case CyclesLightFalloff.Quadratic:
+						falloffnode.outs.Quadratic.Connect(emnode.ins.Strength);
+						break;
+				}
+
 			}
 
 			emnode.outs.Emission.Connect(m_shader.Output.ins.Surface);

@@ -1349,7 +1349,17 @@ namespace RhinoCyclesCore.Database
 			emissive.Name = rgl.Name;
 			emissive.Gamma = PreProcessGamma;
 			emissive.SetParameter(Materials.EmissiveMaterial._Emissive, color);
-			emissive.SetParameter(Materials.EmissiveMaterial._Falloff, 0);
+			switch(rgl.AttenuationType) {
+				case RGLight.Attenuation.Linear:
+					emissive.SetParameter(Materials.EmissiveMaterial._Falloff, 1);
+					break;
+				case RGLight.Attenuation.InverseSquared:
+					emissive.SetParameter(Materials.EmissiveMaterial._Falloff, 2);
+					break;
+				default:
+					emissive.SetParameter(Materials.EmissiveMaterial._Falloff, 0);
+					break;
+			}
 			emissive.SetParameter(Materials.EmissiveMaterial._Strength, (float)rgl.Intensity * RcCore.It.EngineSettings.LinearlightFactor * (rgl.IsEnabled ? 1 : 0));
 			emissive.EndChange();
 			emissive.BakeParameters();
