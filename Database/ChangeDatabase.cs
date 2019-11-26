@@ -1121,7 +1121,43 @@ namespace RhinoCyclesCore.Database
 		/// Guid of our groundplane object.
 		/// </summary>
 		private readonly Tuple<Guid, int> _groundplaneGuid = new Tuple<Guid, int>(new Guid("306690EC-6E86-4676-B55B-1A50066D7432"), 0);
+		private bool UsesWcs(RenderMaterial rm) {
+			RenderContent child = rm.FirstChild;
+			while(child != null) {
+				if(child is RenderTexture rt) {
+					var projection = rt.GetProjectionMode();
+					if(projection== TextureProjectionMode.Wcs || projection == TextureProjectionMode.WcsBox) {
+						return true;
+					}
+				}
+				child = child.NextSibling;
+			}
+			return false;
+		}
 
+		private void FixWcs(RenderMaterial rm) {
+			rm.BeginChange(RenderContent.ChangeContexts.Ignore);
+			RenderContent child = rm.FirstChild;
+			while (child != null)
+			{
+				if (child is RenderTexture rt)
+				{
+					var projection = rt.GetProjectionMode();
+					if (projection == TextureProjectionMode.Wcs || projection == TextureProjectionMode.WcsBox)
+					{
+						//rt.BeginChange(RenderContent.ChangeContexts.Ignore);
+						var rep = rt.GetRepeat();
+						rt.SetProjectionMode(TextureProjectionMode.MappingChannel, RenderContent.ChangeContexts.Ignore);
+						rep.X = 1f / rep.X;
+						rep.Y = 1f / rep.Y;
+						rep.Z = 1f / rep.Z;
+					}
+				}
+				child = child.NextSibling;
+			}
+
+			rm.EndChange();
+		}
 
 		/// <summary>
 		/// The mesh instance id for ground plane
@@ -1132,6 +1168,14 @@ namespace RhinoCyclesCore.Database
 		private uint currentGpRenderMaterial = 0;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
+			var isshadowonly = gp.IsShadowOnly;
+			var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
+			var mat = isshadowonly ? def : MaterialFromId(gp.MaterialId);
+
+			if(UsesWcs(mat))
+			{
+				FixWcs(mat);
+			}
 			var gpid = _groundplaneGuid;
 			var altitude = (float)(gp.Enabled ? gp.Altitude : 0.0);
 			altitude -= 2.5e-4f;
@@ -1162,10 +1206,6 @@ namespace RhinoCyclesCore.Database
 			}
 
 			HandleMeshData(gpid.Item1, gpid.Item2, m, false, uint.MaxValue);
-
-			var isshadowonly = gp.IsShadowOnly;
-			var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
-			var mat = isshadowonly ? def : MaterialFromId(gp.MaterialId);
 
 			HandleRenderMaterial(mat);
 
