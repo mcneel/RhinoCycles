@@ -415,23 +415,27 @@ namespace RhinoCyclesCore.Shaders
 						final_bg277.outs.Background.Connect(m_shader.Output.ins.Surface);
 					}
 				} else {
-
-					var bg_env_texture255 = new EnvironmentTextureNode("bg_env_texture");
-					bg_env_texture255.Projection = TextureNode.EnvironmentProjection.Equirectangular;
-					bg_env_texture255.ColorSpace = TextureNode.TextureColorSpace.None;
-					bg_env_texture255.Extension = TextureNode.TextureExtension.Repeat;
-					bg_env_texture255.Interpolation = InterpolationType.Linear;
-					bg_env_texture255.IsLinear = false;
 					var final_bg277 = new BackgroundNode("final_bg");
 					final_bg277.ins.Strength.Value = 1f;
 					m_shader.AddNode(final_bg277);
-					m_shader.AddNode(bg_env_texture255);
-					RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.BgTexture);
-					_SetEnvironmentProjection(m_original_background.BgTexture, bg_env_texture255);
-					bg_env_texture255.Translation = m_original_background.BgTexture.Transform.x;
-					bg_env_texture255.Scale = m_original_background.BgTexture.Transform.y;
-					bg_env_texture255.Rotation = m_original_background.BgTexture.Transform.z;
-					bg_env_texture255.outs.Color.Connect(final_bg277.ins.Color);
+					if (m_original_background.BgTexture.HasTextureImage)
+					{
+						var bg_env_texture255 = new EnvironmentTextureNode("bg_env_texture");
+						bg_env_texture255.Projection = TextureNode.EnvironmentProjection.Equirectangular;
+						bg_env_texture255.ColorSpace = TextureNode.TextureColorSpace.None;
+						bg_env_texture255.Extension = TextureNode.TextureExtension.Repeat;
+						bg_env_texture255.Interpolation = InterpolationType.Linear;
+						bg_env_texture255.IsLinear = false;
+						m_shader.AddNode(bg_env_texture255);
+						RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.BgTexture);
+						_SetEnvironmentProjection(m_original_background.BgTexture, bg_env_texture255);
+						bg_env_texture255.Translation = m_original_background.BgTexture.Transform.x;
+						bg_env_texture255.Scale = m_original_background.BgTexture.Transform.y;
+						bg_env_texture255.Rotation = m_original_background.BgTexture.Transform.z;
+						bg_env_texture255.outs.Color.Connect(final_bg277.ins.Color);
+					} else {
+						final_bg277.ins.Color.Value = m_original_background.Color1AsFloat4;
+					}
 					final_bg277.ins.Strength.Value = m_original_background.BgStrength;
 
 					final_bg277.outs.Background.Connect(m_shader.Output.ins.Surface);
