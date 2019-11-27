@@ -409,7 +409,7 @@ namespace RhinoCyclesCore
 			set { RcPlugIn.Settings.SetDouble("BumpStrengthFactor", value); }
 		}
 
-		public float BumpDistanceDefault => 0.01f;
+		public float BumpDistanceDefault => 0.10f;
 		public virtual float BumpDistance
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble("BumpDistance", BumpDistanceDefault); }
