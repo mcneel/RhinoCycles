@@ -641,12 +641,7 @@ namespace RhinoCyclesCore.Database
 			if(_modalRenderer) {
 				var targetw = (float)RenderDimension.Width;
 				var targeth = (float)RenderDimension.Height;
-				var sourcew = (float)vp.ScreenPort.Width;
-				var sourceh = (float)vp.ScreenPort.Height;
-				var ws = targetw / sourcew;
-				var hs = targeth / sourceh;
-				vp.GetFrustum(out double srl, out double srr, out double srb, out double srt, out double srn, out double srf);
-				vp.SetFrustum(srl * ws, srr * ws, srb * hs, srt * hs, srn, srf);
+				vp.FrustumAspect = targetw / targeth;
 			}
 
 			// camera transform, camera to world conversion
