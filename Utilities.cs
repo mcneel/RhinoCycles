@@ -64,7 +64,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
+							HandleRenderTexture(rt, tex, true, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
 							tex.Amount = amount;
 						}
 					}
@@ -127,7 +127,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
+							HandleRenderTexture(rt, tex, true, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
 							tex.Amount = amount;
 						}
 					}
@@ -138,7 +138,7 @@ namespace RhinoCyclesCore
 		}
 
 
-		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, float gamma = 1.0f)
+		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, float gamma = 1.0f)
 		{
 			if (rt == null) return;
 			uint rid = rt.RenderHashWithoutLocalMapping;
@@ -225,7 +225,7 @@ namespace RhinoCyclesCore
 					tex.TexHeight = pheight;
 					tex.Name = rid.ToString(CultureInfo.InvariantCulture);
 					tex.IsLinear = linear;
-					tex.IsNormalMap = rt.IsNormalMap();
+					tex.IsNormalMap = check_for_normal_map ? rt.IsNormalMap() : false;
 					tex.ProjectionMode = projectionMode;
 					tex.EnvProjectionMode = envProjectionMode;
 					tex.Transform = tt;

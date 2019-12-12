@@ -48,7 +48,7 @@ namespace RhinoCyclesCore.Materials
 		public void BakeParameters()
 		{
 			HandleTexturedValue(_Diffuse, Diffuse);
-			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, Gamma);
+			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()
