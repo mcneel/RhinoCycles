@@ -63,7 +63,23 @@ namespace RhinoCyclesCore.ExtensionMethods
 
 	public static class DisplayColor4fExtensions
 	{
-		public static T[] ToArray<T>(this Rhino.Display.Color4f cl)
+	public static void ToArray(this Rhino.Display.Color4f cl, ref byte[] conv)
+	{
+	  conv[0] = (byte)(Math.Min(cl.R, 1.0f) * 255.0f);
+	  conv[1] = (byte)(Math.Min(cl.G, 1.0f) * 255.0f);
+	  conv[2] = (byte)(Math.Min(cl.B, 1.0f) * 255.0f);
+	  conv[3] = (byte)(Math.Min(cl.A, 1.0f) * 255.0f);
+	}
+
+	public static void ToArray(this Rhino.Display.Color4f cl, ref float[] conv)
+	{
+	  conv[0] = cl.R;
+	  conv[1] = cl.G;
+	  conv[2] = cl.B;
+	  conv[3] = cl.A;
+	}
+
+	public static T[] ToArray<T>(this Rhino.Display.Color4f cl)
 		{
 			var conv = new T[4];
 			if (typeof(T) == typeof(float))

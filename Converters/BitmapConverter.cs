@@ -469,53 +469,119 @@ namespace RhinoCyclesCore.Converters
 		}
 
 
-		private static T[] ReadBitmapFromEvaluator<T>(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
-		{
-			if (typeof(T) != typeof(float) && typeof(T) != typeof(byte)) throw new ArgumentException($"ReadBitmapFromEvaluator doesn't supporte type {typeof(T)}");
+	private static byte[] ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
+	{
+	  var upixel = new byte[pwidth * pheight * 4];
 
-			var upixel = new T[pwidth * pheight * 4];
+	  var halfpixelU = 0.5 / pwidth;
+	  var halfpixelV = 0.5 / pheight;
+	  var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
+	  if (isImageBased) duvw.X = duvw.Y = duvw.Z = 0.0;
 
-			var halfpixelU = 0.5 / pwidth;
-			var halfpixelV = 0.5 / pheight;
-			var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
-			if (isImageBased) duvw.X = duvw.Y = duvw.Z = 0.0;
+	  byte[] conv = new byte[4];
 
-			if(!canUse)
-			{
-				Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-				var conv = c4f.ToArray<T>();
-				upixel[0] = conv[0];
-				upixel[1] = conv[1];
-				upixel[2] = conv[2];
-				upixel[3] = conv[3];
-				return upixel;
-			}
+	  if (!canUse)
+	  {
+			Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-			for (var x = 0; x < pwidth; x++)
-			{
-				for (var y = 0; y < pheight; y++)
-				{
-					var fx = x / (float)pwidth + halfpixelU;
-					var fy = y / (float)pheight + halfpixelV;
+			c4f.ToArray(ref conv);
 
-					// remember z can be !0.0 for volumetrics
-					var col4F = textureEvaluator.GetColor(new Point3d(fx, fy, 0.0), duvw, duvw);
-					var conv = col4F.ToArray<T>();
-					var offset = x * 4 + pwidth * y * 4;
-
-					upixel[offset] = conv[0];
-					upixel[offset + 1] = conv[1];
-					upixel[offset + 2] = conv[2];
-					upixel[offset + 3] = conv[3];
-				}
-			}
+			upixel[0] = conv[0];
+			upixel[1] = conv[1];
+			upixel[2] = conv[2];
+			upixel[3] = conv[3];
 			return upixel;
-		}
+	  }
 
-		public static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
+		var pt = new Point3d();
+		var col4F = new Rhino.Display.Color4f();
+
+	  for (var x = 0; x < pwidth; x++)
+	  {
+			for (var y = 0; y < pheight; y++)
+			{
+				var fx = x / (float)pwidth + halfpixelU;
+				var fy = y / (float)pheight + halfpixelV;
+
+				pt.X = fx;
+				pt.Y = fy;
+				pt.Z = 0.0;
+
+				// remember z can be !0.0 for volumetrics
+				textureEvaluator.GetColor(pt, duvw, duvw, ref col4F);
+
+				col4F.ToArray(ref conv);
+
+				var offset = x * 4 + pwidth * y * 4;
+
+				upixel[offset] = conv[0];
+				upixel[offset + 1] = conv[1];
+				upixel[offset + 2] = conv[2];
+				upixel[offset + 3] = conv[3];
+			}
+	  }
+	  return upixel;
+	}
+
+	private static float[] ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
+	{
+	  var upixel = new float[pwidth * pheight * 4];
+
+	  var halfpixelU = 0.5 / pwidth;
+	  var halfpixelV = 0.5 / pheight;
+	  var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
+	  if (isImageBased) duvw.X = duvw.Y = duvw.Z = 0.0;
+
+	  float[] conv = new float[4];
+
+	  if (!canUse)
+	  {
+			Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+			c4f.ToArray(ref conv);
+
+			upixel[0] = conv[0];
+			upixel[1] = conv[1];
+			upixel[2] = conv[2];
+			upixel[3] = conv[3];
+
+			return upixel;
+	  }
+
+	  var pt = new Point3d();
+	  var col4F = new Rhino.Display.Color4f();
+
+	  for (var x = 0; x < pwidth; x++)
+	  {
+			for (var y = 0; y < pheight; y++)
+			{
+				var fx = x / (float)pwidth + halfpixelU;
+				var fy = y / (float)pheight + halfpixelV;
+
+				pt.X = fx;
+				pt.Y = fy;
+				pt.Z = 0.0;
+
+				// remember z can be !0.0 for volumetrics
+				textureEvaluator.GetColor(pt, duvw, duvw, ref col4F);
+
+				col4F.ToArray(ref conv);
+
+				var offset = x * 4 + pwidth * y * 4;
+
+				upixel[offset] = conv[0];
+				upixel[offset + 1] = conv[1];
+				upixel[offset + 2] = conv[2];
+				upixel[offset + 3] = conv[3];
+			}
+	  }
+	  return upixel;
+	}
+
+	public static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
 		{
 			var read = ByteImagesNew.ContainsKey(rId);
-			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadBitmapFromEvaluator<byte>(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
+			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
 			if (!read)
 			{
 				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
@@ -531,7 +597,7 @@ namespace RhinoCyclesCore.Converters
 		public static FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
 		{
 			var read = FloatImagesNew.ContainsKey(rId);
-			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadBitmapFromEvaluator<float>(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
+			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
 			if (!read)
 			{
 				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
