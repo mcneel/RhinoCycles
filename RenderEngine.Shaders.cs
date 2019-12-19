@@ -107,7 +107,7 @@ namespace RhinoCyclesCore
 			{
 				if (texture.HasByteImage)
 				{
-					imnode.ByteImage = texture.TexByte;
+					imnode.ByteImage = texture.TexByte.Convert();
 				}
 				else if (texture.HasFloatImage)
 				{
@@ -126,7 +126,7 @@ namespace RhinoCyclesCore
 			{
 				if (texture.HasByteImage)
 				{
-					envnode.ByteImage = texture.TexByte;
+					envnode.ByteImage = texture.TexByte.Convert();
 				}
 				else if (texture.HasFloatImage)
 				{

@@ -451,7 +451,7 @@ namespace RhinoCyclesCore.Converters
 
 		public static ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
 		{
-			var upixel = new byte[pwidth * pheight * 4];
+			var upixel = TextureEvaluator.NewByteArray(pwidth, pheight);
 
 			for (var x = 0; x < pwidth; x++)
 			{
@@ -459,19 +459,19 @@ namespace RhinoCyclesCore.Converters
 				{
 					Color px = bm.GetPixel(x, pheight - 1 - y);
 					var offset = x * 4 + pwidth * y * 4;
-					upixel[offset] = px.R;
-					upixel[offset + 1] = px.G;
-					upixel[offset + 2] = px.B;
-					upixel[offset + 3] = px.A;
+
+					TextureEvaluator.SetByteArrayValue(upixel, offset, px.R);
+					TextureEvaluator.SetByteArrayValue(upixel, offset +1, px.G);
+					TextureEvaluator.SetByteArrayValue(upixel, offset +2, px.B);
+					TextureEvaluator.SetByteArrayValue(upixel, offset +3, px.A);
 				}
 			}
-			return new ByteBitmap(id, upixel, pwidth, pheight, false);
+			return new ByteBitmap(id, new ByteArray(upixel, pwidth*pheight*4), pwidth, pheight, false);
 		}
 
-
-	private static byte[] ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
+	private static IntPtr ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
 	{
-	  var upixel = new byte[pwidth * pheight * 4];
+	  var byte_array = TextureEvaluator.NewByteArray(pwidth, pheight);
 
 	  var halfpixelU = 0.5 / pwidth;
 	  var halfpixelV = 0.5 / pheight;
@@ -486,12 +486,19 @@ namespace RhinoCyclesCore.Converters
 
 			c4f.ToArray(ref conv);
 
-			upixel[0] = conv[0];
-			upixel[1] = conv[1];
-			upixel[2] = conv[2];
-			upixel[3] = conv[3];
-			return upixel;
+			TextureEvaluator.SetByteArrayValue(byte_array, 0, conv[0]);
+			TextureEvaluator.SetByteArrayValue(byte_array, 1, conv[1]);
+			TextureEvaluator.SetByteArrayValue(byte_array, 2, conv[2]);
+			TextureEvaluator.SetByteArrayValue(byte_array, 3, conv[3]);
+			
+				return byte_array;
 	  }
+
+		if (textureEvaluator.CanBeDumpedToBytes(pwidth, pheight))
+		{
+			textureEvaluator.DumpToBytes(pwidth, pheight, byte_array);
+			return byte_array;
+		}
 
 		var pt = new Point3d();
 		var col4F = new Rhino.Display.Color4f();
@@ -514,13 +521,13 @@ namespace RhinoCyclesCore.Converters
 
 				var offset = x * 4 + pwidth * y * 4;
 
-				upixel[offset] = conv[0];
-				upixel[offset + 1] = conv[1];
-				upixel[offset + 2] = conv[2];
-				upixel[offset + 3] = conv[3];
+					TextureEvaluator.SetByteArrayValue(byte_array, 0, conv[0]);
+					TextureEvaluator.SetByteArrayValue(byte_array, 1, conv[1]);
+					TextureEvaluator.SetByteArrayValue(byte_array, 2, conv[2]);
+					TextureEvaluator.SetByteArrayValue(byte_array, 3, conv[3]);
 			}
 	  }
-	  return upixel;
+	  return byte_array;
 	}
 
 	private static float[] ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
@@ -581,7 +588,7 @@ namespace RhinoCyclesCore.Converters
 	public static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
 		{
 			var read = ByteImagesNew.ContainsKey(rId);
-			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
+			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, new ByteArray(ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth*pheight*4), pwidth, pheight, isLinear);
 			if (!read)
 			{
 				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();

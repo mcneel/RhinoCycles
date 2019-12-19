@@ -25,8 +25,8 @@ namespace RhinoCyclesCore
 {
 	public class BitmapImage<T> : IDisposable
 	{
-		internal T[] Original;
-		internal T[] Corrected;
+		internal T Original;
+		internal T Corrected;
 
 		protected int W;
 		protected int H;
@@ -45,7 +45,7 @@ namespace RhinoCyclesCore
 
 		internal bool GammaApplied { get; set; }
 
-		public BitmapImage(uint id, T[] data, int w, int h, bool linear)
+		public BitmapImage(uint id, T data, int w, int h, bool linear)
 		{
 			Id = id;
 
@@ -54,16 +54,14 @@ namespace RhinoCyclesCore
 
 			IsLinear = linear;
 
-			var l = data.Length;
-			Original = new T[l];
-			data.CopyTo(Original, 0);
+			Original = data;
 		}
 
 		virtual public void ApplyGamma(float gamma)
 		{
 		}
 
-		public T[] Data => IsLinear || !GammaApplied ? Original : Corrected;
+		public T Data => IsLinear || !GammaApplied ? Original : Corrected;
 
 		public void SaveBitmaps()
 		{
@@ -74,41 +72,75 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		protected virtual void SavePixels(T[] pixels, string name) {}
+		protected virtual void SavePixels(T pixels, string name) {}
 
 		public void Dispose()
 		{
-			Original = null;
-			Corrected = null;
 		}
 	}
 
-	public class ByteBitmap : BitmapImage<byte>
+	public class ByteArray : IDisposable
+	{
+		public ByteArray(IntPtr p, int size)
+		{
+			_p = p;
+			_size = size;
+		}
+
+		public void Dispose()
+		{
+			TextureEvaluator.FreeByteArray(_p);
+		}
+
+		public IntPtr Data
+		{
+			get { return _p; }
+		}
+
+		public byte[] Convert()
+		{
+			var bytes = new byte[_size];
+			for (int i=0;i<_size;i++)
+			{
+				bytes[i] = TextureEvaluator.GetByteArrayValue(_p, i);
+			}
+			return bytes;
+		}
+
+		IntPtr _p;
+		int _size;
+	}
+
+
+	public class ByteBitmap : BitmapImage<ByteArray>
 	{
 
-		public ByteBitmap(uint id, byte[] data, int w, int h, bool linear) : base(id, data, w, h, linear)
+		public ByteBitmap(uint id, ByteArray data, int w, int h, bool linear) : base(id, data, w, h, linear)
 		{ }
 
 		override public void ApplyGamma(float gamma)
 		{
 			if (!IsLinear && Math.Abs(gamma - 1.0f) > float.Epsilon)
 			{
-				var conv = Original.AsParallel().Select((b, i) => (i+1)%4 == 0 ? b : (byte) (Math.Pow(b/255.0f, gamma)*255.0f)).ToArray();
+				/*var conv = Original.AsParallel().Select((b, i) => (i+1)%4 == 0 ? b : (byte) (Math.Pow(b/255.0f, gamma)*255.0f)).ToArray();
 				if(Corrected == null)
 					Corrected = new byte[Original.Length];
-				conv.CopyTo(Corrected, 0);
+				conv.CopyTo(Corrected, 0);*/
+
+				Corrected = new ByteArray(TextureEvaluator.Rdk_TextureEvaluator_NewByteArray_ApplyGamma(Original.Data, W, H, gamma), W*H*4);
 				GammaApplied = true;
 			}
 			else
 			{
 				GammaApplied = false;
+				//Corrected.Dispose();
 				Corrected = null;
 			}
 		}
 
-		protected override void SavePixels(byte[] pixels, string name)
+		protected override void SavePixels(ByteArray pixels, string name)
 		{
-			using (var rw = RenderWindow.Create(new Size(W, H)))
+			/*using (var rw = RenderWindow.Create(new Size(W, H)))
 			{
 				using (var ch = rw.OpenChannel(RenderWindow.StandardChannels.RGBA))
 				{
@@ -124,11 +156,11 @@ namespace RhinoCyclesCore
 				}
 				var tmpfhdr = RenderEngine.TempPathForFile($"byte_{name}.exr");
 				rw.SaveRenderImageAs(tmpfhdr, true);
-			}
+			}*/
 		}
 	}
 
-	public class FloatBitmap : BitmapImage<float>
+	public class FloatBitmap : BitmapImage<float[]>
 	{
 		public FloatBitmap(uint id, float[] data, int w, int h, bool linear) : base(id, data, w, h, linear)
 		{ }

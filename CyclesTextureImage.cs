@@ -22,7 +22,7 @@ namespace RhinoCyclesCore
 		public bool HasTextureImage => TexByte != null || TexFloat != null;
 		public bool HasFloatImage => TexFloat != null;
 		public bool HasByteImage => TexByte != null;
-		public byte[] TexByte { get; set; }
+		public ByteArray TexByte { get; set; }
 		public float[] TexFloat { get; set; }
 		public int TexWidth;
 		public int TexHeight;
