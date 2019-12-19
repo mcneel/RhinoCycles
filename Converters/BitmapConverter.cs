@@ -493,7 +493,20 @@ namespace RhinoCyclesCore.Converters
 			return upixel;
 	  }
 
-		var pt = new Point3d();
+			if (textureEvaluator.CanBeDumpedToBytes(pwidth, pheight))
+			{
+				unsafe
+				{
+					fixed (byte* p = upixel)
+					{
+						textureEvaluator.DumpToBytes(pwidth, pheight, (IntPtr)p);
+					}
+				}
+
+				return upixel;
+			}
+
+			var pt = new Point3d();
 		var col4F = new Rhino.Display.Color4f();
 
 	  for (var x = 0; x < pwidth; x++)
@@ -548,7 +561,7 @@ namespace RhinoCyclesCore.Converters
 			return upixel;
 	  }
 
-	  var pt = new Point3d();
+		var pt = new Point3d();
 	  var col4F = new Rhino.Display.Color4f();
 
 	  for (var x = 0; x < pwidth; x++)

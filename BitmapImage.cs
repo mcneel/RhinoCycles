@@ -45,6 +45,8 @@ namespace RhinoCyclesCore
 
 		internal bool GammaApplied { get; set; }
 
+		internal float GammaValueApplied { get; set; }
+
 		public BitmapImage(uint id, T[] data, int w, int h, bool linear)
 		{
 			Id = id;
@@ -93,11 +95,22 @@ namespace RhinoCyclesCore
 		{
 			if (!IsLinear && Math.Abs(gamma - 1.0f) > float.Epsilon)
 			{
-				var conv = Original.AsParallel().Select((b, i) => (i+1)%4 == 0 ? b : (byte) (Math.Pow(b/255.0f, gamma)*255.0f)).ToArray();
-				if(Corrected == null)
-					Corrected = new byte[Original.Length];
-				conv.CopyTo(Corrected, 0);
+				if (null == Corrected || Math.Abs(gamma - GammaValueApplied) > float.Epsilon)
+				{
+					if (Corrected == null)
+						Corrected = new byte[Original.Length];
+					Original.CopyTo(Corrected, 0);
+
+					unsafe
+					{
+						fixed (byte* p = Corrected)
+						{
+							TextureEvaluator.Rdk_TextureEvaluator_ApplyGamma((IntPtr)p, W, H, gamma);
+						}
+					}
+				}
 				GammaApplied = true;
+				GammaValueApplied = gamma;
 			}
 			else
 			{
@@ -137,11 +150,17 @@ namespace RhinoCyclesCore
 		{
 			if (!IsLinear && Math.Abs(gamma - 1.0f) > float.Epsilon)
 			{
-				var conv = Original.AsParallel().Select((f, i) => (i+1)%4==0 ? f : (float)Math.Pow(f, gamma)).ToArray();
-				if(Corrected == null)
-					Corrected = new float[Original.Length];
-				conv.CopyTo(Corrected, 0);
+				if (null == Corrected || Math.Abs(gamma - GammaValueApplied) > float.Epsilon)
+				{
+					var conv = Original.AsParallel().Select((f, i) => (i+1)%4==0 ? f : (float)Math.Pow(f, gamma)).ToArray();
+					if(Corrected == null)
+					{
+						Corrected = new float[Original.Length];
+					}
+					conv.CopyTo(Corrected, 0);
+				}
 				GammaApplied = true;
+				GammaValueApplied = gamma;
 			}
 			else
 			{
