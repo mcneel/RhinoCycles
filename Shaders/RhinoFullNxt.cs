@@ -258,6 +258,15 @@ namespace RhinoCyclesCore.Shaders
 
 				tangent.outs.Tangent.Connect(principled.ins.Tangent);
 
+				if(part.PbrDisplacement.On && part.PbrDisplacementTexture.HasTextureImage)
+				{
+					var displacement = new DisplacementNode();
+					displacement.ins.Midlevel.Value = 0.0f;
+					m_shader.AddNode(displacement);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, displacement.ins.Height, texco);
+					displacement.outs.Displacement.Connect(m_shader.Output.ins.Displacement);
+				}
+
 				return addemissive;
 				
 			} else {
