@@ -314,8 +314,12 @@ namespace RhinoCyclesCore
 				var invcol = new ccl.ShaderNodes.InvertNode();
 				var normalmapnode = new ccl.ShaderNodes.NormalMapNode();
 				var tobwnode = new ccl.ShaderNodes.RgbToBwNode();
+				var alphamult = new ccl.ShaderNodes.MathMultiply();
 
 				var mixerNode = new ccl.ShaderNodes.MixNode();
+
+				alphamult.ins.Value1.Value = amount;
+				alphamult.ins.Value2.Value = 1.0f;
 
 				mixerNode.ins.Fac.Value = amount;
 
@@ -323,14 +327,21 @@ namespace RhinoCyclesCore
 				sh.AddNode(imtexnode);
 
 				valueSocket?.Connect(mixerNode.ins.Color1);
-				if (valueSocket == null) mixerNode.ins.Fac.Value = 1.0f;
 
 				RenderEngine.SetTextureImage(imtexnode, teximg);
 				imtexnode.Extension = teximg.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
 				imtexnode.ColorSpace = ccl.ShaderNodes.TextureNode.TextureColorSpace.None;
 				imtexnode.Projection = ccl.ShaderNodes.TextureNode.TextureProjection.Flat;
 				imtexnode.AlternateTiles = teximg.AlternateTiles;
+				imtexnode.UseAlpha = true;
 				RenderEngine.SetProjectionMode(sh, teximg, imtexnode, texco);
+				if (valueSocket == null) {
+					mixerNode.ins.Fac.Value = 1.0f;
+				} else {
+					sh.AddNode(alphamult);
+					imtexnode.outs.Alpha.Connect(alphamult.ins.Value2);
+					alphamult.outs.Value.Connect(mixerNode.ins.Fac);
+				}
 				if (normalMap)
 				{
 					// ideally we calculate the tangents and switch to Tangent space here.
