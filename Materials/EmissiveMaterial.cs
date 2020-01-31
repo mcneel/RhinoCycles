@@ -112,12 +112,7 @@ namespace RhinoCyclesCore.Materials
 			simulatedMaterial.RefractionGlossiness = Strength;
 
 			simulatedMaterial.Name = Name;
-
-
 		}
-
-
-
 
 		public string MaterialXml => throw new InvalidOperationException("Cycles Emissive is not an XMl-based material");
 
@@ -145,7 +140,7 @@ namespace RhinoCyclesCore.Materials
 
 			Utilities.PbrGraphForSlot(sh, Emission, EmissionTexture, emission.ins.Color, texco);
 
-			lfo.ins.Strength.Value = Falloff > 1 ? Strength : Strength / 100.0f;
+			lfo.ins.Strength.Value = Strength;
 			lfo.ins.Smooth.Value = Smooth;
 
 			switch(Falloff) {
