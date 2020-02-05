@@ -27,6 +27,7 @@ namespace RhinoCyclesCore
 		{
 			Visible = true;
 			CastShadow = true;
+			OcsFrame = Transform.Identity();
 		}
 
 		public ccl.Object cob { get; set; }
@@ -46,6 +47,10 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public Transform Transform { get; set; }
 
+		/// <summary>
+		/// The OcsFrame for this object.
+		/// </summary>
+		public ccl.Transform OcsFrame { get; set; } = ccl.Transform.Identity();
 		/// <summary>
 		/// Material CRC (RenderHash)
 		/// </summary>

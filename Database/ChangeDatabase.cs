@@ -969,7 +969,7 @@ namespace RhinoCyclesCore.Database
 
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				var cutout = _objectDatabase.MeshIsClippingObject(meshid);
-				var ob = new CyclesObject { obid = a.InstanceId, meshid = meshid, Transform = a.Transform.ToCyclesTransform(), matid = matid, CastShadow = a.CastShadows, Cutout = cutout};
+				var ob = new CyclesObject { obid = a.InstanceId, meshid = meshid, Transform = a.Transform.ToCyclesTransform(), OcsFrame = a.OcsTransform.ToCyclesTransform(), matid = matid, CastShadow = a.CastShadows, Cutout = cutout};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
 
 				HandleShaderChange(a.InstanceId, oldhash, matid, meshid);
@@ -1632,6 +1632,7 @@ namespace RhinoCyclesCore.Database
 				cob.Mesh = mesh;
 				cob.RandomId = ob.obid;
 				cob.Transform = ob.Transform;
+				cob.OcsFrame = ob.OcsFrame;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				cob.IsBlockInstance = true;
 				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
