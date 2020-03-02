@@ -122,6 +122,8 @@ namespace RhinoCyclesCore.Shaders
 				emissive.ins.Strength.Value = 1.0f;
 				var addemissive = new AddClosureNode("pbr_addinemissive");
 
+				principled.Sss = SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.EngineSettings.SssMethod);
+
 				m_shader.AddNode(texco);
 				m_shader.AddNode(emissive);
 				m_shader.AddNode(addemissive);

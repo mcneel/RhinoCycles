@@ -107,6 +107,8 @@ namespace RhinoCyclesCore
 
 			TransparentMaxBounce = TransparentMaxBounce;
 
+			SssMethod = SssMethod;
+
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverride;
 			UseDrawOpenGl = UseDrawOpenGl;
@@ -204,6 +206,8 @@ namespace RhinoCyclesCore
 			SensorHeight = SensorHeightDefault;
 
 			TransparentMaxBounce = TransparentMaxBounceDefault;
+
+			SssMethod = SssMethodDefault;
 
 			// application settings
 			AllowViewportSettingsOverride = AllowViewportSettingsOverrideDefault;
@@ -649,6 +653,12 @@ namespace RhinoCyclesCore
 		{
 			get { return RcPlugIn.Settings.GetInteger("TransparentMaxBounce", TransparentMaxBounceDefault); }
 			set { RcPlugIn.Settings.SetInteger("TransparentMaxBounce", value); }
+		}
+
+		public int SssMethodDefault => 44;
+		public virtual int SssMethod {
+			get { return RcPlugIn.Settings.GetInteger("SssMethod", SssMethodDefault); }
+			set { RcPlugIn.Settings.SetInteger("SssMethod", value); }
 		}
 
 		public bool AllowViewportSettingsOverrideDefault => false;
