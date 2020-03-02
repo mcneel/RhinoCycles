@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Threading;
 using ccl;
 using Rhino;
@@ -342,37 +343,53 @@ namespace RhinoCyclesCore
 				{
 					if (channel != null)
 					{
-						var rect = new Rectangle((int)tx, (int)ty, (int)tw, (int)th);
-						for (var x = 0; x < (int)tw; x++)
+						var rect = new Rectangle((int)tx, (int)(RenderDimension.Height - ty - th), (int)tw, (int)th);
+
+						if (channel != null && passtype == PassType.Combined)
 						{
-							for (var y = 0; y < (int)th; y++)
+							var pixels_dim = new Size((int)tw, (int)th);
+
+							var pixels_flipped = new float[tw * th * stride];
+							for (int y = 0; y < th; ++y)
 							{
-								var i = y * tw * stride + x * stride;
-								var r = pixels[i];
-								var g = stride > 1 ? pixels[i + 1] : 1.0f;
-								var b = stride > 2 ? pixels[i + 2] : 1.0f;
-								var a = stride > 3 ? pixels[i + 3] : 1.0f;
-								if (stride == 1)
-								{
-									g = b = r;
-								}
-								if (passtype != PassType.Combined) a = 1.0f;
+								long width_elems = tw * stride;
+								Array.Copy(pixels, y * width_elems, pixels_flipped, (th - y - 1) * width_elems, width_elems);
+							}
 
-								var c4_f = new Color4f(r, g, b, a);
+							GCHandle pixels_handle = GCHandle.Alloc(pixels_flipped, GCHandleType.Pinned);
+							PixelBuffer buffer = new PixelBuffer(pixels_handle.AddrOfPinnedObject());
 
-								var cox = (int)tx + x;
-								var coy = height - ((int)ty + y + 1);
-								if (channel != null && passtype == PassType.Combined)
+							channel.SetValues(rect, pixels_dim, buffer);
+
+							pixels_handle.Free();
+						}
+						else
+						{
+							for (var x = 0; x < (int)tw; x++)
+							{
+								for (var y = 0; y < (int)th; y++)
 								{
-									channel.SetValue(cox, coy, c4_f);
-								}
-								else if (nx!=null && ny!=null && nz!=null && passtype == PassType.Normal) {
-									nx.SetValue(cox, coy, r);
-									ny.SetValue(cox, coy, g);
-									nz.SetValue(cox, coy, b);
-								} else if(depth!=null && passtype == PassType.Depth)
-								{
-									depth.SetValue(cox, coy, r);
+									var i = y * tw * stride + x * stride;
+									var r = pixels[i];
+									var g = stride > 1 ? pixels[i + 1] : 1.0f;
+									var b = stride > 2 ? pixels[i + 2] : 1.0f;
+									if (stride == 1)
+									{
+										g = b = r;
+									}
+
+									var cox = (int)tx + x;
+									var coy = RenderDimension.Height - ((int)ty + y + 1);
+									if (nx != null && ny != null && nz != null && passtype == PassType.Normal)
+									{
+										nx.SetValue(cox, coy, r);
+										ny.SetValue(cox, coy, g);
+										nz.SetValue(cox, coy, b);
+									}
+									else if (depth != null && passtype == PassType.Depth)
+									{
+										depth.SetValue(cox, coy, r);
+									}
 								}
 							}
 						}

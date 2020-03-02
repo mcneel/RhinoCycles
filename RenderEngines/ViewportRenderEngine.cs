@@ -42,8 +42,7 @@ namespace RhinoCyclesCore.RenderEngines
 			m_update_callback = UpdateCallback;
 			m_update_render_tile_callback = null;
 			m_write_render_tile_callback = null;
-			if(!UsingOpenGl)
-				m_write_render_tile_callback = WriteRenderTileCallback;
+			m_write_render_tile_callback = WriteRenderTileCallback;
 			m_test_cancel_callback = null;
 			m_display_update_callback = null;
 			m_logger_callback = ViewportLoggerCallback;
@@ -129,7 +128,6 @@ namespace RhinoCyclesCore.RenderEngines
 		/// <param name="h">Height in pixels</param>
 		public void SetRenderSize(int w, int h)
 		{
-			if (UsingOpenGl) return;
 			RenderWindow?.SetSize(new Size(w, h));
 		}
 
@@ -210,12 +208,12 @@ namespace RhinoCyclesCore.RenderEngines
 				ShadingSystem = ShadingSystem.SVM,
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
-				Background = !UsingOpenGl,
+				Background = true,
 				ProgressiveRefine = true,
 				Progressive = true,
 				PixelSize = pixelSize,
 			};
-			if(UsingOpenGl && (renderDevice.IsCpu || RcCore.It.EngineSettings.UseStartResolution)) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
+			//	if(UsingOpenGl && (renderDevice.IsCpu || RcCore.It.EngineSettings.UseStartResolution)) sessionParams.StartResolution = RcCore.It.EngineSettings.StartResolution;
 			#endregion
 
 			if (this == null || CancelRender) return;

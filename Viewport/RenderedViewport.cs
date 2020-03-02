@@ -247,7 +247,7 @@ namespace RhinoCycles.Viewport
 
 			_frameAvailable = false;
 
-			if (!_useOpenGl) renderWindow.SetSize(new Size(w, h));
+			renderWindow.SetSize(new Size(w, h));
 
 			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa, _useOpenGl)
 			{
