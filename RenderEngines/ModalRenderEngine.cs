@@ -102,9 +102,8 @@ namespace RhinoCyclesCore.RenderEngines
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
 
-			EngineSettings engineSettings = null;
-
-			if(!IsProductRender) {
+			EngineSettings engineSettings;
+			if (!IsProductRender) {
 				engineSettings = RcCore.It.EngineSettings;
 			} else {
 				switch(Quality)
@@ -181,7 +180,8 @@ namespace RhinoCyclesCore.RenderEngines
 				cyclesEngine.Session.PrepareRun();
 
 				// lets first reset session
-				cyclesEngine.Session.Reset(size.Width, size.Height, requestedSamples);
+				int cycles_full_y = FullSize.Height - BufferRectangle.Bottom;
+				cyclesEngine.Session.Reset(size.Width, size.Height, requestedSamples, BufferRectangle.X, cycles_full_y, FullSize.Width, FullSize.Height);
 				// then reset scene
 				//cyclesEngine.Session.Scene.Reset();
 				// and actually start

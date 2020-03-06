@@ -133,7 +133,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.PrepareRun();
 
 			// lets first reset session
-			cyclesEngine.Session.Reset(size.Width, size.Height, samples);
+			cyclesEngine.Session.Reset(size.Width, size.Height, samples, 0, 0, size.Width, size.Height);
 			// then reset scene
 			cyclesEngine.Session.Scene.Reset();
 			// and actually start

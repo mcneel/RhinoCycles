@@ -42,6 +42,7 @@ using RhinoCyclesCore.Shaders;
 using RhinoCyclesCore.ExtensionMethods;
 using Rhino.Collections;
 using System.Text;
+using RhinoCyclesCore.RenderEngines;
 
 namespace RhinoCyclesCore.Database
 {
@@ -587,9 +588,9 @@ namespace RhinoCyclesCore.Database
 		private void UploadCamera(CyclesView view)
 		{
 			var scene = _renderEngine.Session.Scene;
-			var oldSize = _renderEngine.RenderDimension;
+			var oldSize = _modalRenderer ? _renderEngine.FullSize : _renderEngine.RenderDimension;
 			var newSize = new Size(view.Width, view.Height);
-			_renderEngine.RenderDimension = newSize;
+			if(!_modalRenderer) _renderEngine.RenderDimension = newSize;
 
 			TriggerViewChanged(view.View, oldSize!=newSize, newSize);
 
@@ -598,7 +599,7 @@ namespace RhinoCyclesCore.Database
 
 			//System.Diagnostics.Debug.WriteLine("size: {0}, matrix: {1}, angle: {2}, Sensorsize: {3}x{4}", size, view.Transform, angle, Settings.SensorHeight, Settings.SensorWidth);
 
-			scene.Camera.Size = newSize;
+			scene.Camera.Size = _modalRenderer ? _renderEngine.FullSize : newSize;
 			scene.Camera.Matrix = view.Transform;
 			scene.Camera.Type = view.Projection;
 			scene.Camera.Fov = angle;
@@ -639,8 +640,8 @@ namespace RhinoCyclesCore.Database
 			var vp = viewInfo.Viewport;
 
 			if(_modalRenderer) {
-				var targetw = (float)RenderDimension.Width;
-				var targeth = (float)RenderDimension.Height;
+				var targetw = (float)_renderEngine.FullSize.Width;
+				var targeth = (float)_renderEngine.FullSize.Height;
 				vp.FrustumAspect = targetw / targeth;
 			}
 
@@ -718,8 +719,8 @@ namespace RhinoCyclesCore.Database
 			}
 			else
 			{
-				w = RenderDimension.Width;
-				h = RenderDimension.Height;
+				w = _renderEngine.FullSize.Width;
+				h = _renderEngine.FullSize.Height;
 			}
 			var viewAspectratio = (float)w / (float)h;
 

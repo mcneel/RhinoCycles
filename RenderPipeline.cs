@@ -16,6 +16,7 @@ limitations under the License.
 using System.Drawing;
 using Rhino;
 using Rhino.Render;
+using RhinoCyclesCore.Core;
 using RhinoCyclesCore.RenderEngines;
 
 namespace RhinoCycles
@@ -36,7 +37,14 @@ namespace RhinoCycles
 
 		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, ModalRenderEngine aRC)
 			: base(doc, mode, plugin, RenderSize(doc, true),
-					"Rhino Render", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
+					$"Rhino Render on {RcCore.It.EngineSettings.RenderDevice.NiceName}", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
+		{
+			cyclesEngine = aRC;
+		}
+
+		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, Size rwSize, ModalRenderEngine aRC)
+			: base(doc, mode, plugin, rwSize,
+					$"Rhino Render on {RcCore.It.EngineSettings.RenderDevice.NiceName}" , Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
 		{
 			cyclesEngine = aRC;
 		}
@@ -67,7 +75,11 @@ namespace RhinoCycles
 			return !cyclesEngine.CancelRender;
 		}
 
-		protected override bool OnRenderWindowBegin(Rhino.Display.RhinoView view, System.Drawing.Rectangle rect) { return false; }
+		protected override bool OnRenderWindowBegin(Rhino.Display.RhinoView view, System.Drawing.Rectangle rect)
+		{
+			m_bStopFlag = false;
+			return cyclesEngine.StartRenderThread(cyclesEngine.Renderer, "A cool Cycles modal rendering thread | RenderWindowBegin");
+		}
 
 		public override bool SupportsPause()
 		{

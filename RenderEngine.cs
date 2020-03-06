@@ -166,6 +166,9 @@ namespace RhinoCyclesCore
 
 		public bool ViewSet => View != null;
 
+		public Rectangle BufferRectangle { get; set; }
+		public Size FullSize { get; set; }
+
 #region CONSTRUCTORS
 
 		private void RegisterEventHandler()
@@ -325,7 +328,7 @@ namespace RhinoCyclesCore
 		public void DisplayBuffer(uint sessionId, uint tx, uint ty, uint tw, uint th, PassType passtype, ref float[] pixels, int pixlen, int stride)
 		{
 			if (IsStopped) return;
-			(var width, var height) =  RenderDimension;
+			(var _, var height) =  RenderDimension;
 			//var width = RenderDimension.Width;
 			//var height = RenderDimension.Height;
 			if (RenderWindow != null)

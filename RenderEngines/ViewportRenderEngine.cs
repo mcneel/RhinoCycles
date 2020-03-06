@@ -116,9 +116,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void DrawOpenGl(float alpha)
 		{
-			var width = RenderDimension.Width;
-			var height = RenderDimension.Height;
-			Session.RhinoDraw(width, height, alpha);
+			Session.RhinoDraw(alpha);
 			
 		}
 
@@ -266,7 +264,7 @@ namespace RhinoCyclesCore.RenderEngines
 					Session.Scene.Integrator.TagForUpdate();
 
 					// lets reset session
-					Session.Reset(size.Width, size.Height, _samples);
+					Session.Reset(size.Width, size.Height, _samples, 0, 0, size.Width, size.Height);
 				}
 				if(this != null && IsRendering) {
 					var smpl = Session.Sample();

@@ -210,7 +210,11 @@ namespace RhinoCycles.Viewport
 				_useOpenGl = false;
 				SetUseDrawOpenGl(false);
 				_useFastDraw = UseFastDraw();
-				var mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo, Dpa, false);
+				var mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo, Dpa, false)
+				{
+					BufferRectangle = viewportInfo.GetScreenPort(),
+					FullSize = viewportInfo.GetScreenPort().Size
+				};
 				mre.SetCallbackForCapture();
 
 				_cycles = null;
@@ -245,7 +249,11 @@ namespace RhinoCycles.Viewport
 
 			if (!_useOpenGl) renderWindow.SetSize(new Size(w, h));
 
-			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa, _useOpenGl);
+			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa, _useOpenGl)
+			{
+				BufferRectangle = viewportInfo.GetScreenPort(),
+				FullSize = viewportInfo.GetScreenPort().Size
+			};
 
 			_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			_cycles.RenderStarted += CyclesRenderStarted; // render engine tells us when it actually is rendering
