@@ -35,13 +35,6 @@ namespace RhinoCycles
 		/// </summary>
 		readonly private ModalRenderEngine cyclesEngine;
 
-		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, ModalRenderEngine aRC)
-			: base(doc, mode, plugin, RenderSize(doc, true),
-					$"Rhino Render on {RcCore.It.EngineSettings.RenderDevice.NiceName}", Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
-		{
-			cyclesEngine = aRC;
-		}
-
 		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, Size rwSize, ModalRenderEngine aRC)
 			: base(doc, mode, plugin, rwSize,
 					$"Rhino Render on {RcCore.It.EngineSettings.RenderDevice.NiceName}" , Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
