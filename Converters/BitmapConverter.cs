@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -28,8 +29,8 @@ namespace RhinoCyclesCore.Converters
 {
 	public static class BitmapConverter
 	{
-		static readonly internal Dictionary<uint, ByteBitmap> ByteImagesNew = new Dictionary<uint, ByteBitmap>();
-		static readonly internal Dictionary<uint, FloatBitmap> FloatImagesNew = new Dictionary<uint, FloatBitmap>();
+		static readonly internal ConcurrentDictionary<uint, ByteBitmap> ByteImagesNew = new ConcurrentDictionary<uint, ByteBitmap>();
+		static readonly internal ConcurrentDictionary<uint, FloatBitmap> FloatImagesNew = new ConcurrentDictionary<uint, FloatBitmap>();
 
 		static readonly private object bytelocker = new object();
 		static readonly private object floatlocker = new object();

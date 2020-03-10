@@ -487,7 +487,7 @@ namespace RhinoCycles.Viewport
 					alphaLocal = _alpha;
 				}
 				if (!_frameAvailable) return false;
-				_cycles.DrawOpenGl(alphaLocal);
+				_cycles.BlitPixelsToRenderWindowChannel(alphaLocal);
 				return true;
 			}
 		}

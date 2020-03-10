@@ -302,8 +302,6 @@ namespace RhinoCyclesCore
 			RenderWindow?.SetProgress(status, progress);
 
 			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples>0 ? (RenderedSamples+1) : RenderedSamples));
-
-			//if(!m_interactive) CheckFlushQueue();
 		}
 
 		/// <summary>
@@ -343,7 +341,7 @@ namespace RhinoCyclesCore
 				{
 					if (channel != null)
 					{
-						var rect = new Rectangle((int)tx, (int)(RenderDimension.Height - ty - th), (int)tw, (int)th);
+						var rect = new Rectangle((int)tx, (int)(height - ty - th), (int)tw, (int)th);
 
 						if (channel != null && passtype == PassType.Combined)
 						{
@@ -379,7 +377,7 @@ namespace RhinoCyclesCore
 									}
 
 									var cox = (int)tx + x;
-									var coy = RenderDimension.Height - ((int)ty + y + 1);
+									var coy = height - ((int)ty + y + 1);
 									if (nx != null && ny != null && nz != null && passtype == PassType.Normal)
 									{
 										nx.SetValue(cox, coy, r);
@@ -399,6 +397,33 @@ namespace RhinoCyclesCore
 			}
 		}
 
+		public void BlitPixelsToRenderWindowChannel(float alpha)
+		{
+			var rect = new Rectangle(0, 0, RenderWindow.Size().Width, RenderWindow.Size().Height);
+			IntPtr pixel_buffer = Session.GetPixelBuffer(PassType.Combined);
+
+			if(pixel_buffer != IntPtr.Zero)
+			{
+				using (var rgba = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.RGBA))
+				{
+					Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(pixel_buffer);
+					rgba.SetValues(rect, rect.Size, pb);
+				}
+			}
+			/*using (var xyz = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.NormalXYZ))
+			{
+				if(xyz!=null)
+				{
+					IntPtr normal_buffer = Session.GetPixelBuffer(PassType.Normal);
+					if (normal_buffer != IntPtr.Zero)
+					{
+						Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(normal_buffer);
+						xyz.SetValues(rect, rect.Size, pb);
+					}
+				}
+			}*/
+		}
+
 		/// <summary>
 		/// Callback for debug logging facility. Will be called only for Debug builds of ccycles.dll
 		/// </summary>
@@ -406,36 +431,6 @@ namespace RhinoCyclesCore
 		public static void LoggerCallback(string msg)
 		{
 			sdd.WriteLine($"DBG: {msg}");
-		}
-
-		/// <summary>
-		/// Handle write render tile callback
-		/// </summary>
-		/// <param name="sessionId"></param>
-		/// <param name="x"></param>
-		/// <param name="y"></param>
-		/// <param name="w"></param>
-		/// <param name="h"></param>
-		/// <param name="depth"></param>
-		public void WriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
-		{
-			if (IsStopped || passtype!=PassType.Combined) return;
-			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
-		}
-
-		/// <summary>
-		/// Handle update render tile callback
-		/// </summary>
-		/// <param name="sessionId"></param>
-		/// <param name="x"></param>
-		/// <param name="y"></param>
-		/// <param name="w"></param>
-		/// <param name="h"></param>
-		/// <param name="depth"></param>
-		public void UpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
-		{
-			if (IsStopped) return;
-			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 		}
 
 		/// <summary>

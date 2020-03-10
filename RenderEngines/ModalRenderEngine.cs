@@ -50,10 +50,10 @@ namespace RhinoCyclesCore.RenderEngines
 			#region create callbacks for Cycles
 
 			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = UpdateRenderTileCallback;
-			m_write_render_tile_callback = RenderWindowWriteRenderTileCallback;
+			m_update_render_tile_callback = null;
+			m_write_render_tile_callback = null;
 			m_test_cancel_callback = null;
-			m_display_update_callback = null; // DisplayUpdateHandler;
+			m_display_update_callback = null;
 
 			CSycles.log_to_stdout(false);
 
@@ -69,20 +69,8 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			capturing = true;
 			m_update_render_tile_callback = null;
-			//m_update_callback = null;
 			m_logger_callback = null;
-			m_write_render_tile_callback = ModalWriteRenderTileCallback;
-		}
-
-		public void ModalWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
-		{
-			if (!IsRendering || (int)sample<(maxSamples) || passtype!=PassType.Combined) return;
-			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
-		}
-		public void RenderWindowWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
-		{
-			if (!IsRendering) return;
-			DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
+			m_write_render_tile_callback = null;
 		}
 
 		private int maxSamples;
@@ -146,8 +134,9 @@ namespace RhinoCyclesCore.RenderEngines
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsGpu ? 0 : engineSettings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
-				Background = true,
-				DisplayBufferLinear = false,
+				SkipLinearToSrgbConversion = true,
+				DisplayBufferLinear = true,
+				Background = false,
 				ProgressiveRefine = true,
 				Progressive = true,
 				PixelSize = 1,
@@ -182,8 +171,6 @@ namespace RhinoCyclesCore.RenderEngines
 				// lets first reset session
 				int cycles_full_y = FullSize.Height - BufferRectangle.Bottom;
 				cyclesEngine.Session.Reset(size.Width, size.Height, requestedSamples, BufferRectangle.X, cycles_full_y, FullSize.Width, FullSize.Height);
-				// then reset scene
-				//cyclesEngine.Session.Scene.Reset();
 				// and actually start
 				bool stillrendering = true;
 				var throttle = Math.Max(0, engineSettings.ThrottleMs);
@@ -192,10 +179,17 @@ namespace RhinoCyclesCore.RenderEngines
 					if (cyclesEngine.IsRendering)
 					{
 						stillrendering = cyclesEngine.Session.Sample() > -1;
+						if (!capturing)
+						{
+							cyclesEngine.BlitPixelsToRenderWindowChannel(0.0f);
+							cyclesEngine.RenderWindow.Invalidate();
+						}
 					}
 					Thread.Sleep(throttle);
 					if (cyclesEngine.IsStopped) break;
 				}
+				cyclesEngine.BlitPixelsToRenderWindowChannel(0.0f);
+				cyclesEngine.RenderWindow.Invalidate();
 
 				cyclesEngine.Session.EndRun();
 			}

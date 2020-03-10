@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using Rhino.Display;
 using Pbr = Rhino.Render.RenderMaterial.PhysicallyBased.ChildSlotNames;
 using RhinoCyclesCore.ExtensionMethods;
+using System.Collections.Concurrent;
 
 namespace RhinoCyclesCore
 {
@@ -445,7 +446,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		/// <param name="bytes"></param>
 		/// <param name="floats"></param>
-		public void ReloadTextures(Dictionary<uint, ByteBitmap> bytes, Dictionary<uint, FloatBitmap> floats)
+		public void ReloadTextures(ConcurrentDictionary<uint, ByteBitmap> bytes, ConcurrentDictionary<uint, FloatBitmap> floats)
 		{
 			_front?.ReloadTextures(bytes, floats);
 			_back?.ReloadTextures(bytes, floats);
@@ -628,7 +629,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		/// <param name="bytes"></param>
 		/// <param name="floats"></param>
-		public void ReloadTextures(Dictionary<uint, ByteBitmap> bytes, Dictionary<uint, FloatBitmap> floats)
+		public void ReloadTextures(ConcurrentDictionary<uint, ByteBitmap> bytes, ConcurrentDictionary<uint, FloatBitmap> floats)
 		{
 
 			if (HasDiffuseTexture)
@@ -661,7 +662,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		static private void LoadOneTexture(CyclesTextureImage tex, Dictionary<uint, ByteBitmap> bytes, Dictionary<uint, FloatBitmap> floats)
+		static private void LoadOneTexture(CyclesTextureImage tex, ConcurrentDictionary<uint, ByteBitmap> bytes, ConcurrentDictionary<uint, FloatBitmap> floats)
 		{
 			if (uint.TryParse(tex.Name, out uint rid))
 			{
