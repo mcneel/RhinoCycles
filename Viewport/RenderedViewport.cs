@@ -42,8 +42,7 @@ namespace RhinoCycles.Viewport
 
 		public override Guid GUID => new Guid("69E0C7A5-1C6A-46C8-B98B-8779686CD181");
 
-		public override bool DrawOpenGl =>
-			RcCore.It.CanUseDrawOpenGl();
+		public override bool DrawOpenGl => false;
 
 		public override Type RealtimeDisplayModeType => typeof(RenderedViewport);
 
@@ -109,8 +108,8 @@ namespace RhinoCycles.Viewport
 
 		public override void PostConstruct()
 		{
-			_okOgl = OpenGlVersion() >= 40;
-			SetUseDrawOpenGl(RcCore.It.CanUseDrawOpenGl() && _okOgl);
+			_okOgl = false;
+			SetUseDrawOpenGl(_okOgl);
 		}
 
 		private void RenderedViewport_MaxPassesChanged(object sender, HudMaxPassesChangedEventArgs e)
@@ -170,10 +169,9 @@ namespace RhinoCycles.Viewport
 
 		private bool _useFastDraw = false;
 		private bool _useOpenGl = false;
-		public override bool UseFastDraw() { return !_forCapture && _okOgl && (_cycles?.RenderDevice.IsCpu ?? false || RcCore.It.EngineSettings.UseFastDraw) && RcCore.It.CanUseDrawOpenGl(); }
+		public override bool UseFastDraw() { return false; }
 
 		private Thread _modalThread;
-		private Thread _sw;
 		private readonly object timerLock = new object();
 
 		private float _alpha = 0.0f;
@@ -281,14 +279,6 @@ namespace RhinoCycles.Viewport
 
 			_startTime = DateTime.UtcNow;
 			_lastTime = _startTime;
-			if (_useFastDraw)
-			{
-				_sw = new Thread(TimerForAlpha)
-				{
-					Name = "Cycles RenderedViewport Alpha Thread"
-				};
-				_sw.Start();
-			}
 			_cycles.StartRenderThread(_cycles.Renderer, $"A cool Cycles viewport rendering thread {_serial}");
 
 			return true;
@@ -362,6 +352,7 @@ namespace RhinoCycles.Viewport
 						if (e.Sample>-1)
 						{
 							_frameAvailable = true;
+							DrawOpenGl();
 						}
 						SetView(e.View);
 						_samples = e.Sample;
@@ -479,17 +470,9 @@ namespace RhinoCycles.Viewport
 
 		public override bool DrawOpenGl()
 		{
-			float alphaLocal = 1.0f;
-			lock (timerLock)
-			{
-				if (_useFastDraw)
-				{
-					alphaLocal = _alpha;
-				}
-				if (!_frameAvailable) return false;
-				_cycles.BlitPixelsToRenderWindowChannel(alphaLocal);
-				return true;
-			}
+			if (!_frameAvailable) return false;
+			_cycles.BlitPixelsToRenderWindowChannel(0.0f);
+			return true;
 		}
 
 		public override bool OnRenderSizeChanged(int width, int height)

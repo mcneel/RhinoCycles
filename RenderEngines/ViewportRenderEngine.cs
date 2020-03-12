@@ -206,7 +206,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Background = false,
 				ProgressiveRefine = true,
 				Progressive = true,
-				PixelSize = pixelSize,
+				PixelSize = 1,
 			};
 			#endregion
 
