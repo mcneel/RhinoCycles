@@ -530,7 +530,6 @@ namespace RhinoCycles.Viewport
 			var cpu = _cycles.RenderDevice.IsCpu;
 			if (_showRenderDevice && !cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}";
 			else if (_showRenderDevice && cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}x{_cycles.ThreadCount}";
-			if (!RcCore.It.CanUseDrawOpenGl() || !_okOgl) pn = $"{pn} NoGL";
 			return pn;
 		}
 
