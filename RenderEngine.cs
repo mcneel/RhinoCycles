@@ -400,28 +400,35 @@ namespace RhinoCyclesCore
 		public void BlitPixelsToRenderWindowChannel(float alpha)
 		{
 			var rect = new Rectangle(0, 0, RenderWindow.Size().Width, RenderWindow.Size().Height);
-			IntPtr pixel_buffer = Session.GetPixelBuffer(PassType.Combined);
+			IntPtr pixel_buffer = IntPtr.Zero;
+			IntPtr normal_buffer = IntPtr.Zero;
+			IntPtr depth_buffer = IntPtr.Zero;
+			Session.GetPixelBuffer(PassType.Combined, ref pixel_buffer, ref normal_buffer, ref depth_buffer);
 
 			if(pixel_buffer != IntPtr.Zero)
 			{
 				using (var rgba = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.RGBA))
 				{
 					Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(pixel_buffer);
-					rgba.SetValues(rect, rect.Size, pb);
+					rgba?.SetValues(rect, rect.Size, pb);
 				}
 			}
-			/*using (var xyz = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.NormalXYZ))
+			if(normal_buffer != IntPtr.Zero)
 			{
-				if(xyz!=null)
+				using (var normals = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.NormalXYZ))
 				{
-					IntPtr normal_buffer = Session.GetPixelBuffer(PassType.Normal);
-					if (normal_buffer != IntPtr.Zero)
-					{
-						Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(normal_buffer);
-						xyz.SetValues(rect, rect.Size, pb);
-					}
+					Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(normal_buffer);
+					normals?.SetValues(rect, rect.Size, pb);
 				}
-			}*/
+			}
+			if(depth_buffer != IntPtr.Zero)
+			{
+				using (var depth = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.DistanceFromCamera))
+				{
+					Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(depth_buffer);
+					depth?.SetValues(rect, rect.Size, pb);
+				}
+			}
 		}
 
 		/// <summary>
