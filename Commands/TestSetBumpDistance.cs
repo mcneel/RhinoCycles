@@ -41,7 +41,7 @@ namespace RhinoCycles.Commands
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			var getNumber = new GetNumber();
-			getNumber.SetDefaultNumber(RcCore.It.EngineSettings.BumpDistance);
+			getNumber.SetDefaultNumber(RcCore.It.AllSettings.BumpDistance);
 			getNumber.SetCommandPrompt($"Set bump distance");
 			var getRc = getNumber.Get();
 			if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
@@ -49,7 +49,7 @@ namespace RhinoCycles.Commands
 			{
 				var nr = getNumber.Number();
 				RhinoApp.WriteLine($"User wants bump distance {nr}");
-				RcCore.It.EngineSettings.BumpDistance = (float)nr;
+				RcCore.It.AllSettings.BumpDistance = (float)nr;
 				return Result.Success;
 			}
 

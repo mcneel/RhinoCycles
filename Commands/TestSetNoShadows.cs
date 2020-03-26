@@ -42,13 +42,13 @@ namespace RhinoCycles.Commands
 		{
 			if (doc == null || doc.Views.ActiveView == null) return Result.Nothing;
 
-			var oldval = RhinoCyclesCore.Core.RcCore.It.EngineSettings.NoShadows;
-			RhinoCyclesCore.Core.RcCore.It.EngineSettings.NoShadows = !oldval;
+			var oldval = RhinoCyclesCore.Core.RcCore.It.AllSettings.NoShadows;
+			RhinoCyclesCore.Core.RcCore.It.AllSettings.NoShadows = !oldval;
 
 			if(doc.Views.ActiveView.RealtimeDisplayMode is RhinoCycles.Viewport.RenderedViewport rdp)
 			{
 				rdp.ToggleNoShadows();
-				RhinoApp.WriteLine($"Set NoShadows from {oldval} to {RhinoCyclesCore.Core.RcCore.It.EngineSettings.NoShadows}");
+				RhinoApp.WriteLine($"Set NoShadows from {oldval} to {RhinoCyclesCore.Core.RcCore.It.AllSettings.NoShadows}");
 				return Result.Success;
 			}
 			

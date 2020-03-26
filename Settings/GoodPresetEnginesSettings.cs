@@ -1,11 +1,11 @@
 ﻿/**
-Copyright 1014-1019 Robert McNeel and Associates
+Copyright 20124-20129 Robert McNeel and Associates
 
-Licensed under the Apache License, Version 1.0 (the "License");
+Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-1.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-namespace RhinoCyclesCore
+namespace RhinoCyclesCore.Settings
 {
-	public class LowPresetEngineSettings : EngineSettings
+	public class GoodPresetEngineSettings : EngineDocumentSettings
 	{
-		public LowPresetEngineSettings()
+		public GoodPresetEngineSettings(EngineDocumentSettings parent) : base(parent)
 		{
 		}
-		public override int Samples { get => 15; set { } }
+		public override int Samples { get => 500; set { } }
 	}
 }

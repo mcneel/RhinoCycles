@@ -28,6 +28,7 @@ using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
 using RhinoCyclesCore.RenderEngines;
 using System.Diagnostics;
+using RhinoCyclesCore.Settings;
 
 namespace RhinoCycles.Viewport
 {
@@ -87,14 +88,13 @@ namespace RhinoCycles.Viewport
 		private int _maxSamples;
 		private string _status = "";
 
-		private int _fadeInMs = 10;
 		private bool _okOgl = false;
 
 		public RenderedViewport()
 		{
 			_runningSerial ++;
 			_serial = _runningSerial;
-			(EngineSettings.RcPlugIn as Plugin)?.InitialiseCSycles();
+			(ApplicationAndDocumentSettings.RcPlugIn as Plugin)?.InitialiseCSycles();
 
 			HudPlayButtonPressed += RenderedViewport_HudPlayButtonPressed;
 			HudPauseButtonPressed += RenderedViewport_HudPauseButtonPressed;
@@ -167,47 +167,19 @@ namespace RhinoCycles.Viewport
 			Dpa = displayPipelineAttributes;
 		}
 
-		private bool _useFastDraw = false;
-		private bool _useOpenGl = false;
-		public override bool UseFastDraw() { return false; }
-
 		private Thread _modalThread;
 		private readonly object timerLock = new object();
-
-		private float _alpha = 0.0f;
-
-		private bool _runTimerForAlpha = true;
-		public void TimerForAlpha ()
-		{
-			while (_runTimerForAlpha)
-			{
-				lock (timerLock)
-				{
-					if (_samples > 0 && _alpha < 1.0f)
-					{
-						_alpha += 0.01f;
-						if (_alpha > 1.0f) _alpha = 1.0f;
-						SignalRedraw();
-					}
-				}
-				Thread.Sleep(_fadeInMs);
-			}
-		}
-
+		IAllSettings eds;
 
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
 			_docSerialNumber = doc.RuntimeSerialNumber;
+			eds = RhinoCyclesCore.Utilities.GetEngineDocumentSettings(_docSerialNumber);
 			_started = true;
 			_forCapture = forCapture;
-			_useFastDraw = UseFastDraw();
-			_useOpenGl = RcCore.It.CanUseDrawOpenGl() && _okOgl;
-			SetUseDrawOpenGl(_useOpenGl);
+			SetUseDrawOpenGl(false);
 			if (forCapture)
 			{
-				_useOpenGl = false;
-				SetUseDrawOpenGl(false);
-				_useFastDraw = UseFastDraw();
 				var mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo, Dpa, false)
 				{
 					BufferRectangle = viewportInfo.GetScreenPort(),
@@ -241,13 +213,12 @@ namespace RhinoCycles.Viewport
 
 				return true;
 			}
-			_fadeInMs = RcCore.It.EngineSettings.FadeInMs;
 
 			_frameAvailable = false;
 
 			renderWindow.SetSize(new Size(w, h));
 
-			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa, _useOpenGl)
+			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa)
 			{
 				BufferRectangle = viewportInfo.GetScreenPort(),
 				FullSize = viewportInfo.GetScreenPort().Size
@@ -261,21 +232,17 @@ namespace RhinoCycles.Viewport
 			_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 			_cycles.UploadProgress += _cycles_UploadProgress;
 
-			ViewportSettingsChanged += _cycles.ViewportSettingsChangedHandler;
-			_cycles.CurrentViewportSettingsRequested += _cycles_CurrentViewportSettingsRequested;
 			var renderSize = new Size(w, h); //Rhino.Render.RenderPipeline.RenderSize(doc);
 
 			_cycles.RenderWindow = renderWindow;
 			_cycles.RenderDimension = renderSize;
 
-			_maxSamples = RcCore.It.EngineSettings.Samples;
+			_maxSamples = eds.Samples;
 
 			_startTime = DateTime.UtcNow; // use _startTime to time CreateWorld
 			_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
 			var createWorldDuration = DateTime.UtcNow - _startTime;
-
-			RhinoApp.OutputDebugString($"CreateWorld({RcCore.It.EngineSettings.FlushAtEndOfCreateWorld}): {createWorldDuration.Ticks} ticks ({createWorldDuration.TotalMilliseconds} ms)\n");
 
 			_startTime = DateTime.UtcNow;
 			_lastTime = _startTime;
@@ -289,23 +256,6 @@ namespace RhinoCycles.Viewport
 			_status = e.Message;
 			if(!_cycles.CancelRender) SignalRedraw();
 		}
-
-		private void _cycles_CurrentViewportSettingsRequested(object sender, EventArgs e)
-		{
-			IViewportSettings vud;
-			if (RcCore.It.EngineSettings.AllowViewportSettingsOverride)
-			{
-				vud = Plugin.GetActiveViewportSettings(_docSerialNumber);
-				if(vud==null) vud = RcCore.It.EngineSettings;
-			} else
-			{
-				vud = RcCore.It.EngineSettings;
-			}
-			if (vud == null) return;
-			TriggerViewportSettingsChanged(vud);
-		}
-
-		public event EventHandler<ViewportSettingsChangedArgs> ViewportSettingsChanged;
 
 		private double _progress;
 		private void Mre_StatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
@@ -379,7 +329,6 @@ namespace RhinoCycles.Viewport
 			lock (timerLock)
 			{
 				_samples = -1;
-				if(_useFastDraw) _alpha = 0.0f;
 				_frameAvailable = false;
 				IsSynchronizing = false;
 			}
@@ -414,8 +363,8 @@ namespace RhinoCycles.Viewport
 
 		public void ChangeSamples(int samples)
 		{
-			var vud = Plugin.GetActiveViewportSettings(_docSerialNumber);
-			if (vud == null) vud = RcCore.It.EngineSettings;
+			var vud = RhinoCyclesCore.Utilities.GetEngineDocumentSettings(_docSerialNumber);
+			if (vud == null) vud = RcCore.It.AllSettings;
 			if(vud!=null)
 			{
 				vud.Samples = samples;
@@ -428,11 +377,6 @@ namespace RhinoCycles.Viewport
 		public void ToggleNoShadows()
 		{
 			_cycles?.ToggleNoShadows();
-		}
-
-		public void TriggerViewportSettingsChanged(IViewportSettings settings)
-		{
-			ViewportSettingsChanged?.Invoke(this, new ViewportSettingsChangedArgs(settings));
 		}
 
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
@@ -493,7 +437,6 @@ namespace RhinoCycles.Viewport
 			}
 			else
 			{
-				_runTimerForAlpha = false;
 				_cycles?.StopRendering();
 				_cycles?.Dispose();
 			}
@@ -570,7 +513,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool HudShowMaxPasses()
 		{
-			return RcCore.It.EngineSettings.ShowMaxPasses;
+			return eds.ShowMaxPasses;
 		}
 
 		public override bool HudShowPasses()

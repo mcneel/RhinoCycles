@@ -40,16 +40,16 @@ namespace RhinoCycles.Commands
 			var getNumber = new GetInteger();
 			getNumber.SetLowerLimit(0, false);
 			getNumber.SetUpperLimit(500, false);
-			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.ThrottleMs);
+			getNumber.SetDefaultInteger(RcCore.It.AllSettings.ThrottleMs);
 			getNumber.SetCommandPrompt("Set throttle (in ms)");
 
-			var toggleVerbose = new OptionToggle(RcCore.It.EngineSettings.Verbose, "No", "Yes");
+			var toggleVerbose = new OptionToggle(RcCore.It.AllSettings.Verbose, "No", "Yes");
 
-			var spotlightFactor = new OptionDouble(RcCore.It.EngineSettings.SpotlightFactor, 0.0, 1000000.0);
-			var pointlightFactor = new OptionDouble(RcCore.It.EngineSettings.PointlightFactor, 0.0, 1000000.0);
-			var sunlightFactor = new OptionDouble(RcCore.It.EngineSettings.SunlightFactor, 0.0, 1000000.0);
-			var arealightFactor = new OptionDouble(RcCore.It.EngineSettings.ArealightFactor, 0.0, 1000000.0);
-			var polishFactor = new OptionDouble(RcCore.It.EngineSettings.PolishFactor, 0.0, 1000000.0);
+			var spotlightFactor = new OptionDouble(RcCore.It.AllSettings.SpotLightFactor, 0.0, 1000000.0);
+			var pointlightFactor = new OptionDouble(RcCore.It.AllSettings.PointLightFactor, 0.0, 1000000.0);
+			var sunlightFactor = new OptionDouble(RcCore.It.AllSettings.SunLightFactor, 0.0, 1000000.0);
+			var arealightFactor = new OptionDouble(RcCore.It.AllSettings.AreaLightFactor, 0.0, 1000000.0);
+			var polishFactor = new OptionDouble(RcCore.It.AllSettings.PolishFactor, 0.0, 1000000.0);
 
 			getNumber.AddOptionToggle("verbose", ref toggleVerbose);
 
@@ -68,7 +68,7 @@ namespace RhinoCycles.Commands
 				{
 					case GetResult.Nothing:
 					case GetResult.Number:
-						RcCore.It.EngineSettings.ThrottleMs = getNumber.Number();
+						RcCore.It.AllSettings.ThrottleMs = getNumber.Number();
 						ReadOptions(toggleVerbose, spotlightFactor, pointlightFactor, sunlightFactor, arealightFactor, polishFactor);
 						break;
 					case GetResult.Option:
@@ -87,12 +87,12 @@ namespace RhinoCycles.Commands
 			OptionDouble spotlightFactor, OptionDouble pointlightFactor, OptionDouble sunlightFactor,
 			OptionDouble arealightFactor, OptionDouble polishFactor)
 		{
-			RcCore.It.EngineSettings.Verbose = toggleVerbose.CurrentValue;
-			RcCore.It.EngineSettings.SpotlightFactor = (float) spotlightFactor.CurrentValue;
-			RcCore.It.EngineSettings.PointlightFactor = (float) pointlightFactor.CurrentValue;
-			RcCore.It.EngineSettings.SunlightFactor = (float) sunlightFactor.CurrentValue;
-			RcCore.It.EngineSettings.ArealightFactor = (float) arealightFactor.CurrentValue;
-			RcCore.It.EngineSettings.PolishFactor = (float) polishFactor.CurrentValue;
+			RcCore.It.AllSettings.Verbose = toggleVerbose.CurrentValue;
+			RcCore.It.AllSettings.SpotLightFactor = (float) spotlightFactor.CurrentValue;
+			RcCore.It.AllSettings.PointLightFactor = (float) pointlightFactor.CurrentValue;
+			RcCore.It.AllSettings.SunLightFactor = (float) sunlightFactor.CurrentValue;
+			RcCore.It.AllSettings.AreaLightFactor = (float) arealightFactor.CurrentValue;
+			RcCore.It.AllSettings.PolishFactor = (float) polishFactor.CurrentValue;
 		}
 	}
 }

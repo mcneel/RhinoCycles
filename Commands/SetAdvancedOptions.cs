@@ -45,10 +45,10 @@ namespace RhinoCycles.Commands
 			var getNumber = new GetNumber();
 			getNumber.SetLowerLimit(2.0, false);
 			getNumber.SetUpperLimit(uint.MaxValue, false);
-			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.Samples);
+			getNumber.SetDefaultInteger(RcCore.It.AllSettings.Samples);
 			getNumber.SetCommandPrompt("Set render samples");
 
-			var props = RcCore.It.EngineSettings.GetType().GetProperties();
+			var props = RcCore.It.AllSettings.GetType().GetProperties();
 
 			Dictionary<string, Tuple<PropertyInfo, object>> opts = new Dictionary<string, Tuple<PropertyInfo, object>>(32);
 
@@ -62,21 +62,21 @@ namespace RhinoCycles.Commands
 
 				if(prop.PropertyType == typeof(bool))
 				{
-					var curbool = (bool)(prop.GetValue(RcCore.It.EngineSettings, null));
+					var curbool = (bool)(prop.GetValue(RcCore.It.AllSettings, null));
 					var boolopt = new OptionToggle(curbool, $"No{prop.Name}", $"{prop.Name}");
 					getNumber.AddOptionToggle(prop.Name, ref boolopt);
 					opts[prop.Name] = new Tuple<PropertyInfo, object>(prop, boolopt);
 				}
 				if(prop.PropertyType == typeof(int))
 				{
-					var curint = (int)(prop.GetValue(RcCore.It.EngineSettings, null));
+					var curint = (int)(prop.GetValue(RcCore.It.AllSettings, null));
 					var intopt = new OptionInteger(curint);
 					getNumber.AddOptionInteger(prop.Name, ref intopt);
 					opts[prop.Name] = new Tuple<PropertyInfo, object>(prop, intopt);
 				}
 				if(prop.PropertyType == typeof(float))
 				{
-					var curfloat = (float)(prop.GetValue(RcCore.It.EngineSettings, null));
+					var curfloat = (float)(prop.GetValue(RcCore.It.AllSettings, null));
 					var floatopt = new OptionDouble(curfloat);
 					getNumber.AddOptionDouble(prop.Name, ref floatopt);
 					opts[prop.Name] = new Tuple<PropertyInfo, object>(prop, floatopt);
@@ -91,7 +91,7 @@ namespace RhinoCycles.Commands
 				switch (getRc)
 				{
 					case GetResult.Number:
-						RcCore.It.EngineSettings.Samples = (int)getNumber.Number();
+						RcCore.It.AllSettings.Samples = (int)getNumber.Number();
 						foreach(var opt in opts)
 						{
 							var v = opt.Value;
@@ -106,14 +106,14 @@ namespace RhinoCycles.Commands
 #if DEBUG
 								msg = $"\t{k} # {v.Item1.Name} -> {blopt.CurrentValue}";
 #endif
-								pinf.SetValue(RcCore.It.EngineSettings, blopt.CurrentValue);
+								pinf.SetValue(RcCore.It.AllSettings, blopt.CurrentValue);
 							}
 							if(pinf.PropertyType == typeof(int))
 							{
 								var intopt = v.Item2 as OptionInteger;
-								var oldint = pinf.GetValue(RcCore.It.EngineSettings, null);
-								pinf.SetValue(RcCore.It.EngineSettings, intopt.CurrentValue);
-								var newint = pinf.GetValue(RcCore.It.EngineSettings, null);
+								var oldint = pinf.GetValue(RcCore.It.AllSettings, null);
+								pinf.SetValue(RcCore.It.AllSettings, intopt.CurrentValue);
+								var newint = pinf.GetValue(RcCore.It.AllSettings, null);
 #if DEBUG
 								msg = $"\t{k} # {v.Item1.Name} = {intopt.CurrentValue}. {oldint} -> {newint}";
 #endif
@@ -124,7 +124,7 @@ namespace RhinoCycles.Commands
 #if DEBUG
 								msg = $"\t{k} # {v.Item1.Name} -> {flopt.CurrentValue}";
 #endif
-								pinf.SetValue(RcCore.It.EngineSettings, (float)flopt.CurrentValue);
+								pinf.SetValue(RcCore.It.AllSettings, (float)flopt.CurrentValue);
 							}
 
 #if DEBUG

@@ -22,6 +22,7 @@ using Rhino;
 using Rhino.DocObjects;
 using Rhino.Render;
 using RhinoCyclesCore.Core;
+using RhinoCyclesCore.Settings;
 using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCyclesCore.RenderEngines
@@ -82,6 +83,7 @@ namespace RhinoCyclesCore.RenderEngines
 		public void Renderer()
 		{
 			var cyclesEngine = this;
+			EngineDocumentSettings eds = new EngineDocumentSettings(m_doc_serialnumber);
 
 			var rw = cyclesEngine.RenderWindow;
 
@@ -90,39 +92,38 @@ namespace RhinoCyclesCore.RenderEngines
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
 
-			EngineSettings engineSettings;
-			if (!IsProductRender) {
-				engineSettings = RcCore.It.EngineSettings;
-			} else {
-				switch(Quality)
+			IAllSettings engineSettings = eds;
+			if (!eds.UseDocumentSamples)
+			{
+				switch (Quality)
 				{
 					case AntialiasLevel.Draft:
-						engineSettings = new DraftPresetEngineSettings();
+						engineSettings = new DraftPresetEngineSettings(eds);
 						break;
 					case AntialiasLevel.Good:
-						engineSettings = new GoodPresetEngineSettings();
+						engineSettings = new GoodPresetEngineSettings(eds);
 						break;
 					case AntialiasLevel.High:
-						engineSettings = new FinalPresetEngineSettings();
+						engineSettings = new FinalPresetEngineSettings(eds);
 						break;
 					case AntialiasLevel.None:
 					default:
-						engineSettings = new LowPresetEngineSettings();
+						engineSettings = new LowPresetEngineSettings(eds);
 						break;
 				}
 			}
 			requestedSamples = Attributes?.RealtimeRenderPasses ?? engineSettings.Samples;
 			requestedSamples = (requestedSamples < 1) ? engineSettings.Samples : requestedSamples;
-			cyclesEngine.TriggerCurrentViewportSettingsRequested();
 
 			#region pick a render device
+			HandleDeviceAndIntegrator(eds);
 			var renderDevice = engineSettings.RenderDevice;
 
-			if (engineSettings.Verbose) sdd.WriteLine(
-				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
+			/*if (engineSettings.Verbose) sdd.WriteLine(
+				$"Using device {renderDevice.Name + " " + renderDevice.Description}");*/
 			#endregion
 
-			cyclesEngine.TriggerCurrentViewportSettingsRequested();
+			HandleDeviceAndIntegrator(eds);
 			maxSamples = requestedSamples;
 
 			#region set up session parameters
@@ -195,11 +196,11 @@ namespace RhinoCyclesCore.RenderEngines
 			}
 			#endregion
 
-			if (engineSettings.SaveDebugImages)
+			/*if (engineSettings.SaveDebugImages)
 			{
 				var tmpf = RenderEngine.TempPathForFile($"RC_modal_renderer.png");
 				cyclesEngine.RenderWindow.SaveRenderImageAs(tmpf, true);
-			}
+			}*/
 
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Session.Destroy();

@@ -87,7 +87,7 @@ namespace RhinoCycles.Commands
 				}
 				var idxstr = string.Join(",", sdidx);
 
-				RcCore.It.EngineSettings.SelectedDeviceStr = idxstr;
+				RcCore.It.AllSettings.SelectedDeviceStr = idxstr;
 				return Result.Success;
 			}
 

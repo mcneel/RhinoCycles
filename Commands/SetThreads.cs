@@ -43,7 +43,7 @@ namespace RhinoCycles.Commands
 			var getNumber = new GetInteger();
 			getNumber.SetLowerLimit(0, false);
 			getNumber.SetUpperLimit(Environment.ProcessorCount, false);
-			getNumber.SetDefaultInteger(RcCore.It.EngineSettings.Threads);
+			getNumber.SetDefaultInteger(RcCore.It.AllSettings.Threads);
 			getNumber.SetCommandPrompt($"Set CPU render threads (max {Environment.ProcessorCount}, 0 for automatic)");
 			var getRc = getNumber.Get();
 			if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
@@ -52,7 +52,7 @@ namespace RhinoCycles.Commands
 				var nr = getNumber.Number();
 				var endS = nr != 1 ? "s" : "";
 				RhinoApp.WriteLine($"User wants {nr} CPU thread{endS}");
-				RcCore.It.EngineSettings.Threads = nr;
+				RcCore.It.AllSettings.Threads = nr;
 				return Result.Success;
 			}
 

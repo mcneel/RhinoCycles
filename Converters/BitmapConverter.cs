@@ -598,7 +598,7 @@ namespace RhinoCyclesCore.Converters
 			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
 			if (!read)
 			{
-				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
+				if(RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
 				lock (bytelocker)
 				{
 					ByteImagesNew[rId] = img;
@@ -614,7 +614,7 @@ namespace RhinoCyclesCore.Converters
 			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
 			if (!read)
 			{
-				if(RcCore.It.EngineSettings.SaveDebugImages) img.SaveBitmaps();
+				if(RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
 				lock (floatlocker)
 				{
 					FloatImagesNew[rId] = img;

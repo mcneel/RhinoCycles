@@ -21,6 +21,7 @@ using ccl.ShaderNodes;
 using Rhino.Render;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
+using RhinoCyclesCore.Settings;
 
 namespace RhinoCyclesCore
 {
@@ -49,7 +50,7 @@ namespace RhinoCyclesCore
 
 		public void SaveRenderedBuffer(int sample)
 		{
-			if (!RcCore.It.EngineSettings.SaveDebugImages) return;
+			if (!RcCore.It.AllSettings.SaveDebugImages) return;
 			var tmpf = TempPathForFile($"RC_{ sample.ToString("D5")}.png");
 			RenderWindow.SaveDibAsBitmap(tmpf);
 		}
@@ -63,7 +64,7 @@ namespace RhinoCyclesCore
 		/// <param name="cycles_engine">Engine instance to create for</param>
 		/// <returns></returns>
 		protected static /*Scene*/ void CreateScene(Client client, Session session, Device render_device,
-			RenderEngine cycles_engine, EngineSettings engineSettings)
+			RenderEngine cycles_engine, IAllSettings engineSettings)
 		{
 			#region set up scene parameters
 			BvhLayout bvhLayout = BvhLayout.Default;
@@ -210,21 +211,21 @@ namespace RhinoCyclesCore
 
 		public static Size TileSize()
 		{
-			var tilex = RcCore.It.EngineSettings.TileX;
-			var tiley = RcCore.It.EngineSettings.TileY;
-			if (!RcCore.It.EngineSettings.DebugNoOverrideTileSize)
+			var tilex = RcCore.It.AllSettings.TileX;
+			var tiley = RcCore.It.AllSettings.TileY;
+			if (!RcCore.It.AllSettings.DebugNoOverrideTileSize)
 			{
-				if (RcCore.It.EngineSettings.RenderDeviceIsOpenCl)
+				if (RcCore.It.AllSettings.RenderDeviceIsOpenCl)
 				{
 					if (tilex < 1024) tilex = 1024;
 					if (tiley < 1024) tiley = 1024;
 				}
-				else if (RcCore.It.EngineSettings.RenderDeviceIsCuda)
+				else if (RcCore.It.AllSettings.RenderDeviceIsCuda)
 				{
 					if (tilex < 512) tilex = 512;
 					if (tiley < 512) tiley = 512;
 				}
-				else if (RcCore.It.EngineSettings.RenderDevice.IsCpu)
+				else if (RcCore.It.AllSettings.RenderDevice.IsCpu)
 				{
 					tilex = 32;
 					tiley = 32;

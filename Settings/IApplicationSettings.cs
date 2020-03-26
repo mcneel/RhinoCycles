@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 20124-20129 Robert McNeel and Associates
+Copyright 2014-2020 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,13 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-namespace RhinoCyclesCore
+namespace RhinoCyclesCore.Settings
 {
-	public class GoodPresetEngineSettings : EngineSettings
+	public interface IApplicationSettings
 	{
-		public GoodPresetEngineSettings()
-		{
-		}
-		public override int Samples { get => 500; set { } }
+		string SelectedDeviceStr { get; set; }
+		string IntermediateSelectedDeviceStr { get; set; }
+		int ThrottleMs { get; set; }
+		int Threads { get; set; }
+
+
+		int OpenClDeviceType { get; set; }
+		bool OpenClSingleProgram { get; set; }
+		int OpenClKernelType { get; set; }
+
+		bool CPUSplitKernel { get; set; }
+
+		bool NoShadows { get; set; }
+
+		float DpiScale { get; set; }
+
+		int PreviewSamples { get; set; }
 	}
 }

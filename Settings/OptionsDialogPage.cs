@@ -20,7 +20,7 @@ using RhinoCyclesCore.Core;
 using System;
 using System.Drawing;
 
-namespace RhinoCycles.Settings
+namespace RhinoCyclesCore.Settings
 {
 	public class OptionsDialogPage : Rhino.UI.OptionsDialogPage
 	{
@@ -45,7 +45,7 @@ namespace RhinoCycles.Settings
 
 		public override void OnDefaults()
 		{
-			RcCore.It.EngineSettings.DefaultSettings();
+			RcCore.It.AllSettings.DefaultSettings();
 			CollapsibleSectionHolder.UpdateSections();
 		}
 		private OptionsDialogCollapsibleSectionUIPanel CollapsibleSectionHolder { get; }

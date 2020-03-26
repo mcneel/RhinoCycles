@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 20644-20649 Robert McNeel and Associates
+Copyright 2014-2020 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-namespace RhinoCyclesCore
+using System;
+
+namespace RhinoCyclesCore.Settings
 {
-	public class FinalPresetEngineSettings : EngineSettings
+	public class ApplicationSettingsChangedEventArgs : EventArgs
 	{
-		public FinalPresetEngineSettings()
-		{
-		}
-		public override int Samples { get => 1500; set { } }
+		public IApplicationSettings Settings { get; private set; }
+		public ApplicationSettingsChangedEventArgs(IApplicationSettings aps) { Settings = aps; }
 	}
 }

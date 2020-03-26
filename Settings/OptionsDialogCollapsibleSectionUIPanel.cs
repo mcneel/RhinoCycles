@@ -17,7 +17,7 @@ using System;
 using Eto.Forms;
 using Rhino.UI.Controls;
 
-namespace RhinoCycles.Settings
+namespace RhinoCyclesCore.Settings
 {
 	public class OptionsDialogCollapsibleSectionUIPanel : Panel
 	{
@@ -47,15 +47,15 @@ namespace RhinoCycles.Settings
 			m_holder = new EtoCollapsibleSectionHolder();
 		}
 
-		IntegratorSection m_integratorSection;
+		//IntegratorSection m_integratorSection;
 		SessionSection m_sessionSection;
 		DeviceSection m_deviceSection;
 		private void InitializeLayout()
 		{
-			m_integratorSection = new IntegratorSection(true, 0);
+			//m_integratorSection = new IntegratorSection(Rhino.PlugIns.PlugIn.IdFromName("Rhino Render"), true, 0);
 			m_sessionSection = new SessionSection(true, 0);
 			m_deviceSection = new DeviceSection(true, 0);
-			m_holder.Add(m_integratorSection);
+			//m_holder.Add(m_integratorSection);
 			m_holder.Add(m_sessionSection);
 			m_holder.Add(m_deviceSection);
 			UpdateSections();
@@ -71,7 +71,7 @@ namespace RhinoCycles.Settings
 		public void UpdateSections()
 		{
 			m_deviceSection.DisplayData();
-			m_integratorSection.DisplayData();
+			//m_integratorSection.DisplayData();
 			m_sessionSection.DisplayData();
 		}
 	}

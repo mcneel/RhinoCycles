@@ -16,16 +16,16 @@ limitations under the License.
 using Eto.Forms;
 using Rhino;
 using Rhino.UI;
-using RhinoCycles.Viewport;
+//using RhinoCyclesCore.Viewport;
 using RhinoCyclesCore.Core;
 using System;
 
-namespace RhinoCycles.Settings
+namespace RhinoCyclesCore.Settings
 {
 	///<summary>
 	/// The UI implementation of of Section one
 	///</summary>
-	public class SessionSection: Section
+	public class SessionSection: ApplicationSection
 	{
 		private LocalizeStringPair m_caption;
 		private Label m_samples_lb;
@@ -41,7 +41,7 @@ namespace RhinoCycles.Settings
 		///<summary>
 		/// The Heigth of the section
 		///</summary>
-		public override int SectionHeight => Content.Height;
+		public override int SectionHeight => MainLayout.Height;
 
 		///<summary>
 		/// Constructor for SectionOne
@@ -53,7 +53,14 @@ namespace RhinoCycles.Settings
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
-			ViewportSettingsReceived += SessionSection_ViewportSettingsReceived;
+			EngineSettingsReceived += SessionSection_EngineSettingsReceivedHandler;
+			ViewModelActivated += SessionSection_ViewModelActivated; ;
+		}
+
+		private void SessionSection_ViewModelActivated(object sender, EventArgs e)
+		{
+			DataContext = ViewModel;
+			DisplayData();
 		}
 
 		private void It_InitialisationCompleted(object sender, EventArgs e)
@@ -65,7 +72,7 @@ namespace RhinoCycles.Settings
 				SuspendLayout();
 				UnRegisterControlEvents();
 				m_samples.Value = vud.Samples;
-				m_throttlems.Value = vud.ThrottleMs;
+				if(m_for_app) m_throttlems.Value = vud.ThrottleMs;
 				RegisterControlEvents();
 				ResumeLayout();
 			}
@@ -74,15 +81,15 @@ namespace RhinoCycles.Settings
 
 		public override void DisplayData()
 		{
-			SessionSection_ViewportSettingsReceived(this, new ViewportSettingsReceivedEventArgs(Settings));
+			SessionSection_EngineSettingsReceivedHandler(this, new EngineSettingsReceivedArgs(Settings));
 		}
-		private void SessionSection_ViewportSettingsReceived(object sender, ViewportSettingsReceivedEventArgs e)
+		private void SessionSection_EngineSettingsReceivedHandler(object sender, EngineSettingsReceivedArgs e)
 		{
-			if (e.ViewportSettings != null)
+			if (e.AllSettings != null)
 			{
 				UnRegisterControlEvents();
-				m_samples.Value = e.ViewportSettings.Samples;
-				m_throttlems.Value = e.ViewportSettings.ThrottleMs;
+				m_samples.Value = e.AllSettings.Samples;
+				if(m_for_app) m_throttlems.Value = e.AllSettings.ThrottleMs;
 				RegisterControlEvents();
 			}
 		}
@@ -102,25 +109,29 @@ namespace RhinoCycles.Settings
 				MinValue = 0,
 				Width = 75,
 			};
-			m_throttlems_lb = new Label()
+			if (m_for_app)
 			{
-				Text = Localization.LocalizeString("Throttle (in ms)", 19),
-				VerticalAlignment = VerticalAlignment.Center,
-			};
-			m_throttlems = new NumericStepper()
-			{
-				Value = 0,
-				MaximumDecimalPlaces = 0,
-				MaxValue = int.MaxValue,
-				MinValue = 0,
-				Width = 75,
-			};
+				m_throttlems_lb = new Label()
+				{
+					Text = Localization.LocalizeString("Throttle (in ms)", 19),
+					VerticalAlignment = VerticalAlignment.Center,
+				};
+				m_throttlems = new NumericStepper()
+				{
+					Value = 0,
+					MaximumDecimalPlaces = 0,
+					MaxValue = int.MaxValue,
+					MinValue = 0,
+					Width = 75,
+				};
+			}
 		}
 
 
+		StackLayout MainLayout;
 		private void InitializeLayout()
 		{
-			StackLayout layout = new StackLayout()
+			MainLayout = new StackLayout()
 			{
 				// Padding around the table
 				Padding = new Eto.Drawing.Padding(3, 5, 3, 0),
@@ -135,20 +146,20 @@ namespace RhinoCycles.Settings
 								Spacing = new Eto.Drawing.Size(1, 5),
 								Rows = {
 									new TableRow( new TableCell(m_samples_lb, true), new TableCell(m_samples, true)),
-									new TableRow(m_throttlems_lb, m_throttlems),
+									m_for_app ? new TableRow(m_throttlems_lb, m_throttlems) : null,
 								}
 							}
 						}
 					)
 				}
 			};
-			Content = layout;
+			Content = MainLayout;
 		}
 
 		private void RegisterControlEvents()
 		{
 			m_samples.ValueChanged += M_ValueChanged;
-			m_throttlems.ValueChanged += M_ValueChanged;
+			if(m_for_app) m_throttlems.ValueChanged += M_ValueChanged;
 		}
 
 		private void M_ValueChanged(object sender, EventArgs e)
@@ -157,9 +168,9 @@ namespace RhinoCycles.Settings
 			if (vud == null) return;
 
 			vud.Samples = (int)m_samples.Value;
-			vud.ThrottleMs = (int)m_throttlems.Value;
+			if(m_for_app) vud.ThrottleMs = (int)m_throttlems.Value;
 
-			if (!m_for_app && RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber) is RhinoDoc doc)
+			/*if (!m_for_app && RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber) is RhinoDoc doc)
 			{
 				var rvp = doc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
 				if (rvp == null) return;
@@ -167,13 +178,13 @@ namespace RhinoCycles.Settings
 				rvp.TriggerViewportSettingsChanged(vud);
 				rvp.ChangeSamples(vud.Samples);
 				rvp.SignalRedraw();
-			}
+			}*/
 		}
 
 		private void UnRegisterControlEvents()
 		{
 			m_samples.ValueChanged -= M_ValueChanged;
-			m_throttlems.ValueChanged -= M_ValueChanged;
+			if(m_for_app) m_throttlems.ValueChanged -= M_ValueChanged;
 		}
 	}
 }

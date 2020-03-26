@@ -64,7 +64,7 @@ namespace RhinoCycles.Commands
 				Device dev = idx > -1 ? Device.GetDevice(idx) : Device.FirstCuda;
 				RhinoApp.WriteLine($"User selected device {idx}: {dev}");
 				PlugIn.Settings.SetInteger("rc_renderdevice", idx);
-				RcCore.It.EngineSettings.SelectedDeviceStr = idx.ToString();
+				RcCore.It.AllSettings.SelectedDeviceStr = idx.ToString();
 				return Result.Success;
 			}
 
