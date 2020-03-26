@@ -34,7 +34,7 @@ namespace RhinoCyclesCore.Shaders
 
 		public override Shader GetShader()
 		{
-			if(RcCore.It.EngineSettings.DebugSimpleShaders)
+			if(RcCore.It.AllSettings.DebugSimpleShaders)
 			{
 				var bg = new BackgroundNode();
 				bg.ins.Color.Value = new float4(0.7f);

@@ -181,9 +181,9 @@ namespace RhinoCyclesCore
 
 		private void SetKernelFlags()
 		{
-			CSycles.debug_set_opencl_kernel(RcCore.It.EngineSettings.OpenClKernelType);
-			CSycles.debug_set_opencl_single_program(RcCore.It.EngineSettings.OpenClSingleProgram);
-			CSycles.debug_set_cpu_kernel(RcCore.It.EngineSettings.CPUSplitKernel);
+			CSycles.debug_set_opencl_kernel(RcCore.It.AllSettings.OpenClKernelType);
+			CSycles.debug_set_opencl_single_program(RcCore.It.AllSettings.OpenClSingleProgram);
+			CSycles.debug_set_cpu_kernel(RcCore.It.AllSettings.CPUSplitKernel);
 		}
 
 		public DisplayPipelineAttributes Attributes => Database?.DisplayPipelineAttributes ?? null;
@@ -218,7 +218,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public void CreateWorld()
 		{
-			Database.CreateWorld(RcCore.It.EngineSettings.FlushAtEndOfCreateWorld);
+			Database.CreateWorld(RcCore.It.AllSettings.FlushAtEndOfCreateWorld);
 		}
 
 		/// <summary>
@@ -298,7 +298,7 @@ namespace RhinoCyclesCore
 
 			// don't set full 100% progress here yet, because that signals the renderwindow the end of async render
 			if (progress >= 0.9999f) progress = 1.0f;
-			if ((Attributes?.RealtimeRenderPasses ?? RcCore.It.EngineSettings.Samples) == ushort.MaxValue) progress = -1.0f;
+			if ((Attributes?.RealtimeRenderPasses ?? RcCore.It.AllSettings.Samples) == ushort.MaxValue) progress = -1.0f;
 			RenderWindow?.SetProgress(status, progress);
 
 			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples>0 ? (RenderedSamples+1) : RenderedSamples));

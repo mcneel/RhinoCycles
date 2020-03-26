@@ -115,7 +115,7 @@ namespace RhinoCyclesCore.Converters
 			var spotangle = 0.0;
 			var smooth = 0.0;
 			var size = 0.0f;
-			var strength = (float)(lg.Intensity * RcCore.It.EngineSettings.PointlightFactor);
+			var strength = (float)(lg.Intensity * RcCore.It.AllSettings.PointLightFactor);
 			var axisu = new float4(0.0f);
 			var axisv = new float4(0.0f);
 			var useMis = true;
@@ -143,7 +143,7 @@ namespace RhinoCyclesCore.Converters
 			if (lg.IsDirectionalLight)
 			{
 				lt = LightType.Distant;
-				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.SunlightFactor);
+				strength = (float)(lg.Intensity * RcCore.It.AllSettings.SunLightFactor);
 				//size = 0.01f;
 			}
 			else if (lg.IsSpotLight)
@@ -151,13 +151,13 @@ namespace RhinoCyclesCore.Converters
 				lt = LightType.Spot;
 				spotangle = lg.SpotAngleRadians * 2;
 				smooth = 1.0 / Math.Max(lg.HotSpot, 0.001f) - 1.0;
-				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.SpotlightFactor);
+				strength = (float)(lg.Intensity * RcCore.It.AllSettings.SpotLightFactor);
 			}
 			else if (lg.IsRectangularLight)
 			{
 				lt = LightType.Area;
 
-				strength = (float)(lg.Intensity * RcCore.It.EngineSettings.ArealightFactor);
+				strength = (float)(lg.Intensity * RcCore.It.AllSettings.AreaLightFactor);
 
 				var width = lg.Width;
 				var length = lg.Length;

@@ -58,8 +58,6 @@
     <Compile Include="Commands\TestToggleIsClippingObject.cs" />
     <Compile Include="Commands\TestCreateMultiOpenCl.cs" />
     <Compile Include="Commands\TestCreateMultiCuda.cs" />
-    <Compile Include="Commands\TestAddViewportSettings.cs" />
-    <Compile Include="Commands\TestShowCyclesViewportSettingsPanelToggle.cs" />
     <Compile Include="Commands\TestAddUserData.cs" />
     <Compile Include="Commands\TestSetBumpDistance.cs" />
     <Compile Include="Commands\TestSaveDebugImagesToggle.cs" />
@@ -72,22 +70,6 @@
     <Compile Include="Commands\SetRenderOptions.cs" />
     <Compile Include="Commands\ListDevices.cs" />
     <Compile Include="Plugin.cs" />
-    <Compile Include="Properties\IconResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>IconResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Settings\OptionsDialogCollapsibleSectionUIPanel.cs" />
-    <Compile Include="Settings\ResetAllSection.cs" />
-    <Compile Include="Settings\ViewportCollapsibleSectionUIPanel.cs" />
-    <Compile Include="Settings\AddUserdataSection.cs" />
-    <Compile Include="Settings\DeviceSection.cs" />
-    <Compile Include="Settings\SessionSection.cs" />
-    <Compile Include="Settings\IntegratorSection.cs" />
-    <Compile Include="Settings\Section.cs" />
-    <Compile Include="Settings\OptionsDialogPage.cs" />
-    <Compile Include="Settings\ViewportPropertiesPage.cs" />
-    <Compile Include="Settings\ViewportSettings.cs" />
     <Compile Include="Viewport\RenderedViewport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -178,10 +160,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\zh-tw\XML\zh-twRhinoCycles.xml">
       <Link>Localization\zh-twRhinoCycles.xml</Link>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\IconResources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>IconResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

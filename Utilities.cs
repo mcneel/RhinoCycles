@@ -1,6 +1,9 @@
 ﻿using ccl;
+using Rhino;
 using Rhino.Display;
+using Rhino.DocObjects;
 using Rhino.Render;
+using RhinoCyclesCore.Settings;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
 using RhinoCyclesCore.Materials;
@@ -27,6 +30,10 @@ namespace RhinoCyclesCore
 
 	public static class Utilities
 	{
+		public static IAllSettings GetEngineDocumentSettings(uint doc_serial)
+		{
+			return new EngineDocumentSettings(doc_serial);
+		}
 		public static void TexturedSlot(RenderMaterial rm, string slotname, Color4f defaultColor, string prompt)
 		{
 			rm.Fields.AddTextured(slotname, defaultColor, prompt, false);
@@ -348,7 +355,7 @@ namespace RhinoCyclesCore
 					normalmapnode.SpaceType = ccl.ShaderNodes.NormalMapNode.Space.Tangent;
 					sh.AddNode(normalmapnode);
 					imtexnode.outs.Color.Connect(normalmapnode.ins.Color);
-					normalmapnode.ins.Strength.Value = amount * RcCore.It.EngineSettings.NormalStrengthFactor;
+					normalmapnode.ins.Strength.Value = amount * RcCore.It.AllSettings.NormalStrengthFactor;
 					normalmapnode.outs.Normal.Connect(sock);
 				}
 				else

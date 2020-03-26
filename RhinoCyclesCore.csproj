@@ -23,7 +23,7 @@
     <DefineConstants Condition="'$(OS)' == 'Unix'">DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -58,11 +58,21 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Database\RenderSettingsDatabase.cs" />
-    <Compile Include="DraftPresetEnginesSettings.cs" />
-    <Compile Include="GoodPresetEnginesSettings.cs" />
-    <Compile Include="FinalPresetEnginesSettings.cs" />
-    <Compile Include="LowPresetEnginesSettings.cs" />
-    <Compile Include="EngineSettings.cs" />
+    <Compile Include="Properties\IconResources.Designer.cs">
+      <DependentUpon>IconResources.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Settings\ApplicationSettingsChangedEventArgs.cs" />
+    <Compile Include="Settings\DefaultEngineSettings.cs" />
+    <Compile Include="Settings\DraftPresetEnginesSettings.cs" />
+    <Compile Include="Settings\GoodPresetEnginesSettings.cs" />
+    <Compile Include="Settings\FinalPresetEnginesSettings.cs" />
+    <Compile Include="Settings\IAllSettings.cs" />
+    <Compile Include="Settings\IApplicationSettings.cs" />
+    <Compile Include="Settings\IDocumentSettings.cs" />
+    <Compile Include="Settings\LowPresetEnginesSettings.cs" />
+    <Compile Include="Settings\ApplicationAndDocumentSettings.cs" />
     <Compile Include="Environments\XmlEnvironment.cs" />
     <Compile Include="Materials\VertexColorMaterial.cs" />
     <Compile Include="Materials\EmissiveMaterial.cs" />
@@ -109,6 +119,18 @@
     <Compile Include="RenderEngine.Shaders.cs" />
     <Compile Include="RenderEngine.Utils.cs" />
     <Compile Include="ExtensionMethods\RhinoCyclesExtensions.cs" />
+    <Compile Include="Settings\EngineDocumentSettings.cs" />
+    <Compile Include="Settings\OptionsDialogCollapsibleSectionUIPanel.cs" />
+    <Compile Include="Settings\ResetAllSection.cs" />
+    <Compile Include="Settings\DeviceSection.cs" />
+    <Compile Include="Settings\ApplicationSection.cs" />
+    <Compile Include="Settings\SessionSection.cs" />
+    <Compile Include="Settings\AdvancedSettingsSection.cs" />
+    <Compile Include="Settings\Section.cs" />
+    <Compile Include="Settings\OptionsDialogPage.cs" />
+    <Compile Include="Settings\DocumentSettingsModel.cs" />
+    <Compile Include="Settings\SettingNames.cs" />
+    <Compile Include="Settings\ViewportSettingsChangedEventArgs.cs" />
     <Compile Include="Shaders\RhinoFullNxt.cs" />
     <Compile Include="Shaders\RhinoLight.cs" />
     <Compile Include="Shaders\RhinoBackground.cs" />
@@ -125,6 +147,10 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <AppDesigner Include="Core\Properties\" />
+    <EmbeddedResource Include="Properties\IconResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>IconResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj">
@@ -169,6 +195,18 @@
   </Choose>
   <ItemGroup>
     <None Include="Icons\Cycles_material.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\CPU.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\CUDA.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\Cycles_viewport_properties.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\OpenCL.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -24,7 +24,7 @@ using Rhino;
 using Rhino.DocObjects;
 using Rhino.PlugIns;
 using Rhino.Render;
-using RhinoCycles.Settings;
+using RhinoCyclesCore.Settings;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore;
 using Rhino.UI;
@@ -73,11 +73,11 @@ namespace RhinoCycles
 				if(RhinoApp.RunningOnVMWare()) {
 					CSycles.debug_set_opencl_device_type(0);
 				} else {
-					CSycles.debug_set_opencl_device_type(RcCore.It.EngineSettings.OpenClDeviceType);
+					CSycles.debug_set_opencl_device_type(RcCore.It.AllSettings.OpenClDeviceType);
 				}
-				CSycles.debug_set_opencl_kernel(RcCore.It.EngineSettings.OpenClKernelType);
-				CSycles.debug_set_opencl_single_program(RcCore.It.EngineSettings.OpenClSingleProgram);
-				CSycles.debug_set_cpu_kernel(RcCore.It.EngineSettings.CPUSplitKernel);
+				CSycles.debug_set_opencl_kernel(RcCore.It.AllSettings.OpenClKernelType);
+				CSycles.debug_set_opencl_single_program(RcCore.It.AllSettings.OpenClSingleProgram);
+				CSycles.debug_set_cpu_kernel(RcCore.It.AllSettings.CPUSplitKernel);
 
 				RcCore.It.Initialised = false;
 				AsyncInitialise();
@@ -90,19 +90,6 @@ namespace RhinoCycles
 			RcCore.It.AppInitialised = true;
 		}
 
-		public static IViewportSettings GetActiveViewportSettings(uint doc_serial)
-		{
-			if (RhinoDoc.FromRuntimeSerialNumber(doc_serial) is RhinoDoc doc && doc.Views.ActiveView != null)
-			{
-
-				var vi = new ViewInfo(doc.Views.ActiveView.ActiveViewport);
-				var vpi = vi.Viewport;
-				var vud = vpi.UserData.Find(typeof(ViewportSettings)) as ViewportSettings;
-
-				return vud;
-			}
-			return null;
-		}
 
 		private static readonly object InitialiseLock = new object();
 		private void AsyncInitialise()
@@ -142,14 +129,14 @@ namespace RhinoCycles
 
 		protected override void OptionsDialogPages(List<Rhino.UI.OptionsDialogPage> pages)
 		{
-			var optionsPage = new Settings.OptionsDialogPage();
+			var optionsPage = new RhinoCyclesCore.Settings.OptionsDialogPage();
 			pages.Add(optionsPage);
 			base.OptionsDialogPages(pages);
 		}
 
-		protected override void ObjectPropertiesPages(ObjectPropertiesPageCollection collection)
+		/*protected override void ObjectPropertiesPages(ObjectPropertiesPageCollection collection)
 		{
 			collection.Add(new ViewportPropertiesPage(collection.DocumentRuntimeSerailNumber));
-		}
+		}*/
 	}
 }

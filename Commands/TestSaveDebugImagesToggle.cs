@@ -37,8 +37,8 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			RcCore.It.EngineSettings.SaveDebugImages = !RcCore.It.EngineSettings.SaveDebugImages;
-			var saving = RcCore.It.EngineSettings.SaveDebugImages ? "Saving" : "Not saving";
+			RcCore.It.AllSettings.SaveDebugImages = !RcCore.It.AllSettings.SaveDebugImages;
+			var saving = RcCore.It.AllSettings.SaveDebugImages ? "Saving" : "Not saving";
 			RhinoApp.WriteLine($"{saving} debug images");
 			return Result.Success;
 		}

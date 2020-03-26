@@ -105,10 +105,10 @@ namespace RhinoCyclesCore.Database
 
 		private readonly bool _modalRenderer;
 
-		public uint Blades { get; } = RcCore.It.EngineSettings.Blades;
-		public float BladesRotation { get; } = RcCore.It.EngineSettings.BladesRotation;
-		public float ApertureRatio { get; } = RcCore.It.EngineSettings.ApertureRatio;
-		public float ApertureFactor { get; } = RcCore.It.EngineSettings.ApertureFactor;
+		public uint Blades { get; } = (uint)RcCore.It.AllSettings.Blades;
+		public float BladesRotation { get; } = RcCore.It.AllSettings.BladesRotation;
+		public float ApertureRatio { get; } = RcCore.It.AllSettings.ApertureRatio;
+		public float ApertureFactor { get; } = RcCore.It.AllSettings.ApertureFactor;
 
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal) : base(pluginId, doc, view, attributes, true, !modal)
 		{
@@ -612,8 +612,8 @@ namespace RhinoCyclesCore.Database
 			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
 			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
 
-			scene.Camera.SensorHeight = RcCore.It.EngineSettings.SensorHeight;
-			scene.Camera.SensorWidth = RcCore.It.EngineSettings.SensorWidth;
+			scene.Camera.SensorHeight = RcCore.It.AllSettings.SensorHeight;
+			scene.Camera.SensorWidth = RcCore.It.AllSettings.SensorWidth;
 			scene.Camera.Update();
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Camera changes handled", -1.0f);
 		}
@@ -1407,7 +1407,7 @@ namespace RhinoCyclesCore.Database
 					emissive.SetParameter(Materials.EmissiveMaterial._Falloff, 0);
 					break;
 			}
-			emissive.SetParameter(Materials.EmissiveMaterial._Strength, (float)rgl.Intensity * RcCore.It.EngineSettings.LinearlightFactor * (rgl.IsEnabled ? 1 : 0));
+			emissive.SetParameter(Materials.EmissiveMaterial._Strength, (float)rgl.Intensity * RcCore.It.AllSettings.LinearLightFactor * (rgl.IsEnabled ? 1 : 0));
 			emissive.EndChange();
 			emissive.BakeParameters();
 			var shader = new CyclesShader(matid);
@@ -1808,6 +1808,20 @@ namespace RhinoCyclesCore.Database
 		protected override BakingFunctions BakeFor()
 		{
 			return BakingFunctions.Decals | BakingFunctions.ProceduralTextures | BakingFunctions.MultipleMappingChannels;
+		}
+
+		protected override int BakingSize(RhinoObject ro, RenderMaterial material, TextureType type)
+		{
+			switch(_renderEngine._textureBakeQuality) {
+				case 1:
+					return 2048*2;
+				case 2:
+					return 2048*4;
+				case 3:
+					return 2048*8;
+				default:
+					return 2048;
+			}
 		}
 
 		protected override bool ProvideOriginalObject()

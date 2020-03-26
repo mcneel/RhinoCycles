@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using RhinoCyclesCore.Core;
+using RhinoCyclesCore.Settings;
 using System;
 using System.Drawing;
 
@@ -26,12 +27,10 @@ namespace RhinoCyclesCore
 		/// Get or set the resolution for rendering.
 		/// </summary>
 		public Size RenderDimension { get; set; }
-		public enum IntegratorSetting
+		public enum AdvancedSettings
 		{
 			Seed,
-			DiffuseSamples,
-			GlossySamples,
-			TransmissionSamples,
+			Samples,
 			MaxBounce,
 			MaxDiffuseBounce,
 			MaxGlossyBounce,
@@ -40,52 +39,43 @@ namespace RhinoCyclesCore
 			TransparentMaxBounce,
 		}
 
-		public event EventHandler CurrentViewportSettingsRequested;
-		protected void TriggerCurrentViewportSettingsRequested()
-		{
-			CurrentViewportSettingsRequested?.Invoke(this, EventArgs.Empty);
-		}
-
 		public int ThreadCount { get; set; } = 0;
 		private uint _oldIntegratorHash = 0;
 		public ccl.Device RenderDevice { get; set; }
-		public void ViewportSettingsChangedHandler(object sender, ViewportSettingsChangedArgs e)
-		{
-			if(e.Settings.AllowSelectedDeviceOverride)
-			{
-				RenderDevice = ccl.Device.DeviceFromString(ccl.Device.ValidDeviceString(e.Settings.SelectedDeviceStr));
-			}
-			else
-			{
-				RenderDevice = RcCore.It.EngineSettings.RenderDevice;
-			}
-			if (Session != null && Session.Scene != null)
-			{
-				var hash = e.Settings.IntegratorHash;
-				if (hash != _oldIntegratorHash)
-				{
-					var integrator = Session.Scene.Integrator;
-					integrator.Seed = e.Settings.Seed;
-					integrator.DiffuseSamples = e.Settings.DiffuseSamples;
-					integrator.GlossySamples = e.Settings.GlossySamples;
-					integrator.MaxBounce = e.Settings.MaxBounce;
-					integrator.MaxDiffuseBounce = e.Settings.MaxDiffuseBounce;
-					integrator.MaxGlossyBounce = e.Settings.MaxGlossyBounce;
-					integrator.MaxTransmissionBounce = e.Settings.MaxTransmissionBounce;
-					integrator.MaxVolumeBounce = e.Settings.MaxVolumeBounce;
-					integrator.TagForUpdate();
-					_needReset = true;
-					_oldIntegratorHash = hash;
-				}
-				Session.SetSamples(e.Settings.Samples);
-				_throttle = e.Settings.ThrottleMs;
-				_samples = e.Settings.Samples;
-			}
-		}
 
 		protected int _throttle { get; set; } = 10;
 		protected int _samples { get; set; } = 1;
 
 		protected bool _needReset;
+
+		public int _textureBakeQuality { get; set; } = 0;
+
+		public void HandleDeviceAndIntegrator(IAllSettings settings)
+		{
+			RenderDevice = settings.RenderDevice;
+			if (Session != null && Session.Scene != null)
+			{
+				var hash = settings.IntegratorHash;
+				if (hash != _oldIntegratorHash)
+				{
+					var integrator = Session.Scene.Integrator;
+					integrator.Seed = settings.Seed;
+					integrator.DiffuseSamples = settings.DiffuseSamples;
+					integrator.GlossySamples = settings.GlossySamples;
+					integrator.MaxBounce = settings.MaxBounce;
+					integrator.MaxDiffuseBounce = settings.MaxDiffuseBounce;
+					integrator.MaxGlossyBounce = settings.MaxGlossyBounce;
+					integrator.MaxTransmissionBounce = settings.MaxTransmissionBounce;
+					integrator.MaxVolumeBounce = settings.MaxVolumeBounce;
+					integrator.TagForUpdate();
+					_needReset = true;
+					_oldIntegratorHash = hash;
+				}
+				Session.SetSamples(settings.Samples);
+				_textureBakeQuality = settings.TextureBakeQuality;
+				_throttle = settings.ThrottleMs;
+				_samples = settings.Samples;
+			}
+		}
 	}
 }

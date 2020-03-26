@@ -85,13 +85,13 @@ namespace RhinoCyclesCore.RenderEngines
 			var threads = (uint)Math.Max(1, Environment.ProcessorCount - 1);
 
 			var size = cyclesEngine.RenderDimension;
-			var samples = RcCore.It.EngineSettings.PreviewSamples;
+			var samples = RcCore.It.AllSettings.PreviewSamples;
 			cyclesEngine.PreviewSamples = samples;
 
 			#region pick a render device
 			var renderDevice = Device.Default;
 
-			if (RcCore.It.EngineSettings.Verbose) sdd.WriteLine(
+			if (RcCore.It.AllSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
 #endregion
 
@@ -121,7 +121,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session = new Session(client, sessionParams);
 #endregion
 
-			CreateScene(client, cyclesEngine.Session, renderDevice, cyclesEngine, RcCore.It.EngineSettings);
+			CreateScene(client, cyclesEngine.Session, renderDevice, cyclesEngine, RcCore.It.AllSettings);
 
 			// register callbacks before starting any rendering
 			cyclesEngine.SetCallbacks();
@@ -138,7 +138,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.Scene.Reset();
 			// and actually start
 			bool stillrendering = true;
-			var throttle = Math.Max(0, RcCore.It.EngineSettings.ThrottleMs);
+			var throttle = Math.Max(0, RcCore.It.AllSettings.ThrottleMs);
 			while (stillrendering)
 			{
 				if (cyclesEngine.IsRendering)

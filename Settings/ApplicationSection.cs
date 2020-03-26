@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2017 Robert McNeel and Associates
+Copyright 2014-2020 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,13 +15,14 @@ limitations under the License.
 **/
 using System;
 using Rhino.UI.Controls;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore.Settings
 {
 	///<summary>
 	/// Base class for all the sections
 	///</summary>
-	public abstract class Section : EtoCollapsibleSection
+	public abstract class ApplicationSection : EtoCollapsibleSection
 	{
 		protected int m_table_padding = 10;
 
@@ -33,13 +34,13 @@ namespace RhinoCyclesCore.Settings
 		/// </summary>
 		/// <param name="for_app">Pass in 'true' if sections display application settings. 'false' means
 		/// viewport-specific settings.</param>
-		public Section(bool for_app, uint doc_serial) {
+		public ApplicationSection(bool for_app, uint doc_serial) {
 			m_for_app = for_app;
 			m_doc_serialnumber = doc_serial;
-			vps = new DocumentSettingsModel(this);
+			vps = RcCore.It.AllSettings;
 		}
 
-		DocumentSettingsModel vps;
+		ApplicationAndDocumentSettings vps;
 
 		/// <summary>
 		/// Access to settings related to viewport/sessions through IViewportSettings

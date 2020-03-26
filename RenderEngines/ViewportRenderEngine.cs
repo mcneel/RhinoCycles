@@ -24,14 +24,14 @@ using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
 using Rhino;
 using System.Collections.Generic;
+using RhinoCyclesCore.Settings;
 
 namespace RhinoCyclesCore.RenderEngines
 {
 	public class ViewportRenderEngine : RenderEngine
 	{
-		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, ViewInfo view, Rhino.Display.DisplayPipelineAttributes attr, bool useOpenGl) : base(pluginId, docRuntimeSerialNumber, view, null, attr, true)
+		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, ViewInfo view, Rhino.Display.DisplayPipelineAttributes attr) : base(pluginId, docRuntimeSerialNumber, view, null, attr, true)
 		{
-			UsingOpenGl = useOpenGl;
 			Client = new Client();
 			State = State.Rendering;
 
@@ -113,9 +113,6 @@ namespace RhinoCyclesCore.RenderEngines
 		/// </summary>
 		public event EventHandler<PassRenderedEventArgs> PassRendered;
 
-
-		private bool UsingOpenGl { get; set; }
-
 		/// <summary>
 		/// Set new size for the internal RenderWindow object.
 		/// </summary>
@@ -153,6 +150,7 @@ namespace RhinoCyclesCore.RenderEngines
 			Locked = false;
 
 			var doc = RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
+			EngineDocumentSettings eds = new EngineDocumentSettings(m_doc_serialnumber);
 			var vi = new ViewInfo(doc.Views.ActiveView.ActiveViewport);
 			var vpi = vi.Viewport;
 
@@ -161,8 +159,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (rw == null) return;
 
-			_throttle = RcCore.It.EngineSettings.ThrottleMs;
-			_samples = Attributes?.RealtimeRenderPasses ?? RcCore.It.EngineSettings.Samples;
+			_throttle = eds.ThrottleMs;
+			_samples = Attributes?.RealtimeRenderPasses ?? eds.Samples;
 
 			#region pick a render device
 
@@ -182,17 +180,17 @@ namespace RhinoCyclesCore.RenderEngines
 			var renderDevice = Device.CreateMultiDevice(rdlist);
 
 #else
-			TriggerCurrentViewportSettingsRequested();
-			var renderDevice = RenderDevice; // RcCore.It.EngineSettings.RenderDevice;
+			HandleDeviceAndIntegrator(eds);
+			var renderDevice = RenderDevice;
 #endif
 
 			#endregion
 
 			var scaledPixelSize = Dpi / 72.0f;
-			var pixelSize = Math.Max(1, (int)(scaledPixelSize * RcCore.It.EngineSettings.DpiScale));
+			var pixelSize = Math.Max(1, (int)(scaledPixelSize * eds.DpiScale));
 
 			#region set up session parameters
-			ThreadCount = (renderDevice.IsCpu ? RcCore.It.EngineSettings.Threads : 0);
+			ThreadCount = (renderDevice.IsCpu ? eds.Threads : 0);
 			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
@@ -216,9 +214,8 @@ namespace RhinoCyclesCore.RenderEngines
 			Session = new Session(client, sessionParams);
 			#endregion
 
-			CreateScene(client, Session, renderDevice, this, RcCore.It.EngineSettings);
-
-			TriggerCurrentViewportSettingsRequested();
+			CreateScene(client, Session, renderDevice, this, eds);
+			HandleDeviceAndIntegrator(eds);
 
 			// register callbacks before starting any rendering
 			SetCallbacks();
@@ -252,7 +249,7 @@ namespace RhinoCyclesCore.RenderEngines
 					_needReset = false;
 					var size = RenderDimension;
 
-					Session.Scene.Integrator.NoShadows = RcCore.It.EngineSettings.NoShadows;
+					Session.Scene.Integrator.NoShadows = eds.NoShadows;
 					Session.Scene.Integrator.TagForUpdate();
 
 					// lets reset session

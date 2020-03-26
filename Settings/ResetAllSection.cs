@@ -16,11 +16,11 @@ limitations under the License.
 using Eto.Forms;
 using Rhino;
 using Rhino.UI;
-using RhinoCycles.Viewport;
+//using RhinoCyclesCore.Viewport;
 using RhinoCyclesCore.Core;
 using System;
 
-namespace RhinoCycles.Settings
+namespace RhinoCyclesCore.Settings
 {
 	///<summary>
 	/// The UI implementation of of Section one
@@ -98,7 +98,7 @@ namespace RhinoCycles.Settings
 
 		private void M_resetall_Click(object sender, EventArgs e)
 		{
-			RcCore.It.EngineSettings.DefaultSettings();
+			RcCore.It.AllSettings.DefaultSettings();
 			Reset?.Invoke(this, EventArgs.Empty);
 		}
 	}

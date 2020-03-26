@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using Rhino;
+using RhinoCyclesCore.Settings;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -77,11 +78,6 @@ namespace RhinoCyclesCore.Core
 		#endregion
 
 
-		public bool CanUseDrawOpenGl()
-		{
-			return !RhinoApp.RunningInRdp() && EngineSettings.UseDrawOpenGl;
-		}
-
 		public void InitializeResourceManager()
 		{
 			Properties.Resources.Culture = CultureInfo.InvariantCulture;
@@ -122,13 +118,12 @@ namespace RhinoCyclesCore.Core
 
 		public string AppPath { get; set; }
 
-		public EngineSettings EngineSettings => _engineSettings;
+		public ApplicationAndDocumentSettings AllSettings { get; }
 
-		private readonly EngineSettings _engineSettings;
 		private RcCore() {
 			AppInitialised = false;
-			if(_engineSettings == null)
-				_engineSettings = new EngineSettings();
+			if(AllSettings == null)
+				AllSettings = new ApplicationAndDocumentSettings();
 		}
 
 		public static RcCore It { get; } = new RcCore();
