@@ -310,8 +310,8 @@ namespace RhinoCyclesCore.Settings
 #region Application/Global settings
 		public string SelectedDeviceStr 
 		{
-			get => mDict.GetString(SettingNames.SelectedDeviceStr, DefaultEngineSettings.SelectedDeviceStr);
-			set => mDict[SettingNames.SelectedDevice] = value;
+			get => RcCore.It.AllSettings.SelectedDeviceStr;
+			set => RcCore.It.AllSettings.SelectedDeviceStr = value;
 		}
 		public string IntermediateSelectedDeviceStr 
 		{

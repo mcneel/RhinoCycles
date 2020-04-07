@@ -180,7 +180,6 @@ namespace RhinoCyclesCore.Settings
 		private GridDevicePage m_tabpage_cpu;
 		private GridDevicePage m_tabpage_cuda;
 		private GridDevicePage m_tabpage_opencl;
-		private Button m_select;
 		private ccl.Device m_currentDevice;
 		private readonly string m_nodeviceselected = Localization.LocalizeString("No device selected, default device will be used", 13);
 
@@ -295,7 +294,6 @@ namespace RhinoCyclesCore.Settings
 
 		private void InitializeComponents()
 		{
-			m_select = new Button { Text = Localization.LocalizeString("Activate device", 39), ToolTip = Localization.LocalizeString("Activate the selection as the new render device for this viewport.\nThis will restart the render session.", 40) };
 			m_tc = new TabControl();
 
 			m_tabpage_cpu = new GridDevicePage { Text = "CPU", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CPU.ico").WithSize(16, 16)  , ToolTip = Localization.LocalizeString("Show all the render devices in the CPU category.", 24)};
@@ -329,7 +327,6 @@ namespace RhinoCyclesCore.Settings
 
 		private void RegisterControlEvents()
 		{
-			m_select.Click += HandleSelectClick;
 			m_tabpage_cpu.SelectionChanged += DeviceSelectionChanged;
 			m_tabpage_cpu.RegisterEventHandlers();
 			m_tabpage_cuda.SelectionChanged += DeviceSelectionChanged;
@@ -358,17 +355,6 @@ namespace RhinoCyclesCore.Settings
 			{
 				vud.SelectedDeviceStr = RcCore.It.AllSettings.SelectedDeviceStr;
 				vud.IntermediateSelectedDeviceStr = vud.SelectedDeviceStr;
-				It_InitialisationCompleted(this, EventArgs.Empty);
-			}
-		}
-
-		private void HandleSelectClick(object sender, EventArgs e)
-		{
-			var vud = Settings;
-			if (!m_for_app && vud != null && RcCore.It.AllSettings.AllowSelectedDeviceOverride)
-			{
-				vud.SelectedDeviceStr = vud.IntermediateSelectedDeviceStr;
-				Rhino.RhinoApp.RunScript("_-SetDisplayMode Mode Wireframe Enter _-SetDisplayMode Mode Raytraced Enter", false);
 				It_InitialisationCompleted(this, EventArgs.Empty);
 			}
 		}
@@ -411,7 +397,6 @@ namespace RhinoCyclesCore.Settings
 
 		private void UnRegisterControlEvents()
 		{
-			m_select.Click -= HandleSelectClick;
 			m_tabpage_cpu.SelectionChanged -= DeviceSelectionChanged;
 			m_tabpage_cpu.UnregisterEventHandlers();
 			m_tabpage_cuda.SelectionChanged -= DeviceSelectionChanged;
