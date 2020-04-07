@@ -38,8 +38,9 @@ namespace RhinoCyclesCore.Settings
 		{
 		}
 
-
+#pragma warning disable CS0067
 		public event PropertyChangedEventHandler PropertyChanged;
+#pragma warning restore CS0067
 		private ArchivableDictionary RenderSettingsForRead()
 		{
 			var rs = GetData(Rhino.UI.Controls.DataSource.ProviderIds.RhinoSettings, false, true) as Rhino.Render.DataSources.RhinoSettings;
