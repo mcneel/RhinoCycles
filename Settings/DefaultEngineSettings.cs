@@ -12,7 +12,7 @@ namespace RhinoCyclesCore.Settings
 
 		static public float SpotLightFactor => 40.0f;
 		static public float PointLightFactor => 40.0f;
-		static public float SunLightFactor => 1.0f;
+		static public float SunLightFactor => 3.2f;
 		static public float LinearLightFactor => 10.0f;
 		static public float AreaLightFactor => 17.2f;
 		static public float PolishFactor => 0.09f;
