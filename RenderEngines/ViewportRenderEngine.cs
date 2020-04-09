@@ -223,6 +223,8 @@ namespace RhinoCyclesCore.RenderEngines
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
+			_textureBakeQuality = eds.TextureBakeQuality;
+
 			if (this != null && !CancelRender)
 			{
 				CheckFlushQueue();

@@ -53,6 +53,9 @@ namespace RhinoCyclesCore
 		public void HandleDeviceAndIntegrator(IAllSettings settings)
 		{
 			RenderDevice = settings.RenderDevice;
+			_textureBakeQuality = settings.TextureBakeQuality;
+			_throttle = settings.ThrottleMs;
+			_samples = settings.Samples;
 			if (Session != null && Session.Scene != null)
 			{
 				var hash = settings.IntegratorHash;
@@ -72,9 +75,6 @@ namespace RhinoCyclesCore
 					_oldIntegratorHash = hash;
 				}
 				Session.SetSamples(settings.Samples);
-				_textureBakeQuality = settings.TextureBakeQuality;
-				_throttle = settings.ThrottleMs;
-				_samples = settings.Samples;
 			}
 		}
 	}
