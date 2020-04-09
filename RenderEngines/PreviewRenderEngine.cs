@@ -89,7 +89,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.PreviewSamples = samples;
 
 			#region pick a render device
-			var renderDevice = Device.Default;
+			var renderDevice = RcCore.It.AllSettings.RenderDevice;
 
 			if (RcCore.It.AllSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
@@ -138,13 +138,16 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.Scene.Reset();
 			// and actually start
 			bool stillrendering = true;
+			bool firstpass = true;
 			var throttle = Math.Max(0, RcCore.It.AllSettings.ThrottleMs);
 			while (stillrendering)
 			{
 				if (cyclesEngine.IsRendering)
 				{
 					var sample = cyclesEngine.Session.Sample();
-					stillrendering = sample > -1;
+					if (firstpass) stillrendering = true;
+					else stillrendering = sample > -1;
+					firstpass = false;
 					cyclesEngine.SignalUpdate(sample);
 					Thread.Sleep(throttle);
 				}
