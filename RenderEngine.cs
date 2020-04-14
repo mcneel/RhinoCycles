@@ -397,7 +397,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public void BlitPixelsToRenderWindowChannel(float alpha)
+		public void BlitPixelsToRenderWindowChannel()
 		{
 			var rect = new Rectangle(0, 0, RenderWindow.Size().Width, RenderWindow.Size().Height);
 			IntPtr pixel_buffer = IntPtr.Zero;

@@ -131,7 +131,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				Experimental = false,
 				Samples = requestedSamples,
-				TileSize = TileSize(),
+				TileSize = TileSize(renderDevice),
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(renderDevice.IsGpu ? 0 : engineSettings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
@@ -182,14 +182,14 @@ namespace RhinoCyclesCore.RenderEngines
 						stillrendering = cyclesEngine.Session.Sample() > -1;
 						if (!capturing)
 						{
-							cyclesEngine.BlitPixelsToRenderWindowChannel(0.0f);
+							cyclesEngine.BlitPixelsToRenderWindowChannel();
 							cyclesEngine.RenderWindow.Invalidate();
 						}
 					}
 					Thread.Sleep(throttle);
 					if (cyclesEngine.IsStopped) break;
 				}
-				cyclesEngine.BlitPixelsToRenderWindowChannel(0.0f);
+				cyclesEngine.BlitPixelsToRenderWindowChannel();
 				cyclesEngine.RenderWindow.Invalidate();
 
 				cyclesEngine.Session.EndRun();
@@ -212,7 +212,7 @@ namespace RhinoCyclesCore.RenderEngines
 				cyclesEngine.SetProgress(rw,
 					$"Render ready {cyclesEngine.RenderedSamples + 1} samples, duration {cyclesEngine.TimeString}", 1.0f);
 				// signal the render window we're done.
-				rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
+				//rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 			}
 			cyclesEngine.CancelRender = true;
 			// get rid of our change queue

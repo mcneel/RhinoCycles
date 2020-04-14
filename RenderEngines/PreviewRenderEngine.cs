@@ -54,20 +54,21 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
-			if (IsStopped) return;
+			//if (IsStopped) return;
 			
-		  DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
+		  //DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 	  }
 
 		public void SignalUpdate(int sample)
 		{
-			if (sample > 10 && sample % 50 != 0 && (sample + 2) < PreviewSamples) 
-				return;
-
-			if (sample > 1 && m_sample_count != sample)
+			if (sample > 0 && (sample == 10 || sample % 50 == 0 || sample >= (PreviewSamples-1)))
 			{
-				PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
-				m_sample_count = sample;
+				if (m_sample_count != sample)
+				{
+					RenderWindow.Invalidate();
+					PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
+					m_sample_count = sample;
+				}
 			}
 		}
 
@@ -82,7 +83,6 @@ namespace RhinoCyclesCore.RenderEngines
 			var cyclesEngine = (PreviewRenderEngine)oPipe;
 
 			var client = cyclesEngine.Client;
-			var threads = (uint)Math.Max(1, Environment.ProcessorCount - 1);
 
 			var size = cyclesEngine.RenderDimension;
 			var samples = RcCore.It.AllSettings.PreviewSamples;
@@ -97,18 +97,21 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (cyclesEngine.CancelRender) return;
 
+			var gpusize = TileSize(renderDevice);
+			var threads = renderDevice.IsGpu ? 0 : (uint)Math.Max(1, Environment.ProcessorCount - 1);
+
 			#region set up session parameters
 			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
 				Samples = samples,
-				TileSize = new Size(16, 16),
-				TileOrder = TileOrder.HilbertSpiral,
+				TileSize = gpusize,
+				TileOrder = TileOrder.Center,
 				Threads = threads,
 				ShadingSystem = ShadingSystem.SVM,
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
-				Background = true,
+				Background = false,
 				ProgressiveRefine = true,
 				Progressive = true,
 				PixelSize = 1,
@@ -138,18 +141,14 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.Scene.Reset();
 			// and actually start
 			bool stillrendering = true;
-			bool firstpass = true;
-			var throttle = Math.Max(0, RcCore.It.AllSettings.ThrottleMs);
 			while (stillrendering)
 			{
 				if (cyclesEngine.IsRendering)
 				{
 					var sample = cyclesEngine.Session.Sample();
-					if (firstpass) stillrendering = true;
-					else stillrendering = sample > -1;
-					firstpass = false;
+					stillrendering = sample > -1;
+					cyclesEngine.BlitPixelsToRenderWindowChannel();
 					cyclesEngine.SignalUpdate(sample);
-					Thread.Sleep(throttle);
 				}
 				else
 				{

@@ -209,26 +209,23 @@ namespace RhinoCyclesCore
 			return ang * (float)Math.PI / 180.0f;
 		}
 
-		public static Size TileSize()
+		public static Size TileSize(ccl.Device device)
 		{
 			var tilex = RcCore.It.AllSettings.TileX;
 			var tiley = RcCore.It.AllSettings.TileY;
 			if (!RcCore.It.AllSettings.DebugNoOverrideTileSize)
 			{
-				if (RcCore.It.AllSettings.RenderDeviceIsOpenCl)
+				if (device.IsOpenCl)
 				{
-					if (tilex < 1024) tilex = 1024;
-					if (tiley < 1024) tiley = 1024;
+					tilex = tiley = 1024;
 				}
-				else if (RcCore.It.AllSettings.RenderDeviceIsCuda)
+				else if (device.IsCuda)
 				{
-					if (tilex < 512) tilex = 512;
-					if (tiley < 512) tiley = 512;
+					tilex = tiley = 512;
 				}
-				else if (RcCore.It.AllSettings.RenderDevice.IsCpu)
+				else if (device.IsCpu)
 				{
-					tilex = 32;
-					tiley = 32;
+					tilex = tiley = 32;
 				}
 			}
 

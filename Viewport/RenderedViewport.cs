@@ -415,7 +415,7 @@ namespace RhinoCycles.Viewport
 		public override bool DrawOpenGl()
 		{
 			if (!_frameAvailable) return false;
-			_cycles.BlitPixelsToRenderWindowChannel(0.0f);
+			_cycles.BlitPixelsToRenderWindowChannel();
 			return true;
 		}
 

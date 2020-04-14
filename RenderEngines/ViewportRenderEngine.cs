@@ -195,7 +195,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				Experimental = false,
 				Samples = (int)_samples,
-				TileSize = TileSize(),
+				TileSize = TileSize(renderDevice),
 				TileOrder = TileOrder.Center,
 				Threads = (uint)ThreadCount,
 				ShadingSystem = ShadingSystem.SVM,
