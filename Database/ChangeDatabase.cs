@@ -1487,7 +1487,8 @@ namespace RhinoCyclesCore.Database
 			_environmentDatabase.TagUpdate();
 		}
 
-		private readonly MeshingParameters mp = new MeshingParameters(0.1) { MinimumEdgeLength = 0.001, GridMinCount = 16, JaggedSeams = false };
+		private readonly MeshingParameters mp = MeshingParameters.FastRenderMesh;
+		//new MeshingParameters(0.1) { MinimumEdgeLength = 0.001, GridMinCount = 16, JaggedSeams = false };
 		private readonly MeshingParameters mpclipping = new MeshingParameters(0.1) { MinimumEdgeLength = 0.1, GridMinCount = 8, JaggedSeams = false };
 
 		private void HandleLinearLightAddOrModify(uint lightmeshinstanceid, RGLight ld)
@@ -1495,10 +1496,26 @@ namespace RhinoCyclesCore.Database
 			var p = new Plane(ld.Location, ld.Direction);
 			var circle = new Circle(p, ld.Width.Length*0.5);
 			var c = new Cylinder(circle, ld.Direction.Length);
-			var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(true, true), mp);
 			var mesh = new Rhino.Geometry.Mesh();
-			foreach (var im in m) mesh.Append(im);
-			mesh.RebuildNormals();
+			if (c.IsValid)
+			{
+				var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(true, true), mp);
+				foreach (var im in m) mesh.Append(im);
+				mesh.RebuildNormals();
+			}
+			else
+			{
+				mesh.Vertices.Add(new Rhino.Geometry.Point3d(0.01, 0.01, 0.01));
+				mesh.Vertices.Add(new Rhino.Geometry.Point3d(0.01, 0.01, -0.01));
+				mesh.Vertices.Add(new Rhino.Geometry.Point3d(0.01, -0.01, 0.01));
+
+				mesh.Translate(new Vector3d(ld.Location));
+
+				mesh.Faces.AddFace(0, 1, 2);
+
+				mesh.FaceNormals.ComputeFaceNormals();
+				mesh.Normals.ComputeNormals();
+			}
 			var t = ccl.Transform.Identity();
 
 			var ldid = new Tuple<Guid, int>(ld.Id, 0);
@@ -1515,7 +1532,7 @@ namespace RhinoCyclesCore.Database
 				obid = lightmeshinstanceid,
 				meshid = ldid,
 				Transform = t,
-				Visible = ld.IsEnabled,
+				Visible = c.IsValid ? ld.IsEnabled : false,
 				CastShadow = false,
 				IsShadowCatcher = false,
 				CastNoShadow = ld.ShadowIntensity < 0.00001,
