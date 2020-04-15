@@ -61,7 +61,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void SignalUpdate(int sample)
 		{
-			if (sample > 0 && (sample == 10 || sample % 50 == 0 || sample >= (PreviewSamples-1)))
+			if (sample > 0 && (sample == 1 || sample == 10 || sample % 50 == 0 || sample >= (PreviewSamples-1)))
 			{
 				if (m_sample_count != sample)
 				{
@@ -74,6 +74,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 
 		public int PreviewSamples { get; set; }
+
 		/// <summary>
 		/// Renderer entry point for preview rendering
 		/// </summary>
