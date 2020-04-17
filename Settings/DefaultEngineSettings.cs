@@ -19,7 +19,7 @@ namespace RhinoCyclesCore.Settings
 
 		static public int ThrottleMs => 0;
 		static public int Threads => 0;
-		static public float BumpDistance => 0.1f;
+		static public float BumpDistance => 1.0f;
 		static public float NormalStrengthFactor => 1.0f;
 		static public float BumpStrengthFactor => 1.0f;
 

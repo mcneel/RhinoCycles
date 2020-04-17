@@ -350,7 +350,8 @@ namespace RhinoCyclesCore.Shaders
 
 				var bump88 = new BumpNode("bump");
 					bump88.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					bump88.ins.Distance.Value = 0.1f;
+					bump88.ins.Strength.Value = RcCore.It.AllSettings.BumpStrengthFactor;
+					bump88.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 
 				var light_path109 = new LightPathNode("light_path");
 
