@@ -202,6 +202,7 @@ namespace RhinoCycles.Viewport
 				mre.StatusTextUpdated += Mre_StatusTextUpdated;
 
 				mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
+				mre.HandleDeviceAndIntegrator(eds);
 
 				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
@@ -236,6 +237,8 @@ namespace RhinoCycles.Viewport
 
 			_cycles.RenderWindow = renderWindow;
 			_cycles.RenderDimension = renderSize;
+
+			_cycles.HandleDeviceAndIntegrator(eds);
 
 			_maxSamples = eds.Samples;
 
