@@ -1017,10 +1017,14 @@ namespace RhinoCyclesCore.Database
 		/// <param name="mat"></param>
 		private void HandleRenderMaterial(RenderMaterial mat)
 		{
-			if (_shaderDatabase.HasShader(mat.RenderHash)) return;
+			//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
+			if (_shaderDatabase.HasShader(mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", LinearWorkflow)))
+			{
+				return;
+			}
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, PreProcessGamma);
+			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow);
 			_shaderDatabase.AddShader(sh);
 		}
 
@@ -1216,7 +1220,8 @@ namespace RhinoCyclesCore.Database
 
 			HandleRenderMaterial(mat);
 
-			var matrenderhash = mat.RenderHash;
+			//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
+			var matrenderhash = mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", LinearWorkflow);
 			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 			var cyclesObject = new CyclesObject
 			{

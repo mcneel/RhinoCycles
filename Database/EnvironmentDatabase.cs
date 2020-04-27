@@ -104,7 +104,12 @@ namespace RhinoCyclesCore.Database
 			switch (usage)
 			{
 				case RenderEnvironment.Usage.Background:
-					if (environment?.RenderHash == _cqBackground.BackgroundEnvironment?.RenderHash) return;
+					//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
+					if (environment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "") == _cqBackground.BackgroundEnvironment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "")) 
+					{
+						return;
+					}
+
 					_cqBackground.Xml = "";
 					var xmlenv = (environment?.TopLevelParent as Materials.ICyclesMaterial);
 					if(xmlenv?.MaterialType == RhinoCyclesCore.ShaderBody.CyclesMaterial.XmlEnvironment || xmlenv?.MaterialType == RhinoCyclesCore.ShaderBody.CyclesMaterial.SimpleNoiseEnvironment)

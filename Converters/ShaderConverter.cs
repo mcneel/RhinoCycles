@@ -37,9 +37,10 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="rm">Material to convert to CyclesShader</param>
 		/// <param name="gamma">gamma to use for this shader</param>
 		/// <returns>The CyclesShader</returns>
-		public CyclesShader CreateCyclesShader(RenderMaterial rm, float gamma)
+		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw)
 		{
-			var mid = rm.RenderHash;
+			//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
+			var mid = rm.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", lw);
 			var shader = new CyclesShader(mid)
 			{
 				Type = CyclesShader.Shader.Diffuse
@@ -49,11 +50,11 @@ namespace RhinoCyclesCore.Converters
 			{
 				if (rm.FindChild("front") is RenderMaterial front)
 				{
-					shader.CreateFrontShader(front, gamma);
+					shader.CreateFrontShader(front, lw.PreProcessGamma);
 				}
 				if (rm.FindChild("back") is RenderMaterial back)
 				{
-					shader.CreateBackShader(back, gamma);
+					shader.CreateBackShader(back, lw.PreProcessGamma);
 				}
 				/* Now ensure we have a valid front part of the shader. When a
 				 * double-sided material is added without having a front material
@@ -62,13 +63,13 @@ namespace RhinoCyclesCore.Converters
 				{
 					using (RenderMaterial defrm = RenderMaterial.CreateBasicMaterial(null))
 					{
-						shader.CreateFrontShader(defrm, gamma);
+						shader.CreateFrontShader(defrm, lw.PreProcessGamma);
 					}
 				}
 			}
 			else
 			{
-				shader.CreateFrontShader(rm, gamma);
+				shader.CreateFrontShader(rm, lw.PreProcessGamma);
 			}
 
 			return shader;
