@@ -105,7 +105,7 @@ namespace RhinoCyclesCore
 					{
 						fixed (byte* p = Corrected)
 						{
-							TextureEvaluator.Rdk_TextureEvaluator_ApplyGamma((IntPtr)p, W, H, gamma);
+							TextureEvaluator.ApplyGamma((IntPtr)p, W, H, gamma);
 						}
 					}
 				}
