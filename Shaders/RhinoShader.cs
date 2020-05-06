@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using ccl;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -41,7 +42,8 @@ namespace RhinoCyclesCore.Shaders
 					UseMis = true,
 					UseTransparentShadow = true,
 					HeterogeneousVolume = false,
-					Name = name
+					Name = name,
+					Verbose = shaderType == Shader.ShaderType.Material ? RcCore.It.AllSettings.Verbose : false
 				};
 			}
 

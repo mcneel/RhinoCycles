@@ -43,6 +43,7 @@ using RhinoCyclesCore.ExtensionMethods;
 using Rhino.Collections;
 using System.Text;
 using RhinoCyclesCore.RenderEngines;
+using Rhino;
 
 namespace RhinoCyclesCore.Database
 {
@@ -110,9 +111,11 @@ namespace RhinoCyclesCore.Database
 		public float ApertureRatio { get; } = RcCore.It.AllSettings.ApertureRatio;
 		public float ApertureFactor { get; } = RcCore.It.AllSettings.ApertureFactor;
 
+		uint _doc_serialnr;
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal) : base(pluginId, doc, view, attributes, true, !modal)
 		{
 			_renderEngine = engine;
+			_doc_serialnr = doc;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
 			_modalRenderer = modal;
 		}
@@ -798,6 +801,7 @@ namespace RhinoCyclesCore.Database
 				var meshguid = cqm.Id();
 
 				var attr = cqm.Attributes;
+
 				bool isClippingObject = false;
 				if(attr!=null && attr.HasUserData)
 				{
@@ -817,6 +821,92 @@ namespace RhinoCyclesCore.Database
 					meshIndex++;
 				}
 			}
+		}
+
+		public List<CyclesDecal> HandleMeshDecals(Guid meshguid, Decals decals)
+		{
+			if (decals == null) return null;
+			if(decals.Count()<1) return null;
+			int idx = 0;
+			List<CyclesDecal> decalList = new List<CyclesDecal>(decals.Count());
+
+			StringBuilder sb = new StringBuilder();
+			foreach (Decal decal in decals) {
+				var mapping = decal.DecalMapping;
+				var projection = decal.DecalProjection;
+
+				var across = decal.VectorAcross;
+				var up = decal.VectorUp;
+				var origin = decal.Origin;
+				var height = decal.Height;
+				var radius = decal.Radius;
+				var horsweepstart = decal.StartLatitude;
+				var horsweepend = decal.EndLatitude;
+				var versweepstart = decal.StartLongitude;
+				var versweepend = decal.EndLongitude;
+
+				var texmapping = decal.GetTextureMapping();
+				var pxyz = texmapping.PrimativeTransform;
+				Rhino.Geometry.Transform pinv;
+				pxyz.TryGetInverse(out pinv);
+				string mapstr = mapping.ToString();
+				string projstr = projection.ToString();
+
+				Plane fromPlane;
+
+				switch (mapping) {
+					case DecalMapping.Cylindrical:
+						fromPlane = Plane.WorldXY;
+						fromPlane.Rotate(Math.PI*0.5, Vector3d.XAxis);
+						break;
+					case DecalMapping.Spherical:
+						fromPlane = Plane.WorldXY;
+						fromPlane.Rotate(Math.PI*0.5, Vector3d.XAxis);
+						break;
+					default:
+						fromPlane = Plane.WorldXY;
+						break;
+				}
+
+				Plane toPlane = new Plane(origin, across, up);
+				Rhino.Geometry.Transform decalXform = Rhino.Geometry.Transform.PlaneToPlane(fromPlane, toPlane);
+
+				Rhino.Geometry.Transform scale = Rhino.Geometry.Transform.Scale(Rhino.Geometry.Plane.WorldXY, across.Length, up.Length, 1.0);
+
+				decalXform = decalXform * scale;
+
+				RenderTexture rt = TextureForId(decal.TextureRenderCRC(TextureRenderHashFlags.ExcludeLocalMapping));
+
+				CyclesTextureImage tex = new CyclesTextureImage();
+				Utilities.HandleRenderTexture(rt, tex, false, LinearWorkflow.PreProcessGamma);
+
+				var rtid = rt?.Id ?? Guid.Empty;
+				string textype = tex.HasTextureImage ? (tex.HasByteImage ? "byte" : "float") : "no image";
+
+				sb.Append($"\t{idx} : {mapstr} / {projstr} -> {textype} < {tex.TexWidth}, {tex.TexHeight}> ) | {decalXform}");
+				CyclesDecal cyclesDecal = new CyclesDecal {
+					Mapping = mapping,
+					Projection = projection,
+					TextureMapping = texmapping,
+					Texture = tex,
+					Height = (float)height,
+					Radius = (float)radius,
+					HorizontalSweepStart = (float)horsweepstart,
+					HorizontalSweepEnd = (float)horsweepend,
+					VerticalSweepStart = (float)versweepstart,
+					VerticalSweepEnd = (float)versweepend,
+					Transparency = (float)decal.Transparency,
+					Transform = decalXform.ToCyclesTransform(),
+					CRC = (uint)decal.CRC
+				};
+				decalList.Insert(0, cyclesDecal);
+
+				idx++;
+			}
+			string sbstr = sb.ToString();
+			//sdd.WriteLine(sbstr);
+			RhinoApp.OutputDebugString($"{sbstr}\n\n");
+			return decalList;
 		}
 
 		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, bool isClippingObject, uint linearlightMatId)
@@ -956,21 +1046,41 @@ namespace RhinoCyclesCore.Database
 
 				if (_renderEngine.CancelRender) return;
 
+				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
+				var cyclesDecals = HandleMeshDecals(a.MeshId, a.Decals);
+
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
 				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes}. material {mat.Name}\n";
 				RcCore.OutputDebugString(stat);
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
 
+				if(cyclesDecals!=null) {
+					uint decalsCRC = CyclesDecal.CRCForList(cyclesDecals);
+					matid = RhinoMath.CRC32(matid, decalsCRC);
+				}
+
 				if (!addedmats.Contains(matid))
 				{
-					HandleRenderMaterial(mat);
+					HandleRenderMaterial(mat, cyclesDecals);
 					addedmats.Add(matid);
 				}
 
-				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				var cutout = _objectDatabase.MeshIsClippingObject(meshid);
-				var ob = new CyclesObject { obid = a.InstanceId, meshid = meshid, Transform = a.Transform.ToCyclesTransform(), OcsFrame = a.OcsTransform.ToCyclesTransform(), matid = matid, CastShadow = a.CastShadows, Cutout = cutout};
+				Rhino.Geometry.Transform ocsInv;
+				a.OcsTransform.TryGetInverse(out ocsInv);
+				var t = ocsInv.ToCyclesTransform();
+				var ob = new CyclesObject
+				{
+					obid = a.InstanceId,
+					meshid = meshid,
+					Transform = a.Transform.ToCyclesTransform(),
+					OcsFrame = t,
+					matid = matid,
+					CastShadow = a.CastShadows,
+					Cutout = cutout,
+					Decals = cyclesDecals
+				};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
 
 				HandleShaderChange(a.InstanceId, oldhash, matid, meshid);
@@ -1014,17 +1124,26 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// Handle RenderMaterial - will queue new shader if necessary
 		/// </summary>
-		/// <param name="mat"></param>
-		private void HandleRenderMaterial(RenderMaterial mat)
+		/// <param name="mat">RenderMaterial instance to handle</param>
+		/// <param name="decals">List of CyclesDecal that need to be integrated into the shader</param>
+		private void HandleRenderMaterial(RenderMaterial mat, List<CyclesDecal> decals)
 		{
+			uint decalsCRC = CyclesDecal.CRCForList(decals);
 			//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
-			if (_shaderDatabase.HasShader(mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", LinearWorkflow)))
+			uint matCRC = mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", LinearWorkflow);
+
+			if(decalsCRC!=0)
+			{
+				matCRC = RhinoMath.CRC32(matCRC, decalsCRC);
+			}
+
+			if (_shaderDatabase.HasShader(matCRC))
 			{
 				return;
 			}
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow);
+			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, decals);
 			_shaderDatabase.AddShader(sh);
 		}
 
@@ -1088,7 +1207,7 @@ namespace RhinoCyclesCore.Database
 				if (existing == null)
 				{
 					var rm = MaterialFromId(distinct);
-					HandleRenderMaterial(rm);
+					HandleRenderMaterial(rm, null);
 				}
 			}
 		}
@@ -1218,7 +1337,7 @@ namespace RhinoCyclesCore.Database
 
 			HandleMeshData(gpid.Item1, gpid.Item2, m, false, uint.MaxValue);
 
-			HandleRenderMaterial(mat);
+			HandleRenderMaterial(mat, null);
 
 			//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
 			var matrenderhash = mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", LinearWorkflow);
@@ -1825,14 +1944,13 @@ namespace RhinoCyclesCore.Database
 
 		/// <summary>
 		/// Tell ChangeQueue we want baking for
-		/// - Decals
 		/// - ProceduralTextures
 		/// - MultipleMappingChannels
 		/// </summary>
 		/// <returns></returns>
 		protected override BakingFunctions BakeFor()
 		{
-			return BakingFunctions.Decals | BakingFunctions.ProceduralTextures | BakingFunctions.MultipleMappingChannels;
+			return BakingFunctions.ProceduralTextures | BakingFunctions.MultipleMappingChannels;
 		}
 
 		protected override int BakingSize(RhinoObject ro, RenderMaterial material, TextureType type)

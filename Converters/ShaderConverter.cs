@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using System.Collections.Generic;
 using ccl;
 using Rhino;
 using Rhino.DocObjects;
@@ -35,15 +36,22 @@ namespace RhinoCyclesCore.Converters
 		/// Create a CyclesShader based on given Material m
 		/// </summary>
 		/// <param name="rm">Material to convert to CyclesShader</param>
-		/// <param name="gamma">gamma to use for this shader</param>
+		/// <param name="lw">LinearWorkflow data for this shader (gamma)</param>
+		/// <param name="decals">Decals to integrate into the shader</param>
 		/// <returns>The CyclesShader</returns>
-		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw)
+		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, List<CyclesDecal> decals)
 		{
+			uint decalsCRC = CyclesDecal.CRCForList(decals);
 			//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
 			var mid = rm.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", lw);
+			if(decalsCRC!=0) {
+				mid = RhinoMath.CRC32(mid, decalsCRC);
+			}
+
 			var shader = new CyclesShader(mid)
 			{
-				Type = CyclesShader.Shader.Diffuse
+				Type = CyclesShader.Shader.Diffuse,
+				Decals = decals
 			};
 
 			if (rm.TypeId.Equals(realtimDisplaMaterialId))

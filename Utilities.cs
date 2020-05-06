@@ -259,12 +259,12 @@ namespace RhinoCyclesCore
 			ccl.ShaderNodes.Sockets.ISocket valsock = null;
 			if (t == typeof(float))
 			{
-				ccl.ShaderNodes.ValueNode vn = new ccl.ShaderNodes.ValueNode($"input value for {slot.Name}");
+				ccl.ShaderNodes.ValueNode vn = new ccl.ShaderNodes.ValueNode($"input_value_for_{slot.Name}_");
 				sh.AddNode(vn);
 				vn.Value = (float)(object)slot.Value;
 				if (invert)
 				{
-					ccl.ShaderNodes.MathSubtract invval = new ccl.ShaderNodes.MathSubtract($"invert value for {slot.Name}");
+					ccl.ShaderNodes.MathSubtract invval = new ccl.ShaderNodes.MathSubtract($"invert_value_for_{slot.Name}_");
 					invval.ins.Value1.Value = 1.0f;
 					sh.AddNode(invval);
 					vn.outs.Value.Connect(invval.ins.Value2);
@@ -277,12 +277,12 @@ namespace RhinoCyclesCore
 			}
 			else if (t == typeof(Color4f))
 			{
-				ccl.ShaderNodes.ColorNode cn = new ccl.ShaderNodes.ColorNode($"input color for {slot.Name}");
+				ccl.ShaderNodes.ColorNode cn = new ccl.ShaderNodes.ColorNode($"input_color_for_{slot.Name}_");
 				sh.AddNode(cn);
 				cn.Value = ((Color4f)(object)slot.Value).ToFloat4();
 				if (invert)
 				{
-					ccl.ShaderNodes.InvertNode invcol = new ccl.ShaderNodes.InvertNode($"invert input color for {slot.Name}");
+					ccl.ShaderNodes.InvertNode invcol = new ccl.ShaderNodes.InvertNode($"invert_input_color_for_{slot.Name}_");
 					invcol.ins.Fac.Value = 1.0f;
 					sh.AddNode(invcol);
 					cn.outs.Color.Connect(invcol.ins.Color);

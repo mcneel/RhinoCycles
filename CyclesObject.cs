@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using System;
+using System.Collections.Generic;
 using ccl;
 
 namespace RhinoCyclesCore
@@ -87,5 +88,7 @@ namespace RhinoCyclesCore
 		/// Object ignores any clipping object if set to true
 		/// </summary>
 		public bool IgnoreCutout { get; set; }
+
+		public List<CyclesDecal> Decals { get; set; } = null;
 	}
 }
