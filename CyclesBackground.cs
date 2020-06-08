@@ -26,6 +26,7 @@ using Rhino.DocObjects;
 using Rhino.Render;
 using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
+using Rhino.Runtime.InteropWrappers;
 
 namespace RhinoCyclesCore
 {
@@ -314,7 +315,7 @@ namespace RhinoCyclesCore
 				}
 				var wallpaperbm = BitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaperbm.ApplyGamma(Gamma);
-				Wallpaper.TexByte = wallpaperbm.Data;
+				Wallpaper.TexByte = wallpaperbm.Data as SimpleArrayByte;
 				if (RcCore.It.AllSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
 				Wallpaper.TexWidth = newBitmap.Width;
 				Wallpaper.TexHeight = newBitmap.Height;
@@ -413,8 +414,8 @@ namespace RhinoCyclesCore
 			}
 			sb.Append("---------\n");
 			if(HasBgEnvTexture && BgTexture.HasFloatImage) {
-				var tenperc = BgTexture.TexFloat.Length / 10;
-				sb.Append($"\t --> {BgTexture.TexFloat[tenperc]}");
+				var tenperc = BgTexture.TexFloat.Count / 10;
+				sb.Append($"\t --> {BgTexture.TexFloat.ToArray()[tenperc]}");
 			}
 			return sb.ToString();
 		}

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using Rhino.Render;
+using Rhino.Runtime.InteropWrappers;
 
 namespace RhinoCyclesCore
 {
@@ -22,8 +23,8 @@ namespace RhinoCyclesCore
 		public bool HasTextureImage => TexByte != null || TexFloat != null;
 		public bool HasFloatImage => TexFloat != null;
 		public bool HasByteImage => TexByte != null;
-		public byte[] TexByte { get; set; }
-		public float[] TexFloat { get; set; }
+		public SimpleArrayByte TexByte { get; set; }
+		public SimpleArrayFloat TexFloat { get; set; }
 		public int TexWidth;
 		public int TexHeight;
 		public string Name;
@@ -99,11 +100,13 @@ namespace RhinoCyclesCore
 			}
 			if (HasFloatImage)
 			{
-				sb.Append($"{TexFloat[0]}|{TexFloat[1]}|{TexFloat[2]}|{TexFloat[3]}");
-				var mid = TexFloat.Length / 2;
-				sb.Append($"{TexFloat[mid]}|{TexFloat[mid + 1]}|{TexFloat[mid + 2]}|{TexFloat[mid + 3]}");
-				var end = TexFloat.Length - 4;
-				sb.Append($"{TexFloat[end]}|{TexFloat[end + 1]}|{TexFloat[end + 2]}|{TexFloat[end + 3]}");
+				var tf = TexFloat.ToArray();
+
+				sb.Append($"{tf[0]}|{tf[1]}|{tf[2]}|{tf[3]}");
+				var mid = tf.Length / 2;
+				sb.Append($"{tf[mid]}|{tf[mid + 1]}|{tf[mid + 2]}|{tf[mid + 3]}");
+				var end = tf.Length - 4;
+				sb.Append($"{tf[end]}|{tf[end + 1]}|{tf[end + 2]}|{tf[end + 3]}");
 			}
 			return sb.ToString();
 		}

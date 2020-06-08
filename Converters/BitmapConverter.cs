@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
@@ -24,6 +25,7 @@ using Rhino.Render;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
 using Transform = ccl.Transform;
+using Rhino.Runtime.InteropWrappers;
 
 namespace RhinoCyclesCore.Converters
 {
@@ -82,9 +84,6 @@ namespace RhinoCyclesCore.Converters
 			var rotationvec = renderTexture.GetRotation();
 			var repeatvec = renderTexture.GetRepeat();
 			var offsetvec = renderTexture.GetOffset();
-
-			//var newrhinotfm = Rhino.Geometry.Transform.Identity;
-			//newrhinotfm.
 
 			Transform tt = new Transform(
 				(float)offsetvec.X, (float)offsetvec.Y, (float)offsetvec.Z, 0.0f,
@@ -160,22 +159,22 @@ namespace RhinoCyclesCore.Converters
 				{
 					case RenderMaterial.StandardChildSlots.Diffuse:
 						shader.DiffuseTexture.IsLinear = isLinear;
-						shader.DiffuseTexture.TexFloat = img.Data;
+						shader.DiffuseTexture.TexFloat = img.Data as SimpleArrayFloat;
 						shader.DiffuseTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Bump:
 						shader.BumpTexture.IsLinear = isLinear;
-						shader.BumpTexture.TexFloat = img.Data;
+						shader.BumpTexture.TexFloat = img.Data as SimpleArrayFloat;
 						shader.BumpTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Transparency:
 						shader.TransparencyTexture.IsLinear = isLinear;
-						shader.TransparencyTexture.TexFloat = img.Data;
+						shader.TransparencyTexture.TexFloat = img.Data as SimpleArrayFloat;
 						shader.TransparencyTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Environment:
 						shader.EnvironmentTexture.IsLinear = isLinear;
-						shader.EnvironmentTexture.TexFloat = img.Data;
+						shader.EnvironmentTexture.TexFloat = img.Data as SimpleArrayFloat;
 						shader.EnvironmentTexture.TexByte = null;
 						break;
 				}
@@ -193,22 +192,22 @@ namespace RhinoCyclesCore.Converters
 					case RenderMaterial.StandardChildSlots.Diffuse:
 						shader.DiffuseTexture.IsLinear = isLinear;
 						shader.DiffuseTexture.TexFloat = null;
-						shader.DiffuseTexture.TexByte = img.Data;
+						shader.DiffuseTexture.TexByte = img.Data as SimpleArrayByte;
 						break;
 					case RenderMaterial.StandardChildSlots.Bump:
 						shader.BumpTexture.IsLinear = isLinear;
 						shader.BumpTexture.TexFloat = null;
-						shader.BumpTexture.TexByte = img.Data;
+						shader.BumpTexture.TexByte = img.Data as SimpleArrayByte;
 						break;
 					case RenderMaterial.StandardChildSlots.Transparency:
 						shader.TransparencyTexture.IsLinear = isLinear;
 						shader.TransparencyTexture.TexFloat = null;
-						shader.TransparencyTexture.TexByte = img.Data;
+						shader.TransparencyTexture.TexByte = img.Data as SimpleArrayByte;
 						break;
 					case RenderMaterial.StandardChildSlots.Environment:
 						shader.EnvironmentTexture.IsLinear = isLinear;
 						shader.EnvironmentTexture.TexFloat = null;
-						shader.EnvironmentTexture.TexByte = img.Data;
+						shader.EnvironmentTexture.TexByte = img.Data as SimpleArrayByte;
 						break;
 				}
 			}
@@ -392,14 +391,14 @@ namespace RhinoCyclesCore.Converters
 				{
 					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse);
 					img.ApplyGamma(gamma);
-					teximg.TexFloat = img.Data;
+					teximg.TexFloat = img.Data as SimpleArrayFloat;
 					teximg.TexByte = null;
 				}
 				else
 				{
 					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse);
 					img.ApplyGamma(gamma);
-					teximg.TexByte = img.Data;
+					teximg.TexByte = img.Data as SimpleArrayByte;
 					teximg.TexFloat = null;
 				}
 				teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
@@ -450,147 +449,217 @@ namespace RhinoCyclesCore.Converters
 			teximg.Strength = mult * multadj;
 		}
 
-		public static ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
+	
+
+		class MyDumbBitmapByteList : IEnumerable<byte>
 		{
-			var upixel = new byte[pwidth * pheight * 4];
-
-			for (var x = 0; x < pwidth; x++)
+			Bitmap _bitmap;
+			public MyDumbBitmapByteList(Bitmap bm)
 			{
-				for (var y = 0; y < pheight; y++)
-				{
-					Color px = bm.GetPixel(x, pheight - 1 - y);
-					var offset = x * 4 + pwidth * y * 4;
-					upixel[offset] = px.R;
-					upixel[offset + 1] = px.G;
-					upixel[offset + 2] = px.B;
-					upixel[offset + 3] = px.A;
-				}
+				_bitmap = bm;
 			}
-			return new ByteBitmap(id, upixel, pwidth, pheight, false);
-		}
-
-
-	private static byte[] ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
-	{
-	  var upixel = new byte[pwidth * pheight * 4];
-
-	  var halfpixelU = 0.5 / pwidth;
-	  var halfpixelV = 0.5 / pheight;
-	  var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
-	  if (isImageBased) duvw.X = duvw.Y = duvw.Z = 0.0;
-
-	  byte[] conv = new byte[4];
-
-	  if (!canUse)
-	  {
-			Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-			c4f.ToArray(ref conv);
-
-			upixel[0] = conv[0];
-			upixel[1] = conv[1];
-			upixel[2] = conv[2];
-			upixel[3] = conv[3];
-			return upixel;
-	  }
-
-			if (textureEvaluator.CanBeDumpedToBytes(pwidth, pheight))
+			IEnumerator IEnumerable.GetEnumerator()
 			{
-				unsafe
+				return GetEnumeratorImpl();
+			}
+			IEnumerator<byte> IEnumerable<byte>.GetEnumerator()
+			{
+				return GetEnumeratorImpl();
+			}
+			IEnumerator<byte> GetEnumeratorImpl()
+			{
+				int width = _bitmap.Width;
+				int height = _bitmap.Height;
+
+				for (var y = 0; y < height; y++)
 				{
-					fixed (byte* p = upixel)
+					for (var x = 0; x < width; x++)
 					{
-						textureEvaluator.DumpToBytes(pwidth, pheight, (IntPtr)p);
+						Color px = _bitmap.GetPixel(x, height - 1 - y);
+
+						yield return px.R;
+						yield return px.G;
+						yield return px.B;
+						yield return px.A;
 					}
 				}
-
-				return upixel;
 			}
+		};
 
-			var pt = new Point3d();
-		var col4F = new Rhino.Display.Color4f();
-
-	  for (var x = 0; x < pwidth; x++)
-	  {
-			for (var y = 0; y < pheight; y++)
-			{
-				var fx = x / (float)pwidth + halfpixelU;
-				var fy = y / (float)pheight + halfpixelV;
-
-				pt.X = fx;
-				pt.Y = fy;
-				pt.Z = 0.0;
-
-				// remember z can be !0.0 for volumetrics
-				textureEvaluator.GetColor(pt, duvw, duvw, ref col4F);
-
-				col4F.ToArray(ref conv);
-
-				var offset = x * 4 + pwidth * y * 4;
-
-				upixel[offset] = conv[0];
-				upixel[offset + 1] = conv[1];
-				upixel[offset + 2] = conv[2];
-				upixel[offset + 3] = conv[3];
-			}
-	  }
-	  return upixel;
+	public static ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
+	{
+		return new ByteBitmap(id, new SimpleArrayByte(new MyDumbBitmapByteList(bm)), pwidth, pheight, false);
 	}
 
-	private static float[] ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
+
+		class EvaluatorToByteList : IEnumerable<byte>
+		{
+			TextureEvaluator _eval;
+			int _width, _height;
+			bool _image_based;
+			public EvaluatorToByteList(TextureEvaluator eval, int width, int height, bool image_based)
+			{
+				_eval = eval;
+				_width = width;
+				_height = height;
+				_image_based = image_based;
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumeratorImpl();
+			}
+
+			IEnumerator<byte> IEnumerable<byte>.GetEnumerator()
+			{
+				return GetEnumeratorImpl();
+			}
+
+			IEnumerator<byte> GetEnumeratorImpl()
+			{
+				var halfpixelU = 0.5 / _width;
+				var halfpixelV = 0.5 / _height;
+				var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
+
+				if (_image_based)
+				{
+					duvw.X = duvw.Y = duvw.Z = 0.0;
+				}
+
+				var pt = new Point3d();
+				var col4F = new Rhino.Display.Color4f();
+
+				for (var y = 0; y < _height; y++)
+				{
+					for (var x = 0; x < _width; x++)
+					{
+						var fx = x / (float)_width + halfpixelU;
+						var fy = y / (float)_height + halfpixelV;
+
+						pt.X = fx;
+						pt.Y = fy;
+						pt.Z = 0.0;
+
+						// remember z can be !0.0 for volumetrics
+						_eval.GetColor(pt, duvw, duvw, ref col4F);
+
+						yield return (byte)(col4F.R * 255.0);
+						yield return (byte)(col4F.G * 255.0);
+						yield return (byte)(col4F.B * 255.0);
+						yield return (byte)(col4F.A * 255.0);
+					}
+				}
+			}
+	};
+
+
+	private static SimpleArrayByte ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
 	{
-	  var upixel = new float[pwidth * pheight * 4];
-
-	  var halfpixelU = 0.5 / pwidth;
-	  var halfpixelV = 0.5 / pheight;
-	  var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
-	  if (isImageBased) duvw.X = duvw.Y = duvw.Z = 0.0;
-
-	  float[] conv = new float[4];
-
 	  if (!canUse)
 	  {
 			Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
 
+			byte[] conv = new byte[4];
 			c4f.ToArray(ref conv);
 
-			upixel[0] = conv[0];
-			upixel[1] = conv[1];
-			upixel[2] = conv[2];
-			upixel[3] = conv[3];
-
-			return upixel;
+			return new SimpleArrayByte(conv);
 	  }
 
-		var pt = new Point3d();
-	  var col4F = new Rhino.Display.Color4f();
+		var bytes = textureEvaluator.WriteToByteArray(pwidth, pheight);
+		if (null != bytes)
+		{
+			return bytes;
+		}
 
-	  for (var x = 0; x < pwidth; x++)
-	  {
-			for (var y = 0; y < pheight; y++)
-			{
-				var fx = x / (float)pwidth + halfpixelU;
-				var fy = y / (float)pheight + halfpixelV;
-
-				pt.X = fx;
-				pt.Y = fy;
-				pt.Z = 0.0;
-
-				// remember z can be !0.0 for volumetrics
-				textureEvaluator.GetColor(pt, duvw, duvw, ref col4F);
-
-				col4F.ToArray(ref conv);
-
-				var offset = x * 4 + pwidth * y * 4;
-
-				upixel[offset] = conv[0];
-				upixel[offset + 1] = conv[1];
-				upixel[offset + 2] = conv[2];
-				upixel[offset + 3] = conv[3];
-			}
-	  }
-	  return upixel;
+		//Otherwise, we do this the slow way.
+		return new SimpleArrayByte(new EvaluatorToByteList(textureEvaluator, pwidth, pheight, isImageBased));
 	}
+
+
+
+
+
+		class EvaluatorToFloatList : IEnumerable<float>
+		{
+			TextureEvaluator _eval;
+			int _width, _height;
+			bool _image_based;
+			public EvaluatorToFloatList(TextureEvaluator eval, int width, int height, bool image_based)
+			{
+				_eval = eval;
+				_width = width;
+				_height = height;
+				_image_based = image_based;
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumeratorImpl();
+			}
+
+			IEnumerator<float> IEnumerable<float>.GetEnumerator()
+			{
+				return GetEnumeratorImpl();
+			}
+
+			IEnumerator<float> GetEnumeratorImpl()
+			{
+				var halfpixelU = 0.5 / _width;
+				var halfpixelV = 0.5 / _height;
+				var duvw = new Vector3d(halfpixelU, halfpixelV, 0.0);
+
+				if (_image_based)
+				{
+					duvw.X = duvw.Y = duvw.Z = 0.0;
+				}
+
+				var pt = new Point3d();
+				var col4F = new Rhino.Display.Color4f();
+
+				for (var y = 0; y < _height; y++)
+				{
+					for (var x = 0; x < _width; x++)
+					{
+						var fx = x / (float)_width + halfpixelU;
+						var fy = y / (float)_height + halfpixelV;
+
+						pt.X = fx;
+						pt.Y = fy;
+						pt.Z = 0.0;
+
+						// remember z can be !0.0 for volumetrics
+						_eval.GetColor(pt, duvw, duvw, ref col4F);
+
+						yield return col4F.R;
+						yield return col4F.G;
+						yield return col4F.B;
+						yield return col4F.A;
+					}
+				}
+			}
+		};
+
+		private static SimpleArrayFloat ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
+	{
+			if (!canUse)
+			{
+				Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+				float[] conv = new float[4];
+				c4f.ToArray(ref conv);
+
+				return new SimpleArrayFloat(conv);
+			}
+
+			var floats = textureEvaluator.WriteToFloatArray(pwidth, pheight);
+			if (null != floats)
+			{
+				return floats;
+			}
+
+			//Otherwise, we do this the slow way.
+			return new SimpleArrayFloat(new EvaluatorToFloatList(textureEvaluator, pwidth, pheight, isImageBased));
+		}
 
 	public static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
 		{

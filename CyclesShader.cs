@@ -24,6 +24,7 @@ using Rhino.Display;
 using Pbr = Rhino.Render.RenderMaterial.PhysicallyBased.ChildSlotNames;
 using RhinoCyclesCore.ExtensionMethods;
 using System.Collections.Concurrent;
+using Rhino.Runtime.InteropWrappers;
 
 namespace RhinoCyclesCore
 {
@@ -670,14 +671,14 @@ namespace RhinoCyclesCore
 				{
 					if (bytes.ContainsKey(rid))
 					{
-						tex.TexByte = bytes[rid].Data;
+						tex.TexByte = bytes[rid].Data as SimpleArrayByte;
 					}
 				}
 				else if (tex.HasFloatImage)
 				{
 					if (floats.ContainsKey(rid))
 					{
-						tex.TexFloat = floats[rid].Data;
+						tex.TexFloat = floats[rid].Data as SimpleArrayFloat;
 					}
 				}
 			}

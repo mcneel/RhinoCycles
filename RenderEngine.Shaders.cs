@@ -18,6 +18,7 @@ using ccl;
 using CclShader = ccl.Shader;
 using ccl.ShaderNodes;
 using RhinoCyclesCore.Shaders;
+using Rhino.Runtime.InteropWrappers;
 
 namespace RhinoCyclesCore
 {
@@ -107,11 +108,11 @@ namespace RhinoCyclesCore
 			{
 				if (texture.HasByteImage)
 				{
-					imnode.ByteImage = texture.TexByte;
+					imnode.ByteImagePtr = texture.TexByte.Array();
 				}
 				else if (texture.HasFloatImage)
 				{
-					imnode.FloatImage = texture.TexFloat;
+					imnode.FloatImagePtr = texture.TexFloat.Array();
 				}
 				imnode.Filename = texture.Name;
 				imnode.Width = (uint) texture.TexWidth;
@@ -126,11 +127,11 @@ namespace RhinoCyclesCore
 			{
 				if (texture.HasByteImage)
 				{
-					envnode.ByteImage = texture.TexByte;
+					envnode.ByteImagePtr = texture.TexByte.Array();
 				}
 				else if (texture.HasFloatImage)
 				{
-					envnode.FloatImage = texture.TexFloat;
+					envnode.FloatImagePtr = texture.TexFloat.Array();
 					envnode.Interpolation = InterpolationType.Cubic;
 				}
 				envnode.Filename = texture.Name;

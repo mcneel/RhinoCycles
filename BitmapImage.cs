@@ -20,13 +20,14 @@ using System.Drawing.Imaging;
 using System.Linq;
 using Rhino.Display;
 using Rhino.Render;
+using Rhino.Runtime.InteropWrappers;
 
 namespace RhinoCyclesCore
 {
 	public class BitmapImage<T> : IDisposable
 	{
-		internal T[] Original;
-		internal T[] Corrected;
+		internal object Original;		//SimpleArrayByte or SimpleArrayFloat
+		internal object Corrected;	//SimpleArrayByte or SimpleArrayFloat
 
 		protected int W;
 		protected int H;
@@ -47,7 +48,7 @@ namespace RhinoCyclesCore
 
 		internal float GammaValueApplied { get; set; }
 
-		public BitmapImage(uint id, T[] data, int w, int h, bool linear)
+		public BitmapImage(uint id, object data, int w, int h, bool linear)
 		{
 			Id = id;
 
@@ -56,16 +57,14 @@ namespace RhinoCyclesCore
 
 			IsLinear = linear;
 
-			var l = data.Length;
-			Original = new T[l];
-			data.CopyTo(Original, 0);
+			Original = data;
 		}
 
 		virtual public void ApplyGamma(float gamma)
 		{
 		}
 
-		public T[] Data => IsLinear || !GammaApplied ? Original : Corrected;
+		public object Data => IsLinear || !GammaApplied ? Original : Corrected;
 
 		public void SaveBitmaps()
 		{
@@ -76,7 +75,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		protected virtual void SavePixels(T[] pixels, string name) {}
+		protected virtual void SavePixels(object pixels, string name) {}
 
 		public void Dispose()
 		{
@@ -88,7 +87,7 @@ namespace RhinoCyclesCore
 	public class ByteBitmap : BitmapImage<byte>
 	{
 
-		public ByteBitmap(uint id, byte[] data, int w, int h, bool linear) : base(id, data, w, h, linear)
+		public ByteBitmap(uint id, SimpleArrayByte data, int w, int h, bool linear) : base(id, data, w, h, linear)
 		{ }
 
 		override public void ApplyGamma(float gamma)
@@ -98,16 +97,15 @@ namespace RhinoCyclesCore
 				if (null == Corrected || Math.Abs(gamma - GammaValueApplied) > float.Epsilon)
 				{
 					if (Corrected == null)
-						Corrected = new byte[Original.Length];
-					Original.CopyTo(Corrected, 0);
-
-					unsafe
 					{
-						fixed (byte* p = Corrected)
-						{
-							TextureEvaluator.ApplyGamma((IntPtr)p, W, H, gamma);
-						}
+						Corrected = new SimpleArrayByte(Original as SimpleArrayByte);
 					}
+					else
+					{
+						(Original as SimpleArrayByte).CopyTo(Corrected as SimpleArrayByte);
+					}
+
+					ccl.CSycles.apply_gamma_to_byte_buffer((Corrected as SimpleArrayByte).Array(), W*H*4, gamma);
 				}
 				GammaApplied = true;
 				GammaValueApplied = gamma;
@@ -119,8 +117,10 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		protected override void SavePixels(byte[] pixels, string name)
+		protected override void SavePixels(object oPixels, string name)
 		{
+			var pixels = (oPixels as SimpleArrayByte).ToArray();
+
 			using (var rw = RenderWindow.Create(new Size(W, H)))
 			{
 				using (var ch = rw.OpenChannel(RenderWindow.StandardChannels.RGBA))
@@ -130,8 +130,7 @@ namespace RhinoCyclesCore
 						for (var y = 0; y < H; y++)
 						{
 							var i = y*W*4 + x*4;
-							ch.SetValue(x, y,
-								Color4f.FromArgb(pixels[i + 3]/255.0f, pixels[i]/255.0f, pixels[i + 1]/255.0f, pixels[i + 2]/255.0f));
+							ch.SetValue(x, y, Color4f.FromArgb(pixels[i + 3]/255.0f, pixels[i]/255.0f, pixels[i + 1]/255.0f, pixels[i + 2]/255.0f));
 						}
 					}
 				}
@@ -143,7 +142,7 @@ namespace RhinoCyclesCore
 
 	public class FloatBitmap : BitmapImage<float>
 	{
-		public FloatBitmap(uint id, float[] data, int w, int h, bool linear) : base(id, data, w, h, linear)
+		public FloatBitmap(uint id, SimpleArrayFloat data, int w, int h, bool linear) : base(id, data, w, h, linear)
 		{ }
 
 		override public void ApplyGamma(float gamma)
@@ -152,25 +151,32 @@ namespace RhinoCyclesCore
 			{
 				if (null == Corrected || Math.Abs(gamma - GammaValueApplied) > float.Epsilon)
 				{
-					var conv = Original.AsParallel().Select((f, i) => (i+1)%4==0 ? f : (float)Math.Pow(f, gamma)).ToArray();
-					if(Corrected == null)
+					if (Corrected == null)
 					{
-						Corrected = new float[Original.Length];
+						Corrected = new SimpleArrayFloat(Original as SimpleArrayFloat);
 					}
-					conv.CopyTo(Corrected, 0);
+					else
+					{
+						(Original as SimpleArrayFloat).CopyTo(Corrected as SimpleArrayFloat);
+					}
+
+					ccl.CSycles.apply_gamma_to_float_buffer((Corrected as SimpleArrayByte).Array(), W*H*4*4, gamma);
+
 				}
 				GammaApplied = true;
 				GammaValueApplied = gamma;
 			}
 			else
 			{
-				Corrected = null;
 				GammaApplied = false;
+				Corrected = null;
 			}
 		}
 
-		protected override void SavePixels(float[] pixels, string name)
+		protected override void SavePixels(object oPixels, string name)
 		{
+			var pixels = (oPixels as SimpleArrayFloat).ToArray();
+
 			using (var rw = RenderWindow.Create(new Size(W, H)))
 			{
 				using (var ch = rw.OpenChannel(RenderWindow.StandardChannels.RGBA))
