@@ -315,7 +315,7 @@ namespace RhinoCyclesCore
 				}
 				var wallpaperbm = BitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaperbm.ApplyGamma(Gamma);
-				Wallpaper.TexByte = wallpaperbm.Data as SimpleArrayByte;
+				Wallpaper.TexByte = wallpaperbm.Data as TextureEvaluator.ByteArray;
 				if (RcCore.It.AllSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
 				Wallpaper.TexWidth = newBitmap.Width;
 				Wallpaper.TexHeight = newBitmap.Height;
@@ -413,9 +413,12 @@ namespace RhinoCyclesCore
 				sb.Append($"\t{prop.Name} := {prop.GetValue(this)}\n");
 			}
 			sb.Append("---------\n");
-			if(HasBgEnvTexture && BgTexture.HasFloatImage) {
-				var tenperc = BgTexture.TexFloat.Count / 10;
-				sb.Append($"\t --> {BgTexture.TexFloat.ToArray()[tenperc]}");
+			if(HasBgEnvTexture && BgTexture.HasFloatImage) 
+			{
+				var a = BgTexture.TexFloat.ToArray();
+
+				var tenperc = a.Length / 10;
+				sb.Append($"\t --> {a[tenperc]}");
 			}
 			return sb.ToString();
 		}
