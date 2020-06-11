@@ -26,8 +26,8 @@ namespace RhinoCyclesCore
 {
 	public class BitmapImage<T> : IDisposable
 	{
-		internal object Original;		//SimpleArrayByte or SimpleArrayFloat
-		internal object Corrected;	//SimpleArrayByte or SimpleArrayFloat
+		internal object Original;   //TextureEvaluator.FloatByte or TextureEvaluator.FloatArray
+		internal object Corrected;  //TextureEvaluator.FloatByte or TextureEvaluator.FloatArray
 
 		protected int W;
 		protected int H;
@@ -87,7 +87,7 @@ namespace RhinoCyclesCore
 	public class ByteBitmap : BitmapImage<byte>
 	{
 
-		public ByteBitmap(uint id, SimpleArrayByte data, int w, int h, bool linear) : base(id, data, w, h, linear)
+		public ByteBitmap(uint id, TextureEvaluator.ByteArray data, int w, int h, bool linear) : base(id, data, w, h, linear)
 		{ }
 
 		override public void ApplyGamma(float gamma)
@@ -98,14 +98,14 @@ namespace RhinoCyclesCore
 				{
 					if (Corrected == null)
 					{
-						Corrected = new SimpleArrayByte(Original as SimpleArrayByte);
+						Corrected = new TextureEvaluator.ByteArray(Original as TextureEvaluator.ByteArray);
 					}
 					else
 					{
-						(Original as SimpleArrayByte).CopyTo(Corrected as SimpleArrayByte);
+						(Original as TextureEvaluator.ByteArray).CopyTo(Corrected as TextureEvaluator.ByteArray);
 					}
 
-					ccl.CSycles.apply_gamma_to_byte_buffer((Corrected as SimpleArrayByte).Array(), W*H*4, gamma);
+					ccl.CSycles.apply_gamma_to_byte_buffer((Corrected as TextureEvaluator.ByteArray).c_array(), W*H*4, gamma);
 				}
 				GammaApplied = true;
 				GammaValueApplied = gamma;
@@ -119,7 +119,7 @@ namespace RhinoCyclesCore
 
 		protected override void SavePixels(object oPixels, string name)
 		{
-			var pixels = (oPixels as SimpleArrayByte).ToArray();
+			var pixels = (oPixels as TextureEvaluator.ByteArray).ToArray();
 
 			using (var rw = RenderWindow.Create(new Size(W, H)))
 			{
@@ -142,7 +142,7 @@ namespace RhinoCyclesCore
 
 	public class FloatBitmap : BitmapImage<float>
 	{
-		public FloatBitmap(uint id, SimpleArrayFloat data, int w, int h, bool linear) : base(id, data, w, h, linear)
+		public FloatBitmap(uint id, TextureEvaluator.FloatArray data, int w, int h, bool linear) : base(id, data, w, h, linear)
 		{ }
 
 		override public void ApplyGamma(float gamma)
@@ -153,14 +153,14 @@ namespace RhinoCyclesCore
 				{
 					if (Corrected == null)
 					{
-						Corrected = new SimpleArrayFloat(Original as SimpleArrayFloat);
+						Corrected = new TextureEvaluator.FloatArray(Original as TextureEvaluator.FloatArray);
 					}
 					else
 					{
-						(Original as SimpleArrayFloat).CopyTo(Corrected as SimpleArrayFloat);
+						(Original as TextureEvaluator.FloatArray).CopyTo(Corrected as TextureEvaluator.FloatArray);
 					}
 
-					ccl.CSycles.apply_gamma_to_float_buffer((Corrected as SimpleArrayByte).Array(), W*H*4*4, gamma);
+					ccl.CSycles.apply_gamma_to_float_buffer((Corrected as TextureEvaluator.FloatArray).c_array(), W*H*4*4, gamma);
 
 				}
 				GammaApplied = true;
@@ -175,7 +175,7 @@ namespace RhinoCyclesCore
 
 		protected override void SavePixels(object oPixels, string name)
 		{
-			var pixels = (oPixels as SimpleArrayFloat).ToArray();
+			var pixels = (oPixels as TextureEvaluator.FloatArray).ToArray();
 
 			using (var rw = RenderWindow.Create(new Size(W, H)))
 			{

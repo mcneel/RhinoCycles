@@ -219,14 +219,14 @@ namespace RhinoCyclesCore
 					{
 						var img = Converters.BitmapConverter.RetrieveFloatsImg(rid, pwidth, pheight, eval, linear, imgbased, canuse);
 						img.ApplyGamma(gamma);
-						tex.TexFloat = img.Data as SimpleArrayFloat;
+						tex.TexFloat = img.Data as TextureEvaluator.FloatArray;
 						tex.TexByte = null;
 					}
 					else
 					{
 						var img = Converters.BitmapConverter.RetrieveBytesImg(rid, pwidth, pheight, eval, linear, imgbased, canuse);
 						img.ApplyGamma(gamma);
-						tex.TexByte = img.Data as SimpleArrayByte;
+						tex.TexByte = img.Data as TextureEvaluator.ByteArray;
 						tex.TexFloat = null;
 					}
 					tex.TexWidth = pwidth;
