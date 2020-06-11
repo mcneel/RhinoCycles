@@ -263,9 +263,13 @@ namespace RhinoCyclesCore.Shaders
 				if(part.PbrDisplacement.On && part.PbrDisplacementTexture.HasTextureImage)
 				{
 					var displacement = new DisplacementNode();
+					var strength = new MathMultiply();
 					displacement.ins.Midlevel.Value = 0.0f;
 					m_shader.AddNode(displacement);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, displacement.ins.Height, texco);
+					m_shader.AddNode(strength);
+					strength.ins.Value1.Value = part.PbrDisplacement.Amount;
+					Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, strength.ins.Value2, texco);
+					strength.outs.Value.Connect(displacement.ins.Height);
 					displacement.outs.Displacement.Connect(m_shader.Output.ins.Displacement);
 				}
 
