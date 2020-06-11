@@ -187,73 +187,216 @@ namespace RhinoCyclesCore
 
 			return ProbableMaterial.Custom;
 		}
+		RenderMaterial.StandardChildSlots StandardChildSlotFromName(string pbrSlotName)
+		{
+			RenderMaterial.StandardChildSlots scs = RenderMaterial.StandardChildSlots.PbrBaseColor;
+			if (pbrSlotName.Equals(Pbr.BaseColor))
+				scs = RenderMaterial.StandardChildSlots.PbrBaseColor;
+
+			if (pbrSlotName.Equals(Pbr.Metallic))
+				scs = RenderMaterial.StandardChildSlots.PbrMetallic;
+
+			if (pbrSlotName.Equals(Pbr.Subsurface))
+				scs = RenderMaterial.StandardChildSlots.PbrSubsurface;
+
+			if (pbrSlotName.Equals(Pbr.SubsurfaceScatteringColor))
+				scs = RenderMaterial.StandardChildSlots.PbrSubSurfaceScattering;
+
+			if (pbrSlotName.Equals(Pbr.SubsurfaceScatteringRadius))
+				scs = RenderMaterial.StandardChildSlots.PbrSubsurfaceScatteringRadius;
+
+			if (pbrSlotName.Equals(Pbr.Roughness))
+				scs = RenderMaterial.StandardChildSlots.PbrRoughness;
+
+			if (pbrSlotName.Equals(Pbr.Specular))
+				scs = RenderMaterial.StandardChildSlots.PbrSpecular;
+
+			if (pbrSlotName.Equals(Pbr.SpecularTint))
+				scs = RenderMaterial.StandardChildSlots.PbrSpecularTint;
+
+			if (pbrSlotName.Equals(Pbr.Anisotropic))
+				scs = RenderMaterial.StandardChildSlots.PbrAnisotropic;
+
+			if (pbrSlotName.Equals(Pbr.AnisotropicRotation))
+				scs = RenderMaterial.StandardChildSlots.PbrAnisotropicRotation;
+
+			if (pbrSlotName.Equals(Pbr.Sheen))
+				scs = RenderMaterial.StandardChildSlots.PbrSheen;
+
+			if (pbrSlotName.Equals(Pbr.SheenTint))
+				scs = RenderMaterial.StandardChildSlots.PbrSheenTint;
+
+			if (pbrSlotName.Equals(Pbr.Clearcoat))
+				scs = RenderMaterial.StandardChildSlots.PbrClearcoat;
+
+			if (pbrSlotName.Equals(Pbr.ClearcoatRoughness))
+				scs = RenderMaterial.StandardChildSlots.PbrClearcoatRoughness;
+
+			if (pbrSlotName.Equals(Pbr.ClearcoatBump))
+				scs = RenderMaterial.StandardChildSlots.PbrClearcoatBump;
+
+			if (pbrSlotName.Equals(Pbr.Opacity))
+				scs = RenderMaterial.StandardChildSlots.PbrOpacity;
+
+			if (pbrSlotName.Equals(Pbr.OpacityIor))
+				scs = RenderMaterial.StandardChildSlots.PbrOpacityIor;
+
+			if (pbrSlotName.Equals(Pbr.OpacityRoughness))
+				scs = RenderMaterial.StandardChildSlots.PbrOpacityRoughness;
+
+			if (pbrSlotName.Equals(Pbr.Emission))
+				scs = RenderMaterial.StandardChildSlots.PbrEmission;
+
+			if (pbrSlotName.Equals(Pbr.Bump))
+				scs = RenderMaterial.StandardChildSlots.Bump;
+
+			if (pbrSlotName.Equals(Pbr.Displacement))
+				scs = RenderMaterial.StandardChildSlots.PbrDisplacement;
+
+			if (pbrSlotName.Equals(Pbr.AmbientOcclusion))
+				scs = RenderMaterial.StandardChildSlots.PbrAmbientOcclusion;
+
+			return scs;
+		}
+
+		void HandleTexturedScalarProperty(string pbrSlotName, PhysicallyBasedMaterial pbrmat, RenderMaterial rm, TexturedFloat tv)
+		{
+			RenderMaterial.StandardChildSlots childSlot = StandardChildSlotFromName(pbrSlotName);
+			switch (childSlot) {
+				case RenderMaterial.StandardChildSlots.PbrMetallic:
+					tv.Value = (float)pbrmat.Metallic;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrSubsurface:
+					tv.Value = (float)pbrmat.Subsurface;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrSubsurfaceScatteringRadius:
+					tv.Value = (float)pbrmat.SubsurfaceScatteringRadius;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrRoughness:
+					tv.Value = (float)pbrmat.Roughness;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrSpecular:
+					tv.Value = (float)pbrmat.Specular;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrSpecularTint:
+					tv.Value = (float)pbrmat.SpecularTint;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrAnisotropic:
+					tv.Value = (float)pbrmat.Anisotropic;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrAnisotropicRotation:
+					tv.Value = (float)pbrmat.AnisotropicRotation;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrSheen:
+					tv.Value = (float)pbrmat.Sheen;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrSheenTint:
+					tv.Value = (float)pbrmat.SheenTint;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrClearcoat:
+					tv.Value = (float)pbrmat.Clearcoat;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrClearcoatRoughness:
+					tv.Value = (float)pbrmat.ClearcoatRoughness;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrOpacity:
+					tv.Value = (float)pbrmat.Opacity;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrOpacityIor:
+					tv.Value = (float)pbrmat.OpacityIOR;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrOpacityRoughness:
+					tv.Value = (float)pbrmat.OpacityRoughness;
+					break;
+			}
+			tv.On = rm.GetTextureOnFromUsage(childSlot);
+			if (tv.On)
+			{
+				tv.Amount = (float)rm.GetTextureAmountFromUsage(childSlot);
+				tv.Texture = rm.GetTextureFromUsage(childSlot);
+			}
+		}
+
+		void HandleTexturedColorProperty(string pbrSlotName, PhysicallyBasedMaterial pbrmat, RenderMaterial rm, TexturedColor tv)
+		{
+			RenderMaterial.StandardChildSlots childSlot = StandardChildSlotFromName(pbrSlotName);
+
+				switch (childSlot)
+				{
+					case RenderMaterial.StandardChildSlots.PbrBaseColor:
+						tv.Value = pbrmat.BaseColor;
+						break;
+					case RenderMaterial.StandardChildSlots.PbrSubSurfaceScattering:
+						tv.Value = pbrmat.SubsurfaceScatteringColor;
+						break;
+					case RenderMaterial.StandardChildSlots.PbrEmission:
+						tv.Value = pbrmat.Emission;
+						break;
+				}
+
+			tv.On = rm.GetTextureOnFromUsage(childSlot);
+			if (tv.On)
+			{
+				tv.Amount = (float)rm.GetTextureAmountFromUsage(childSlot);
+				tv.Texture = rm.GetTextureFromUsage(childSlot);
+			}
+		}
+
 
 		private bool CreateShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
-			var pbrbasecol = new NamedValue("pbr-base-color", rm.GetParameter("pbr-base-color"));
-			if (pbrbasecol.Value != null)
+			Material interim = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow);
+			if (interim.PhysicallyBased is PhysicallyBasedMaterial pbrmat && pbrmat.Supported)
 			{
-				// always simulate material, need to know now myself
-				// what to read out from the simulated material to
-				// populate my own material descriptions.
-				//var m = rm.SimulatedMaterial(true);
-				// figure out what type of material we are.
-				//var probemat = GuessMaterialFromSmell(rm);
-				//var probemat = WhatMaterial(rm, m);
 				shb.IsPbr = true;
 				rm.BeginChange(RenderContent.ChangeContexts.Ignore);
 				shb.Name = rm.Name ?? "";
 				shb.Gamma = gamma;
-				rm.HandleTexturedValue(Pbr.BaseColor, shb.PbrBase);
+				HandleTexturedColorProperty(Pbr.BaseColor, pbrmat, rm, shb.PbrBase);
 				shb.PbrBase.Value = (shb.PbrBase.Value.ToFloat4() ^ gamma).ToColor4f();
 				Utilities.HandleRenderTexture(shb.PbrBase.Texture, shb.PbrBaseTexture, false, gamma);
-				rm.HandleTexturedValue(Pbr.Metallic, shb.PbrMetallic);
+				HandleTexturedScalarProperty(Pbr.Metallic, pbrmat, rm, shb.PbrMetallic);
 				Utilities.HandleRenderTexture(shb.PbrMetallic.Texture, shb.PbrMetallicTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.Subsurface, shb.PbrSubsurface);
+				HandleTexturedScalarProperty(Pbr.Subsurface, pbrmat, rm, shb.PbrSubsurface);
 				Utilities.HandleRenderTexture(shb.PbrSubsurface.Texture, shb.PbrSubsurfaceTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.SubsurfaceScatteringColor, shb.PbrSubsurfaceColor);
+				HandleTexturedColorProperty(Pbr.SubsurfaceScatteringColor, pbrmat, rm, shb.PbrSubsurfaceColor);
 				Utilities.HandleRenderTexture(shb.PbrSubsurfaceColor.Texture, shb.PbrSubsurfaceColorTexture, false, gamma);
-				rm.HandleTexturedValue(Pbr.SubsurfaceScatteringRadius, shb.PbrSubsurfaceRadius);
+				HandleTexturedScalarProperty(Pbr.SubsurfaceScatteringRadius, pbrmat, rm, shb.PbrSubsurfaceRadius);
 				Utilities.HandleRenderTexture(shb.PbrSubsurfaceRadius.Texture, shb.PbrSubsurfaceRadiusTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.Roughness, shb.PbrRoughness);
+				HandleTexturedScalarProperty(Pbr.Roughness, pbrmat, rm, shb.PbrRoughness);
 				Utilities.HandleRenderTexture(shb.PbrRoughness.Texture, shb.PbrRoughnessTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.Specular, shb.PbrSpecular);
+				HandleTexturedScalarProperty(Pbr.Specular, pbrmat, rm, shb.PbrSpecular);
 				Utilities.HandleRenderTexture(shb.PbrSpecular.Texture, shb.PbrSpecularTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.SpecularTint, shb.PbrSpecularTint);
+				HandleTexturedScalarProperty(Pbr.SpecularTint, pbrmat, rm, shb.PbrSpecularTint);
 				Utilities.HandleRenderTexture(shb.PbrSpecularTint.Texture, shb.PbrSpecularTintTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.Anisotropic, shb.PbrAnisotropic);
+				HandleTexturedScalarProperty(Pbr.Anisotropic, pbrmat, rm, shb.PbrAnisotropic);
 				Utilities.HandleRenderTexture(shb.PbrAnisotropic.Texture, shb.PbrAnisotropicTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.AnisotropicRotation, shb.PbrAnisotropicRotation);
+				HandleTexturedScalarProperty(Pbr.AnisotropicRotation, pbrmat, rm, shb.PbrAnisotropicRotation);
 				Utilities.HandleRenderTexture(shb.PbrAnisotropicRotation.Texture, shb.PbrAnisotropicRotationTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.Sheen, shb.PbrSheen);
+				HandleTexturedScalarProperty(Pbr.Sheen, pbrmat, rm, shb.PbrSheen);
 				Utilities.HandleRenderTexture(shb.PbrSheen.Texture, shb.PbrSheenTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.SheenTint, shb.PbrSheenTint);
+				HandleTexturedScalarProperty(Pbr.SheenTint, pbrmat, rm, shb.PbrSheenTint);
 				Utilities.HandleRenderTexture(shb.PbrSheenTint.Texture, shb.PbrSheenTintTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.Clearcoat, shb.PbrClearcoat);
+				HandleTexturedScalarProperty(Pbr.Clearcoat, pbrmat, rm, shb.PbrClearcoat);
 				Utilities.HandleRenderTexture(shb.PbrClearcoat.Texture, shb.PbrClearcoatTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.ClearcoatRoughness, shb.PbrClearcoatRoughness);
+				HandleTexturedScalarProperty(Pbr.ClearcoatRoughness, pbrmat, rm, shb.PbrClearcoatRoughness);
 				Utilities.HandleRenderTexture(shb.PbrClearcoatRoughness.Texture, shb.PbrClearcoatRoughnessTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.ClearcoatBump, shb.PbrClearcoatBump);
+				HandleTexturedColorProperty(Pbr.ClearcoatBump, pbrmat, rm, shb.PbrClearcoatBump);
 				Utilities.HandleRenderTexture(shb.PbrClearcoatBump.Texture, shb.PbrClearcoatBumpTexture, true, 1.0f);
-				rm.HandleTexturedValue(Pbr.Opacity, shb.PbrTransmission);
+				HandleTexturedScalarProperty(Pbr.Opacity, pbrmat, rm, shb.PbrTransmission);
 				Utilities.HandleRenderTexture(shb.PbrTransmission.Texture, shb.PbrTransmissionTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.OpacityIor, shb.PbrIor);
+				HandleTexturedScalarProperty(Pbr.OpacityIor, pbrmat, rm, shb.PbrIor);
 				Utilities.HandleRenderTexture(shb.PbrIor.Texture, shb.PbrIorTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.OpacityRoughness, shb.PbrTransmissionRoughness);
+				HandleTexturedScalarProperty(Pbr.OpacityRoughness, pbrmat, rm, shb.PbrTransmissionRoughness);
 				Utilities.HandleRenderTexture(shb.PbrTransmissionRoughness.Texture, shb.PbrTransmissionRoughnessTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.Emission, shb.PbrEmission);
+				HandleTexturedColorProperty(Pbr.Emission, pbrmat, rm, shb.PbrEmission);
 				Utilities.HandleRenderTexture(shb.PbrEmission.Texture, shb.PbrEmissionTexture, false, gamma);
-				rm.HandleTexturedValue(Pbr.Bump, shb.PbrBump);
+				HandleTexturedColorProperty(Pbr.Bump, pbrmat, rm, shb.PbrBump);
 				Utilities.HandleRenderTexture(shb.PbrBump.Texture, shb.PbrBumpTexture, true, 1.0f);
-				rm.HandleTexturedValue(Pbr.Displacement, shb.PbrDisplacement);
+				HandleTexturedColorProperty(Pbr.Displacement, pbrmat, rm, shb.PbrDisplacement);
 				Utilities.HandleRenderTexture(shb.PbrDisplacement.Texture, shb.PbrDisplacementTexture, true, 1.0f);
-				rm.HandleTexturedValue("smudge", shb.PbrSmudge);
-				Utilities.HandleRenderTexture(shb.PbrSmudge.Texture, shb.PbrSmudgeTexture, false, 1.0f);
-				rm.HandleTexturedValue("scratch", shb.PbrScratch);
-				Utilities.HandleRenderTexture(shb.PbrScratch.Texture, shb.PbrScratchTexture, false, 1.0f);
-				rm.HandleTexturedValue(Pbr.AmbientOcclusion, shb.PbrAmbientOcclusion);
+				HandleTexturedScalarProperty(Pbr.AmbientOcclusion, pbrmat, rm, shb.PbrAmbientOcclusion);
 				Utilities.HandleRenderTexture(shb.PbrAmbientOcclusion.Texture, shb.PbrAmbientOcclusionTexture, false, 1.0f);
-				rm.EndChange();
 			}
 			else
 			{
