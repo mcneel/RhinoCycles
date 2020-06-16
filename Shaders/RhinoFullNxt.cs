@@ -317,6 +317,16 @@ namespace RhinoCyclesCore.Shaders
 				emissive.ins.Strength.Value = 1.0f;
 				var addemissive = new AddClosureNode("pbr_addinemissive_");
 
+				var colored_shadow = new TransparentBsdfNode("pbr_colored_shadow");
+				var colored_shadow_mixin = new MixClosureNode("pbr_colored_shadow_mixin");
+				var colored_shadow_flipper = new MathMultiply("pbr_colored_shadow_flipper");
+				var shadowpath = new LightPathNode("pbr_colored_shadow_raypicker");
+
+				m_shader.AddNode(colored_shadow);
+				m_shader.AddNode(colored_shadow_mixin);
+				m_shader.AddNode(colored_shadow_flipper);
+				m_shader.AddNode(shadowpath);
+
 				principled.Sss = SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.AllSettings.SssMethod);
 
 				m_shader.AddNode(texco);
@@ -342,30 +352,31 @@ namespace RhinoCyclesCore.Shaders
 
 				MixNode decalMixin = HandleDecals();
 
-				if(decalMixin!=null) {
-					Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, decalMixin.ins.Color1, texco);
-					decalMixin.outs.Color.Connect(basewithao.ins.Color1);
-				} else {
-					Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1, texco);
-				}
+				Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1, texco, false);
 				basewithao.outs.Color.Connect(principled.ins.BaseColor);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, principled.ins.SpecularTint, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture, principled.ins.Roughness, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, principled.ins.SheenTint, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.Clearcoat, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.ClearcoatGloss, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius, texco, false);
 
-				Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, principled.ins.SpecularTint, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture, principled.ins.Roughness, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, principled.ins.SheenTint, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.Clearcoat, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.ClearcoatGloss, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, principled.ins.Transmission, texco, true);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic, texco);
-				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation, texco);
+				// set up list where we also ensure the transmission data (value/texture) get also
+				// hooked up to the colored shadow shader branch
+				List<ISocket> transpIns = principled.ins.Transmission.ToList();
+				transpIns.Add(colored_shadow_flipper.ins.Value1);
+
+				Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, transpIns, texco, true);
+
+				Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic, texco, false);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation, texco, false);
 				
 				if (part.PbrSmudge.On && part.PbrSmudge.Amount > 0.001)
 				{
@@ -396,13 +407,13 @@ namespace RhinoCyclesCore.Shaders
 					{
 						var bump = new ccl.ShaderNodes.BumpNode("bump_");
 						m_shader.AddNode(bump);
-						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height, texco, true);
+						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), texco, true);
 						bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
 						bump.Invert = part.PbrBump.Amount < 0.0f;
 						bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 						bump.outs.Normal.Connect(principled.ins.Normal);
 					} else {
-						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal, texco, false, true, false);
+						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal.ToList(), texco, false, true, false);
 					}
 				}
 				if (part.PbrClearcoatBump.On && part.PbrClearcoatBumpTexture.HasTextureImage)
@@ -411,13 +422,13 @@ namespace RhinoCyclesCore.Shaders
 					{
 						var bump = new ccl.ShaderNodes.BumpNode("clearcoat_bump_");
 						m_shader.AddNode(bump);
-						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height, texco, true);
+						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), texco, true);
 						bump.ins.Strength.Value = Math.Abs(part.PbrClearcoatBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
 						bump.Invert = part.PbrClearcoatBump.Amount < 0.0f;
 						bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 						bump.outs.Normal.Connect(principled.ins.ClearcoatNormal);
 					} else {
-						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal, texco, false, true, false);
+						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal.ToList(), texco, false, true, false);
 					}
 				}
 
@@ -446,11 +457,17 @@ namespace RhinoCyclesCore.Shaders
 					}
 				}
 
-				principled.outs.BSDF.Connect(addemissive.ins.Closure1);
+				shadowpath.outs.IsShadowRay.Connect(colored_shadow_flipper.ins.Value2);
+				colored_shadow_flipper.outs.Value.Connect(colored_shadow_mixin.ins.Fac);
+
+				principled.outs.BSDF.Connect(colored_shadow_mixin.ins.Closure1);
+				basewithao.outs.Color.Connect(colored_shadow.ins.Color);
+				colored_shadow.outs.BSDF.Connect(colored_shadow_mixin.ins.Closure2);
+				colored_shadow_mixin.outs.Closure.Connect(addemissive.ins.Closure1);
 
 				if(part.PbrEmission.On && part.PbrEmissionTexture.HasTextureImage)
 				{
-					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, emissive.ins.Color, texco);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, emissive.ins.Color.ToList(), texco);
 					emissive.outs.Emission.Connect(addemissive.ins.Closure2);
 				}
 				else if(!part.PbrEmission.Value.Equals(Rhino.Display.Color4f.Black))
@@ -469,7 +486,7 @@ namespace RhinoCyclesCore.Shaders
 					m_shader.AddNode(displacement);
 					m_shader.AddNode(strength);
 					strength.ins.Value1.Value = part.PbrDisplacement.Amount;
-					Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, strength.ins.Value2, texco);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, strength.ins.Value2, texco, false);
 					strength.outs.Value.Connect(displacement.ins.Height);
 					displacement.outs.Displacement.Connect(m_shader.Output.ins.Displacement);
 				}

@@ -12,6 +12,9 @@ using System.Globalization;
 using static Rhino.Render.RenderContent;
 using Pbr = Rhino.Render.PhysicallyBasedMaterial.ParametersNames;
 using Rhino.Runtime.InteropWrappers;
+using System.Collections.Generic;
+using ccl.ShaderNodes;
+using ccl.ShaderNodes.Sockets;
 
 namespace RhinoCyclesCore
 {
@@ -251,9 +254,33 @@ namespace RhinoCyclesCore
 		/// <param name="sh"></param>
 		/// <param name="slot"></param>
 		/// <param name="teximg"></param>
-		/// <param name="sock"></param>
+		/// <param name="socks"></param>
 		/// <param name="texco"></param>
-		public static void PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool invert = false)
+		public static void PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool invert)
+		{
+			List<ccl.ShaderNodes.Sockets.ISocket> socks = new List<ccl.ShaderNodes.Sockets.ISocket>();
+			socks.Add(sock);
+			if (invert)
+			{
+				PbrGraphForSlot(sh, slot, teximg, socks, texco, true);
+			}
+			else
+			{
+				PbrGraphForSlot(sh, slot, teximg, socks, texco);
+			}
+		}
+
+		/// <summary>
+		/// Create the partial graph for a PBR-type slot.
+		/// </summary>
+		/// <since>6.12</since>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="sh"></param>
+		/// <param name="slot"></param>
+		/// <param name="teximg"></param>
+		/// <param name="socks"></param>
+		/// <param name="texco"></param>
+		public static void PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco, bool invert = false)
 		{
 			Type t = typeof(T);
 			ccl.ShaderNodes.Sockets.ISocket valsock = null;
@@ -296,25 +323,25 @@ namespace RhinoCyclesCore
 			if(valsock == null) {
 				throw new UnrecognizedTexturedSlotType($"Type tried is {t}");
 			}
-			GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, sock, texco, false, false, invert);
+			GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, socks, texco, false, false, invert);
 		}
 
-		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco)
+		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco)
 		{
-			GraphForSlot(sh, valueSocket, IsOn, amount, teximg, sock, texco, false, false, false);
+			GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socks, texco, false, false, false);
 		}
 
-		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw)
+		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw)
 		{
-			GraphForSlot(sh, valueSocket, IsOn, amount, teximg, sock, texco, toBw, false, false);
+			GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socks, texco, toBw, false, false);
 		}
 
-		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap)
+		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap)
 		{
-			GraphForSlot(sh, valueSocket, IsOn, amount, teximg, sock, texco, toBw, normalMap, false);
+			GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socks, texco, toBw, normalMap, false);
 		}
 
-		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sock, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap, bool invert)
+		public static void GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap, bool invert)
 		{
 			if (IsOn && teximg.HasTextureImage)
 			{
@@ -357,7 +384,9 @@ namespace RhinoCyclesCore
 					sh.AddNode(normalmapnode);
 					imtexnode.outs.Color.Connect(normalmapnode.ins.Color);
 					normalmapnode.ins.Strength.Value = amount * RcCore.It.AllSettings.NormalStrengthFactor;
-					normalmapnode.outs.Normal.Connect(sock);
+					foreach(var sock in socks) {
+						normalmapnode.outs.Normal.Connect(sock);
+					}
 				}
 				else
 				{
@@ -368,7 +397,6 @@ namespace RhinoCyclesCore
 
 						invcol.ins.Fac.Value = 1.0f;
 						invcol.outs.Color.Connect(mixerNode.ins.Color2);
-
 					}
 					else
 					{
@@ -380,12 +408,18 @@ namespace RhinoCyclesCore
 						}
 						outsock.Connect(mixerNode.ins.Color2);
 					}
-					mixerNode.outs.Color.Connect(sock);
+					foreach (var sock in socks)
+					{
+						mixerNode.outs.Color.Connect(sock);
+					}
 				}
 			}
 			else
 			{
-				valueSocket?.Connect(sock);
+				foreach (var sock in socks)
+				{
+					valueSocket?.Connect(sock);
+				}
 			}
 		}
 	}

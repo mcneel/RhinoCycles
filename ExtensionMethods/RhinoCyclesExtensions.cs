@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using ccl.ShaderNodes.Sockets;
 using Rhino.Geometry.Collections;
 
 namespace RhinoCyclesCore.ExtensionMethods
@@ -59,6 +61,17 @@ namespace RhinoCyclesCore.ExtensionMethods
 			if (count != cl.Count) return null;
 			return cl.ToFloatArray();
 		}
+	}
+
+	public static class ISocketExtenions
+	{
+	public static List<ISocket> ToList(this ISocket sock)
+	{
+		List<ISocket> lst = new List<ISocket> {
+			sock
+		};
+			return lst;
+	}
 	}
 
 	public static class DisplayColor4fExtensions
