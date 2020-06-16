@@ -289,6 +289,8 @@ namespace RhinoCyclesCore.Shaders
 
 		private ShaderNode GetShaderPart(ShaderBody part)
 		{
+			MixNode decalMixin = HandleDecals();
+
 			if (part.IsPbr)
 			{
 				var principled = new PrincipledBsdfNode("pbr_principled");
@@ -350,9 +352,13 @@ namespace RhinoCyclesCore.Shaders
 					aoamount.outs.Color.Connect(basewithao.ins.Color2);
 				}
 
-				MixNode decalMixin = HandleDecals();
+				if(decalMixin!=null) {
+					Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, decalMixin.ins.Color1.ToList(), texco);
+					decalMixin.outs.Color.Connect(basewithao.ins.Color1);
+				} else {
+					Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1.ToList(), texco);
+				}
 
-				Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1, texco, false);
 				basewithao.outs.Color.Connect(principled.ins.BaseColor);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic, texco, false);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular, texco, false);
@@ -498,6 +504,8 @@ namespace RhinoCyclesCore.Shaders
 				// can have different texture mappings with different transform matrices. Using only the one would
 				// result in only one transform being applied and the rest will appear untouched.
 				// See https://mcneel.myjetbrains.com/youtrack/issue/RH-51531
+
+				// NOTE: decalMixin is manually added outside of GH definition
 
 				var texcoord84 = new TextureCoordinateNode("texcoord_for_diff_");
 				var texcoord84bump = new TextureCoordinateNode("texcoord_for_bump_");
@@ -885,8 +893,16 @@ namespace RhinoCyclesCore.Shaders
 				use_alpha_weighted_with_modded_amount71.outs.Value.Connect(diffuse_base_color_through_alpha120.ins.Fac);
 				bump_texture_to_bw87.outs.Val.Connect(bump88.ins.Height);
 				bump_amount72.outs.Value.Connect(bump88.ins.Strength);
-				diffuse_base_color_through_alpha120.outs.Color.Connect(final_diffuse89.ins.Color);
-				diffuse_base_color_through_alpha120.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+
+				if(decalMixin!=null) {
+					diffuse_base_color_through_alpha120.outs.Color.Connect(decalMixin.ins.Color1);
+					decalMixin.outs.Color.Connect(final_diffuse89.ins.Color);
+					decalMixin.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+				} else {
+					diffuse_base_color_through_alpha120.outs.Color.Connect(final_diffuse89.ins.Color);
+					diffuse_base_color_through_alpha120.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+				}
+
 				light_path109.outs.IsCameraRay.Connect(shadeless_on_cameraray122.ins.Value1);
 				fresnel_based_on_constant92.outs.Fac.Connect(fresnel_reflection94.ins.R);
 				simple_reflection93.outs.Image.Connect(select_reflection_or_fresnel_reflection95.ins.Color1);
