@@ -259,7 +259,7 @@ namespace RhinoCyclesCore
 			return scs;
 		}
 
-		void HandleTexturedScalarProperty(string pbrSlotName, PhysicallyBasedMaterial pbrmat, RenderMaterial rm, TexturedFloat tv)
+		void HandleTexturedScalarProperty(string pbrSlotName, Rhino.DocObjects.PhysicallyBasedMaterial pbrmat, RenderMaterial rm, TexturedFloat tv)
 		{
 			RenderMaterial.StandardChildSlots childSlot = StandardChildSlotFromName(pbrSlotName);
 			switch (childSlot) {
@@ -317,7 +317,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		void HandleTexturedColorProperty(string pbrSlotName, PhysicallyBasedMaterial pbrmat, RenderMaterial rm, TexturedColor tv)
+		void HandleTexturedColorProperty(string pbrSlotName, Rhino.DocObjects.PhysicallyBasedMaterial pbrmat, RenderMaterial rm, TexturedColor tv)
 		{
 			RenderMaterial.StandardChildSlots childSlot = StandardChildSlotFromName(pbrSlotName);
 
@@ -346,7 +346,7 @@ namespace RhinoCyclesCore
 		private bool CreateShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
 			Material interim = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow);
-			if (interim.PhysicallyBased is PhysicallyBasedMaterial pbrmat && pbrmat.Supported)
+			if (interim.PhysicallyBased is Rhino.DocObjects.PhysicallyBasedMaterial pbrmat && pbrmat.Supported)
 			{
 				shb.IsPbr = true;
 				rm.BeginChange(RenderContent.ChangeContexts.Ignore);
