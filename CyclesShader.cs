@@ -21,7 +21,7 @@ using RhinoCyclesCore.Materials;
 using RhinoCyclesCore.Converters;
 using System.Collections.Generic;
 using Rhino.Display;
-using Pbr = Rhino.Render.RenderMaterial.PhysicallyBased.ChildSlotNames;
+using Pbr = Rhino.Render.ChildSlotNames.PhysicallyBased;
 using RhinoCyclesCore.ExtensionMethods;
 using System.Collections.Concurrent;
 using Rhino.Runtime.InteropWrappers;
