@@ -23,8 +23,8 @@ namespace RhinoCyclesCore
 		public bool HasTextureImage => TexByte != null || TexFloat != null;
 		public bool HasFloatImage => TexFloat != null;
 		public bool HasByteImage => TexByte != null;
-		public TextureEvaluator.ByteArray TexByte { get; set; }
-		public TextureEvaluator.FloatArray TexFloat { get; set; }
+		public SimpleArrayByte TexByte { get; set; }
+		public SimpleArrayFloat TexFloat { get; set; }
 		public int TexWidth;
 		public int TexHeight;
 		public string Name;

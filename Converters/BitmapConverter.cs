@@ -159,22 +159,22 @@ namespace RhinoCyclesCore.Converters
 				{
 					case RenderMaterial.StandardChildSlots.Diffuse:
 						shader.DiffuseTexture.IsLinear = isLinear;
-						shader.DiffuseTexture.TexFloat = img.Data as TextureEvaluator.FloatArray;
+						shader.DiffuseTexture.TexFloat = img.Data as SimpleArrayFloat;
 						shader.DiffuseTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Bump:
 						shader.BumpTexture.IsLinear = isLinear;
-						shader.BumpTexture.TexFloat = img.Data as TextureEvaluator.FloatArray;
+						shader.BumpTexture.TexFloat = img.Data as SimpleArrayFloat;
 						shader.BumpTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Transparency:
 						shader.TransparencyTexture.IsLinear = isLinear;
-						shader.TransparencyTexture.TexFloat = img.Data as TextureEvaluator.FloatArray;
+						shader.TransparencyTexture.TexFloat = img.Data as SimpleArrayFloat;
 						shader.TransparencyTexture.TexByte = null;
 						break;
 					case RenderMaterial.StandardChildSlots.Environment:
 						shader.EnvironmentTexture.IsLinear = isLinear;
-						shader.EnvironmentTexture.TexFloat = img.Data as TextureEvaluator.FloatArray;
+						shader.EnvironmentTexture.TexFloat = img.Data as SimpleArrayFloat;
 						shader.EnvironmentTexture.TexByte = null;
 						break;
 				}
@@ -192,22 +192,22 @@ namespace RhinoCyclesCore.Converters
 					case RenderMaterial.StandardChildSlots.Diffuse:
 						shader.DiffuseTexture.IsLinear = isLinear;
 						shader.DiffuseTexture.TexFloat = null;
-						shader.DiffuseTexture.TexByte = img.Data as TextureEvaluator.ByteArray;
+						shader.DiffuseTexture.TexByte = img.Data as SimpleArrayByte;
 						break;
 					case RenderMaterial.StandardChildSlots.Bump:
 						shader.BumpTexture.IsLinear = isLinear;
 						shader.BumpTexture.TexFloat = null;
-						shader.BumpTexture.TexByte = img.Data as TextureEvaluator.ByteArray;
+						shader.BumpTexture.TexByte = img.Data as SimpleArrayByte;
 						break;
 					case RenderMaterial.StandardChildSlots.Transparency:
 						shader.TransparencyTexture.IsLinear = isLinear;
 						shader.TransparencyTexture.TexFloat = null;
-						shader.TransparencyTexture.TexByte = img.Data as TextureEvaluator.ByteArray;
+						shader.TransparencyTexture.TexByte = img.Data as SimpleArrayByte;
 						break;
 					case RenderMaterial.StandardChildSlots.Environment:
 						shader.EnvironmentTexture.IsLinear = isLinear;
 						shader.EnvironmentTexture.TexFloat = null;
-						shader.EnvironmentTexture.TexByte = img.Data as TextureEvaluator.ByteArray;
+						shader.EnvironmentTexture.TexByte = img.Data as SimpleArrayByte;
 						break;
 				}
 			}
@@ -391,14 +391,14 @@ namespace RhinoCyclesCore.Converters
 				{
 					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse);
 					img.ApplyGamma(gamma);
-					teximg.TexFloat = img.Data as TextureEvaluator.FloatArray;
+					teximg.TexFloat = img.Data as SimpleArrayFloat;
 					teximg.TexByte = null;
 				}
 				else
 				{
 					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse);
 					img.ApplyGamma(gamma);
-					teximg.TexByte = img.Data as TextureEvaluator.ByteArray;
+					teximg.TexByte = img.Data as SimpleArrayByte;
 					teximg.TexFloat = null;
 				}
 				teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
@@ -488,7 +488,7 @@ namespace RhinoCyclesCore.Converters
 
 	public static ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
 	{
-		return new ByteBitmap(id, new TextureEvaluator.ByteArray(new MyDumbBitmapByteList(bm)), pwidth, pheight, false);
+		return new ByteBitmap(id, new SimpleArrayByte(new MyDumbBitmapByteList(bm)), pwidth, pheight, false);
 	}
 
 
@@ -553,7 +553,7 @@ namespace RhinoCyclesCore.Converters
 	};
 
 
-	private static TextureEvaluator.ByteArray ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
+	private static SimpleArrayByte ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
 	{
 	  if (!canUse)
 	  {
@@ -562,7 +562,7 @@ namespace RhinoCyclesCore.Converters
 			byte[] conv = new byte[4];
 			c4f.ToArray(ref conv);
 
-			return new TextureEvaluator.ByteArray(conv);
+			return new SimpleArrayByte(conv);
 	  }
 
 		var bytes = textureEvaluator.WriteToByteArray(pwidth, pheight);
@@ -572,7 +572,7 @@ namespace RhinoCyclesCore.Converters
 		}
 
 		//Otherwise, we do this the slow way.
-		return new TextureEvaluator.ByteArray(new EvaluatorToByteList(textureEvaluator, pwidth, pheight, isImageBased));
+		return new SimpleArrayByte(new EvaluatorToByteList(textureEvaluator, pwidth, pheight, isImageBased));
 	}
 
 
@@ -639,7 +639,7 @@ namespace RhinoCyclesCore.Converters
 			}
 		};
 
-		private static TextureEvaluator.FloatArray ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
+		private static SimpleArrayFloat ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
 	{
 			if (!canUse)
 			{
@@ -648,7 +648,7 @@ namespace RhinoCyclesCore.Converters
 				float[] conv = new float[4];
 				c4f.ToArray(ref conv);
 
-				return new TextureEvaluator.FloatArray(conv);
+				return new SimpleArrayFloat(conv);
 			}
 
 			var floats = textureEvaluator.WriteToFloatArray(pwidth, pheight);
@@ -658,7 +658,7 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			//Otherwise, we do this the slow way.
-			return new TextureEvaluator.FloatArray(new EvaluatorToFloatList(textureEvaluator, pwidth, pheight, isImageBased));
+			return new SimpleArrayFloat(new EvaluatorToFloatList(textureEvaluator, pwidth, pheight, isImageBased));
 		}
 
 	public static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)

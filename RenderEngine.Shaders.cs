@@ -108,11 +108,11 @@ namespace RhinoCyclesCore
 			{
 				if (texture.HasByteImage)
 				{
-					imnode.ByteImagePtr = texture.TexByte.c_array();
+					imnode.ByteImagePtr = texture.TexByte.Array();
 				}
 				else if (texture.HasFloatImage)
 				{
-					imnode.FloatImagePtr = texture.TexFloat.c_array();
+					imnode.FloatImagePtr = texture.TexFloat.Array();
 				}
 				imnode.Filename = texture.Name;
 				imnode.Width = (uint) texture.TexWidth;
@@ -127,11 +127,11 @@ namespace RhinoCyclesCore
 			{
 				if (texture.HasByteImage)
 				{
-					envnode.ByteImagePtr = texture.TexByte.c_array();
+					envnode.ByteImagePtr = texture.TexByte.Array();
 				}
 				else if (texture.HasFloatImage)
 				{
-					envnode.FloatImagePtr = texture.TexFloat.c_array();
+					envnode.FloatImagePtr = texture.TexFloat.Array();
 					envnode.Interpolation = InterpolationType.Cubic;
 				}
 				envnode.Filename = texture.Name;

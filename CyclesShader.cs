@@ -814,14 +814,14 @@ namespace RhinoCyclesCore
 				{
 					if (bytes.ContainsKey(rid))
 					{
-						tex.TexByte = bytes[rid].Data as TextureEvaluator.ByteArray;
+						tex.TexByte = bytes[rid].Data as SimpleArrayByte;
 					}
 				}
 				else if (tex.HasFloatImage)
 				{
 					if (floats.ContainsKey(rid))
 					{
-						tex.TexFloat = floats[rid].Data as TextureEvaluator.FloatArray;
+						tex.TexFloat = floats[rid].Data as SimpleArrayFloat;
 					}
 				}
 			}
