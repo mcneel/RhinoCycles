@@ -163,9 +163,9 @@ namespace RhinoCyclesCore.RenderEngines
 			var requestedChannels = rw.GetRequestedRenderChannelsAsStandardChannels();
 			
 			List<ccl.PassType> reqPassTypes = requestedChannels
-					.Distinct()
 					.Where(chan => chan != Rhino.Render.RenderWindow.StandardChannels.AlbedoRGB)
 					.Select(chan => PassTypeForStandardChannel(chan))
+					.Distinct()
 					.ToList();
 
 			_throttle = eds.ThrottleMs;

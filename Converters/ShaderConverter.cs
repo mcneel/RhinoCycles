@@ -39,9 +39,9 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="lw">LinearWorkflow data for this shader (gamma)</param>
 		/// <param name="decals">Decals to integrate into the shader</param>
 		/// <returns>The CyclesShader</returns>
-		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, List<CyclesDecal> decals)
+		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, CyclesDecals decals)
 		{
-			uint decalsCRC = CyclesDecal.CRCForList(decals);
+			uint decalsCRC = CyclesDecal.CRCForList(decals.List.Items);
 			//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
 			var mid = rm.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", lw);
 			if(decalsCRC!=0) {
@@ -51,7 +51,7 @@ namespace RhinoCyclesCore.Converters
 			var shader = new CyclesShader(mid)
 			{
 				Type = CyclesShader.Shader.Diffuse,
-				Decals = decals
+				Decals = decals.List.Items
 			};
 
 			if (rm.TypeId.Equals(realtimDisplaMaterialId))

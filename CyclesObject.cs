@@ -89,6 +89,6 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public bool IgnoreCutout { get; set; }
 
-		public List<CyclesDecal> Decals { get; set; } = null;
+		public CyclesDecals Decals { get; set; } = null;
 	}
 }

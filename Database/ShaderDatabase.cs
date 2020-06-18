@@ -37,7 +37,7 @@ namespace RhinoCyclesCore.Database
 
 	public interface IWriteShaderDatabase
 	{
-		
+
 	}
 
 	public interface IReadWriteShaderDatabase : IReadShaderDatabase, IWriteShaderDatabase
@@ -53,7 +53,7 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// record material changes for objects
 		/// </summary>
-		private readonly List<CyclesObjectShader> _cqObjectsShaderChanges = new List<CyclesObjectShader>(); 
+		private readonly List<CyclesObjectShader> _cqObjectsShaderChanges = new List<CyclesObjectShader>();
 		/// <summary>
 		/// record shader changes to push to cycles
 		/// </summary>
@@ -61,11 +61,17 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// record RenderMaterial CRC and Shader relationship. Key is RenderHash, Value is Shader.
 		/// </summary>
-		private readonly Dictionary<uint, CclShader> _rhCclShaders = new Dictionary<uint, CclShader>(); 
+		private readonly Dictionary<uint, CclShader> _rhCclShaders = new Dictionary<uint, CclShader>();
 		/// <summary>
 		/// record shader in scene relationship. Key is RenderMaterial.RenderHash, Value is shader id in scene.
 		/// </summary>
 		private readonly Dictionary<uint, uint> _rhCclSceneShaderIds = new Dictionary<uint, uint>();
+
+		/// <summary>
+		/// Mapping of original material IDs and decals. The CyclesDecals gives access to also the original material
+		/// id, but also the MaterialWithDecalsId
+		/// </summary>
+		private readonly Dictionary<uint, CyclesDecals> _rhOriginalMaterialIdsAndDecals = new Dictionary<uint, CyclesDecals>();
 
 		/// <summary>
 		/// Return true if any shader or object shader changes were recorded by the ChangeQueue mechanism.
@@ -213,6 +219,36 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
+
+		/// <summary>
+		/// Add a CyclesDecals for matid
+		/// </summary>
+		public void AddOriginalMaterialAndDecals(uint matid, CyclesDecals decals) {
+			_rhOriginalMaterialIdsAndDecals[matid] = decals;
+		}
+
+		/// <summary>
+		/// Remove oldmatid entry if exists, add newmatid entry with given decals.
+		/// </summary>
+		public void ReplaceOriginalMaterialAndDecals(uint oldmatid, uint newmatid, CyclesDecals decals)
+		{
+			if(_rhOriginalMaterialIdsAndDecals.ContainsKey(oldmatid)) {
+				_rhOriginalMaterialIdsAndDecals.Remove(oldmatid);
+			}
+			_rhOriginalMaterialIdsAndDecals[newmatid] = decals;
+		}
+
+		/// <summary>
+		/// Retrieve a CyclesDecals instance for given matid, or null if no
+		/// decals were registerd for matid.
+		/// </summary>
+		public CyclesDecals RetrieveDecalsForMaterialId(uint matid) {
+			if(_rhOriginalMaterialIdsAndDecals.ContainsKey(matid)) {
+				return _rhOriginalMaterialIdsAndDecals[matid];
+			}
+
+			return null;
+		}
 
 	}
 }

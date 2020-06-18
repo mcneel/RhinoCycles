@@ -1050,19 +1050,19 @@ namespace RhinoCyclesCore.Database
 				var cyclesDecals = HandleMeshDecals(a.MeshId, a.Decals);
 
 				var matid = a.MaterialId;
+				var predecalmatid = matid;
 				var mat = a.RenderMaterial;
 				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes}. material {mat.Name}\n";
 				RcCore.OutputDebugString(stat);
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
 
-				if(cyclesDecals!=null) {
-					uint decalsCRC = CyclesDecal.CRCForList(cyclesDecals);
-					matid = RhinoMath.CRC32(matid, decalsCRC);
-				}
+				CyclesDecals theDecals = new CyclesDecals(predecalmatid, new DecalCollection(cyclesDecals));
+
+				matid = theDecals.MaterialWithDecalsId;
 
 				if (!addedmats.Contains(matid))
 				{
-					HandleRenderMaterial(mat, cyclesDecals);
+					HandleRenderMaterial(mat, theDecals);
 					addedmats.Add(matid);
 				}
 
@@ -1079,7 +1079,7 @@ namespace RhinoCyclesCore.Database
 					matid = matid,
 					CastShadow = a.CastShadows,
 					Cutout = cutout,
-					Decals = cyclesDecals
+					Decals = theDecals
 				};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
 
@@ -1125,10 +1125,10 @@ namespace RhinoCyclesCore.Database
 		/// Handle RenderMaterial - will queue new shader if necessary
 		/// </summary>
 		/// <param name="mat">RenderMaterial instance to handle</param>
-		/// <param name="decals">List of CyclesDecal that need to be integrated into the shader</param>
-		private void HandleRenderMaterial(RenderMaterial mat, List<CyclesDecal> decals)
+		/// <param name="decals">CyclesDecals instance potentially containing decals that need to be integrated into the shader</param>
+		private void HandleRenderMaterial(RenderMaterial mat, CyclesDecals decals)
 		{
-			uint decalsCRC = CyclesDecal.CRCForList(decals);
+			uint decalsCRC = decals.DecalsHash;
 			//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
 			uint matCRC = mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", LinearWorkflow);
 
@@ -1169,7 +1169,7 @@ namespace RhinoCyclesCore.Database
 		protected override void ApplyMaterialChanges(List<CqMaterial> mats)
 		{
 			// list of material hashes
-			var distinctMats = new List<uint>();
+			var distinctMats = new Dictionary<uint, CyclesDecals>();
 
 			RcCore.OutputDebugString($"ApplyMaterialChanges: {mats.Count}\n");
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Apply materials", -1.0f);
@@ -1185,12 +1185,16 @@ namespace RhinoCyclesCore.Database
 				RcCore.OutputDebugString($"\t[material {mat.Id}, {mat.MeshInstanceId}, {mat.MeshIndex}]\n");
 				var rm = MaterialFromId(mat.Id);
 
-				if (!distinctMats.Contains(mat.Id))
+				if (!distinctMats.ContainsKey(mat.Id))
 				{
-					distinctMats.Add(mat.Id);
+					distinctMats[mat.Id] = null;
 				}
 
 				var obid = mat.MeshInstanceId;
+
+				var oldmatid = _objectShaderDatabase.FindRenderHashForObjectId(obid);
+				_shaderDatabase.RetrieveDecalsForMaterialId(oldmatid);
+
 
 				// no mesh id here, but shouldn't be necessary either. Passing in null.
 				HandleMaterialChangeOnObject(mat.Id, obid, null);
@@ -1203,11 +1207,11 @@ namespace RhinoCyclesCore.Database
 			{
 				curmat++;
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Apply distinct material {curmat}/{totalmats}", -1.0f);
-				var existing = _shaderDatabase.GetShaderFromHash(distinct);
+				var existing = _shaderDatabase.GetShaderFromHash(distinct.Key);
 				if (existing == null)
 				{
-					var rm = MaterialFromId(distinct);
-					HandleRenderMaterial(rm, null);
+					var rm = MaterialFromId(distinct.Key);
+					HandleRenderMaterial(rm, new CyclesDecals(distinct.Key, null));
 				}
 			}
 		}

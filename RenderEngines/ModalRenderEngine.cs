@@ -99,6 +99,7 @@ namespace RhinoCyclesCore.RenderEngines
 					.ToList();
 			List<ccl.PassType> reqPassTypes = reqChanList
 					.Select(chan => PassTypeForStandardChannel(chan))
+					.Distinct()
 					.ToList();
 			
 			var client = cyclesEngine.Client;
