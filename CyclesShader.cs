@@ -346,7 +346,7 @@ namespace RhinoCyclesCore
 		private bool CreateShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
 			Material interim = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow);
-			if (interim.PhysicallyBased is Rhino.DocObjects.PhysicallyBasedMaterial pbrmat && pbrmat.Supported)
+			if (interim.IsPhysicallyBased && interim.PhysicallyBased is Rhino.DocObjects.PhysicallyBasedMaterial pbrmat)
 			{
 				shb.IsPbr = true;
 				rm.BeginChange(RenderContent.ChangeContexts.Ignore);
