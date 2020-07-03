@@ -25,6 +25,7 @@ using RhinoCyclesCore.Database;
 using Rhino;
 using System.Collections.Generic;
 using RhinoCyclesCore.Settings;
+using System.Linq;
 
 namespace RhinoCyclesCore.RenderEngines
 {
@@ -159,6 +160,14 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (rw == null) return;
 
+			var requestedChannels = rw.GetRequestedRenderChannelsAsStandardChannels();
+			
+			List<ccl.PassType> reqPassTypes = requestedChannels
+					.Distinct()
+					.Where(chan => chan != Rhino.Render.RenderWindow.StandardChannels.AlbedoRGB)
+					.Select(chan => PassTypeForStandardChannel(chan))
+					.ToList();
+
 			_throttle = eds.ThrottleMs;
 			_samples = Attributes?.RealtimeRenderPasses ?? eds.Samples;
 
@@ -216,6 +225,12 @@ namespace RhinoCyclesCore.RenderEngines
 
 			CreateScene(client, Session, renderDevice, this, eds);
 			HandleDeviceAndIntegrator(eds);
+
+			// Set up passes
+			foreach (var reqPass in reqPassTypes)
+			{
+				Session.AddPass(reqPass);
+			}
 
 			// register callbacks before starting any rendering
 			SetCallbacks();

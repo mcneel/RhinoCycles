@@ -403,7 +403,7 @@ namespace RhinoCyclesCore.Database
 				HasClippingPlaneChanges ||
 				_cameraDatabase.HasChanges() ||
 				_environmentDatabase.BackgroundHasChanged ||
-				_lightDatabase.HasChanges() || 
+				_lightDatabase.HasChanges() ||
 				_shaderDatabase.HasChanges() ||
 				_objectDatabase.HasChanges() ||
 				LinearWorkflowHasChanged ||
@@ -1592,7 +1592,7 @@ namespace RhinoCyclesCore.Database
 		{
 			if (_environmentDatabase.BackgroundHasChanged)
 			{
-				_environmentDatabase.CyclesShader.EnabledLights = AnyActiveLights(); 
+				_environmentDatabase.CyclesShader.EnabledLights = AnyActiveLights();
 				RcCore.OutputDebugString($"Uploading background changes, active lights: {_environmentDatabase.CyclesShader.EnabledLights}, sky {_environmentDatabase.CyclesShader.SkylightEnabled} skystrength {_environmentDatabase.CyclesShader.SkyStrength}\n");
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Handling Environment changes", -1.0f);
 				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader);
@@ -1697,6 +1697,9 @@ namespace RhinoCyclesCore.Database
 		{
 			if (rs != null)
 			{
+				var chanGuids = _renderEngine.RenderWindow.GetRequestedRenderChannels();
+				var rchmode = rs.RenderChannels.Mode;
+				RcCore.OutputDebugString($"RenderChannels.Mode: {rchmode}\n");
 				var trbg = TransparentBackground;
 				TransparentBackground = rs.TransparentBackground;
 				DisplayPipelineAttributesChanged |= trbg != TransparentBackground;
@@ -1752,7 +1755,7 @@ namespace RhinoCyclesCore.Database
 		protected override void ApplyEnvironmentChanges(RenderEnvironment.Usage usage)
 		{
 			/* instead of just reading the one environment we have to read everything.
-			 * 
+			 *
 			 * The earlier assumption that non-changing EnvironmentIdForUsage meant non-changing
 			 * environment instance is wrong. See http://mcneel.myjetbrains.com/youtrack/issue/RH-32418
 			 */

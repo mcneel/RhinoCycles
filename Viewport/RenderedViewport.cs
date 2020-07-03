@@ -29,6 +29,8 @@ using RhinoCyclesCore.Database;
 using RhinoCyclesCore.RenderEngines;
 using System.Diagnostics;
 using RhinoCyclesCore.Settings;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RhinoCycles.Viewport
 {
@@ -178,6 +180,17 @@ namespace RhinoCycles.Viewport
 			_started = true;
 			_forCapture = forCapture;
 			SetUseDrawOpenGl(false);
+			var requestedChannels = renderWindow.GetRequestedRenderChannelsAsStandardChannels();
+
+			List<RenderWindow.StandardChannels> reqChanList = requestedChannels
+					.Distinct()
+					.Where(chan => chan != RenderWindow.StandardChannels.AlbedoRGB)
+					.ToList();
+
+			foreach(var reqChan in reqChanList) {
+				renderWindow.AddChannel(reqChan);
+			}
+
 			if (forCapture)
 			{
 				var mre = new ModalRenderEngine(doc, PlugIn.IdFromName("RhinoCycles"), rhinoView, viewportInfo, Dpa, false)
@@ -305,7 +318,7 @@ namespace RhinoCycles.Viewport
 						if (e.Sample>-1)
 						{
 							_frameAvailable = true;
-							DrawOpenGl();
+							PutResultsIntoRenderWindowBuffer();
 						}
 						SetView(e.View);
 						_samples = e.Sample;
@@ -415,11 +428,10 @@ namespace RhinoCycles.Viewport
 			}
 		}
 
-		public override bool DrawOpenGl()
+		public void PutResultsIntoRenderWindowBuffer()
 		{
-			if (!_frameAvailable) return false;
-			_cycles.BlitPixelsToRenderWindowChannel();
-			return true;
+			if (_frameAvailable)
+				_cycles.BlitPixelsToRenderWindowChannel();
 		}
 
 		public override bool OnRenderSizeChanged(int width, int height)

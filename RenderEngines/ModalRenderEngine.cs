@@ -15,7 +15,9 @@ limitations under the License.
 **/
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
 using ccl;
 using Rhino;
@@ -89,6 +91,16 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (rw == null) return; // we don't have a window to write to...
 
+			var requestedChannels = rw.GetRequestedRenderChannelsAsStandardChannels();
+
+			List<RenderWindow.StandardChannels> reqChanList = requestedChannels
+					.Distinct()
+					.Where(chan => chan != RenderWindow.StandardChannels.AlbedoRGB)
+					.ToList();
+			List<ccl.PassType> reqPassTypes = reqChanList
+					.Select(chan => PassTypeForStandardChannel(chan))
+					.ToList();
+			
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
 
@@ -151,6 +163,12 @@ namespace RhinoCyclesCore.RenderEngines
 			#endregion
 
 			CreateScene(client, Session, renderDevice, cyclesEngine, engineSettings);
+
+			// Set up passes
+			foreach (var reqPass in reqPassTypes)
+			{
+				Session.AddPass(reqPass);
+			}
 
 			// register callbacks before starting any rendering
 			cyclesEngine.SetCallbacks();

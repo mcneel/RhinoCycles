@@ -403,7 +403,8 @@ namespace RhinoCyclesCore
 			IntPtr pixel_buffer = IntPtr.Zero;
 			IntPtr normal_buffer = IntPtr.Zero;
 			IntPtr depth_buffer = IntPtr.Zero;
-			Session.GetPixelBuffer(PassType.Combined, ref pixel_buffer, ref normal_buffer, ref depth_buffer);
+			IntPtr albedo_buffer = IntPtr.Zero;
+			Session.GetPixelBuffer(PassType.Combined, ref pixel_buffer, ref normal_buffer, ref depth_buffer, ref albedo_buffer);
 
 			if(pixel_buffer != IntPtr.Zero)
 			{
@@ -428,6 +429,15 @@ namespace RhinoCyclesCore
 					Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(depth_buffer);
 					depth?.SetValues(rect, rect.Size, pb);
 				}
+			}
+			if(albedo_buffer != IntPtr.Zero)
+			{
+				using (var albedo = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.AlbedoRGB))
+				{
+					Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(albedo_buffer);
+					albedo?.SetValues(rect, rect.Size, pb);
+				}
+
 			}
 		}
 

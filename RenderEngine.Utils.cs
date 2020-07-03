@@ -22,11 +22,32 @@ using Rhino.Render;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
 using RhinoCyclesCore.Settings;
+using static Rhino.Render.RenderWindow;
 
 namespace RhinoCyclesCore
 {
 	partial class RenderEngine
 	{
+
+		public static ccl.PassType PassTypeForStandardChannel(StandardChannels channel) {
+			switch(channel) {
+				case StandardChannels.RGB:
+				case StandardChannels.RGBA:
+					return PassType.Combined;
+				case StandardChannels.DistanceFromCamera:
+					return PassType.Depth;
+				case StandardChannels.NormalXYZ:
+					return PassType.Normal;
+				case StandardChannels.AlbedoRGB:
+					return PassType.DiffuseColor;
+				case StandardChannels.MaterialIds:
+					return PassType.MaterialId;
+				case StandardChannels.ObjectIds:
+					return PassType.ObjectId;
+				default:
+					throw new ArgumentException("unsupported channel");
+			}
+		}
 		/// <summary>
 		/// Construct a full path name to the temp folder for
 		/// McNeel/Rhino/VERSIONNR

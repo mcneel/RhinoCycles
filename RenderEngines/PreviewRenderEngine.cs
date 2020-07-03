@@ -127,6 +127,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 			CreateScene(client, cyclesEngine.Session, renderDevice, cyclesEngine, RcCore.It.AllSettings);
 
+			cyclesEngine.Session.AddPass(PassType.Combined);
+
 			// register callbacks before starting any rendering
 			cyclesEngine.SetCallbacks();
 
