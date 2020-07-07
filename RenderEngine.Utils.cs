@@ -45,7 +45,7 @@ namespace RhinoCyclesCore
 				case StandardChannels.ObjectIds:
 					return PassType.ObjectId;
 				default:
-					throw new ArgumentException("unsupported channel");
+					return PassType.Combined;
 			}
 		}
 		/// <summary>
