@@ -98,13 +98,13 @@ namespace RhinoCycles.Viewport
 			_serial = _runningSerial;
 			(ApplicationAndDocumentSettings.RcPlugIn as Plugin)?.InitialiseCSycles();
 
-			HudPlayButtonPressed += RenderedViewport_HudPlayButtonPressed;
-			HudPauseButtonPressed += RenderedViewport_HudPauseButtonPressed;
-			HudLockButtonPressed += RenderedViewport_HudLockButtonPressed;
-			HudUnlockButtonPressed += RenderedViewport_HudUnlockButtonPressed;
-			HudProductNamePressed += RenderedViewport_HudPlayProductNamePressed;
-			HudStatusTextPressed += RenderedViewport_HudPlayStatusTextPressed;
-			HudTimePressed += RenderedViewport_HudPlayTimePressed;
+			HudPlayButtonLeftClicked += RenderedViewport_HudPlayButtonPressed;
+			HudPauseButtonLeftClicked += RenderedViewport_HudPauseButtonPressed;
+			HudLockButtonLeftClicked += RenderedViewport_HudLockButtonPressed;
+			HudUnlockButtonLeftClicked += RenderedViewport_HudUnlockButtonPressed;
+			HudProductNameLeftClicked += RenderedViewport_HudPlayProductNamePressed;
+			HudStatusTextLeftClicked += RenderedViewport_HudPlayStatusTextPressed;
+			HudTimeLeftClicked += RenderedViewport_HudPlayTimePressed;
 			MaxPassesChanged += RenderedViewport_MaxPassesChanged;
 		}
 
