@@ -195,6 +195,44 @@
     </When>
   </Choose>
   <ItemGroup>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\cs-cz\XML\cs-czRhinoCyclesCore.xml">
+      <Link>Localization\cs-czRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\de-de\XML\de-deRhinoCyclesCore.xml">
+      <Link>Localization\de-deRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\es-es\XML\es-esRhinoCyclesCore.xml">
+      <Link>Localization\es-esRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\fr-fr\XML\fr-frRhinoCyclesCore.xml">
+      <Link>Localization\fr-frRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\it-it\XML\it-itRhinoCyclesCore.xml">
+      <Link>Localization\it-itRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\ja-jp\XML\ja-jpRhinoCyclesCore.xml">
+      <Link>Localization\ja-jpRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\ko-kr\XML\ko-krRhinoCyclesCore.xml">
+      <Link>Localization\ko-krRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\pl-pl\XML\pl-plRhinoCyclesCore.xml">
+      <Link>Localization\pl-plRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\pt-pt\XML\pt-ptRhinoCyclesCore.xml">
+      <Link>Localization\pt-ptRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\ru-ru\XML\ru-ruRhinoCyclesCore.xml">
+      <Link>Localization\ru-ruRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\zh-cn\XML\zh-cnRhinoCyclesCore.xml">
+      <Link>Localization\zh-cnRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\Localization\Rhino\zh-tw\XML\zh-twRhinoCyclesCore.xml">
+      <Link>Localization\zh-twRhinoCyclesCore.xml</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <None Include="Icons\Cycles_material.ico" />
   </ItemGroup>
   <ItemGroup>
