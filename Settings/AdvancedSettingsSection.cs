@@ -145,13 +145,13 @@ namespace RhinoCyclesCore.Settings
 			};
 			LblUseDocumentSamples = new Label()
 			{
-				Text = LOC.STR("Override Production Render Quality"),
+				Text = Localization.LocalizeString("Override Production Render Quality", 1),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			CheckboxUseSamples = new CheckBox()
 			{
 				Checked = false,
-				ToolTip = LOC.STR("Check to override render quality setting"),
+				ToolTip = Localization.LocalizeString("Check to override render quality setting", 2),
 			};
 
 			LblMaxBounces = new Label()
@@ -260,16 +260,16 @@ namespace RhinoCyclesCore.Settings
 			};
 			LblTextureBakeQuality = new Label()
 			{
-				Text = LOC.STR("Texture Bake Quality"),
+				Text = Localization.LocalizeString("Texture Bake Quality", 3),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			ListboxTextureBakeQuality = new DropDown()
 			{
 				Items = {
-					LOC.STR("Low"),
-					LOC.STR("Standard"),
-					LOC.STR("High"),
-					LOC.STR("Ultra")
+					Localization.LocalizeString("Low", 8),
+					Localization.LocalizeString("Standard", 9),
+					Localization.LocalizeString("High", 10),
+					Localization.LocalizeString("Ultra", 11)
 				}
 			};
 
@@ -333,8 +333,8 @@ namespace RhinoCyclesCore.Settings
 						new GroupBox()
 						{
 							Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
-							Text = LOC.STR("Session"),
-							ToolTip = LOC.STR("Settings for controlling Cycles in a session"),
+							Text = Localization.LocalizeString("Session", 12),
+							ToolTip = Localization.LocalizeString("Settings for controlling Cycles in a session", 20),
 							Content = sampleTable,
 						}
 					),
@@ -351,8 +351,8 @@ namespace RhinoCyclesCore.Settings
 						new GroupBox()
 						{
 							Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
-							Text = LOC.STR("Texture Baking"),
-							ToolTip = LOC.STR("Setting for controlling texture bake resolution"),
+							Text = Localization.LocalizeString("Texture Baking", 21),
+							ToolTip = Localization.LocalizeString("Setting for controlling texture bake resolution", 28),
 							Content = textureTable,
 						}
 					),
