@@ -145,13 +145,13 @@ namespace RhinoCyclesCore.Settings
 			};
 			LblUseDocumentSamples = new Label()
 			{
-				Text = "Override Production Render Quality",
+				Text = LOC.STR("Override Production Render Quality"),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			CheckboxUseSamples = new CheckBox()
 			{
 				Checked = false,
-				ToolTip = "Check to override render quality setting",
+				ToolTip = LOC.STR("Check to override render quality setting"),
 			};
 
 			LblMaxBounces = new Label()
@@ -260,16 +260,16 @@ namespace RhinoCyclesCore.Settings
 			};
 			LblTextureBakeQuality = new Label()
 			{
-				Text = "Texture Bake Quality",
+				Text = LOC.STR("Texture Bake Quality"),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			ListboxTextureBakeQuality = new DropDown()
 			{
 				Items = {
-					"Low",
-					"Standard",
-					"High",
-					"Ultra",
+					LOC.STR("Low"),
+					LOC.STR("Standard"),
+					LOC.STR("High"),
+					LOC.STR("Ultra")
 				}
 			};
 
@@ -333,8 +333,8 @@ namespace RhinoCyclesCore.Settings
 						new GroupBox()
 						{
 							Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
-							Text = "Session",
-							ToolTip = "Settings for controlling Cycles in a session",
+							Text = LOC.STR("Session"),
+							ToolTip = LOC.STR("Settings for controlling Cycles in a session"),
 							Content = sampleTable,
 						}
 					),
@@ -351,8 +351,8 @@ namespace RhinoCyclesCore.Settings
 						new GroupBox()
 						{
 							Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
-							Text = "Texture Baking",
-							ToolTip = "Setting for controlling texture bake resolution",
+							Text = LOC.STR("Texture Baking"),
+							ToolTip = LOC.STR("Setting for controlling texture bake resolution"),
 							Content = textureTable,
 						}
 					),
