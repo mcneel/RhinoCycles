@@ -23,6 +23,14 @@ namespace RhinoCyclesCore.Database
 	{
 		#region lists for shaders
 		/// <summary>
+		/// Record meshids that use a renderhash
+		/// </summary>
+		private readonly Dictionary<uint, List<Tuple<Guid, int>>> _rhRenderhashMeshids = new Dictionary<uint, List<Tuple<Guid, int>>>();
+		/// <summary>
+		/// Record renderhash for meshid
+		/// </summary>
+		private readonly Dictionary<Tuple<Guid, int>, uint> _rhMeshidRenderhash = new Dictionary<Tuple<Guid, int>, uint>();
+		/// <summary>
 		/// Record renderhash used object id (meshinstanceid)
 		/// </summary>
 		private readonly Dictionary<uint, uint> _rhMeshinstanceRenderhashes = new Dictionary<uint, uint>(); 
@@ -47,6 +55,8 @@ namespace RhinoCyclesCore.Database
 
 		public void Dispose()
 		{
+			_rhRenderhashMeshids.Clear();
+			_rhMeshidRenderhash.Clear();
 			_rhMeshinstanceRenderhashes.Clear();
 			_rhRenderhashObjects.Clear();
 		}
@@ -60,6 +70,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="meshInstanceId"></param>
 		public void RecordRenderHashRelation(uint hash, Tuple<Guid, int> meshId, uint meshInstanceId)
 		{
+			RecordRenderHashMeshId(hash, meshId);
 			RecordRenderHashMeshInstanceId(hash, meshInstanceId);
 		}
 
@@ -79,6 +90,20 @@ namespace RhinoCyclesCore.Database
 		}
 
 		/// <summary>
+		/// record relationship for renderhash -- meshid (tuple of guid and int)
+		/// </summary>
+		/// <param name="hash"></param>
+		/// <param name="meshId"></param>
+		private void RecordRenderHashMeshId(uint hash, Tuple<Guid, int> meshId)
+		{
+			// save meshid into list for render hash
+			if (!_rhRenderhashMeshids.ContainsKey(hash)) _rhRenderhashMeshids.Add(hash, new List<Tuple<Guid, int>>());
+			if (!_rhRenderhashMeshids[hash].Contains(meshId)) _rhRenderhashMeshids[hash].Add(meshId);
+			// save render hash for meshid
+			_rhMeshidRenderhash[meshId] = hash;
+		}
+
+		/// <summary>
 		/// Remove renderhash--meshinstanceid
 		/// </summary>
 		/// <param name="hash"></param>
@@ -88,6 +113,11 @@ namespace RhinoCyclesCore.Database
 			//if(m_objects_on_shader.ContainsKey(oldShader)) m_objects_on_shader[oldShader].RemoveAll(x => x.Equals(oid));
 			if (_rhRenderhashObjects.ContainsKey(hash)) _rhRenderhashObjects[hash].RemoveAll(x => x.Equals(meshInstanceId));
 			if (_rhMeshinstanceRenderhashes.ContainsKey(meshInstanceId)) _rhMeshinstanceRenderhashes.Remove(meshInstanceId);
+
+			var meshid = _objectDatabase.FindMeshIdOnObjectId(meshInstanceId);
+
+			if (_rhRenderhashMeshids.ContainsKey(hash)) _rhRenderhashMeshids[hash].RemoveAll(x => x.Equals(meshid));
+			if (_rhMeshidRenderhash.ContainsKey(meshid)) _rhMeshidRenderhash.Remove(meshid);
 		}
 
 		/// <summary>
@@ -102,6 +132,18 @@ namespace RhinoCyclesCore.Database
 
 			var meshid = _objectDatabase.FindMeshIdOnObjectId(oid);
 			RecordRenderHashRelation(newShader, meshid, oid);
+		}
+
+		/// <summary>
+		/// Find Rhino material RenderHash for mesh.
+		/// </summary>
+		/// <param name="meshId"></param>
+		/// <returns>The RenderHash for the Rhino material that is used on this mesh.</returns>
+		public uint FindRenderHashForMeshId(Tuple<Guid, int> meshId)
+		{
+			if (_rhMeshidRenderhash.ContainsKey(meshId)) return _rhMeshidRenderhash[meshId];
+
+			return uint.MaxValue;
 		}
 
 		/// <summary>

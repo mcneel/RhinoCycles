@@ -284,7 +284,18 @@ namespace RhinoCyclesCore.Database
 				if (_renderEngine.CancelRender) return;
 
 				// lets find the shader for this, or use 0 if none found.
-				uint shid = 0;
+				uint shid;
+				var matid = _objectShaderDatabase.FindRenderHashForMeshId(cyclesMesh.MeshId);
+				try
+				{
+					// @todo check this is correct naming and dictionary to query from
+					shid = _shaderDatabase.GetShaderIdForMatId(matid);
+				}
+				catch (Exception)
+				{
+					shid = 0;
+				}
+
 				var shader = _renderEngine.Client.Scene.ShaderFromSceneId(shid);
 
 				// creat a new mesh to upload mesh data to
@@ -297,7 +308,7 @@ namespace RhinoCyclesCore.Database
 
 				// update status bar of render window.
 				var stat =
-					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.Verts.Length/3}, t: {cyclesMesh.Faces.Length/3}]";
+					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.Verts.Length/3}, t: {cyclesMesh.Faces.Length/3} using shader {shid}]";
 				RcCore.OutputDebugString($"\t\t{stat}\n");
 
 				// set progress, but without rendering percentage (hence the -1.0f)
@@ -802,13 +813,13 @@ namespace RhinoCyclesCore.Database
 				foreach(var meshdata in meshes)
 				{
 					if (_renderEngine.CancelRender) return;
-					HandleMeshData(meshguid, meshIndex, meshdata, isClippingObject);
+					HandleMeshData(meshguid, meshIndex, meshdata, isClippingObject, uint.MaxValue);
 					meshIndex++;
 				}
 			}
 		}
 
-		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, bool isClippingObject)
+		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, bool isClippingObject, uint linearlightMatId)
 		{
 			if (_renderEngine.CancelRender) return;
 			RcCore.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
@@ -862,6 +873,9 @@ namespace RhinoCyclesCore.Database
 			}
 
 			var meshid = new Tuple<Guid, int>(meshguid, meshIndex);
+
+			var crc = linearlightMatId==uint.MaxValue ? _objectShaderDatabase.FindRenderHashForMeshId(meshid) : linearlightMatId;
+			if (crc == uint.MaxValue) crc = 0;
 			if (_renderEngine.CancelRender) return;
 
 			// now we have everything we need
@@ -874,7 +888,8 @@ namespace RhinoCyclesCore.Database
 				Faces = findices,
 				Uvs = cmuv,
 				VertexNormals = rhvn,
-				VertexColors = cmvc
+				VertexColors = cmvc,
+				MatId = crc,
 			};
 			_objectDatabase.AddMesh(cyclesMesh);
 			_objectDatabase.SetIsClippingObject(meshid, isClippingObject);
@@ -1201,7 +1216,7 @@ namespace RhinoCyclesCore.Database
 				m.SetCachedTextureCoordinates(texturemapping, ref tfm);
 			}
 
-			HandleMeshData(gpid.Item1, gpid.Item2, m, false);
+			HandleMeshData(gpid.Item1, gpid.Item2, m, false, uint.MaxValue);
 
 			HandleRenderMaterial(mat);
 
@@ -1514,7 +1529,7 @@ namespace RhinoCyclesCore.Database
 
 			HandleLightMaterial(ld, matid);
 
-			HandleMeshData(ld.Id, 0, mesh, false);
+			HandleMeshData(ld.Id, 0, mesh, false, matid);
 
 			var lightObject = new CyclesObject
 			{
