@@ -30,7 +30,7 @@ namespace RhinoCyclesCore.Settings
 			mDict = (RhinoDoc.FromRuntimeSerialNumber(docSerialNumber))?.RenderSettings?.UserDictionary;
 		}
 #region Document settings
-		public IntegratorMethod IntegratorMethod 
+		public IntegratorMethod IntegratorMethod
 		{
 			get => RcCore.It.AllSettings.IntegratorMethod;
 			set => throw new InvalidOperationException();
@@ -54,12 +54,12 @@ namespace RhinoCyclesCore.Settings
 				return rem;
 			}
 		}
-		public virtual int Samples 
+		public virtual int Samples
 		{
 			get => Math.Max(1, mDict.GetInteger(SettingNames.Samples, DefaultEngineSettings.Samples));
 			set => mDict[SettingNames.Samples] = Math.Max(1, value);
 		}
-		public virtual bool UseDocumentSamples 
+		public virtual bool UseDocumentSamples
 		{
 			get => mDict.GetBool(SettingNames.UseDocumentSamples, DefaultEngineSettings.UseDocumentSamples);
 			set => mDict[SettingNames.UseDocumentSamples] = value;
@@ -75,225 +75,225 @@ namespace RhinoCyclesCore.Settings
 				mDict[SettingNames.TextureBakeQuality] = quali;
 			}
 		}
-		public int Seed 
+		public int Seed
 		{
 			get => mDict.GetInteger(SettingNames.Seed, DefaultEngineSettings.Seed);
 			set => throw new InvalidOperationException();
 		}
-		public int DiffuseSamples 
+		public int DiffuseSamples
 		{
 			get => mDict.GetInteger(SettingNames.DiffuseSamples, DefaultEngineSettings.DiffuseSamples);
 			set => throw new InvalidOperationException();
 		}
-		public int GlossySamples 
+		public int GlossySamples
 		{
 			get => mDict.GetInteger(SettingNames.GlossySamples, DefaultEngineSettings.GlossySamples);
 			set => throw new InvalidOperationException();
 		}
-		public int TransmissionSamples 
+		public int TransmissionSamples
 		{
 			get => mDict.GetInteger(SettingNames.TransmissionSamples, DefaultEngineSettings.TransmissionSamples);
 			set => throw new InvalidOperationException();
 		}
-		public int MaxBounce 
+		public int MaxBounce
 		{
 			get => mDict.GetInteger(SettingNames.MaxBounce, DefaultEngineSettings.MaxBounce);
 			set => throw new InvalidOperationException();
 		}
-		public int MaxDiffuseBounce 
+		public int MaxDiffuseBounce
 		{
 			get => mDict.GetInteger(SettingNames.MaxDiffuseBounce, DefaultEngineSettings.MaxDiffuseBounce);
 			set => throw new InvalidOperationException();
 		}
-		public int MaxGlossyBounce 
+		public int MaxGlossyBounce
 		{
 			get => mDict.GetInteger(SettingNames.MaxGlossyBounce, DefaultEngineSettings.MaxGlossyBounce);
 			set => throw new InvalidOperationException();
 		}
-		public int MaxVolumeBounce 
+		public int MaxVolumeBounce
 		{
 			get => mDict.GetInteger(SettingNames.MaxVolumeBounce, DefaultEngineSettings.MaxVolumeBounce);
 			set => throw new InvalidOperationException();
 		}
-		public int MaxTransmissionBounce 
+		public int MaxTransmissionBounce
 		{
 			get => mDict.GetInteger(SettingNames.MaxTransmissionBounce, DefaultEngineSettings.MaxTransmissionBounce);
 			set => throw new InvalidOperationException();
 		}
-		public int TransparentMaxBounce 
+		public int TransparentMaxBounce
 		{
 			get => mDict.GetInteger(SettingNames.TransparentMaxBounce, DefaultEngineSettings.TransparentMaxBounce);
 			set => throw new InvalidOperationException();
 		}
 
-		public int TileX 
+		public int TileX
 		{
 			get => mDict.GetInteger(SettingNames.TileX, DefaultEngineSettings.TileX);
 			set => throw new InvalidOperationException();
 		}
-		public int TileY 
+		public int TileY
 		{
 			get => mDict.GetInteger(SettingNames.TileY, DefaultEngineSettings.TileY);
 			set => throw new InvalidOperationException();
 		}
-		public bool UseStartResolution 
+		public bool UseStartResolution
 		{
 			get => mDict.GetBool(SettingNames.UseStartResolution, DefaultEngineSettings.UseStartResolution);
 			set => throw new InvalidOperationException();
 		}
-		public int StartResolution 
+		public int StartResolution
 		{
 			get => mDict.GetInteger(SettingNames.StartResolution, DefaultEngineSettings.StartResolution);
 			set => throw new InvalidOperationException();
 		}
 
-		public float SpotLightFactor 
+		public float SpotLightFactor
 		{
 			get => (float)mDict.GetDouble(SettingNames.SpotLightFactor, DefaultEngineSettings.SpotLightFactor);
 			set => throw new InvalidOperationException();
 		}
-		public float PointLightFactor 
+		public float PointLightFactor
 		{
 			get => (float)mDict.GetDouble(SettingNames.PointLightFactor, DefaultEngineSettings.PointLightFactor);
 			set => throw new InvalidOperationException();
 		}
-		public float SunLightFactor 
+		public float SunLightFactor
 		{
 			get => (float)mDict.GetDouble(SettingNames.SunLightFactor, DefaultEngineSettings.SunLightFactor);
 			set => throw new InvalidOperationException();
 		}
-		public float LinearLightFactor 
+		public float LinearLightFactor
 		{
 			get => (float)mDict.GetDouble(SettingNames.LinearLightFactor, DefaultEngineSettings.LinearLightFactor);
 			set => throw new InvalidOperationException();
 		}
-		public float AreaLightFactor 
+		public float AreaLightFactor
 		{
 			get => (float)mDict.GetDouble(SettingNames.AreaLightFactor, DefaultEngineSettings.AreaLightFactor);
 			set => throw new InvalidOperationException();
 		}
-		public float PolishFactor 
+		public float PolishFactor
 		{
 			get => (float)mDict.GetDouble(SettingNames.PolishFactor, DefaultEngineSettings.PolishFactor);
 			set => throw new InvalidOperationException();
 		}
 
-		public float BumpDistance 
+		public float BumpDistance
 		{
 			get => (float)mDict.GetDouble(SettingNames.BumpDistance, DefaultEngineSettings.BumpDistance);
 			set => throw new InvalidOperationException();
 		}
-		public float NormalStrengthFactor 
+		public float NormalStrengthFactor
 		{
 			get => (float)mDict.GetDouble(SettingNames.NormalStrengthFactor, DefaultEngineSettings.NormalStrengthFactor);
 			set => throw new InvalidOperationException();
 		}
-		public float BumpStrengthFactor 
+		public float BumpStrengthFactor
 		{
 			get => (float)mDict.GetDouble(SettingNames.BumpStrengthFactor, DefaultEngineSettings.BumpStrengthFactor);
 			set => throw new InvalidOperationException();
 		}
 
-		public bool NoCaustics 
+		public bool NoCaustics
 		{
 			get => mDict.GetBool(SettingNames.NoCaustics, DefaultEngineSettings.NoCaustics);
 			set => throw new InvalidOperationException();
 		}
 
-		public int AaSamples 
+		public int AaSamples
 		{
 			get => mDict.GetInteger(SettingNames.AaSamples, DefaultEngineSettings.AaSamples);
 			set => throw new InvalidOperationException();
 		}
-		
-		public int AoSamples 
+
+		public int AoSamples
 		{
 			get => mDict.GetInteger(SettingNames.AoSamples, DefaultEngineSettings.AoSamples);
 			set => throw new InvalidOperationException();
 		}
-		
-		public int MeshLightSamples 
+
+		public int MeshLightSamples
 		{
 			get => mDict.GetInteger(SettingNames.MeshLightSamples, DefaultEngineSettings.MeshLightSamples);
 			set => throw new InvalidOperationException();
 		}
-		public int SubsurfaceSamples 
+		public int SubsurfaceSamples
 		{
 			get => mDict.GetInteger(SettingNames.SubSurfaceSamples, DefaultEngineSettings.SubSurfaceSamples);
 			set => throw new InvalidOperationException();
 		}
-		public int VolumeSamples 
+		public int VolumeSamples
 		{
 			get => mDict.GetInteger(SettingNames.VolumeSamples, DefaultEngineSettings.VolumeSamples);
 			set => throw new InvalidOperationException();
 		}
 
-		public float FilterGlossy 
+		public float FilterGlossy
 		{
 			get => (float)mDict.GetDouble(SettingNames.FilterGlossy, DefaultEngineSettings.FilterGlossy);
 			set => throw new InvalidOperationException();
 		}
 
-		public float SampleClampDirect 
+		public float SampleClampDirect
 		{
 			get => (float)mDict.GetDouble(SettingNames.SampleClampDirect, DefaultEngineSettings.SampleClampDirect);
 			set => throw new InvalidOperationException();
 		}
-		public float SampleClampIndirect 
+		public float SampleClampIndirect
 		{
 			get => (float)mDict.GetDouble(SettingNames.SampleClampIndirect, DefaultEngineSettings.SampleClampIndirect);
 			set => throw new InvalidOperationException();
 		}
-		public float LightSamplingThreshold 
+		public float LightSamplingThreshold
 		{
 			get => (float)mDict.GetDouble(SettingNames.LightSamplingThreshold, DefaultEngineSettings.LightSamplingThreshold);
 			set => throw new InvalidOperationException();
 		}
 
-		public bool SampleAllLights 
+		public bool SampleAllLights
 		{
 			get => mDict.GetBool(SettingNames.SampleAllLights, DefaultEngineSettings.SampleAllLights);
 			set => throw new InvalidOperationException();
 		}
-		public bool SampleAllLightsIndirect 
+		public bool SampleAllLightsIndirect
 		{
 			get => mDict.GetBool(SettingNames.SampleAllLightsIndirect, DefaultEngineSettings.SampleAllLightsIndirect);
 			set => throw new InvalidOperationException();
 		}
 
-		public int Blades 
+		public int Blades
 		{
 			get => mDict.GetInteger(SettingNames.Blades, DefaultEngineSettings.Blades);
 			set => throw new InvalidOperationException();
 		}
-		public float BladesRotation 
+		public float BladesRotation
 		{
 			get => (float)mDict.GetDouble(SettingNames.BladesRotation, DefaultEngineSettings.BladesRotation);
 			set => throw new InvalidOperationException();
 		}
-		public float ApertureRatio 
+		public float ApertureRatio
 		{
 			get => (float)mDict.GetDouble(SettingNames.ApertureRatio, DefaultEngineSettings.ApertureRatio);
 			set => throw new InvalidOperationException();
 		}
-		public float ApertureFactor 
+		public float ApertureFactor
 		{
 			get => (float)mDict.GetDouble(SettingNames.ApertureFactor, DefaultEngineSettings.ApertureFactor);
 			set => throw new InvalidOperationException();
 		}
 
-		public float SensorWidth 
+		public float SensorWidth
 		{
 			get => (float)mDict.GetDouble(SettingNames.SensorWidth, DefaultEngineSettings.SensorWidth);
 			set => throw new InvalidOperationException();
 		}
-		public float SensorHeight 
+		public float SensorHeight
 		{
 			get => (float)mDict.GetDouble(SettingNames.SensorHeight, DefaultEngineSettings.SensorHeight);
 			set => throw new InvalidOperationException();
 		}
 
-		public int SssMethod 
+		public int SssMethod
 		{
 			get => mDict.GetInteger(SettingNames.SssMethod, DefaultEngineSettings.SssMethod);
 			set => throw new InvalidOperationException();
@@ -308,63 +308,63 @@ namespace RhinoCyclesCore.Settings
 #endregion
 
 #region Application/Global settings
-		public string SelectedDeviceStr 
+		public string SelectedDeviceStr
 		{
 			get => RcCore.It.AllSettings.SelectedDeviceStr;
 			set => RcCore.It.AllSettings.SelectedDeviceStr = value;
 		}
-		public string IntermediateSelectedDeviceStr 
+		public string IntermediateSelectedDeviceStr
 		{
 			get => mDict.GetString(SettingNames.IntermediateSelectedDeviceStr, DefaultEngineSettings.SelectedDeviceStr);
 			set => mDict[SettingNames.IntermediateSelectedDeviceStr] = value;
 		}
-		public int ThrottleMs 
+		public int ThrottleMs
 		{
-			get => mDict.GetInteger(SettingNames.ThrottleMs, DefaultEngineSettings.ThrottleMs);
+			get => RcCore.It.AllSettings.ThrottleMs; //mDict.GetInteger(SettingNames.ThrottleMs, DefaultEngineSettings.ThrottleMs);
 			set => throw new InvalidOperationException();
 		}
-		public virtual int Threads 
+		public virtual int Threads
 		{
 			get => mDict.GetInteger(SettingNames.Threads, DefaultEngineSettings.Threads);
 			set => throw new InvalidOperationException();
 		}
 
 
-		public int OpenClDeviceType 
+		public int OpenClDeviceType
 		{
 			get => mDict.GetInteger(SettingNames.OpenClDeviceType, DefaultEngineSettings.OpenClDeviceType);
 			set => throw new InvalidOperationException();
 		}
-		public bool OpenClSingleProgram 
+		public bool OpenClSingleProgram
 		{
 			get => mDict.GetBool(SettingNames.OpenClSingleProgram, DefaultEngineSettings.OpenClSingleProgram);
 			set => throw new InvalidOperationException();
 		}
-		public int OpenClKernelType 
+		public int OpenClKernelType
 		{
 			get => mDict.GetInteger(SettingNames.OpenClKernelType, DefaultEngineSettings.OpenClKernelType);
 			set => throw new InvalidOperationException();
 		}
 
-		public bool CPUSplitKernel 
+		public bool CPUSplitKernel
 		{
 			get => mDict.GetBool(SettingNames.CPUSplitKernel, DefaultEngineSettings.CPUSplitKernel);
 			set => throw new InvalidOperationException();
 		}
 
-		public bool NoShadows 
+		public bool NoShadows
 		{
 			get => mDict.GetBool(SettingNames.NoShadows, DefaultEngineSettings.NoShadows);
 			set => throw new InvalidOperationException();
 		}
 
-		public float DpiScale 
+		public float DpiScale
 		{
 			get => (float)mDict.GetDouble(SettingNames.DpiScale, DefaultEngineSettings.DpiScale);
 			set => throw new InvalidOperationException();
 		}
 
-		public int PreviewSamples 
+		public int PreviewSamples
 		{
 			get => mDict.GetInteger(SettingNames.PreviewSamples, DefaultEngineSettings.PreviewSamples);
 			set => throw new InvalidOperationException();

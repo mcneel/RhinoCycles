@@ -17,7 +17,7 @@ namespace RhinoCyclesCore.Settings
 		static public float AreaLightFactor => 17.2f;
 		static public float PolishFactor => 0.09f;
 
-		static public int ThrottleMs => 0;
+		static public int ThrottleMs => 5;
 		static public int Threads => 0;
 		static public float BumpDistance => 1.0f;
 		static public float NormalStrengthFactor => 1.0f;
@@ -49,9 +49,9 @@ namespace RhinoCyclesCore.Settings
 		static public int DiffuseSamples => 32;
 		static public int GlossySamples => 32;
 		static public int TransmissionSamples => 32;
-		
+
 		static public int AoSamples => 32;
-		
+
 		static public int MeshLightSamples => 32;
 		static public int SubSurfaceSamples => 32;
 		static public int VolumeSamples => 32;
@@ -60,7 +60,7 @@ namespace RhinoCyclesCore.Settings
 		static public bool UseDocumentSamples => false;
 		/// <summary>
 		/// Texture bake quality 0-3
-		/// 
+		///
 		/// 0 = low
 		/// 1 = standard
 		/// 2 = high

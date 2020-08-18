@@ -55,7 +55,7 @@ namespace RhinoCyclesCore.RenderEngines
 		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
 			//if (IsStopped) return;
-			
+
 		  //DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 	  }
 
@@ -152,6 +152,7 @@ namespace RhinoCyclesCore.RenderEngines
 					stillrendering = sample > -1;
 					cyclesEngine.BlitPixelsToRenderWindowChannel();
 					cyclesEngine.SignalUpdate(sample);
+					Thread.Sleep(2);
 				}
 				else
 				{
