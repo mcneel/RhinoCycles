@@ -103,6 +103,7 @@
     <Compile Include="RenderEngine.Shaders.cs" />
     <Compile Include="RenderEngine.Utils.cs" />
     <Compile Include="ExtensionMethods\RhinoCyclesExtensions.cs" />
+    <Compile Include="Settings\SkipList.cs" />
     <Compile Include="Shaders\RhinoFullNxt.cs" />
     <Compile Include="Shaders\RhinoLight.cs" />
     <Compile Include="Shaders\RhinoBackground.cs" />
@@ -165,7 +166,7 @@
     <None Include="Icons\Cycles_material.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
