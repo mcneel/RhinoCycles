@@ -29,6 +29,8 @@ using RhinoCyclesCore.Core;
 using RhinoCyclesCore;
 using Rhino.UI;
 
+using System.Management;
+
 namespace RhinoCycles
 {
 	public class Plugin : PlugIn
@@ -40,6 +42,35 @@ namespace RhinoCycles
 		public override PlugInLoadTime LoadTime => PlugInLoadTime.AtStartup;
 
 		private bool pluginLoaded = false;
+
+		private bool SkipOpenCl() {
+#if ON_RUNTIME_WIN
+			SkipList skipList = new SkipList(SettingsDirectory);
+
+			ManagementObjectSearcher objvide = new ManagementObjectSearcher("select * from Win32_VideoController");
+
+			bool shouldskip = false;
+
+			foreach (ManagementObject obj in objvide.Get())
+			{
+				string name = $"{obj["Name"]}";
+				int avail = Convert.ToInt16(obj["Availability"]);
+				string driverversion = $"{obj["DriverVersion"]}";
+
+				if (avail != 3) continue;
+
+				RhinoApp.OutputDebugString($"Name: {name}\n");
+				RhinoApp.OutputDebugString($"Availability: {avail}\n");
+				RhinoApp.OutputDebugString($"DriverVersion: {driverversion}\n");
+
+				shouldskip |= skipList.Hit(name); // name.Contains("Intel") && name.Contains("530");
+
+			}
+			return shouldskip;
+#else
+			return false;
+#endif
+		}
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			if(!pluginLoaded) {
@@ -70,13 +101,13 @@ namespace RhinoCycles
 
 				CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
 
-				if(RhinoApp.RunningOnVMWare()) {
+				if(RhinoApp.RunningOnVMWare() || SkipOpenCl()) {
 					CSycles.debug_set_opencl_device_type(0);
 				} else {
 					CSycles.debug_set_opencl_device_type(RcCore.It.AllSettings.OpenClDeviceType);
+					CSycles.debug_set_opencl_kernel(RcCore.It.AllSettings.OpenClKernelType);
+					CSycles.debug_set_opencl_single_program(RcCore.It.AllSettings.OpenClSingleProgram);
 				}
-				CSycles.debug_set_opencl_kernel(RcCore.It.AllSettings.OpenClKernelType);
-				CSycles.debug_set_opencl_single_program(RcCore.It.AllSettings.OpenClSingleProgram);
 				CSycles.debug_set_cpu_kernel(RcCore.It.AllSettings.CPUSplitKernel);
 
 				RcCore.It.Initialised = false;
