@@ -131,6 +131,7 @@
     <Compile Include="Settings\OptionsDialogPage.cs" />
     <Compile Include="Settings\DocumentSettingsModel.cs" />
     <Compile Include="Settings\SettingNames.cs" />
+    <Compile Include="Settings\SkipList.cs" />
     <Compile Include="Settings\ViewportSettingsChangedEventArgs.cs" />
     <Compile Include="Shaders\RhinoFullNxt.cs" />
     <Compile Include="Shaders\RhinoLight.cs" />
