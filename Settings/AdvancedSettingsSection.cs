@@ -74,7 +74,7 @@ namespace RhinoCyclesCore.Settings
 		public AdvancedSettingsSection(Guid pluginId, bool for_app, uint doc_serial) : base(for_app, doc_serial)
 		{
 			m_pluginId = pluginId;
-			m_caption = LOC.COV("Rhino Render Advanced Settings");
+			m_caption = Localization.LocalizeCommandOptionValue("Rhino Render Advanced Settings", 38);
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
