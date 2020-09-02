@@ -29,7 +29,7 @@ namespace RhinoCyclesCore.Settings
 
 
 	/// Becausee this model is used also in application settings all settings interface is implemented.
-	/// 
+	///
 	/// </summary>
 	[Guid("cae9d284-03b0-4d1c-aa46-b431bc9a7ea2")]
 	public class DocumentSettingsModel : CollapsibleSectionViewModel, INotifyPropertyChanged, IAllSettings
@@ -158,12 +158,12 @@ namespace RhinoCyclesCore.Settings
 		{
 			get
 			{
-				GetInt(SettingNames.Samples, DefaultEngineSettings.Samples, out int outVal);
+				GetInt(SettingNames.Samples, RcCore.It.AllSettings.Samples, out int outVal);
 				return outVal;
 			}
 			set => SetInt(SettingNames.Samples, value);
 		}
-		public virtual bool UseDocumentSamples 
+		public virtual bool UseDocumentSamples
 		{
 			get
 			{

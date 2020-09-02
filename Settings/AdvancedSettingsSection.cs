@@ -68,6 +68,7 @@ namespace RhinoCyclesCore.Settings
 		public Label LblTextureBakeQuality { get; set; }
 		public StackLayout MainLayout { get; set; }
 
+
 		///<summary>
 		/// Constructor for IntegratorSection
 		///</summary>
@@ -100,6 +101,8 @@ namespace RhinoCyclesCore.Settings
 				StepperSeed.Value = e.AllSettings.Seed;
 				CheckboxUseSamples.Checked = e.AllSettings.UseDocumentSamples;
 				StepperSamples.Value = e.AllSettings.Samples;
+				StepperSamples.Visible = CheckboxUseSamples.Checked.GetValueOrDefault(false);
+				LblSamples.Visible = StepperSamples.Visible;
 				StepperMaxBounces.Value = e.AllSettings.MaxBounce;
 				StepperMaxDiffuseBounces.Value = e.AllSettings.MaxDiffuseBounce;
 				StepperMaxGlossyBounces.Value = e.AllSettings.MaxGlossyBounce;
@@ -296,8 +299,8 @@ namespace RhinoCyclesCore.Settings
 				Spacing = new Eto.Drawing.Size(1, 5),
 				Rows =
 				{
-					new TableRow(LblSamples, StepperSamples),
 					new TableRow(LblUseDocumentSamples, CheckboxUseSamples),
+					new TableRow(LblSamples, StepperSamples),
 				}
 			};
 			var textureTable = new TableLayout()
@@ -386,8 +389,9 @@ namespace RhinoCyclesCore.Settings
 		{
 			var vud = Settings;
 			if (vud == null) return;
-			
+
 			vud.UseDocumentSamples = CheckboxUseSamples.Checked.GetValueOrDefault(false);
+			StepperSamples.Visible = LblSamples.Visible = vud.UseDocumentSamples;
 		}
 
 		private void UnregisterControlEvents()

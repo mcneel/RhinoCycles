@@ -56,7 +56,7 @@ namespace RhinoCyclesCore.Settings
 		}
 		public virtual int Samples
 		{
-			get => Math.Max(1, mDict.GetInteger(SettingNames.Samples, DefaultEngineSettings.Samples));
+			get => Math.Max(1, mDict.GetInteger(SettingNames.Samples, RcCore.It.AllSettings.Samples));
 			set => mDict[SettingNames.Samples] = Math.Max(1, value);
 		}
 		public virtual bool UseDocumentSamples
