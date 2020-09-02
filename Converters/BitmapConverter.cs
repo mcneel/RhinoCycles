@@ -323,13 +323,17 @@ namespace RhinoCyclesCore.Converters
 			var rot = renderTexture.GetRotation();
 			var rep = renderTexture.GetRepeat();
 			var tra = renderTexture.GetOffset();
-			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude;multiplier;rdk-texture-repeat;rdk-texture-offset;rdk-texture-rotation;rdk-texture-adjust-multiplier");
+			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude;multiplier;rdk-texture-repeat;rdk-texture-offset;rdk-texture-rotation;rdk-texture-adjust-multiplier;intensity");
 			var azimob = renderTexture.GetParameter("azimuth");
 			var altob = renderTexture.GetParameter("altitude");
 			var multob = renderTexture.GetParameter("multiplier");
+			var intensityob = renderTexture.GetParameter("intensity");
 			var multadjob = renderTexture.GetParameter("rdk-texture-adjust-multiplier");
 			var mult = 1.0f;
 			var multadj = 1.0f;
+			var azi = 0.0f;
+			var alti = 0.0f;
+			var intensity = 1.0f;
 
 			if (multob != null)
 			{
@@ -339,13 +343,32 @@ namespace RhinoCyclesCore.Converters
 			{
 				multadj = (float)Convert.ToDouble(multadjob);
 			}
+			if (azimob != null) {
+				azi = (float)Convert.ToDouble(azimob);
+			}
+			if (altob != null) {
+				alti = (float)Convert.ToDouble(altob);
+			}
+			if (intensityob != null) {
+				intensity = (float)Convert.ToDouble(intensityob);
+			}
 
-			var restore = !multadj.FuzzyEquals(1.0f);
+			var restore =
+				!multadj.FuzzyEquals(1.0f)
+				|| !mult.FuzzyEquals(1.0f)
+				|| !azi.FuzzyEquals(0.0f)
+				|| !alti.FuzzyEquals(0.0f)
+				|| !intensity.FuzzyEquals(1.0f);
 
 			if (restore)
 			{
 				renderTexture.BeginChange(RenderContent.ChangeContexts.Ignore);
 				renderTexture.SetParameter("rdk-texture-adjust-multiplier", 1.0);
+				renderTexture.SetParameter("azimuth", 0.0);
+				renderTexture.SetParameter("altitude", 0.0);
+				renderTexture.SetParameter("intensity", 1.0);
+				renderTexture.SetParameter("multiplier", 1.0);
+				renderTexture.EndChange();
 			}
 
 			using (var textureEvaluator =
@@ -406,15 +429,18 @@ namespace RhinoCyclesCore.Converters
 			}
 			if (restore)
 			{
+				renderTexture.BeginChange(RenderContent.ChangeContexts.Ignore);
 				renderTexture.SetParameter("rdk-texture-adjust-multiplier", (double)multadj);
+				renderTexture.SetParameter("azimuth", (double)azi);
+				renderTexture.SetParameter("altitude", (double)alti);
+				renderTexture.SetParameter("intensity", (double)intensity);
+				renderTexture.SetParameter("multiplier", (double)mult);
 				renderTexture.EndChange();
 			}
 			teximg.EnvProjectionMode = projection;
 			teximg.ProjectionMode = TextureProjectionMode.EnvironmentMap;
 
-			if ((int)projection != 4 && azimob != null && altob != null) {
-				var azi = Convert.ToDouble(azimob);
-				var alti = Convert.ToDouble(altob);
+			if ((int)projection != 4) {
 
 				rhinotfm.M00 = tra.X;
 				rhinotfm.M01 = tra.Y;
@@ -449,7 +475,7 @@ namespace RhinoCyclesCore.Converters
 			teximg.Strength = mult * multadj;
 		}
 
-	
+
 
 		class MyDumbBitmapByteList : IEnumerable<byte>
 		{

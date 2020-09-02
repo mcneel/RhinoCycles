@@ -284,9 +284,7 @@ namespace RhinoCycles.Viewport
 			if (o is ModalRenderEngine mre)
 			{
 				mre.Renderer();
-#if DEBUG
 				mre.SaveRenderedBuffer(0);
-#endif
 				_frameAvailable = true;
 			}
 		}
