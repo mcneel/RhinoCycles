@@ -23,6 +23,7 @@ using ccl;
 using Rhino;
 using Rhino.DocObjects;
 using Rhino.Render;
+using Rhino.UI;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Settings;
 using sdd = System.Diagnostics.Debug;
@@ -228,7 +229,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				// set final status string and progress to 1.0f to signal completed render
 				cyclesEngine.SetProgress(rw,
-					$"Render ready {cyclesEngine.RenderedSamples + 1} samples, duration {cyclesEngine.TimeString}", 1.0f);
+					String.Format(LOC.STR("Render ready {0} samples, duration {1}"), cyclesEngine.RenderedSamples + 1, cyclesEngine.TimeString), 1.0f);
 				// signal the render window we're done.
 				//rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 			}

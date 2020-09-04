@@ -13,9 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+using System;
 using System.Drawing;
 using Rhino;
 using Rhino.Render;
+using Rhino.UI;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.RenderEngines;
 
@@ -37,7 +39,7 @@ namespace RhinoCycles
 
 		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, Size rwSize, ModalRenderEngine aRC)
 			: base(doc, mode, plugin, rwSize,
-					$"Rhino Render on {RcCore.It.AllSettings.RenderDevice.NiceName}" , Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
+					String.Format(LOC.STR("Rhino Render on {0}"), RcCore.It.AllSettings.RenderDevice.NiceName), Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
 		{
 			cyclesEngine = aRC;
 		}
