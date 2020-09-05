@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -229,7 +229,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				// set final status string and progress to 1.0f to signal completed render
 				cyclesEngine.SetProgress(rw,
-					String.Format(LOC.STR("Render ready {0} samples, duration {1}"), cyclesEngine.RenderedSamples + 1, cyclesEngine.TimeString), 1.0f);
+					String.Format(Localization.LocalizeString("Render ready {0} samples, duration {1}", 39), cyclesEngine.RenderedSamples + 1, cyclesEngine.TimeString), 1.0f);
 				// signal the render window we're done.
 				//rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 			}

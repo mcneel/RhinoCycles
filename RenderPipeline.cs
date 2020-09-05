@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,7 +39,7 @@ namespace RhinoCycles
 
 		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, Size rwSize, ModalRenderEngine aRC)
 			: base(doc, mode, plugin, rwSize,
-					String.Format(LOC.STR("Rhino Render on {0}"), RcCore.It.AllSettings.RenderDevice.NiceName), Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
+					String.Format(Localization.LocalizeString("Rhino Render on {0}", 40), RcCore.It.AllSettings.RenderDevice.NiceName), Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
 		{
 			cyclesEngine = aRC;
 		}
