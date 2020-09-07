@@ -194,6 +194,7 @@ namespace RhinoCyclesCore.RenderEngines
 #endif
 
 			#endregion
+			HandleDeviceAndIntegrator(eds);
 
 			var scaledPixelSize = Dpi / 72.0f;
 			var pixelSize = Math.Max(1, (int)(scaledPixelSize * eds.DpiScale));
@@ -224,7 +225,6 @@ namespace RhinoCyclesCore.RenderEngines
 			#endregion
 
 			CreateScene(client, Session, renderDevice, this, eds);
-			HandleDeviceAndIntegrator(eds);
 
 			// Set up passes
 			foreach (var reqPass in reqPassTypes)
