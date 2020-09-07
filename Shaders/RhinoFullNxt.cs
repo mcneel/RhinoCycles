@@ -109,6 +109,11 @@ namespace RhinoCyclesCore.Shaders
 
 				var tangent = new TangentNode("tangents");
 
+				var coloured_shadow_mix_custom = new MixClosureNode("coloured_shadow_mix_custom");
+				var lightpath = new LightPathNode("light_path_for_coloured_shadow");
+				var coloured_shadow_switch = new MathMultiply("coloured_shadow_switch");
+				var coloured_shadow = new TransparentBsdfNode("coloured_shadow_transp_bsdf");
+
 				aoamount.BlendType = MixNode.BlendTypes.Blend;
 				aoamount.ins.Color1.Value = Rhino.Display.Color4f.Black.ToFloat4();
 				aoamount.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
@@ -131,6 +136,11 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(basewithao);
 				m_shader.AddNode(tangent);
 
+				m_shader.AddNode(coloured_shadow_mix_custom);
+				m_shader.AddNode(lightpath);
+				m_shader.AddNode(coloured_shadow_switch);
+				m_shader.AddNode(coloured_shadow);
+
 				if(part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasTextureImage) {
 					m_shader.AddNode(aotex);
 					m_shader.AddNode(aoamount);
@@ -147,8 +157,12 @@ namespace RhinoCyclesCore.Shaders
 
 
 
+
 				Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1, texco);
 				basewithao.outs.Color.Connect(principled.ins.BaseColor);
+				basewithao.outs.Color.Connect(coloured_shadow.ins.Color);
+
+
 				Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, principled.ins.SpecularTint, texco);
@@ -161,6 +175,7 @@ namespace RhinoCyclesCore.Shaders
 				Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, principled.ins.Transmission, texco, true);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, coloured_shadow_switch.ins.Value2, texco, true);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR, texco);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic, texco);
@@ -245,7 +260,12 @@ namespace RhinoCyclesCore.Shaders
 					}
 				}
 
-				principled.outs.BSDF.Connect(addemissive.ins.Closure1);
+				lightpath.outs.IsShadowRay.Connect(coloured_shadow_switch.ins.Value1);
+				coloured_shadow_switch.outs.Value.Connect(coloured_shadow_mix_custom.ins.Fac);
+				coloured_shadow.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure2);
+				principled.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure1);
+
+				coloured_shadow_mix_custom.outs.Closure.Connect(addemissive.ins.Closure1);
 
 				if(part.PbrEmission.On && part.PbrEmissionTexture.HasTextureImage)
 				{
