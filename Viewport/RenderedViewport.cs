@@ -395,7 +395,7 @@ namespace RhinoCycles.Viewport
 
 		void CyclesStatusTextUpdated(object sender, RenderEngine.StatusTextEventArgs e)
 		{
-			if (_cycles?.IsWaiting ?? false) _status = "Paused";
+			if (_cycles?.IsWaiting ?? false) _status = LOC.STR("Paused");
 			else
 			{
 				_status = e.Samples < 0 ? e.StatusText : "";
