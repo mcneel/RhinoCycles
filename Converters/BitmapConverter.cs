@@ -514,7 +514,17 @@ namespace RhinoCyclesCore.Converters
 
 	public static ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
 	{
-		return new ByteBitmap(id, new SimpleArrayByte(new MyDumbBitmapByteList(bm)), pwidth, pheight, false);
+		var read = ByteImagesNew.ContainsKey(id);
+		var img = read ? ByteImagesNew[id] : new ByteBitmap(id, new SimpleArrayByte(new MyDumbBitmapByteList(bm)), pwidth, pheight, false);
+		if (!read)
+		{
+			if (RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
+			lock (bytelocker)
+			{
+				ByteImagesNew[id] = img;
+			}
+		}
+		return img;
 	}
 
 
