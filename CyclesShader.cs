@@ -358,6 +358,7 @@ namespace RhinoCyclesCore
 				rm.BeginChange(RenderContent.ChangeContexts.Ignore);
 				shb.Name = rm.Name ?? "";
 				shb.Gamma = gamma;
+				shb.UseBaseColorTextureAlphaAsObjectAlpha = pbrmat.UseBaseColorTextureAlphaForObjectAlphaTransparencyTexture;
 				HandleTexturedColorProperty(Pbr.BaseColor, pbrmat, rm, shb.PbrBase);
 				shb.PbrBase.Value = (shb.PbrBase.Value.ToFloat4() ^ gamma).ToColor4f();
 				Utilities.HandleRenderTexture(shb.PbrBase.Texture, shb.PbrBaseTexture, false, gamma);
@@ -704,6 +705,8 @@ namespace RhinoCyclesCore
 
 		public TexturedFloat PbrAlpha = new TexturedFloat(Pbr.Alpha, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrAlphaTexture = new CyclesTextureImage();
+
+		public bool UseBaseColorTextureAlphaAsObjectAlpha { get; set; } = true;
 
 		public TexturedColor PbrEmission = new TexturedColor(Pbr.Emission, Color4f.Black, false, 0.0f);
 		public CyclesTextureImage PbrEmissionTexture = new CyclesTextureImage();

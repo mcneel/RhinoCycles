@@ -178,7 +178,7 @@ namespace RhinoCyclesCore.Shaders
 
 				ImageTextureNode basecoltex = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1, texco);
 
-				if(basecoltex != null) {
+				if(basecoltex != null && part.UseBaseColorTextureAlphaAsObjectAlpha) {
 					basecoltex.outs.Alpha.Connect(alpha_invert_basecolalpha_component.ins.Value2);
 					alpha_invert_basecolalpha_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value1);
 				}
