@@ -234,7 +234,6 @@ namespace RhinoCyclesCore
 			m_old_grayscale = view.ShowWallpaperInGrayScale;
 			m_old_scaletofit = scaleToFit;
 			m_old_wallpaper = file ?? "";
-			var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(m_old_wallpaper));
 			RcCore.OutputDebugString($"Handling wallpaper, reading {file}\n");
 			try
 			{
@@ -313,14 +312,15 @@ namespace RhinoCyclesCore
 						g.DrawImage(bm, new Rectangle(p, bmsize), 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, attr);
 					}
 				}
+				var wallpaperName = $"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
+				var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(wallpaperName));
 				var wallpaperbm = BitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaperbm.ApplyGamma(Gamma);
 				Wallpaper.TexByte = wallpaperbm.Data as SimpleArrayByte;
 				if (RcCore.It.AllSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
 				Wallpaper.TexWidth = newBitmap.Width;
 				Wallpaper.TexHeight = newBitmap.Height;
-				Wallpaper.Name =
-					$"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
+				Wallpaper.Name = wallpaperName;
 			}
 			catch (Exception e)
 			{
