@@ -256,6 +256,9 @@ namespace RhinoCyclesCore
 			if (pbrSlotName.Equals(Pbr.AmbientOcclusion))
 				scs = RenderMaterial.StandardChildSlots.PbrAmbientOcclusion;
 
+			if (pbrSlotName.Equals(Pbr.Alpha))
+				scs = RenderMaterial.StandardChildSlots.PbrAlpha;
+
 			return scs;
 		}
 
@@ -307,6 +310,9 @@ namespace RhinoCyclesCore
 					break;
 				case RenderMaterial.StandardChildSlots.PbrOpacityRoughness:
 					tv.Value = (float)pbrmat.OpacityRoughness;
+					break;
+				case RenderMaterial.StandardChildSlots.PbrAlpha:
+					tv.Value = (float)pbrmat.Alpha;
 					break;
 			}
 			tv.On = rm.GetTextureOnFromUsage(childSlot);
@@ -397,6 +403,8 @@ namespace RhinoCyclesCore
 				Utilities.HandleRenderTexture(shb.PbrDisplacement.Texture, shb.PbrDisplacementTexture, true, 1.0f);
 				HandleTexturedScalarProperty(Pbr.AmbientOcclusion, pbrmat, rm, shb.PbrAmbientOcclusion);
 				Utilities.HandleRenderTexture(shb.PbrAmbientOcclusion.Texture, shb.PbrAmbientOcclusionTexture, false, 1.0f);
+				HandleTexturedScalarProperty(Pbr.Alpha, pbrmat, rm, shb.PbrAlpha);
+				Utilities.HandleRenderTexture(shb.PbrAlpha.Texture, shb.PbrAlphaTexture, false, 1.0f);
 			}
 			else
 			{
@@ -693,6 +701,9 @@ namespace RhinoCyclesCore
 
 		public TexturedFloat PbrAmbientOcclusion = new TexturedFloat(Pbr.AmbientOcclusion, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrAmbientOcclusionTexture = new CyclesTextureImage();
+
+		public TexturedFloat PbrAlpha = new TexturedFloat(Pbr.Alpha, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrAlphaTexture = new CyclesTextureImage();
 
 		public TexturedColor PbrEmission = new TexturedColor(Pbr.Emission, Color4f.Black, false, 0.0f);
 		public CyclesTextureImage PbrEmissionTexture = new CyclesTextureImage();

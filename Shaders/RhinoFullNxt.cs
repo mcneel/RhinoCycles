@@ -129,6 +129,17 @@ namespace RhinoCyclesCore.Shaders
 
 				principled.Sss = SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.AllSettings.SssMethod);
 
+				var alpha_transparency_bsdf = new TransparentBsdfNode("alpha_transparency_bsdf");
+				var alpha_transparency_mixer = new MixClosureNode("alpha_transparency_mixer");
+				var alpha_transp_component = new MathSubtract("alpha_transp_component");
+				alpha_transp_component.ins.Value1.Value = 1.0f;
+				var alpha_invert_basecolalpha_component = new MathSubtract("alpha_invert_basecolalpha_component");
+				alpha_invert_basecolalpha_component.ins.Value1.Value = 1.0f;
+
+				var alpha_basecolalpha_plus_alphatransp = new MathAdd("alpha_basecolalpha_plus_alphatransp");
+				var alpha_transparency_final = new MathSubtract("alpha_transparency_final");
+				alpha_transparency_final.ins.Value1.Value = 1.0f;
+
 				m_shader.AddNode(texco);
 				m_shader.AddNode(emissive);
 				m_shader.AddNode(addemissive);
@@ -140,6 +151,13 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(lightpath);
 				m_shader.AddNode(coloured_shadow_switch);
 				m_shader.AddNode(coloured_shadow);
+
+				m_shader.AddNode(alpha_transparency_bsdf);
+				m_shader.AddNode(alpha_transparency_mixer);
+				m_shader.AddNode(alpha_transp_component);
+				m_shader.AddNode(alpha_invert_basecolalpha_component);
+				m_shader.AddNode(alpha_transparency_final);
+				m_shader.AddNode(alpha_basecolalpha_plus_alphatransp);
 
 				if(part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasTextureImage) {
 					m_shader.AddNode(aotex);
@@ -158,7 +176,13 @@ namespace RhinoCyclesCore.Shaders
 
 
 
-				Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1, texco);
+				ImageTextureNode basecoltex = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1, texco);
+
+				if(basecoltex != null) {
+					basecoltex.outs.Alpha.Connect(alpha_invert_basecolalpha_component.ins.Value2);
+					alpha_invert_basecolalpha_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value1);
+				}
+
 				basewithao.outs.Color.Connect(principled.ins.BaseColor);
 				basewithao.outs.Color.Connect(coloured_shadow.ins.Color);
 
@@ -278,6 +302,15 @@ namespace RhinoCyclesCore.Shaders
 					emissive.outs.Emission.Connect(addemissive.ins.Closure2);
 				}
 
+				addemissive.outs.Closure.Connect(alpha_transparency_mixer.ins.Closure2);
+				alpha_transparency_bsdf.outs.BSDF.Connect(alpha_transparency_mixer.ins.Closure1);
+				Utilities.PbrGraphForSlot(m_shader, part.PbrAlpha, part.PbrAlphaTexture, alpha_transp_component.ins.Value2, texco);
+
+				alpha_transp_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value2);
+
+				alpha_basecolalpha_plus_alphatransp.outs.Value.Connect(alpha_transparency_final.ins.Value2);
+				alpha_transparency_final.outs.Value.Connect(alpha_transparency_mixer.ins.Fac);
+
 				tangent.outs.Tangent.Connect(principled.ins.Tangent);
 
 				if(part.PbrDisplacement.On && part.PbrDisplacementTexture.HasTextureImage)
@@ -293,7 +326,7 @@ namespace RhinoCyclesCore.Shaders
 					displacement.outs.Displacement.Connect(m_shader.Output.ins.Displacement);
 				}
 
-				return addemissive;
+				return alpha_transparency_mixer;
 				
 			} else {
 				// NOTE: need to add separate texture coordinate nodes for each channel, since different channels
