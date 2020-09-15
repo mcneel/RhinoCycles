@@ -61,7 +61,7 @@ namespace RhinoCyclesCore.Converters
 				 * set this can be necessary. */
 				if (shader.Front == null)
 				{
-					using (RenderMaterial defrm = RenderMaterial.CreateBasicMaterial(null))
+					using (RenderMaterial defrm = RenderMaterial.CreateBasicMaterial(null, null))
 					{
 						shader.CreateFrontShader(defrm, lw.PreProcessGamma);
 					}
