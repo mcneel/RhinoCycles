@@ -417,7 +417,7 @@ namespace RhinoCyclesCore
 					// what to read out from the simulated material to
 					// populate my own material descriptions.
 					var m = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Disallow);
-					var backuprm = RenderMaterial.CreateBasicMaterial(m);
+					var backuprm = RenderMaterial.CreateBasicMaterial(m, null);
 					// figure out what type of material we are.
 					//var probemat = GuessMaterialFromSmell(rm);
 					var probemat = WhatMaterial(rm, m);
