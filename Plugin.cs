@@ -82,8 +82,6 @@ namespace RhinoCycles
 				var rccoreass = typeof(RcCore).Assembly;
 				RenderContent.RegisterContent(rccoreass, Id);
 
-				RenderContent.ContentFieldChanged += RenderContentOnContentFieldChanged;
-
 				var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
 				RcCore.It.PluginPath = path;
 				var kernelPath = Path.Combine(path, "RhinoCycles");
@@ -145,16 +143,11 @@ namespace RhinoCycles
 			}
 		}
 
-		private void RenderContentOnContentFieldChanged(object sender, RenderContentFieldChangedEventArgs renderContentFieldChangedEventArgs)
-		{
-			//RhinoApp.WriteLine("... {0}", renderContentFieldChangedEventArgs.FieldName);
-		}
-
 		protected override void OnShutdown()
 		{
 			RhinoApp.Initialized -= RhinoApp_Initialized;
 			/* Clean up everything from C[CS]?ycles. */
-			CSycles.shutdown();
+			RcCore.It.Shutdown();
 			base.OnShutdown();
 		}
 

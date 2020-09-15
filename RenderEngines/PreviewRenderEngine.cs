@@ -122,7 +122,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (cyclesEngine.CancelRender) return;
 
 #region create session for scene
-			cyclesEngine.Session = new Session(client, sessionParams);
+			cyclesEngine.Session = RcCore.It.CreateSession(client, sessionParams);
 #endregion
 
 			CreateScene(client, cyclesEngine.Session, renderDevice, cyclesEngine, RcCore.It.AllSettings);
@@ -135,6 +135,10 @@ namespace RhinoCyclesCore.RenderEngines
 			// main render loop
 			cyclesEngine.Database.Flush();
 			cyclesEngine.UploadData();
+
+			// get rid of our change queue
+			cyclesEngine.Database?.Dispose();
+			cyclesEngine.Database = null;
 
 			cyclesEngine.Session.PrepareRun();
 
@@ -164,11 +168,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			cyclesEngine.Session.EndRun();
 			// we're done now, so lets clean up our session.
-			cyclesEngine.Session.Destroy();
-
-			// get rid of our change queue
-			cyclesEngine.Database?.Dispose();
-			cyclesEngine.Database = null;
+			RcCore.It.ReleaseSession(cyclesEngine.Session);
 		}
 
 	}

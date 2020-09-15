@@ -221,7 +221,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (this == null || CancelRender) return;
 
 			#region create session for scene
-			Session = new Session(client, sessionParams);
+			Session = RcCore.It.CreateSession(client, sessionParams);
 			#endregion
 
 			CreateScene(client, Session, renderDevice, this, eds);
@@ -301,7 +301,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (this != null)
 			{
 				Session.EndRun();
-				Session.Destroy();
+				RcCore.It.ReleaseSession(Session);
 			}
 		}
 

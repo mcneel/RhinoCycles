@@ -14,13 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using ccl;
 using Rhino;
 using RhinoCyclesCore.Settings;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Text;
+using System.Threading;
 
 namespace RhinoCyclesCore.Core
 {
@@ -131,8 +132,61 @@ namespace RhinoCyclesCore.Core
 		public static void OutputDebugString(string msg)
 		{
 #if OUTPUTDEBUGSTRINGS
-			Rhino.RhinoApp.OutputDebugString(msg);
+			RhinoApp.OutputDebugString(msg);
 #endif
+		}
+
+		ConcurrentDictionary<uint, Session> sessions = new ConcurrentDictionary<uint, Session>();
+		/// <summary>
+		/// Shut down Cycles on all levels. Wait for all active session to complete.
+		/// </summary>
+		public void Shutdown() {
+			int count;
+			int timer = 0;
+			while((count = sessions.Count) > 0 ) {
+				if(timer%50==0)
+					RhinoApp.OutputDebugString($"Number of sessions we wait for {count}\n");
+				Thread.Sleep(10);
+				timer++;
+			}
+			RhinoApp.OutputDebugString($"All sessions cleaned up\n");
+			CSycles.shutdown();
+		}
+
+		/// <summary>
+		/// Create a ccl.Session and register with central system so we can later ensure
+		/// we wait on all sessions to fully complete before shutting down CSycles.
+		/// 
+		/// Sessions created with this function have to be released/destroyed using
+		/// the function ReleaseSession
+		/// </summary>
+		/// <param name="client"></param>
+		/// <param name="sessionParameters"></param>
+		/// <returns></returns>
+		public Session CreateSession(Client client, SessionParameters sessionParameters) {
+			var session = new Session(client, sessionParameters);
+
+			if(sessions.ContainsKey(session.Id)) {
+				RhinoApp.OutputDebugString($"Session {session.Id} already exists\n");
+			}
+
+			sessions[session.Id] = session;
+			RhinoApp.OutputDebugString($"Created session {session.Id}\n");
+
+			return session;
+		}
+
+		/// <summary>
+		/// Release and destroy session created by CreateSession.
+		/// </summary>
+		/// <param name="session"></param>
+		public void ReleaseSession(Session session) {
+			if(sessions.ContainsKey(session.Id)) {
+				RhinoApp.OutputDebugString($"Releasing session {session.Id}\n");
+				sessions.TryRemove(session.Id, out Session tempSession);
+				tempSession.EndRun();
+				tempSession.Destroy();
+			}
 		}
 	}
 }
