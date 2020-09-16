@@ -325,7 +325,7 @@ namespace RhinoCyclesCore.Settings
 		}
 		public virtual int Threads
 		{
-			get => mDict.GetInteger(SettingNames.Threads, DefaultEngineSettings.Threads);
+			get => mDict.GetInteger(SettingNames.Threads, RcCore.It.AllSettings.Threads);
 			set => throw new InvalidOperationException();
 		}
 
