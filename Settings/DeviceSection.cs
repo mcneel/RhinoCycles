@@ -349,7 +349,10 @@ namespace RhinoCyclesCore.Settings
 			var nodev = "-";
 			if(m_currentDevice!=null)
 			{
-				m_curdev.Text = $"{m_currentDevice.NiceName} ({m_currentDevice.Type})";
+				if(m_currentDevice.Type != ccl.DeviceType.Optix)
+					m_curdev.Text = $"{m_currentDevice.NiceName} ({m_currentDevice.Type})";
+				else
+					m_curdev.Text = $"{m_currentDevice.NiceName}";
 			}
 			else
 			{
