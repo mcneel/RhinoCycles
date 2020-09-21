@@ -318,7 +318,7 @@ namespace RhinoCyclesCore
 			tv.On = rm.GetTextureOnFromUsage(childSlot);
 			if (tv.On)
 			{
-				tv.Amount = (float)rm.GetTextureAmountFromUsage(childSlot);
+				tv.Amount = (float)rm.GetTextureAmountFromUsage(childSlot) / 100.0f;
 				tv.Texture = rm.GetTextureFromUsage(childSlot);
 			}
 		}
