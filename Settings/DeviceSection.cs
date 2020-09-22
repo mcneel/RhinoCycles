@@ -330,7 +330,7 @@ namespace RhinoCyclesCore.Settings
 				MaximumDecimalPlaces = 0,
 				Width = 75
 			};
-			m_lb_threadcount = new Label { Text = LOC.STR("CPU Threads"), ToolTip = LOC.STR("Amount of threads to use when using CPU as rendering device") };
+			m_lb_threadcount = new Label { Text = Localization.LocalizeString("CPU Threads", 13), ToolTip = Localization.LocalizeString("Amount of threads to use when using CPU as rendering device", 42) };
 		}
 
 
