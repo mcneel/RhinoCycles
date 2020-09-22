@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using Eto.Forms;
+using Rhino.Runtime;
 using Rhino.UI;
 using RhinoCyclesCore.Core;
 using System;
@@ -21,6 +22,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using static RhinoCyclesCore.RenderEngine;
 
 namespace RhinoCyclesCore.Settings
 {
@@ -182,7 +184,8 @@ namespace RhinoCyclesCore.Settings
 		private GridDevicePage m_tabpage_optix;
 		private GridDevicePage m_tabpage_opencl;
 		private ccl.Device m_currentDevice;
-		private readonly string m_nodeviceselected = Localization.LocalizeString("No device selected, default device will be used", 13);
+		private Label m_lb_threadcount;
+		private NumericStepper m_threadcount;
 
 		public override LocalizeStringPair Caption
 		{
@@ -264,6 +267,9 @@ namespace RhinoCyclesCore.Settings
 				SetupDeviceData(vud, m_tabpage_optix.Collection, ccl.DeviceType.Optix);
 				SetupDeviceData(vud, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
 				ActivateDevicePage(vud);
+				m_lb_threadcount.Visible = m_currentDevice.IsCpu;
+				m_threadcount.Visible = m_currentDevice.IsCpu;
+				m_threadcount.Value = Settings.Threads;
 				RegisterControlEvents();
 				ResumeLayout();
 			}
@@ -292,6 +298,9 @@ namespace RhinoCyclesCore.Settings
 				SetupDeviceData(e.AllSettings, m_tabpage_optix.Collection, ccl.DeviceType.Optix);
 				SetupDeviceData(e.AllSettings, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
 				ActivateDevicePage(e.AllSettings);
+				m_lb_threadcount.Visible = m_currentDevice.IsCpu;
+				m_threadcount.Visible = m_currentDevice.IsCpu;
+				m_threadcount.Value = e.AllSettings.Threads;
 				RegisterControlEvents();
 				ResumeLayout();
 			}
@@ -312,6 +321,16 @@ namespace RhinoCyclesCore.Settings
 
 			m_lb_curdev = new Label { Text = Localization.LocalizeString("Current render device:", 27) };
 			m_curdev = new Label { Text = "...", Wrap = WrapMode.Word };
+
+			m_threadcount = new NumericStepper()
+			{
+				Value = 0,
+				MaxValue = Environment.ProcessorCount,
+				MinValue = 1,
+				MaximumDecimalPlaces = 0,
+				Width = 75
+			};
+			m_lb_threadcount = new Label { Text = LOC.STR("CPU Threads"), ToolTip = LOC.STR("Amount of threads to use when using CPU as rendering device") };
 		}
 
 
@@ -326,7 +345,8 @@ namespace RhinoCyclesCore.Settings
 				Items =
 				{
 					TableLayout.HorizontalScaled(15, m_lb_curdev, m_curdev),
-					new StackLayoutItem(m_tc, true)
+					new StackLayoutItem(m_tc, true),
+					TableLayout.HorizontalScaled(15, m_lb_threadcount, m_threadcount),
 				}
 			};
 			Content = layout;
@@ -342,6 +362,16 @@ namespace RhinoCyclesCore.Settings
 			m_tabpage_optix.RegisterEventHandlers();
 			m_tabpage_opencl.SelectionChanged += DeviceSelectionChanged;
 			m_tabpage_opencl.RegisterEventHandlers();
+			m_threadcount.ValueChanged += M_threadcount_ValueChanged;
+		}
+
+		private void M_threadcount_ValueChanged(object sender, EventArgs e)
+		{
+			var vud = Settings;
+			if (vud != null)
+			{
+				vud.Threads = (int)m_threadcount.Value;
+			}
 		}
 
 		private void ShowDeviceData()
@@ -417,6 +447,7 @@ namespace RhinoCyclesCore.Settings
 			m_tabpage_optix.UnregisterEventHandlers();
 			m_tabpage_opencl.SelectionChanged -= DeviceSelectionChanged;
 			m_tabpage_opencl.UnregisterEventHandlers();
+			m_threadcount.ValueChanged -= M_threadcount_ValueChanged;
 		}
 	}
 }
