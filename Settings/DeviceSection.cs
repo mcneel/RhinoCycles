@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using Eto.Forms;
+using Rhino.Render;
 using Rhino.Runtime;
 using Rhino.UI;
 using RhinoCyclesCore.Core;
@@ -185,7 +186,8 @@ namespace RhinoCyclesCore.Settings
 		private GridDevicePage m_tabpage_opencl;
 		private ccl.Device m_currentDevice;
 		private Label m_lb_threadcount;
-		private NumericStepper m_threadcount;
+		private Slider m_threadcount;
+		private Label m_lb_threadcount_currentval;
 
 		public override LocalizeStringPair Caption
 		{
@@ -269,6 +271,8 @@ namespace RhinoCyclesCore.Settings
 				ActivateDevicePage(vud);
 				m_lb_threadcount.Visible = m_currentDevice.IsCpu;
 				m_threadcount.Visible = m_currentDevice.IsCpu;
+				int utilPerc = (int)((float)Settings.Threads / Environment.ProcessorCount * 100.0f);
+				m_lb_threadcount_currentval.Text = $"(~{utilPerc} %)";
 				m_threadcount.Value = Settings.Threads;
 				RegisterControlEvents();
 				ResumeLayout();
@@ -301,6 +305,8 @@ namespace RhinoCyclesCore.Settings
 				m_lb_threadcount.Visible = m_currentDevice.IsCpu;
 				m_threadcount.Visible = m_currentDevice.IsCpu;
 				m_threadcount.Value = e.AllSettings.Threads;
+				int utilPerc = (int)((float)e.AllSettings.Threads / Environment.ProcessorCount * 100.0f);
+				m_lb_threadcount_currentval.Text = $"(~{utilPerc} %)";
 				RegisterControlEvents();
 				ResumeLayout();
 			}
@@ -322,15 +328,19 @@ namespace RhinoCyclesCore.Settings
 			m_lb_curdev = new Label { Text = Localization.LocalizeString("Current render device:", 27) };
 			m_curdev = new Label { Text = "...", Wrap = WrapMode.Word };
 
-			m_threadcount = new NumericStepper()
+			m_threadcount = new Slider()
 			{
-				Value = 0,
+				//SnapToTick = true,
+				TickFrequency = Environment.ProcessorCount,
+				Value = 1,
 				MaxValue = Environment.ProcessorCount,
 				MinValue = 1,
-				MaximumDecimalPlaces = 0,
-				Width = 75
+				Width = 130,
+				Orientation = Orientation.Horizontal
 			};
-			m_lb_threadcount = new Label { Text = Localization.LocalizeString("CPU Threads", 13), ToolTip = Localization.LocalizeString("Amount of threads to use when using CPU as rendering device", 42) };
+			m_lb_threadcount = new Label { Text = Localization.LocalizeString("CPU Utilization", 13), ToolTip = Localization.LocalizeString("Utilization percentage of CPU to use when set as render device", 42) };
+			m_lb_threadcount_currentval = new Label { Text = "-" };
+
 		}
 
 
@@ -346,7 +356,7 @@ namespace RhinoCyclesCore.Settings
 				{
 					TableLayout.HorizontalScaled(15, m_lb_curdev, m_curdev),
 					new StackLayoutItem(m_tc, true),
-					TableLayout.HorizontalScaled(15, m_lb_threadcount, m_threadcount),
+					TableLayout.HorizontalScaled(15, m_lb_threadcount, m_threadcount, m_lb_threadcount_currentval),
 				}
 			};
 			Content = layout;
@@ -367,11 +377,13 @@ namespace RhinoCyclesCore.Settings
 
 		private void M_threadcount_ValueChanged(object sender, EventArgs e)
 		{
-			var vud = Settings;
-			if (vud != null)
-			{
-				vud.Threads = (int)m_threadcount.Value;
-			}
+			Settings.Threads = (int)m_threadcount.Value;
+			Application.Instance.AsyncInvoke(() => {
+				UnRegisterControlEvents();
+				int utilPerc = (int)((float)Settings.Threads / Environment.ProcessorCount * 100.0f);
+				m_lb_threadcount_currentval.Text = $"(~{utilPerc} %)";
+				RegisterControlEvents();
+			});
 		}
 
 		private void ShowDeviceData()
