@@ -271,6 +271,7 @@ namespace RhinoCyclesCore.Settings
 				ActivateDevicePage(vud);
 				m_lb_threadcount.Visible = m_currentDevice.IsCpu;
 				m_threadcount.Visible = m_currentDevice.IsCpu;
+				m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
 				int utilPerc = (int)((float)Settings.Threads / Environment.ProcessorCount * 100.0f);
 				m_lb_threadcount_currentval.Text = $"(~{utilPerc} %)";
 				m_threadcount.Value = Settings.Threads;
@@ -303,6 +304,7 @@ namespace RhinoCyclesCore.Settings
 				SetupDeviceData(e.AllSettings, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
 				ActivateDevicePage(e.AllSettings);
 				m_lb_threadcount.Visible = m_currentDevice.IsCpu;
+				m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
 				m_threadcount.Visible = m_currentDevice.IsCpu;
 				m_threadcount.Value = e.AllSettings.Threads;
 				int utilPerc = (int)((float)e.AllSettings.Threads / Environment.ProcessorCount * 100.0f);
