@@ -256,27 +256,12 @@ namespace RhinoCyclesCore.Settings
 
 		private void It_InitialisationCompleted(object sender, EventArgs e)
 		{
+			m_currentDevice = Settings.RenderDevice;
+			DeviceSection_EngineSettingsReceivedHandler(this, new EngineSettingsReceivedArgs(Settings));
+
 			Application.Instance.AsyncInvoke(() =>
 			{
-				IDocumentSettings vud = Settings;
-				if (vud == null) return;
-				m_currentDevice = Settings.RenderDevice;
-				SuspendLayout();
-				UnRegisterControlEvents();
-				ShowDeviceData();
-				SetupDeviceData(vud, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
-				SetupDeviceData(vud, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
-				SetupDeviceData(vud, m_tabpage_optix.Collection, ccl.DeviceType.Optix);
-				SetupDeviceData(vud, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
-				ActivateDevicePage(vud);
-				m_lb_threadcount.Visible = m_currentDevice.IsCpu;
-				m_threadcount.Visible = m_currentDevice.IsCpu;
-				m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
-				int utilPerc = (int)((float)Settings.Threads / Environment.ProcessorCount * 100.0f);
-				m_lb_threadcount_currentval.Text = $"(~{utilPerc} %)";
-				m_threadcount.Value = Settings.Threads;
-				RegisterControlEvents();
-				ResumeLayout();
+				
 			}
 			);
 		}
@@ -292,26 +277,28 @@ namespace RhinoCyclesCore.Settings
 
 		private void DeviceSection_EngineSettingsReceivedHandler(object sender, EngineSettingsReceivedArgs e)
 		{
-			if (e.AllSettings != null)
-			{
-				m_currentDevice = RcCore.It.AllSettings.RenderDevice;
-				SuspendLayout();
-				UnRegisterControlEvents();
-				ShowDeviceData();
-				SetupDeviceData(e.AllSettings, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
-				SetupDeviceData(e.AllSettings, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
-				SetupDeviceData(e.AllSettings, m_tabpage_optix.Collection, ccl.DeviceType.Optix);
-				SetupDeviceData(e.AllSettings, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
-				ActivateDevicePage(e.AllSettings);
-				m_lb_threadcount.Visible = m_currentDevice.IsCpu;
-				m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
-				m_threadcount.Visible = m_currentDevice.IsCpu;
-				m_threadcount.Value = e.AllSettings.Threads;
-				int utilPerc = (int)((float)e.AllSettings.Threads / Environment.ProcessorCount * 100.0f);
-				m_lb_threadcount_currentval.Text = $"(~{utilPerc} %)";
-				RegisterControlEvents();
-				ResumeLayout();
-			}
+			m_currentDevice = RcCore.It.AllSettings.RenderDevice;
+
+			Application.Instance.AsyncInvoke(() => {
+				if (e.AllSettings != null) {
+					SuspendLayout();
+					UnRegisterControlEvents();
+					ShowDeviceData();
+					SetupDeviceData(e.AllSettings, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
+					SetupDeviceData(e.AllSettings, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
+					SetupDeviceData(e.AllSettings, m_tabpage_optix.Collection, ccl.DeviceType.Optix);
+					SetupDeviceData(e.AllSettings, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
+					ActivateDevicePage(e.AllSettings);
+					m_lb_threadcount.Visible = m_currentDevice.IsCpu;
+					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
+					m_threadcount.Visible = m_currentDevice.IsCpu;
+					m_threadcount.Value = e.AllSettings.Threads;
+					int utilPerc = (int)((float)e.AllSettings.Threads / Environment.ProcessorCount * 100.0f);
+					m_lb_threadcount_currentval.Text = $"(\u2248{utilPerc} %)";
+					RegisterControlEvents();
+					ResumeLayout();
+				}
+			});
 		}
 
 		private void InitializeComponents()
@@ -332,8 +319,8 @@ namespace RhinoCyclesCore.Settings
 
 			m_threadcount = new Slider()
 			{
-				//SnapToTick = true,
-				TickFrequency = Environment.ProcessorCount,
+				SnapToTick = true,
+				TickFrequency = 1,
 				Value = 1,
 				MaxValue = Environment.ProcessorCount,
 				MinValue = 1,
@@ -383,7 +370,7 @@ namespace RhinoCyclesCore.Settings
 			Application.Instance.AsyncInvoke(() => {
 				UnRegisterControlEvents();
 				int utilPerc = (int)((float)Settings.Threads / Environment.ProcessorCount * 100.0f);
-				m_lb_threadcount_currentval.Text = $"(~{utilPerc} %)";
+				m_lb_threadcount_currentval.Text = $"(\u2248{utilPerc} %)";
 				RegisterControlEvents();
 			});
 		}
