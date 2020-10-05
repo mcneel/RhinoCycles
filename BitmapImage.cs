@@ -18,6 +18,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using Rhino;
 using Rhino.Display;
 using Rhino.Render;
 using Rhino.Runtime.InteropWrappers;
@@ -119,24 +120,26 @@ namespace RhinoCyclesCore
 
 		protected override void SavePixels(object oPixels, string name)
 		{
-			var pixels = (oPixels as SimpleArrayByte).ToArray();
+			Eto.Forms.Application.Instance.AsyncInvoke(() => {
+				var pixels = (oPixels as SimpleArrayByte).ToArray();
 
-			using (var rw = RenderWindow.Create(new Size(W, H)))
-			{
-				using (var ch = rw.OpenChannel(RenderWindow.StandardChannels.RGBA))
+				using (var rw = RenderWindow.Create(new Size(W, H)))
 				{
-					for (var x = 0; x < W; x++)
+					using (var ch = rw.OpenChannel(RenderWindow.StandardChannels.RGBA))
 					{
-						for (var y = 0; y < H; y++)
+						for (var x = 0; x < W; x++)
 						{
-							var i = y*W*4 + x*4;
-							ch.SetValue(x, y, Color4f.FromArgb(pixels[i + 3]/255.0f, pixels[i]/255.0f, pixels[i + 1]/255.0f, pixels[i + 2]/255.0f));
+							for (var y = 0; y < H; y++)
+							{
+								var i = y * W * 4 + x * 4;
+								ch.SetValue(x, y, Color4f.FromArgb(pixels[i + 3] / 255.0f, pixels[i] / 255.0f, pixels[i + 1] / 255.0f, pixels[i + 2] / 255.0f));
+							}
 						}
 					}
+					var tmpfhdr = RenderEngine.TempPathForFile($"byte_{name}.exr");
+					rw.SaveRenderImageAs(tmpfhdr, true);
 				}
-				var tmpfhdr = RenderEngine.TempPathForFile($"byte_{name}.exr");
-				rw.SaveRenderImageAs(tmpfhdr, true);
-			}
+			});
 		}
 	}
 
@@ -175,24 +178,27 @@ namespace RhinoCyclesCore
 
 		protected override void SavePixels(object oPixels, string name)
 		{
-			var pixels = (oPixels as SimpleArrayFloat).ToArray();
-
-			using (var rw = RenderWindow.Create(new Size(W, H)))
+			Eto.Forms.Application.Instance.AsyncInvoke(() =>
 			{
-				using (var ch = rw.OpenChannel(RenderWindow.StandardChannels.RGBA))
+				var pixels = (oPixels as SimpleArrayFloat).ToArray();
+
+				using (var rw = RenderWindow.Create(new Size(W, H)))
 				{
-					for (var x = 0; x < W; x++)
+					using (var ch = rw.OpenChannel(RenderWindow.StandardChannels.RGBA))
 					{
-						for (var y = 0; y < H; y++)
+						for (var x = 0; x < W; x++)
 						{
-							var i = y*W*4 + x*4;
-							ch.SetValue(x, y, Color4f.FromArgb(pixels[i+3], pixels[i], pixels[i+1], pixels[i+2]));
+							for (var y = 0; y < H; y++)
+							{
+								var i = y * W * 4 + x * 4;
+								ch.SetValue(x, y, Color4f.FromArgb(pixels[i + 3], pixels[i], pixels[i + 1], pixels[i + 2]));
+							}
 						}
 					}
+					var tmpfhdr = RenderEngine.TempPathForFile($"float_{ name}.exr");
+					rw.SaveRenderImageAs(tmpfhdr, true);
 				}
-				var tmpfhdr = RenderEngine.TempPathForFile($"float_{ name}.exr");
-				rw.SaveRenderImageAs(tmpfhdr, true);
-			}
+			});
 		}
 
 	}

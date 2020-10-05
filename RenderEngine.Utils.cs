@@ -72,8 +72,11 @@ namespace RhinoCyclesCore
 		public void SaveRenderedBuffer(int sample)
 		{
 			if (!RcCore.It.AllSettings.SaveDebugImages) return;
-			var tmpf = TempPathForFile($"RC_{ sample.ToString("D5")}.png");
-			RenderWindow.SaveDibAsBitmap(tmpf);
+			Eto.Forms.Application.Instance.AsyncInvoke(() =>
+			{
+				var tmpf = TempPathForFile($"RC_{ sample.ToString("D5")}.png");
+				RenderWindow.SaveDibAsBitmap(tmpf);
+			});
 		}
 
 		/// <summary>
