@@ -234,10 +234,11 @@ namespace RhinoCyclesCore.Shaders
 					{
 						var bump = new ccl.ShaderNodes.BumpNode("bump");
 						m_shader.AddNode(bump);
-						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height, texco, true);
 						bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
 						bump.Invert = part.PbrBump.Amount < 0.0f;
 						bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
+						part.PbrBump.Amount = 1.0f;
+						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height, texco, true);
 						bump.outs.Normal.Connect(principled.ins.Normal);
 					} else {
 						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal, texco, false, true, false);
@@ -249,10 +250,11 @@ namespace RhinoCyclesCore.Shaders
 					{
 						var bump = new ccl.ShaderNodes.BumpNode("clearcoat_bump");
 						m_shader.AddNode(bump);
-						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height, texco, true);
 						bump.ins.Strength.Value = Math.Abs(part.PbrClearcoatBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
 						bump.Invert = part.PbrClearcoatBump.Amount < 0.0f;
+						part.PbrClearcoatBump.Amount = 1.0f;
 						bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
+						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height, texco, true);
 						bump.outs.Normal.Connect(principled.ins.ClearcoatNormal);
 					} else {
 						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal, texco, false, true, false);
@@ -321,6 +323,7 @@ namespace RhinoCyclesCore.Shaders
 					m_shader.AddNode(displacement);
 					m_shader.AddNode(strength);
 					strength.ins.Value1.Value = part.PbrDisplacement.Amount;
+					part.PbrDisplacement.Amount = 1.0f;
 					Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, strength.ins.Value2, texco);
 					strength.outs.Value.Connect(displacement.ins.Height);
 					displacement.outs.Displacement.Connect(m_shader.Output.ins.Displacement);
