@@ -80,11 +80,17 @@ namespace RhinoCyclesCore.Settings
 			InitializeLayout();
 			RegisterControlEvents();
 			ViewModelActivated += IntegratorSection_ViewModelActivated;
+			SettingsForProperties.PropertyChanged += SettingsForProperties_PropertyChanged;
+		}
+
+		private void SettingsForProperties_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		{
+			DisplayData();
 		}
 
 		private void IntegratorSection_ViewModelActivated(object sender, EventArgs e)
 		{
-			DataContext = ViewModel;
+			DataContext = Settings;
 			DisplayData();
 		}
 
@@ -101,8 +107,6 @@ namespace RhinoCyclesCore.Settings
 				StepperSeed.Value = e.AllSettings.Seed;
 				CheckboxUseSamples.Checked = e.AllSettings.UseDocumentSamples;
 				StepperSamples.Value = e.AllSettings.Samples;
-				StepperSamples.Visible = CheckboxUseSamples.Checked.GetValueOrDefault(false);
-				LblSamples.Visible = StepperSamples.Visible;
 				StepperMaxBounces.Value = e.AllSettings.MaxBounce;
 				StepperMaxDiffuseBounces.Value = e.AllSettings.MaxDiffuseBounce;
 				StepperMaxGlossyBounces.Value = e.AllSettings.MaxGlossyBounce;
@@ -299,8 +303,8 @@ namespace RhinoCyclesCore.Settings
 				Spacing = new Eto.Drawing.Size(1, 5),
 				Rows =
 				{
-					new TableRow(LblUseDocumentSamples, CheckboxUseSamples),
 					new TableRow(LblSamples, StepperSamples),
+					new TableRow(LblUseDocumentSamples, CheckboxUseSamples),
 				}
 			};
 			var textureTable = new TableLayout()
@@ -391,7 +395,6 @@ namespace RhinoCyclesCore.Settings
 			if (vud == null) return;
 
 			vud.UseDocumentSamples = CheckboxUseSamples.Checked.GetValueOrDefault(false);
-			StepperSamples.Visible = LblSamples.Visible = vud.UseDocumentSamples;
 		}
 
 		private void UnregisterControlEvents()
