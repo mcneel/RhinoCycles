@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using System;
+using System.Collections.Concurrent;
 using Rhino.UI.Controls;
 
 namespace RhinoCyclesCore.Settings
@@ -27,6 +28,8 @@ namespace RhinoCyclesCore.Settings
 
 		public readonly uint m_doc_serialnumber = 0;
 
+		private static ConcurrentDictionary<uint, DocumentSettingsModel> vpses = new ConcurrentDictionary<uint, DocumentSettingsModel>();
+
 		protected readonly bool m_for_app = false;
 		/// <summary>
 		/// Constructor
@@ -36,15 +39,16 @@ namespace RhinoCyclesCore.Settings
 		public Section(bool for_app, uint doc_serial) {
 			m_for_app = for_app;
 			m_doc_serialnumber = doc_serial;
-			vps = new DocumentSettingsModel(this);
+			if(!vpses.ContainsKey(m_doc_serialnumber))
+				vpses[m_doc_serialnumber] = new DocumentSettingsModel(this);
 		}
 
-		DocumentSettingsModel vps;
-
 		/// <summary>
-		/// Access to settings related to viewport/sessions through IViewportSettings
+		/// Access to settings
 		/// </summary>
-		public IAllSettings Settings => vps;
+		public IAllSettings Settings => vpses[m_doc_serialnumber];
+
+		public System.ComponentModel.INotifyPropertyChanged SettingsForProperties => vpses[m_doc_serialnumber];
 
 		public virtual void DisplayData()
 		{

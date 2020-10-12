@@ -28,8 +28,6 @@ namespace RhinoCyclesCore.Settings
 	public class SessionSection: ApplicationSection
 	{
 		private LocalizeStringPair m_caption;
-		private Label m_samples_lb;
-		private NumericStepper m_samples;
 		private Label m_throttlems_lb;
 		private NumericStepper m_throttlems;
 
@@ -71,7 +69,6 @@ namespace RhinoCyclesCore.Settings
 				if (vud == null) return;
 				SuspendLayout();
 				UnRegisterControlEvents();
-				m_samples.Value = vud.Samples;
 				if(m_for_app) m_throttlems.Value = vud.ThrottleMs;
 				RegisterControlEvents();
 				ResumeLayout();
@@ -88,7 +85,6 @@ namespace RhinoCyclesCore.Settings
 			if (e.AllSettings != null)
 			{
 				UnRegisterControlEvents();
-				m_samples.Value = e.AllSettings.Samples;
 				if(m_for_app) m_throttlems.Value = e.AllSettings.ThrottleMs;
 				RegisterControlEvents();
 			}
@@ -96,19 +92,6 @@ namespace RhinoCyclesCore.Settings
 
 		private void InitializeComponents()
 		{
-			m_samples_lb = new Label()
-			{
-				Text = Localization.LocalizeString("Samples", 6),
-				VerticalAlignment = VerticalAlignment.Center,
-			};
-			m_samples = new NumericStepper()
-			{
-				Value = 0,
-				MaximumDecimalPlaces = 0,
-				MaxValue = int.MaxValue,
-				MinValue = 0,
-				Width = 75,
-			};
 			if (m_for_app)
 			{
 				m_throttlems_lb = new Label()
@@ -145,7 +128,6 @@ namespace RhinoCyclesCore.Settings
 							Content = new TableLayout() {
 								Spacing = new Eto.Drawing.Size(1, 5),
 								Rows = {
-									new TableRow( new TableCell(m_samples_lb, true), new TableCell(m_samples, true)),
 									m_for_app ? new TableRow(m_throttlems_lb, m_throttlems) : null,
 								}
 							}
@@ -158,7 +140,6 @@ namespace RhinoCyclesCore.Settings
 
 		private void RegisterControlEvents()
 		{
-			m_samples.ValueChanged += M_ValueChanged;
 			if(m_for_app) m_throttlems.ValueChanged += M_ValueChanged;
 		}
 
@@ -167,23 +148,12 @@ namespace RhinoCyclesCore.Settings
 			var vud = Settings;
 			if (vud == null) return;
 
-			vud.Samples = (int)m_samples.Value;
 			if(m_for_app) vud.ThrottleMs = (int)m_throttlems.Value;
 
-			/*if (!m_for_app && RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber) is RhinoDoc doc)
-			{
-				var rvp = doc.Views.ActiveView.RealtimeDisplayMode as RenderedViewport;
-				if (rvp == null) return;
-
-				rvp.TriggerViewportSettingsChanged(vud);
-				rvp.ChangeSamples(vud.Samples);
-				rvp.SignalRedraw();
-			}*/
 		}
 
 		private void UnRegisterControlEvents()
 		{
-			m_samples.ValueChanged -= M_ValueChanged;
 			if(m_for_app) m_throttlems.ValueChanged -= M_ValueChanged;
 		}
 	}

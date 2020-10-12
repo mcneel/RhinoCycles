@@ -54,9 +54,10 @@ namespace RhinoCyclesCore.Settings
 			return GetData(Rhino.UI.Controls.DataSource.ProviderIds.RhinoSettings, true, true) as Rhino.Render.DataSources.RhinoSettings;
 		}
 
-		private void CommitRenderSettings()
+		private void CommitRenderSettings(string propName)
 		{
 			Commit(Rhino.UI.Controls.DataSource.ProviderIds.RhinoSettings);
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
 		}
 
 		private void GetInt(string valueName, int defaultValue, out int value)
@@ -74,7 +75,7 @@ namespace RhinoCyclesCore.Settings
 			dictionary[valueName] = value;
 
 			rs.SetRenderSettings(renderSettings);
-			CommitRenderSettings();
+			CommitRenderSettings(valueName);
 		}
 		private void GetBool(string valueName, bool defaultValue, out bool value)
 		{
@@ -91,7 +92,7 @@ namespace RhinoCyclesCore.Settings
 			dictionary[valueName] = value;
 
 			rs.SetRenderSettings(renderSettings);
-			CommitRenderSettings();
+			CommitRenderSettings(valueName);
 		}
 
 		private void GetFloat(string valueName, float defaultValue, out float value)
@@ -110,7 +111,7 @@ namespace RhinoCyclesCore.Settings
 			dictionary[valueName] = value;
 
 			rs.SetRenderSettings(renderSettings);
-			CommitRenderSettings();
+			CommitRenderSettings(valueName);
 		}
 
 		/*private void GetString(string valueName, string defaultValue, out string value)
@@ -129,7 +130,7 @@ namespace RhinoCyclesCore.Settings
 			dictionary[valueName] = value;
 
 			rs.SetRenderSettings(renderSettings);
-			CommitRenderSettings();
+			CommitRenderSettings(valueName);
 		}*/
 
 		#region Document settings
@@ -158,7 +159,7 @@ namespace RhinoCyclesCore.Settings
 		{
 			get
 			{
-				GetInt(SettingNames.Samples, RcCore.It.AllSettings.Samples, out int outVal);
+				GetInt(SettingNames.Samples, DefaultEngineSettings.Samples, out int outVal);
 				return outVal;
 			}
 			set => SetInt(SettingNames.Samples, value);
