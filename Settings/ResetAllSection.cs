@@ -43,7 +43,7 @@ namespace RhinoCyclesCore.Settings
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public ResetAllSection(bool for_app, uint doc_serial) : base(for_app, doc_serial)
+		public ResetAllSection()
 		{
 			m_caption = new LocalizeStringPair("Reset section", Localization.LocalizeString("Reset settings", 43));
 			InitializeComponents();
