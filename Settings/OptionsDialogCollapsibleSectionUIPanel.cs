@@ -53,8 +53,8 @@ namespace RhinoCyclesCore.Settings
 		private void InitializeLayout()
 		{
 			//m_integratorSection = new IntegratorSection(Rhino.PlugIns.PlugIn.IdFromName("Rhino Render"), true, 0);
-			m_sessionSection = new SessionSection(true, 0);
-			m_deviceSection = new DeviceSection(true, 0);
+			m_sessionSection = new SessionSection(0);
+			m_deviceSection = new DeviceSection(0);
 			//m_holder.Add(m_integratorSection);
 			m_holder.Add(m_sessionSection);
 			m_holder.Add(m_deviceSection);

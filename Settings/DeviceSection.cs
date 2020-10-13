@@ -203,14 +203,14 @@ namespace RhinoCyclesCore.Settings
 		{
 			get
 			{
-				return m_for_app ? false : !RcCore.It.AllSettings.AllowSelectedDeviceOverride ? true : base.Hidden;
+				return false;
 			}
 		}
 
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public DeviceSection(bool for_app, uint doc_serial) : base(for_app, doc_serial)
+		public DeviceSection(uint doc_serial) : base(doc_serial)
 		{
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
 			m_caption = new LocalizeStringPair("Device settings", Localization.LocalizeString("Device settings", 14));
@@ -402,18 +402,6 @@ namespace RhinoCyclesCore.Settings
 			}
 		}
 
-		private void HandleUseAppDeviceClick(object sender, EventArgs e)
-		{
-			var vud = Settings;
-			if (!m_for_app && vud != null)
-			{
-				vud.SelectedDeviceStr = RcCore.It.AllSettings.SelectedDeviceStr;
-				vud.IntermediateSelectedDeviceStr = vud.SelectedDeviceStr;
-				Rhino.RhinoApp.RunScript("_-SetDisplayMode Mode Wireframe Enter _-SetDisplayMode Mode Raytraced Enter", false);
-				It_InitialisationCompleted(this, EventArgs.Empty);
-			}
-		}
-
 		private void DeviceSelectionChanged(object sender, EventArgs e)
 		{
 			UnRegisterControlEvents();
@@ -429,7 +417,7 @@ namespace RhinoCyclesCore.Settings
 				{
 					var dev = ccl.Device.DeviceFromString(senderpage.DeviceSelectionString());
 					vud.IntermediateSelectedDeviceStr = dev.DeviceString;
-					if (m_for_app) vud.SelectedDeviceStr = vud.IntermediateSelectedDeviceStr;
+					vud.SelectedDeviceStr = vud.IntermediateSelectedDeviceStr;
 				}
 			}
 

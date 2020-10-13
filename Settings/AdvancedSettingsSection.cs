@@ -72,7 +72,7 @@ namespace RhinoCyclesCore.Settings
 		///<summary>
 		/// Constructor for IntegratorSection
 		///</summary>
-		public AdvancedSettingsSection(Guid pluginId, bool for_app, uint doc_serial) : base(for_app, doc_serial)
+		public AdvancedSettingsSection(Guid pluginId)
 		{
 			m_pluginId = pluginId;
 			m_caption = Localization.LocalizeCommandOptionValue("Rhino Render Advanced Settings", 38);
@@ -80,7 +80,13 @@ namespace RhinoCyclesCore.Settings
 			InitializeLayout();
 			RegisterControlEvents();
 			ViewModelActivated += IntegratorSection_ViewModelActivated;
-			SettingsForProperties.PropertyChanged += SettingsForProperties_PropertyChanged;
+			DataChanged += AdvancedSettingsSection_DataChanged;
+		}
+
+		private void AdvancedSettingsSection_DataChanged(object sender, Rhino.UI.Controls.DataSource.EventArgs e)
+		{
+			if(e.DataType == Rhino.UI.Controls.DataSource.ProviderIds.RhinoSettings)
+				DisplayData();
 		}
 
 		private void SettingsForProperties_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -90,7 +96,7 @@ namespace RhinoCyclesCore.Settings
 
 		private void IntegratorSection_ViewModelActivated(object sender, EventArgs e)
 		{
-			DataContext = Settings;
+			DataContext = ViewModel;
 			DisplayData();
 		}
 

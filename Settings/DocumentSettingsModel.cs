@@ -28,7 +28,7 @@ namespace RhinoCyclesCore.Settings
 	/// View model of document settings. Used for in the integrator section.
 
 
-	/// Becausee this model is used also in application settings all settings interface is implemented.
+	/// Because this model is used also in application settings all settings interface is implemented.
 	///
 	/// </summary>
 	[Guid("cae9d284-03b0-4d1c-aa46-b431bc9a7ea2")]

@@ -26,16 +26,13 @@ namespace RhinoCyclesCore.Settings
 	{
 		protected int m_table_padding = 10;
 
-		public readonly uint m_doc_serialnumber = 0;
-
-		protected readonly bool m_for_app = false;
+		protected uint m_doc_serialnumber;
 		/// <summary>
 		/// Constructor
 		/// </summary>
 		/// <param name="for_app">Pass in 'true' if sections display application settings. 'false' means
 		/// viewport-specific settings.</param>
-		public ApplicationSection(bool for_app, uint doc_serial) {
-			m_for_app = for_app;
+		public ApplicationSection(uint doc_serial) {
 			m_doc_serialnumber = doc_serial;
 			vps = RcCore.It.AllSettings;
 		}

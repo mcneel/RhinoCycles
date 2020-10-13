@@ -14,9 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using Eto.Forms;
-using Rhino;
 using Rhino.UI;
-//using RhinoCyclesCore.Viewport;
 using RhinoCyclesCore.Core;
 using System;
 
@@ -27,7 +25,7 @@ namespace RhinoCyclesCore.Settings
 	///</summary>
 	public class SessionSection: ApplicationSection
 	{
-		private LocalizeStringPair m_caption;
+		private readonly LocalizeStringPair m_caption;
 		private Label m_throttlems_lb;
 		private NumericStepper m_throttlems;
 
@@ -44,7 +42,7 @@ namespace RhinoCyclesCore.Settings
 		///<summary>
 		/// Constructor for SectionOne
 		///</summary>
-		public SessionSection(bool for_app, uint doc_serial) : base(for_app, doc_serial)
+		public SessionSection(uint doc_serial) : base(doc_serial)
 		{
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
 			m_caption = new LocalizeStringPair("Session settings", Localization.LocalizeString("Session settings", 5));
@@ -69,7 +67,7 @@ namespace RhinoCyclesCore.Settings
 				if (vud == null) return;
 				SuspendLayout();
 				UnRegisterControlEvents();
-				if(m_for_app) m_throttlems.Value = vud.ThrottleMs;
+				m_throttlems.Value = vud.ThrottleMs;
 				RegisterControlEvents();
 				ResumeLayout();
 			}
@@ -85,29 +83,26 @@ namespace RhinoCyclesCore.Settings
 			if (e.AllSettings != null)
 			{
 				UnRegisterControlEvents();
-				if(m_for_app) m_throttlems.Value = e.AllSettings.ThrottleMs;
+				m_throttlems.Value = e.AllSettings.ThrottleMs;
 				RegisterControlEvents();
 			}
 		}
 
 		private void InitializeComponents()
 		{
-			if (m_for_app)
+			m_throttlems_lb = new Label()
 			{
-				m_throttlems_lb = new Label()
-				{
-					Text = Localization.LocalizeString("Throttle (in ms)", 19),
-					VerticalAlignment = VerticalAlignment.Center,
-				};
-				m_throttlems = new NumericStepper()
-				{
-					Value = 0,
-					MaximumDecimalPlaces = 0,
-					MaxValue = int.MaxValue,
-					MinValue = 0,
-					Width = 75,
-				};
-			}
+				Text = Localization.LocalizeString("Throttle (in ms)", 19),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+			m_throttlems = new NumericStepper()
+			{
+				Value = 0,
+				MaximumDecimalPlaces = 0,
+				MaxValue = int.MaxValue,
+				MinValue = 0,
+				Width = 75,
+			};
 		}
 
 
@@ -128,7 +123,7 @@ namespace RhinoCyclesCore.Settings
 							Content = new TableLayout() {
 								Spacing = new Eto.Drawing.Size(1, 5),
 								Rows = {
-									m_for_app ? new TableRow(m_throttlems_lb, m_throttlems) : null,
+									new TableRow(m_throttlems_lb, m_throttlems),
 								}
 							}
 						}
@@ -140,7 +135,7 @@ namespace RhinoCyclesCore.Settings
 
 		private void RegisterControlEvents()
 		{
-			if(m_for_app) m_throttlems.ValueChanged += M_ValueChanged;
+			m_throttlems.ValueChanged += M_ValueChanged;
 		}
 
 		private void M_ValueChanged(object sender, EventArgs e)
@@ -148,13 +143,13 @@ namespace RhinoCyclesCore.Settings
 			var vud = Settings;
 			if (vud == null) return;
 
-			if(m_for_app) vud.ThrottleMs = (int)m_throttlems.Value;
+			vud.ThrottleMs = (int)m_throttlems.Value;
 
 		}
 
 		private void UnRegisterControlEvents()
 		{
-			if(m_for_app) m_throttlems.ValueChanged -= M_ValueChanged;
+			m_throttlems.ValueChanged -= M_ValueChanged;
 		}
 	}
 }

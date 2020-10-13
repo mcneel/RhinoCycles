@@ -16,6 +16,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using Rhino.UI.Controls;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore.Settings
 {
@@ -26,29 +27,18 @@ namespace RhinoCyclesCore.Settings
 	{
 		protected int m_table_padding = 10;
 
-		public readonly uint m_doc_serialnumber = 0;
-
-		private static ConcurrentDictionary<uint, DocumentSettingsModel> vpses = new ConcurrentDictionary<uint, DocumentSettingsModel>();
-
-		protected readonly bool m_for_app = false;
+		DocumentSettingsModel dsm;
 		/// <summary>
 		/// Constructor
 		/// </summary>
-		/// <param name="for_app">Pass in 'true' if sections display application settings. 'false' means
-		/// viewport-specific settings.</param>
-		public Section(bool for_app, uint doc_serial) {
-			m_for_app = for_app;
-			m_doc_serialnumber = doc_serial;
-			if(!vpses.ContainsKey(m_doc_serialnumber))
-				vpses[m_doc_serialnumber] = new DocumentSettingsModel(this);
+		public Section() {
+			dsm = new DocumentSettingsModel(this);
 		}
 
 		/// <summary>
 		/// Access to settings
 		/// </summary>
-		public IAllSettings Settings => vpses[m_doc_serialnumber];
-
-		public System.ComponentModel.INotifyPropertyChanged SettingsForProperties => vpses[m_doc_serialnumber];
+		public IAllSettings Settings => dsm;
 
 		public virtual void DisplayData()
 		{
