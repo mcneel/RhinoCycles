@@ -367,6 +367,7 @@ namespace RhinoCyclesCore
 				HandleTexturedScalarProperty(Pbr.Subsurface, pbrmat, rm, shb.PbrSubsurface);
 				Utilities.HandleRenderTexture(shb.PbrSubsurface.Texture, shb.PbrSubsurfaceTexture, false, 1.0f);
 				HandleTexturedColorProperty(Pbr.SubsurfaceScatteringColor, pbrmat, rm, shb.PbrSubsurfaceColor);
+				shb.PbrSubsurfaceColor.Value = (shb.PbrSubsurfaceColor.Value.ToFloat4() ^ gamma).ToColor4f();
 				Utilities.HandleRenderTexture(shb.PbrSubsurfaceColor.Texture, shb.PbrSubsurfaceColorTexture, false, gamma);
 				HandleTexturedScalarProperty(Pbr.SubsurfaceScatteringRadius, pbrmat, rm, shb.PbrSubsurfaceRadius);
 				Utilities.HandleRenderTexture(shb.PbrSubsurfaceRadius.Texture, shb.PbrSubsurfaceRadiusTexture, false, 1.0f);
@@ -397,6 +398,7 @@ namespace RhinoCyclesCore
 				HandleTexturedScalarProperty(Pbr.OpacityRoughness, pbrmat, rm, shb.PbrTransmissionRoughness);
 				Utilities.HandleRenderTexture(shb.PbrTransmissionRoughness.Texture, shb.PbrTransmissionRoughnessTexture, false, 1.0f);
 				HandleTexturedColorProperty(Pbr.Emission, pbrmat, rm, shb.PbrEmission);
+				shb.PbrEmission.Value = (shb.PbrEmission.Value.ToFloat4() ^ gamma).ToColor4f();
 				Utilities.HandleRenderTexture(shb.PbrEmission.Texture, shb.PbrEmissionTexture, false, gamma);
 				HandleTexturedColorProperty(Pbr.Bump, pbrmat, rm, shb.PbrBump);
 				Utilities.HandleRenderTexture(shb.PbrBump.Texture, shb.PbrBumpTexture, true, 1.0f);
