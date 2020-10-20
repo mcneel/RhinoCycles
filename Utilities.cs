@@ -13,6 +13,7 @@ using static Rhino.Render.RenderContent;
 using Pbr = Rhino.Render.PhysicallyBasedMaterial.ParametersNames;
 using Rhino.Runtime.InteropWrappers;
 using System.Runtime.Remoting.Messaging;
+using ccl.ShaderNodes;
 
 namespace RhinoCyclesCore
 {
@@ -319,18 +320,18 @@ namespace RhinoCyclesCore
 		{
 			if (IsOn && teximg.HasTextureImage)
 			{
-				var imtexnode = new ccl.ShaderNodes.ImageTextureNode();
-				var invcol = new ccl.ShaderNodes.InvertNode();
-				var normalmapnode = new ccl.ShaderNodes.NormalMapNode();
-				var tobwnode = new ccl.ShaderNodes.RgbToBwNode();
-				var alphamult = new ccl.ShaderNodes.MathMultiply();
+				var imtexnode = new ccl.ShaderNodes.ImageTextureNode($"image texture for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var invcol = new ccl.ShaderNodes.InvertNode($"invert color for imtexnode for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var normalmapnode = new ccl.ShaderNodes.NormalMapNode($"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var tobwnode = new ccl.ShaderNodes.RgbToBwNode($"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var alphamult = new ccl.ShaderNodes.MathMultiply($"alpha multiplier for {valueSocket?.Parent.VariableName ?? "unknown input"}");
 
-				var mixerNode = new ccl.ShaderNodes.MixNode();
+				var mixerNode = new ccl.ShaderNodes.MixNode($"rgb mix node for imtexnode and {valueSocket?.Parent.VariableName ?? "unknown input"}");
 
-				alphamult.ins.Value1.Value = amount;
+				alphamult.ins.Value1.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
 				alphamult.ins.Value2.Value = 1.0f;
 
-				mixerNode.ins.Fac.Value = amount;
+				mixerNode.ins.Fac.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
 
 				sh.AddNode(mixerNode);
 				sh.AddNode(imtexnode);
@@ -382,7 +383,43 @@ namespace RhinoCyclesCore
 						}
 						outsock.Connect(mixerNode.ins.Color2);
 					}
-					mixerNode.outs.Color.Connect(sock);
+					if (amount >= 0.0f && amount <= 1.0f)
+					{
+						mixerNode.outs.Color.Connect(sock);
+					} else { // multiply the output of mixerNode.outs.Color with amount.
+						SeparateRgbNode separateRgbNode = new SeparateRgbNode($"separating the color for multiplication {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						MathMultiply multiplyR = new MathMultiply($"multiplier for R {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						MathMultiply multiplyG = new MathMultiply($"multiplier for G {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						MathMultiply multiplyB = new MathMultiply($"multiplier for B {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						CombineRgbNode combineRgbNode = new CombineRgbNode($"combining the new color values {valueSocket?.Parent.VariableName ?? "unknown input"}");
+
+						sh.AddNode(separateRgbNode);
+						sh.AddNode(multiplyR);
+						sh.AddNode(multiplyG);
+						sh.AddNode(multiplyB);
+						sh.AddNode(combineRgbNode);
+
+						multiplyR.UseClamp = false;
+						multiplyG.UseClamp = false;
+						multiplyB.UseClamp = false;
+
+						multiplyR.ins.Value1.Value = amount;
+						multiplyG.ins.Value1.Value = amount;
+						multiplyB.ins.Value1.Value = amount;
+
+						mixerNode.outs.Color.Connect(separateRgbNode.ins.Image);
+
+						separateRgbNode.outs.R.Connect(multiplyR.ins.Value2);
+						separateRgbNode.outs.G.Connect(multiplyG.ins.Value2);
+						separateRgbNode.outs.B.Connect(multiplyB.ins.Value2);
+
+						multiplyR.outs.Value.Connect(combineRgbNode.ins.R);
+						multiplyG.outs.Value.Connect(combineRgbNode.ins.G);
+						multiplyB.outs.Value.Connect(combineRgbNode.ins.B);
+
+						combineRgbNode.outs.Image.Connect(sock);
+
+					}
 				}
 				return imtexnode;
 			}
