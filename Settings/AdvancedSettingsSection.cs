@@ -106,7 +106,7 @@ namespace RhinoCyclesCore.Settings
 			{
 				IntegratorSection_ViewportSettingsReceived(this, new EngineSettingsReceivedArgs(Settings));
 			}
-			catch (Exception _)
+			catch (Exception)
 			{
 
 			}
