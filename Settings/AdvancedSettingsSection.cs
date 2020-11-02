@@ -102,7 +102,14 @@ namespace RhinoCyclesCore.Settings
 
 		public override void DisplayData()
 		{
-			IntegratorSection_ViewportSettingsReceived(this, new EngineSettingsReceivedArgs(Settings));
+			try
+			{
+				IntegratorSection_ViewportSettingsReceived(this, new EngineSettingsReceivedArgs(Settings));
+			}
+			catch (Exception)
+			{
+
+			}
 		}
 
 		private void IntegratorSection_ViewportSettingsReceived(object sender, EngineSettingsReceivedArgs e)
