@@ -272,7 +272,7 @@ namespace RhinoCyclesCore.RenderEngines
 					// lets reset session
 					Session.Reset(size.Width, size.Height, _samples, 0, 0, size.Width, size.Height);
 				}
-				if(this != null && IsRendering) {
+				if(this != null && !Flush && IsRendering) {
 					var smpl = Session.Sample();
 					if (smpl>-1 && !Flush)
 					{
