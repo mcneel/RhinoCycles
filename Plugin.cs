@@ -31,6 +31,7 @@ using ObjectPropertiesPage = Rhino.UI.ObjectPropertiesPage;
 using RhinoCyclesCore;
 
 using System.Management;
+using RhinoCyclesCore.Settings;
 
 namespace RhinoCycles
 {
