@@ -30,6 +30,7 @@ using RhinoCyclesCore;
 using Rhino.UI;
 
 using System.Management;
+using RhinoCyclesCore.Settings;
 
 namespace RhinoCycles
 {
