@@ -47,7 +47,8 @@ namespace RhinoCyclesCore.Settings
 			get
 			{
 				float dpi = ParentWindow != null ? ParentWindow.LogicalPixelSize : 1.0f;
-				int height = (int)(MainLayout.Height * dpi);
+				// Content.Height, use 450 for now
+				int height = (int)(450 * dpi);
 				return height;
 			}
 		}
