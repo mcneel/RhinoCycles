@@ -208,8 +208,11 @@ namespace RhinoCyclesCore.RenderEngines
 					Thread.Sleep(throttle);
 					if (cyclesEngine.IsStopped) break;
 				}
-				cyclesEngine.BlitPixelsToRenderWindowChannel();
-				cyclesEngine.RenderWindow.Invalidate();
+				if (!cyclesEngine.CancelRender)
+				{
+					cyclesEngine.BlitPixelsToRenderWindowChannel();
+					cyclesEngine.RenderWindow.Invalidate();
+				}
 
 				cyclesEngine.Session.EndRun();
 			}
