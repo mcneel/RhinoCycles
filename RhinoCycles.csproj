@@ -1,17 +1,12 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props" Condition="Exists('..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props')" />
   <Import Project="..\..\..\..\RhinoProjectPropertySheets\Rhino.CS.PlugIn.props" Condition="Exists('..\..\..\..\RhinoProjectPropertySheets\Rhino.CS.PlugIn.props')" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7DB01F36-A1C2-49A0-8326-FF09FFC6ADF3}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RhinoCycles</RootNamespace>
-    <AssemblyName>RhinoCycles</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFramework>net48</TargetFramework>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <EnableDefaultItems>False</EnableDefaultItems>
+
     <FileAlignment>512</FileAlignment>
     <WarningLevel>4</WarningLevel>
     <TargetFrameworkProfile />
@@ -82,49 +77,21 @@
     <Compile Include="Commands\TestSetSssMethod.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj">
-      <Project>{35ef0a4e-2a1a-492c-8bed-106774ea09f2}</Project>
-      <Name>Eto</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj">
-      <Project>{3d7c4cfa-38e3-46ed-a689-862a34f6656c}</Project>
-      <Name>Rhino.UI</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj">
-      <Project>{ed38373e-290c-4bde-acba-1601484e582a}</Project>
-      <Name>RhinoCommon</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\cycles\csycles\csycles.csproj">
-      <Project>{36396655-e087-4c00-990b-ce44f08e4fb2}</Project>
-      <Name>csycles</Name>
-    </ProjectReference>
-    <ProjectReference Include="RhinoCyclesCore.csproj">
-      <Project>{509fc709-9478-43ff-b669-a1a4e3ba8b4a}</Project>
-      <Name>RhinoCyclesCore</Name>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-      <Private>True</Private>
-    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj" Private="False" ExcludeAssets="all" />
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj" Private="False" ExcludeAssets="all" />
+    <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj" Private="False" ExcludeAssets="all" />
+    <ProjectReference Include="..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
+    <ProjectReference Include="RhinoCyclesCore.csproj" PrivateAssets="all" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(OS)' == 'Windows_NT'">
       <ItemGroup>
-        <ProjectReference Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
-          <Project>{78e5c303-7764-446e-baba-fdb410bd98e1}</Project>
-          <Name>RhinoWindows</Name>
-          <Private>False</Private>
-        </ProjectReference>
+        <ProjectReference Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj" Private="False" ExcludeAssets="all" />
       </ItemGroup>
     </When>
     <When Condition="'$(OS)' == 'Unix'">
       <ItemGroup>
-        <ProjectReference Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj">
-          <Project>{89edadb3-3d68-4c7e-85dc-62b95972e226}</Project>
-          <Name>RhinoMac</Name>
-          <Private>False</Private>
-        </ProjectReference>
+        <ProjectReference Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj" Private="False" ExcludeAssets="all" />
       </ItemGroup>
     </When>
   </Choose>
@@ -184,8 +151,10 @@
   <ItemGroup>
     <None Include="Icons\Cycles_material.ico" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Target Name="BeforeBuild">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
+  </ItemGroup>
+  <Target Name="CopyFiles" BeforeTargets="BeforeBuild">
     <MakeDir Directories="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" />
     <Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" OverwriteReadOnlyFiles="True" />
     <Copy SourceFiles="$(ProjectDir)..\cycles\cycles\third_party\cuew\LICENSE" DestinationFiles="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\cuew.txt" OverwriteReadOnlyFiles="True" />

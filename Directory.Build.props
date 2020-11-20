@@ -1,0 +1,7 @@
+﻿<Project>
+  <PropertyGroup>
+		<!-- Since we have two .csproj's in the same folder we use a separate intermediate path for each -->
+		<BaseIntermediateOutputPath>obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
+		<DefaultItemExcludes>obj\*</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>
