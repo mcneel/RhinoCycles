@@ -188,19 +188,27 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				cyclesEngine.Session.PrepareRun();
 
+				long lastUpdate = DateTime.Now.Ticks;
+				long curUpdate = DateTime.Now.Ticks; // remember, 10000 ticks in a millisecond
+				const long updateInterval = 1000 * 10000;
+
 				// lets first reset session
 				int cycles_full_y = FullSize.Height - BufferRectangle.Bottom;
 				cyclesEngine.Session.Reset(size.Width, size.Height, requestedSamples, BufferRectangle.X, cycles_full_y, FullSize.Width, FullSize.Height);
 				// and actually start
 				bool stillrendering = true;
 				var throttle = Math.Max(0, engineSettings.ThrottleMs);
+				int sample = -1;
 				while (stillrendering)
 				{
 					if (cyclesEngine.IsRendering)
 					{
-						stillrendering = cyclesEngine.Session.Sample() > -1;
-						if (!capturing)
+						sample = cyclesEngine.Session.Sample();
+						stillrendering = sample > -1;
+						curUpdate = DateTime.Now.Ticks;
+						if (!capturing && stillrendering && (sample == 0 || (curUpdate - lastUpdate) > updateInterval))
 						{
+							lastUpdate = curUpdate;
 							cyclesEngine.BlitPixelsToRenderWindowChannel();
 							cyclesEngine.RenderWindow.Invalidate();
 						}
