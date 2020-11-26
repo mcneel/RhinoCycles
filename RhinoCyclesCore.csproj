@@ -1,18 +1,14 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props" Condition="Exists('..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props')" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{509FC709-9478-43FF-B669-A1A4E3BA8B4A}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <EnableDefaultItems>False</EnableDefaultItems>
+    <GenerateResourceUsePreserializedResources>True</GenerateResourceUsePreserializedResources>
+
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RhinoCyclesCore</RootNamespace>
-    <AssemblyName>RhinoCyclesCore</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -155,43 +151,20 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj">
-      <Project>{35ef0a4e-2a1a-492c-8bed-106774ea09f2}</Project>
-      <Name>Eto</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj">
-      <Project>{3d7c4cfa-38e3-46ed-a689-862a34f6656c}</Project>
-      <Name>Rhino.UI</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj">
-      <Project>{ed38373e-290c-4bde-acba-1601484e582a}</Project>
-      <Name>RhinoCommon</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\cycles\csycles\csycles.csproj">
-      <Project>{36396655-e087-4c00-990b-ce44f08e4fb2}</Project>
-      <Name>csycles</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj" Private="False" ExcludeAssets="all" />
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj" Private="False" ExcludeAssets="all" />
+    <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj" Private="False" ExcludeAssets="all" />
+    <ProjectReference Include="..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(OS)' == 'Windows_NT'">
       <ItemGroup>
-        <ProjectReference Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj">
-          <Project>{78e5c303-7764-446e-baba-fdb410bd98e1}</Project>
-          <Name>RhinoWindows</Name>
-          <Private>False</Private>
-        </ProjectReference>
+        <ProjectReference Include="..\..\..\..\DotNetSDK\RhinoWindows\RhinoWindows.csproj" Private="False" ExcludeAssets="all" />
       </ItemGroup>
     </When>
     <When Condition="'$(OS)' == 'Unix'">
       <ItemGroup>
-        <ProjectReference Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj">
-          <Project>{89edadb3-3d68-4c7e-85dc-62b95972e226}</Project>
-          <Name>RhinoMac</Name>
-          <Private>False</Private>
-        </ProjectReference>
+        <ProjectReference Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj" Private="False" ExcludeAssets="all" />
       </ItemGroup>
     </When>
   </Choose>
@@ -248,12 +221,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Icons\OpenCL.ico" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="5.0.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
+  </ItemGroup>
 </Project>
