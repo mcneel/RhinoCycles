@@ -90,6 +90,11 @@ namespace RhinoCyclesCore.Settings
 		{
 			empArray.Add(newGpuDevice);
 		}
+
+		public void Clear()
+		{
+			empArray.Clear();
+		}
 	}
 
 	public class GpuDevice
@@ -111,12 +116,23 @@ namespace RhinoCyclesCore.Settings
 	{
 		GpuDevices skipDevice = new GpuDevices();
 
+		private void InitializeSkipList() {
+				skipDevice.Clear();
+				skipDevice.Add(new GpuDevice("Intel", new List<string>() { "530" }));
+				WriteSkipList();
+		}
+
 		private void ReadSkipList() {
-			XmlSerializer xml = new XmlSerializer(typeof(GpuDevices));
-			FileStream fs = new FileStream(DbPath, FileMode.Open);
-			GpuDevices skipList = xml.Deserialize(fs) as GpuDevices;
-			skipDevice = skipList;
-			fs.Close();
+			try {
+				XmlSerializer xml = new XmlSerializer(typeof(GpuDevices));
+				using(FileStream fs = new FileStream(DbPath, FileMode.Open)) {
+					GpuDevices skipList = xml.Deserialize(fs) as GpuDevices;
+					skipDevice = skipList;
+					fs.Close();
+				}
+			} catch (Exception) {
+				InitializeSkipList();
+			}
 		}
 
 		private void WriteSkipList() {
@@ -125,9 +141,12 @@ namespace RhinoCyclesCore.Settings
 			if(!Directory.Exists(directory)) {
 				Directory.CreateDirectory(directory);
 			}
-			TextWriter tw = new StreamWriter(DbPath);
-			xml.Serialize(tw, skipDevice);
-			tw.Close();
+			try {
+				using(TextWriter tw = new StreamWriter(DbPath)) {
+					xml.Serialize(tw, skipDevice);
+					tw.Close();
+				}
+			} catch (Exception) {}
 		}
 
 		public SkipList() {
@@ -145,8 +164,7 @@ namespace RhinoCyclesCore.Settings
 			if (File.Exists(DbPath)) {
 				ReadSkipList();
 			} else {
-				skipDevice.Add(new GpuDevice("Intel", new List<string>() { "530" }));
-				WriteSkipList();
+				InitializeSkipList();
 			}
 		}
 
