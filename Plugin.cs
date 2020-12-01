@@ -43,6 +43,12 @@ namespace RhinoCycles
 
 		private bool pluginLoaded = false;
 
+		private bool IsIntelOpenClSdkInstalled() {
+			var prog = Environment.GetEnvironmentVariable("PROGRAMFILES(x86)");
+			var directory = Path.GetDirectoryName($"{prog}\\Common Files\\Intel\\OpenCL");
+			return Directory.Exists(directory);
+		}
+
 		private bool SkipOpenCl() {
 #if ON_RUNTIME_WIN
 			SkipList skipList = new SkipList(SettingsDirectory);
@@ -66,9 +72,9 @@ namespace RhinoCycles
 				shouldskip |= skipList.Hit(name); // name.Contains("Intel") && name.Contains("530");
 
 			}
-			return shouldskip;
+			return shouldskip | IsIntelOpenClSdkInstalled();
 #else
-			return false;
+			return true;
 #endif
 		}
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
