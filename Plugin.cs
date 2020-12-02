@@ -48,14 +48,18 @@ namespace RhinoCycles
 		private bool pluginLoaded = false;
 
 		private bool IsIntelOpenClSdkInstalled() {
-			var proglocs = new List<string>();
-			proglocs.Add(Environment.GetEnvironmentVariable("PROGRAMFILES(x86)"));
-			proglocs.Add(Environment.GetEnvironmentVariable("PROGRAMFILES"));
+			List<string> proglocs = new List<string>
+			{
+				Environment.GetEnvironmentVariable("PROGRAMFILES(x86)"),
+				Environment.GetEnvironmentVariable("PROGRAMFILES")
+			};
 
-			var intelbits = new List<string>();
-			intelbits.Add("Intel\\OpenCL SDK");
-			intelbits.Add("Common Files\\Intel\\OpenCL");
-			foreach(var progloc in proglocs) {
+			List<string> intelbits = new List<string>
+			{
+				"Intel\\OpenCL SDK",
+				"Common Files\\Intel\\OpenCL"
+			};
+			foreach (var progloc in proglocs) {
 				foreach(var intelbit in intelbits) {
 					var directory = Path.GetDirectoryName($"{progloc}\\{intelbit}");
 					if (Directory.Exists(directory))
