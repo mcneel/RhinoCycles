@@ -293,8 +293,11 @@ namespace RhinoCyclesCore.Shaders
 
 				coloured_shadow_mix_custom.outs.Closure.Connect(addemissive.ins.Closure1);
 
+				float emission_strength = part.PbrEmission.Value.LargestComponent();
+
 				if(part.PbrEmission.On && part.PbrEmissionTexture.HasTextureImage)
 				{
+					emissive.ins.Strength.Value = emission_strength;
 					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, emissive.ins.Color, texco);
 					emissive.outs.Emission.Connect(addemissive.ins.Closure2);
 				}
