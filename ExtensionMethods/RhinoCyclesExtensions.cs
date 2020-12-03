@@ -104,6 +104,15 @@ namespace RhinoCyclesCore.ExtensionMethods
 			return conv;
 		}
 
+		public static float LargestComponent(this Rhino.Display.Color4f cl)
+		{
+			if (cl.R > cl.G && cl.R > cl.B) return cl.R;
+
+			if (cl.G > cl.R && cl.G > cl.B) return cl.G;
+
+			return cl.B;
+		}
+
 		public static ccl.float4 ToFloat4(this Rhino.Display.Color4f cl)
 		{
 			return RenderEngine.CreateFloat4(cl.R, cl.G, cl.B);
