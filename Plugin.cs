@@ -57,7 +57,7 @@ namespace RhinoCycles
 			};
 			foreach (var progloc in proglocs) {
 				foreach(var intelbit in intelbits) {
-					var directory = Path.GetDirectoryName($"{progloc}\\{intelbit}");
+					var directory = $"{progloc}\\{intelbit}";
 					if (Directory.Exists(directory))
 					{
 						return true;
