@@ -38,8 +38,8 @@ namespace RhinoCyclesCore.Settings
 
 		static public bool NoCaustics => false;
 
-		static public int MaxDiffuseBounce => 32;
-		static public int MaxGlossyBounce => 32;
+		static public int MaxDiffuseBounce => 4;
+		static public int MaxGlossyBounce => 4;
 		static public int MaxTransmissionBounce => 32;
 
 		static public int MaxVolumeBounce => 32;
