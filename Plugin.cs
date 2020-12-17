@@ -73,7 +73,6 @@ namespace RhinoCycles
 			SkipList skipList = new SkipList(SettingsDirectory);
 
 			var gpuNames = DisplayDeviceInfo.GpuNames();
-			var gpuInfos = DisplayDeviceInfo.GpuDeviceInfos();
 
 			bool shouldskip = false;
 
