@@ -72,23 +72,13 @@ namespace RhinoCycles
 #if ON_RUNTIME_WIN
 			SkipList skipList = new SkipList(SettingsDirectory);
 
-			ManagementObjectSearcher objvide = new ManagementObjectSearcher("select * from Win32_VideoController");
+			var gpuNames = DisplayDeviceInfo.GpuNames();
 
 			bool shouldskip = false;
 
-			foreach (ManagementObject obj in objvide.Get())
+			foreach (string gpuName in gpuNames)
 			{
-				string name = $"{obj["Name"]}";
-				int avail = Convert.ToInt16(obj["Availability"]);
-				string driverversion = $"{obj["DriverVersion"]}";
-
-				if (avail != 3) continue;
-
-				RhinoApp.OutputDebugString($"Name: {name}\n");
-				RhinoApp.OutputDebugString($"Availability: {avail}\n");
-				RhinoApp.OutputDebugString($"DriverVersion: {driverversion}\n");
-
-				shouldskip |= skipList.Hit(name); // name.Contains("Intel") && name.Contains("530");
+				shouldskip |= skipList.Hit(gpuName);
 
 			}
 			return shouldskip | IsIntelOpenClSdkInstalled();
