@@ -50,6 +50,8 @@ namespace RhinoCyclesCore
 			_bitmapConverter = bitmapConverter;
 		}
 
+		public List<CyclesDecal> Decals { get; set; } = null;
+
 		/// <summary>
 		/// RenderHash of the RenderMaterial for which this intermediary is created.
 		/// </summary>

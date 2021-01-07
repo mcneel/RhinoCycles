@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using ccl.ShaderNodes.Sockets;
 using Rhino.Geometry.Collections;
 
 namespace RhinoCyclesCore.ExtensionMethods
@@ -59,6 +61,17 @@ namespace RhinoCyclesCore.ExtensionMethods
 			if (count != cl.Count) return null;
 			return cl.ToFloatArray();
 		}
+	}
+
+	public static class ISocketExtenions
+	{
+	public static List<ISocket> ToList(this ISocket sock)
+	{
+		List<ISocket> lst = new List<ISocket> {
+			sock
+		};
+			return lst;
+	}
 	}
 
 	public static class DisplayColor4fExtensions
@@ -121,6 +134,35 @@ namespace RhinoCyclesCore.ExtensionMethods
 		public static Rhino.Display.Color4f ToColor4f(this ccl.float4 cl)
 		{
 			return new Rhino.Display.Color4f(cl.x, cl.y, cl.z, cl.w);
+		}
+	}
+	public static class Point3dExtensions
+	{
+		/// <summary>
+		/// Get a ccl.float4 representation from a Point3d. The w property will
+		/// be set to 0
+		/// </summary>
+		/// <param name="point">The Point3d to cast</param>
+		/// <returns>ccl.float4</returns>
+		public static ccl.float4 ToFloat4(this Rhino.Geometry.Point3d point)
+		{
+			var f = new ccl.float4((float)point.X, (float)point.Y, (float)point.Z);
+			return f;
+		}
+	}
+
+	public static class Vector3dExtensions
+	{
+		/// <summary>
+		/// Get a ccl.float4 representation from a Vector3d. The w property will
+		/// be set to 0
+		/// </summary>
+		/// <param name="vector">The Vector3d to cast</param>
+		/// <returns>ccl.float4</returns>
+		public static ccl.float4 ToFloat4(this Rhino.Geometry.Vector3d vector)
+		{
+			var f = new ccl.float4((float)vector.X, (float)vector.Y, (float)vector.Z);
+			return f;
 		}
 	}
 

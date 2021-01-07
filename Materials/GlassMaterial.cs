@@ -110,10 +110,10 @@ namespace RhinoCyclesCore.Materials
 
 			glass.ins.Transmission.Value = 1.0f;
 
-			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, glass.ins.BaseColor, texco);
-			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, transp.ins.Color, texco);
-			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.TransmissionRoughness, texco);
-			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.IOR, texco);
+			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, glass.ins.BaseColor.ToList(), texco, false);
+			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, transp.ins.Color.ToList(), texco, false);
+			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.TransmissionRoughness.ToList(), texco, false);
+			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.IOR.ToList(), texco, false);
 
 			transp.outs.BSDF.Connect(mix.ins.Closure2);
 			glass.outs.BSDF.Connect(mix.ins.Closure1);
