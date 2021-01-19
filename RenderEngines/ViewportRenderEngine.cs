@@ -190,7 +190,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 #else
 			HandleDeviceAndIntegrator(eds);
-			var renderDevice = RenderDevice;
+			var renderDevice = GetRenderDevice(RenderDevice);
 #endif
 
 			#endregion
