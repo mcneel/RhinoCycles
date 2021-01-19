@@ -90,7 +90,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.PreviewSamples = samples;
 
 			#region pick a render device
-			var renderDevice = RcCore.It.AllSettings.RenderDevice;
+			var renderDevice = GetRenderDevice(RcCore.It.AllSettings.RenderDevice);
 
 			if (RcCore.It.AllSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");

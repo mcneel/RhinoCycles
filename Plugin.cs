@@ -86,6 +86,8 @@ namespace RhinoCycles
 			return true;
 #endif
 		}
+
+		private bool UseOpenCl { get; set; } = false;
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			if(!pluginLoaded) {
@@ -111,10 +113,10 @@ namespace RhinoCycles
 				userPath = Path.GetFullPath(userPath);
 
 				RcCore.It.DataUserPath = userPath;
-
+				UseOpenCl = !(RhinoApp.RunningOnVMWare() || SkipOpenCl());
 				CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
 
-				if(RhinoApp.RunningOnVMWare() || SkipOpenCl()) {
+				if(!UseOpenCl) {
 					CSycles.debug_set_opencl_device_type(0);
 				} else {
 					CSycles.debug_set_opencl_device_type(RcCore.It.AllSettings.OpenClDeviceType);
@@ -155,6 +157,11 @@ namespace RhinoCycles
 					RcCore.It.Initialised = true;
 					RcCore.It.TriggerInitialisationCompleted(this);
 				}
+			}
+			if (!RcCore.It.OpenClInitializationStarted)
+			{
+				RcCore.It.OpenClInitializationStarted = true;
+				if (UseOpenCl) CSycles.device_prepare_opencl();
 			}
 		}
 
