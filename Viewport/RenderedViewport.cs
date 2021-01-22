@@ -484,8 +484,8 @@ namespace RhinoCycles.Viewport
 			if (_cycles.RenderDevice == null) return "?";
 			var pn = Localization.LocalizeString("Cycles", 9);
 			var cpu = _cycles.RenderDevice.IsCpu;
-			if (_showRenderDevice && !cpu) pn = $"{pn}@{RenderEngine.GetRenderDevice(_cycles.RenderDevice).NiceName}";
-			else if (_showRenderDevice && cpu) pn = $"{pn}@{RenderEngine.GetRenderDevice(_cycles.RenderDevice).NiceName}x{_cycles.ThreadCount}";
+			if (_showRenderDevice && !cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}";
+			else if (_showRenderDevice && cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}x{_cycles.ThreadCount}";
 			return pn;
 		}
 
