@@ -98,8 +98,6 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		public bool Initialised { get; set; }
 
-		public bool OpenClInitializationStarted { get; set; } = false;
-
 		public bool AppInitialised { get; set; }
 
 		/// <summary>

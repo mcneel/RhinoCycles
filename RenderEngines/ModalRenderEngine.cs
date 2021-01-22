@@ -130,7 +130,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#region pick a render device
 			HandleDeviceAndIntegrator(eds);
-			var renderDevice = GetRenderDevice(engineSettings.RenderDevice);
+			var renderDevice = engineSettings.RenderDevice;
 
 			/*if (engineSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");*/
