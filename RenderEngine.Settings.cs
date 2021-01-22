@@ -42,17 +42,6 @@ namespace RhinoCyclesCore
 		public int ThreadCount { get; set; } = 0;
 		private uint _oldIntegratorHash = 0;
 		public ccl.Device RenderDevice { get; set; }
-		/// <summary>
-		/// Get a render device. Ensure the device is ready. This
-		/// is especially important for OpenCL. If the device is _not_
-		/// ready by the time it is wanted for a render session give
-		/// a CPU render device instead.
-		/// </summary>
-		/// <returns>Either the requested device, or CPU device if it wasn't ready yet.</returns>
-		public static ccl.Device GetRenderDevice(ccl.Device device) {
-			if (device.IsReady()) return device;
-			return ccl.Device.Default;
-		}
 
 		protected int _throttle { get; set; } = 10;
 		protected int _samples { get; set; } = 1;
