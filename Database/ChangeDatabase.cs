@@ -964,7 +964,7 @@ namespace RhinoCyclesCore.Database
 
 				if (!addedmats.Contains(matid))
 				{
-					HandleRenderMaterial(mat);
+					HandleRenderMaterial(mat, matid);
 					addedmats.Add(matid);
 				}
 
@@ -1015,16 +1015,16 @@ namespace RhinoCyclesCore.Database
 		/// Handle RenderMaterial - will queue new shader if necessary
 		/// </summary>
 		/// <param name="mat"></param>
-		private void HandleRenderMaterial(RenderMaterial mat)
+		private void HandleRenderMaterial(RenderMaterial mat, uint matId)
 		{
 			//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
-			if (_shaderDatabase.HasShader(mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", LinearWorkflow)))
+			if (_shaderDatabase.HasShader(matId))
 			{
 				return;
 			}
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow);
+			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId);
 			_shaderDatabase.AddShader(sh);
 		}
 
@@ -1088,7 +1088,7 @@ namespace RhinoCyclesCore.Database
 				if (existing == null)
 				{
 					var rm = MaterialFromId(distinct);
-					HandleRenderMaterial(rm);
+					HandleRenderMaterial(rm, distinct);
 				}
 			}
 		}
@@ -1218,10 +1218,9 @@ namespace RhinoCyclesCore.Database
 
 			HandleMeshData(gpid.Item1, gpid.Item2, m, false, uint.MaxValue);
 
-			HandleRenderMaterial(mat);
+			HandleRenderMaterial(mat, gp.MaterialId);
 
-			//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
-			var matrenderhash = mat.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "", LinearWorkflow);
+			var matrenderhash = gp.MaterialId;
 			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 			var cyclesObject = new CyclesObject
 			{
