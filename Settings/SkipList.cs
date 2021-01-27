@@ -55,6 +55,10 @@ namespace RhinoCyclesCore.Settings
 			Value = name;
 		}
 	}
+
+	/// <summary>
+	/// Collection of GpuDevice instances
+	/// </summary>
 	public class GpuDevices : ICollection
 	{
 		public string CollectionName;
@@ -97,11 +101,39 @@ namespace RhinoCyclesCore.Settings
 		}
 	}
 
+
+	/// <summary>
+	/// Representation of a GPU device name that needs to be found, and zero or
+	/// more substrings to test against in case the DeviceName is found.
+	/// </summary>
 	public class GpuDevice
 	{
+		/// <summary>
+		/// The shortest possible part of device name to initially test against,
+		/// for instance "Intel"
+		/// </summary>
 		public string DeviceName;
+
+		/// <summary>
+		/// Collection of substrings. If more than one is in the collection at
+		/// least one must be found
+		/// </summary>
 		public SubStrings SubStrings;
 		public GpuDevice() { }
+		/// <summary>
+		/// Construct a GpuDevice given the name and a list of zero or more strings
+		/// that will function as sub strings
+		///
+		/// To compare against the string "Intel HD Graphics 530" one would create
+		/// a GpuDevice with name "Intel" and list of substrings containing one
+		/// entry "530".
+		///
+		/// If more Intel devices should be found, say "Intel HD Graphics 630" one
+		/// would create a GpuDevice with name "Intel" and a list of substrings
+		/// containing the strings "530" and "630".
+		/// </summary>
+		/// <param name="name">Shortest part of GPU device to for initial test</param>
+		/// <param name="subStrings">List of zero or more strings for secondary test</param>
 		public GpuDevice(string name, List<string> subStrings)
 		{
 			DeviceName = name;
@@ -112,9 +144,20 @@ namespace RhinoCyclesCore.Settings
 		}
 	}
 
+
+	/// <summary>
+	/// SkipList helps maintaining a list of device and substring collections that
+	/// can be used to determine whether a given string for a device should trigger
+	/// skipping of OpenCL initialization.
+	/// </summary>
 	public class SkipList
 	{
+		/// <summary>
+		/// All device strings and substrings collection.
+		/// </summary>
 		GpuDevices skipDevice = new GpuDevices();
+
+		private Type GpuDevicesType = typeof(GpuDevices);
 
 		private void InitializeSkipList() {
 				skipDevice.Clear();
@@ -124,11 +167,9 @@ namespace RhinoCyclesCore.Settings
 
 		private void ReadSkipList() {
 			try {
-				XmlSerializer xml = new XmlSerializer(typeof(GpuDevices));
 				using(FileStream fs = new FileStream(DbPath, FileMode.Open)) {
-					GpuDevices skipList = xml.Deserialize(fs) as GpuDevices;
+					GpuDevices skipList = xmlMarshal.Deserialize(fs) as GpuDevices;
 					skipDevice = skipList;
-					fs.Close();
 				}
 			} catch (Exception) {
 				InitializeSkipList();
@@ -136,30 +177,41 @@ namespace RhinoCyclesCore.Settings
 		}
 
 		private void WriteSkipList() {
-			XmlSerializer xml = new XmlSerializer(typeof(GpuDevices));
 			var directory = Path.GetDirectoryName(DbPath);
 			if(!Directory.Exists(directory)) {
 				Directory.CreateDirectory(directory);
 			}
 			try {
 				using(TextWriter tw = new StreamWriter(DbPath)) {
-					xml.Serialize(tw, skipDevice);
-					tw.Close();
+					xmlMarshal.Serialize(tw, skipDevice);
 				}
 			} catch (Exception) {}
 		}
 
 		public SkipList() {
-
+			xmlMarshal = XmlSerializer.FromTypes(new List<Type>(){GpuDevicesType}.ToArray()).First();
 		}
 
+
+		/// <summary>
+		/// Set the path to the folder that will contain the skip list serialization.
+		/// </summary>
+		/// <param name="name">Path to the folder for skip list</param>
 		public void SetDbPath(string name) {
 			DbPath = name;
 		}
 
 		private string DbPath;
 
+		private XmlSerializer xmlMarshal;
+
+		/// <summary>
+		/// Construct a new SkipList instance using the given path name of folder to
+		/// save the skip list to.
+		/// </summary>
+		/// <param name="path"></param>
 		public SkipList(string path) {
+			xmlMarshal = XmlSerializer.FromTypes(new List<Type>(){GpuDevicesType}.ToArray()).First();
 			SetDbPath(Path.Combine(path, "skiplist.xml"));
 			if (File.Exists(DbPath)) {
 				ReadSkipList();
@@ -168,6 +220,13 @@ namespace RhinoCyclesCore.Settings
 			}
 		}
 
+		/// <summary>
+		/// Given the string see if any gpu device name is contained within and
+		/// if there are substrings for the device name if any of them exist.
+		///
+		/// </summary>
+		/// <param name="entry">Full device name to test with, for instance "Intel HD Graphics 530"</param>
+		/// <returns>true if the entry satisfies any of the entries</returns>
 		public bool Hit(string entry) {
 			foreach(GpuDevice key in skipDevice) {
 				if(entry.Contains(key.DeviceName)) {

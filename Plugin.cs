@@ -81,7 +81,9 @@ namespace RhinoCycles
 				shouldskip |= skipList.Hit(gpuName);
 
 			}
-			return shouldskip | IsIntelOpenClSdkInstalled();
+
+			bool v = RcCore.It.AllSettings.OpenClDeviceType == 0 || shouldskip | IsIntelOpenClSdkInstalled();
+			return v;
 #else
 			return true;
 #endif
