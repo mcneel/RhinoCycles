@@ -56,14 +56,14 @@ namespace RhinoCyclesCore.Materials
 			ModifyRenderContentStyles(RenderContentStyles.None, RenderContentStyles.TextureSummary);
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			HandleTexturedValue(_Color, Color);
-			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, Gamma);
+			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, bitmapConverter, Gamma);
 			HandleTexturedValue(_Frost, Frost);
-			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, false, Gamma);
+			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, false, bitmapConverter, Gamma);
 			HandleTexturedValue(_Color, Color);
-			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, Gamma);
+			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, bitmapConverter, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -75,7 +75,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
 
-			BakeParameters();
+			BakeParameters(BitmapConverter);
 
 			simulatedMaterial.Reflectivity = 1.0;
 			simulatedMaterial.Transparency = 1.0;
@@ -131,5 +131,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			return outsocket ?? sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

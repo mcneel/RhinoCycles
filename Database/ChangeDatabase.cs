@@ -87,7 +87,7 @@ namespace RhinoCyclesCore.Database
 		/// Database responsible for keeping track of background and environment changes and their
 		/// relations between Rhino and Cycles.
 		/// </summary>
-		private readonly EnvironmentDatabase _environmentDatabase = new EnvironmentDatabase();
+		private readonly EnvironmentDatabase _environmentDatabase;
 
 		/// <summary>
 		/// Database responsible for managing camera transforms from Rhino to Cycles.
@@ -110,8 +110,12 @@ namespace RhinoCyclesCore.Database
 		public float ApertureRatio { get; } = RcCore.It.AllSettings.ApertureRatio;
 		public float ApertureFactor { get; } = RcCore.It.AllSettings.ApertureFactor;
 
-		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal) : base(pluginId, doc, view, attributes, true, !modal)
+		public BitmapConverter BitmapConverter { get; private set; }
+
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal, BitmapConverter bitmapConverter) : base(pluginId, doc, view, attributes, true, !modal)
 		{
+			BitmapConverter = bitmapConverter;
+			_environmentDatabase = new EnvironmentDatabase(BitmapConverter);
 			_renderEngine = engine;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
 			_modalRenderer = modal;
@@ -124,8 +128,10 @@ namespace RhinoCyclesCore.Database
 		/// <param name="pluginId">Id of the plugin instantiating the render change queue</param>
 		/// <param name="engine">Reference to our render engine</param>
 		/// <param name="createPreviewEventArgs">preview event arguments</param>
-		internal ChangeDatabase(Guid pluginId, RenderEngine engine, CreatePreviewEventArgs createPreviewEventArgs) : base(pluginId, createPreviewEventArgs)
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, CreatePreviewEventArgs createPreviewEventArgs, BitmapConverter bitmapConverter) : base(pluginId, createPreviewEventArgs)
 		{
+			BitmapConverter = bitmapConverter;
+			_environmentDatabase = new EnvironmentDatabase(BitmapConverter);
 			_renderEngine = engine;
 			_modalRenderer = true;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
@@ -1024,7 +1030,7 @@ namespace RhinoCyclesCore.Database
 			}
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId);
+			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter);
 			_shaderDatabase.AddShader(sh);
 		}
 
@@ -1413,8 +1419,8 @@ namespace RhinoCyclesCore.Database
 			}
 			emissive.SetParameter(Materials.EmissiveMaterial._Strength, (float)rgl.Intensity * RcCore.It.AllSettings.LinearLightFactor * (rgl.IsEnabled ? 1 : 0));
 			emissive.EndChange();
-			emissive.BakeParameters();
-			var shader = new CyclesShader(matid);
+			emissive.BakeParameters(BitmapConverter);
+			var shader = new CyclesShader(matid, BitmapConverter);
 			shader.CreateFrontShader(emissive, PreProcessGamma);
 			shader.Type = CyclesShader.Shader.Diffuse;
 

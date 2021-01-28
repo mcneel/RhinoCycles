@@ -19,6 +19,7 @@ using System.Globalization;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
+using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Shaders;
 using sd = System.Drawing;
 
@@ -30,7 +31,14 @@ namespace RhinoCyclesCore.Database
 		/// record background shader changes to push to cycles
 		/// note that we have only one object that gets updated when necessary.
 		/// </summary>
-		private readonly CyclesBackground _cqBackground = new CyclesBackground();
+		private readonly CyclesBackground _cqBackground;
+
+		private readonly BitmapConverter _bitmapConverter;
+		public EnvironmentDatabase(BitmapConverter bitmapConverter)
+		{
+			_bitmapConverter = bitmapConverter;
+			_cqBackground = new CyclesBackground(_bitmapConverter);
+		}
 
 		public void Dispose()
 		{
@@ -105,7 +113,7 @@ namespace RhinoCyclesCore.Database
 			{
 				case RenderEnvironment.Usage.Background:
 					//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
-					if (environment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "") == _cqBackground.BackgroundEnvironment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "")) 
+					if (environment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "") == _cqBackground.BackgroundEnvironment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, ""))
 					{
 						return;
 					}
@@ -114,7 +122,7 @@ namespace RhinoCyclesCore.Database
 					var xmlenv = (environment?.TopLevelParent as Materials.ICyclesMaterial);
 					if(xmlenv?.MaterialType == RhinoCyclesCore.ShaderBody.CyclesMaterial.XmlEnvironment || xmlenv?.MaterialType == RhinoCyclesCore.ShaderBody.CyclesMaterial.SimpleNoiseEnvironment)
 					{
-						xmlenv.BakeParameters();
+						xmlenv.BakeParameters(_bitmapConverter);
 						_cqBackground.Xml = xmlenv.MaterialXml;
 					}
 					_cqBackground.BackgroundEnvironment = environment;

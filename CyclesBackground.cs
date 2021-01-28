@@ -35,7 +35,14 @@ namespace RhinoCyclesCore
 	/// </summary>
 	public class CyclesBackground : IDisposable
 	{
-		ccl.float4 _tst = new ccl.float4(1.0f, 0.5f, 0.25f);
+
+		BitmapConverter _bitmapConverter;
+		public CyclesBackground(BitmapConverter bitmapConverter)
+		{
+			_bitmapConverter = bitmapConverter;
+		}
+
+		ccl.float4 _tst = new ccl.float4(0.0f, 0.0f, 0.0f);
 		/// <summary>
 		/// True if ChangeQueue modified the background
 		/// </summary>
@@ -109,7 +116,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public Color SkyColor { get; set; } = Color.Empty;
 		public ccl.float4 SkyColorAs4float =>
-			SkyColor.Equals(Color.Empty) ? 
+			SkyColor.Equals(Color.Empty) ?
 				((
 					(BackgroundFill == BackgroundStyle.SolidColor || BackgroundFill == BackgroundStyle.Gradient) &&
 					SkylightEnabled) ?
@@ -133,7 +140,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public string Xml { get; set; } = ""; 
+		public string Xml { get; set; } = "";
 
 		public bool PlanarProjection { get; set; } = false;
 
@@ -314,7 +321,7 @@ namespace RhinoCyclesCore
 				}
 				var wallpaperName = $"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
 				var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(wallpaperName));
-				var wallpaperbm = BitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
+				var wallpaperbm = _bitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaperbm.ApplyGamma(Gamma);
 				Wallpaper.TexByte = wallpaperbm.Data as SimpleArrayByte;
 				if (RcCore.It.AllSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
@@ -346,7 +353,7 @@ namespace RhinoCyclesCore
 						{
 							BgColor = simenv.BackgroundColor;
 						}
-						BitmapConverter.EnvironmentBitmapFromEvaluator(BackgroundEnvironment, BgTexture, Gamma);
+						_bitmapConverter.EnvironmentBitmapFromEvaluator(BackgroundEnvironment, BgTexture, Gamma);
 					}
 					else
 					{
@@ -362,7 +369,7 @@ namespace RhinoCyclesCore
 						{
 							SkyColor = simenv.BackgroundColor;
 						}
-						BitmapConverter.EnvironmentBitmapFromEvaluator(SkylightEnvironment, SkyTexture, Gamma);
+						_bitmapConverter.EnvironmentBitmapFromEvaluator(SkylightEnvironment, SkyTexture, Gamma);
 					}
 					else
 					{
@@ -378,7 +385,7 @@ namespace RhinoCyclesCore
 						{
 							ReflectionColor = simenv.BackgroundColor;
 						}
-						BitmapConverter.EnvironmentBitmapFromEvaluator(ReflectionEnvironment, ReflectionTexture, Gamma);
+						_bitmapConverter.EnvironmentBitmapFromEvaluator(ReflectionEnvironment, ReflectionTexture, Gamma);
 					}
 					else
 					{
@@ -413,7 +420,7 @@ namespace RhinoCyclesCore
 				sb.Append($"\t{prop.Name} := {prop.GetValue(this)}\n");
 			}
 			sb.Append("---------\n");
-			if(HasBgEnvTexture && BgTexture.HasFloatImage) 
+			if(HasBgEnvTexture && BgTexture.HasFloatImage)
 			{
 				var a = BgTexture.TexFloat.ToArray();
 

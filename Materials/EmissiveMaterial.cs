@@ -70,10 +70,10 @@ namespace RhinoCyclesCore.Materials
 			ModifyRenderContentStyles(RenderContentStyles.None, RenderContentStyles.TextureSummary);
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			HandleTexturedValue(_Emissive, Emission);
-			Utilities.HandleRenderTexture(Emission.Texture, EmissionTexture, false);
+			Utilities.HandleRenderTexture(Emission.Texture, EmissionTexture, false, bitmapConverter, 1.0f);
 			if (Fields.TryGetValue(_Strength, out float strength))
 			{
 				Strength = strength;
@@ -99,7 +99,7 @@ namespace RhinoCyclesCore.Materials
 
 		public override void SimulateMaterial(ref Material simulatedMaterial, bool forDataOnly)
 		{
-			BakeParameters();
+			BakeParameters(BitmapConverter);
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
 
 			simulatedMaterial.Reflectivity = 0.0;
@@ -176,5 +176,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			return outsocket ?? sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

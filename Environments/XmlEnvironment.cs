@@ -41,7 +41,7 @@ namespace RhinoCyclesCore.Environments
 			Fields.Add("xmlcode", XmlString, "XML definition");
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			string xml;
 			if (Fields.TryGetValue("xmlcode", out xml))
@@ -80,5 +80,7 @@ namespace RhinoCyclesCore.Environments
 		{
 			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

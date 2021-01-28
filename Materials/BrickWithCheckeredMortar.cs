@@ -30,7 +30,7 @@ namespace RhinoCyclesCore.Materials
 
 		public float Gamma { get; set; }
 
-		public void BakeParameters() { }
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter) { }
 
 		public override void SimulateMaterial(ref Rhino.DocObjects.Material simulatedMaterial, bool forDataOnly)
 		{
@@ -95,5 +95,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

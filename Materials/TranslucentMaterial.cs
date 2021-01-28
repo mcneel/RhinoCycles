@@ -23,7 +23,7 @@ using ccl.ShaderNodes.Sockets;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("E64050E9-521F-44F3-BFDA-EFEAFA73625E")]
-	[CustomRenderContent(IsPrivate=true)]
+	[CustomRenderContent(IsPrivate = true)]
 	public class TranslucentMaterial : RenderMaterial, ICyclesMaterial
 	{
 		private static readonly string _DiffuseColor = "diffuse_color";
@@ -41,10 +41,10 @@ namespace RhinoCyclesCore.Materials
 			ModifyRenderContentStyles(RenderContentStyles.None, RenderContentStyles.TextureSummary);
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			HandleTexturedValue(_DiffuseColor, Diffuse);
-			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, Gamma);
+			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, bitmapConverter, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -55,7 +55,7 @@ namespace RhinoCyclesCore.Materials
 		public override void SimulateMaterial(ref Rhino.DocObjects.Material simulatedMaterial, bool forDataOnly)
 		{
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
-			BakeParameters();
+			BakeParameters(BitmapConverter);
 
 
 			simulatedMaterial.DiffuseColor = Diffuse.Value.AsSystemColor();
@@ -88,5 +88,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			return outsocket ?? sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

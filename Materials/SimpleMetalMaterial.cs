@@ -47,7 +47,7 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("metal-polish", 0.0f, "Roughness");
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			Color4f col;
 			if (Fields.TryGetValue("metal-color", out col))
@@ -104,7 +104,7 @@ namespace RhinoCyclesCore.Materials
 
 					"<connect from=\"metal bsdf\" to=\"output surface\" />" +
 					"",
-					
+
 					color.R, color.G, color.B,
 					polish
 					);
@@ -126,5 +126,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

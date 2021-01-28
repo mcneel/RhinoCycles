@@ -46,12 +46,15 @@ namespace RhinoCyclesCore
 		{
 			rm.Fields.AddTextured(slotname, defaultValue, prompt, false);
 		}
-		public static Tuple<bool, float4, bool, float> HandleTexturedColor(RenderMaterial rm, string slotname, CyclesTextureImage tex)
+		public static Tuple<bool, float4, bool, float> HandleTexturedColor(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter)
 		{
 			bool success = false;
 			float4 rc = new float4(0.0f);
 			bool onness = false;
 			float amount = 0.0f;
+
+			if(bitmapConverter==null) bitmapConverter = new Converters.BitmapConverter();
+
 			if (rm.Fields.TryGetValue(slotname, out Color4f c))
 			{
 				rc = c.ToFloat4();
@@ -74,7 +77,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, true, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
+							HandleRenderTexture(rt, tex, true, bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
 							tex.Amount = amount;
 						}
 					}
@@ -109,7 +112,7 @@ namespace RhinoCyclesCore
 
 			return new Tuple<bool, float4, bool, float, RenderMaterial>(success, rc, onness, amount, rmchild);
 		}
-		public static Tuple<bool, float, bool, float> HandleTexturedValue(RenderMaterial rm, string slotname, CyclesTextureImage tex)
+		public static Tuple<bool, float, bool, float> HandleTexturedValue(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter)
 		{
 			bool success = false;
 			float rc = 0.0f;
@@ -137,7 +140,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, true, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
+							HandleRenderTexture(rt, tex, true, bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
 							tex.Amount = amount;
 						}
 					}
@@ -148,9 +151,11 @@ namespace RhinoCyclesCore
 		}
 
 
-		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, float gamma = 1.0f)
+		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, Converters.BitmapConverter bitmapConverter, float gamma = 1.0f)
 		{
 			if (rt == null) return;
+			if(bitmapConverter==null) bitmapConverter = new Converters.BitmapConverter();
+
 			uint rid = rt.RenderHashWithoutLocalMapping;
 
 			var rotationvec = rt.GetRotation();
@@ -219,14 +224,14 @@ namespace RhinoCyclesCore
 					var isFloat = rt.IsHdrCapable();
 					if (isFloat)
 					{
-						var img = Converters.BitmapConverter.RetrieveFloatsImg(rid, pwidth, pheight, eval, linear, imgbased, canuse);
+						var img = bitmapConverter.RetrieveFloatsImg(rid, pwidth, pheight, eval, linear, imgbased, canuse);
 						img.ApplyGamma(gamma);
 						tex.TexFloat = img.Data as SimpleArrayFloat;
 						tex.TexByte = null;
 					}
 					else
 					{
-						var img = Converters.BitmapConverter.RetrieveBytesImg(rid, pwidth, pheight, eval, linear, imgbased, canuse);
+						var img = bitmapConverter.RetrieveBytesImg(rid, pwidth, pheight, eval, linear, imgbased, canuse);
 						img.ApplyGamma(gamma);
 						tex.TexByte = img.Data as SimpleArrayByte;
 						tex.TexFloat = null;

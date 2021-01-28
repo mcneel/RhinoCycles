@@ -40,7 +40,7 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("attribute", "vertexcolor", "Attribute");
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 		}
 
@@ -87,5 +87,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

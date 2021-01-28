@@ -48,7 +48,7 @@ namespace RhinoCyclesCore.Environments
 			Fields.Add("strength", Strength, "Background Strength");
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			float val;
 			if (Fields.TryGetValue("scale", out val))
@@ -106,5 +106,7 @@ namespace RhinoCyclesCore.Environments
 		{
 			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

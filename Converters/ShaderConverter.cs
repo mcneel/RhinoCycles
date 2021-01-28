@@ -37,9 +37,9 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="rm">Material to convert to CyclesShader</param>
 		/// <param name="gamma">gamma to use for this shader</param>
 		/// <returns>The CyclesShader</returns>
-		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid)
+		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid, BitmapConverter bitmapConverter)
 		{
-			var shader = new CyclesShader(mid)
+			var shader = new CyclesShader(mid, bitmapConverter)
 			{
 				Type = CyclesShader.Shader.Diffuse
 			};

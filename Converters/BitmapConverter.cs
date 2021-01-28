@@ -29,26 +29,27 @@ using Rhino.Runtime.InteropWrappers;
 
 namespace RhinoCyclesCore.Converters
 {
-	public static class BitmapConverter
+	public class BitmapConverter : IDisposable
 	{
-		static readonly internal ConcurrentDictionary<uint, ByteBitmap> ByteImagesNew = new ConcurrentDictionary<uint, ByteBitmap>();
-		static readonly internal ConcurrentDictionary<uint, FloatBitmap> FloatImagesNew = new ConcurrentDictionary<uint, FloatBitmap>();
+		readonly internal ConcurrentDictionary<uint, ByteBitmap> ByteImagesNew = new ConcurrentDictionary<uint, ByteBitmap>();
+		readonly internal ConcurrentDictionary<uint, FloatBitmap> FloatImagesNew = new ConcurrentDictionary<uint, FloatBitmap>();
 
-		static readonly private object bytelocker = new object();
-		static readonly private object floatlocker = new object();
+		readonly private object bytelocker = new object();
+		readonly private object floatlocker = new object();
+		private bool disposedValue;
 
-		public static void ReloadTextures(CyclesShader shader)
+		public void ReloadTextures(CyclesShader shader)
 		{
 			shader.ReloadTextures(ByteImagesNew, FloatImagesNew);
 		}
 
-		public static void ClearTextureMemory()
+		public void ClearTextureMemory()
 		{
 			ByteImagesNew.Clear();
 			FloatImagesNew.Clear();
 		}
 
-		public static void ApplyGammaToTextures(float gamma)
+		public void ApplyGammaToTextures(float gamma)
 		{
 			lock (bytelocker)
 			{
@@ -74,7 +75,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="rm"></param>
 		/// <param name="renderTexture"></param>
 		/// <param name="textureType"></param>
-		public static void MaterialBitmapFromEvaluator(ref ShaderBody shader, RenderTexture renderTexture, RenderMaterial.StandardChildSlots textureType)
+		public void MaterialBitmapFromEvaluator(ref ShaderBody shader, RenderTexture renderTexture, RenderMaterial.StandardChildSlots textureType)
 		{
 			if (renderTexture == null) return;
 
@@ -107,7 +108,7 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		private static void InternalMaterialBitmapFromEvaluator(ShaderBody shader, RenderTexture renderTexture,
+		private void InternalMaterialBitmapFromEvaluator(ShaderBody shader, RenderTexture renderTexture,
 			RenderMaterial.StandardChildSlots textureType, Rhino.Geometry.Transform rhinotfm, uint rId, TextureEvaluator actualEvaluator,
 			TextureProjectionMode projectionMode, TextureEnvironmentMappingMode envProjectionMode, bool repeat)
 		{
@@ -257,7 +258,7 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		static private TextureEnvironmentMappingMode get_environment_mapping(RenderEnvironment rm, RenderTexture renderTexture)
+		private TextureEnvironmentMappingMode get_environment_mapping(RenderEnvironment rm, RenderTexture renderTexture)
 		{
 			var s = rm.GetParameter("background-projection") as IConvertible;
 			string proj = "";
@@ -300,7 +301,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="teximg"></param>
 		/// <param name="gamma"></param>
 		/// <param name="floatAsByte"></param>
-		public static void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma)
+		public void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma)
 		{
 			RenderTexture renderTexture = null;
 
@@ -512,7 +513,7 @@ namespace RhinoCyclesCore.Converters
 			}
 		};
 
-	public static ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
+	public ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
 	{
 		var read = ByteImagesNew.ContainsKey(id);
 		var img = read ? ByteImagesNew[id] : new ByteBitmap(id, new SimpleArrayByte(new MyDumbBitmapByteList(bm)), pwidth, pheight, false);
@@ -589,7 +590,7 @@ namespace RhinoCyclesCore.Converters
 	};
 
 
-	private static SimpleArrayByte ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
+	private SimpleArrayByte ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
 	{
 	  if (!canUse)
 	  {
@@ -675,7 +676,7 @@ namespace RhinoCyclesCore.Converters
 			}
 		};
 
-		private static SimpleArrayFloat ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
+		private SimpleArrayFloat ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
 	{
 			if (!canUse)
 			{
@@ -697,7 +698,7 @@ namespace RhinoCyclesCore.Converters
 			return new SimpleArrayFloat(new EvaluatorToFloatList(textureEvaluator, pwidth, pheight, isImageBased));
 		}
 
-	public static ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
+	public ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
 		{
 			var read = ByteImagesNew.ContainsKey(rId);
 			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
@@ -713,7 +714,7 @@ namespace RhinoCyclesCore.Converters
 			return img;
 		}
 
-		public static FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
+		public FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
 		{
 			var read = FloatImagesNew.ContainsKey(rId);
 			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
@@ -729,5 +730,34 @@ namespace RhinoCyclesCore.Converters
 			return img;
 		}
 
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					ClearTextureMemory();
+					// TODO: dispose managed state (managed objects)
+				}
+
+				// TODO: free unmanaged resources (unmanaged objects) and override finalizer
+				// TODO: set large fields to null
+				disposedValue = true;
+			}
+		}
+
+		// // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+		// ~BitmapConverter()
+		// {
+		//     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+		//     Dispose(disposing: false);
+		// }
+
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
 	}
 }
