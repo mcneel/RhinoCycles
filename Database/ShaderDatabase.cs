@@ -37,13 +37,13 @@ namespace RhinoCyclesCore.Database
 
 	public interface IWriteShaderDatabase
 	{
-		
+
 	}
 
 	public interface IReadWriteShaderDatabase : IReadShaderDatabase, IWriteShaderDatabase
 	{ }
 
-	public class ShaderDatabase : IReadWriteShaderDatabase
+	public class ShaderDatabase : IReadWriteShaderDatabase, IDisposable
 	{
 		/// <summary>
 		/// RhinoCycles shaders and Cycles shaders relations
@@ -53,7 +53,7 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// record material changes for objects
 		/// </summary>
-		private readonly List<CyclesObjectShader> _cqObjectsShaderChanges = new List<CyclesObjectShader>(); 
+		private readonly List<CyclesObjectShader> _cqObjectsShaderChanges = new List<CyclesObjectShader>();
 		/// <summary>
 		/// record shader changes to push to cycles
 		/// </summary>
@@ -61,11 +61,12 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// record RenderMaterial CRC and Shader relationship. Key is RenderHash, Value is Shader.
 		/// </summary>
-		private readonly Dictionary<uint, CclShader> _rhCclShaders = new Dictionary<uint, CclShader>(); 
+		private readonly Dictionary<uint, CclShader> _rhCclShaders = new Dictionary<uint, CclShader>();
 		/// <summary>
 		/// record shader in scene relationship. Key is RenderMaterial.RenderHash, Value is shader id in scene.
 		/// </summary>
 		private readonly Dictionary<uint, uint> _rhCclSceneShaderIds = new Dictionary<uint, uint>();
+		private bool disposedValue;
 
 		/// <summary>
 		/// Return true if any shader or object shader changes were recorded by the ChangeQueue mechanism.
@@ -213,6 +214,37 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					_allShaders.Clear();
+					_cqObjectsShaderChanges.Clear(); // CyclesObjectShader
+					_cqShaders.Clear(); // CyclesShader
+					_rhCclShaders.Clear(); // uint, CclShader
+					_rhCclSceneShaderIds.Clear(); //
+				}
 
+				// TODO: free unmanaged resources (unmanaged objects) and override finalizer
+				// TODO: set large fields to null
+				disposedValue = true;
+			}
+		}
+
+		// // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+		// ~ShaderDatabase()
+		// {
+		//     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+		//     Dispose(disposing: false);
+		// }
+
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
 	}
 }

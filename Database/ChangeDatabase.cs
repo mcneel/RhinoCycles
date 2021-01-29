@@ -143,6 +143,7 @@ namespace RhinoCyclesCore.Database
 			_environmentDatabase?.Dispose();
 			_objectShaderDatabase?.Dispose();
 			_objectDatabase?.Dispose();
+			_shaderDatabase?.Dispose();
 			base.Dispose(isDisposing);
 		}
 
