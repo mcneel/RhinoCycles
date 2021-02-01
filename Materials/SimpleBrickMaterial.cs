@@ -46,7 +46,7 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("offset", Offset, "Offset");
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			Color4f col;
 			if (Fields.TryGetValue("color1", out col))
@@ -135,5 +135,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

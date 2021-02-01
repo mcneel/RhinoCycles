@@ -30,7 +30,7 @@ namespace RhinoCyclesCore.Materials
 		/// need access to your own custom render material Fields dictionary
 		/// after a flush.
 		/// </summary>
-		void BakeParameters();
+		void BakeParameters(Converters.BitmapConverter bitmapConverter);
 
 		/// <summary>
 		/// Get the XML representing the material. Note that if you need to access
@@ -58,5 +58,10 @@ namespace RhinoCyclesCore.Materials
 		/// Set the gamma to use when serializing to XML.
 		/// </summary>
 		float Gamma { get; set; }
+
+		/// <summary>
+		/// Get and set the Bitmap to be used internally when needed
+		/// </summary>
+		Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

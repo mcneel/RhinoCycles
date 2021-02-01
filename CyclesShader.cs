@@ -39,12 +39,13 @@ namespace RhinoCyclesCore
 	{
 		private ShaderBody _front;
 		private ShaderBody _back;
-		public CyclesShader(uint id)
+		private BitmapConverter _bitmapConverter;
+		public CyclesShader(uint id, BitmapConverter bitmapConverter)
 		{
 			Id = id;
 			_front = null;
 			_back = null;
-
+			_bitmapConverter = bitmapConverter;
 		}
 
 		/// <summary>
@@ -122,32 +123,32 @@ namespace RhinoCyclesCore
 			if (rm.TypeId.Equals(RenderMaterial.PictureMaterialGuid))
 			{
 				return ProbableMaterial.Picture;
-				
+
 			}
 			if (rm.TypeId.Equals(RenderMaterial.PlasterMaterialGuid))
 			{
 				return ProbableMaterial.Plaster;
-				
+
 			}
 			if (rm.TypeId.Equals(RenderMaterial.GlassMaterialGuid))
 			{
 				return ProbableMaterial.Glass;
-				
+
 			}
 			if (rm.TypeId.Equals(RenderMaterial.GemMaterialGuid))
 			{
 				return ProbableMaterial.Gem;
-				
+
 			}
 			if (rm.TypeId.Equals(RenderMaterial.PaintMaterialGuid))
 			{
 				return ProbableMaterial.Paint;
-				
+
 			}
 			if (rm.TypeId.Equals(RenderMaterial.PlasticMaterialGuid))
 			{
 				return ProbableMaterial.Plastic;
-				
+
 			}
 			if (rm.TypeId.Equals(RenderMaterial.MetalMaterialGuid))
 			{
@@ -158,27 +159,27 @@ namespace RhinoCyclesCore
 			if (rm.SmellsLikePlaster || rm.SmellsLikeTexturedPlaster)
 			{
 				return ProbableMaterial.Plaster;
-				
+
 			}
 			if (rm.SmellsLikeGlass || rm.SmellsLikeTexturedGlass)
 			{
 				return ProbableMaterial.Glass;
-				
+
 			}
 			if (rm.SmellsLikeGem || rm.SmellsLikeTexturedGem)
 			{
 				return ProbableMaterial.Gem;
-				
+
 			}
 			if (rm.SmellsLikePaint || rm.SmellsLikeTexturedPaint)
 			{
 				return ProbableMaterial.Paint;
-				
+
 			}
 			if (rm.SmellsLikePlastic || rm.SmellsLikeTexturedPlastic)
 			{
 				return ProbableMaterial.Plastic;
-				
+
 			}
 			if (rm.SmellsLikeMetal || rm.SmellsLikeTexturedMetal)
 			{
@@ -364,53 +365,53 @@ namespace RhinoCyclesCore
 				shb.UseBaseColorTextureAlphaAsObjectAlpha = pbrmat.UseBaseColorTextureAlphaForObjectAlphaTransparencyTexture;
 				HandleTexturedColorProperty(Pbr.BaseColor, pbrmat, rmFromPbrMat, shb.PbrBase);
 				shb.PbrBase.Value = (shb.PbrBase.Value.ToFloat4() ^ gamma).ToColor4f();
-				Utilities.HandleRenderTexture(shb.PbrBase.Texture, shb.PbrBaseTexture, false, gamma);
+				Utilities.HandleRenderTexture(shb.PbrBase.Texture, shb.PbrBaseTexture, false, _bitmapConverter, gamma);
 				HandleTexturedScalarProperty(Pbr.Metallic, pbrmat, rmFromPbrMat, shb.PbrMetallic);
-				Utilities.HandleRenderTexture(shb.PbrMetallic.Texture, shb.PbrMetallicTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrMetallic.Texture, shb.PbrMetallicTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.Subsurface, pbrmat, rmFromPbrMat, shb.PbrSubsurface);
-				Utilities.HandleRenderTexture(shb.PbrSubsurface.Texture, shb.PbrSubsurfaceTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrSubsurface.Texture, shb.PbrSubsurfaceTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedColorProperty(Pbr.SubsurfaceScatteringColor, pbrmat, rmFromPbrMat, shb.PbrSubsurfaceColor);
 				shb.PbrSubsurfaceColor.Value = (shb.PbrSubsurfaceColor.Value.ToFloat4() ^ gamma).ToColor4f();
-				Utilities.HandleRenderTexture(shb.PbrSubsurfaceColor.Texture, shb.PbrSubsurfaceColorTexture, false, gamma);
+				Utilities.HandleRenderTexture(shb.PbrSubsurfaceColor.Texture, shb.PbrSubsurfaceColorTexture, false, _bitmapConverter, gamma);
 				HandleTexturedScalarProperty(Pbr.SubsurfaceScatteringRadius, pbrmat, rmFromPbrMat, shb.PbrSubsurfaceRadius);
-				Utilities.HandleRenderTexture(shb.PbrSubsurfaceRadius.Texture, shb.PbrSubsurfaceRadiusTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrSubsurfaceRadius.Texture, shb.PbrSubsurfaceRadiusTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.Roughness, pbrmat, rmFromPbrMat, shb.PbrRoughness);
-				Utilities.HandleRenderTexture(shb.PbrRoughness.Texture, shb.PbrRoughnessTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrRoughness.Texture, shb.PbrRoughnessTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.Specular, pbrmat, rmFromPbrMat, shb.PbrSpecular);
-				Utilities.HandleRenderTexture(shb.PbrSpecular.Texture, shb.PbrSpecularTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrSpecular.Texture, shb.PbrSpecularTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.SpecularTint, pbrmat, rmFromPbrMat, shb.PbrSpecularTint);
-				Utilities.HandleRenderTexture(shb.PbrSpecularTint.Texture, shb.PbrSpecularTintTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrSpecularTint.Texture, shb.PbrSpecularTintTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.Anisotropic, pbrmat, rmFromPbrMat, shb.PbrAnisotropic);
-				Utilities.HandleRenderTexture(shb.PbrAnisotropic.Texture, shb.PbrAnisotropicTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrAnisotropic.Texture, shb.PbrAnisotropicTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.AnisotropicRotation, pbrmat, rmFromPbrMat, shb.PbrAnisotropicRotation);
-				Utilities.HandleRenderTexture(shb.PbrAnisotropicRotation.Texture, shb.PbrAnisotropicRotationTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrAnisotropicRotation.Texture, shb.PbrAnisotropicRotationTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.Sheen, pbrmat, rmFromPbrMat, shb.PbrSheen);
-				Utilities.HandleRenderTexture(shb.PbrSheen.Texture, shb.PbrSheenTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrSheen.Texture, shb.PbrSheenTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.SheenTint, pbrmat, rmFromPbrMat, shb.PbrSheenTint);
-				Utilities.HandleRenderTexture(shb.PbrSheenTint.Texture, shb.PbrSheenTintTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrSheenTint.Texture, shb.PbrSheenTintTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.Clearcoat, pbrmat, rmFromPbrMat, shb.PbrClearcoat);
-				Utilities.HandleRenderTexture(shb.PbrClearcoat.Texture, shb.PbrClearcoatTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrClearcoat.Texture, shb.PbrClearcoatTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.ClearcoatRoughness, pbrmat, rmFromPbrMat, shb.PbrClearcoatRoughness);
-				Utilities.HandleRenderTexture(shb.PbrClearcoatRoughness.Texture, shb.PbrClearcoatRoughnessTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrClearcoatRoughness.Texture, shb.PbrClearcoatRoughnessTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedColorProperty(Pbr.ClearcoatBump, pbrmat, rmFromPbrMat, shb.PbrClearcoatBump);
-				Utilities.HandleRenderTexture(shb.PbrClearcoatBump.Texture, shb.PbrClearcoatBumpTexture, true, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrClearcoatBump.Texture, shb.PbrClearcoatBumpTexture, true, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.Opacity, pbrmat, rmFromPbrMat, shb.PbrTransmission);
-				Utilities.HandleRenderTexture(shb.PbrTransmission.Texture, shb.PbrTransmissionTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrTransmission.Texture, shb.PbrTransmissionTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.OpacityIor, pbrmat, rmFromPbrMat, shb.PbrIor);
-				Utilities.HandleRenderTexture(shb.PbrIor.Texture, shb.PbrIorTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrIor.Texture, shb.PbrIorTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.OpacityRoughness, pbrmat, rmFromPbrMat, shb.PbrTransmissionRoughness);
-				Utilities.HandleRenderTexture(shb.PbrTransmissionRoughness.Texture, shb.PbrTransmissionRoughnessTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrTransmissionRoughness.Texture, shb.PbrTransmissionRoughnessTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedColorProperty(Pbr.Emission, pbrmat, rmFromPbrMat, shb.PbrEmission);
 				shb.PbrEmission.Value = (shb.PbrEmission.Value.ToFloat4() ^ gamma).ToColor4f();
-				Utilities.HandleRenderTexture(shb.PbrEmission.Texture, shb.PbrEmissionTexture, false, gamma);
+				Utilities.HandleRenderTexture(shb.PbrEmission.Texture, shb.PbrEmissionTexture, false, _bitmapConverter, gamma);
 				HandleTexturedColorProperty(Pbr.Bump, pbrmat, rmFromPbrMat, shb.PbrBump);
-				Utilities.HandleRenderTexture(shb.PbrBump.Texture, shb.PbrBumpTexture, true, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrBump.Texture, shb.PbrBumpTexture, true, _bitmapConverter, 1.0f);
 				HandleTexturedColorProperty(Pbr.Displacement, pbrmat, rmFromPbrMat, shb.PbrDisplacement);
-				Utilities.HandleRenderTexture(shb.PbrDisplacement.Texture, shb.PbrDisplacementTexture, true, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrDisplacement.Texture, shb.PbrDisplacementTexture, true, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.AmbientOcclusion, pbrmat, rmFromPbrMat, shb.PbrAmbientOcclusion);
-				Utilities.HandleRenderTexture(shb.PbrAmbientOcclusion.Texture, shb.PbrAmbientOcclusionTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrAmbientOcclusion.Texture, shb.PbrAmbientOcclusionTexture, false, _bitmapConverter, 1.0f);
 				HandleTexturedScalarProperty(Pbr.Alpha, pbrmat, rmFromPbrMat, shb.PbrAlpha);
-				Utilities.HandleRenderTexture(shb.PbrAlpha.Texture, shb.PbrAlphaTexture, false, 1.0f);
+				Utilities.HandleRenderTexture(shb.PbrAlpha.Texture, shb.PbrAlphaTexture, false, _bitmapConverter, 1.0f);
 			}
 			else
 			{
@@ -515,7 +516,7 @@ namespace RhinoCyclesCore
 					{
 						var useorig = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse) != null;
 						var difftex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Diffuse);
-						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, difftex, RenderMaterial.StandardChildSlots.Diffuse);
+						_bitmapConverter.MaterialBitmapFromEvaluator(ref shb, difftex, RenderMaterial.StandardChildSlots.Diffuse);
 						if (shb.HasDiffuseTexture)
 						{
 							shb.CyclesMaterialType = ShaderBody.CyclesMaterial.No;
@@ -528,7 +529,7 @@ namespace RhinoCyclesCore
 					{
 						var useorig = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump) != null;
 						var bumptex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Bump);
-						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, bumptex, RenderMaterial.StandardChildSlots.Bump);
+						_bitmapConverter.MaterialBitmapFromEvaluator(ref shb, bumptex, RenderMaterial.StandardChildSlots.Bump);
 						if (shb.HasBumpTexture)
 						{
 							shb.BumpTexture.Amount = (float)Math.Min((useorig ? rm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump) : backuprm.GetTextureAmountFromUsage(RenderMaterial.StandardChildSlots.Bump)) / 100.0f, 1.0f);
@@ -539,7 +540,7 @@ namespace RhinoCyclesCore
 					{
 						var useorig = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency) != null;
 						var transtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Transparency);
-						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, transtex,
+						_bitmapConverter.MaterialBitmapFromEvaluator(ref shb, transtex,
 							RenderMaterial.StandardChildSlots.Transparency);
 						if (shb.HasTransparencyTexture)
 						{
@@ -551,7 +552,7 @@ namespace RhinoCyclesCore
 					{
 						var useorig = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment) != null;
 						var envtex = rm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment) ?? backuprm.GetTextureFromUsage(RenderMaterial.StandardChildSlots.Environment);
-						BitmapConverter.MaterialBitmapFromEvaluator(ref shb, envtex,
+						_bitmapConverter.MaterialBitmapFromEvaluator(ref shb, envtex,
 							RenderMaterial.StandardChildSlots.Environment);
 						if (shb.HasEnvironmentTexture)
 						{
@@ -564,7 +565,8 @@ namespace RhinoCyclesCore
 				else
 				{
 					crm.Gamma = gamma;
-					crm.BakeParameters();
+					crm.BitmapConverter = _bitmapConverter;
+					crm.BakeParameters(_bitmapConverter);
 					if (crm.MaterialType == ShaderBody.CyclesMaterial.CustomRenderMaterial)
 					{
 						shb.Crm = crm;
@@ -575,7 +577,7 @@ namespace RhinoCyclesCore
 					else
 					{
 						crm.Gamma = gamma;
-						crm.BakeParameters();
+						crm.BakeParameters(_bitmapConverter);
 						shb.Crm = crm;
 						shb.CyclesMaterialType = ShaderBody.CyclesMaterial.Xml;
 						shb.Gamma = gamma;
@@ -599,7 +601,7 @@ namespace RhinoCyclesCore
 
 		/// <summary>
 		/// A shader should override this function if it needs to reload textures.
-		/// 
+		///
 		/// Textures change after i.e. gamma changes.
 		/// </summary>
 		/// <param name="bytes"></param>
@@ -749,7 +751,7 @@ namespace RhinoCyclesCore
 
 		/// <summary>
 		/// Enumeration of Cycles custom materials.
-		/// 
+		///
 		/// Note: don't forget to update this enumeration for each
 		/// custom material that is added.
 		///
@@ -787,7 +789,7 @@ namespace RhinoCyclesCore
 
 		/// <summary>
 		/// A shader should override this function if it needs to reload textures.
-		/// 
+		///
 		/// Textures change after i.e. gamma changes.
 		/// </summary>
 		/// <param name="bytes"></param>
@@ -1001,6 +1003,6 @@ namespace RhinoCyclesCore
 		public float FresnelReflectionsAsFloat => FresnelReflections ? 1.0f : 0.0f;
 
 		public string Name { get; set; }
-		
+
 	}
 }

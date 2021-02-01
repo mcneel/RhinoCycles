@@ -85,7 +85,7 @@ namespace RhinoCyclesCore
 
 		/// <summary>
 		/// Reference to the bitmap we're rendering into.
-		/// 
+		///
 		/// This is used when rendering material previews.
 		/// </summary>
 		public Bitmap RenderBitmap { get; set; }
@@ -159,7 +159,7 @@ namespace RhinoCyclesCore
 		/// Render engine implementations that need to keep track of views
 		/// for instance to signal when a frame is ready for that particular
 		/// view.
-		/// 
+		///
 		/// Generally such engines want to register an event handler to
 		/// Database.ViewChanged to record the new ViewInfo here.
 		/// </summary>
@@ -186,6 +186,7 @@ namespace RhinoCyclesCore
 			CSycles.debug_set_cpu_kernel(RcCore.It.AllSettings.CPUSplitKernel);
 		}
 
+		protected Converters.BitmapConverter _bitmapConverter = new Converters.BitmapConverter();
 		public DisplayPipelineAttributes Attributes => Database?.DisplayPipelineAttributes ?? null;
 		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, ViewInfo view, ViewportInfo vp, DisplayPipelineAttributes attributes, bool interactive)
 		{
@@ -194,7 +195,7 @@ namespace RhinoCyclesCore
 			View = view;
 			m_interactive = interactive;
 			var doc = RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
-			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, attributes, !m_interactive)
+			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, attributes, !m_interactive, _bitmapConverter)
 			{
 				ModelAbsoluteTolerance = doc.ModelAbsoluteTolerance,
 				ModelAngleToleranceRadians = doc.ModelAngleToleranceRadians,
@@ -207,7 +208,7 @@ namespace RhinoCyclesCore
 		{
 			SetKernelFlags();
 			PreviewEventArgs = previewEventArgs;
-			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs);
+			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs, _bitmapConverter);
 			RegisterEventHandler();
 		}
 
@@ -448,7 +449,7 @@ namespace RhinoCyclesCore
 		// handle material shader updates
 		protected void Database_MaterialShaderChanged(object sender, MaterialShaderUpdatedEventArgs e)
 		{
-			Converters.BitmapConverter.ReloadTextures(e.RcShader);
+			_bitmapConverter.ReloadTextures(e.RcShader);
 			RecreateMaterialShader(e.RcShader, e.CclShader);
 			e.CclShader.Tag();
 		}

@@ -62,7 +62,7 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("gamma", MixFactor, "Flake and Shine Mix Factor");
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			Color4f color;
 			if (Fields.TryGetValue("flake1", out color))
@@ -184,5 +184,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

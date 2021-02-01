@@ -24,14 +24,14 @@ using ccl.ShaderNodes.Sockets;
 namespace RhinoCyclesCore.Materials
 {
 	[Guid("8B544B3E-D86F-4BCD-8494-FB660CF15E1C")]
-	[CustomRenderContent(IsPrivate=true)]
+	[CustomRenderContent(IsPrivate = true)]
 	public class XmlMaterial : RenderMaterial, ICyclesMaterial
 	{
 		public override bool Icon(Size size, out Bitmap bitmap)
 		{
 			var icon = new Icon(Core.Properties.Resources.Cycles_material, size);
 			bitmap = icon.ToBitmap();
-			return bitmap!=null;
+			return bitmap != null;
 		}
 
 		public override bool VirtualIcon(Size size, out Bitmap bitmap)
@@ -56,7 +56,7 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("xmlcode", XmlString, "XML");
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			string xml;
 			if (Fields.TryGetValue("xmlcode", out xml))
@@ -102,5 +102,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }

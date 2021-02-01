@@ -52,7 +52,7 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("reflectivity", Reflectivity, "Reflectivity");
 		}
 
-		public void BakeParameters()
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			Color4f col;
 			if (Fields.TryGetValue("diffuse", out col))
@@ -192,5 +192,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			return sh.Output.ins.Surface.ConnectionFrom as ClosureSocket;
 		}
+
+		public Converters.BitmapConverter BitmapConverter { get; set; }
 	}
 }
