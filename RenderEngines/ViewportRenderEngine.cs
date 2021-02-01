@@ -300,7 +300,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (this != null)
 			{
-				Session.EndRun();
 				RcCore.It.ReleaseSession(Session);
 			}
 		}

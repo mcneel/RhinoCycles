@@ -220,9 +220,21 @@ namespace RhinoCyclesCore.Database
 			{
 				if (disposing)
 				{
+					foreach (var allshader in _allShaders)
+					{
+						allshader.Item2?.Dispose();
+					}
 					_allShaders.Clear();
 					_cqObjectsShaderChanges.Clear(); // CyclesObjectShader
+					foreach (var shader in _cqShaders)
+					{
+						shader.Dispose();
+					}
 					_cqShaders.Clear(); // CyclesShader
+					foreach (var cclshader in _rhCclShaders)
+					{
+						cclshader.Value?.Dispose();
+					}
 					_rhCclShaders.Clear(); // uint, CclShader
 					_rhCclSceneShaderIds.Clear(); //
 				}

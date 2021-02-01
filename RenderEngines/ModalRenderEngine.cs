@@ -101,7 +101,7 @@ namespace RhinoCyclesCore.RenderEngines
 			List<ccl.PassType> reqPassTypes = reqChanList
 					.Select(chan => PassTypeForStandardChannel(chan))
 					.ToList();
-			
+
 			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
 
@@ -181,8 +181,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 			cyclesEngine.Database?.Flush();
 			var rc = cyclesEngine.UploadData();
-			cyclesEngine.Database?.Dispose();
-			cyclesEngine.Database = null;
 
 			if (rc)
 			{
@@ -222,7 +220,6 @@ namespace RhinoCyclesCore.RenderEngines
 					cyclesEngine.RenderWindow.Invalidate();
 				}
 
-				cyclesEngine.Session.EndRun();
 			}
 			#endregion
 
@@ -234,6 +231,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 			// we're done now, so lets clean up our session.
 			RcCore.It.ReleaseSession(cyclesEngine.Session);
+			cyclesEngine.Database?.Dispose();
+			cyclesEngine.Database = null;
 			cyclesEngine.State = State.Stopped;
 
 			if (!capturing)
@@ -244,7 +243,7 @@ namespace RhinoCyclesCore.RenderEngines
 				// signal the render window we're done.
 				//rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
 			}
-			cyclesEngine.CancelRender = true;
+			//cyclesEngine.CancelRender = true;
 		}
 
 		public bool SupportsPause()

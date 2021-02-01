@@ -93,5 +93,17 @@ namespace RhinoCyclesCore.Materials
 		}
 
 		public Converters.BitmapConverter BitmapConverter { get; set; }
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			if (disposing)
+			{
+				Diffuse.Texture?.Dispose();
+				Diffuse.Texture = null;
+				DiffuseTexture?.Dispose();
+				DiffuseTexture = null;
+			}
+		}
 	}
 }
