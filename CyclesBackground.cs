@@ -406,10 +406,21 @@ namespace RhinoCyclesCore
 
 		public void Dispose()
 		{
-			ReflectionTexture.Clear();
-			BgTexture.Clear();
-			SkyTexture.Clear();
-			Wallpaper.Clear();
+			ReflectionTexture?.Dispose();
+			ReflectionTexture = null;
+			BgTexture?.Dispose();
+			BgTexture = null;
+			SkyTexture?.Dispose();
+			SkyTexture = null;
+			Wallpaper?.Dispose();
+			Wallpaper = null;
+
+			BackgroundEnvironment?.Dispose();
+			BackgroundEnvironment = null;
+			SkylightEnvironment?.Dispose();
+			SkylightEnvironment = null;
+			ReflectionEnvironment?.Dispose();
+			ReflectionEnvironment = null;
 		}
 
 		public override string ToString()
@@ -426,6 +437,7 @@ namespace RhinoCyclesCore
 
 				var tenperc = a.Length / 10;
 				sb.Append($"\t --> {a[tenperc]}");
+				a = null;
 			}
 			return sb.ToString();
 		}

@@ -35,11 +35,13 @@ namespace RhinoCyclesCore
 	///
 	/// @todo better organise shader intermediary code instead of overloading heavily
 	/// </summary>
-	public class CyclesShader
+	public class CyclesShader : IDisposable
 	{
 		private ShaderBody _front;
 		private ShaderBody _back;
 		private BitmapConverter _bitmapConverter;
+		private bool disposedValue;
+
 		public CyclesShader(uint id, BitmapConverter bitmapConverter)
 		{
 			Id = id;
@@ -612,9 +614,30 @@ namespace RhinoCyclesCore
 			_back?.ReloadTextures(bytes, floats);
 		}
 
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					_front?.Dispose();
+					_back?.Dispose();
+				}
+
+				_front = null;
+				_back = null;
+				disposedValue = true;
+			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
 	}
 
-	public class ShaderBody
+	public class ShaderBody : IDisposable
 	{
 		#region PBR style parameters
 		public bool IsPbr { get; set; }
@@ -986,6 +1009,8 @@ namespace RhinoCyclesCore
 		public bool HasReflectivity => !NoReflectivity;
 
 		private float m_gamma;
+		private bool disposedValue;
+
 		public float Gamma
 		{
 			get { return m_gamma; }
@@ -1004,5 +1029,193 @@ namespace RhinoCyclesCore
 
 		public string Name { get; set; }
 
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					PbrBase.Texture?.Dispose();
+					PbrBase.Texture = null;
+					PbrBaseTexture?.Dispose();
+					PbrBaseTexture = null;
+
+					PbrMetallic.Texture?.Dispose();
+					PbrMetallic.Texture = null;
+					PbrMetallicTexture?.Dispose();
+					PbrMetallicTexture = null;
+
+					PbrSubsurface.Texture?.Dispose();
+					PbrSubsurface.Texture = null;
+					PbrSubsurfaceTexture?.Dispose();
+					PbrSubsurfaceTexture = null;
+
+					/*****/
+
+					PbrSubsurfaceColor.Texture?.Dispose();
+					PbrSubsurfaceColor.Texture = null;
+					PbrSubsurfaceColorTexture?.Dispose();
+					PbrSubsurfaceColorTexture = null;
+
+					/*****/
+
+					PbrSubsurfaceRadius.Texture?.Dispose();
+					PbrSubsurfaceRadius.Texture = null;
+					PbrSubsurfaceRadiusTexture?.Dispose();
+					PbrSubsurfaceRadiusTexture = null;
+
+					/*****/
+
+					PbrSpecular.Texture?.Dispose();
+					PbrSpecular.Texture = null;
+					PbrSpecularTexture?.Dispose();
+					PbrSpecularTexture = null;
+
+					/*****/
+
+					PbrSpecularTint.Texture?.Dispose();
+					PbrSpecularTint.Texture = null;
+					PbrSpecularTintTexture?.Dispose();
+					PbrSpecularTintTexture = null;
+
+					/*****/
+
+					PbrRoughness.Texture?.Dispose();
+					PbrRoughness.Texture = null;
+					PbrRoughnessTexture?.Dispose();
+					PbrRoughnessTexture = null;
+
+					/*****/
+
+					PbrAnisotropic.Texture?.Dispose();
+					PbrAnisotropic.Texture = null;
+					PbrAnisotropicTexture?.Dispose();
+					PbrAnisotropicTexture = null;
+
+					/*****/
+
+					PbrAnisotropicRotation.Texture?.Dispose();
+					PbrAnisotropicRotation.Texture = null;
+					PbrAnisotropicRotationTexture?.Dispose();
+					PbrAnisotropicRotationTexture = null;
+
+					/*****/
+
+					PbrSheen.Texture?.Dispose();
+					PbrSheen.Texture = null;
+					PbrSheenTexture?.Dispose();
+					PbrSheenTexture = null;
+
+					/*****/
+
+					PbrSheenTint.Texture?.Dispose();
+					PbrSheenTint.Texture = null;
+					PbrSheenTintTexture?.Dispose();
+					PbrSheenTintTexture = null;
+
+					/*****/
+
+					PbrClearcoat.Texture?.Dispose();
+					PbrClearcoat.Texture = null;
+					PbrClearcoatTexture?.Dispose();
+					PbrClearcoatTexture = null;
+
+					/*****/
+
+					PbrClearcoatRoughness.Texture?.Dispose();
+					PbrClearcoatRoughness.Texture = null;
+					PbrClearcoatRoughnessTexture?.Dispose();
+					PbrClearcoatRoughnessTexture = null;
+
+					/*****/
+
+					PbrClearcoatBump.Texture?.Dispose();
+					PbrClearcoatBump.Texture = null;
+					PbrClearcoatBumpTexture?.Dispose();
+					PbrClearcoatBumpTexture = null;
+
+					/*****/
+
+					PbrIor.Texture?.Dispose();
+					PbrIor.Texture = null;
+					PbrIorTexture?.Dispose();
+					PbrIorTexture = null;
+
+					/*****/
+
+					PbrTransmission.Texture?.Dispose();
+					PbrTransmission.Texture = null;
+					PbrTransmissionTexture?.Dispose();
+					PbrTransmissionTexture = null;
+
+					/*****/
+
+					PbrTransmissionRoughness.Texture?.Dispose();
+					PbrTransmissionRoughness.Texture = null;
+					PbrTransmissionRoughnessTexture?.Dispose();
+					PbrTransmissionRoughnessTexture = null;
+
+					PbrAmbientOcclusion.Texture?.Dispose();
+					PbrAmbientOcclusion.Texture = null;
+					PbrAmbientOcclusionTexture?.Dispose();
+					PbrAmbientOcclusionTexture = null;
+
+					PbrAlpha.Texture?.Dispose();
+					PbrAlpha.Texture = null;
+					PbrAlphaTexture?.Dispose();
+					PbrAlphaTexture = null;
+
+					PbrEmission.Texture?.Dispose();
+					PbrEmission.Texture = null;
+					PbrEmissionTexture?.Dispose();
+					PbrEmissionTexture = null;
+
+					PbrBump.Texture?.Dispose();
+					PbrBump.Texture = null;
+					PbrBumpTexture?.Dispose();
+					PbrBumpTexture = null;
+
+					PbrDisplacement.Texture?.Dispose();
+					PbrDisplacement.Texture = null;
+					PbrDisplacementTexture?.Dispose();
+					PbrDisplacementTexture = null;
+
+					PbrSmudge.Texture?.Dispose();
+					PbrSmudge.Texture = null;
+					PbrSmudgeTexture?.Dispose();
+					PbrSmudgeTexture = null;
+
+					PbrScratch.Texture?.Dispose();
+					PbrScratch.Texture = null;
+					PbrScratchTexture?.Dispose();
+					PbrScratchTexture = null;
+
+					/*** CyclesTextureImages for custom shader case ***/
+					DiffuseTexture?.Dispose();
+					DiffuseTexture = null;
+					BumpTexture?.Dispose();
+					BumpTexture = null;
+					TransparencyTexture?.Dispose();
+					TransparencyTexture = null;
+					EnvironmentTexture?.Dispose();
+					EnvironmentTexture = null;
+					GiEnvTexture?.Dispose();
+					GiEnvTexture = null;
+					BgEnvTexture?.Dispose();
+					BgEnvTexture = null;
+					ReflRefrEnvTexture?.Dispose();
+					ReflRefrEnvTexture = null;
+				}
+
+				disposedValue = true;
+			}
+		}
+
+
+		public void Dispose()
+		{
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
 	}
 }

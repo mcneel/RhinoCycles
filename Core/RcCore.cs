@@ -153,10 +153,11 @@ namespace RhinoCyclesCore.Core
 			CSycles.shutdown();
 		}
 
+		private readonly object sessionsLock = new object();
 		/// <summary>
 		/// Create a ccl.Session and register with central system so we can later ensure
 		/// we wait on all sessions to fully complete before shutting down CSycles.
-		/// 
+		///
 		/// Sessions created with this function have to be released/destroyed using
 		/// the function ReleaseSession
 		/// </summary>
@@ -164,16 +165,20 @@ namespace RhinoCyclesCore.Core
 		/// <param name="sessionParameters"></param>
 		/// <returns></returns>
 		public Session CreateSession(Client client, SessionParameters sessionParameters) {
-			var session = new Session(client, sessionParameters);
+			lock (sessionsLock)
+			{
+				var session = new Session(client, sessionParameters);
 
-			if(sessions.ContainsKey(session.Id)) {
-				RhinoApp.OutputDebugString($"Session {session.Id} already exists\n");
+				if (sessions.ContainsKey(session.Id))
+				{
+					RhinoApp.OutputDebugString($"Session {session.Id} already exists\n");
+				}
+
+				sessions[session.Id] = session;
+				RhinoApp.OutputDebugString($"Created session {session.Id}.\n");
+
+				return session;
 			}
-
-			sessions[session.Id] = session;
-			RhinoApp.OutputDebugString($"Created session {session.Id}\n");
-
-			return session;
 		}
 
 		/// <summary>
@@ -181,11 +186,24 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		/// <param name="session"></param>
 		public void ReleaseSession(Session session) {
-			if(sessions.ContainsKey(session.Id)) {
-				RhinoApp.OutputDebugString($"Releasing session {session.Id}\n");
-				sessions.TryRemove(session.Id, out Session tempSession);
-				tempSession.EndRun();
-				tempSession.Destroy();
+			lock (sessionsLock)
+			{
+				if (sessions.ContainsKey(session.Id))
+				{
+					RhinoApp.OutputDebugString($"Releasing session {session.Id}.\n");
+					Session tempSession;
+					while (!sessions.TryRemove(session.Id, out tempSession))
+					{
+						Thread.Sleep(10);
+					}
+					if (tempSession != null)
+					{
+						tempSession.EndRun();
+						tempSession.Destroy();
+					}
+					RhinoApp.OutputDebugString($"Session {session.Id} released.\n");
+
+				}
 			}
 		}
 	}

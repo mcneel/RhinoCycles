@@ -136,10 +136,6 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Database.Flush();
 			cyclesEngine.UploadData();
 
-			// get rid of our change queue
-			cyclesEngine.Database?.Dispose();
-			cyclesEngine.Database = null;
-
 			cyclesEngine.Session.PrepareRun();
 
 			// lets first reset session
@@ -166,9 +162,23 @@ namespace RhinoCyclesCore.RenderEngines
 				if (cyclesEngine.CancelRender) break;
 			}
 
-			cyclesEngine.Session.EndRun();
 			// we're done now, so lets clean up our session.
 			RcCore.It.ReleaseSession(cyclesEngine.Session);
+
+			cyclesEngine.Dispose();
+		}
+
+		private bool _disposed;
+		public override void Dispose(bool isDisposing)
+		{
+			if (_disposed) return;
+
+			base.Dispose(isDisposing);
+
+			Database?.Dispose();
+			Database = null;
+			Client?.Dispose();
+			_disposed = true;
 		}
 
 	}

@@ -13,12 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+using System;
 using Rhino.Render;
 using Rhino.Runtime.InteropWrappers;
 
 namespace RhinoCyclesCore
 {
-	public class CyclesTextureImage
+	public class CyclesTextureImage : IDisposable
 	{
 		public bool HasTextureImage => TexByte != null || TexFloat != null;
 		public bool HasFloatImage => TexFloat != null;
@@ -30,6 +31,8 @@ namespace RhinoCyclesCore
 		public string Name;
 		public bool UseAlpha;
 		public bool AlternateTiles;
+		private bool disposedValue;
+
 		public float UseAlphaAsFloat => UseAlpha ? 1.0f : 0.0f;
 		public float Amount { get; set; }
 
@@ -87,7 +90,7 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <returns></returns>
 		public override string ToString()
@@ -109,6 +112,29 @@ namespace RhinoCyclesCore
 				sb.Append($"{tf[end]}|{tf[end + 1]}|{tf[end + 2]}|{tf[end + 3]}");
 			}
 			return sb.ToString();
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					TexByte?.Dispose();
+					TexFloat?.Dispose();
+				}
+
+				Clear();
+
+				disposedValue = true;
+			}
+		}
+
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
 		}
 	}
 }
