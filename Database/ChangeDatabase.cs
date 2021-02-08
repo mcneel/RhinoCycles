@@ -1834,11 +1834,12 @@ namespace RhinoCyclesCore.Database
 		/// - Decals
 		/// - ProceduralTextures
 		/// - MultipleMappingChannels
+		/// - CustomObjectMappings
 		/// </summary>
 		/// <returns></returns>
 		protected override BakingFunctions BakeFor()
 		{
-			return BakingFunctions.Decals | BakingFunctions.ProceduralTextures | BakingFunctions.MultipleMappingChannels;
+			return BakingFunctions.Decals | BakingFunctions.ProceduralTextures | BakingFunctions.MultipleMappingChannels | BakingFunctions.CustomObjectMappings;
 		}
 
 		protected override int BakingSize(RhinoObject ro, RenderMaterial material, TextureType type)
