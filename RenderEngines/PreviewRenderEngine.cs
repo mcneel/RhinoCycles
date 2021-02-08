@@ -99,7 +99,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (cyclesEngine.CancelRender) return;
 
 			var gpusize = TileSize(renderDevice);
-			var threads = renderDevice.IsGpu ? 0 : (uint)Math.Max(1, Environment.ProcessorCount - 1);
+			var threads = renderDevice.IsGpu ? 0 : (uint)Math.Max(1, Utilities.GetSystemProcessorCount() - 1);
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(client, renderDevice)

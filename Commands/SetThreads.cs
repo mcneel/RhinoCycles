@@ -42,9 +42,9 @@ namespace RhinoCycles.Commands
 		{
 			var getNumber = new GetInteger();
 			getNumber.SetLowerLimit(0, false);
-			getNumber.SetUpperLimit(Environment.ProcessorCount, false);
+			getNumber.SetUpperLimit(RhinoCyclesCore.Utilities.GetSystemProcessorCount(), false);
 			getNumber.SetDefaultInteger(RcCore.It.AllSettings.Threads);
-			getNumber.SetCommandPrompt($"Set CPU render threads (max {Environment.ProcessorCount}, 0 for automatic)");
+			getNumber.SetCommandPrompt($"Set CPU render threads (max {RhinoCyclesCore.Utilities.GetSystemProcessorCount()}, 0 for automatic)");
 			var getRc = getNumber.Get();
 			if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
 			if (getRc == GetResult.Number)

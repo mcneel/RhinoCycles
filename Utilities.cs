@@ -12,6 +12,7 @@ using System.Globalization;
 using static Rhino.Render.RenderContent;
 using Pbr = Rhino.Render.PhysicallyBasedMaterial.ParametersNames;
 using Rhino.Runtime.InteropWrappers;
+using Rhino.Runtime;
 using System.Runtime.Remoting.Messaging;
 using ccl.ShaderNodes;
 
@@ -433,6 +434,11 @@ namespace RhinoCyclesCore
 				valueSocket?.Connect(sock);
 			}
 			return null;
+		}
+
+		public static int GetSystemProcessorCount()
+		{
+			return HostUtils.GetSystemProcessorCount();
 		}
 	}
 }
