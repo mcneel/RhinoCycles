@@ -34,7 +34,7 @@ namespace RhinoCyclesCore.Shaders
 		/// <summary>
 		/// Voronoi texture with Cell coloring
 		/// </summary>
-		private readonly VoronoiTexture vor = new VoronoiTexture {Coloring = VoronoiTexture.ColoringTypes.Cells };
+		private readonly VoronoiTexture vor = new VoronoiTexture {Dimension = VoronoiTexture.Dimensions.D3};
 
 		/// <summary>
 		/// Wave output with type Rings
@@ -90,7 +90,7 @@ namespace RhinoCyclesCore.Shaders
 
 			// inputs to max(wav.fac, vor.fac)
 			wav.outs.Fac.Connect(max.ins.Value1);
-			vor.outs.Fac.Connect(max.ins.Value2);
+			vor.outs.Distance.Connect(max.ins.Value2);
 
 			// drive wave + voronoi color mixing with max(wav.fac, vor.fac)
 			max.outs.Value.Connect(m_mix_wave_and_voronoi.ins.Fac);
