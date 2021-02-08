@@ -47,7 +47,7 @@ namespace RhinoCyclesCore.Settings
 			m_gv.Columns.Add(new GridColumn {
 				DataCell = new CheckBoxCell { Binding = Binding.Property<DeviceItem, bool?>(r => r.Selected) },
 				HeaderText = "Use",
-				Editable = false 
+				Editable = false
 			});
 			m_gv.Columns.Add(new GridColumn {
 				DataCell = new TextBoxCell { Binding = Binding.Property<DeviceItem, string>(r => r.Text) },
@@ -261,7 +261,7 @@ namespace RhinoCyclesCore.Settings
 
 			Application.Instance.AsyncInvoke(() =>
 			{
-				
+
 			}
 			);
 		}
@@ -293,7 +293,7 @@ namespace RhinoCyclesCore.Settings
 					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Value = e.AllSettings.Threads;
-					int utilPerc = (int)((float)e.AllSettings.Threads / Environment.ProcessorCount * 100.0f);
+					int utilPerc = (int)((float)e.AllSettings.Threads / Utilities.GetSystemProcessorCount() * 100.0f);
 					m_lb_threadcount_currentval.Text = $"(\u2248{utilPerc} %)";
 					RegisterControlEvents();
 					ResumeLayout();
@@ -322,7 +322,7 @@ namespace RhinoCyclesCore.Settings
 				SnapToTick = true,
 				TickFrequency = 1,
 				Value = 1,
-				MaxValue = Environment.ProcessorCount,
+				MaxValue = Utilities.GetSystemProcessorCount(),
 				MinValue = 1,
 				Width = 130,
 				Orientation = Orientation.Horizontal
@@ -369,7 +369,7 @@ namespace RhinoCyclesCore.Settings
 			Settings.Threads = (int)m_threadcount.Value;
 			Application.Instance.AsyncInvoke(() => {
 				UnRegisterControlEvents();
-				int utilPerc = (int)((float)Settings.Threads / Environment.ProcessorCount * 100.0f);
+				int utilPerc = (int)((float)Settings.Threads / Utilities.GetSystemProcessorCount() * 100.0f);
 				m_lb_threadcount_currentval.Text = $"(\u2248{utilPerc} %)";
 				RegisterControlEvents();
 			});
