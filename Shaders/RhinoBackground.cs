@@ -53,7 +53,7 @@ namespace RhinoCyclesCore.Shaders
 			}
 			else
 			{
-				if (!m_original_background.PreviewBg) {
+				//if (!m_original_background.PreviewBg) {
 					var texcoord210 = new TextureCoordinateNode("texcoord");
 
 					var bg_env_texture255 = new EnvironmentTextureNode("bg_env_texture");
@@ -414,7 +414,7 @@ namespace RhinoCyclesCore.Shaders
 					{
 						final_bg277.outs.Background.Connect(m_shader.Output.ins.Surface);
 					}
-				} else {
+				/*} else {
 					var final_bg277 = new BackgroundNode("final_bg");
 					final_bg277.ins.Strength.Value = 1f;
 					m_shader.AddNode(final_bg277);
@@ -439,7 +439,7 @@ namespace RhinoCyclesCore.Shaders
 					final_bg277.ins.Strength.Value = m_original_background.BgStrength;
 
 					final_bg277.outs.Background.Connect(m_shader.Output.ins.Surface);
-				}
+				}*/
 			}
 
 			// phew, done.

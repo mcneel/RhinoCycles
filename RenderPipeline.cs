@@ -25,7 +25,7 @@ namespace RhinoCycles
 {
 	/// <summary>
 	/// For asynchronous renderer this is just the entry point.
-	/// 
+	///
 	/// Inherits Rhino.Render.RenderPipeline
 	/// <seealso cref="Rhino.Render.RenderPipeline"/>
 	/// </summary>
@@ -38,8 +38,16 @@ namespace RhinoCycles
 		readonly private ModalRenderEngine cyclesEngine;
 
 		public RenderPipeline(RhinoDoc doc, Rhino.Commands.RunMode mode, Rhino.PlugIns.RenderPlugIn plugin, Size rwSize, ModalRenderEngine aRC)
-			: base(doc, mode, plugin, rwSize,
-					String.Format(Localization.LocalizeString("Rhino Render on {0}", 40), RcCore.It.AllSettings.RenderDevice.NiceName), Rhino.Render.RenderWindow.StandardChannels.RGBA, false, false)
+			: base(
+					doc,
+					mode,
+					plugin,
+					rwSize,
+					String.Format(Localization.LocalizeString("Rhino Render on {0}", 40),
+									 $"{RcCore.It.IsDeviceReady(RcCore.It.AllSettings.RenderDevice).actualDevice.NiceName}{(RcCore.It.IsDeviceReady(RcCore.It.AllSettings.RenderDevice).isDeviceReady ? "" : " - OpenCL compiling")}"),
+					Rhino.Render.RenderWindow.StandardChannels.RGBA,
+					false,
+					false)
 		{
 			cyclesEngine = aRC;
 		}
