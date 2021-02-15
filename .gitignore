@@ -2,3 +2,8 @@ bin/
 obj/
 *.blend1
 *.user
+
+.vs
+
+.fake
+.ionide

@@ -21,15 +21,10 @@ using System.Reflection;
 using System.Threading;
 using ccl;
 using Rhino;
-using Rhino.DocObjects;
 using Rhino.PlugIns;
 using Rhino.Render;
 using RhinoCyclesCore.Settings;
 using RhinoCyclesCore.Core;
-using RhinoCyclesCore;
-using Rhino.UI;
-
-using System.Management;
 
 namespace RhinoCycles
 {
@@ -155,10 +150,14 @@ namespace RhinoCycles
 				{
 					CSycles.initialise();
 					RcCore.It.Initialised = true;
+
+					RcCore.It.InitialiseOpenCl();
+
 					RcCore.It.TriggerInitialisationCompleted(this);
 				}
 			}
 		}
+
 
 		protected override void OnShutdown()
 		{
@@ -174,10 +173,5 @@ namespace RhinoCycles
 			pages.Add(optionsPage);
 			base.OptionsDialogPages(pages);
 		}
-
-		/*protected override void ObjectPropertiesPages(ObjectPropertiesPageCollection collection)
-		{
-			collection.Add(new ViewportPropertiesPage(collection.DocumentRuntimeSerailNumber));
-		}*/
 	}
 }

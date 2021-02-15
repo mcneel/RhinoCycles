@@ -51,7 +51,7 @@ namespace RhinoCyclesCore.RenderEngines
 			CSycles.log_to_stdout(false);
 			//CSycles.set_logger(Client.Id, m_logger_callback);
 #endregion
-			
+
 		}
 
 		private bool _bvhUploaded = false;
@@ -161,7 +161,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (rw == null) return;
 
 			var requestedChannels = rw.GetRequestedRenderChannelsAsStandardChannels();
-			
+
 			List<ccl.PassType> reqPassTypes = requestedChannels
 					.Distinct()
 					.Where(chan => chan != Rhino.Render.RenderWindow.StandardChannels.AlbedoRGB)
@@ -169,7 +169,7 @@ namespace RhinoCyclesCore.RenderEngines
 					.ToList();
 
 			_throttle = eds.ThrottleMs;
-			_samples = Attributes?.RealtimeRenderPasses ?? eds.Samples;
+			MaxSamples = Attributes?.RealtimeRenderPasses ?? eds.Samples;
 
 			#region pick a render device
 
@@ -192,20 +192,22 @@ namespace RhinoCyclesCore.RenderEngines
 			HandleDeviceAndIntegrator(eds);
 			var renderDevice = RenderDevice;
 #endif
+			(bool isReady, Device possibleRenderDevice) = RcCore.It.IsDeviceReady(renderDevice);
+			RenderDevice = possibleRenderDevice;
+			IsFallbackRenderDevice = !isReady;
 
 			#endregion
-			HandleDeviceAndIntegrator(eds);
 
 			var scaledPixelSize = Dpi / 72.0f;
 			var pixelSize = Math.Max(1, (int)(scaledPixelSize * eds.DpiScale));
 
 			#region set up session parameters
-			ThreadCount = (renderDevice.IsCpu ? eds.Threads : 0);
-			var sessionParams = new SessionParameters(client, renderDevice)
+			ThreadCount = (RenderDevice.IsCpu ? eds.Threads : 0);
+			var sessionParams = new SessionParameters(client, RenderDevice)
 			{
 				Experimental = false,
-				Samples = (int)_samples,
-				TileSize = TileSize(renderDevice),
+				Samples = (int)MaxSamples,
+				TileSize = TileSize(RenderDevice),
 				TileOrder = TileOrder.Center,
 				Threads = (uint)ThreadCount,
 				ShadingSystem = ShadingSystem.SVM,
@@ -224,7 +226,7 @@ namespace RhinoCyclesCore.RenderEngines
 			Session = RcCore.It.CreateSession(client, sessionParams);
 			#endregion
 
-			CreateScene(client, Session, renderDevice, this, eds);
+			CreateScene(client, Session, RenderDevice, this, eds);
 
 			// Set up passes
 			foreach (var reqPass in reqPassTypes)
@@ -270,7 +272,7 @@ namespace RhinoCyclesCore.RenderEngines
 					Session.Scene.Integrator.TagForUpdate();
 
 					// lets reset session
-					Session.Reset(size.Width, size.Height, _samples, 0, 0, size.Width, size.Height);
+					Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height);
 				}
 				if(this != null && !Flush && IsRendering) {
 					var smpl = Session.Sample();
@@ -347,7 +349,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (Session != null && State == State.Uploading)
 			{
 				TriggerStartSynchronizing();
-				
+
 				if (UploadData())
 				{
 					State = State.Rendering;
@@ -364,8 +366,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void ChangeSamples(int samples)
 		{
-			_samples = Math.Max(1, samples);
-			Session?.SetSamples(samples);
+			MaxSamples = Math.Max(1, samples);
+			Session?.SetSamples(MaxSamples);
 		}
 
 		public void ToggleNoShadows()

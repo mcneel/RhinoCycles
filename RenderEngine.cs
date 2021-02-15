@@ -42,7 +42,7 @@ namespace RhinoCyclesCore
 	/// <summary>
 	/// The actual render engine, ready for asynchronous work in Rhino.
 	/// </summary>
-	public partial class RenderEngine
+	public partial class RenderEngine : IDisposable
 	{
 		protected CreatePreviewEventArgs PreviewEventArgs { get; set; }
 
@@ -387,6 +387,13 @@ namespace RhinoCyclesCore
 			State = State.Rendering;
 		}
 
+
+		/// <summary>
+		/// This device is set for the modal render engine case when the session
+		/// is used to compile the OpenCL kernels off the main thread
+		/// when we do so we should just destroy the session without cancelling
+		/// the session
+		/// </summary>
 		public Thread RenderThread { get; set; } = null;
 		public bool StartRenderThread(ThreadStart threadStart, string threadName)
 		{
@@ -415,7 +422,6 @@ namespace RhinoCyclesCore
 
 			RenderThread?.Join();
 			RenderThread = null;
-
 		}
 
 		/// <summary>
@@ -470,7 +476,9 @@ namespace RhinoCyclesCore
 		{
 		}
 
-		public virtual void Dispose() { Dispose(true); }
+		public virtual void Dispose() {
+			Dispose(true);
+		}
 
 		public virtual void Dispose(bool isDisposing) { }
 	}
