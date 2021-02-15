@@ -86,11 +86,12 @@ namespace RhinoCyclesCore.RenderEngines
 			var client = cyclesEngine.Client;
 
 			var size = cyclesEngine.RenderDimension;
-			var samples = RcCore.It.AllSettings.PreviewSamples;
-			cyclesEngine.PreviewSamples = samples;
+			cyclesEngine.PreviewSamples = Math.Max(1, RcCore.It.AllSettings.PreviewSamples);
+			cyclesEngine.MaxSamples = cyclesEngine.PreviewSamples;
 
 			#region pick a render device
-			var renderDevice = RcCore.It.AllSettings.RenderDevice;
+			(bool isReady, Device renderDevice) = RcCore.It.IsDeviceReady(RcCore.It.AllSettings.RenderDevice);
+			cyclesEngine.IsFallbackRenderDevice = !isReady;
 
 			if (RcCore.It.AllSettings.Verbose) sdd.WriteLine(
 				$"Using device {renderDevice.Name + " " + renderDevice.Description}");
@@ -105,7 +106,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var sessionParams = new SessionParameters(client, renderDevice)
 			{
 				Experimental = false,
-				Samples = samples,
+				Samples = cyclesEngine.MaxSamples,
 				TileSize = gpusize,
 				TileOrder = TileOrder.Center,
 				Threads = threads,
@@ -139,7 +140,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.PrepareRun();
 
 			// lets first reset session
-			cyclesEngine.Session.Reset(size.Width, size.Height, samples, 0, 0, size.Width, size.Height);
+			cyclesEngine.Session.Reset(size.Width, size.Height, cyclesEngine.MaxSamples, 0, 0, size.Width, size.Height);
 			// then reset scene
 			cyclesEngine.Session.Scene.Reset();
 			// and actually start

@@ -77,9 +77,6 @@ namespace RhinoCyclesCore.RenderEngines
 			m_write_render_tile_callback = null;
 		}
 
-		private int maxSamples;
-		public int requestedSamples { get; set; }
-
 		/// <summary>
 		/// Entry point for a new render process. This is to be done in a separate thread.
 		/// </summary>
@@ -125,28 +122,27 @@ namespace RhinoCyclesCore.RenderEngines
 						break;
 				}
 			}
-			requestedSamples = Attributes?.RealtimeRenderPasses ?? engineSettings.Samples;
-			requestedSamples = (requestedSamples < 1) ? engineSettings.Samples : requestedSamples;
+			MaxSamples = Attributes?.RealtimeRenderPasses ?? engineSettings.Samples;
+			MaxSamples = (MaxSamples < 1) ? engineSettings.Samples : MaxSamples;
 
 			#region pick a render device
 			HandleDeviceAndIntegrator(eds);
-			var renderDevice = engineSettings.RenderDevice;
+			(bool isReady, Device possibleRenderDevice) = RcCore.It.IsDeviceReady(engineSettings.RenderDevice);
+			RenderDevice = possibleRenderDevice;
+			IsFallbackRenderDevice = !isReady;
 
 			/*if (engineSettings.Verbose) sdd.WriteLine(
-				$"Using device {renderDevice.Name + " " + renderDevice.Description}");*/
+				$"Using device {RenderDevice.Name + " " + RenderDevice.Description}");*/
 			#endregion
 
-			HandleDeviceAndIntegrator(eds);
-			maxSamples = requestedSamples;
-
 			#region set up session parameters
-			var sessionParams = new SessionParameters(client, renderDevice)
+			var sessionParams = new SessionParameters(client, RenderDevice)
 			{
 				Experimental = false,
-				Samples = requestedSamples,
-				TileSize = TileSize(renderDevice),
+				Samples = MaxSamples,
+				TileSize = TileSize(RenderDevice),
 				TileOrder = TileOrder.Center,
-				Threads = (uint)(renderDevice.IsGpu ? 0 : engineSettings.Threads),
+				Threads = (uint)(RenderDevice.IsGpu ? 0 : engineSettings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
@@ -163,7 +159,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session = RcCore.It.CreateSession(client, sessionParams);
 			#endregion
 
-			CreateScene(client, Session, renderDevice, cyclesEngine, engineSettings);
+			CreateScene(client, Session, RenderDevice, cyclesEngine, engineSettings);
 
 			// Set up passes
 			foreach (var reqPass in reqPassTypes)
@@ -192,7 +188,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 				// lets first reset session
 				int cycles_full_y = FullSize.Height - BufferRectangle.Bottom;
-				cyclesEngine.Session.Reset(size.Width, size.Height, requestedSamples, BufferRectangle.X, cycles_full_y, FullSize.Width, FullSize.Height);
+				cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, cycles_full_y, FullSize.Width, FullSize.Height);
 				// and actually start
 				bool stillrendering = true;
 				var throttle = Math.Max(0, engineSettings.ThrottleMs);
@@ -259,6 +255,18 @@ namespace RhinoCyclesCore.RenderEngines
 		public void PauseRendering()
 		{
 			State = State.Waiting;
+		}
+
+
+		private bool isDisposed = false;
+		public override void Dispose(bool isDisposing)
+		{
+			if(isDisposing) {
+				if(!isDisposed) {
+					isDisposed = true;
+				}
+			}
+			base.Dispose(isDisposing);
 		}
 	}
 

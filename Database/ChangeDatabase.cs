@@ -1747,7 +1747,7 @@ namespace RhinoCyclesCore.Database
 			{
 				if (RealtimePreviewPasses>-1 && _renderEngine is RenderEngines.ModalRenderEngine mre)
 				{
-					mre.requestedSamples = RealtimePreviewPasses;
+					mre.MaxSamples = RealtimePreviewPasses;
 				}
 				_renderEngine.Session.Scene.Background.Transparent = TransparentBackground;
 			}

@@ -39,12 +39,29 @@ namespace RhinoCyclesCore
 			TransparentMaxBounce,
 		}
 
+		/// <summary>
+		/// The amount of threads requested for raytracing (on CPU).
+		/// </summary>
 		public int ThreadCount { get; set; } = 0;
 		private uint _oldIntegratorHash = 0;
+		/// <summary>
+		/// The render device set to this render engine implementation.
+		/// </summary>
 		public ccl.Device RenderDevice { get; set; }
+		/// <summary>
+		/// True if the render device we wanted to use wasn't ready. Instead we're using the
+		/// fallback device
+		/// </summary>
+		public bool IsFallbackRenderDevice { get; set; } = false;
 
+		/// <summary>
+		/// Sleep in ms between each pass
+		/// </summary>
 		protected int _throttle { get; set; } = 10;
-		protected int _samples { get; set; } = 1;
+		/// <summary>
+		/// Maximum samples this session will render
+		/// </summary>
+		public int MaxSamples { get; set; } = 1;
 
 		protected bool _needReset;
 
@@ -55,7 +72,7 @@ namespace RhinoCyclesCore
 			RenderDevice = settings.RenderDevice;
 			_textureBakeQuality = settings.TextureBakeQuality;
 			_throttle = settings.ThrottleMs;
-			_samples = settings.Samples;
+			MaxSamples = settings.Samples;
 			if (Session != null && Session.Scene != null)
 			{
 				var hash = settings.IntegratorHash;
