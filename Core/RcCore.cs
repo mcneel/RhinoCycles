@@ -159,12 +159,14 @@ namespace RhinoCyclesCore.Core
 		public void Shutdown() {
 			int count;
 			int timer = 0;
-			if(currentCompilerProcess!=null) {
+			if(checkOpenClCompilationCompletedThread!=null) {
+				stopCheckingForOpenClCompileFinished = true;
 				try
 				{
-					currentCompilerProcess.Kill();
-				} finally {
-					currentCompilerProcess = null;
+					checkOpenClCompilationCompletedThread.Join();
+				}
+				finally {
+					checkOpenClCompilationCompletedThread = null;
 				}
 			}
 			if(openClCompilerThread!=null)
@@ -271,6 +273,10 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		Thread openClCompilerThread = null;
 		/// <summary>
+		/// Thread that will check if compiles have finished.
+		/// </summary>
+		Thread checkOpenClCompilationCompletedThread = null;
+		/// <summary>
 		/// Start the process to initialize OpenCL for Cycles in a separate thread.
 		/// Before starting the process create a list of all OpenCL devices and
 		/// initialize their readiness state to false.
@@ -289,6 +295,9 @@ namespace RhinoCyclesCore.Core
 			}
 			openClCompilerThread = new Thread(StartCompileOpenCl);
 			openClCompilerThread.Start();
+
+			checkOpenClCompilationCompletedThread = new Thread(CheckOpenClCompileFinished);
+			checkOpenClCompilationCompletedThread.Start();
 		}
 
 		/// <summary>
@@ -299,12 +308,38 @@ namespace RhinoCyclesCore.Core
 		/// List holding OpenCL devices and their readiness state.
 		/// </summary>
 		List<(ccl.Device Device, bool IsReady)> openClDevicesReadiness = new List<(ccl.Device, bool)>();
-
 		/// <summary>
-		/// Current modal render engine session. If it is not null one is in progress
-		/// and can be cancelled
+		/// List of SHA256 hashes created from device.NiceName + driver date + rhino app version.
+		/// The names are used to create a file with that name when the OpenCL compilation
+		/// has finished successfully.
 		/// </summary>
-		Process currentCompilerProcess = null;
+		List<string> deviceFileNames = new List<string>();
+		/// <summary>
+		/// available devices on the system. needed mostly for driver date
+		/// </summary>
+		List<(string DeviceName, string DriverDate)> availableGpuDevices = (from devinfo in DisplayDeviceInfo.GpuDeviceInfos() select (DeviceName: devinfo.Name, DriverDate: devinfo.DriverDateAsString)).ToList();
+
+		bool stopCheckingForOpenClCompileFinished = false;
+		public void CheckOpenClCompileFinished()
+		{
+			do
+			{
+				Thread.Sleep(1000);
+				for (int idx = 0; idx < deviceFileNames.Count; idx++)
+				{
+					var deviceFileName = deviceFileNames[idx];
+					(Device device, bool isReady) = openClDevicesReadiness[idx];
+					if (File.Exists(deviceFileName) && !isReady)
+					{
+						lock (accessOpenClDevicesReadiness)
+						{
+							openClDevicesReadiness[idx] = (device, true);
+						}
+					}
+				}
+			}
+			while (!stopCheckingForOpenClCompileFinished);
+		}
 
 		/// <summary>
 		/// Compile OpenCL if necessary
@@ -314,8 +349,6 @@ namespace RhinoCyclesCore.Core
 			// no opencl devices to compile for
 			if (openClDevicesReadiness.Count == 0) return;
 
-			// available devices on the system. needed mostly for driver date
-			var availableGpuDevices = (from devinfo in DisplayDeviceInfo.GpuDeviceInfos() select (DeviceName: devinfo.Name, DriverDate: devinfo.DriverDateAsString)).ToList();
 			// make a list of just the devices, so we can update the openClDevicesReadiness
 			// list when needed
 			List<Device> devicesToCheck;
@@ -326,7 +359,7 @@ namespace RhinoCyclesCore.Core
 
 			// Compute the SHA256 hash for each device on the concatenated string
 			// containing device nice name, device driver and Rhino version.
-			List<string> deviceFileNames = new List<string>(devicesToCheck.Count);
+			deviceFileNames = new List<string>(devicesToCheck.Count);
 			foreach(ccl.Device device in devicesToCheck) {
 				foreach(var gpudev in availableGpuDevices) {
 					if(gpudev.DeviceName.Contains(device.NiceName)) {
@@ -369,6 +402,7 @@ namespace RhinoCyclesCore.Core
 			{
 				var renderDevice = devicesToCheck[idx];
 				var compiledFileName = deviceFileNames[idx];
+				var compilingLock = $"{compiledFileName}.compiling";
 
 				// no need to start a compile when we have this file already
 				// just mark device as ready
@@ -380,71 +414,78 @@ namespace RhinoCyclesCore.Core
 					}
 					continue;
 				}
+				else if(File.Exists(compilingLock)) {
+					// compile already in progress, check next device instead.
+					continue;
+				}
 				else
 				{
+					// Tell any other rhino process that we've started compiling for this
+					// device.
+					File.WriteAllText(compilingLock, DateTime.Now.ToLongTimeString());
 					// Start a new process to compile the OpenCL kernels for the current
 					// device.
 					// The process will use RhinoCyclesOpenClCompiler to essentially start
 					// the simplest possible Cycles session. This in turn will build the
 					// OpenCL kernels.
-					currentCompilerProcess = new Process();
+					using(Process currentCompilerProcess = new Process()) {
 					currentCompilerProcess.StartInfo.FileName = Path.Combine(PluginPath, "RhinoCyclesOpenClCompiler");
+					currentCompilerProcess.StartInfo.WorkingDirectory = DataUserPath;
 					currentCompilerProcess.StartInfo.CreateNoWindow = true;
-					using (AnonymousPipeServerStream pipeServer =
-								new AnonymousPipeServerStream(PipeDirection.Out, HandleInheritability.Inheritable))
-					{
-						currentCompilerProcess.StartInfo.Arguments =
-							pipeServer.GetClientHandleAsString();
-						currentCompilerProcess.StartInfo.UseShellExecute = false;
-						currentCompilerProcess.Start();
-
-						pipeServer.DisposeLocalCopyOfClientHandle();
-
-						try
+						using (NamedPipeServerStream pipeServer =
+									new NamedPipeServerStream("rhino.opencl.compiler", PipeDirection.InOut))
 						{
-							using (StreamWriter sw = new StreamWriter(pipeServer))
+							currentCompilerProcess.StartInfo.UseShellExecute = true;
+							currentCompilerProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+							currentCompilerProcess.Start();
+
+							// wait for client to connect
+							pipeServer.WaitForConnection();
+
+
+							try
 							{
-								sw.AutoFlush = true;
-								// Send a 'sync message' and wait for client to receive it.
-								sw.WriteLine("SYNC");
-								pipeServer.WaitForPipeDrain();
-								// write kernel path
-								sw.WriteLine(RcCore.It.KernelPath);
-								pipeServer.WaitForPipeDrain();
-								// write data path
-								sw.WriteLine(RcCore.It.DataUserPath);
-								pipeServer.WaitForPipeDrain();
-								// now write device ID
-								sw.WriteLine($"{renderDevice.Id}");
-								pipeServer.WaitForPipeDrain();
-								// and device NiceName
-								sw.WriteLine($"{renderDevice.NiceName}");
-								pipeServer.WaitForPipeDrain();
+								using (StreamWriter sw = new StreamWriter(pipeServer))
+								{
+									sw.AutoFlush = true;
+									// Send a 'sync message' and wait for client to receive it.
+									sw.WriteLine("SYNC");
+									pipeServer.WaitForPipeDrain();
+									// write compile lock filename
+									sw.WriteLine(compilingLock);
+									pipeServer.WaitForPipeDrain();
+									// write compiled filename
+									sw.WriteLine(compiledFileName);
+									pipeServer.WaitForPipeDrain();
+									// write kernel path
+									sw.WriteLine(RcCore.It.KernelPath);
+									pipeServer.WaitForPipeDrain();
+									// write data path
+									sw.WriteLine(RcCore.It.DataUserPath);
+									pipeServer.WaitForPipeDrain();
+									// now write device ID
+									sw.WriteLine($"{renderDevice.Id}");
+									pipeServer.WaitForPipeDrain();
+									// and device NiceName
+									sw.WriteLine($"{renderDevice.NiceName}");
+									pipeServer.WaitForPipeDrain();
+								}
 							}
-						}
-						catch (IOException)
-						{
-							continue;
-						}
-
-						currentCompilerProcess.WaitForExit();
-						// Exit code 0 means we had a successful
-						// compilation of the kernels.
-						if (currentCompilerProcess.ExitCode == 0)
-						{
-
-							lock (accessOpenClDevicesReadiness)
+							catch (IOException)
 							{
-								openClDevicesReadiness[idx] = (renderDevice, true);
+								continue;
 							}
-							// write out current time to compiledFileName so we know when
-							// this was finalized successfully
-							File.WriteAllText(compiledFileName, DateTime.Now.ToShortDateString());
-						}
-						currentCompilerProcess.Close();
-						currentCompilerProcess = null;
-					}
-				}
+
+							bool still_compiling = true;
+							do
+							{
+								Thread.Sleep(500);
+								still_compiling = Directory.EnumerateFiles(RcCore.It.DataUserPath, "*.compile").Any();
+							}
+							while (!stopCheckingForOpenClCompileFinished && still_compiling);
+						} /* end of using named pipe server stream */
+					} /* end of using process */
+				} /* end of else -> we need to compile code block */
 			}
 		} /* end of StartCompileOpenCl() */
 	}
