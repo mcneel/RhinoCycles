@@ -362,7 +362,7 @@ namespace RhinoCyclesCore.Core
 			deviceFileNames = new List<string>(devicesToCheck.Count);
 			foreach(ccl.Device device in devicesToCheck) {
 				foreach(var gpudev in availableGpuDevices) {
-					if(gpudev.DeviceName.Contains(device.NiceName)) {
+					if(gpudev.DeviceName.Contains(device.NiceName) || device.NiceName.Contains(gpudev.DeviceName)) {
 						using(SHA256 sha = SHA256Managed.Create()) {
 							var hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes($"{device.NiceName}{gpudev.DriverDate}{RhinoApp.Version}"));
 							deviceFileNames.Add(Path.Combine(DataUserPath, string.Concat(hash.Select(b => b.ToString("x2")))));
