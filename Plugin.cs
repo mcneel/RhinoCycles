@@ -107,6 +107,10 @@ namespace RhinoCycles
 				var userPath = Path.Combine(dataPath, "..", "data");
 				userPath = Path.GetFullPath(userPath);
 
+				if(!Directory.Exists(userPath)) {
+					Directory.CreateDirectory(userPath);
+				}
+
 				RcCore.It.DataUserPath = userPath;
 
 				CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
