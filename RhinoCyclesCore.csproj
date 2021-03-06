@@ -79,6 +79,7 @@
     <Compile Include="Converters\BitmapConverter.cs" />
     <Compile Include="Converters\ShaderConverter.cs" />
     <Compile Include="CyclesBackground.cs" />
+    <Compile Include="CyclesDecal.cs" />
     <Compile Include="CyclesLight.cs" />
     <Compile Include="CyclesMesh.cs" />
     <Compile Include="CyclesObject.cs" />

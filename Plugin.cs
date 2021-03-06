@@ -90,6 +90,8 @@ namespace RhinoCycles
 				RhinoApp.Initialized += RhinoApp_Initialized;
 				RcCore.It.InitializeResourceManager();
 
+				ccl.Utilities.RegisterConsoleWriter(Rhino.RhinoApp.OutputDebugString);
+
 				// code got moved to separate DLL so use that to register from.
 				var rccoreass = typeof(RcCore).Assembly;
 				RenderContent.RegisterContent(rccoreass, Id);

@@ -19,6 +19,7 @@ using Rhino.Display;
 using Rhino.Render;
 using System;
 using ccl.ShaderNodes.Sockets;
+using RhinoCyclesCore.ExtensionMethods;
 
 namespace RhinoCyclesCore.Materials
 {
@@ -76,7 +77,7 @@ namespace RhinoCyclesCore.Materials
 			sh.AddNode(translucent);
 			sh.AddNode(texco);
 
-			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, translucent.ins.Color, texco);
+			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, translucent.ins.Color.ToList(), texco, false);
 
 			translucent.outs.BSDF.Connect(sh.Output.ins.Surface);
 			outsocket = translucent.outs.BSDF;
