@@ -136,6 +136,7 @@ namespace RhinoCycles.Viewport
 
 		private void RenderedViewport_HudPauseButtonPressed(object sender, EventArgs e)
 		{
+			_lastTime = DateTime.UtcNow;
 			_cycles?.Pause();
 		}
 
