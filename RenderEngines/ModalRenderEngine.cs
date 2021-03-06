@@ -103,6 +103,9 @@ namespace RhinoCyclesCore.RenderEngines
 			var size = cyclesEngine.RenderDimension;
 
 			IAllSettings engineSettings = eds;
+
+			#region pick a render device
+			HandleDeviceAndIntegrator(eds);
 			if (!eds.UseDocumentSamples)
 			{
 				switch (Quality)
@@ -124,9 +127,6 @@ namespace RhinoCyclesCore.RenderEngines
 			}
 			MaxSamples = Attributes?.RealtimeRenderPasses ?? engineSettings.Samples;
 			MaxSamples = (MaxSamples < 1) ? engineSettings.Samples : MaxSamples;
-
-			#region pick a render device
-			HandleDeviceAndIntegrator(eds);
 			(bool isReady, Device possibleRenderDevice) = RcCore.It.IsDeviceReady(engineSettings.RenderDevice);
 			RenderDevice = possibleRenderDevice;
 			IsFallbackRenderDevice = !isReady;
