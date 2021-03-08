@@ -364,10 +364,14 @@ namespace RhinoCyclesCore.Database
 			}
 			if (_renderEngine.CancelRender) return false;
 			// set uvs
-			if (cyclesMesh.Uvs != null)
+			if (cyclesMesh.Uvs?.Count > 0)
 			{
-				var uvs = cyclesMesh.Uvs;
-				me.SetUvs(ref uvs);
+				for (int idx = 0; idx < cyclesMesh.Uvs.Count; idx++)
+				{
+					var uvs = cyclesMesh.Uvs[idx];
+					string uvmap_name = $"uvmap{idx+1}";
+					me.SetUvs(ref uvs, uvmap_name);
+				}
 			}
 			// set vertex colors
 			if(cyclesMesh.VertexColors != null)
@@ -805,6 +809,7 @@ namespace RhinoCyclesCore.Database
 				curadd++;
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Handle mesh {curadd}/{totaladds}", -1.0f);
 				var meshes = cqm.GetMeshes();
+				var mappingCollection = cqm.Mapping;
 				var meshguid = cqm.Id();
 
 				var attr = cqm.Attributes;
@@ -824,7 +829,7 @@ namespace RhinoCyclesCore.Database
 				foreach(var meshdata in meshes)
 				{
 					if (_renderEngine.CancelRender) return;
-					HandleMeshData(meshguid, meshIndex, meshdata, isClippingObject, uint.MaxValue);
+					HandleMeshData(meshguid, meshIndex, meshdata, mappingCollection, isClippingObject, uint.MaxValue);
 					meshIndex++;
 				}
 			}
@@ -926,7 +931,29 @@ namespace RhinoCyclesCore.Database
 			return decalList;
 		}
 
-		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, bool isClippingObject, uint linearlightMatId)
+		public void HandleMeshTextureCoordinates(Rhino.Geometry.Mesh meshdata, int[] findices, List<float[]> cmuvList)
+		{
+				var tc = meshdata.TextureCoordinates;
+				var rhuv = tc.ToFloatArray();
+				var cmuv = rhuv.Length > 0 ? new float[findices.Length * 2] : null;
+				if (cmuv != null)
+				{
+					for (var fi = 0; fi < findices.Length; fi++)
+					{
+						if (_renderEngine.CancelRender) return;
+						var fioffs = fi * 2;
+						var findex = findices[fi];
+						var findex2 = findex * 2;
+						var rhuvit = rhuv[findex2];
+						var rhuvit1 = rhuv[findex2 + 1];
+						cmuv[fioffs] = rhuvit;
+						cmuv[fioffs + 1] = rhuvit1;
+					}
+					cmuvList.Add(cmuv);
+				}
+		}
+
+		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, MappingChannelCollection mappingCollection, bool isClippingObject, uint linearlightMatId)
 		{
 			if (_renderEngine.CancelRender) return;
 			RcCore.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
@@ -935,10 +962,6 @@ namespace RhinoCyclesCore.Database
 			var findices = meshdata.Faces.ToIntArray(true);
 			RcCore.OutputDebugString($" .. {findices.Length/3}\n");
 
-			// Get texture coordinates and
-			// flattens to a float array.
-			var tc = meshdata.TextureCoordinates;
-			var rhuv = tc.ToFloatArray();
 			float[] rhvc = meshdata.VertexColors.ToFloatArray(meshdata.Vertices.Count);
 			float[] cmvc = rhvc != null ? new float[findices.Length * 3] : null;
 			if (cmvc != null)
@@ -961,21 +984,19 @@ namespace RhinoCyclesCore.Database
 			var vn = meshdata.Normals;
 			var rhvn = vn.ToFloatArray();
 
+			var cmuvList = new List<float[]>();
+
 			if (_renderEngine.CancelRender) return;
 			// now convert UVs: from vertex indexed array to per face per vertex
-			var cmuv = rhuv.Length > 0 ? new float[findices.Length * 2] : null;
-			if (cmuv != null)
+			if (mappingCollection == null)
 			{
-				for (var fi = 0; fi < findices.Length; fi++)
-				{
-					if (_renderEngine.CancelRender) return;
-					var fioffs = fi * 2;
-					var findex = findices[fi];
-					var findex2 = findex * 2;
-					var rhuvit = rhuv[findex2];
-					var rhuvit1 = rhuv[findex2 + 1];
-					cmuv[fioffs] = rhuvit;
-					cmuv[fioffs + 1] = rhuvit1;
+				// Get texture coordinates and
+				// flattens to a float array.
+				HandleMeshTextureCoordinates(meshdata, findices, cmuvList);
+			} else {
+				foreach(var mapping in mappingCollection.Channels) {
+					meshdata.SetTextureCoordinates(mapping.Mapping, mapping.Local, false);
+					HandleMeshTextureCoordinates(meshdata, findices, cmuvList);
 				}
 			}
 
@@ -993,7 +1014,7 @@ namespace RhinoCyclesCore.Database
 				MeshId = meshid,
 				Verts = meshdata.Vertices.ToFloatArray(),
 				Faces = findices,
-				Uvs = cmuv,
+				Uvs = cmuvList,
 				VertexNormals = rhvn,
 				VertexColors = cmvc,
 				MatId = crc,
@@ -1345,7 +1366,7 @@ namespace RhinoCyclesCore.Database
 				m.SetCachedTextureCoordinates(texturemapping, ref tfm);
 			}
 
-			HandleMeshData(gpid.Item1, gpid.Item2, m, false, uint.MaxValue);
+			HandleMeshData(gpid.Item1, gpid.Item2, m, null, false, uint.MaxValue);
 
 			HandleRenderMaterial(mat, gp.MaterialId, null);
 
@@ -1657,7 +1678,7 @@ namespace RhinoCyclesCore.Database
 
 			HandleLightMaterial(ld, matid);
 
-			HandleMeshData(ld.Id, 0, mesh, false, matid);
+			HandleMeshData(ld.Id, 0, mesh, null, false, matid);
 
 			var lightObject = new CyclesObject
 			{
@@ -1960,7 +1981,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		protected override BakingFunctions BakeFor()
 		{
-			return BakingFunctions.ProceduralTextures | BakingFunctions.MultipleMappingChannels | BakingFunctions.CustomObjectMappings;
+			return BakingFunctions.ProceduralTextures | BakingFunctions.CustomObjectMappings;
 		}
 
 		protected override int BakingSize(RhinoObject ro, RenderMaterial material, TextureType type)

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using System;
+using System.Collections.Generic;
 
 namespace RhinoCyclesCore
 {
@@ -39,9 +40,11 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public int[] Faces { get; set; }
 		/// <summary>
-		/// float array with UV coordinates. Stride 2.
+		/// List of float arrays with UV coordinates. Stride 2.
+		/// The first entry will be available in Cycles as "uvmap", the next
+		/// "uvmap2" and so on.
 		/// </summary>
-		public float[] Uvs { get; set; }
+		public List<float[]> Uvs { get; set; }
 		/// <summary>
 		/// Float array with vertex normal data. Stride 3.
 		/// </summary>

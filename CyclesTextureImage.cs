@@ -68,6 +68,12 @@ namespace RhinoCyclesCore
 		public TextureProjectionMode ProjectionMode { get; set; }
 		public TextureEnvironmentMappingMode EnvProjectionMode { get; set; }
 
+		public int MappingChannel { get; set; } = 0;
+		public string GetUvMapForChannel()
+		{
+			return $"uvmap{MappingChannel}";
+		}
+
 		public bool Repeat { get; set; }
 		public float InvertRepeatAsFloat => Repeat ? 0.0f : 1.0f;
 		public float RepeatAsFloat => Repeat ? 1.0f : 0.0f;

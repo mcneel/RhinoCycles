@@ -248,6 +248,7 @@ namespace RhinoCyclesCore
 					tex.Transform = tt;
 					tex.Repeat = repeat;
 					tex.AlternateTiles = alternate;
+					tex.MappingChannel = rt.GetMappingChannel();
 				}
 			}
 		}
@@ -340,10 +341,11 @@ namespace RhinoCyclesCore
 			return GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socks, texco, toBw, normalMap, false);
 		}
 
-		public static ImageTextureNode GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap, bool invert)
+		public static ImageTextureNode GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texcoObsolete, bool toBw, bool normalMap, bool invert)
 		{
 			if (IsOn && teximg.HasTextureImage)
 			{
+				var texco = new ccl.ShaderNodes.TextureCoordinateNode($"texco for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
 				var imtexnode = new ccl.ShaderNodes.ImageTextureNode($"image texture for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
 				var invcol = new ccl.ShaderNodes.InvertNode($"invert color for imtexnode for {valueSocket?.Parent.VariableName ?? "unknown input"}");
 				var normalmapnode = new ccl.ShaderNodes.NormalMapNode($"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}");
@@ -357,8 +359,11 @@ namespace RhinoCyclesCore
 
 				mixerNode.ins.Fac.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
 
+				sh.AddNode(texco);
 				sh.AddNode(mixerNode);
 				sh.AddNode(imtexnode);
+
+				texco.UvMap = teximg.GetUvMapForChannel();
 
 				valueSocket?.Connect(mixerNode.ins.Color1);
 
