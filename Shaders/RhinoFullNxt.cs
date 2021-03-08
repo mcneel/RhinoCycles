@@ -100,6 +100,7 @@ namespace RhinoCyclesCore.Shaders
 			texco.UseTransform = true;
 
 			RenderEngine.SetTextureImage(imgtex, decal.Texture);
+			texco.UvMap = decal.Texture.GetUvMapForChannel();
 			imgtex.Extension = TextureNode.TextureExtension.Clip;
 			imgtex.UseAlpha = true;
 
@@ -559,6 +560,11 @@ namespace RhinoCyclesCore.Shaders
 				var texcoord84env = new TextureCoordinateNode("texcoord_for_envmap_");
 				var texcoord84transp = new TextureCoordinateNode("texcoord_for_transp_");
 
+				texcoord84.UvMap = "";
+				texcoord84bump.UvMap = "";
+				texcoord84env.UvMap = "";
+				texcoord84transp.UvMap = "";
+
 				// NOTE THAT NORMALMAP NODE IS OUTSIDE OF GH DEFINITION ADDED
 				var normalmap = new NormalMapNode("normal_map_for_bumpslot_");
 					normalmap.SpaceType = NormalMapNode.Space.Tangent;
@@ -932,7 +938,7 @@ namespace RhinoCyclesCore.Shaders
 				diffuse_texture85.outs.Color.Connect(diffuse_base_color_through_alpha180.ins.Color2);
 				diff_tex_weighted_alpha_for_basecol_mix182.outs.Value.Connect(diffuse_base_color_through_alpha180.ins.Fac);
 				weight_diffuse_amount_by_transparency_inv69.outs.Value.Connect(use_alpha_weighted_with_modded_amount71.ins.Value2);
-				texcoord84.outs.UV.Connect(bump_texture86.ins.Vector);
+				texcoord84bump.outs.UV.Connect(bump_texture86.ins.Vector);
 				bump_texture86.outs.Color.Connect(bump_texture_to_bw87.ins.Color);
 				bump_texture86.outs.Color.Connect(normalmap.ins.Color);
 				diffuse_base_color_through_alpha180.outs.Color.Connect(diffuse_base_color_through_alpha120.ins.Color1);
@@ -992,7 +998,7 @@ namespace RhinoCyclesCore.Shaders
 				diffuse_texture85.outs.Alpha.Connect(max_of_texalpha_or_usealpha179.ins.Value1);
 				one_if_usealphatransp_turned_off178.outs.Value.Connect(max_of_texalpha_or_usealpha179.ins.Value2);
 				max_of_texalpha_or_usealpha179.outs.Value.Connect(invert_alpha70.ins.Value2);
-				texcoord84.outs.UV.Connect(transparency_texture112.ins.Vector);
+				texcoord84transp.outs.UV.Connect(transparency_texture112.ins.Vector);
 				transparency_texture112.outs.Color.Connect(transpluminance113.ins.Color);
 				transpluminance113.outs.Val.Connect(invert_luminence79.ins.Value2);
 				invert_luminence79.outs.Value.Connect(transparency_texture_amount80.ins.Value1);
@@ -1039,18 +1045,21 @@ namespace RhinoCyclesCore.Shaders
 
 				if (part.HasTransparencyTexture)
 				{
+					texcoord84transp.UvMap = part.TransparencyTexture.GetUvMapForChannel();
 					RenderEngine.SetTextureImage(transparency_texture112, part.TransparencyTexture);
 					RenderEngine.SetProjectionMode(m_shader, part.TransparencyTexture, transparency_texture112, texcoord84transp);
 				}
 
 				if (part.HasDiffuseTexture)
 				{
+					texcoord84.UvMap = part.DiffuseTexture.GetUvMapForChannel();
 					RenderEngine.SetTextureImage(diffuse_texture85, part.DiffuseTexture);
 					RenderEngine.SetProjectionMode(m_shader, part.DiffuseTexture, diffuse_texture85, texcoord84);
 				}
 
 				if (part.HasBumpTexture)
 				{
+					texcoord84bump.UvMap = part.BumpTexture.GetUvMapForChannel();
 					RenderEngine.SetTextureImage(bump_texture86, part.BumpTexture);
 					RenderEngine.SetProjectionMode(m_shader, part.BumpTexture, bump_texture86, texcoord84bump);
 				}
