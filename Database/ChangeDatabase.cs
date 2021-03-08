@@ -1975,7 +1975,6 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// Tell ChangeQueue we want baking for
 		/// - ProceduralTextures
-		/// - MultipleMappingChannels
 		/// - CustomObjectMappings
 		/// </summary>
 		/// <returns></returns>
