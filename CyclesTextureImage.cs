@@ -71,7 +71,8 @@ namespace RhinoCyclesCore
 		public int MappingChannel { get; set; } = 0;
 		public string GetUvMapForChannel()
 		{
-			return $"uvmap{MappingChannel}";
+			var chan = MappingChannel > 0 ? MappingChannel : 1;
+			return $"uvmap{chan}";
 		}
 
 		public bool Repeat { get; set; }
