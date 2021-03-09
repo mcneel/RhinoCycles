@@ -13,11 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
-using Rhino;
-using Rhino.DocObjects;
 using Rhino.UI;
 using RhinoCyclesCore.Core;
-using System;
 using System.Drawing;
 
 namespace RhinoCyclesCore.Settings
@@ -26,7 +23,7 @@ namespace RhinoCyclesCore.Settings
 	{
 		public OptionsDialogPage() : base("Cycles")
 		{
-			CollapsibleSectionHolder = new OptionsDialogCollapsibleSectionUIPanel();
+			CollapsibleSectionHolder = new OptionsDialogCollapsibleSectionUIPanel(this);
 		}
 
 		public override object PageControl => CollapsibleSectionHolder;
@@ -34,10 +31,12 @@ namespace RhinoCyclesCore.Settings
 		public override bool ShowApplyButton => false;
 		public override bool ShowDefaultsButton => true;
 		public override string LocalPageTitle => Localization.LocalizeString("Cycles", 7);
-		public override void OnHelp () => RhinoHelp.Show("options/cycles.htm");
+		public override void OnHelp() => RhinoHelp.Show("options/cycles.htm");
 
-		public override Image PageImage {
-			get {
+		public override Image PageImage
+		{
+			get
+			{
 				var icon = Properties.IconResources.Cycles_viewport_properties;
 				return icon.ToBitmap();
 			}
