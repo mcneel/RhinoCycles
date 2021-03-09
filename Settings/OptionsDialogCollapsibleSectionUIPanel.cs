@@ -15,6 +15,7 @@ limitations under the License.
 **/
 using System;
 using Eto.Forms;
+using Rhino.UI;
 using Rhino.UI.Controls;
 
 namespace RhinoCyclesCore.Settings
@@ -32,35 +33,84 @@ namespace RhinoCyclesCore.Settings
 			}
 		}
 
+		OptionsDialogPage mParent { get; set; }
+
 		/// <summary>
 		/// Public constructor
 		/// </summary>
-		public OptionsDialogCollapsibleSectionUIPanel()
+		public OptionsDialogCollapsibleSectionUIPanel(OptionsDialogPage parent)
 		{
+			mParent = parent;
 			InitializeComponents();
 			InitializeLayout();
+			RegisterControlEvents();
 		}
 
 		private EtoCollapsibleSectionHolder m_holder;
 		private void InitializeComponents()
 		{
+			mNoteAboutAdvancedSettings= new Label()
+			{
+				Text = LOC.STR("For Rhino Render Advanced Settings please see the"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+			mLinkToRenderPage = new LinkButton()
+			{
+				Text = LOC.STR("Document Properties Render Page")
+		};
 			m_holder = new EtoCollapsibleSectionHolder();
 		}
 
-		//IntegratorSection m_integratorSection;
+		private Label mNoteAboutAdvancedSettings;
+		private LinkButton mLinkToRenderPage;
 		SessionSection m_sessionSection;
 		DeviceSection m_deviceSection;
+		StackLayout MainLayout;
 		private void InitializeLayout()
 		{
-			//m_integratorSection = new IntegratorSection(Rhino.PlugIns.PlugIn.IdFromName("Rhino Render"), true, 0);
 			m_sessionSection = new SessionSection(0);
 			m_deviceSection = new DeviceSection(0);
-			//m_holder.Add(m_integratorSection);
 			m_holder.Add(m_sessionSection);
 			m_holder.Add(m_deviceSection);
 			UpdateSections();
 
-			Content = m_holder;
+			MainLayout = new StackLayout()
+			{
+				// Padding around the table
+				Padding = new Eto.Drawing.Padding(3, 5, 3, 0),
+				// Spacing between table cells
+				HorizontalContentAlignment = HorizontalAlignment.Stretch,
+				Items =
+				{
+					TableLayout.HorizontalScaled(0,
+						new Panel() {
+							Padding = 10,
+							Content = new TableLayout() {
+								Spacing = new Eto.Drawing.Size(1, 5),
+								Rows = {
+									new TableRow(mNoteAboutAdvancedSettings, mLinkToRenderPage),
+								}
+							}
+						}
+					),
+					m_holder,
+				}
+			};
+
+			Content = MainLayout;
+		}
+
+		private void LinkToButtonPageClicked(object sender, EventArgs args)
+		{
+			mParent.SetActivePageTo("Render", true);
+		}
+
+		private void RegisterControlEvents() {
+			mLinkToRenderPage.Click += LinkToButtonPageClicked;
+		}
+
+		private void UnRegisterControlEvents() {
+			mLinkToRenderPage.Click -= LinkToButtonPageClicked;
 		}
 
 		private void ResetAllSection_Reset(object sender, EventArgs e)
@@ -71,7 +121,6 @@ namespace RhinoCyclesCore.Settings
 		public void UpdateSections()
 		{
 			m_deviceSection.DisplayData();
-			//m_integratorSection.DisplayData();
 			m_sessionSection.DisplayData();
 		}
 	}
