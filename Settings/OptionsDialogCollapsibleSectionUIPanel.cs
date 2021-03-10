@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,12 +51,12 @@ namespace RhinoCyclesCore.Settings
 		{
 			mNoteAboutAdvancedSettings= new Label()
 			{
-				Text = LOC.STR("For Rhino Render Advanced Settings please see the"),
+				Text = Localization.LocalizeString("For Rhino Render Advanced Settings please see the", 45),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			mLinkToRenderPage = new LinkButton()
 			{
-				Text = LOC.STR("Document Properties Render Page")
+				Text = Localization.LocalizeString("Document Properties Render Page", 46)
 		};
 			m_holder = new EtoCollapsibleSectionHolder();
 		}
