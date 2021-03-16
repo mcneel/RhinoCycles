@@ -535,12 +535,16 @@ namespace RhinoCyclesCore.Shaders
 				{
 					var displacement = new DisplacementNode();
 					var strength = new MathMultiply();
+					var adjust = new MathSubtract();
 					displacement.ins.Midlevel.Value = 0.0f;
+					adjust.ins.Value2.Value = 0.5f;
 					m_shader.AddNode(displacement);
 					m_shader.AddNode(strength);
-					strength.ins.Value1.Value = part.PbrDisplacement.Amount;
+					m_shader.AddNode(adjust);
+					strength.ins.Value1.Value = part.PbrDisplacement.Amount*2.0f;
 					part.PbrDisplacement.Amount = 1.0f;
-					Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, strength.ins.Value2, texco, false);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, adjust.ins.Value1, texco, false);
+					adjust.outs.Value.Connect(strength.ins.Value2);
 					strength.outs.Value.Connect(displacement.ins.Height);
 					displacement.outs.Displacement.Connect(m_shader.Output.ins.Displacement);
 				}
