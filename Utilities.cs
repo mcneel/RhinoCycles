@@ -364,6 +364,7 @@ namespace RhinoCyclesCore
 				sh.AddNode(imtexnode);
 
 				texco.UvMap = teximg.GetUvMapForChannel();
+				normalmapnode.Attribute = teximg.GetUvMapForChannel();
 
 				valueSocket?.Connect(mixerNode.ins.Color1);
 

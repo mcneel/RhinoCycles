@@ -371,6 +371,8 @@ namespace RhinoCyclesCore.Database
 					var uvs = cyclesMesh.Uvs[idx];
 					string uvmap_name = $"uvmap{idx+1}";
 					me.SetUvs(ref uvs, uvmap_name);
+					// compute tangent space
+					me.AttrTangentSpace(uvmap_name);
 				}
 			}
 			// set vertex colors
@@ -379,8 +381,6 @@ namespace RhinoCyclesCore.Database
 				var vcs = cyclesMesh.VertexColors;
 				me.SetVertexColors(ref vcs);
 			}
-			// compute tangent space
-			me.AttrTangentSpace();
 			// and finally tag for rebuilding
 			me.TagRebuild();
 			return true;
