@@ -360,7 +360,7 @@ namespace RhinoCyclesCore.Settings
 
 		public float DpiScale
 		{
-			get => (float)mDict.GetDouble(SettingNames.DpiScale, DefaultEngineSettings.DpiScale);
+			get => RcCore.It.AllSettings.DpiScale;
 			set => throw new InvalidOperationException();
 		}
 
