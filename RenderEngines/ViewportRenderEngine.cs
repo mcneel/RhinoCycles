@@ -216,7 +216,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Background = false,
 				ProgressiveRefine = true,
 				Progressive = true,
-				//StartResolution = 32,
+				StartResolution = RenderDevice.IsCpu ? 16 : 128,
 				PixelSize = pixelSize,
 			};
 			#endregion
