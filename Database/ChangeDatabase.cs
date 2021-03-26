@@ -1999,7 +1999,7 @@ namespace RhinoCyclesCore.Database
 
 		protected override bool ProvideOriginalObject()
 		{
-			return true;
+			return false;
 		}
 
 		public override string ToString()
