@@ -35,5 +35,7 @@ namespace RhinoCyclesCore.Settings
 		float DpiScale { get; set; }
 
 		int PreviewSamples { get; set; }
+		bool UseStartResolution { get; set; }
+		int StartResolution { get; set; }
 	}
 }

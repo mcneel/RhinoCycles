@@ -138,12 +138,12 @@ namespace RhinoCyclesCore.Settings
 		}
 		public bool UseStartResolution
 		{
-			get => mDict.GetBool(SettingNames.UseStartResolution, DefaultEngineSettings.UseStartResolution);
+			get => RcCore.It.AllSettings.UseStartResolution;
 			set => throw new InvalidOperationException();
 		}
 		public int StartResolution
 		{
-			get => mDict.GetInteger(SettingNames.StartResolution, DefaultEngineSettings.StartResolution);
+			get => RcCore.It.AllSettings.StartResolution;
 			set => throw new InvalidOperationException();
 		}
 
@@ -360,7 +360,7 @@ namespace RhinoCyclesCore.Settings
 
 		public float DpiScale
 		{
-			get => (float)mDict.GetDouble(SettingNames.DpiScale, DefaultEngineSettings.DpiScale);
+			get => RcCore.It.AllSettings.DpiScale;
 			set => throw new InvalidOperationException();
 		}
 

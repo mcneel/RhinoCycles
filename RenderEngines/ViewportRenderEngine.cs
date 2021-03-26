@@ -214,9 +214,10 @@ namespace RhinoCyclesCore.RenderEngines
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
 				Background = false,
-				ProgressiveRefine = true,
+				ProgressiveRefine = eds.UseStartResolution, //true,
 				Progressive = true,
-				PixelSize = 1,
+				StartResolution = eds.StartResolution,
+				PixelSize = pixelSize,
 			};
 			#endregion
 
