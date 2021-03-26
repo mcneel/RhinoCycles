@@ -65,13 +65,19 @@ namespace RhinoCyclesCore.Settings
 		private LinkButton mLinkToRenderPage;
 		SessionSection m_sessionSection;
 		DeviceSection m_deviceSection;
+		ViewportSharpnessSection m_viewportSharpnessSection;
+		ViewportResponsivenessSection m_viewportResponsivenessSection;
 		StackLayout MainLayout;
 		private void InitializeLayout()
 		{
 			m_sessionSection = new SessionSection(0);
 			m_deviceSection = new DeviceSection(0);
+			m_viewportSharpnessSection = new ViewportSharpnessSection(0);
+			m_viewportResponsivenessSection = new ViewportResponsivenessSection(0);
 			m_holder.Add(m_sessionSection);
 			m_holder.Add(m_deviceSection);
+			m_holder.Add(m_viewportSharpnessSection);
+			m_holder.Add(m_viewportResponsivenessSection);
 			UpdateSections();
 
 			MainLayout = new StackLayout()
@@ -122,6 +128,8 @@ namespace RhinoCyclesCore.Settings
 		{
 			m_deviceSection.DisplayData();
 			m_sessionSection.DisplayData();
+			m_viewportSharpnessSection.DisplayData();
+			m_viewportResponsivenessSection.DisplayData();
 		}
 	}
 }

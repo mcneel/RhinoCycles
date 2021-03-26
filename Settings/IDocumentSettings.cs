@@ -38,8 +38,6 @@ namespace RhinoCyclesCore.Settings
 
 		int TileX { get; set; }
 		int TileY { get; set; }
-		bool UseStartResolution { get; set; }
-		int StartResolution { get; set; }
 
 		float SpotLightFactor { get; set; }
 		float PointLightFactor { get; set; }
@@ -55,9 +53,9 @@ namespace RhinoCyclesCore.Settings
 		bool NoCaustics { get; set; }
 
 		int AaSamples { get; set; }
-		
+
 		int AoSamples { get; set; }
-		
+
 		int MeshLightSamples { get; set; }
 		int SubsurfaceSamples { get; set; }
 		int VolumeSamples { get; set; }
