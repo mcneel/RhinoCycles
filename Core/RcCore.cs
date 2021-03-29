@@ -322,6 +322,8 @@ namespace RhinoCyclesCore.Core
 		bool stopCheckingForOpenClCompileFinished = false;
 		public void CheckOpenClCompileFinished()
 		{
+			if(openClDevicesReadiness.Count == 0) return;
+
 			do
 			{
 				Thread.Sleep(1000);
@@ -336,6 +338,15 @@ namespace RhinoCyclesCore.Core
 							openClDevicesReadiness[idx] = (device, true);
 						}
 					}
+				}
+				bool ready = true;
+				lock (accessOpenClDevicesReadiness)
+				{
+					ready = openClDevicesReadiness.Aggregate(true, (state, next) => state && next.IsReady);
+				}
+				if (ready)
+				{
+					break;
 				}
 			}
 			while (!stopCheckingForOpenClCompileFinished);
