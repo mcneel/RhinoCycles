@@ -359,7 +359,7 @@ namespace RhinoCyclesCore
 			Material interim = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow);
 			if (interim.IsPhysicallyBased && interim.PhysicallyBased is Rhino.DocObjects.PhysicallyBasedMaterial pbrmat)
 			{
-				RenderMaterial rmFromPbrMat = RenderMaterial.FromMaterial(pbrmat.Material, null);
+				RenderMaterial rmFromPbrMat = RenderMaterial.FromMaterial(pbrmat.Material, rm.DocumentAssoc);
 
 
 				shb.IsPbr = true;
