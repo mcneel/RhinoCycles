@@ -181,8 +181,10 @@ namespace RhinoCyclesCore.RenderEngines
 			var rd4 = Device.GetDevice(4);
 			var rdlist = new List<Device>();
 			//rdlist.Add(rd0);
-			rdlist.Add(rd1);
-			rdlist.Add(rd2);
+			//rdlist.Add(rd1);
+			rdlist.Add(rd0);
+			rdlist.Add(rd0);
+			//rdlist.Add(rd0);
 			//rdlist.Add(rd3);
 			//rdlist.Add(rd4);
 
@@ -198,8 +200,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#endregion
 
-			var scaledPixelSize = Dpi / 72.0f;
-			var pixelSize = Math.Max(1, (int)(scaledPixelSize * eds.DpiScale));
+			var pixelSize = (int)eds.DpiScale;
 
 			#region set up session parameters
 			ThreadCount = (RenderDevice.IsCpu ? eds.Threads : 0);
@@ -214,7 +215,7 @@ namespace RhinoCyclesCore.RenderEngines
 				SkipLinearToSrgbConversion = true,
 				DisplayBufferLinear = true,
 				Background = false,
-				ProgressiveRefine = eds.UseStartResolution, //true,
+				ProgressiveRefine = eds.UseStartResolution,
 				Progressive = true,
 				StartResolution = eds.StartResolution,
 				PixelSize = pixelSize,

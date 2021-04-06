@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2017 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
 using RhinoCyclesCore.Settings;
 using static Rhino.Render.RenderWindow;
+using Rhino.UI;
 
 namespace RhinoCyclesCore
 {
@@ -177,54 +178,27 @@ namespace RhinoCyclesCore
 		static public float4 CreateFloat4(byte x, byte y, byte z, byte w) { return new float4(x / 255.0f, y / 255.0f, z / 255.0f, w / 255.0f); }
 		static public float4 CreateFloat4(Color color) { return CreateFloat4(color.R, color.G, color.B, color.A); }
 
-		static public int ScaledPixelSize
+		/// <summary>
+		/// Default pixel size based on monitor resolution.
+		/// The screen resolution the Rhino main window is mostly on is used. The width
+		/// and height are multiplied, that is used to determine pixel size. Currently:
+		/// 8K (7680x4320) and larger: 4
+		/// 4K (3840x2160) and larger: 2
+		/// Anything lower than Full HD: 1
+		/// </summary>
+		static public int DefaultPixelSizeBasedOnMonitorResolution
 		{
-			get
-			{
-#if ON_RUNTIME_WIN
-				var sdpi = RhinoWindows.Forms.Dpi.ScaleInt(1);
-				return sdpi;
-#else
-				return 1;
-#endif
-			}
+			get {
+				int pixelCount = (int)(RhinoEtoApp.MainWindow.Screen.Bounds.Width * RhinoEtoApp.MainWindow.Screen.Bounds.Height);
+				int pixelSize = 1;
 
-		}
-		static public int DpiScale
-		{
-			get
-			{
-#if ON_RUNTIME_WIN
-				var sdpi = RhinoWindows.Forms.Dpi.DpiScale();
-				return sdpi;
-#else
-				return 1;
-#endif
-			}
-		}
-		static public int Dpi
-		{
-			get
-			{
-#if ON_RUNTIME_WIN
-				var sdpi = RhinoWindows.Forms.Dpi.ScreenDpi();
-				return sdpi;
-#else
-				return 72;
-#endif
-			}
-
-		}
-		static public bool OnHighDpi
-		{
-			get
-			{
-#if ON_RUNTIME_WIN
-				var sdpi = RhinoWindows.Forms.Dpi.ScreenDpi();
-				return sdpi > 96;
-#else
-				return false;
-#endif
+				if(pixelCount >= 7_680*4_320) {
+					pixelSize = 4;
+				}
+				else if (pixelCount >= 3_840*2_160) {
+					pixelSize = 2;
+				}
+				return pixelSize;
 			}
 		}
 
@@ -259,7 +233,7 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Set image texture node and link up with correct TextureCoordinateNode output based on
 		/// texture ProjectionMode.
-		/// 
+		///
 		/// This may add new nodes to the shader!
 		/// </summary>
 		/// <param name="shader"></param>

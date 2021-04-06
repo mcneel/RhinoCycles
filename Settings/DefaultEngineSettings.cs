@@ -26,10 +26,10 @@ namespace RhinoCyclesCore.Settings
 		static public string SelectedDeviceStr => "-1";
 		static public bool AllowSelectedDeviceOverride => false;
 
-		static public bool UseStartResolution => RenderEngine.OnHighDpi ? true : false;
-		static public int StartResolution => 64;
+		static public bool UseStartResolution => RenderEngine.DefaultPixelSizeBasedOnMonitorResolution > 1;
+		static public int StartResolution => 128;
 
-		static public float DpiScale => 1.0f;
+		static public float DpiScale => RenderEngine.DefaultPixelSizeBasedOnMonitorResolution;
 
 		static public int TileX => 128;
 		static public int TileY => 128;
