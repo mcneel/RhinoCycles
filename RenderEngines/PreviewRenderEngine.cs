@@ -102,8 +102,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var gpusize = TileSize(renderDevice);
 			var threads = renderDevice.IsGpu ? 0 : (uint)Math.Max(1, Utilities.GetSystemProcessorCount() - 1);
 
-			var scaledPixelSize = Dpi / 72.0f;
-			var pixelSize = Math.Max(1, (int)(scaledPixelSize * RcCore.It.AllSettings.DpiScale));
+			var pixelSize = (int)(RcCore.It.AllSettings.DpiScale);
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(client, renderDevice)
