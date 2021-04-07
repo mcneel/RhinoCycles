@@ -24,6 +24,7 @@ using RhinoCyclesCore.ExtensionMethods;
 using RhinoCyclesCore.Settings;
 using static Rhino.Render.RenderWindow;
 using Rhino.UI;
+using Eto.Forms;
 
 namespace RhinoCyclesCore
 {
@@ -189,7 +190,11 @@ namespace RhinoCyclesCore
 		static public int DefaultPixelSizeBasedOnMonitorResolution
 		{
 			get {
+#if ON_RUNTIME_WIN
 				int pixelCount = (int)(RhinoEtoApp.MainWindow.Screen.Bounds.Width * RhinoEtoApp.MainWindow.Screen.Bounds.Height);
+#else
+				int pixelCount = (int)(Eto.Forms.Screen.PrimaryScreen.Bounds.Width * Eto.Forms.Screen.PrimaryScreen.Bounds.Height);
+#endif
 				int pixelSize = 1;
 
 				if(pixelCount >= 7_680*4_320) {
