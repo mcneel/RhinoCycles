@@ -194,22 +194,20 @@ namespace RhinoCyclesCore
 			return ProbableMaterial.Custom;
 		}
 
-		private void HandleCustomTexture(RenderMaterial.StandardChildSlots childSlot, ShaderBody shb, CyclesTextureImage ti, RenderMaterial rm, bool useAlpha = false)
+		private void HandleCustomTexture(RenderMaterial.StandardChildSlots childSlot, ShaderBody shb, CyclesTextureImage ti, RenderMaterial rm, bool checkForNormal)
 		{
 			var texture = rm.GetTextureFromUsage(childSlot);
+			float amount = 0.0f;
+			bool enabled = false;
 
 			if (null != texture)
 			{
-				if (rm.GetTextureOnFromUsage(childSlot))
+				enabled = rm.GetTextureOnFromUsage(childSlot);
+				if (enabled)
 				{
-					_bitmapConverter.MaterialBitmapFromEvaluator(ref shb, texture, childSlot);
-
-					if (ti.HasTextureImage)
-					{
-						shb.CyclesMaterialType = ShaderBody.CyclesMaterial.No;
-						ti.UseAlpha = useAlpha;
-						ti.Amount = (float)Math.Min(rm.GetTextureAmountFromUsage(childSlot) / 100.0f, 1.0f);
-					}
+					amount = (float)Math.Min(rm.GetTextureAmountFromUsage(childSlot) / 100.0f, 1.0f);
+				} else {
+					texture = null;
 				}
 			}
 			else
@@ -225,22 +223,17 @@ namespace RhinoCyclesCore
 					//so that when the new bitmap texture is created below, the WCS transforms are not applied.
 					var simtex = new SimulatedTexture(rm.DocumentAssoc, on_texture);
 
-					var textureFromSim = RenderTexture.NewBitmapTexture(simtex, rm.DocumentAssoc);
+					texture = RenderTexture.NewBitmapTexture(simtex, rm.DocumentAssoc);
 
-					_bitmapConverter.MaterialBitmapFromEvaluator(ref shb, textureFromSim, childSlot);
+					//Always use the actual values given by the simualtion at this point.
+					on_texture.GetAlphaBlendValues(out double c, out double a0, out double a1, out double a2, out double a3);
 
-					if (ti.HasTextureImage)
-					{
-						shb.CyclesMaterialType = ShaderBody.CyclesMaterial.No;
-						ti.UseAlpha = useAlpha;
-
-						//Always use the actual values given by the simualtion at this point.
-						double c, a0, a1, a2, a3;
-						on_texture.GetAlphaBlendValues(out c, out a0, out a1, out a2, out a3);
-
-						ti.Amount = (float)c;
-					}
+					amount = (float)c;
 				}
+			}
+			if(texture!=null && enabled) {
+				Utilities.HandleRenderTexture(texture, ti, checkForNormal, _bitmapConverter, shb.Gamma);
+				ti.Amount = amount;
 			}
 		}
 
@@ -333,10 +326,16 @@ namespace RhinoCyclesCore
 			shb.TransparencyTexture.Amount = 0.0f;
 			shb.EnvironmentTexture.Amount = 0.0f;
 
-			HandleCustomTexture(StdCS.Diffuse, shb, shb.DiffuseTexture, rm, difftexAlpha);
-			HandleCustomTexture(StdCS.Bump, shb, shb.BumpTexture, rm);
-			HandleCustomTexture(StdCS.Transparency, shb, shb.TransparencyTexture, rm);
-			HandleCustomTexture(StdCS.Environment, shb, shb.EnvironmentTexture, rm);
+			HandleCustomTexture(StdCS.Diffuse, shb, shb.DiffuseTexture, rm, false);
+			if (shb.HasDiffuseTexture)
+			{
+				shb.DiffuseTexture.UseAlpha = difftexAlpha;
+			} else {
+				shb.DiffuseTexture.UseAlpha = false;
+			}
+			HandleCustomTexture(StdCS.Bump, shb, shb.BumpTexture, rm, true);
+			HandleCustomTexture(StdCS.Transparency, shb, shb.TransparencyTexture, rm, false);
+			HandleCustomTexture(StdCS.Environment, shb, shb.EnvironmentTexture, rm, false);
 		}
 
 		void HandlePbrTexturedProperty<T>(RenderMaterial.StandardChildSlots childSlot, T v, RenderMaterial rm, TexturedValue<T> tv, CyclesTextureImage cti, float gamma = 1.0f)
@@ -388,11 +387,6 @@ namespace RhinoCyclesCore
 			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, _bitmapConverter, gamma);
 		}
 
-		private Color4f ApplyGamma(Color4f col, float gamma)
-		{
-			return (col.ToFloat4() ^ gamma).ToColor4f();
-		}
-
 		private void CreatePbrShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
 			var pbrmat = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow).PhysicallyBased;
@@ -402,9 +396,9 @@ namespace RhinoCyclesCore
 			shb.Gamma = gamma;
 			shb.UseBaseColorTextureAlphaAsObjectAlpha = pbrmat.UseBaseColorTextureAlphaForObjectAlphaTransparencyTexture;
 
-			HandlePbrTexturedProperty(StdCS.PbrBaseColor, ApplyGamma(pbrmat.BaseColor, gamma), rm, shb.PbrBase, shb.PbrBaseTexture, gamma);
-			HandlePbrTexturedProperty(StdCS.PbrSubSurfaceScattering, ApplyGamma(pbrmat.SubsurfaceScatteringColor, gamma), rm, shb.PbrSubsurfaceColor, shb.PbrSubsurfaceColorTexture, gamma);
-			HandlePbrTexturedProperty(StdCS.PbrEmission, ApplyGamma(pbrmat.Emission, gamma), rm, shb.PbrEmission, shb.PbrEmissionTexture, gamma);
+			HandlePbrTexturedProperty(StdCS.PbrBaseColor, pbrmat.BaseColor.ApplyGamma(gamma), rm, shb.PbrBase, shb.PbrBaseTexture, gamma);
+			HandlePbrTexturedProperty(StdCS.PbrSubSurfaceScattering, pbrmat.SubsurfaceScatteringColor.ApplyGamma(gamma), rm, shb.PbrSubsurfaceColor, shb.PbrSubsurfaceColorTexture, gamma);
+			HandlePbrTexturedProperty(StdCS.PbrEmission, pbrmat.Emission.ApplyGamma(gamma), rm, shb.PbrEmission, shb.PbrEmissionTexture, gamma);
 
 			HandlePbrTexturedProperty(StdCS.PbrMetallic,           (float)pbrmat.Metallic,            rm, shb.PbrMetallic,            shb.PbrMetallicTexture);
 			HandlePbrTexturedProperty(StdCS.PbrSubsurface,         (float)pbrmat.Subsurface,          rm, shb.PbrSubsurface,          shb.PbrSubsurfaceTexture);
