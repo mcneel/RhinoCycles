@@ -135,6 +135,21 @@ namespace RhinoCyclesCore.ExtensionMethods
 		{
 			return new Rhino.Display.Color4f(cl.x, cl.y, cl.z, cl.w);
 		}
+
+
+		/// <summary>
+		/// Apply gamma
+		/// </summary>
+		/// <param name="cl">Color whose components to raise to the power of</param>
+		/// <param name="gamma">power to raise to</param>
+		/// <returns>Color with components raised to the power of gamma</returns>
+		public static Rhino.Display.Color4f ApplyGamma(this Rhino.Display.Color4f cl, float gamma) {
+			if (Math.Abs(1.0f - gamma) > float.Epsilon)
+			{
+				return new Rhino.Display.Color4f((float) Math.Pow(cl.R, gamma), (float) Math.Pow(cl.G, gamma), (float) Math.Pow(cl.B, gamma), cl.A);
+			}
+			return cl;
+		}
 	}
 	public static class Point3dExtensions
 	{
