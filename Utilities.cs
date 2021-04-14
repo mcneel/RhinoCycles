@@ -48,7 +48,35 @@ namespace RhinoCyclesCore
 		{
 			rm.Fields.AddTextured(slotname, defaultValue, prompt, false);
 		}
-		public static Tuple<bool, float4, bool, float> HandleTexturedColor(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter)
+
+		public static (bool Success, float4 Result, bool IsOn, float Amount, RenderMaterial Child) HandleMaterialSlot(RenderMaterial rm, string slotname)
+		{
+			bool success = false;
+			float4 rc = new float4(0.0f);
+			bool onness = false;
+			float amount = 0.0f;
+			RenderMaterial rmchild = null;
+			if (rm.Fields.TryGetValue(slotname, out Color4f c))
+			{
+				rc = c.ToFloat4();
+				success = true;
+			}
+			var texamount = rm.GetChildSlotParameter(slotname, "texture-amount") as IConvertible;
+			if(texamount != null) {
+				amount = Convert.ToSingle(texamount) / 100.0f;
+			}
+			var texon = rm.GetChildSlotParameter(slotname, "texture-on") as IConvertible;
+			if(texon != null) {
+				onness = Convert.ToBoolean(texon);
+			}
+			if(rm.FindChild(slotname) is RenderMaterial rt) {
+				rmchild = rt;
+			}
+
+			return (success, rc, onness, amount, rmchild);
+		}
+
+		public static (bool Success, float4 Result, bool IsOn, float Amount) HandleTexturedColor(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter)
 		{
 			bool success = false;
 			float4 rc = new float4(0.0f);
@@ -86,35 +114,10 @@ namespace RhinoCyclesCore
 				}
 			}
 
-			return new Tuple<bool, float4, bool, float>(success, rc, onness, amount);
+			return (success, rc, onness, amount);
 		}
-		public static Tuple<bool, float4, bool, float, RenderMaterial> HandleMaterialSlot(RenderMaterial rm, string slotname)
-		{
-			bool success = false;
-			float4 rc = new float4(0.0f);
-			bool onness = false;
-			float amount = 0.0f;
-			RenderMaterial rmchild = null;
-			if (rm.Fields.TryGetValue(slotname, out Color4f c))
-			{
-				rc = c.ToFloat4();
-				success = true;
-			}
-			var texamount = rm.GetChildSlotParameter(slotname, "texture-amount") as IConvertible;
-			if(texamount != null) {
-				amount = Convert.ToSingle(texamount) / 100.0f;
-			}
-			var texon = rm.GetChildSlotParameter(slotname, "texture-on") as IConvertible;
-			if(texon != null) {
-				onness = Convert.ToBoolean(texon);
-			}
-			if(rm.FindChild(slotname) is RenderMaterial rt) {
-				rmchild = rt;
-			}
 
-			return new Tuple<bool, float4, bool, float, RenderMaterial>(success, rc, onness, amount, rmchild);
-		}
-		public static Tuple<bool, float, bool, float> HandleTexturedValue(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter)
+		public static (bool Success, float Result, bool IsOn, float Amount) HandleTexturedValue(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter)
 		{
 			bool success = false;
 			float rc = 0.0f;
@@ -149,9 +152,8 @@ namespace RhinoCyclesCore
 				}
 			}
 
-			return new Tuple<bool, float, bool, float>(success, rc, onness, amount);
+			return (success, rc, onness, amount);
 		}
-
 
 		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, Converters.BitmapConverter bitmapConverter, float gamma = 1.0f)
 		{
