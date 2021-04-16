@@ -51,7 +51,7 @@ namespace RhinoCyclesCore.Settings
 
 		public ViewportResponsivenessSection(uint doc_serial) : base(doc_serial)
 		{
-			m_caption = new LocalizeStringPair("Viewport responsiveness", LOC.STR("Viewport responsiveness"));
+			m_caption = new LocalizeStringPair("Viewport responsiveness", Localization.LocalizeString("Viewport responsiveness", 47));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
@@ -65,8 +65,8 @@ namespace RhinoCyclesCore.Settings
 
 		private void InitializeComponents() {
 
-			m_labelResponsiveness = new Label { Text = LOC.STR("Response"), ToolTip=LOC.STR("The responsiveness of the viewport when tumbling or making changes.") };
-			m_labelResponsivenessFast = new Label { Text = LOC.STR("Faster (coarser start)"), ToolTip=LOC.STR("Faster response, but the initial results are more pixelized.") };
+			m_labelResponsiveness = new Label { Text = Localization.LocalizeString("Response", 48), ToolTip=Localization.LocalizeString("The responsiveness of the viewport when tumbling or making changes.", 49) };
+			m_labelResponsivenessFast = new Label { Text = Localization.LocalizeString("Faster (coarser start)", 50), ToolTip=Localization.LocalizeString("Faster response, but the initial results are more pixelized.", 51) };
 			m_sliderResponsiveness = new Slider()
 			{
 				SnapToTick = true,
@@ -77,7 +77,7 @@ namespace RhinoCyclesCore.Settings
 				Width = 130,
 				Orientation = Orientation.Horizontal
 			};
-			m_labelResponsivenessSlow = new Label { Text = LOC.STR("Slower (sharper start)"), ToolTip=LOC.STR("Slower response, but initial results are less pixelized or even not at all pixelized.") };
+			m_labelResponsivenessSlow = new Label { Text = Localization.LocalizeString("Slower (sharper start)", 52), ToolTip=Localization.LocalizeString("Slower response, but initial results are less pixelized or even not at all pixelized.", 53) };
 		}
 
 		private void InitializeLayout()
