@@ -163,13 +163,14 @@ namespace RhinoCyclesCore.RenderEngines
 			var requestedChannels = rw.GetRequestedRenderChannelsAsStandardChannels();
 
 			List<ccl.PassType> reqPassTypes = requestedChannels
-					.Distinct()
 					.Where(chan => chan != Rhino.Render.RenderWindow.StandardChannels.AlbedoRGB)
 					.Select(chan => PassTypeForStandardChannel(chan))
+					.Distinct()
 					.ToList();
 
 			_throttle = eds.ThrottleMs;
 			MaxSamples = Attributes?.RealtimeRenderPasses ?? eds.Samples;
+			MaxSamples = MaxSamples > 0 ? MaxSamples : eds.Samples;
 
 			#region pick a render device
 
@@ -182,8 +183,8 @@ namespace RhinoCyclesCore.RenderEngines
 			var rdlist = new List<Device>();
 			//rdlist.Add(rd0);
 			//rdlist.Add(rd1);
-			rdlist.Add(rd0);
-			rdlist.Add(rd0);
+			rdlist.Add(rd1);
+			rdlist.Add(rd2);
 			//rdlist.Add(rd0);
 			//rdlist.Add(rd3);
 			//rdlist.Add(rd4);
