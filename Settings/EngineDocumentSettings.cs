@@ -360,7 +360,7 @@ namespace RhinoCyclesCore.Settings
 
 		public float DpiScale
 		{
-			get => RcCore.It.AllSettings.DpiScale;
+			get => Math.Max(1.0f, RcCore.It.AllSettings.DpiScale);
 			set => throw new InvalidOperationException();
 		}
 

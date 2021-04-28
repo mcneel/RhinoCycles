@@ -29,7 +29,7 @@ namespace RhinoCyclesCore.Settings
 		static public bool UseStartResolution => RenderEngine.DefaultPixelSizeBasedOnMonitorResolution > 1;
 		static public int StartResolution => RenderEngine.DefaultPixelSizeBasedOnMonitorResolution > 1 ? 128 : int.MaxValue;
 
-		static public float DpiScale => RenderEngine.DefaultPixelSizeBasedOnMonitorResolution;
+		static public float DpiScale => Math.Max(1.0f, RenderEngine.DefaultPixelSizeBasedOnMonitorResolution);
 
 		static public int TileX => 128;
 		static public int TileY => 128;
