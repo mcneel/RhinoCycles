@@ -50,6 +50,27 @@ namespace RhinoCyclesCore
 					return PassType.Combined;
 			}
 		}
+
+		public static StandardChannels StandardChannelForPassType(PassType pass) {
+			switch(pass) {
+				case PassType.Combined:
+					return StandardChannels.RGBA;
+				case PassType.Depth:
+					return StandardChannels.DistanceFromCamera;
+				case PassType.Normal:
+					return StandardChannels.NormalXYZ;
+				case PassType.DiffuseColor:
+					return StandardChannels.AlbedoRGB;
+				case PassType.MaterialId:
+					return StandardChannels.MaterialIds;
+				case PassType.ObjectId:
+					return StandardChannels.ObjectIds;
+				default:
+					return StandardChannels.RGBA;
+			}
+		}
+
+
 		/// <summary>
 		/// Construct a full path name to the temp folder for
 		/// McNeel/Rhino/VERSIONNR

@@ -175,7 +175,7 @@ namespace RhinoCyclesCore.Settings
 					startResolution = 512;
 					break;
 				default:
-					startResolution = 1024*20;
+					startResolution = int.MaxValue;
 					useStartResolution = false;
 					break;
 

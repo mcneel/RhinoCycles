@@ -299,7 +299,8 @@ namespace RhinoCyclesCore
 
 			// don't set full 100% progress here yet, because that signals the renderwindow the end of async render
 			if (progress >= 0.9999f) progress = 1.0f;
-			if ((Attributes?.RealtimeRenderPasses ?? RcCore.It.AllSettings.Samples) == ushort.MaxValue) progress = -1.0f;
+
+			if (MaxSamples == int.MaxValue) progress = -1.0f;
 			RenderWindow?.SetProgress(status, progress);
 
 			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples>0 ? (RenderedSamples+1) : RenderedSamples));
@@ -319,42 +320,18 @@ namespace RhinoCyclesCore
 		public void BlitPixelsToRenderWindowChannel()
 		{
 			var rect = new Rectangle(0, 0, RenderWindow.Size().Width, RenderWindow.Size().Height);
-			IntPtr pixel_buffer = IntPtr.Zero;
-			IntPtr normal_buffer = IntPtr.Zero;
-			IntPtr depth_buffer = IntPtr.Zero;
-			IntPtr albedo_buffer = IntPtr.Zero;
-			Session.GetPixelBuffer(PassType.Combined, ref pixel_buffer, ref normal_buffer, ref depth_buffer, ref albedo_buffer);
-
-			if(pixel_buffer != IntPtr.Zero)
+			foreach (var pass in Session.Passes)
 			{
-				using (var rgba = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.RGBA))
+				IntPtr pixel_buffer = IntPtr.Zero;
+				var channel = StandardChannelForPassType(pass);
+				Session.GetPixelBuffer(pass, ref pixel_buffer);
+				if (pixel_buffer != IntPtr.Zero)
 				{
-					Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(pixel_buffer);
-					rgba?.SetValues(rect, rect.Size, pb);
-				}
-			}
-			if(normal_buffer != IntPtr.Zero)
-			{
-				using (var normals = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.NormalXYZ))
-				{
-					Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(normal_buffer);
-					normals?.SetValues(rect, rect.Size, pb);
-				}
-			}
-			if(depth_buffer != IntPtr.Zero)
-			{
-				using (var depth = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.DistanceFromCamera))
-				{
-					Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(depth_buffer);
-					depth?.SetValues(rect, rect.Size, pb);
-				}
-			}
-			if(albedo_buffer != IntPtr.Zero)
-			{
-				using (var albedo = RenderWindow.OpenChannel(Rhino.Render.RenderWindow.StandardChannels.AlbedoRGB))
-				{
-					Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(albedo_buffer);
-					albedo?.SetValues(rect, rect.Size, pb);
+					using (var rgba = RenderWindow.OpenChannel(channel))
+					{
+						Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(pixel_buffer);
+						rgba?.SetValuesFlipped(rect, rect.Size, pb);
+					}
 				}
 
 			}
