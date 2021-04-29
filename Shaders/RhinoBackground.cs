@@ -164,7 +164,7 @@ namespace RhinoCyclesCore.Shaders
 
 					var skycolor_or_final_bg281 = new MixNode("skycolor_or_final_bg");
 					skycolor_or_final_bg281.ins.Color2.Value = m_original_background.SkyColorAs4float;
-					skycolor_or_final_bg281.ins.Fac.Value = 0.0f; // m_original_background.UseSkyColorAsFloat;
+					skycolor_or_final_bg281.ins.Fac.Value = m_original_background.UseSkyColorAsFloat;
 					skycolor_or_final_bg281.BlendType = MixNode.BlendTypes.Blend;
 					skycolor_or_final_bg281.UseClamp = false;
 

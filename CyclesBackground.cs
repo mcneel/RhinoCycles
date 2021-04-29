@@ -124,7 +124,7 @@ namespace RhinoCyclesCore
 				)
 			: RenderEngine.CreateFloat4(SkyColor) ^ Gamma;
 
-		public float UseSkyColorAsFloat => SkyColor.Equals(Color.Empty) ? 0.0f : 1.0f;
+		public float UseSkyColorAsFloat => (SkyColor.Equals(Color.Empty) || HasSkyEnvTexture) ? 0.0f : 1.0f;
 		public float SkyStrength => SkylightEnabled ? ( HasSkyEnvTexture ? SkyTexture.Strength : BgStrength) : 0.0f;
 
 		private float gamma = 1.0f;
