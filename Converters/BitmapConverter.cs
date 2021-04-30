@@ -72,36 +72,39 @@ namespace RhinoCyclesCore.Converters
 		{
 			var s = rm.GetParameter("background-projection") as IConvertible;
 			string proj = "";
-			if (s == null) {
+			if (s == null)
+			{
 				SimulatedEnvironment simenv = rm.SimulateEnvironment(true);
 				proj = SimulatedEnvironment.StringFromProjection(simenv.BackgroundProjection);
 			}
-			else {
+			else
+			{
 				proj = Convert.ToString(s, CultureInfo.InvariantCulture);
 			}
 
-			switch (proj) {
-			case "automatic":
+			switch (proj)
+			{
+				case "automatic":
 					return renderTexture.GetEnvironmentMappingMode();
-			case "box":
+				case "box":
 					return TextureEnvironmentMappingMode.Box;
-			case "cubemap":
+				case "cubemap":
 					return TextureEnvironmentMappingMode.Cube;
-			case "emap":
+				case "emap":
 					return TextureEnvironmentMappingMode.EnvironmentMap;
-			case "horizontal-cross-cubemap":
+				case "horizontal-cross-cubemap":
 					return TextureEnvironmentMappingMode.HorizontalCrossCube;
-			case "vertical-cross-cubemap":
+				case "vertical-cross-cubemap":
 					return TextureEnvironmentMappingMode.VerticalCrossCube;
-			case "hemispherical":
+				case "hemispherical":
 					return TextureEnvironmentMappingMode.Hemispherical;
-			case "lightprobe":
+				case "lightprobe":
 					return TextureEnvironmentMappingMode.LightProbe;
-			case "spherical":
+				case "spherical":
 					return TextureEnvironmentMappingMode.Spherical;
 				default: // default (non existing planar)
 					return (TextureEnvironmentMappingMode)4;
-				}
+			}
 		}
 
 		/// <summary>
@@ -154,13 +157,16 @@ namespace RhinoCyclesCore.Converters
 			{
 				multadj = (float)Convert.ToDouble(multadjob);
 			}
-			if (azimob != null) {
+			if (azimob != null)
+			{
 				azi = (float)Convert.ToDouble(azimob);
 			}
-			if (altob != null) {
+			if (altob != null)
+			{
 				alti = (float)Convert.ToDouble(altob);
 			}
-			if (intensityob != null) {
+			if (intensityob != null)
+			{
 				intensity = (float)Convert.ToDouble(intensityob);
 			}
 
@@ -214,7 +220,7 @@ namespace RhinoCyclesCore.Converters
 				{
 					teximg.TexHeight = teximg.TexWidth = 1024;
 				}
-				if(!canUse) { teximg.TexHeight = teximg.TexWidth = 1; }
+				if (!canUse) { teximg.TexHeight = teximg.TexWidth = 1; }
 
 				var isFloat = renderTexture.IsHdrCapable();
 
@@ -223,14 +229,14 @@ namespace RhinoCyclesCore.Converters
 
 				if (isFloat)
 				{
-					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse);
+					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false);
 					img.ApplyGamma(gamma);
 					teximg.TexFloat = img.Data as SimpleArrayFloat;
 					teximg.TexByte = null;
 				}
 				else
 				{
-					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse);
+					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false);
 					img.ApplyGamma(gamma);
 					teximg.TexByte = img.Data as SimpleArrayByte;
 					teximg.TexFloat = null;
@@ -251,7 +257,8 @@ namespace RhinoCyclesCore.Converters
 			teximg.EnvProjectionMode = projection;
 			teximg.ProjectionMode = TextureProjectionMode.EnvironmentMap;
 
-			if ((int)projection != 4) {
+			if ((int)projection != 4)
+			{
 
 				rhinotfm.M00 = tra.X;
 				rhinotfm.M01 = tra.Y;
@@ -264,7 +271,8 @@ namespace RhinoCyclesCore.Converters
 				rhinotfm.M20 = alti;
 				rhinotfm.M21 = 0; // alti;
 				rhinotfm.M22 = azi + (-Rhino.RhinoMath.ToRadians(rot.Z));
-			} else
+			}
+			else
 			{
 				rhinotfm.M00 = tra.X;
 				rhinotfm.M01 = tra.Y;
@@ -323,20 +331,20 @@ namespace RhinoCyclesCore.Converters
 			}
 		};
 
-	public ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
-	{
-		var read = ByteImagesNew.ContainsKey(id);
-		var img = read ? ByteImagesNew[id] : new ByteBitmap(id, new SimpleArrayByte(new MyDumbBitmapByteList(bm)), pwidth, pheight, false);
-		if (!read)
+		public ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
 		{
-			if (RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
-			lock (bytelocker)
+			var read = ByteImagesNew.ContainsKey(id);
+			var img = read ? ByteImagesNew[id] : new ByteBitmap(id, new SimpleArrayByte(new MyDumbBitmapByteList(bm)), pwidth, pheight, false);
+			if (!read)
 			{
-				ByteImagesNew[id] = img;
+				if (RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
+				lock (bytelocker)
+				{
+					ByteImagesNew[id] = img;
+				}
 			}
+			return img;
 		}
-		return img;
-	}
 
 
 		class EvaluatorToByteList : IEnumerable<byte>
@@ -397,30 +405,33 @@ namespace RhinoCyclesCore.Converters
 					}
 				}
 			}
-	};
+		};
 
 
-	private SimpleArrayByte ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
-	{
-	  if (!canUse)
-	  {
-			Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-			byte[] conv = new byte[4];
-			c4f.ToArray(ref conv);
-
-			return new SimpleArrayByte(conv);
-	  }
-
-		var bytes = textureEvaluator.WriteToByteArray(pwidth, pheight);
-		if (null != bytes)
+		private SimpleArrayByte ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse, bool hasTransparentColor)
 		{
-			return bytes;
-		}
+			if (!hasTransparentColor)
+			{
+				if (!canUse)
+				{
+					Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-		//Otherwise, we do this the slow way.
-		return new SimpleArrayByte(new EvaluatorToByteList(textureEvaluator, pwidth, pheight, isImageBased));
-	}
+					byte[] conv = new byte[4];
+					c4f.ToArray(ref conv);
+
+					return new SimpleArrayByte(conv);
+				}
+
+				var bytes = textureEvaluator.WriteToByteArray(pwidth, pheight);
+				if (null != bytes)
+				{
+					return bytes;
+				}
+			}
+
+			//Otherwise, we do this the slow way.
+			return new SimpleArrayByte(new EvaluatorToByteList(textureEvaluator, pwidth, pheight, isImageBased));
+		}
 
 
 
@@ -486,35 +497,38 @@ namespace RhinoCyclesCore.Converters
 			}
 		};
 
-		private SimpleArrayFloat ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse)
-	{
-			if (!canUse)
+		private SimpleArrayFloat ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse, bool hasTransparentColor)
+		{
+			if (!hasTransparentColor)
 			{
-				Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
+				if (!canUse)
+				{
+					Rhino.Display.Color4f c4f = new Rhino.Display.Color4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-				float[] conv = new float[4];
-				c4f.ToArray(ref conv);
+					float[] conv = new float[4];
+					c4f.ToArray(ref conv);
 
-				return new SimpleArrayFloat(conv);
-			}
+					return new SimpleArrayFloat(conv);
+				}
 
-			var floats = textureEvaluator.WriteToFloatArray(pwidth, pheight);
-			if (null != floats)
-			{
-				return floats;
+				var floats = textureEvaluator.WriteToFloatArray(pwidth, pheight);
+				if (null != floats)
+				{
+					return floats;
+				}
 			}
 
 			//Otherwise, we do this the slow way.
 			return new SimpleArrayFloat(new EvaluatorToFloatList(textureEvaluator, pwidth, pheight, isImageBased));
 		}
 
-	public ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
+		public ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse, bool hasTransparentColor)
 		{
 			var read = ByteImagesNew.ContainsKey(rId);
-			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
+			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse, hasTransparentColor), pwidth, pheight, isLinear);
 			if (!read)
 			{
-				if(RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
+				if (RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
 				lock (bytelocker)
 				{
 					ByteImagesNew[rId] = img;
@@ -524,13 +538,13 @@ namespace RhinoCyclesCore.Converters
 			return img;
 		}
 
-		public FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse)
+		public FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse, bool hasTransparentColor)
 		{
 			var read = FloatImagesNew.ContainsKey(rId);
-			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse), pwidth, pheight, isLinear);
+			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse, hasTransparentColor), pwidth, pheight, isLinear);
 			if (!read)
 			{
-				if(RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
+				if (RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
 				lock (floatlocker)
 				{
 					FloatImagesNew[rId] = img;
