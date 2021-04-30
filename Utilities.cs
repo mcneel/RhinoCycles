@@ -177,6 +177,15 @@ namespace RhinoCyclesCore
 			var envProjectionMode = rt.GetInternalEnvironmentMappingMode();
 			var repeat = rt.GetWrapType() == TextureWrapType.Repeating;
 
+			var use_color_mask = false;
+			{
+				var use_mask = rt.GetParameter("has-transparent-color");
+				if (use_mask != null)
+				{
+					use_color_mask = Convert.ToBoolean(use_mask);
+				}
+			}
+
 			var alternate = false;
 			{
 				var alternateob = rt.GetParameter("mirror-alternate-tiles");
@@ -228,14 +237,14 @@ namespace RhinoCyclesCore
 					var isFloat = rt.IsHdrCapable();
 					if (isFloat)
 					{
-						var img = bitmapConverter.RetrieveFloatsImg(rid, pwidth, pheight, eval, linear, imgbased, canuse);
+						var img = bitmapConverter.RetrieveFloatsImg(rid, pwidth, pheight, eval, linear, imgbased, canuse, use_color_mask);
 						img.ApplyGamma(gamma);
 						tex.TexFloat = img.Data as SimpleArrayFloat;
 						tex.TexByte = null;
 					}
 					else
 					{
-						var img = bitmapConverter.RetrieveBytesImg(rid, pwidth, pheight, eval, linear, imgbased, canuse);
+						var img = bitmapConverter.RetrieveBytesImg(rid, pwidth, pheight, eval, linear, imgbased, canuse, use_color_mask);
 						img.ApplyGamma(gamma);
 						tex.TexByte = img.Data as SimpleArrayByte;
 						tex.TexFloat = null;
