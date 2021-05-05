@@ -266,7 +266,7 @@ namespace RhinoCyclesCore.Converters
 
 				rhinotfm.M10 = rep.X;
 				rhinotfm.M11 = rep.Y;
-				rhinotfm.M12 = rep.Z;
+				rhinotfm.M12 = 1.0f; // rep.Z;
 
 				rhinotfm.M20 = alti;
 				rhinotfm.M21 = 0; // alti;
