@@ -118,6 +118,7 @@ namespace RhinoCyclesCore.Converters
 			var spotangle = 0.0;
 			var smooth = 0.0;
 			var size = 0.0f;
+			var angle = 0.009180f;
 			var strength = (float)(lg.Intensity * RcCore.It.AllSettings.PointLightFactor);
 			var axisu = new float4(0.0f);
 			var axisv = new float4(0.0f);
@@ -142,11 +143,15 @@ namespace RhinoCyclesCore.Converters
 			var dir = RenderEngine.CreateFloat4(lg.Direction.X, lg.Direction.Y, lg.Direction.Z);
 			var color = RenderEngine.CreateFloat4(lg.Diffuse.R, lg.Diffuse.G, lg.Diffuse.B, lg.Diffuse.A);
 
+			var sizeterm= 1.0f - (float)lg.ShadowIntensity;
+			size = sizeterm*sizeterm*sizeterm * 100.0f; // / 100.f;
+
 			var lt = LightType.Point;
 			if (lg.IsDirectionalLight)
 			{
 				lt = LightType.Distant;
 				strength = (float)(lg.Intensity * RcCore.It.AllSettings.SunLightFactor);
+				angle = Math.Max(sizeterm * sizeterm * sizeterm * 1.5f, 0.009180f);
 				//size = 0.01f;
 			}
 			else if (lg.IsSpotLight)
@@ -168,7 +173,7 @@ namespace RhinoCyclesCore.Converters
 				sizeU = (float)width.Length;
 				sizeV = (float)length.Length;
 
-				size = 1.0f;
+				size = 1.0f;// - (float)lg.ShadowIntensity / 100.f;
 
 				var rectLoc = lg.Location + (lg.Width * 0.5) + (lg.Length * 0.5);
 
@@ -196,6 +201,7 @@ namespace RhinoCyclesCore.Converters
 					Dir = dir,
 					DiffuseColor = color,
 					Size = size,
+					Angle = angle,
 
 					SizeU = sizeU,
 					SizeV = sizeV,
