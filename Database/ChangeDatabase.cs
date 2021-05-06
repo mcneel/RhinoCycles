@@ -1329,9 +1329,7 @@ namespace RhinoCyclesCore.Database
 		private uint currentGpRenderMaterial = 0;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
-			var isshadowonly = gp.IsShadowOnly;
-			var def = Rhino.DocObjects.Material.DefaultMaterial.RenderMaterial;
-			var mat = isshadowonly ? def : MaterialFromId(gp.MaterialId);
+			var mat = MaterialFromId(gp.MaterialId);
 
 			if(UsesWcs(mat))
 			{
@@ -1380,7 +1378,7 @@ namespace RhinoCyclesCore.Database
 				Transform = t,
 				Visible = gp.Enabled,
 				CastShadow = true,
-				IsShadowCatcher = isshadowonly,
+				IsShadowCatcher = gp.IsShadowOnly,
 				IgnoreCutout = true,
 			};
 
