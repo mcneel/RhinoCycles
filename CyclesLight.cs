@@ -28,7 +28,7 @@ namespace RhinoCyclesCore
 	};
 
 	/// <summary>
-	/// Intermediate class used for converting rhino light sources 
+	/// Intermediate class used for converting rhino light sources
 	/// to Cycles light sources.
 	/// </summary>
 	public class CyclesLight
@@ -59,10 +59,14 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Size of soft-shadow. Higher values give softer shadows, lower values
 		/// sharper shadows.
-		/// 
+		///
 		/// Note that lower values will contribute to fireflies.
 		/// </summary>
 		public float Size { get; set; }
+		/// <summary>
+		/// Angular dimension - used for sun (distant light).
+		/// </summary>
+		public float Angle { get; set; }
 
 		public float SizeU { get; set; }
 		public float SizeV { get; set; }

@@ -51,7 +51,7 @@ namespace RhinoCyclesCore.Settings
 
 		public ViewportSharpnessSection(uint doc_serial) : base(doc_serial)
 		{
-			m_caption = new LocalizeStringPair("Viewport resolution sharpness", LOC.STR("Viewport resolution sharpness"));
+			m_caption = new LocalizeStringPair("Viewport resolution sharpness", Localization.LocalizeString("Viewport resolution sharpness", 54));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
@@ -65,8 +65,8 @@ namespace RhinoCyclesCore.Settings
 
 
 		private void InitializeComponents() {
-			m_labelSharpness = new Label { Text = LOC.STR("Sharpness"), ToolTip=LOC.STR("Sharpness of rendering in viewport and thumbnail previews.") };
-			m_labelSharpnessPixelized = new Label { Text = LOC.STR("Pixelized (fastest)"), ToolTip=LOC.STR("Rendering happens faster, but results are more pixelized. Also affects thumbnail previews.") };
+			m_labelSharpness = new Label { Text = Localization.LocalizeString("Sharpness", 55), ToolTip=Localization.LocalizeString("Sharpness of rendering in viewport and thumbnail previews.", 56) };
+			m_labelSharpnessPixelized = new Label { Text = Localization.LocalizeString("Pixelized (fastest)", 57), ToolTip=Localization.LocalizeString("Rendering happens faster, but results are more pixelized. Also affects thumbnail previews.", 58) };
 			m_sliderSharpness = new Slider()
 			{
 				SnapToTick = true,
@@ -77,7 +77,7 @@ namespace RhinoCyclesCore.Settings
 				Width = 130,
 				Orientation = Orientation.Horizontal
 			};
-			m_labelSharpnessPerfect = new Label { Text = LOC.STR("Pixel perfect (slowest)"), ToolTip=LOC.STR("Rendering happens slower, and results are pixel perfect. Also affects thumbnail previews.")  };
+			m_labelSharpnessPerfect = new Label { Text = Localization.LocalizeString("Pixel perfect (slowest)", 59), ToolTip=Localization.LocalizeString("Rendering happens slower, and results are pixel perfect. Also affects thumbnail previews.", 60)  };
 		}
 
 		private void InitializeLayout()

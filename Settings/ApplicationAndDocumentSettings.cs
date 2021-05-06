@@ -73,9 +73,9 @@ namespace RhinoCyclesCore.Settings
 			DiffuseSamples = DiffuseSamples;
 			GlossySamples = GlossySamples;
 			TransmissionSamples = TransmissionSamples;
-			
+
 			AoSamples = AoSamples;
-			
+
 			MeshLightSamples = MeshLightSamples;
 			SubsurfaceSamples = SubsurfaceSamples;
 			VolumeSamples = VolumeSamples;
@@ -167,9 +167,9 @@ namespace RhinoCyclesCore.Settings
 			DiffuseSamples = DefaultEngineSettings.DiffuseSamples;
 			GlossySamples = DefaultEngineSettings.GlossySamples;
 			TransmissionSamples = DefaultEngineSettings.TransmissionSamples;
-			
+
 			AoSamples = DefaultEngineSettings.AoSamples;
-			
+
 			MeshLightSamples = DefaultEngineSettings.MeshLightSamples;
 			SubsurfaceSamples = DefaultEngineSettings.SubSurfaceSamples;
 			VolumeSamples = DefaultEngineSettings.VolumeSamples;
@@ -397,7 +397,7 @@ namespace RhinoCyclesCore.Settings
 
 		public virtual float DpiScale
 		{
-			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.DpiScale, DefaultEngineSettings.DpiScale); }
+			get { return Math.Max(1.0f, (float)RcPlugIn.Settings.GetDouble(SettingNames.DpiScale, DefaultEngineSettings.DpiScale)); }
 			set { RcPlugIn.Settings.SetDouble(SettingNames.DpiScale, value); }
 		}
 
@@ -497,7 +497,7 @@ namespace RhinoCyclesCore.Settings
 			get { return RcPlugIn.Settings.GetInteger(SettingNames.Samples, DefaultEngineSettings.Samples); }
 			set { RcPlugIn.Settings.SetInteger(SettingNames.Samples, Math.Max(1, value)); }
 		}
-		public virtual bool UseDocumentSamples 
+		public virtual bool UseDocumentSamples
 		{
 			get => RcPlugIn.Settings.GetBool(SettingNames.UseDocumentSamples, DefaultEngineSettings.UseDocumentSamples);
 			set => RcPlugIn.Settings.SetBool(SettingNames.UseDocumentSamples, value);

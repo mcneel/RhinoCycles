@@ -127,7 +127,7 @@ namespace RhinoCyclesCore.RenderEngines
 			}
 			MaxSamples = Attributes?.RealtimeRenderPasses ?? engineSettings.Samples;
 			MaxSamples = (MaxSamples < 1) ? engineSettings.Samples : MaxSamples;
-			(bool isReady, Device possibleRenderDevice) = RcCore.It.IsDeviceReady(engineSettings.RenderDevice);
+			(bool isReady, Device possibleRenderDevice) = RcCore.It.IsDeviceReady(RenderDevice);
 			RenderDevice = possibleRenderDevice;
 			IsFallbackRenderDevice = !isReady;
 

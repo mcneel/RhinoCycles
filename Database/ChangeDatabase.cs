@@ -1455,6 +1455,7 @@ namespace RhinoCyclesCore.Database
 				{
 					Type = l.Type,
 					Size = l.Size,
+					Angle = 0.0f,
 					Location = l.Co,
 					Direction = l.Dir,
 					UseMis = l.UseMis,
@@ -1472,6 +1473,10 @@ namespace RhinoCyclesCore.Database
 					case LightType.Spot:
 						light.SpotAngle = l.SpotAngle;
 						light.SpotSmooth = l.SpotSmooth;
+						break;
+					case LightType.Distant:
+						light.Size = 0.0f;
+						light.Angle = l.Angle;
 						break;
 					default:
 						break;
@@ -1511,12 +1516,15 @@ namespace RhinoCyclesCore.Database
 					case LightType.Area:
 						break;
 					case LightType.Point:
+						existingL.Size = l.Size;
 						break;
 					case LightType.Spot:
+						existingL.Size = l.Size;
 						existingL.SpotAngle = l.SpotAngle;
 						existingL.SpotSmooth = l.SpotSmooth;
 						break;
 					case LightType.Distant:
+						existingL.Angle = l.Angle;
 						break;
 				}
 				existingL.TagUpdate();
