@@ -440,9 +440,13 @@ namespace RhinoCyclesCore.Core
 					// the simplest possible Cycles session. This in turn will build the
 					// OpenCL kernels.
 					using(Process currentCompilerProcess = new Process()) {
-					currentCompilerProcess.StartInfo.FileName = Path.Combine(PluginPath, "RhinoCyclesOpenClCompiler");
-					currentCompilerProcess.StartInfo.WorkingDirectory = DataUserPath;
-					currentCompilerProcess.StartInfo.CreateNoWindow = true;
+						currentCompilerProcess.StartInfo.FileName = Path.Combine(PluginPath, "RhinoCyclesOpenClCompiler");
+						currentCompilerProcess.StartInfo.WorkingDirectory = DataUserPath;
+						currentCompilerProcess.StartInfo.CreateNoWindow = true;
+						if (AllSettings.Verbose)
+						{
+							currentCompilerProcess.StartInfo.Arguments = "d";
+						}
 						using (NamedPipeServerStream pipeServer =
 									new NamedPipeServerStream("rhino.opencl.compiler", PipeDirection.InOut))
 						{
