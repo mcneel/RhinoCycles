@@ -14,10 +14,13 @@ namespace RhinoCyclesOpenClCompiler {
 
 		static int Main(string[] args) {
 
-#if DEBUGCOMPILER
-			Console.WriteLine("Attach debugger, then press enter");
-			Console.ReadLine();
-#endif
+			bool debugging = args.Contains("d");
+
+			if (debugging)
+			{
+				Console.WriteLine("Attach debugger if you want, then press enter to continue...");
+				Console.ReadLine();
+			}
 			using (NamedPipeClientStream pipeClient =
 					new NamedPipeClientStream(".", "rhino.opencl.compiler", PipeDirection.In))
 			{
@@ -48,9 +51,10 @@ namespace RhinoCyclesOpenClCompiler {
 						Device device = Device.GetDevice(id);
 						if (device.NiceName.Equals(nicename))
 						{
-#if DEBUGCOMPILER
-							Console.WriteLine($"We have a device match {device}");
-#endif
+							if (debugging)
+							{
+								Console.WriteLine($"We have a device match {device}");
+							}
 							try
 							{
 								Client client = new Client();
@@ -116,20 +120,22 @@ namespace RhinoCyclesOpenClCompiler {
 								session.EndRun();
 								session.Destroy();
 							} catch (Exception) {
-#if DEBUGCOMPILER
-								Console.WriteLine("Error happened, press enter");
-								Console.ReadLine();
+								if (debugging)
+								{
+									Console.WriteLine("Error happened, press enter");
+									Console.ReadLine();
+								}
 
 								if(File.Exists(compilingLock)) {
 									File.Delete(compilingLock);
 								}
-#endif
 								return -1;
 							}
-#if DEBUGCOMPILER
-							Console.WriteLine("Fin.");
-							Console.ReadLine();
-#endif
+							if (debugging)
+							{
+								Console.WriteLine("Fin.");
+								Console.ReadLine();
+							}
 							File.Move(compilingLock, compiledFileName);
 							return 0;
 						}
