@@ -446,7 +446,10 @@ namespace RhinoCyclesCore.Core
 					using(Process currentCompilerProcess = new Process()) {
 						currentCompilerProcess.StartInfo.FileName = Path.Combine(PluginPath, "RhinoCyclesOpenClCompiler");
 						currentCompilerProcess.StartInfo.WorkingDirectory = DataUserPath;
-						currentCompilerProcess.StartInfo.CreateNoWindow = true;
+						if (!AllSettings.Verbose)
+						{
+							currentCompilerProcess.StartInfo.CreateNoWindow = true;
+						}
 						if (AllSettings.Verbose)
 						{
 							currentCompilerProcess.StartInfo.Arguments = "d";
@@ -455,7 +458,10 @@ namespace RhinoCyclesCore.Core
 									new NamedPipeServerStream("rhino.opencl.compiler", PipeDirection.InOut))
 						{
 							currentCompilerProcess.StartInfo.UseShellExecute = true;
-							currentCompilerProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+							if (!AllSettings.Verbose)
+							{
+								currentCompilerProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+							}
 							currentCompilerProcess.Start();
 
 							// wait for client to connect
