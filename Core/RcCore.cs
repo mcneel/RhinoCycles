@@ -228,17 +228,21 @@ namespace RhinoCyclesCore.Core
 				if (sessions.ContainsKey(session.Id))
 				{
 					RhinoApp.OutputDebugString($"Releasing session {session.Id}.\n");
-					Session tempSession;
-					while (!sessions.TryRemove(session.Id, out tempSession))
-					{
-						Thread.Sleep(10);
-					}
+					Session tempSession = sessions[session.Id];
 					if (tempSession != null)
 					{
 						tempSession.EndRun();
 						tempSession.Destroy();
+						while (!sessions.TryRemove(session.Id, out tempSession))
+						{
+							Thread.Sleep(10);
+						}
+						RhinoApp.OutputDebugString($"Session {session.Id} released.\n");
 					}
-					RhinoApp.OutputDebugString($"Session {session.Id} released.\n");
+					else
+					{
+						RhinoApp.OutputDebugString($"Session {session.Id} was not found.\n");
+					}
 
 				}
 			}
