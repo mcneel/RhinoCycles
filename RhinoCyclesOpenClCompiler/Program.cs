@@ -110,6 +110,7 @@ namespace RhinoCyclesOpenClCompiler {
 								scene.Film.Exposure = 1.0f;
 								scene.Film.Update();
 
+								session.AddPass(PassType.Combined);
 								session.Scene = scene;
 
 								session.PrepareRun();
