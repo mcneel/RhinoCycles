@@ -505,7 +505,7 @@ namespace RhinoCyclesCore.Core
 							do
 							{
 								Thread.Sleep(500);
-								still_compiling = Directory.EnumerateFiles(RcCore.It.DataUserPath, "*.compile").Any();
+								still_compiling = Directory.EnumerateFiles(RcCore.It.DataUserPath, "*.compiling").Any();
 							}
 							while (!stopCheckingForOpenClCompileFinished && still_compiling);
 						} /* end of using named pipe server stream */
