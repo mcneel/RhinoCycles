@@ -1500,10 +1500,13 @@ namespace RhinoCyclesCore.Database
 
 				existingL.Type = l.Type;
 				existingL.Size = l.Size;
+				existingL.Angle = l.Angle;
 				existingL.Location = l.Co;
 				existingL.Direction = l.Dir;
 				existingL.UseMis = l.UseMis;
 				existingL.CastShadow = l.CastShadow;
+				existingL.SpotAngle = l.SpotAngle;
+				existingL.SpotSmooth = l.SpotSmooth;
 				existingL.Samples = 1;
 				existingL.MaxBounces = 8;
 				existingL.SizeU = l.SizeU;
@@ -1511,20 +1514,8 @@ namespace RhinoCyclesCore.Database
 				existingL.AxisU = l.AxisU;
 				existingL.AxisV = l.AxisV;
 
-				switch (l.Type)
-				{
-					case LightType.Area:
-						break;
-					case LightType.Point:
-						existingL.Size = l.Size;
-						break;
-					case LightType.Spot:
-						existingL.Size = l.Size;
-						existingL.SpotAngle = l.SpotAngle;
-						existingL.SpotSmooth = l.SpotSmooth;
-						break;
-					case LightType.Distant:
-						existingL.Angle = l.Angle;
+				if(l.Type == LightType.Distant) {
+						existingL.Samples = 1024;
 						break;
 				}
 				existingL.TagUpdate();
