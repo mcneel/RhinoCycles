@@ -110,7 +110,6 @@ namespace RhinoCyclesCore.Database
 		private bool bgLightPoked { get; set; } = false;
 		public void UpdateBackgroundLight()
 		{
-#if USEBGLIGHT
 			if(!bgLightPoked)
 			{
 				CyclesLight bgLight = new CyclesLight()
@@ -118,12 +117,14 @@ namespace RhinoCyclesCore.Database
 					Id = BackgroundLightGuid,
 					UseMis = true,
 					Strength = 1.0f,
+					Size = 0.0f,
+					Angle = 0.0f,
 					Type = ccl.LightType.Background,
+					CastShadow = true,
 				};
 				AddLight(bgLight);
 				bgLightPoked = true;
 			}
-#endif
 		}
 
 		/// <summary>
