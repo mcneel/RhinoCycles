@@ -409,6 +409,7 @@ namespace RhinoCyclesCore.Settings
 			if (vud == null) return;
 
 			vud.UseDocumentSamples = CheckboxUseSamples.Checked.GetValueOrDefault(false);
+			StepperSamples.ReadOnly= !vud.UseDocumentSamples;
 		}
 
 		private void UnregisterControlEvents()
