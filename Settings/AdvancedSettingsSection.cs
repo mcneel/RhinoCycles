@@ -317,8 +317,8 @@ namespace RhinoCyclesCore.Settings
 				Spacing = new Eto.Drawing.Size(1, 5),
 				Rows =
 				{
-					new TableRow(LblSamples, StepperSamples),
 					new TableRow(LblUseDocumentSamples, CheckboxUseSamples),
+					new TableRow(LblSamples, StepperSamples),
 				}
 			};
 			var textureTable = new TableLayout()
