@@ -1,6 +1,6 @@
 ﻿//#define YES
 /**
-Copyright 2014-2017 Robert McNeel and Associates
+Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -192,7 +192,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var renderDevice = Device.CreateMultiDevice(rdlist);
 
 #else
-			HandleDeviceAndIntegrator(eds);
+			HandleDevice(eds);
 			var renderDevice = RenderDevice;
 #endif
 			(bool isReady, Device possibleRenderDevice) = RcCore.It.IsDeviceReady(renderDevice);
@@ -270,6 +270,8 @@ namespace RhinoCyclesCore.RenderEngines
 				if(this != null && _needReset) {
 					_needReset = false;
 					var size = RenderDimension;
+
+					HandleIntegrator(eds);
 
 					Session.Scene.Integrator.NoShadows = eds.NoShadows;
 					Session.Scene.Integrator.TagForUpdate();
@@ -371,6 +373,22 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			MaxSamples = Math.Max(1, samples);
 			Session?.SetSamples(MaxSamples);
+		}
+		public void ChangeIntegrator(IntegratorSettings integrator)
+		{
+			if (Session != null)
+			{
+				var cyclesIntegrator = Session.Scene.Integrator;
+				cyclesIntegrator.Seed = integrator.Seed;
+				cyclesIntegrator.MaxBounce = integrator.MaxBounce;
+				cyclesIntegrator.MaxDiffuseBounce = integrator.MaxDiffuseBounce;
+				cyclesIntegrator.MaxGlossyBounce = integrator.MaxGlossyBounce;
+				cyclesIntegrator.MaxTransmissionBounce = integrator.MaxTransmissionBounce;
+				cyclesIntegrator.MaxVolumeBounce = integrator.MaxVolumeBounce;
+				cyclesIntegrator.TransparentMaxBounce = integrator.MaxTransparentBounce;
+				cyclesIntegrator.TagForUpdate();
+				_needReset = true;
+			}
 		}
 
 		public void ToggleNoShadows()

@@ -47,6 +47,7 @@
     <Compile Include="..\..\..\..\version.cs">
       <Link>Properties\version.cs</Link>
     </Compile>
+    <Compile Include="Commands\TriggerChangeIntegrator.cs" />
     <Compile Include="Commands\ChangeSamples.cs" />
     <Compile Include="Commands\SelectMultiDevice.cs" />
     <Compile Include="Commands\ClearTextureMemory.cs" />

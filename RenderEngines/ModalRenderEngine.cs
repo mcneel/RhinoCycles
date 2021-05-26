@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2017 Robert McNeel and Associates
+Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -105,7 +105,7 @@ namespace RhinoCyclesCore.RenderEngines
 			IAllSettings engineSettings = eds;
 
 			#region pick a render device
-			HandleDeviceAndIntegrator(eds);
+			HandleDevice(eds);
 			if (!eds.UseDocumentSamples)
 			{
 				switch (Quality)
@@ -160,6 +160,7 @@ namespace RhinoCyclesCore.RenderEngines
 			#endregion
 
 			CreateScene(client, Session, RenderDevice, cyclesEngine, engineSettings);
+			HandleIntegrator(eds);
 
 			// Set up passes
 			foreach (var reqPass in reqPassTypes)

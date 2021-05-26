@@ -22,21 +22,21 @@ using Rhino.Commands;
 using Rhino.Input;
 using Rhino.Input.Custom;
 using RhinoCycles.Viewport;
-using RhinoCyclesCore.Core;
+using RhinoCyclesCore.Settings;
 
 namespace RhinoCycles.Commands
 {
-	[Guid("168C2084-CDA8-469E-BE98-4E0E8B8BD607")]
+	[Guid("0F322EED-0CEF-4A94-8759-633574974F60")]
 	[CommandStyle(Style.Hidden)]
-	public class ChangeSamples : Command
+	public class TriggerChangeIntegrator : Command
 	{
-		static ChangeSamples _instance;
-		public ChangeSamples()
+		static TriggerChangeIntegrator _instance;
+		public TriggerChangeIntegrator()
 		{
 			if(_instance==null) _instance = this;
 		}
 
-		public override string EnglishName => "RhinoCycles_ChangeSamples";
+		public override string EnglishName => "RhinoCycles_TriggerChangeIntegrator";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
@@ -45,26 +45,13 @@ namespace RhinoCycles.Commands
 
 			if(rvps.Count>0)
 			{
-				var getNumber = new GetInteger();
-				getNumber.SetLowerLimit(1, true);
-				getNumber.SetDefaultInteger(RcCore.It.AllSettings.Samples + 100);
-				getNumber.SetCommandPrompt("Set new sample count");
-				var getRc = getNumber.Get();
-				if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
-				if (getRc == GetResult.Number)
+				var integratorSettings = new RhinoCyclesCore.Settings.IntegratorSettings(new EngineDocumentSettings(doc.RuntimeSerialNumber));
+				foreach(var rvp in rvps)
 				{
-					var nr = getNumber.Number();
-					RcCore.It.AllSettings.Samples = nr;
-					foreach (var rvp in rvps)
-					{
-						rvp.ChangeSamples(nr);
-					}
-					RhinoApp.WriteLine($"User changes samples to {nr}");
-					return Result.Success;
+					rvp.ChangeIntegrator(integratorSettings);
 				}
+				return Result.Success;
 			}
-
-			RhinoApp.WriteLine("No view is rendering with Cycles");
 
 			return Result.Nothing;
 		}

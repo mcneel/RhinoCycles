@@ -60,6 +60,7 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
+    <Compile Include="Settings\IntegratorSettings.cs" />
     <Compile Include="Settings\ApplicationSettingsChangedEventArgs.cs" />
     <Compile Include="Settings\DefaultEngineSettings.cs" />
     <Compile Include="Settings\DraftPresetEnginesSettings.cs" />

@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2015 Robert McNeel and Associates
+Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -216,7 +216,7 @@ namespace RhinoCycles.Viewport
 				mre.StatusTextUpdated += Mre_StatusTextUpdated;
 
 				mre.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
-				mre.HandleDeviceAndIntegrator(eds);
+				mre.HandleDevice(eds);
 
 				mre.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 
@@ -252,7 +252,7 @@ namespace RhinoCycles.Viewport
 			_cycles.RenderWindow = renderWindow;
 			_cycles.RenderDimension = renderSize;
 
-			_cycles.HandleDeviceAndIntegrator(eds);
+			_cycles.HandleDevice(eds);
 
 			_maxSamples = eds.Samples;
 
@@ -386,6 +386,12 @@ namespace RhinoCycles.Viewport
 			}
 			_maxSamples = samples;
 			_cycles?.ChangeSamples(samples);
+			_ResetRenderTime();
+		}
+
+		public void ChangeIntegrator(IntegratorSettings integrator)
+		{
+			_cycles?.ChangeIntegrator(integrator);
 			_ResetRenderTime();
 		}
 
@@ -547,6 +553,26 @@ namespace RhinoCycles.Viewport
 		public override DateTime HudStartTime()
 		{
 			return _startTime;
+		}
+
+		/// <summary>
+		/// Get a list of all RenderedViewport instances currently
+		/// in use for the given Rhino document.
+		/// </summary>
+		/// <param name="doc">RhinoDoc instance to check in</param>
+		/// <returns>List with zero or more RenderedViewport instances</returns>
+		public static List<RenderedViewport> GetRenderedViewports(RhinoDoc doc)
+		{
+			List<RenderedViewport> rvps = new List<RenderedViewport>();
+			foreach(var view in doc.Views)
+			{
+				if (view.RealtimeDisplayMode is RenderedViewport rvp)
+				{
+					rvps.Add(rvp);
+				}
+			}
+
+			return rvps;
 		}
 	}
 }

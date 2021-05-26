@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2017 Robert McNeel and Associates
+Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -69,6 +69,18 @@ namespace RhinoCyclesCore.Settings
 		public Label LblTextureBakeQuality { get; set; }
 		public StackLayout MainLayout { get; set; }
 
+		/// <summary>
+		/// Set to true when in Unload event handler
+		/// we need to signal
+		/// </summary>
+		private bool Dirty { get; set; } = false;
+		/// <summary>
+		/// Local copy of Settings.Samples. Needed since we need it on
+		/// the Unload event. At this point Settings is invalid, so
+		/// that can't be used.
+		/// </summary>
+		private int Samples { get; set; } = 0;
+
 
 		///<summary>
 		/// Constructor for IntegratorSection
@@ -82,6 +94,22 @@ namespace RhinoCyclesCore.Settings
 			RegisterControlEvents();
 			ViewModelActivated += IntegratorSection_ViewModelActivated;
 			DataChanged += AdvancedSettingsSection_DataChanged;
+			UnLoad += AdvancedSettingsSection_UnLoad;
+			Load += AdvancedSettingsSection_Load;
+		}
+
+		private void AdvancedSettingsSection_Load(object sender, EventArgs e)
+		{
+			Dirty = false;
+		}
+
+		private void AdvancedSettingsSection_UnLoad(object sender, EventArgs e)
+		{
+			if (Dirty)
+			{
+				Eto.Forms.Application.Instance.AsyncInvoke(() => Rhino.RhinoApp.RunScript($"_RhinoCycles_ChangeSamples {Samples} _Enter", false));
+				Eto.Forms.Application.Instance.AsyncInvoke(() => Rhino.RhinoApp.RunScript($"_RhinoCycles_TriggerChangeIntegrator  _Enter", false));
+			}
 		}
 
 		private void AdvancedSettingsSection_DataChanged(object sender, Rhino.UI.Controls.DataSource.EventArgs e)
@@ -172,7 +200,7 @@ namespace RhinoCyclesCore.Settings
 			CheckboxUseSamples = new CheckBox()
 			{
 				Checked = false,
-				ToolTip = Localization.LocalizeString("Check to override render quality setting", 2),
+				ToolTip = Localization.LocalizeString("Check to override render quality setting. If unchecked affects only viewport sample count", 2),
 			};
 
 			LblMaxBounces = new Label()
@@ -317,8 +345,8 @@ namespace RhinoCyclesCore.Settings
 				Spacing = new Eto.Drawing.Size(1, 5),
 				Rows =
 				{
-					new TableRow(LblUseDocumentSamples, CheckboxUseSamples),
 					new TableRow(LblSamples, StepperSamples),
+					new TableRow(LblUseDocumentSamples, CheckboxUseSamples),
 				}
 			};
 			var textureTable = new TableLayout()
@@ -409,7 +437,6 @@ namespace RhinoCyclesCore.Settings
 			if (vud == null) return;
 
 			vud.UseDocumentSamples = CheckboxUseSamples.Checked.GetValueOrDefault(false);
-			StepperSamples.ReadOnly= !vud.UseDocumentSamples;
 		}
 
 		private void UnregisterControlEvents()
@@ -441,6 +468,7 @@ namespace RhinoCyclesCore.Settings
 					break;
 				case AdvancedSettings.Samples:
 					vud.Samples = (int)ns.Value;
+					Samples = (int)ns.Value;
 					break;
 				case AdvancedSettings.MaxBounce:
 					vud.MaxBounce = (int)ns.Value;
@@ -462,6 +490,15 @@ namespace RhinoCyclesCore.Settings
 					break;
 				default:
 					throw new ArgumentException("Unknown IntegratorSetting encountered");
+			}
+			Dirty = true;
+			if (setting == AdvancedSettings.Samples)
+			{
+					Eto.Forms.Application.Instance.AsyncInvoke(() => Rhino.RhinoApp.RunScript($"_RhinoCycles_ChangeSamples {(int)ns.Value} _Enter", false));
+			}
+			else
+			{
+				Eto.Forms.Application.Instance.AsyncInvoke(() => Rhino.RhinoApp.RunScript($"_RhinoCycles_TriggerChangeIntegrator  _Enter", false));
 			}
 		}
 
