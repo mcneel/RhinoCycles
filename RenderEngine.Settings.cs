@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2017 Robert McNeel and Associates
+Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -67,7 +67,31 @@ namespace RhinoCyclesCore
 
 		public int _textureBakeQuality { get; set; } = 0;
 
-		public void HandleDeviceAndIntegrator(IAllSettings settings)
+		public void HandleIntegrator(IAllSettings settings)
+		{
+			if (Session != null && Session.Scene != null)
+			{
+				var hash = settings.IntegratorHash;
+				if (hash != _oldIntegratorHash)
+				{
+					var integrator = Session.Scene.Integrator;
+					integrator.Seed = settings.Seed;
+					integrator.DiffuseSamples = settings.DiffuseSamples;
+					integrator.GlossySamples = settings.GlossySamples;
+					integrator.MaxBounce = settings.MaxBounce;
+					integrator.MaxDiffuseBounce = settings.MaxDiffuseBounce;
+					integrator.MaxGlossyBounce = settings.MaxGlossyBounce;
+					integrator.MaxTransmissionBounce = settings.MaxTransmissionBounce;
+					integrator.MaxVolumeBounce = settings.MaxVolumeBounce;
+					integrator.TagForUpdate();
+					_needReset = true;
+					_oldIntegratorHash = hash;
+				}
+				Session.SetSamples(settings.Samples);
+			}
+		}
+
+		public void HandleDevice(IAllSettings settings)
 		{
 			RenderDevice = settings.RenderDevice;
 			_textureBakeQuality = settings.TextureBakeQuality;
