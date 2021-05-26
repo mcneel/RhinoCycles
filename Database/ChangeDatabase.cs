@@ -1390,7 +1390,6 @@ namespace RhinoCyclesCore.Database
 
 		private uint old_gp_crc = 0;
 		private bool old_gp_enabled = false;
-		RenderMaterial gpShadowsOnlyMat = RenderContentType.NewContentFromTypeId(RenderMaterial.PlasterMaterialGuid) as RenderMaterial;
 		/// <summary>
 		/// Handle ground plane changes.
 		/// </summary>
