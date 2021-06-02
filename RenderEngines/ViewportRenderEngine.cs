@@ -54,6 +54,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 		}
 
+		public IRenderedViewportCallbacks RenderedViewport { get; set; }
+
 		private bool _bvhUploaded = false;
 		private bool _sessionCancelFlagged = false;
 		private void ViewportRenderEngine_BeginChangesNotified(object sender, EventArgs e)

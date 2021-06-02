@@ -1879,6 +1879,8 @@ namespace RhinoCyclesCore.Database
 				if(_renderEngine is RenderEngines.ViewportRenderEngine vpe)
 				{
 					vpe.ChangeIntegrator(integratorSettings);
+					vpe.RenderedViewport?.UpdateMaxSamples(integratorSettings.Samples);
+					vpe.ChangeSamples(integratorSettings.Samples);
 					integratorSettings = null;
 					_integratorChanged = false;
 				}

@@ -45,6 +45,8 @@ namespace RhinoCyclesCore.Settings
 			{
 				uint rem = 0xdeadbeef;
 				rem = RhinoMath.CRC32(rem, Seed);
+				rem = RhinoMath.CRC32(rem, Samples);
+				rem = RhinoMath.CRC32(rem, UseDocumentSamples ? 1 : 0);
 				rem = RhinoMath.CRC32(rem, DiffuseSamples);
 				rem = RhinoMath.CRC32(rem, GlossySamples);
 				rem = RhinoMath.CRC32(rem, TransmissionSamples);
