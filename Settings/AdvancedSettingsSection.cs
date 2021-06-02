@@ -70,11 +70,6 @@ namespace RhinoCyclesCore.Settings
 		public StackLayout MainLayout { get; set; }
 
 		/// <summary>
-		/// Set to true when in Unload event handler
-		/// we need to signal
-		/// </summary>
-		private bool Dirty { get; set; } = false;
-		/// <summary>
 		/// Local copy of Settings.Samples. Needed since we need it on
 		/// the Unload event. At this point Settings is invalid, so
 		/// that can't be used.
@@ -94,22 +89,6 @@ namespace RhinoCyclesCore.Settings
 			RegisterControlEvents();
 			ViewModelActivated += IntegratorSection_ViewModelActivated;
 			DataChanged += AdvancedSettingsSection_DataChanged;
-			UnLoad += AdvancedSettingsSection_UnLoad;
-			Load += AdvancedSettingsSection_Load;
-		}
-
-		private void AdvancedSettingsSection_Load(object sender, EventArgs e)
-		{
-			Dirty = false;
-		}
-
-		private void AdvancedSettingsSection_UnLoad(object sender, EventArgs e)
-		{
-			if (Dirty)
-			{
-				Eto.Forms.Application.Instance.AsyncInvoke(() => Rhino.RhinoApp.RunScript($"_RhinoCycles_ChangeSamples {Samples} _Enter", false));
-				Eto.Forms.Application.Instance.AsyncInvoke(() => Rhino.RhinoApp.RunScript($"_RhinoCycles_TriggerChangeIntegrator  _Enter", false));
-			}
 		}
 
 		private void AdvancedSettingsSection_DataChanged(object sender, Rhino.UI.Controls.DataSource.EventArgs e)
@@ -490,15 +469,6 @@ namespace RhinoCyclesCore.Settings
 					break;
 				default:
 					throw new ArgumentException("Unknown IntegratorSetting encountered");
-			}
-			Dirty = true;
-			if (setting == AdvancedSettings.Samples)
-			{
-					Eto.Forms.Application.Instance.AsyncInvoke(() => Rhino.RhinoApp.RunScript($"_RhinoCycles_ChangeSamples {(int)ns.Value} _Enter", false));
-			}
-			else
-			{
-				Eto.Forms.Application.Instance.AsyncInvoke(() => Rhino.RhinoApp.RunScript($"_RhinoCycles_TriggerChangeIntegrator  _Enter", false));
 			}
 		}
 

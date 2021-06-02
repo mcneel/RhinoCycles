@@ -39,6 +39,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			Database.UploadDisplayPipelineAttributesChanges();
+			Database.UploadIntegratorChanges();
 
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.1f, "Start data upload"));
 

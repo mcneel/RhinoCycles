@@ -29,6 +29,10 @@ namespace RhinoCyclesCore.Settings
 		public EngineDocumentSettings(uint docSerialNumber) {
 			mDict = (RhinoDoc.FromRuntimeSerialNumber(docSerialNumber))?.RenderSettings?.UserDictionary;
 		}
+		internal EngineDocumentSettings(ArchivableDictionary dictionary)
+		{
+			mDict = dictionary;
+		}
 #region Document settings
 		public IntegratorMethod IntegratorMethod
 		{
