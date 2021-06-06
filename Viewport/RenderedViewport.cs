@@ -52,7 +52,7 @@ namespace RhinoCycles.Viewport
 		public override bool DontRegisterAttributesOnStart => true;
 	}
 
-	public class RenderedViewport : RealtimeDisplayMode
+	public class RenderedViewport : RealtimeDisplayMode, IRenderedViewportCallbacks
 	{
 		private static int _runningSerial;
 		private readonly int _serial;
@@ -236,7 +236,8 @@ namespace RhinoCycles.Viewport
 			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa)
 			{
 				BufferRectangle = viewportInfo.GetScreenPort(),
-				FullSize = viewportInfo.GetScreenPort().Size
+				FullSize = viewportInfo.GetScreenPort().Size,
+				RenderedViewport = this,
 			};
 
 			_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
@@ -384,9 +385,13 @@ namespace RhinoCycles.Viewport
 			{
 				vud.Samples = samples;
 			}
-			_maxSamples = samples;
+			UpdateMaxSamples(samples);
 			_cycles?.ChangeSamples(samples);
 			_ResetRenderTime();
+		}
+		public void UpdateMaxSamples(int samples)
+		{
+			_maxSamples = samples;
 		}
 
 		public void ChangeIntegrator(IntegratorSettings integrator)

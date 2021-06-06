@@ -39,6 +39,11 @@ namespace RhinoCyclesCore.Settings
 			get { return m_eds.Seed; }
 			set { m_eds.Seed = value; }
 		}
+		public int Samples
+		{
+			get { return m_eds.Samples; }
+			set { m_eds.Samples = value; }
+		}
 		public int DiffuseSamples
 		{
 			get { return m_eds.DiffuseSamples; }

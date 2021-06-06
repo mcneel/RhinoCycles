@@ -44,6 +44,7 @@ using Rhino.Collections;
 using System.Text;
 using RhinoCyclesCore.RenderEngines;
 using Rhino;
+using RhinoCyclesCore.Settings;
 
 namespace RhinoCyclesCore.Database
 {
@@ -1838,13 +1839,20 @@ namespace RhinoCyclesCore.Database
 
 		private bool _previousScaleBackgroundToFit = false;
 		private bool _wallpaperInitialized = false;
+		private IntegratorSettings integratorSettings { get; set; } = null;
+		private uint _oldIntegratorHash { get; set; } = 0;
+		private bool _integratorChanged { get; set; } = false;
 		protected override void ApplyRenderSettingsChanges(RenderSettings rs)
 		{
 			if (rs != null)
 			{
-				var chanGuids = _renderEngine.RenderWindow.GetRequestedRenderChannels();
-				var rchmode = rs.RenderChannels.Mode;
-				RcCore.OutputDebugString($"RenderChannels.Mode: {rchmode}\n");
+				EngineDocumentSettings eds = new EngineDocumentSettings(rs.UserDictionary);
+				if(eds.IntegratorHash!=_oldIntegratorHash)
+				{
+					integratorSettings = new IntegratorSettings(eds);
+					_oldIntegratorHash = eds.IntegratorHash;
+					_integratorChanged = true;
+				}
 				var trbg = TransparentBackground;
 				TransparentBackground = rs.TransparentBackground;
 				DisplayPipelineAttributesChanged |= trbg != TransparentBackground;
@@ -1862,6 +1870,22 @@ namespace RhinoCyclesCore.Database
 				_previousScaleBackgroundToFit = rs.ScaleBackgroundToFit;
 				_lightDatabase.UpdateBackgroundLight();
 			}
+		}
+
+		public bool UploadIntegratorChanges()
+		{
+			if(_integratorChanged)
+			{
+				if(_renderEngine is RenderEngines.ViewportRenderEngine vpe)
+				{
+					vpe.ChangeIntegrator(integratorSettings);
+					vpe.RenderedViewport?.UpdateMaxSamples(integratorSettings.Samples);
+					vpe.ChangeSamples(integratorSettings.Samples);
+					integratorSettings = null;
+					_integratorChanged = false;
+				}
+			}
+			return true;
 		}
 
 		public bool DisplayPipelineAttributesChanged { get; private set; } = false;
