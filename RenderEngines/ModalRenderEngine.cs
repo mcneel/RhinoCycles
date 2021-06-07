@@ -43,6 +43,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 		AntialiasLevel Quality { get; set; }
 		public bool IsProductRender { get; set; }
+		public bool FastPreview { get; set; } = false;
 
 		private void ModalRenderEngineCommonConstruct()
 		{
@@ -106,23 +107,30 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#region pick a render device
 			HandleDevice(eds);
-			if (!eds.UseDocumentSamples)
+			if (FastPreview)
 			{
-				switch (Quality)
+				engineSettings = new FastPreviewEngineSettings(eds);
+			}
+			else
+			{
+				if (!eds.UseDocumentSamples)
 				{
-					case AntialiasLevel.Draft:
-						engineSettings = new DraftPresetEngineSettings(eds);
-						break;
-					case AntialiasLevel.Good:
-						engineSettings = new GoodPresetEngineSettings(eds);
-						break;
-					case AntialiasLevel.High:
-						engineSettings = new FinalPresetEngineSettings(eds);
-						break;
-					case AntialiasLevel.None:
-					default:
-						engineSettings = new LowPresetEngineSettings(eds);
-						break;
+					switch (Quality)
+					{
+						case AntialiasLevel.Draft:
+							engineSettings = new DraftPresetEngineSettings(eds);
+							break;
+						case AntialiasLevel.Good:
+							engineSettings = new GoodPresetEngineSettings(eds);
+							break;
+						case AntialiasLevel.High:
+							engineSettings = new FinalPresetEngineSettings(eds);
+							break;
+						case AntialiasLevel.None:
+						default:
+							engineSettings = new LowPresetEngineSettings(eds);
+							break;
+					}
 				}
 			}
 			MaxSamples = Attributes?.RealtimeRenderPasses ?? engineSettings.Samples;
