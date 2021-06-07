@@ -86,47 +86,47 @@ namespace RhinoCyclesCore.Settings
 			get => mDict.GetInteger(SettingNames.Seed, DefaultEngineSettings.Seed);
 			set => throw new InvalidOperationException();
 		}
-		public int DiffuseSamples
+		public virtual int DiffuseSamples
 		{
 			get => mDict.GetInteger(SettingNames.DiffuseSamples, DefaultEngineSettings.DiffuseSamples);
 			set => throw new InvalidOperationException();
 		}
-		public int GlossySamples
+		public virtual int GlossySamples
 		{
 			get => mDict.GetInteger(SettingNames.GlossySamples, DefaultEngineSettings.GlossySamples);
 			set => throw new InvalidOperationException();
 		}
-		public int TransmissionSamples
+		public virtual int TransmissionSamples
 		{
 			get => mDict.GetInteger(SettingNames.TransmissionSamples, DefaultEngineSettings.TransmissionSamples);
 			set => throw new InvalidOperationException();
 		}
-		public int MaxBounce
+		public virtual int MaxBounce
 		{
 			get => mDict.GetInteger(SettingNames.MaxBounce, DefaultEngineSettings.MaxBounce);
 			set => throw new InvalidOperationException();
 		}
-		public int MaxDiffuseBounce
+		public virtual int MaxDiffuseBounce
 		{
 			get => mDict.GetInteger(SettingNames.MaxDiffuseBounce, DefaultEngineSettings.MaxDiffuseBounce);
 			set => throw new InvalidOperationException();
 		}
-		public int MaxGlossyBounce
+		public virtual int MaxGlossyBounce
 		{
 			get => mDict.GetInteger(SettingNames.MaxGlossyBounce, DefaultEngineSettings.MaxGlossyBounce);
 			set => throw new InvalidOperationException();
 		}
-		public int MaxVolumeBounce
+		public virtual int MaxVolumeBounce
 		{
 			get => mDict.GetInteger(SettingNames.MaxVolumeBounce, DefaultEngineSettings.MaxVolumeBounce);
 			set => throw new InvalidOperationException();
 		}
-		public int MaxTransmissionBounce
+		public virtual int MaxTransmissionBounce
 		{
 			get => mDict.GetInteger(SettingNames.MaxTransmissionBounce, DefaultEngineSettings.MaxTransmissionBounce);
 			set => throw new InvalidOperationException();
 		}
-		public int TransparentMaxBounce
+		public virtual int TransparentMaxBounce
 		{
 			get => mDict.GetInteger(SettingNames.TransparentMaxBounce, DefaultEngineSettings.TransparentMaxBounce);
 			set => throw new InvalidOperationException();
