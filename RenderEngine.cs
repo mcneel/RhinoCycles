@@ -1,5 +1,5 @@
 ﻿/**
-Copyright 2014-2017 Robert McNeel and Associates
+Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -330,7 +330,7 @@ namespace RhinoCyclesCore
 					using (var rgba = RenderWindow.OpenChannel(channel))
 					{
 						Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(pixel_buffer);
-						rgba?.SetValuesFlipped(rect, rect.Size, pb);
+						rgba?.SetValues(rect, rect.Size, pb);
 					}
 				}
 
