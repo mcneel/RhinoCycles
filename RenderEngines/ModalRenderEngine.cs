@@ -196,8 +196,7 @@ namespace RhinoCyclesCore.RenderEngines
 				const long updateInterval = 1000 * 10000;
 
 				// lets first reset session
-				int cycles_full_y = FullSize.Height - BufferRectangle.Bottom;
-				cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, cycles_full_y, FullSize.Width, FullSize.Height);
+				cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, BufferRectangle.Top, FullSize.Width, FullSize.Height);
 				// and actually start
 				bool stillrendering = true;
 				var throttle = Math.Max(0, engineSettings.ThrottleMs);
