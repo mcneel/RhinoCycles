@@ -25,6 +25,7 @@ using RhinoCyclesCore.Settings;
 using static Rhino.Render.RenderWindow;
 using Rhino.UI;
 using Eto.Forms;
+using Rhino.Runtime;
 
 namespace RhinoCyclesCore
 {
@@ -118,10 +119,9 @@ namespace RhinoCyclesCore
 			if(render_device.IsOptix) {
 				bvhLayout = BvhLayout.OptiX;
 			}
-			/*else if (render_device.IsCpu) {
-				bvhLayout = BvhLayout.Embree;
+			else if (render_device.IsCpu && HostUtils.RunningOnOSX) {
+				bvhLayout = BvhLayout.Bvh2;
 			}
-			*/
 			var scene_params = new SceneParameters(client, ShadingSystem.SVM, BvhType.Static, false, bvhLayout, false);
 			#endregion
 
