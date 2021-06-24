@@ -362,9 +362,9 @@ namespace RhinoCyclesCore.Shaders
 
 					gradient_colorramp279.ColorBand.Stops.Clear();
 					// bottom color on 0.0f
-					gradient_colorramp279.ColorBand.InsertColorStop(m_original_background.Color2AsFloat4, 0.0f);
+					gradient_colorramp279.ColorBand.InsertColorStop(m_original_background.Color2AsFloat4, 1.0f);
 					// top color on 1.0f
-					gradient_colorramp279.ColorBand.InsertColorStop(m_original_background.Color1AsFloat4, 1.0f);
+					gradient_colorramp279.ColorBand.InsertColorStop(m_original_background.Color1AsFloat4, 0.0f);
 
 					// rotate the window vector
 					gradienttexture278.Rotation = RenderEngine.CreateFloat4(0.0, 0.0, 1.570796);
