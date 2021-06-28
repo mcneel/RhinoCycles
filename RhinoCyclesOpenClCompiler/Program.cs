@@ -45,7 +45,7 @@ namespace RhinoCyclesOpenClCompiler {
 					var nicename = sr.ReadLine();
 
 					CSycles.path_init(kernelpath, datauserpath);
-					CSycles.initialise();
+					CSycles.initialise(DeviceTypeMask.All);
 
 					if(id < Device.Devices.Count()) {
 						Device device = Device.GetDevice(id);
