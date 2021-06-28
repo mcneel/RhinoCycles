@@ -154,10 +154,16 @@ namespace RhinoCycles
 			{
 				if(!RcCore.It.Initialised)
 				{
-					CSycles.initialise();
-					RcCore.It.Initialised = true;
+					if(Rhino.RhinoApp.IsSafeModeEnabled)
+					{
+						CSycles.initialise(DeviceTypeMask.CPU);
 
-					RcCore.It.InitialiseOpenCl();
+					} else
+					{
+						CSycles.initialise(DeviceTypeMask.All);
+						RcCore.It.InitialiseOpenCl();
+					}
+					RcCore.It.Initialised = true;
 
 					RcCore.It.TriggerInitialisationCompleted(this);
 				}
