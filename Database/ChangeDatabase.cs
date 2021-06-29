@@ -39,6 +39,7 @@ using Rhino.Geometry;
 using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Shaders;
+using RhinoCyclesCore.Materials;
 using RhinoCyclesCore.ExtensionMethods;
 using Rhino.Collections;
 using System.Text;
@@ -1101,7 +1102,7 @@ namespace RhinoCyclesCore.Database
 
 				if (!addedmats.Contains(matid))
 				{
-					HandleRenderMaterial(mat, matid, cyclesDecals);
+					HandleRenderMaterial(mat, matid, cyclesDecals, false);
 					addedmats.Add(matid);
 				}
 
@@ -1165,7 +1166,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		/// <param name="mat">RenderMaterial instance to handle</param>
 		/// <param name="decals">List of CyclesDecal that need to be integrated into the shader</param>
-		private void HandleRenderMaterial(RenderMaterial mat, uint matId, List<CyclesDecal> decals)
+		private void HandleRenderMaterial(RenderMaterial mat, uint matId, List<CyclesDecal> decals, bool invisibleUnderside)
 		{
 			uint decalsCRC = CyclesDecal.CRCForList(decals);
 
@@ -1176,6 +1177,7 @@ namespace RhinoCyclesCore.Database
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
 			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals);
+			sh.InvisibleUnderside = invisibleUnderside;
 			_shaderDatabase.AddShader(sh);
 		}
 
@@ -1239,7 +1241,7 @@ namespace RhinoCyclesCore.Database
 				if (existing == null)
 				{
 					var rm = MaterialFromId(distinct);
-					HandleRenderMaterial(rm, distinct, null);
+					HandleRenderMaterial(rm, distinct, null, false);
 				}
 			}
 		}
@@ -1328,9 +1330,19 @@ namespace RhinoCyclesCore.Database
 
 		private readonly float gp_side_extension = 1.0E+6f;
 		private uint currentGpRenderMaterial = 0;
+
+		//private ShadowCatcherMaterial shadowCatcherMaterial = (ShadowCatcherMaterial)RenderContentType.NewContentFromTypeId(System.Guid.Parse("9a28c95d-ae43-4ea2-b220-02c70d69f9e8"));
+		//private const int shadowCatcherMaterialId = 42;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
-			var mat = MaterialFromId(gp.MaterialId);
+			var materialId = /*gp.IsShadowOnly ? shadowCatcherMaterialId : */gp.MaterialId;
+			var mat = /*gp.IsShadowOnly ? shadowCatcherMaterial : */MaterialFromId(materialId);
+
+			/* now adjust mat id with set values since we want this to be a special
+			 * ground plane instance
+			 */
+			materialId = RhinoMath.CRC32(materialId, 42);
+			materialId = RhinoMath.CRC32(materialId, gp.ShowUnderside ? 1 : 0);
 
 			if(UsesWcs(mat))
 			{
@@ -1367,9 +1379,9 @@ namespace RhinoCyclesCore.Database
 
 			HandleMeshData(gpid.Item1, gpid.Item2, m, null, false, uint.MaxValue);
 
-			HandleRenderMaterial(mat, gp.MaterialId, null);
+			HandleRenderMaterial(mat, materialId, null, !gp.ShowUnderside);
 
-			var matrenderhash = gp.MaterialId;
+			var matrenderhash = materialId;
 			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 			var cyclesObject = new CyclesObject
 			{
