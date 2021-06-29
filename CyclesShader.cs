@@ -94,6 +94,8 @@ namespace RhinoCyclesCore
 			};
 		}
 
+		public bool InvisibleUnderside { get; set; } = false;
+
 		public bool CreateBackShader(RenderMaterial rm, float gamma)
 		{
 			_back = new ShaderBody(Id);

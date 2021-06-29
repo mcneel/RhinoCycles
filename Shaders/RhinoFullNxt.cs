@@ -71,6 +71,26 @@ namespace RhinoCyclesCore.Shaders
 				var last = GetShaderPart(m_original.Front);
 				var lastclosure = last.GetClosureSocket();
 
+				// InvisibleUnderside may be true if it is set for a material
+				// on a Ground Plane. Handle this case by adding a transparent BSDF
+				// for when the backface is hit. Otherwise just 'regular' shader
+				// as created by GetShaderPart() above.
+				if (m_original.InvisibleUnderside)
+				{
+					var transparent = new TransparentBsdfNode("transparent_gp");
+					transparent.ins.Color.Value = new float4(1.0, 1.0, 1.0, 1.0);
+					var backfacing = new GeometryInfoNode("backfacepicker_");
+					var flipper = new MixClosureNode("front_or_back_");
+					m_shader.AddNode(transparent);
+					m_shader.AddNode(backfacing);
+					m_shader.AddNode(flipper);
+
+					lastclosure.Connect(flipper.ins.Closure1);
+					transparent.outs.BSDF.Connect(flipper.ins.Closure2);
+					backfacing.outs.Backfacing.Connect(flipper.ins.Fac);
+					lastclosure = flipper.GetClosureSocket();
+				}
+
 				return lastclosure;
 			}
 
