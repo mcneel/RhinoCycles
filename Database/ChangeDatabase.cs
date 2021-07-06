@@ -837,7 +837,7 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
-		public List<CyclesDecal> HandleMeshDecals(Guid meshguid, Decals decals)
+		public List<CyclesDecal> HandleMeshDecals(Guid meshguid, Decals decals, Rhino.Geometry.Transform instanceTransform)
 		{
 			if (decals == null) return null;
 			if(decals.Count()<1) return null;
@@ -870,7 +870,6 @@ namespace RhinoCyclesCore.Database
 				switch (mapping) {
 					case DecalMapping.Cylindrical:
 					case DecalMapping.Spherical:
-						fromPlane.Rotate(Math.PI*0.5, Vector3d.XAxis);
 						if(decal.MapToInside) {
 							projection = DecalProjection.Backward;
 						} else {
@@ -887,13 +886,58 @@ namespace RhinoCyclesCore.Database
 						break;
 				}
 
+				// now need to fix up the texmapping to incorporate the given instance transform so we can
+				// show decals properly in block instances.
 				Plane toPlane = new Plane(origin, across, up);
+				double acrossLength = across.Length;
+				double upLength = up.Length;
+				toPlane.Transform(instanceTransform);
+				origin.Transform(instanceTransform);
+				across.Transform(instanceTransform);
+				up.Transform(instanceTransform);
+				// create a new plane for cylindrical and spherical decals, this needs to be rotated -90°
+				// on the plane X axis to ensure the decal gets oriented correctly.
+				Plane cyl_spherPlane = new Plane(toPlane);
+				cyl_spherPlane.Rotate(-Math.PI * 0.5, toPlane.XAxis);
+
+				// create the new mappings using the transformed planes
+				switch(mapping) {
+					case DecalMapping.Planar:
+						{
+							Rhino.Geometry.Interval dx = new Interval(0, acrossLength);
+							Rhino.Geometry.Interval dy = new Interval(0, upLength);
+							Rhino.Geometry.Interval dz = new Interval(0, 0);
+							texmapping = TextureMapping.CreatePlaneMapping(toPlane, dx, dy, dz);
+						}
+						break;
+					case DecalMapping.Cylindrical:
+						{
+							Rhino.Geometry.Circle circle = new Circle(cyl_spherPlane, radius);
+							Cylinder cylinder = new Cylinder(circle, height);
+							texmapping = TextureMapping.CreateCylinderMapping(cylinder, true);
+						}
+						break;
+					case DecalMapping.Spherical:
+						{
+							Sphere sphere = new Sphere(cyl_spherPlane, radius);
+							texmapping = TextureMapping.CreateSphereMapping(sphere);
+						}
+					break;
+					case DecalMapping.UV:
+					break;
+				}
+
+				// create the decal xform. We go from the XY plane to the (transformed) toPlane
+				// which gives as the rotation and translation we need.
 				Rhino.Geometry.Transform decalXform = Rhino.Geometry.Transform.PlaneToPlane(fromPlane, toPlane);
+
+				// scale we calculate for planar decal based on the across and up vector lengths
+				Rhino.Geometry.Transform scaleXform = Rhino.Geometry.Transform.Identity;
 
 				if(mapping != DecalMapping.Cylindrical && mapping != DecalMapping.Spherical)
 				{
-					Rhino.Geometry.Transform scale = Rhino.Geometry.Transform.Scale(Rhino.Geometry.Plane.WorldXY, across.Length, up.Length, 1.0);
-					decalXform = decalXform * scale;
+					scaleXform = Rhino.Geometry.Transform.Scale(Rhino.Geometry.Plane.WorldXY, acrossLength, upLength, 1.0);
+					decalXform = decalXform * scaleXform;
 				}
 
 				RenderTexture rt = TextureForId(decal.TextureRenderCRC(TextureRenderHashFlags.ExcludeLocalMapping));
@@ -928,7 +972,6 @@ namespace RhinoCyclesCore.Database
 				idx++;
 			}
 			string sbstr = sb.ToString();
-			//sdd.WriteLine(sbstr);
 			RhinoApp.OutputDebugString($"{sbstr}\n\n");
 			return decalList;
 		}
@@ -1087,7 +1130,7 @@ namespace RhinoCyclesCore.Database
 				if (_renderEngine.CancelRender) return;
 
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
-				var cyclesDecals = HandleMeshDecals(a.MeshId, a.Decals);
+				var cyclesDecals = HandleMeshDecals(a.MeshId, a.Decals, a.Transform);
 
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
@@ -1097,6 +1140,7 @@ namespace RhinoCyclesCore.Database
 
 				if(cyclesDecals!=null) {
 					uint decalsCRC = CyclesDecal.CRCForList(cyclesDecals);
+					matid = a.Transform.TransformCrc(matid);
 					matid = RhinoMath.CRC32(matid, decalsCRC);
 				}
 
@@ -1166,10 +1210,9 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		/// <param name="mat">RenderMaterial instance to handle</param>
 		/// <param name="decals">List of CyclesDecal that need to be integrated into the shader</param>
+		/// <param name="invisibleUnderside">True if geometry should be see-through from the backface. Used for the groundplane.</param>
 		private void HandleRenderMaterial(RenderMaterial mat, uint matId, List<CyclesDecal> decals, bool invisibleUnderside)
 		{
-			uint decalsCRC = CyclesDecal.CRCForList(decals);
-
 			if (_shaderDatabase.HasShader(matId))
 			{
 				return;
