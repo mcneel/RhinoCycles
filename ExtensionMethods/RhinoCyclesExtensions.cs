@@ -246,6 +246,30 @@ namespace RhinoCyclesCore.ExtensionMethods
 		}
 
 		/// <summary>
+		/// Calculate the CRC for the transform using the given remainder.
+		/// </summary>
+		public static uint TransformCrc(this Rhino.Geometry.Transform rt, uint remainder)
+		{
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M00);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M01);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M02);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M03);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M10);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M11);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M12);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M13);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M20);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M21);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M22);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M23);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M30);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M31);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M32);
+			remainder = Rhino.RhinoMath.CRC32(remainder, rt.M33);
+			return remainder;
+		}
+
+		/// <summary>
 		/// Extract scale vector from ccl.Transform
 		/// </summary>
 		/// <param name="t">ccl.Transform to extract scale vector from</param>

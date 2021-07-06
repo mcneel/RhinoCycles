@@ -41,11 +41,10 @@ namespace RhinoCyclesCore.Converters
 		/// <returns>The CyclesShader</returns>
 		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid, BitmapConverter bitmapConverter, List<CyclesDecal> decals)
 		{
-			uint decalsCRC = CyclesDecal.CRCForList(decals);
 			var shader = new CyclesShader(mid, bitmapConverter)
 			{
 				Type = CyclesShader.Shader.Diffuse,
-				Decals = decals
+				Decals = decals,
 			};
 
 			if (rm.TypeId.Equals(realtimDisplaMaterialId))
