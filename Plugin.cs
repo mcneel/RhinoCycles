@@ -154,10 +154,9 @@ namespace RhinoCycles
 			{
 				if(!RcCore.It.Initialised)
 				{
-					if(Rhino.RhinoApp.IsSafeModeEnabled)
+					if(File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) || Rhino.RhinoApp.IsSafeModeEnabled)
 					{
 						CSycles.initialise(DeviceTypeMask.CPU);
-
 					} else
 					{
 						CSycles.initialise(DeviceTypeMask.All);
