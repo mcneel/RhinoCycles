@@ -36,7 +36,7 @@ namespace RhinoCycles.Commands
 		{
 			if(_instance==null) _instance = this;
 		}
-		public override string LocalName => LOC.STR("RhinoCyclesDisableGpu");
+		public override string LocalName => Localization.LocalizeString("RhinoCyclesDisableGpu", 61);
 
 		public override string EnglishName => "RhinoCyclesDisableGpu";
 
@@ -48,7 +48,7 @@ namespace RhinoCycles.Commands
 				{
 					File.Create(disableGpusFile);
 				}
-				var str = LOC.STR("GPUs for RhinoCycles have now been disabled. Restart Rhino for the change to take effect.");
+				var str = Localization.LocalizeString("GPUs for RhinoCycles have now been disabled. Restart Rhino for the change to take effect.", 62);
 				RhinoApp.WriteLine(str);
 				return Result.Success;
 			}
