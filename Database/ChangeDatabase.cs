@@ -747,12 +747,15 @@ namespace RhinoCyclesCore.Database
 			{
 				// Calculate vertical camera angle for 2 point perspective by horizontal camera angle and view aspect ratio.
 				vertical = Math.Atan(Math.Tan(horizontal) / viewAspectratio);
+				if(vp.IsTwoPointPerspectiveProjection) {
+					(frt, frb) = (frb, frt);
+				}
 			}
 
 			// convert rhino transform to ccsycles transform
 			var rt = rhinocam.ToCyclesTransform();
 			// then convert to Cycles orientation
-			var t = rt * ccl.Transform.RhinoToCyclesCam;
+			var t = rt * (vp.IsTwoPointPerspectiveProjection ? ccl.Transform.RhinoToCyclesCamNoFlip : ccl.Transform.RhinoToCyclesCam);
 
 			// ready, lets push our data
 			var cyclesview = new CyclesView
