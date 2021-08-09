@@ -304,10 +304,10 @@ namespace RhinoCyclesCore
 				if (Color1 != Color.Empty) col = Color1;
 				var brush = new SolidBrush(col);
 				var p = new Point(x, y);
-				var bmsize = new Size(nw, nh);
+				var bmsize = new Size(nw, -nh);
 				if (scaleToFit)
 				{
-					bmsize = new Size(w, h);
+					bmsize = new Size(w, -h);
 					p = new Point(0, 0);
 				}
 				using (Graphics g = Graphics.FromImage(newBitmap))
@@ -316,6 +316,7 @@ namespace RhinoCyclesCore
 					g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 					if (!view.WallpaperHidden)
 					{
+						g.TranslateTransform(0, -bmsize.Height);
 						g.DrawImage(bm, new Rectangle(p, bmsize), 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, attr);
 					}
 				}
