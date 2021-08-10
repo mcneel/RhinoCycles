@@ -26,6 +26,7 @@ using Rhino.DocObjects;
 using Rhino.Render;
 using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
+using Rhino.Runtime;
 using Rhino.Runtime.InteropWrappers;
 
 namespace RhinoCyclesCore
@@ -322,6 +323,10 @@ namespace RhinoCyclesCore
 				}
 				var wallpaperName = $"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
 				var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(wallpaperName));
+				if(HostUtils.RunningOnOSX)
+				{
+					newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipY);
+				}
 				var wallpaperbm = _bitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
 				wallpaperbm.ApplyGamma(Gamma);
 				Wallpaper.TexByte = wallpaperbm.Data as SimpleArrayByte;
