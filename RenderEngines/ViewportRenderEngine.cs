@@ -23,6 +23,7 @@ using Rhino.DocObjects;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
 using Rhino;
+using Rhino.UI;
 using System.Collections.Generic;
 using RhinoCyclesCore.Settings;
 using System.Linq;
@@ -286,6 +287,22 @@ namespace RhinoCyclesCore.RenderEngines
 					if (smpl>-1 && !Flush)
 					{
 						PassRendered?.Invoke(this, new PassRenderedEventArgs(smpl+1, View));
+					}
+					else if(smpl == -13) {
+						Session?.Cancel("Problem during rendering detected");
+						State = State.Stopped;
+						Action switchToWireframe = () =>
+						{
+							RhinoApp.RunScript("_SetDisplayMode _Wireframe", false);
+							RhinoApp.WriteLine(LOC.STR(
+@"An error was detected while using Raytraced.
+To ensure stability the display mode was switched to Wireframe.
+If this keeps happening and you have good steps to reproduce,
+please report to tech@mcneel.com along with the results of the
+Rhino command _SystemInfo."));
+						};
+						RhinoApp.InvokeOnUiThread(switchToWireframe);
+						break;
 					}
 				}
 				_bvhUploaded = true;

@@ -73,6 +73,8 @@ namespace RhinoCyclesCore.RenderEngines
 		}
 
 
+		public bool Success { get; set; } = false;
+
 		public int PreviewSamples { get; set; }
 
 		/// <summary>
@@ -82,6 +84,7 @@ namespace RhinoCyclesCore.RenderEngines
 		public static void Renderer(object oPipe)
 		{
 			var cyclesEngine = (PreviewRenderEngine)oPipe;
+			cyclesEngine.Success = false;
 
 			var client = cyclesEngine.Client;
 
@@ -147,14 +150,23 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.Scene.Reset();
 			// and actually start
 			bool stillrendering = true;
+			bool goodrender = true;
 			while (stillrendering)
 			{
 				if (cyclesEngine.IsRendering)
 				{
 					var sample = cyclesEngine.Session.Sample();
 					stillrendering = sample > -1;
-					cyclesEngine.BlitPixelsToRenderWindowChannel();
-					cyclesEngine.SignalUpdate(sample);
+					if (sample >= 0)
+					{
+						cyclesEngine.BlitPixelsToRenderWindowChannel();
+						cyclesEngine.SignalUpdate(sample);
+					} else if (sample == -13)
+					{
+						cyclesEngine.Success = false;
+						goodrender = false;
+						cyclesEngine.StopRendering();
+					}
 					Thread.Sleep(2);
 				}
 				else
@@ -164,6 +176,8 @@ namespace RhinoCyclesCore.RenderEngines
 				if (cyclesEngine.IsStopped) break;
 				if (cyclesEngine.CancelRender) break;
 			}
+
+			cyclesEngine.Success = goodrender;
 
 			// we're done now, so lets clean up our session.
 			RcCore.It.ReleaseSession(cyclesEngine.Session);
