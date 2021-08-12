@@ -1,4 +1,4 @@
-﻿//#define YES
+//#define YES
 /**
 Copyright 2014-2021 Robert McNeel and Associates
 
@@ -294,12 +294,12 @@ namespace RhinoCyclesCore.RenderEngines
 						Action switchToWireframe = () =>
 						{
 							RhinoApp.RunScript("_SetDisplayMode _Wireframe", false);
-							RhinoApp.WriteLine(LOC.STR(
+							RhinoApp.WriteLine(Localization.LocalizeString(
 @"An error was detected while using Raytraced.
 To ensure stability the display mode was switched to Wireframe.
 If this keeps happening and you have good steps to reproduce,
 please report to tech@mcneel.com along with the results of the
-Rhino command _SystemInfo."));
+Rhino command _SystemInfo.", 66));
 						};
 						RhinoApp.InvokeOnUiThread(switchToWireframe);
 						break;
