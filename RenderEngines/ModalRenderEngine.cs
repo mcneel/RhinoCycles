@@ -187,6 +187,8 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Database?.Flush();
 			var rc = cyclesEngine.UploadData();
 
+			bool goodrender = rc;
+
 			if (rc)
 			{
 				cyclesEngine.Session.PrepareRun();
@@ -214,6 +216,10 @@ namespace RhinoCyclesCore.RenderEngines
 							cyclesEngine.BlitPixelsToRenderWindowChannel();
 							cyclesEngine.RenderWindow.Invalidate();
 						}
+						else if(sample == -13) {
+							goodrender = false;
+							cyclesEngine.CancelRender = true;
+						}
 					}
 					Thread.Sleep(throttle);
 					if (cyclesEngine.IsStopped) break;
@@ -239,13 +245,15 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Database = null;
 			cyclesEngine.State = State.Stopped;
 
-			if (!capturing)
+			if (!capturing && goodrender)
 			{
 				// set final status string and progress to 1.0f to signal completed render
 				cyclesEngine.SetProgress(rw,
 					String.Format(Localization.LocalizeString("Render ready {0} samples, duration {1}", 39), cyclesEngine.RenderedSamples + 1, cyclesEngine.TimeString), 1.0f);
-				// signal the render window we're done.
-				//rw.EndAsyncRender(RenderWindow.RenderSuccessCode.Completed);
+			}
+			else if(!goodrender)
+			{
+				rw.SetProgress(LOC.STR("An error occured while trying to render. The render may be incomplete or not started."), 1.0f);
 			}
 			cyclesEngine.CancelRender = true;
 		}
