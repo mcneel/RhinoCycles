@@ -146,6 +146,23 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public bool Locked { get; set; }
 
+		private void HandleRenderCrash()
+		{
+			Session?.Cancel("Problem during rendering detected");
+			State = State.Stopped;
+			Action switchToWireframe = () =>
+			{
+				RhinoApp.RunScript("_SetDisplayMode _Wireframe", false);
+				RhinoApp.WriteLine(Localization.LocalizeString(
+@"An error was detected while using Raytraced.
+To ensure stability the display mode was switched to Wireframe.
+If this keeps happening and you have good steps to reproduce,
+please report to tech@mcneel.com along with the results of the
+Rhino command _SystemInfo.", 66));
+			};
+			RhinoApp.InvokeOnUiThread(switchToWireframe);
+		}
+
 		/// <summary>
 		/// Entry point for viewport interactive rendering
 		/// </summary>
@@ -270,7 +287,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 			while (this != null && !IsStopped)
 			{
-				if(this != null && _needReset) {
+				if (this != null && _needReset)
+				{
 					_needReset = false;
 					var size = RenderDimension;
 
@@ -280,28 +298,22 @@ namespace RhinoCyclesCore.RenderEngines
 					Session.Scene.Integrator.TagForUpdate();
 
 					// lets reset session
-					Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height);
-				}
-				if(this != null && !Flush && IsRendering) {
-					var smpl = Session.Sample();
-					if (smpl>-1 && !Flush)
+					if (Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height) != 0)
 					{
-						PassRendered?.Invoke(this, new PassRenderedEventArgs(smpl+1, View));
+						HandleRenderCrash();
+						break;
 					}
-					else if(smpl == -13) {
-						Session?.Cancel("Problem during rendering detected");
-						State = State.Stopped;
-						Action switchToWireframe = () =>
-						{
-							RhinoApp.RunScript("_SetDisplayMode _Wireframe", false);
-							RhinoApp.WriteLine(Localization.LocalizeString(
-@"An error was detected while using Raytraced.
-To ensure stability the display mode was switched to Wireframe.
-If this keeps happening and you have good steps to reproduce,
-please report to tech@mcneel.com along with the results of the
-Rhino command _SystemInfo.", 66));
-						};
-						RhinoApp.InvokeOnUiThread(switchToWireframe);
+				}
+				if (this != null && !Flush && IsRendering)
+				{
+					var smpl = Session.Sample();
+					if (smpl > -1 && !Flush)
+					{
+						PassRendered?.Invoke(this, new PassRenderedEventArgs(smpl + 1, View));
+					}
+					else if (smpl == -13)
+					{
+						HandleRenderCrash();
 						break;
 					}
 				}
