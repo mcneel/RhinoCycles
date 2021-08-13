@@ -144,37 +144,42 @@ namespace RhinoCyclesCore.RenderEngines
 
 			cyclesEngine.Session.PrepareRun();
 
-			// lets first reset session
-			cyclesEngine.Session.Reset(size.Width, size.Height, cyclesEngine.MaxSamples, 0, 0, size.Width, size.Height);
-			// then reset scene
-			cyclesEngine.Session.Scene.Reset();
-			// and actually start
-			bool stillrendering = true;
 			bool goodrender = true;
-			while (stillrendering)
+			bool stillrendering = true;
+			// lets first reset session
+			if (cyclesEngine.Session.Reset(size.Width, size.Height, cyclesEngine.MaxSamples, 0, 0, size.Width, size.Height) == 0)
 			{
-				if (cyclesEngine.IsRendering)
+				// then reset scene
+				cyclesEngine.Session.Scene.Reset();
+				// and actually start
+				while (stillrendering)
 				{
-					var sample = cyclesEngine.Session.Sample();
-					stillrendering = sample > -1;
-					if (sample >= 0)
+					if (cyclesEngine.IsRendering)
 					{
-						cyclesEngine.BlitPixelsToRenderWindowChannel();
-						cyclesEngine.SignalUpdate(sample);
-					} else if (sample == -13)
-					{
-						cyclesEngine.Success = false;
-						goodrender = false;
-						cyclesEngine.StopRendering();
+						var sample = cyclesEngine.Session.Sample();
+						stillrendering = sample > -1;
+						if (sample >= 0)
+						{
+							cyclesEngine.BlitPixelsToRenderWindowChannel();
+							cyclesEngine.SignalUpdate(sample);
+						}
+						else if (sample == -13)
+						{
+							cyclesEngine.Success = false;
+							goodrender = false;
+							cyclesEngine.StopRendering();
+						}
+						Thread.Sleep(2);
 					}
-					Thread.Sleep(2);
+					else
+					{
+						break;
+					}
+					if (cyclesEngine.IsStopped) break;
+					if (cyclesEngine.CancelRender) break;
 				}
-				else
-				{
-					break;
-				}
-				if (cyclesEngine.IsStopped) break;
-				if (cyclesEngine.CancelRender) break;
+			} else {
+				goodrender = false;
 			}
 
 			cyclesEngine.Success = goodrender;
