@@ -152,7 +152,7 @@ namespace RhinoCyclesCore.RenderEngines
 			State = State.Stopped;
 			Action switchToWireframe = () =>
 			{
-				RhinoApp.RunScript("_SetDisplayMode _Wireframe", false);
+				RhinoApp.RunScript("_SetDisplayMode _Rendered", false);
 				RhinoApp.WriteLine(Localization.LocalizeString(
 @"An error was detected while using Raytraced.
 To ensure stability the display mode was switched to Wireframe.

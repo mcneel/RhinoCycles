@@ -179,6 +179,7 @@ namespace RhinoCyclesCore.RenderEngines
 					if (cyclesEngine.CancelRender) break;
 				}
 			} else {
+				// reset failed
 				goodrender = false;
 			}
 
