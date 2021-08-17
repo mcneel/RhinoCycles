@@ -155,7 +155,7 @@ namespace RhinoCyclesCore.RenderEngines
 				RhinoApp.RunScript("_SetDisplayMode _Rendered", false);
 				RhinoApp.WriteLine(Localization.LocalizeString(
 @"An error was detected while using Raytraced.
-To ensure stability the display mode was switched to Wireframe.
+To ensure stability the display mode was switched to Rendered.
 If this keeps happening and you have good steps to reproduce,
 please report to tech@mcneel.com along with the results of the
 Rhino command _SystemInfo.", 66));
