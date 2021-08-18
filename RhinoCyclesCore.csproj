@@ -73,6 +73,7 @@
     <Compile Include="Settings\FastPreviewEngineSettings.cs" />
     <Compile Include="Settings\LowPresetEnginesSettings.cs" />
     <Compile Include="Settings\ApplicationAndDocumentSettings.cs" />
+    <Compile Include="Settings\CrashReporterDialog.cs" />
     <Compile Include="Environments\XmlEnvironment.cs" />
     <Compile Include="Materials\VertexColorMaterial.cs" />
     <Compile Include="Materials\EmissiveMaterial.cs" />
