@@ -153,12 +153,12 @@ namespace RhinoCyclesCore.RenderEngines
 			Action switchToWireframe = () =>
 			{
 				RhinoApp.RunScript("_SetDisplayMode _Rendered", false);
-				CrashReporterDialog dlg = new CrashReporterDialog(LOC.STR("Error while using Raytraced"), LOC.STR(
+				CrashReporterDialog dlg = new CrashReporterDialog(Localization.LocalizeString("Error while using Raytraced", 68), Localization.LocalizeString(
 @"An error was detected while using Raytraced.
 
 To ensure stability the display mode was switched to Rendered.
 
-Please click the link below for more information."));
+Please click the link below for more information.", 69));
 				dlg.ShowModal(RhinoEtoApp.MainWindow);
 			};
 			RhinoApp.InvokeOnUiThread(switchToWireframe);

@@ -266,12 +266,12 @@ namespace RhinoCyclesCore.RenderEngines
 				rw.SetProgress(Localization.LocalizeString("An error occured while trying to render. The render may be incomplete or not started.", 65), 1.0f);
 				Action showErrorDialog = () =>
 				{
-				CrashReporterDialog dlg = new CrashReporterDialog(LOC.STR("Error while rendering"), LOC.STR(
+				CrashReporterDialog dlg = new CrashReporterDialog(Localization.LocalizeString("Error while rendering", 66), Localization.LocalizeString(
 @"An error was detected while rendering with Rhino Render.
 
 If there is a result visible you can save it still.
 
-Please click the link below for more information."));
+Please click the link below for more information.", 67));
 					dlg.ShowModal(RhinoEtoApp.MainWindow);
 				};
 				RhinoApp.InvokeOnUiThread(showErrorDialog);
