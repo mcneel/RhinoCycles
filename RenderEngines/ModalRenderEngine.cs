@@ -211,16 +211,17 @@ namespace RhinoCyclesCore.RenderEngines
 							sample = cyclesEngine.Session.Sample();
 							stillrendering = sample > -1;
 							curUpdate = DateTime.Now.Ticks;
-							if (!capturing && stillrendering && (sample == 0 || (curUpdate - lastUpdate) > updateInterval))
+							if (sample == -13)
+							{
+								goodrender = false;
+								stillrendering = false;
+								cyclesEngine.CancelRender = true;
+							}
+							else if (!capturing && stillrendering && (sample == 0 || (curUpdate - lastUpdate) > updateInterval))
 							{
 								lastUpdate = curUpdate;
 								cyclesEngine.BlitPixelsToRenderWindowChannel();
 								cyclesEngine.RenderWindow.Invalidate();
-							}
-							else if (sample == -13)
-							{
-								goodrender = false;
-								cyclesEngine.CancelRender = true;
 							}
 						}
 						Thread.Sleep(throttle);
@@ -259,9 +260,21 @@ namespace RhinoCyclesCore.RenderEngines
 				cyclesEngine.SetProgress(rw,
 					String.Format(Localization.LocalizeString("Render ready {0} samples, duration {1}", 39), cyclesEngine.RenderedSamples + 1, cyclesEngine.TimeString), 1.0f);
 			}
-			else if (!goodrender)
+
+			if (!goodrender)
 			{
 				rw.SetProgress(Localization.LocalizeString("An error occured while trying to render. The render may be incomplete or not started.", 65), 1.0f);
+				Action showErrorDialog = () =>
+				{
+				CrashReporterDialog dlg = new CrashReporterDialog(LOC.STR("Error while rendering"), LOC.STR(
+@"An error was detected while rendering with Rhino Render.
+
+If there is a result visible you can save it still.
+
+Please click the link below for more information."));
+					dlg.ShowModal(RhinoEtoApp.MainWindow);
+				};
+				RhinoApp.InvokeOnUiThread(showErrorDialog);
 			}
 			cyclesEngine.CancelRender = true;
 		}

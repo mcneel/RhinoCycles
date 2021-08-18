@@ -158,16 +158,17 @@ namespace RhinoCyclesCore.RenderEngines
 					{
 						var sample = cyclesEngine.Session.Sample();
 						stillrendering = sample > -1;
+						if (sample == -13)
+						{
+							cyclesEngine.Success = false;
+							goodrender = false;
+							stillrendering = false;
+							cyclesEngine.StopRendering();
+						}
 						if (sample >= 0)
 						{
 							cyclesEngine.BlitPixelsToRenderWindowChannel();
 							cyclesEngine.SignalUpdate(sample);
-						}
-						else if (sample == -13)
-						{
-							cyclesEngine.Success = false;
-							goodrender = false;
-							cyclesEngine.StopRendering();
 						}
 						Thread.Sleep(2);
 					}
