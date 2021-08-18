@@ -153,12 +153,13 @@ namespace RhinoCyclesCore.RenderEngines
 			Action switchToWireframe = () =>
 			{
 				RhinoApp.RunScript("_SetDisplayMode _Rendered", false);
-				RhinoApp.WriteLine(Localization.LocalizeString(
+				CrashReporterDialog dlg = new CrashReporterDialog(LOC.STR("Error while using Raytraced"), LOC.STR(
 @"An error was detected while using Raytraced.
+
 To ensure stability the display mode was switched to Rendered.
-If this keeps happening and you have good steps to reproduce,
-please report to tech@mcneel.com along with the results of the
-Rhino command _SystemInfo.", 66));
+
+Please click the link below for more information."));
+				dlg.ShowModal(RhinoEtoApp.MainWindow);
 			};
 			RhinoApp.InvokeOnUiThread(switchToWireframe);
 		}
@@ -307,14 +308,14 @@ Rhino command _SystemInfo.", 66));
 				if (this != null && !Flush && IsRendering)
 				{
 					var smpl = Session.Sample();
-					if (smpl > -1 && !Flush)
-					{
-						PassRendered?.Invoke(this, new PassRenderedEventArgs(smpl + 1, View));
-					}
-					else if (smpl == -13)
+					if (smpl == -13)
 					{
 						HandleRenderCrash();
 						break;
+					}
+					if (smpl > -1 && !Flush)
+					{
+						PassRendered?.Invoke(this, new PassRenderedEventArgs(smpl + 1, View));
 					}
 				}
 				_bvhUploaded = true;
