@@ -87,7 +87,7 @@ namespace RhinoCyclesCore.Settings
 		}
 		private void LinkClicked(object sender, EventArgs args)
 		{
-			Process.Start("https://wiki.mcneel.com");
+			Process.Start("https://wiki.mcneel.com/rhino/render_error");
 		}
 
 		private void OkClicked(object sender, EventArgs args)
