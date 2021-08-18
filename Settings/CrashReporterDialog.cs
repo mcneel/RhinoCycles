@@ -60,11 +60,11 @@ namespace RhinoCyclesCore.Settings
 			};
 			m_linkToUrl = new LinkButton()
 			{
-				Text = LOC.STR("More information and potential solutions"),
+				Text = Localization.LocalizeString("More information and potential solutions", 70),
 			};
 			m_Ok = new Button()
 			{
-				Text = LOC.STR("OK")
+				Text = Localization.LocalizeString("OK", 71)
 			};
 			StackLayout layout = new StackLayout()
 			{
