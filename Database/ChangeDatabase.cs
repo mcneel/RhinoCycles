@@ -915,6 +915,9 @@ namespace RhinoCyclesCore.Database
 						break;
 					case DecalMapping.Cylindrical:
 						{
+							var n = cyl_spherPlane.Normal;
+							var l = new Rhino.Geometry.Line(cyl_spherPlane.Origin, n, -height/2.0);
+							cyl_spherPlane.Origin = l.To;
 							Rhino.Geometry.Circle circle = new Circle(cyl_spherPlane, radius);
 							Cylinder cylinder = new Cylinder(circle, height);
 							texmapping = TextureMapping.CreateCylinderMapping(cylinder, true);
