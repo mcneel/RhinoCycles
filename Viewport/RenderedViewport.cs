@@ -231,7 +231,14 @@ namespace RhinoCycles.Viewport
 
 			_frameAvailable = false;
 
-			renderWindow.SetSize(new Size(w, h));
+			var renderSize = new Size(w, h); //Rhino.Render.RenderPipeline.RenderSize(doc);
+			var pixelSize = (int)eds.DpiScale;
+
+			renderWindow.SetSize(renderSize);
+			renderWindow.SetRenderOutputRect(new Rectangle(0, 0, w / pixelSize, h / pixelSize));
+
+			var screenport = viewportInfo.GetScreenPort();
+			var fullsize = viewportInfo.GetScreenPort().Size;
 
 			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa)
 			{
@@ -248,10 +255,9 @@ namespace RhinoCycles.Viewport
 			_cycles.Database.LinearWorkflowChanged += DatabaseLinearWorkflowChanged;
 			_cycles.UploadProgress += _cycles_UploadProgress;
 
-			var renderSize = new Size(w, h); //Rhino.Render.RenderPipeline.RenderSize(doc);
-
 			_cycles.RenderWindow = renderWindow;
 			_cycles.RenderDimension = renderSize;
+			_cycles.PixelSize = pixelSize;
 
 			_cycles.HandleDevice(eds);
 

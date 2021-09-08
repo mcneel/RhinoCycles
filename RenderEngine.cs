@@ -319,7 +319,7 @@ namespace RhinoCyclesCore
 
 		public void BlitPixelsToRenderWindowChannel()
 		{
-			var rect = new Rectangle(0, 0, RenderWindow.Size().Width, RenderWindow.Size().Height);
+			var rect = new Rectangle(0, 0, RenderWindow.Size().Width/PixelSize, RenderWindow.Size().Height/PixelSize);
 			foreach (var pass in Session.Passes)
 			{
 				IntPtr pixel_buffer = IntPtr.Zero;
