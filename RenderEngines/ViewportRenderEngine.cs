@@ -124,7 +124,11 @@ namespace RhinoCyclesCore.RenderEngines
 		/// <param name="h">Height in pixels</param>
 		public void SetRenderSize(int w, int h)
 		{
-			RenderWindow?.SetSize(new Size(w, h));
+			if(RenderWindow != null)
+			{
+				RenderWindow.SetSize(new Size(w, h));
+				RenderWindow.SetRenderOutputRect(new Rectangle(0, 0, w / PixelSize, h / PixelSize));
+			}
 		}
 
 		public class RenderStartedEventArgs : EventArgs
@@ -222,8 +226,6 @@ Please click the link below for more information.", 69));
 
 			#endregion
 
-			var pixelSize = (int)eds.DpiScale;
-
 			#region set up session parameters
 			ThreadCount = (RenderDevice.IsCpu ? eds.Threads : 0);
 			var sessionParams = new SessionParameters(client, RenderDevice)
@@ -240,7 +242,7 @@ Please click the link below for more information.", 69));
 				ProgressiveRefine = eds.UseStartResolution,
 				Progressive = true,
 				StartResolution = eds.StartResolution,
-				PixelSize = pixelSize,
+				PixelSize = 1,
 			};
 			#endregion
 
@@ -291,12 +293,13 @@ Please click the link below for more information.", 69));
 				if (this != null && _needReset)
 				{
 					_needReset = false;
-					var size = RenderDimension;
-
+					
 					HandleIntegrator(eds);
 
 					Session.Scene.Integrator.NoShadows = eds.NoShadows;
 					Session.Scene.Integrator.TagForUpdate();
+
+					var size = new Size(RenderDimension.Width / PixelSize, RenderDimension.Height / PixelSize);
 
 					// lets reset session
 					if (Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height) != 0)

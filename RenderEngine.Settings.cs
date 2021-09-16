@@ -27,6 +27,18 @@ namespace RhinoCyclesCore
 		/// Get or set the resolution for rendering.
 		/// </summary>
 		public Size RenderDimension { get; set; }
+
+		private int _pixelSize = 1;
+
+		/// <summary>
+		/// Get or set the pixel size.
+		/// </summary>
+		public int PixelSize
+		{
+			get { return _pixelSize; }
+			set { _pixelSize = value >= 1 ? value : 1; }
+		}
+
 		public enum AdvancedSettings
 		{
 			Seed,
