@@ -317,9 +317,16 @@ namespace RhinoCyclesCore
 			return ch > 255 ? 255 : ch;
 		}
 
+		protected Size CalculateNativeRenderSize()
+		{
+			var render_window_size = RenderWindow.Size();
+			return new Size(render_window_size.Width / PixelSize, render_window_size.Height / PixelSize);
+		}
+
 		public void BlitPixelsToRenderWindowChannel()
 		{
-			var rect = new Rectangle(0, 0, RenderWindow.Size().Width/PixelSize, RenderWindow.Size().Height/PixelSize);
+			var native_render_size = CalculateNativeRenderSize();
+			var rect = new Rectangle(0, 0, native_render_size.Width, native_render_size.Height);
 			foreach (var pass in Session.Passes)
 			{
 				IntPtr pixel_buffer = IntPtr.Zero;

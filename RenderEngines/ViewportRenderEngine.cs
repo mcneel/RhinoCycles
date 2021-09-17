@@ -127,7 +127,10 @@ namespace RhinoCyclesCore.RenderEngines
 			if(RenderWindow != null)
 			{
 				RenderWindow.SetSize(new Size(w, h));
-				RenderWindow.SetRenderOutputRect(new Rectangle(0, 0, w / PixelSize, h / PixelSize));
+
+				var native_render_size = CalculateNativeRenderSize();
+				var rect = new Rectangle(0, 0, native_render_size.Width, native_render_size.Height);
+				RenderWindow.SetRenderOutputRect(rect);
 			}
 		}
 
@@ -299,7 +302,7 @@ Please click the link below for more information.", 69));
 					Session.Scene.Integrator.NoShadows = eds.NoShadows;
 					Session.Scene.Integrator.TagForUpdate();
 
-					var size = new Size(RenderDimension.Width / PixelSize, RenderDimension.Height / PixelSize);
+					var size = CalculateNativeRenderSize();
 
 					// lets reset session
 					if (Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height) != 0)
