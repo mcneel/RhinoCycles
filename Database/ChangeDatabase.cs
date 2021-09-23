@@ -1379,6 +1379,7 @@ namespace RhinoCyclesCore.Database
 
 		private readonly float gp_side_extension = 1.0E+6f;
 		private uint currentGpRenderMaterial = 0;
+		private bool isGpShadowsOnly = false;
 
 		//private ShadowCatcherMaterial shadowCatcherMaterial = (ShadowCatcherMaterial)RenderContentType.NewContentFromTypeId(System.Guid.Parse("9a28c95d-ae43-4ea2-b220-02c70d69f9e8"));
 		//private const int shadowCatcherMaterialId = 42;
@@ -1430,6 +1431,8 @@ namespace RhinoCyclesCore.Database
 
 			HandleRenderMaterial(mat, materialId, null, !gp.ShowUnderside);
 
+			isGpShadowsOnly = gp.IsShadowOnly;
+
 			var matrenderhash = materialId;
 			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 			var cyclesObject = new CyclesObject
@@ -1440,9 +1443,11 @@ namespace RhinoCyclesCore.Database
 				Transform = t,
 				Visible = gp.Enabled,
 				CastShadow = true,
-				IsShadowCatcher = gp.IsShadowOnly,
+				IsShadowCatcher = isGpShadowsOnly,
 				IgnoreCutout = true,
 			};
+
+
 
 			HandleShaderChange(GroundPlaneMeshInstanceId, currentGpRenderMaterial, matrenderhash, gpid);
 			currentGpRenderMaterial = matrenderhash;
@@ -1576,7 +1581,7 @@ namespace RhinoCyclesCore.Database
 				existingL.AxisV = l.AxisV;
 
 				if(l.Type == LightType.Distant) {
-						existingL.Samples = 1024;
+						existingL.Samples = (uint)(isGpShadowsOnly ? 1 : 1024);
 						break;
 				}
 				existingL.TagUpdate();
