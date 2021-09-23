@@ -1607,6 +1607,8 @@ namespace RhinoCyclesCore.Database
 		{
 			if (_shaderDatabase.HasShader(matid)) return;
 
+			float sizeterm= rgl.ShadowIntensity > 0.1 ? (float)rgl.ShadowIntensity : 0.1f;
+
 			var emissive = new Materials.EmissiveMaterial();
 			Color4f color = new Color4f(rgl.Diffuse);
 			emissive.BeginChange(RenderContent.ChangeContexts.Ignore);
@@ -1624,7 +1626,7 @@ namespace RhinoCyclesCore.Database
 					emissive.SetParameter(Materials.EmissiveMaterial._Falloff, 0);
 					break;
 			}
-			emissive.SetParameter(Materials.EmissiveMaterial._Strength, (float)rgl.Intensity * RcCore.It.AllSettings.LinearLightFactor * (rgl.IsEnabled ? 1 : 0));
+			emissive.SetParameter(Materials.EmissiveMaterial._Strength, (float)rgl.Intensity * RcCore.It.AllSettings.LinearLightFactor * (rgl.IsEnabled ? 1 : 0)*sizeterm*sizeterm);
 			emissive.EndChange();
 			emissive.BakeParameters(BitmapConverter);
 			var shader = new CyclesShader(matid, BitmapConverter);
@@ -1710,13 +1712,17 @@ namespace RhinoCyclesCore.Database
 
 		private void HandleLinearLightAddOrModify(uint lightmeshinstanceid, RGLight ld)
 		{
+			float sizeterm= 1.0f - (float)ld.ShadowIntensity;
+			float size = 1.0f + sizeterm*sizeterm*sizeterm * 100.0f; // / 100.f;
+
 			var p = new Plane(ld.Location, ld.Direction);
-			var circle = new Circle(p, ld.Width.Length*0.5);
-			var c = new Cylinder(circle, ld.Direction.Length);
+			var circle = new Circle(p, ld.Width.Length*0.5*size);
+			var c = Surface.CreateExtrusion(circle.ToNurbsCurve(), ld.Direction);
+			//var c = new Cylinder(circle, ld.Direction.Length);
 			var mesh = new Rhino.Geometry.Mesh();
 			if (c.IsValid)
 			{
-				var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(true, true), mp);
+				var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(), mp);
 				foreach (var im in m) mesh.Append(im);
 				mesh.RebuildNormals();
 			}
@@ -1752,7 +1758,7 @@ namespace RhinoCyclesCore.Database
 				Visible = c.IsValid ? ld.IsEnabled : false,
 				CastShadow = false,
 				IsShadowCatcher = false,
-				CastNoShadow = ld.ShadowIntensity < 0.00001,
+				CastNoShadow = ld.ShadowIntensity < 0.05,
 				IgnoreCutout = true,
 			};
 
