@@ -171,7 +171,7 @@
     </When>
     <When Condition="'$(OS)' == 'Unix'">
       <ItemGroup>
-        <ProjectReference Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj" Private="False" ExcludeAssets="all" />
+        <!-- <ProjectReference Include="..\..\..\..\DotNetSDK\rhinomac\RhinoMac.csproj" Private="False" ExcludeAssets="all" /> -->
       </ItemGroup>
     </When>
   </Choose>
