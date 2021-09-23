@@ -172,7 +172,7 @@ namespace RhinoCyclesCore.Converters
 				sizeU = (float)width.Length;
 				sizeV = (float)length.Length;
 
-				size = 1.0f;// - (float)lg.ShadowIntensity / 100.f;
+				size = 1.0f + size/10.0f;// - (float)lg.ShadowIntensity / 100.f;
 
 				var rectLoc = lg.Location + (lg.Width * 0.5) + (lg.Length * 0.5);
 
