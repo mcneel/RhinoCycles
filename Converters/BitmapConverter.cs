@@ -229,14 +229,14 @@ namespace RhinoCyclesCore.Converters
 
 				if (isFloat)
 				{
-					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false);
+					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false, projection == (TextureEnvironmentMappingMode)4); ;
 					img.ApplyGamma(gamma);
 					teximg.TexFloat = img.Data as SimpleArrayFloat;
 					teximg.TexByte = null;
 				}
 				else
 				{
-					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false);
+					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false, projection == (TextureEnvironmentMappingMode)4);
 					img.ApplyGamma(gamma);
 					teximg.TexByte = img.Data as SimpleArrayByte;
 					teximg.TexFloat = null;
@@ -352,12 +352,14 @@ namespace RhinoCyclesCore.Converters
 			TextureEvaluator _eval;
 			int _width, _height;
 			bool _image_based;
-			public EvaluatorToByteList(TextureEvaluator eval, int width, int height, bool image_based)
+			bool _flip;
+			public EvaluatorToByteList(TextureEvaluator eval, int width, int height, bool image_based, bool flip)
 			{
 				_eval = eval;
 				_width = width;
 				_height = height;
 				_image_based = image_based;
+				_flip = flip;
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
@@ -384,33 +386,59 @@ namespace RhinoCyclesCore.Converters
 				var pt = new Point3d();
 				var col4F = new Rhino.Display.Color4f();
 
-				for (var y = 0; y < _height; y++)
+				if (_flip)
 				{
-					for (var x = 0; x < _width; x++)
+					for (var y = _height; y >= 0; y--)
 					{
-						var fx = x / (float)_width + halfpixelU;
-						var fy = y / (float)_height + halfpixelV;
+						for (var x = 0; x < _width; x++)
+						{
+							var fx = x / (float)_width + halfpixelU;
+							var fy = y / (float)_height + halfpixelV;
 
-						pt.X = fx;
-						pt.Y = fy;
-						pt.Z = 0.0;
+							pt.X = fx;
+							pt.Y = fy;
+							pt.Z = 0.0;
 
-						// remember z can be !0.0 for volumetrics
-						_eval.GetColor(pt, duvw, duvw, ref col4F);
+							// remember z can be !0.0 for volumetrics
+							_eval.GetColor(pt, duvw, duvw, ref col4F);
 
-						yield return (byte)(col4F.R * 255.0);
-						yield return (byte)(col4F.G * 255.0);
-						yield return (byte)(col4F.B * 255.0);
-						yield return (byte)(col4F.A * 255.0);
+							yield return (byte)(col4F.R * 255.0);
+							yield return (byte)(col4F.G * 255.0);
+							yield return (byte)(col4F.B * 255.0);
+							yield return (byte)(col4F.A * 255.0);
+						}
+					}
+				}
+				else
+				{
+					for (var y = 0; y < _height; y++)
+					{
+						for (var x = 0; x < _width; x++)
+						{
+							var fx = x / (float)_width + halfpixelU;
+							var fy = y / (float)_height + halfpixelV;
+
+							pt.X = fx;
+							pt.Y = fy;
+							pt.Z = 0.0;
+
+							// remember z can be !0.0 for volumetrics
+							_eval.GetColor(pt, duvw, duvw, ref col4F);
+
+							yield return (byte)(col4F.R * 255.0);
+							yield return (byte)(col4F.G * 255.0);
+							yield return (byte)(col4F.B * 255.0);
+							yield return (byte)(col4F.A * 255.0);
+						}
 					}
 				}
 			}
 		};
 
 
-		private SimpleArrayByte ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse, bool hasTransparentColor)
+		private SimpleArrayByte ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse, bool hasTransparentColor, bool flip)
 		{
-			if (!hasTransparentColor)
+			if (!hasTransparentColor && !flip)
 			{
 				if (!canUse)
 				{
@@ -430,7 +458,7 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			//Otherwise, we do this the slow way.
-			return new SimpleArrayByte(new EvaluatorToByteList(textureEvaluator, pwidth, pheight, isImageBased));
+			return new SimpleArrayByte(new EvaluatorToByteList(textureEvaluator, pwidth, pheight, isImageBased, flip));
 		}
 
 
@@ -442,12 +470,14 @@ namespace RhinoCyclesCore.Converters
 			TextureEvaluator _eval;
 			int _width, _height;
 			bool _image_based;
-			public EvaluatorToFloatList(TextureEvaluator eval, int width, int height, bool image_based)
+			bool _flip;
+			public EvaluatorToFloatList(TextureEvaluator eval, int width, int height, bool image_based, bool flip)
 			{
 				_eval = eval;
 				_width = width;
 				_height = height;
 				_image_based = image_based;
+				_flip = flip;
 			}
 
 			IEnumerator IEnumerable.GetEnumerator()
@@ -474,32 +504,59 @@ namespace RhinoCyclesCore.Converters
 				var pt = new Point3d();
 				var col4F = new Rhino.Display.Color4f();
 
-				for (var y = 0; y < _height; y++)
+				if (_flip)
 				{
-					for (var x = 0; x < _width; x++)
+					for (var y = _height; y >= 0; y--)
 					{
-						var fx = x / (float)_width + halfpixelU;
-						var fy = y / (float)_height + halfpixelV;
+						for (var x = 0; x < _width; x++)
+						{
+							var fx = x / (float)_width + halfpixelU;
+							var fy = y / (float)_height + halfpixelV;
 
-						pt.X = fx;
-						pt.Y = fy;
-						pt.Z = 0.0;
+							pt.X = fx;
+							pt.Y = fy;
+							pt.Z = 0.0;
 
-						// remember z can be !0.0 for volumetrics
-						_eval.GetColor(pt, duvw, duvw, ref col4F);
+							// remember z can be !0.0 for volumetrics
+							_eval.GetColor(pt, duvw, duvw, ref col4F);
 
-						yield return col4F.R;
-						yield return col4F.G;
-						yield return col4F.B;
-						yield return col4F.A;
+							yield return col4F.R;
+							yield return col4F.G;
+							yield return col4F.B;
+							yield return col4F.A;
+						}
+					}
+
+				}
+				else
+				{
+					for (var y = 0; y < _height; y++)
+					{
+						for (var x = 0; x < _width; x++)
+						{
+							var fx = x / (float)_width + halfpixelU;
+							var fy = y / (float)_height + halfpixelV;
+
+							pt.X = fx;
+							pt.Y = fy;
+							pt.Z = 0.0;
+
+							// remember z can be !0.0 for volumetrics
+							_eval.GetColor(pt, duvw, duvw, ref col4F);
+
+							yield return col4F.R;
+							yield return col4F.G;
+							yield return col4F.B;
+							yield return col4F.A;
+						}
 					}
 				}
 			}
 		};
 
-		private SimpleArrayFloat ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse, bool hasTransparentColor)
+		private SimpleArrayFloat ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse, bool hasTransparentColor, bool flip)
 		{
-			if (!hasTransparentColor)
+			if (!hasTransparentColor && !flip)
 			{
 				if (!canUse)
 				{
@@ -519,13 +576,13 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			//Otherwise, we do this the slow way.
-			return new SimpleArrayFloat(new EvaluatorToFloatList(textureEvaluator, pwidth, pheight, isImageBased));
+			return new SimpleArrayFloat(new EvaluatorToFloatList(textureEvaluator, pwidth, pheight, isImageBased, flip));
 		}
 
-		public ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse, bool hasTransparentColor)
+		public ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse, bool hasTransparentColor, bool flip)
 		{
 			var read = ByteImagesNew.ContainsKey(rId);
-			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse, hasTransparentColor), pwidth, pheight, isLinear);
+			var img = read ? ByteImagesNew[rId] : new ByteBitmap(rId, ReadByteBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse, hasTransparentColor, flip), pwidth, pheight, isLinear);
 			if (!read)
 			{
 				if (RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
@@ -538,10 +595,10 @@ namespace RhinoCyclesCore.Converters
 			return img;
 		}
 
-		public FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse, bool hasTransparentColor)
+		public FloatBitmap RetrieveFloatsImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse, bool hasTransparentColor, bool flip)
 		{
 			var read = FloatImagesNew.ContainsKey(rId);
-			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse, hasTransparentColor), pwidth, pheight, isLinear);
+			var img = read ? FloatImagesNew[rId] : new FloatBitmap(rId, ReadFloatBitmapFromEvaluator(pwidth, pheight, textureEvaluator, isImageBased, canUse, hasTransparentColor, flip), pwidth, pheight, isLinear);
 			if (!read)
 			{
 				if (RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();

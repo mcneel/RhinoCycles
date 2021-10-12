@@ -237,14 +237,14 @@ namespace RhinoCyclesCore
 					var isFloat = rt.IsHdrCapable();
 					if (isFloat)
 					{
-						var img = bitmapConverter.RetrieveFloatsImg(rid, pwidth, pheight, eval, linear, imgbased, canuse, use_color_mask);
+						var img = bitmapConverter.RetrieveFloatsImg(rid, pwidth, pheight, eval, linear, imgbased, canuse, use_color_mask, false);
 						img.ApplyGamma(gamma);
 						tex.TexFloat = img.Data as SimpleArrayFloat;
 						tex.TexByte = null;
 					}
 					else
 					{
-						var img = bitmapConverter.RetrieveBytesImg(rid, pwidth, pheight, eval, linear, imgbased, canuse, use_color_mask);
+						var img = bitmapConverter.RetrieveBytesImg(rid, pwidth, pheight, eval, linear, imgbased, canuse, use_color_mask, false);
 						img.ApplyGamma(gamma);
 						tex.TexByte = img.Data as SimpleArrayByte;
 						tex.TexFloat = null;
