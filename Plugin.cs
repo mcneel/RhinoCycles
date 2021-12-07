@@ -21,6 +21,7 @@ using System.Reflection;
 using System.Threading;
 using ccl;
 using Rhino;
+using Rhino.UI;
 using Rhino.PlugIns;
 using Rhino.Render;
 using RhinoCyclesCore.Settings;
@@ -127,6 +128,11 @@ namespace RhinoCycles
 				CSycles.debug_set_cpu_kernel(RcCore.It.AllSettings.CPUSplitKernel);
 
 				RcCore.It.Initialised = false;
+#if ON_RUNTIME_WIN
+				RhinoCyclesCore.RenderEngine._MonitorPixelCount = (int)(RhinoEtoApp.MainWindow.Screen.Bounds.Width * RhinoEtoApp.MainWindow.Screen.Bounds.Height);
+#else
+				RhinoCyclesCore.RenderEngine._MonitorPixelCount = (int)(Eto.Forms.Screen.PrimaryScreen.Bounds.Width * Eto.Forms.Screen.PrimaryScreen.Bounds.Height);
+#endif
 				AsyncInitialise();
 			}
 			return LoadReturnCode.Success;
