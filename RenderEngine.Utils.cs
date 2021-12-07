@@ -201,6 +201,17 @@ namespace RhinoCyclesCore
 		static public float4 CreateFloat4(Color color) { return CreateFloat4(color.R, color.G, color.B, color.A); }
 
 		/// <summary>
+		/// Pixel count provided by the main monitor where Rhino resides.
+		///
+		/// Note: on MacOS we are always looking at the primary screen, regardless of where Rhino is opened.
+		/// </summary>
+		static public int _MonitorPixelCount
+		{
+			get;
+			set;
+		}
+
+		/// <summary>
 		/// Default pixel size based on monitor resolution.
 		/// The screen resolution the Rhino main window is mostly on is used. The width
 		/// and height are multiplied, that is used to determine pixel size. Currently:
@@ -211,12 +222,8 @@ namespace RhinoCyclesCore
 		static public int DefaultPixelSizeBasedOnMonitorResolution
 		{
 			get {
-#if ON_RUNTIME_WIN
-				int pixelCount = (int)(RhinoEtoApp.MainWindow.Screen.Bounds.Width * RhinoEtoApp.MainWindow.Screen.Bounds.Height);
-#else
-				int pixelCount = (int)(Eto.Forms.Screen.PrimaryScreen.Bounds.Width * Eto.Forms.Screen.PrimaryScreen.Bounds.Height);
-#endif
 				int pixelSize = 1;
+				int pixelCount = _MonitorPixelCount;
 
 				if(pixelCount >= 7_680*4_320) {
 					pixelSize = 4;

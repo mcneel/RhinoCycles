@@ -109,11 +109,18 @@ namespace RhinoCyclesCore.Database
 		/// <param name="usage"></param>
 		public void SetBackground(RenderEnvironment environment, RenderEnvironment.Usage usage)
 		{
+			if(environment!=null)
+			{
+				environment = environment.MakeCopy() as RenderEnvironment;
+			}
 			switch (usage)
 			{
 				case RenderEnvironment.Usage.Background:
 					//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
-					if (environment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "") == _cqBackground.BackgroundEnvironment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, ""))
+
+					uint newEnvHash = environment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "") ?? 0;
+					uint oldEnvHash = _cqBackground.BackgroundEnvironment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "") ?? 0;
+					if (newEnvHash == oldEnvHash)
 					{
 						return;
 					}
