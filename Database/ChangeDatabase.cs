@@ -1135,6 +1135,7 @@ namespace RhinoCyclesCore.Database
 
 				if (_renderEngine.CancelRender) return;
 
+				#pragma warning disable CS0618
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				var cyclesDecals = HandleMeshDecals(a.MeshId, a.Decals, a.Transform);
 
@@ -1157,6 +1158,7 @@ namespace RhinoCyclesCore.Database
 				}
 
 				var cutout = _objectDatabase.MeshIsClippingObject(meshid);
+#pragma warning disable CS0618
 				Rhino.Geometry.Transform ocsInv;
 				a.OcsTransform.TryGetInverse(out ocsInv);
 				var t = ocsInv.ToCyclesTransform();
