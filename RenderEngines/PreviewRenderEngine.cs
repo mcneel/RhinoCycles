@@ -184,6 +184,8 @@ namespace RhinoCyclesCore.RenderEngines
 				goodrender = false;
 			}
 
+			cyclesEngine?.Database.ResetChangeQueue();
+
 			cyclesEngine.Success = goodrender;
 
 			// we're done now, so lets clean up our session.

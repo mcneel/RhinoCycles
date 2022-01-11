@@ -69,13 +69,11 @@ namespace RhinoCyclesCore.Database
 
 		public void Dispose()
 		{
-			_cqMeshChanges.Clear();
-			_cqMeshesToDelete.Clear();
+			ResetObjectsChangeQueue();
+			ResetMeshChangeQueue();
 			_rhCclMeshes.Clear();
 			_rhObjectidMeshid.Clear();
 			_rhCclObjects.Clear();
-			_cqNewUpdatedObjects.Clear();
-			_cqDeletedObjects.Clear();
 			_cqObjectTransform.Clear();
 		}
 
@@ -264,6 +262,10 @@ namespace RhinoCyclesCore.Database
 		public void ResetMeshChangeQueue()
 		{
 			_cqMeshesToDelete.Clear();
+			foreach(CyclesMesh cyclesMesh in _cqMeshChanges.Values)
+			{
+				cyclesMesh.Clear();
+			}
 			_cqMeshChanges.Clear();
 		}
 
@@ -272,6 +274,14 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ResetObjectsChangeQueue()
 		{
+			foreach(CyclesObject cyclesObject in _cqDeletedObjects)
+			{
+				cyclesObject.Dispose();
+			}
+			foreach(CyclesObject cyclesObject in _cqNewUpdatedObjects)
+			{
+				cyclesObject.Dispose();
+			}
 			_cqNewUpdatedObjects.Clear();
 			_cqDeletedObjects.Clear();
 		}

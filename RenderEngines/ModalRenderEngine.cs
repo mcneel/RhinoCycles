@@ -217,11 +217,15 @@ namespace RhinoCyclesCore.RenderEngines
 								stillrendering = false;
 								cyclesEngine.CancelRender = true;
 							}
-							else if (!capturing && stillrendering && (sample == 0 || (curUpdate - lastUpdate) > updateInterval))
+							else if (!capturing && stillrendering && (sample >= 0 || (curUpdate - lastUpdate) > updateInterval))
 							{
 								lastUpdate = curUpdate;
 								cyclesEngine.BlitPixelsToRenderWindowChannel();
 								cyclesEngine.RenderWindow.Invalidate();
+								if (sample >= 0)
+								{
+									cyclesEngine.Database.ResetChangeQueue();
+								}
 							}
 						}
 						Thread.Sleep(throttle);
@@ -247,6 +251,7 @@ namespace RhinoCyclesCore.RenderEngines
 				var tmpf = RenderEngine.TempPathForFile($"RC_modal_renderer.png");
 				cyclesEngine.RenderWindow.SaveRenderImageAs(tmpf, true);
 			}*/
+			cyclesEngine?.Database.ResetChangeQueue();
 
 			// we're done now, so lets clean up our session.
 			RcCore.It.ReleaseSession(cyclesEngine.Session);

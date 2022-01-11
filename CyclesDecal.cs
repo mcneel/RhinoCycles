@@ -17,14 +17,17 @@ limitations under the License.
 using System.Collections.Generic;
 using Rhino.Render;
 using Rhino;
+using System;
 
 namespace RhinoCyclesCore
 {
 	/// <summary>
 	/// Helper class to hold decal information for one mesh instance
 	/// </summary>
-	public class CyclesDecal
+	public class CyclesDecal : IDisposable
 	{
+		private bool disposedValue;
+
 		public CyclesTextureImage Texture { get; set; } = null;
 		public DecalMapping Mapping { get; set; } = DecalMapping.Planar;
 		public DecalProjection Projection { get; set; } = DecalProjection.Both;
@@ -75,6 +78,25 @@ namespace RhinoCyclesCore
 			return decalsCRC;
 		}
 
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					Texture?.Dispose();
+					Texture = null;
+				}
+
+				disposedValue = true;
+			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
 	}
 
 }

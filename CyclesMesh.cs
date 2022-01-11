@@ -54,5 +54,14 @@ namespace RhinoCyclesCore
 		/// Float array with vertex color data or null. Stride 3.
 		/// </summary>
 		public float[] VertexColors { get; set; }
+
+		public void Clear()
+		{
+			this.Verts = null;
+			this.Faces = null;
+			this.Uvs = null;
+			this.VertexNormals = null;
+			this.VertexColors = null;
+		}
 	}
 }

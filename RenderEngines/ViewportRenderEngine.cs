@@ -322,6 +322,7 @@ Please click the link below for more information.", 69));
 					if (smpl > -1 && !Flush)
 					{
 						PassRendered?.Invoke(this, new PassRenderedEventArgs(smpl + 1, View));
+						Database.ResetChangeQueue();
 					}
 				}
 				_bvhUploaded = true;
@@ -345,6 +346,7 @@ Please click the link below for more information.", 69));
 
 			if (this != null)
 			{
+				Database.ResetChangeQueue();
 				RcCore.It.ReleaseSession(Session);
 			}
 		}
@@ -361,7 +363,11 @@ Please click the link below for more information.", 69));
 			if (State == State.Waiting) Continue();
 
 			// flush the queue
-			if(!CancelRender) Database.Flush();
+			if (!CancelRender)
+			{
+				Database.ResetChangeQueue();
+				Database.Flush();
+			}
 
 			// if we've got actually changes we care about
 			// change state to signal need for uploading
