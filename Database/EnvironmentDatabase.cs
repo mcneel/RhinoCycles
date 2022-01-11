@@ -132,6 +132,7 @@ namespace RhinoCyclesCore.Database
 						xmlenv.BakeParameters(_bitmapConverter);
 						_cqBackground.Xml = xmlenv.MaterialXml;
 					}
+					_cqBackground.BackgroundEnvironment?.Dispose();
 					_cqBackground.BackgroundEnvironment = environment;
 					if (environment != null)
 					{
@@ -144,9 +145,11 @@ namespace RhinoCyclesCore.Database
 					}
 					break;
 				case RenderEnvironment.Usage.Skylighting:
+					_cqBackground.SkylightEnvironment?.Dispose();
 					_cqBackground.SkylightEnvironment = environment;
 					break;
 				case RenderEnvironment.Usage.ReflectionAndRefraction:
+					_cqBackground.ReflectionEnvironment?.Dispose();
 					_cqBackground.ReflectionEnvironment = environment;
 					break;
 			}

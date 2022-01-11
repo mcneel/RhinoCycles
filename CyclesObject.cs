@@ -22,8 +22,10 @@ namespace RhinoCyclesCore
 	/// <summary>
 	/// Simple wrapper object to hold mesh related data to be pushed to Cycles.
 	/// </summary>
-	public class CyclesObject
+	public class CyclesObject : IDisposable
 	{
+		private bool disposedValue;
+
 		public CyclesObject()
 		{
 			Visible = true;
@@ -90,5 +92,30 @@ namespace RhinoCyclesCore
 		public bool IgnoreCutout { get; set; }
 
 		public List<CyclesDecal> Decals { get; set; } = null;
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+					if(Decals!=null)
+					{
+						foreach(CyclesDecal cyclesDecal in Decals)
+						{
+							cyclesDecal.Dispose();
+						}
+					}
+				}
+
+				disposedValue = true;
+			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
 	}
 }

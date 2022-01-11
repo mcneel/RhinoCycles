@@ -25,13 +25,14 @@ using Rhino.Runtime.InteropWrappers;
 
 namespace RhinoCyclesCore
 {
-	public class BitmapImage<T> : IDisposable
+	public abstract class BitmapImage<T> : IDisposable
 	{
 		internal object Original;   //SimpleArrayByte or SimpleArrayFloat
 		internal object Corrected;  //SimpleArrayByte or SimpleArrayFloat
 
 		protected int W;
 		protected int H;
+		private bool disposedValue;
 
 		public uint Id { get; }
 
@@ -78,10 +79,30 @@ namespace RhinoCyclesCore
 
 		protected virtual void SavePixels(object pixels, string name) {}
 
+		protected abstract void CustomDispose();
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!disposedValue)
+			{
+				if (disposing)
+				{
+				}
+
+				CustomDispose();
+				disposedValue = true;
+			}
+		}
+
+		~BitmapImage()
+		{
+			Dispose(disposing: false);
+		}
+
 		public void Dispose()
 		{
-			Original = null;
-			Corrected = null;
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
 		}
 	}
 
@@ -101,10 +122,8 @@ namespace RhinoCyclesCore
 					{
 						Corrected = new SimpleArrayByte(Original as SimpleArrayByte);
 					}
-					else
-					{
-						(Original as SimpleArrayByte).CopyTo(Corrected as SimpleArrayByte);
-					}
+
+					(Original as SimpleArrayByte).CopyTo(Corrected as SimpleArrayByte);
 
 					ccl.CSycles.apply_gamma_to_byte_buffer((Corrected as SimpleArrayByte).Array(), W*H*4, gamma);
 				}
@@ -116,6 +135,12 @@ namespace RhinoCyclesCore
 				GammaApplied = false;
 				Corrected = null;
 			}
+		}
+
+		protected override void CustomDispose()
+		{
+			(Corrected as SimpleArrayByte)?.Dispose();
+			(Original as SimpleArrayByte)?.Dispose();
 		}
 
 		protected override void SavePixels(object oPixels, string name)
@@ -158,10 +183,7 @@ namespace RhinoCyclesCore
 					{
 						Corrected = new SimpleArrayFloat(Original as SimpleArrayFloat);
 					}
-					else
-					{
-						(Original as SimpleArrayFloat).CopyTo(Corrected as SimpleArrayFloat);
-					}
+					(Original as SimpleArrayFloat).CopyTo(Corrected as SimpleArrayFloat);
 
 					ccl.CSycles.apply_gamma_to_float_buffer((Corrected as SimpleArrayFloat).Array(), W*H*4*4, gamma);
 
@@ -174,6 +196,12 @@ namespace RhinoCyclesCore
 				GammaApplied = false;
 				Corrected = null;
 			}
+		}
+
+		protected override void CustomDispose()
+		{
+			(Original as SimpleArrayFloat)?.Dispose();
+			(Corrected as SimpleArrayFloat)?.Dispose();
 		}
 
 		protected override void SavePixels(object oPixels, string name)

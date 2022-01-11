@@ -453,11 +453,22 @@ namespace RhinoCyclesCore
 		{
 		}
 
+		private bool disposedValue = false;
+
 		public virtual void Dispose() {
 			Dispose(true);
 		}
 
-		public virtual void Dispose(bool isDisposing) { }
+		public virtual void Dispose(bool isDisposing) {
+			if(!disposedValue)
+			{
+				if(isDisposing)
+				{
+					_bitmapConverter?.Dispose();
+				}
+			}
+		}
+
 	}
 
 }

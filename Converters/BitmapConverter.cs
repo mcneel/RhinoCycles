@@ -45,7 +45,15 @@ namespace RhinoCyclesCore.Converters
 
 		public void ClearTextureMemory()
 		{
+			foreach(ByteBitmap byteBitmap in ByteImagesNew.Values)
+			{
+				byteBitmap.Dispose();
+			}
 			ByteImagesNew.Clear();
+			foreach(FloatBitmap floatBitmap in FloatImagesNew.Values)
+			{
+				floatBitmap.Dispose();
+			}
 			FloatImagesNew.Clear();
 		}
 

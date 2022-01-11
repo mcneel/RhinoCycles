@@ -98,5 +98,11 @@ namespace RhinoCycles
 		{
 			cyclesEngine.ResumeRendering();
 		}
+
+		protected override void Dispose(bool isDisposing)
+		{
+			cyclesEngine.Dispose();
+			base.Dispose(isDisposing);
+		}
 	}
 }
