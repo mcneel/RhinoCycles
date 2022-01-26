@@ -86,6 +86,10 @@
     <ProjectReference Include="..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
     <ProjectReference Include="RhinoCyclesCore.csproj" PrivateAssets="all" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" PrivateAssets="all" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(OS)' == 'Windows_NT'">
       <ItemGroup>
@@ -153,9 +157,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Icons\Cycles_material.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
   <Target Name="CopyFiles" BeforeTargets="BeforeBuild">
     <MakeDir Directories="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" />
