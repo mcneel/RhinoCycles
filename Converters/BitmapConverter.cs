@@ -307,9 +307,11 @@ namespace RhinoCyclesCore.Converters
 		class MyDumbBitmapByteList : IEnumerable<byte>
 		{
 			Bitmap _bitmap;
-			public MyDumbBitmapByteList(Bitmap bm)
+			bool _flip;
+			public MyDumbBitmapByteList(Bitmap bm, bool flip)
 			{
 				_bitmap = bm;
+				_flip = flip;
 			}
 			IEnumerator IEnumerable.GetEnumerator()
 			{
@@ -324,25 +326,41 @@ namespace RhinoCyclesCore.Converters
 				int width = _bitmap.Width;
 				int height = _bitmap.Height;
 
-				for (var y = 0; y < height; y++)
-				{
-					for (var x = 0; x < width; x++)
+				if(_flip) {
+					for (var y = 0; y < height; y++)
 					{
-						Color px = _bitmap.GetPixel(x, height - 1 - y);
+						for (var x = 0; x < width; x++)
+						{
+							Color px = _bitmap.GetPixel(x, y);
 
-						yield return px.R;
-						yield return px.G;
-						yield return px.B;
-						yield return px.A;
+							yield return px.R;
+							yield return px.G;
+							yield return px.B;
+							yield return px.A;
+						}
+					}
+				} else
+				{
+					for (var y = 0; y < height; y++)
+					{
+						for (var x = 0; x < width; x++)
+						{
+							Color px = _bitmap.GetPixel(x, height - 1 - y);
+
+							yield return px.R;
+							yield return px.G;
+							yield return px.B;
+							yield return px.A;
+						}
 					}
 				}
 			}
 		};
 
-		public ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm)
+		public ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm, bool flip)
 		{
 			var read = ByteImagesNew.ContainsKey(id);
-			var img = read ? ByteImagesNew[id] : new ByteBitmap(id, new SimpleArrayByte(new MyDumbBitmapByteList(bm)), pwidth, pheight, false);
+			var img = read ? ByteImagesNew[id] : new ByteBitmap(id, new SimpleArrayByte(new MyDumbBitmapByteList(bm, flip)), pwidth, pheight, false);
 			if (!read)
 			{
 				if (RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();

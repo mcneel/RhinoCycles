@@ -323,11 +323,12 @@ namespace RhinoCyclesCore
 				}
 				var wallpaperName = $"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
 				var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(wallpaperName));
-				if(HostUtils.RunningOnOSX)
+				if (HostUtils.RunningOnOSX)
 				{
 					newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipY);
 				}
-				var wallpaperbm = _bitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
+				newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipX);
+				var wallpaperbm = _bitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap, true);
 				wallpaperbm.ApplyGamma(Gamma);
 				Wallpaper.TexByte = wallpaperbm.Data as SimpleArrayByte;
 				if (RcCore.It.AllSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
