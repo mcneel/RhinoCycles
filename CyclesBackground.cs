@@ -327,7 +327,7 @@ namespace RhinoCyclesCore
 				{
 					newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipY);
 				}
-				var wallpaperbm = _bitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap);
+				var wallpaperbm = _bitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap, true);
 				wallpaperbm.ApplyGamma(Gamma);
 				Wallpaper.TexByte = wallpaperbm.Data as SimpleArrayByte;
 				if (RcCore.It.AllSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
