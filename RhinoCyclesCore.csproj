@@ -163,6 +163,11 @@
     <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj" Private="False" ExcludeAssets="all" />
     <ProjectReference Include="..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Resources.Extensions" Version="5.0.0" ExcludeAssets="runtime" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(OS)' == 'Windows_NT'">
       <ItemGroup>
@@ -227,9 +232,5 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Icons\OpenCL.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="5.0.0" ExcludeAssets="runtime" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
 </Project>
