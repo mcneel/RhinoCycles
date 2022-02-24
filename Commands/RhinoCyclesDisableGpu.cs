@@ -24,6 +24,7 @@ using Rhino.Input;
 using Rhino.Input.Custom;
 using RhinoCycles.Viewport;
 using RhinoCyclesCore.Core;
+using RhinoCyclesCore;
 using Rhino.UI;
 
 namespace RhinoCycles.Commands
@@ -42,17 +43,10 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			if(PlugIn is Plugin p) {
-				var disableGpusFile = Path.Combine(p.SettingsDirectory, "disable_gpus");
-				if(!File.Exists(disableGpusFile))
-				{
-					File.Create(disableGpusFile);
-				}
-				var str = Localization.LocalizeString("GPUs for RhinoCycles have now been disabled. Restart Rhino for the change to take effect.", 62);
-				RhinoApp.WriteLine(str);
-				return Result.Success;
-			}
-			return Result.Failure;
+			Utilities.DisableGpus();
+			var str = Localization.LocalizeString("GPUs for RhinoCycles have now been disabled. Restart Rhino for the change to take effect.", 62);
+			RhinoApp.WriteLine(str);
+			return Result.Success;
 		}
 	}
 }

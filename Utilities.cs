@@ -8,6 +8,7 @@ using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
 using RhinoCyclesCore.Materials;
 using System;
+using System.IO;
 using System.Globalization;
 using static Rhino.Render.RenderContent;
 using Pbr = Rhino.Render.PhysicallyBasedMaterial.ParametersNames;
@@ -484,6 +485,41 @@ namespace RhinoCyclesCore
 		public static int GetSystemProcessorCount()
 		{
 			return HostUtils.GetSystemProcessorCount();
+		}
+
+		//public static readonly PlugIn RcPlugIn = Rhino.PlugIns.PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"));
+		public static readonly Rhino.PlugIns.PlugIn RcPlugIn = Rhino.PlugIns.PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"));
+
+		private static string _DisableGpusFile {
+			get
+			{
+				var settingsDirectory = RcPlugIn.SettingsDirectory;
+				if(!Directory.Exists(settingsDirectory))
+				{
+					Directory.CreateDirectory(settingsDirectory);
+				}
+
+				var disableGpusFile = Path.Combine(settingsDirectory, "disable_gpus");
+				return disableGpusFile;
+			}
+		}
+
+		public static bool GpusDisabled => File.Exists(_DisableGpusFile);
+
+		public static void EnableGpus()
+		{
+			if(File.Exists(_DisableGpusFile))
+			{
+				File.Delete(_DisableGpusFile);
+			}
+		}
+
+		public static void DisableGpus()
+		{
+			if(!File.Exists(_DisableGpusFile))
+			{
+				File.Create(_DisableGpusFile);
+			}
 		}
 	}
 }

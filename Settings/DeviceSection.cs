@@ -188,6 +188,8 @@ namespace RhinoCyclesCore.Settings
 		private Label m_lb_threadcount;
 		private Slider m_threadcount;
 		private Label m_lb_threadcount_currentval;
+		private Label m_lb_gpusdisabled_message;
+		private Button m_btn_enablegpus;
 
 		public override LocalizeStringPair Caption
 		{
@@ -293,6 +295,8 @@ namespace RhinoCyclesCore.Settings
 					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Value = e.AllSettings.Threads;
+					m_lb_gpusdisabled_message.Visible = Utilities.GpusDisabled;
+					m_btn_enablegpus.Visible = Utilities.GpusDisabled;
 					int utilPerc = (int)((float)e.AllSettings.Threads / Utilities.GetSystemProcessorCount() * 100.0f);
 					m_lb_threadcount_currentval.Text = $"(\u2248{utilPerc} %)";
 					RegisterControlEvents();
@@ -330,6 +334,16 @@ namespace RhinoCyclesCore.Settings
 			m_lb_threadcount = new Label { Text = Localization.LocalizeString("CPU Utilization", 13), ToolTip = Localization.LocalizeString("Utilization percentage of CPU to use when set as render device", 42) };
 			m_lb_threadcount_currentval = new Label { Text = "-" };
 
+			m_lb_gpusdisabled_message = new Label
+			{
+				Text = LOC.STR("GPU detection is disabled. Press the 'Enable GPU detection' button and restart Rhino.")
+			};
+			m_btn_enablegpus = new Button
+			{
+				Text = LOC.STR("Enable GPU detection"),
+				ToolTip = LOC.STR("Press to enable GPU detection, then restart Rhino")
+			};
+
 		}
 
 
@@ -346,6 +360,7 @@ namespace RhinoCyclesCore.Settings
 					TableLayout.HorizontalScaled(15, m_lb_curdev, m_curdev),
 					new StackLayoutItem(m_tc, true),
 					TableLayout.HorizontalScaled(15, m_lb_threadcount, m_threadcount, m_lb_threadcount_currentval),
+					TableLayout.HorizontalScaled(15, m_lb_gpusdisabled_message, m_btn_enablegpus),
 				}
 			};
 			Content = layout;
@@ -362,6 +377,13 @@ namespace RhinoCyclesCore.Settings
 			m_tabpage_opencl.SelectionChanged += DeviceSelectionChanged;
 			m_tabpage_opencl.RegisterEventHandlers();
 			m_threadcount.ValueChanged += M_threadcount_ValueChanged;
+			m_btn_enablegpus.Click += m_btn_enablegpus_Clicked;
+		}
+
+		private void m_btn_enablegpus_Clicked(object sender, EventArgs e)
+		{
+			Utilities.EnableGpus();
+			Eto.Forms.MessageBox.Show(LOC.STR("GPU detection has been enabled. Please restart Rhino."), Eto.Forms.MessageBoxType.Information);
 		}
 
 		private void M_threadcount_ValueChanged(object sender, EventArgs e)
@@ -437,6 +459,7 @@ namespace RhinoCyclesCore.Settings
 			m_tabpage_opencl.SelectionChanged -= DeviceSelectionChanged;
 			m_tabpage_opencl.UnregisterEventHandlers();
 			m_threadcount.ValueChanged -= M_threadcount_ValueChanged;
+			m_btn_enablegpus.Click -= m_btn_enablegpus_Clicked;
 		}
 	}
 }
