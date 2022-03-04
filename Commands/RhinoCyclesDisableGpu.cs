@@ -30,6 +30,7 @@ using Rhino.UI;
 namespace RhinoCycles.Commands
 {
 	[Guid("C802AF8A-7FD8-4281-93A4-B434961E2388")]
+	[CommandStyle(Style.Hidden)]
 	public class RhinoCyclesDisableGpu : Command
 	{
 		static RhinoCyclesDisableGpu _instance;
