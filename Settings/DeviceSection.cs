@@ -336,12 +336,12 @@ namespace RhinoCyclesCore.Settings
 
 			m_lb_gpusdisabled_message = new Label
 			{
-				Text = LOC.STR("GPU detection is disabled. Press the 'Enable GPU detection' button and restart Rhino.")
+				Text = Localization.LocalizeString("GPU detection is disabled. Press the 'Enable GPU detection' button and restart Rhino.", 72)
 			};
 			m_btn_enablegpus = new Button
 			{
-				Text = LOC.STR("Enable GPU detection"),
-				ToolTip = LOC.STR("Press to enable GPU detection, then restart Rhino")
+				Text = Localization.LocalizeString("Enable GPU detection", 73),
+				ToolTip = Localization.LocalizeString("Press to enable GPU detection, then restart Rhino", 74)
 			};
 
 		}
@@ -383,7 +383,7 @@ namespace RhinoCyclesCore.Settings
 		private void m_btn_enablegpus_Clicked(object sender, EventArgs e)
 		{
 			Utilities.EnableGpus();
-			Eto.Forms.MessageBox.Show(LOC.STR("GPU detection has been enabled. Please restart Rhino."), Eto.Forms.MessageBoxType.Information);
+			Eto.Forms.MessageBox.Show(Localization.LocalizeString("GPU detection has been enabled. Please restart Rhino.", 75), Eto.Forms.MessageBoxType.Information);
 		}
 
 		private void M_threadcount_ValueChanged(object sender, EventArgs e)
