@@ -165,7 +165,15 @@ namespace RhinoCycles
 						CSycles.initialise(DeviceTypeMask.CPU);
 					} else
 					{
-						CSycles.initialise(DeviceTypeMask.All);
+						try
+						{
+							CSycles.initialise(DeviceTypeMask.All);
+						}
+						catch (Exception)
+						{
+							CSycles.initialise(DeviceTypeMask.CPU);
+							RhinoCyclesCore.Utilities.DisableGpus();
+						}
 						RcCore.It.InitialiseOpenCl();
 					}
 					RcCore.It.Initialised = true;
