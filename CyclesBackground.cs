@@ -20,6 +20,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
+using System.Collections.Generic;
 using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
@@ -326,6 +327,44 @@ namespace RhinoCyclesCore
 				if (HostUtils.RunningOnOSX)
 				{
 					newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipY);
+				}
+				const int ExifOrientationId = 0x112;
+				List<int> propertyIdList = new List<int>(bm.PropertyIdList);
+				// Read orientation tag
+				if (propertyIdList.Contains(ExifOrientationId))
+				{
+					var prop = bm.GetPropertyItem(ExifOrientationId);
+					var orient = BitConverter.ToInt16(prop.Value, 0);
+					switch(orient)
+					{
+						case 1:
+							newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipNone);
+							break;
+						case 2:
+							newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipX);
+							break;
+						case 3:
+							newBitmap.RotateFlip(RotateFlipType.Rotate180FlipNone);
+							break;
+						case 4:
+							newBitmap.RotateFlip(RotateFlipType.Rotate180FlipX);
+							break;
+						case 5:
+							newBitmap.RotateFlip(RotateFlipType.Rotate90FlipX);
+							break;
+						case 6:
+							newBitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+							break;
+						case 7:
+							newBitmap.RotateFlip(RotateFlipType.Rotate270FlipX);
+							break;
+						case 8:
+							newBitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
+							break;
+						default:
+							newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipNone);
+							break;
+					}
 				}
 				var wallpaperbm = _bitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap, false);
 				wallpaperbm.ApplyGamma(Gamma);
