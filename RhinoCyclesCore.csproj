@@ -164,9 +164,8 @@
     <ProjectReference Include="..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Resources.Extensions" Version="5.0.0" PrivateAssets="all" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="5.0.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
+    <PackageReference Include="System.Resources.Extensions" Version="6.0.0" ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" PrivateAssets="all" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(OS)' == 'Windows_NT'">
