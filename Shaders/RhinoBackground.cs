@@ -70,6 +70,7 @@ namespace RhinoCyclesCore.Shaders
 				backgroundColorOrTexture.UseClamp = false;
 				MixClosureNode backgroundSkylightAndReflection = new MixClosureNode("backgroundSkylightAndReflection");
 				MathAdd cameraOrTransmission = new MathAdd("cameraOrTransmission");
+				cameraOrTransmission.UseClamp = true;
 				MathSubtract cameraTransmissionRayFirstOnly = new MathSubtract("cameraTransmissionRayFirstOnly");
 
 				BackgroundNode reflection = new BackgroundNode("reflection");
@@ -115,6 +116,12 @@ namespace RhinoCyclesCore.Shaders
 				regularOrGradient.BlendType = MixNode.BlendTypes.Blend;
 				regularOrGradient.UseClamp = false;
 
+				// Three math nodes to disable skylighting effect when skylight
+				// has been turned off
+				MathAdd backgroundSkylightDelimiterOne = new MathAdd("backgroundSkylightDelimiterOne");
+				MathAdd backgroundSkylightDelimiterTwo = new MathAdd("backgroundSkylightDelimiterTwo");
+				MathSubtract backgroundSkylightDelimiterThree = new MathSubtract("backgroundSkylightDelimiterThree");
+
 				m_shader.AddNode(texcoords);
 				m_shader.AddNode(lightPath);
 				m_shader.AddNode(background);
@@ -134,17 +141,50 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(gradientColorRamp);
 				m_shader.AddNode(gradientTexture);
 				m_shader.AddNode(regularOrGradient);
+				m_shader.AddNode(backgroundSkylightDelimiterOne);
+				m_shader.AddNode(backgroundSkylightDelimiterTwo);
+				m_shader.AddNode(backgroundSkylightDelimiterThree);
 
 				// Connect environment textures to respective mixers to be able to switch
-				// between environment texture or solid color
+				// between environment texture or solid color.
 				reflectionTexture.outs.Color.Connect(reflectionColorOrTexture.ins.Color2);
 				skylightTexture.outs.Color.Connect(skylightColorOrTexture.ins.Color2);
 				backgroundTexture.outs.Color.Connect(backgroundColorOrTexture.ins.Color2);
 
-				// Reflection and sky mixers go directly into their respective background
-				// nodes
-				reflectionColorOrTexture.outs.Color.Connect(reflection.ins.Color);
-				skylightColorOrTexture.outs.Color.Connect(skylight.ins.Color);
+				// Reflection and sky mixers go directly into their respective
+				// background nodes. For reflection and skylight we will use the
+				// background texture/color if their respective custom
+				// environments aren't in use (HasRefl, HasSky)
+				if(m_original_background.HasRefl)
+				{
+					reflectionColorOrTexture.outs.Color.Connect(reflection.ins.Color);
+				}
+				else
+				{
+					backgroundColorOrTexture.outs.Color.Connect(reflection.ins.Color);
+				}
+				if(m_original_background.HasSky && m_original_background.SkylightEnabled)
+				{
+					skylightColorOrTexture.outs.Color.Connect(skylight.ins.Color);
+				}
+				else
+				{
+					backgroundColorOrTexture.outs.Color.Connect(skylight.ins.Color);
+					// Skylight is disabled, so we need to adapt background so we don't
+					// get skylighting effect. We do that by ensuring no diffuse lighting
+					// past diffuse ray depth of 1
+					if(!m_original_background.SkylightEnabled) {
+						backgroundSkylightDelimiterOne.UseClamp = true;
+						backgroundSkylightDelimiterTwo.UseClamp = true;
+						lightPath.outs.IsCameraRay.Connect(backgroundSkylightDelimiterOne.ins.Value1);
+						lightPath.outs.IsDiffuseRay.Connect(backgroundSkylightDelimiterOne.ins.Value2);
+						backgroundSkylightDelimiterOne.outs.Value.Connect(backgroundSkylightDelimiterTwo.ins.Value1);
+						lightPath.outs.IsGlossyRay.Connect(backgroundSkylightDelimiterTwo.ins.Value2);
+						backgroundSkylightDelimiterTwo.outs.Value.Connect(backgroundSkylightDelimiterThree.ins.Value1);
+						lightPath.outs.DiffuseDepth.Connect(backgroundSkylightDelimiterThree.ins.Value2);
+						backgroundSkylightDelimiterThree.outs.Value.Connect(background.ins.Strength);
+					}
+				}
 
 				// Background still can have either environment texture/color or gradient
 				// set. The regularOrGradient mixer helps to pick right one. If the
