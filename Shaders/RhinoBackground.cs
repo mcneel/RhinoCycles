@@ -166,20 +166,8 @@ namespace RhinoCyclesCore.Shaders
 				// by glossyFirstOnly. Whenever we have the first glossy ray we sample
 				// reflection background in Closure2, otherwise sample skylight background
 				glossyFirstOnly.outs.Value.Connect(skylightAndReflection.ins.Fac);
-				if(m_original_background.HasSky)
-				{
-					skylight.outs.Background.Connect(skylightAndReflection.ins.Closure1);
-				} else
-				{
-					background.outs.Background.Connect(skylightAndReflection.ins.Closure1);
-				}
-				if (m_original_background.HasRefl)
-				{
-					reflection.outs.Background.Connect(skylightAndReflection.ins.Closure2);
-				} else
-				{
-					background.outs.Background.Connect(skylightAndReflection.ins.Closure2);
-				}
+				skylight.outs.Background.Connect(skylightAndReflection.ins.Closure1);
+				reflection.outs.Background.Connect(skylightAndReflection.ins.Closure2);
 
 				// Ensure we sample background for camera rays, and transmission rays such
 				// that we don't have any glossy depth at all. This will allow us to see
