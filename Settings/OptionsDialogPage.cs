@@ -21,7 +21,7 @@ namespace RhinoCyclesCore.Settings
 {
 	public class OptionsDialogPage : Rhino.UI.OptionsDialogPage
 	{
-		public OptionsDialogPage() : base("Cycles")
+		public OptionsDialogPage() : base("Rhino Render")
 		{
 			CollapsibleSectionHolder = new OptionsDialogCollapsibleSectionUIPanel(this);
 		}
@@ -30,7 +30,7 @@ namespace RhinoCyclesCore.Settings
 
 		public override bool ShowApplyButton => false;
 		public override bool ShowDefaultsButton => true;
-		public override string LocalPageTitle => Localization.LocalizeString("Cycles", 7);
+		public override string LocalPageTitle => Localization.LocalizeString("Rhino Render", 7);
 		public override void OnHelp() => RhinoHelp.Show("options/cycles.htm");
 
 		public override Image PageImage
