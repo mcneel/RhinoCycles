@@ -60,7 +60,7 @@ namespace RhinoCyclesCore.Settings
 			};
 			mNoteAboutSettingsScope = new Label()
 			{
-				Text = LOC.STR("These settings affect both Rhino Render and Raytraced"),
+				Text = Localization.LocalizeString("These settings affect both Rhino Render and Raytraced", 76),
 				VerticalAlignment = VerticalAlignment.Center,
 			};
 			m_holder = new EtoCollapsibleSectionHolder();
