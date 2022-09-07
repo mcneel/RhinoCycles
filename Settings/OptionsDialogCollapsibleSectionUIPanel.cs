@@ -57,12 +57,18 @@ namespace RhinoCyclesCore.Settings
 			mLinkToRenderPage = new LinkButton()
 			{
 				Text = Localization.LocalizeString("Document Properties Render Page", 46)
-		};
+			};
+			mNoteAboutSettingsScope = new Label()
+			{
+				Text = LOC.STR("These settings affect both Rhino Render and Raytraced"),
+				VerticalAlignment = VerticalAlignment.Center,
+			};
 			m_holder = new EtoCollapsibleSectionHolder();
 		}
 
 		private Label mNoteAboutAdvancedSettings;
 		private LinkButton mLinkToRenderPage;
+		private Label mNoteAboutSettingsScope;
 		SessionSection m_sessionSection;
 		DeviceSection m_deviceSection;
 		ViewportSharpnessSection m_viewportSharpnessSection;
@@ -95,6 +101,7 @@ namespace RhinoCyclesCore.Settings
 								Spacing = new Eto.Drawing.Size(1, 5),
 								Rows = {
 									new TableRow(mNoteAboutAdvancedSettings, mLinkToRenderPage),
+									new TableRow(mNoteAboutSettingsScope),
 								}
 							}
 						}
