@@ -171,7 +171,7 @@ namespace RhinoCycles.Viewport
 		}
 
 		private Thread _modalThread;
-		private readonly object timerLock = new object();
+		//private readonly object timerLock = new object();
 		IAllSettings eds;
 
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
@@ -314,7 +314,7 @@ namespace RhinoCycles.Viewport
 		{
 			if (_cycles?.IsRendering ?? false)
 			{
-				lock (timerLock)
+				//lock (timerLock)
 				{
 					if (!IsSynchronizing)
 					{
@@ -336,16 +336,19 @@ namespace RhinoCycles.Viewport
 
 		void CyclesStartSynchronizing(object sender, EventArgs e)
 		{
-			lock (timerLock)
-			{
+			//ALB 2022/09/14
+			//https://mcneel.myjetbrains.com/youtrack/issue/RH-70028/Raytraced-crash-when-switching-to-other-display-mode
+			//write operation for bool is atomic in C#
+			//lock (timerLock)
+			//{
 				IsSynchronizing = true;
-			}
+			//}
 		}
 
 		void CyclesSynchronized(object sender, EventArgs e)
 		{
 			_startTime = DateTime.UtcNow;
-			lock (timerLock)
+			//lock (timerLock)
 			{
 				_samples = -1;
 				_frameAvailable = false;
@@ -478,7 +481,7 @@ namespace RhinoCycles.Viewport
 		public override bool IsCompleted()
 		{
 			bool rc = false;
-			lock (timerLock)
+			//lock (timerLock)
 			{
 				if (_forCapture)
 				{
@@ -520,8 +523,11 @@ namespace RhinoCycles.Viewport
 
 		public override int LastRenderedPass()
 		{
-			int samplesLocal;
-			lock(timerLock)
+			//ALB 2022/09/14
+			//https://mcneel.myjetbrains.com/youtrack/issue/RH-70028/Raytraced-crash-when-switching-to-other-display-mode
+			//read operation for int is atomic in C#
+			int samplesLocal = _samples;
+			//lock(timerLock)
 			{
 				samplesLocal = _samples;
 			}
