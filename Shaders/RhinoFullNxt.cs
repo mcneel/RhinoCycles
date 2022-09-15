@@ -416,8 +416,22 @@ namespace RhinoCyclesCore.Shaders
 					alpha_invert_basecolalpha_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value1);
 				}
 
-				basewithao.outs.Color.Connect(principled.ins.BaseColor);
-				basewithao.outs.Color.Connect(coloured_shadow.ins.Color);
+				if(m_original.Procedurals.TryGetValue(Rhino.DocObjects.TextureType.PBR_BaseColor, out Tuple<float4, float4> color_pair))
+				{
+					var texcoord = new TextureCoordinateNode();
+					m_shader.AddNode(texcoord);
+					var checker = new CheckerTexture();
+					texcoord.outs.UV.Connect(checker.ins.Vector);
+					checker.ins.Color1.Value = color_pair.Item1;
+					checker.ins.Color2.Value = color_pair.Item2;
+					m_shader.AddNode(checker);
+					checker.outs.Color.Connect(principled.ins.BaseColor);
+				}
+				else
+				{
+					basewithao.outs.Color.Connect(principled.ins.BaseColor);
+					basewithao.outs.Color.Connect(coloured_shadow.ins.Color);
+				}
 
 
 				Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic, texco, false);

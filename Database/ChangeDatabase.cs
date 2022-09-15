@@ -46,6 +46,7 @@ using System.Text;
 using RhinoCyclesCore.RenderEngines;
 using Rhino;
 using RhinoCyclesCore.Settings;
+using System.Diagnostics;
 
 namespace RhinoCyclesCore.Database
 {
@@ -1078,6 +1079,68 @@ namespace RhinoCyclesCore.Database
 		public double ModelAngleToleranceRadians { get; set; }
 		public Rhino.UnitSystem ModelUnitSystem { get; set; }
 
+		protected TextureType ConvertChildSlotToTextureType(RenderMaterial.StandardChildSlots child_slot)
+		{
+			switch(child_slot)
+			{
+				case RenderMaterial.StandardChildSlots.None:
+					return TextureType.None;
+				case RenderMaterial.StandardChildSlots.PbrBaseColor:
+					return TextureType.PBR_BaseColor;
+				case RenderMaterial.StandardChildSlots.PbrOpacity:
+					return TextureType.Opacity;
+				case RenderMaterial.StandardChildSlots.Bump:
+					return TextureType.Bump;
+				case RenderMaterial.StandardChildSlots.Environment:
+					return TextureType.Emap;
+				case RenderMaterial.StandardChildSlots.PbrSubsurface:
+					return TextureType.PBR_Subsurface;
+				case RenderMaterial.StandardChildSlots.PbrSubSurfaceScattering:
+					return TextureType.PBR_SubsurfaceScattering;
+				case RenderMaterial.StandardChildSlots.PbrSubsurfaceScatteringRadius:
+					return TextureType.PBR_SubsurfaceScatteringRadius;
+				case RenderMaterial.StandardChildSlots.PbrMetallic:
+					return TextureType.PBR_Metallic;
+				case RenderMaterial.StandardChildSlots.PbrSpecular:
+					return TextureType.PBR_Specular;
+				case RenderMaterial.StandardChildSlots.PbrSpecularTint:
+					return TextureType.PBR_SpecularTint;
+				case RenderMaterial.StandardChildSlots.PbrRoughness:
+					return TextureType.PBR_Roughness;
+				case RenderMaterial.StandardChildSlots.PbrAnisotropic:
+					return TextureType.PBR_Anisotropic;
+				case RenderMaterial.StandardChildSlots.PbrAnisotropicRotation:
+					return TextureType.PBR_Anisotropic_Rotation;
+				case RenderMaterial.StandardChildSlots.PbrSheen:
+					return TextureType.PBR_Sheen;
+				case RenderMaterial.StandardChildSlots.PbrSheenTint:
+					return TextureType.PBR_SheenTint;
+				case RenderMaterial.StandardChildSlots.PbrClearcoat:
+					return TextureType.PBR_Clearcoat;
+				case RenderMaterial.StandardChildSlots.PbrClearcoatRoughness:
+					return TextureType.PBR_ClearcoatRoughness;
+				case RenderMaterial.StandardChildSlots.PbrOpacityIor:
+					return TextureType.PBR_OpacityIor;
+				case RenderMaterial.StandardChildSlots.PbrOpacityRoughness:
+					return TextureType.PBR_OpacityRoughness;
+				case RenderMaterial.StandardChildSlots.PbrEmission:
+					return TextureType.PBR_Emission;
+				case RenderMaterial.StandardChildSlots.PbrAmbientOcclusion:
+					return TextureType.PBR_AmbientOcclusion;
+				case RenderMaterial.StandardChildSlots.PbrDisplacement:
+					return TextureType.PBR_Displacement;
+				case RenderMaterial.StandardChildSlots.PbrClearcoatBump:
+					return TextureType.PBR_ClearcoatBump;
+				case RenderMaterial.StandardChildSlots.PbrAlpha:
+					return TextureType.PBR_Alpha;
+				default:
+					{
+						sdd.Assert(false);
+						return TextureType.None;
+					}
+			}
+		}
+
 		protected override void ApplyMeshInstanceChanges(List<uint> deleted, List<MeshInstance> addedOrChanged)
 		{
 			// helper list to ensure we don't add same material multiple times.
@@ -1138,9 +1201,45 @@ namespace RhinoCyclesCore.Database
 				#pragma warning disable CS0618
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				var cyclesDecals = HandleMeshDecals(a.MeshId, a.Decals, a.Transform);
+				var cyclesProcedurals = new Dictionary<TextureType, Tuple<float4, float4>>();
 
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
+
+				foreach (var child_slot in Enum.GetValues(typeof(RenderMaterial.StandardChildSlots)).Cast<RenderMaterial.StandardChildSlots>())
+				{
+					if (child_slot == RenderMaterial.StandardChildSlots.None ||
+						child_slot == RenderMaterial.StandardChildSlots.Environment)
+						continue;
+
+					var texture_type = ConvertChildSlotToTextureType(child_slot);
+
+					if (cyclesProcedurals.ContainsKey(texture_type))
+						continue;
+
+					RenderTexture render_texture = mat.GetTextureFromUsage(child_slot);
+
+					if(render_texture != null && child_slot == RenderMaterial.StandardChildSlots.PbrBaseColor)
+					{
+						if(render_texture.TypeName.Equals("2D Checker Texture"))
+						{
+							Color4f color1 = Color4f.Black;
+							Color4f color2 = Color4f.White;
+
+							if (render_texture.GetParameter("color-one") is IConvertible variant1)
+							{
+								color1 = variant1.ToColor4f();
+							}
+							if (render_texture.GetParameter("color-two") is IConvertible variant2)
+							{
+								color2 = variant2.ToColor4f();
+							}
+
+							cyclesProcedurals.Add(texture_type, new Tuple<float4, float4>(color1.ToFloat4(), color2.ToFloat4()));
+						}
+					}
+				}
+
 				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes}. material {mat.Name}\n";
 				RcCore.OutputDebugString(stat);
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
@@ -1153,7 +1252,7 @@ namespace RhinoCyclesCore.Database
 
 				if (!addedmats.Contains(matid))
 				{
-					HandleRenderMaterial(mat, matid, cyclesDecals, false);
+					HandleRenderMaterial(mat, matid, cyclesDecals, cyclesProcedurals, false);
 					addedmats.Add(matid);
 				}
 
@@ -1219,7 +1318,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="mat">RenderMaterial instance to handle</param>
 		/// <param name="decals">List of CyclesDecal that need to be integrated into the shader</param>
 		/// <param name="invisibleUnderside">True if geometry should be see-through from the backface. Used for the groundplane.</param>
-		private void HandleRenderMaterial(RenderMaterial mat, uint matId, List<CyclesDecal> decals, bool invisibleUnderside)
+		private void HandleRenderMaterial(RenderMaterial mat, uint matId, List<CyclesDecal> decals, Dictionary<TextureType, Tuple<float4, float4>> procedurals, bool invisibleUnderside)
 		{
 			if (_shaderDatabase.HasShader(matId))
 			{
@@ -1227,7 +1326,7 @@ namespace RhinoCyclesCore.Database
 			}
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals);
+			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals, procedurals);
 			sh.InvisibleUnderside = invisibleUnderside;
 			_shaderDatabase.AddShader(sh);
 		}
@@ -1292,7 +1391,7 @@ namespace RhinoCyclesCore.Database
 				if (existing == null)
 				{
 					var rm = MaterialFromId(distinct);
-					HandleRenderMaterial(rm, distinct, null, false);
+					HandleRenderMaterial(rm, distinct, null, null, false);
 				}
 			}
 		}
@@ -1431,7 +1530,7 @@ namespace RhinoCyclesCore.Database
 
 			HandleMeshData(gpid.Item1, gpid.Item2, m, null, false, uint.MaxValue);
 
-			HandleRenderMaterial(mat, materialId, null, !gp.ShowUnderside);
+			HandleRenderMaterial(mat, materialId, null, null, !gp.ShowUnderside);
 
 			isGpShadowsOnly = gp.IsShadowOnly;
 

@@ -52,7 +52,9 @@ namespace RhinoCyclesCore
 		}
 
 		public List<CyclesDecal> Decals { get; set; } = null;
-		
+
+		public Dictionary<TextureType, Tuple<float4, float4>> Procedurals { get; set; } = null;
+
 		/// <summary>
 		/// RenderHash of the RenderMaterial for which this intermediary is created.
 		/// </summary>

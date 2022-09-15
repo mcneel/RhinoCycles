@@ -39,12 +39,13 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="lw">LinearWorkflow data for this shader (gamma)</param>
 		/// <param name="decals">Decals to integrate into the shader</param>
 		/// <returns>The CyclesShader</returns>
-		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid, BitmapConverter bitmapConverter, List<CyclesDecal> decals)
+		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid, BitmapConverter bitmapConverter, List<CyclesDecal> decals, Dictionary<TextureType, Tuple<float4, float4>> procedurals)
 		{
 			var shader = new CyclesShader(mid, bitmapConverter)
 			{
 				Type = CyclesShader.Shader.Diffuse,
 				Decals = decals,
+				Procedurals = procedurals,
 			};
 
 			if (rm.TypeId.Equals(realtimDisplaMaterialId))
