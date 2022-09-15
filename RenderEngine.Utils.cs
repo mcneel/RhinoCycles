@@ -26,6 +26,7 @@ using static Rhino.Render.RenderWindow;
 using Rhino.UI;
 using Eto.Forms;
 using Rhino.Runtime;
+using ccl.ShaderNodes.Sockets;
 
 namespace RhinoCyclesCore
 {
@@ -197,6 +198,7 @@ namespace RhinoCyclesCore
 		}
 
 		static public float4 CreateFloat4(double x, double y, double z) { return new float4((float)x, (float)y, (float)z, 0.0f); }
+		static public float4 CreateFloat4(double x, double y, double z, double w) { return new float4((float)x, (float)y, (float)z, (float)w); }
 		static public float4 CreateFloat4(byte x, byte y, byte z, byte w) { return new float4(x / 255.0f, y / 255.0f, z / 255.0f, w / 255.0f); }
 		static public float4 CreateFloat4(Color color) { return CreateFloat4(color.R, color.G, color.B, color.A); }
 
@@ -348,6 +350,54 @@ namespace RhinoCyclesCore
 			else
 			{
 				texture_coordinates.outs.UV.Connect(image_node.ins.Vector);
+			}
+		}
+
+		public static VectorSocket GetProjectionModeOutputSocket(CyclesTextureImage texture, TextureCoordinateNode texture_coordinates)
+		{
+			if (texture.ProjectionMode == TextureProjectionMode.WcsBox)
+			{
+				return texture_coordinates.outs.WcsBox;
+			}
+			else if (texture.ProjectionMode == TextureProjectionMode.Wcs)
+			{
+				return texture_coordinates.outs.Object;
+			}
+			else if (texture.ProjectionMode == TextureProjectionMode.Screen)
+			{
+				return texture_coordinates.outs.Window;
+			}
+			else if (texture.ProjectionMode == TextureProjectionMode.View)
+			{
+				return texture_coordinates.outs.Camera;
+			}
+			else if (texture.ProjectionMode == TextureProjectionMode.EnvironmentMap)
+			{
+				switch (texture.EnvProjectionMode)
+				{
+					case TextureEnvironmentMappingMode.Spherical:
+						return texture_coordinates.outs.EnvSpherical;
+					case TextureEnvironmentMappingMode.EnvironmentMap:
+						return texture_coordinates.outs.EnvEmap;
+					case TextureEnvironmentMappingMode.Box:
+						return texture_coordinates.outs.EnvBox;
+					case TextureEnvironmentMappingMode.LightProbe:
+						return texture_coordinates.outs.EnvLightProbe;
+					case TextureEnvironmentMappingMode.Cube:
+						return texture_coordinates.outs.EnvCubemap;
+					case TextureEnvironmentMappingMode.VerticalCrossCube:
+						return texture_coordinates.outs.EnvCubemapVerticalCross;
+					case TextureEnvironmentMappingMode.HorizontalCrossCube:
+						return texture_coordinates.outs.EnvCubemapHorizontalCross;
+					case TextureEnvironmentMappingMode.Hemispherical:
+						return texture_coordinates.outs.EnvHemispherical;
+					default:
+						return texture_coordinates.outs.EnvEmap;
+				}
+			}
+			else
+			{
+				return texture_coordinates.outs.UV;
 			}
 		}
 	}

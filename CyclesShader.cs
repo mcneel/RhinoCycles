@@ -26,6 +26,7 @@ using StdCS = Rhino.Render.RenderMaterial.StandardChildSlots;
 using RhinoCyclesCore.ExtensionMethods;
 using System.Collections.Concurrent;
 using Rhino.Runtime.InteropWrappers;
+using System.Linq;
 
 namespace RhinoCyclesCore
 {
@@ -212,29 +213,8 @@ namespace RhinoCyclesCore
 					texture = null;
 				}
 			}
-			else
-			{
-				//In all other cases, we have to simulate the material and use the textures as presented
-				//to us in the simulation.
-				var on_material = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow);
-				var on_texture = on_material.GetTexture(RenderMaterial.TextureTypeFromSlot(childSlot));
-
-				if (null != on_texture && on_texture.Enabled)
-				{
-					//Note that the simulated texture is created with the RenderMaterial's document association
-					//so that when the new bitmap texture is created below, the WCS transforms are not applied.
-					var simtex = new SimulatedTexture(rm.DocumentAssoc, on_texture);
-
-					texture = RenderTexture.NewBitmapTexture(simtex, rm.DocumentAssoc);
-
-					//Always use the actual values given by the simualtion at this point.
-					on_texture.GetAlphaBlendValues(out double c, out double a0, out double a1, out double a2, out double a3);
-
-					amount = (float)c;
-				}
-			}
 			if(texture!=null && enabled) {
-				Utilities.HandleRenderTexture(texture, ti, checkForNormal, _bitmapConverter, shb.Gamma);
+				Utilities.HandleRenderTexture(texture, ti, checkForNormal, false, _bitmapConverter, shb.Gamma);
 				ti.Amount = amount;
 			}
 		}
@@ -360,6 +340,7 @@ namespace RhinoCyclesCore
 			}
 			else
 			{
+				// TODO make this work with Procedurals
 				//In all other cases, we have to simulate the material and use the textures as presented
 				//to us in the simulation.  A good example of this is Substance - which doesn't actually
 				//have any children, but it fills out the textures slots of an ON_Material in response to
@@ -386,7 +367,7 @@ namespace RhinoCyclesCore
 
 			bool checkForNormal = childSlot == StdCS.Bump || childSlot == StdCS.PbrClearcoatBump || childSlot == StdCS.PbrDisplacement;
 
-			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, _bitmapConverter, gamma);
+			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, false, _bitmapConverter, gamma);
 		}
 
 		private Guid blendMaterialTypeId = new Guid("0322370F-A9AF-4264-A57C-58FF8E4345DD");
@@ -412,7 +393,7 @@ namespace RhinoCyclesCore
 				shb.BlendMixAmount = (float)Convert.ToDouble(rm.GetParameter("mix-amount"));
 				if(rm.FindChild("mix-amount") is RenderTexture mixTexture)
 				{
-					Utilities.HandleRenderTexture(mixTexture, shb.BlendMixAmountTexture, false, _bitmapConverter, gamma);
+					Utilities.HandleRenderTexture(mixTexture, shb.BlendMixAmountTexture, false, false, _bitmapConverter, gamma);
 				}
 			}
 			else
@@ -572,6 +553,7 @@ namespace RhinoCyclesCore
 		public TexturedColor PbrBase = new TexturedColor(PbrCSN.BaseColor, Color4f.White, false, 0.0f);
 		public CyclesTextureImage PbrBaseTexture = new CyclesTextureImage();
 
+
 		/*****/
 
 		public TexturedFloat PbrMetallic = new TexturedFloat(PbrCSN.Metallic, 0.0f, false, 0.0f);
@@ -676,7 +658,6 @@ namespace RhinoCyclesCore
 		public CyclesTextureImage PbrSmudgeTexture = new CyclesTextureImage();
 		public TexturedFloat PbrScratch = new TexturedFloat("scratch", 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrScratchTexture = new CyclesTextureImage();
-
 		#endregion
 
 		public uint Id { get; }
@@ -886,6 +867,7 @@ namespace RhinoCyclesCore
 
 		public CyclesTextureImage DiffuseTexture { get; set; }
 		public bool HasDiffuseTexture => DiffuseTexture.HasTextureImage;
+		public bool HasDiffuseProcedural => DiffuseTexture.HasProcedural;
 		public float HasDiffuseTextureAsFloat => HasDiffuseTexture ? 1.0f : 0.0f;
 		public CyclesTextureImage BumpTexture { get; set; }
 		public bool HasBumpTexture => BumpTexture.HasTextureImage;

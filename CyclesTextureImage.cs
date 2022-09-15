@@ -14,14 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using System;
+using System.Collections.Generic;
 using Rhino.Render;
 using Rhino.Runtime.InteropWrappers;
+using RhinoCyclesCore.Converters;
 
 namespace RhinoCyclesCore
 {
 	public class CyclesTextureImage : IDisposable
 	{
+		public Procedural Procedural { get; set; } = null;
+		public bool HasProcedural => Procedural != null;
 		public bool HasTextureImage => TexByte != null || TexFloat != null;
+		public List<CyclesTextureImage> TextureList = new List<CyclesTextureImage>();
 		public bool HasFloatImage => TexFloat != null;
 		public bool HasByteImage => TexByte != null;
 		public StdVectorByte TexByte { get; set; }
@@ -89,6 +94,7 @@ namespace RhinoCyclesCore
 			Transform = ccl.Transform.Identity();
 			TexByte = null;
 			TexFloat = null;
+			Procedural = null;
 			TexWidth = 0;
 			TexHeight = 0;
 			Name = "";
@@ -129,6 +135,7 @@ namespace RhinoCyclesCore
 				{
 					TexByte?.Dispose();
 					TexFloat?.Dispose();
+					Procedural?.Dispose();
 				}
 
 				Clear();

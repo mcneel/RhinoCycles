@@ -45,7 +45,7 @@ namespace RhinoCyclesCore.Materials
 		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			HandleTexturedValue(_DiffuseColor, Diffuse);
-			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, bitmapConverter, Gamma);
+			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, false, bitmapConverter, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -73,11 +73,9 @@ namespace RhinoCyclesCore.Materials
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
 			ccl.ShaderNodes.TranslucentBsdfNode translucent = new ccl.ShaderNodes.TranslucentBsdfNode("translucent");
-			ccl.ShaderNodes.TextureCoordinateNode texco = new ccl.ShaderNodes.TextureCoordinateNode("texco");
 			sh.AddNode(translucent);
-			sh.AddNode(texco);
 
-			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, translucent.ins.Color.ToList(), texco, false);
+			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, translucent.ins.Color.ToList(), false);
 
 			translucent.outs.BSDF.Connect(sh.Output.ins.Surface);
 			outsocket = translucent.outs.BSDF;

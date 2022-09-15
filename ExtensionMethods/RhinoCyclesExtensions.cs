@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using ccl.ShaderNodes.Sockets;
 using Rhino.Geometry.Collections;
+using Rhino.Render;
 
 namespace RhinoCyclesCore.ExtensionMethods
 {
@@ -60,6 +61,24 @@ namespace RhinoCyclesCore.ExtensionMethods
 		{
 			if (count != cl.Count) return null;
 			return cl.ToFloatArray();
+		}
+	}
+
+	public static class RenderTextureExtensions
+	{
+		public static bool IsBitmapTexture(this RenderTexture tex)
+		{
+			return tex.TypeId.Equals(ContentUuids.BitmapTextureType)
+						|| tex.TypeId.Equals(ContentUuids.SimpleBitmapTextureType)
+						|| tex.TypeId.Equals(ContentUuids.HDRTextureType)
+						|| tex.TypeId.Equals(ContentUuids.HatchBumpTexture)
+						|| tex.TypeId.Equals(ContentUuids.CrossHatchBumpTexture)
+						|| tex.TypeId.Equals(ContentUuids.GritBumpTexture)
+						|| tex.TypeId.Equals(ContentUuids.LeatherBumpTexture)
+						|| tex.TypeId.Equals(ContentUuids.DotBumpTexture)
+						|| tex.TypeId.Equals(ContentUuids.WoodBumpTexture)
+						|| tex.TypeId.Equals(ContentUuids.SpeckleBumpTexture)
+						;
 		}
 	}
 
@@ -128,7 +147,7 @@ namespace RhinoCyclesCore.ExtensionMethods
 
 		public static ccl.float4 ToFloat4(this Rhino.Display.Color4f cl)
 		{
-			return RenderEngine.CreateFloat4(cl.R, cl.G, cl.B);
+			return RenderEngine.CreateFloat4(cl.R, cl.G, cl.B, cl.A);
 		}
 
 		public static Rhino.Display.Color4f ToColor4f(this ccl.float4 cl)

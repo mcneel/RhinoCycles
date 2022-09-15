@@ -46,6 +46,7 @@ using System.Text;
 using RhinoCyclesCore.RenderEngines;
 using Rhino;
 using RhinoCyclesCore.Settings;
+using System.Diagnostics;
 
 namespace RhinoCyclesCore.Database
 {
@@ -957,7 +958,7 @@ namespace RhinoCyclesCore.Database
 				RenderTexture rt = TextureForId(decal.TextureRenderHash(flags));
 
 				CyclesTextureImage tex = new CyclesTextureImage();
-				Utilities.HandleRenderTexture(rt, tex, false, BitmapConverter, LinearWorkflow.PreProcessGamma);
+				Utilities.HandleRenderTexture(rt, tex, false, true, BitmapConverter, LinearWorkflow.PreProcessGamma);
 
 				var rtid = rt?.Id ?? Guid.Empty;
 				string textype = tex.HasTextureImage ? (tex.HasByteImage ? "byte" : "float") : "no image";
@@ -1149,6 +1150,7 @@ namespace RhinoCyclesCore.Database
 
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
+
 				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes}. material {mat.Name}\n";
 				RcCore.OutputDebugString(stat);
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
@@ -2085,7 +2087,7 @@ namespace RhinoCyclesCore.Database
 			if(_renderEngine._textureBakeQuality == 4) { // Disable
 				return BakingFunctions.None;
 			}
-			return BakingFunctions.ProceduralTextures | BakingFunctions.CustomObjectMappings;
+			return BakingFunctions.CustomObjectMappings;
 		}
 
 		protected override int BakingSize(RhinoObject ro, RenderMaterial material, TextureType type)
