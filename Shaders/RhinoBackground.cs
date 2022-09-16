@@ -379,10 +379,7 @@ namespace RhinoCyclesCore.Shaders
 					RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.BgTexture);
 					_SetEnvironmentProjection(m_original_background.BgTexture, bg_env_texture255);
 					azimuthAltitudeTransformNode.Altitude = m_original_background.BgTexture.Transform.z.x;
-					azimuthAltitudeTransformNode.Azimuth = -m_original_background.BgTexture.Transform.z.z;
-					//bg_env_texture255.Translation = m_original_background.BgTexture.Transform.x;
-					//bg_env_texture255.Scale = m_original_background.BgTexture.Transform.y;
-					//bg_env_texture255.Rotation = m_original_background.BgTexture.Transform.z;
+					azimuthAltitudeTransformNode.Azimuth = m_original_background.BgTexture.Transform.z.z;
 				}
 				if (m_original_background.BackgroundFill == BackgroundStyle.WallpaperImage && m_original_background.Wallpaper.HasTextureImage)
 				{
