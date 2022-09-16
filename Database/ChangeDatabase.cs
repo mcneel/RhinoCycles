@@ -946,7 +946,15 @@ namespace RhinoCyclesCore.Database
 					decalXform = decalXform * scaleXform;
 				}
 
-				RenderTexture rt = TextureForId(decal.TextureRenderCRC(TextureRenderHashFlags.ExcludeLocalMapping));
+				// JohnC: I had to change this to also exclude linear workflow because when I changed from using
+				// the (incorrect) TextureRenderHashFlags to the (correct) CrcRenderHashFlags, an assert started firing
+				// because we are not on the main thread. Also note that these flags must match those specified in
+				// ChangeQueue::AddContentReference() because otherwise it won't be able to find the texture.
+				// To further confuse matters, the incorrect value of TextureRenderHashFlags.ExcludeLocalMapping
+				// which is (1 << 32) is actually 1 which is in fact ExcludeLinearWorkflow! So this was always
+				// excluding linear workflow anyway. Now it is also excluding local mapping as originally intended.
+				var flags = CrcRenderHashFlags.ExcludeLocalMapping | CrcRenderHashFlags.ExcludeLinearWorkflow;
+				RenderTexture rt = TextureForId(decal.TextureRenderHash(flags));
 
 				CyclesTextureImage tex = new CyclesTextureImage();
 				Utilities.HandleRenderTexture(rt, tex, false, BitmapConverter, LinearWorkflow.PreProcessGamma);
