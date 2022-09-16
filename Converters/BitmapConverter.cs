@@ -145,7 +145,13 @@ namespace RhinoCyclesCore.Converters
 			var rot = renderTexture.GetRotation();
 			var rep = renderTexture.GetRepeat();
 			var tra = renderTexture.GetOffset();
-			var rId = renderTexture.RenderHashExclude(TextureRenderHashFlags.ExcludeLocalMapping, "azimuth;altitude;multiplier;rdk-texture-repeat;rdk-texture-offset;rdk-texture-rotation;rdk-texture-adjust-multiplier;intensity");
+
+			// JohnC: I had to change this to also exclude linear workflow because when I changed from using
+			// the incorrect TextureRenderHashFlags to the correct CrcRenderHashFlags, an assert started firing
+			// because we are not on the main thread.
+			var flags = CrcRenderHashFlags.ExcludeLocalMapping | CrcRenderHashFlags.ExcludeLinearWorkflow;
+			var rId = renderTexture.RenderHashExclude(flags, "azimuth;altitude;multiplier;rdk-texture-repeat;rdk-texture-offset;rdk-texture-rotation;rdk-texture-adjust-multiplier;intensity");
+
 			var azimob = renderTexture.GetParameter("azimuth");
 			var altob = renderTexture.GetParameter("altitude");
 			var multob = renderTexture.GetParameter("multiplier");
