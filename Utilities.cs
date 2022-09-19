@@ -161,7 +161,10 @@ namespace RhinoCyclesCore
 			if (rt == null) return;
 			if(bitmapConverter==null) bitmapConverter = new Converters.BitmapConverter();
 
-			uint rid = rt.RenderHashWithoutLocalMapping;
+			// JohnC: I had to change this to also exclude linear workflow because when I changed from using
+			// the incorrect TextureRenderHashFlags to the correct CrcRenderHashFlags, an assert started firing
+			// because we are not on the main thread.
+			uint rid = rt.RenderHashWithoutLocalMappingOrLinearWorkflow;
 
 			var rotationvec = rt.GetRotation();
 			var repeatvec = rt.GetRepeat();
