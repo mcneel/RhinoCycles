@@ -416,12 +416,12 @@ namespace RhinoCyclesCore.Shaders
 					alpha_invert_basecolalpha_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value1);
 				}
 
-				if(m_original.Procedurals.TryGetValue(Rhino.DocObjects.TextureType.PBR_BaseColor, out Tuple<float4, float4> color_pair))
+				if(m_original.Procedurals != null && m_original.Procedurals.TryGetValue(Rhino.DocObjects.TextureType.PBR_BaseColor, out Tuple<float4, float4> color_pair))
 				{
 					var texcoord = new TextureCoordinateNode();
 					m_shader.AddNode(texcoord);
-					var checker = new CheckerTexture();
-					texcoord.outs.UV.Connect(checker.ins.Vector);
+					var checker = new CheckerTexture2d();
+					texcoord.outs.UV.Connect(checker.ins.UV);
 					checker.ins.Color1.Value = color_pair.Item1;
 					checker.ins.Color2.Value = color_pair.Item2;
 					m_shader.AddNode(checker);

@@ -16,13 +16,17 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using ccl;
 using Rhino;
+using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Geometry;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
 using RhinoCyclesCore.Core;
+using RhinoCyclesCore.ExtensionMethods;
 using Light = Rhino.Render.ChangeQueue.Light;
 
 namespace RhinoCyclesCore.Converters
@@ -32,6 +36,81 @@ namespace RhinoCyclesCore.Converters
 
 		private Guid realtimDisplaMaterialId = new Guid("e6cd1973-b739-496e-ab69-32957fa48492");
 
+		protected void RecurseIntoChild(RenderTexture render_texture, string child_name, TextureType texture_type, Dictionary<TextureType, Tuple<float4, float4>> procedurals)
+		{
+			if (render_texture.ChildSlotOn(child_name) && render_texture.ChildSlotAmount(child_name) > 0.1)
+			{
+				var render_texture_child = (RenderTexture)render_texture.FindChild(child_name);
+
+				// Recursive call
+				GetProceduralData(render_texture_child, texture_type, procedurals);
+			}
+		}
+
+		protected void GetProceduralData(RenderTexture render_texture, TextureType texture_type, Dictionary<TextureType, Tuple<float4, float4>> procedurals)
+		{
+			if (render_texture.TypeName.Equals("2D Checker Texture"))
+			{
+				render_texture.Fields.TryGetValue<bool>("swap-colors", out bool swap_colors);
+
+				var child_name1 = swap_colors ? "color-two" : "color-one";
+				var child_name2 = swap_colors ? "color-one" : "color-two";
+
+				if (!render_texture.Fields.TryGetValue<Color4f>(child_name1, out Color4f color1))
+				{
+					color1 = swap_colors ? Color4f.White : Color4f.Black;
+				}
+
+				if (!render_texture.Fields.TryGetValue<Color4f>(child_name2, out Color4f color2))
+				{
+					color2 = swap_colors ? Color4f.Black : Color4f.White;
+				}
+
+				var texture_amount_string1 = swap_colors ? "texture-amount-two" : "texture-amount-one";
+				var texture_amount_string2 = swap_colors ? "texture-amount-one" : "texture-amount-two";
+				if (!render_texture.Fields.TryGetValue<double>(texture_amount_string1, out double texture_amount1))
+				{
+					texture_amount1 = 1.0;
+				}
+
+				if (!render_texture.Fields.TryGetValue<double>(texture_amount_string2, out double texture_amount2))
+				{
+					texture_amount2 = 1.0;
+				}
+
+				RecurseIntoChild(render_texture, child_name1, texture_type, procedurals);
+				RecurseIntoChild(render_texture, child_name2, texture_type, procedurals);
+
+				procedurals.Add(texture_type, new Tuple<float4, float4>(color1.ToFloat4(), color2.ToFloat4()));
+			}
+		}
+
+		protected Dictionary<TextureType, Tuple<float4, float4>> ProcessProcedurals(RenderMaterial rm)
+		{
+			var procedurals = new Dictionary<TextureType, Tuple<float4, float4>>();
+
+			foreach (var child_slot in Enum.GetValues(typeof(RenderMaterial.StandardChildSlots)).Cast<RenderMaterial.StandardChildSlots>())
+			{
+				if (child_slot == RenderMaterial.StandardChildSlots.None ||
+					child_slot == RenderMaterial.StandardChildSlots.Environment)
+					continue;
+
+				var texture_type = ConvertChildSlotToTextureType(child_slot);
+
+				if (procedurals.ContainsKey(texture_type))
+					continue;
+
+				RenderTexture render_texture = rm.GetTextureFromUsage(child_slot);
+
+				if (render_texture != null && child_slot == RenderMaterial.StandardChildSlots.PbrBaseColor)
+				{
+					GetProceduralData(render_texture, texture_type, procedurals);
+				}
+			}
+
+			return procedurals;
+		}
+
 		/// <summary>
 		/// Create a CyclesShader based on given Material m
 		/// </summary>
@@ -39,8 +118,10 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="lw">LinearWorkflow data for this shader (gamma)</param>
 		/// <param name="decals">Decals to integrate into the shader</param>
 		/// <returns>The CyclesShader</returns>
-		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid, BitmapConverter bitmapConverter, List<CyclesDecal> decals, Dictionary<TextureType, Tuple<float4, float4>> procedurals)
+		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid, BitmapConverter bitmapConverter, List<CyclesDecal> decals)
 		{
+			var procedurals = ProcessProcedurals(rm);
+
 			var shader = new CyclesShader(mid, bitmapConverter)
 			{
 				Type = CyclesShader.Shader.Diffuse,
@@ -226,6 +307,68 @@ namespace RhinoCyclesCore.Converters
 				};
 
 			return clight;
+		}
+
+		protected TextureType ConvertChildSlotToTextureType(RenderMaterial.StandardChildSlots child_slot)
+		{
+			switch (child_slot)
+			{
+				case RenderMaterial.StandardChildSlots.None:
+					return TextureType.None;
+				case RenderMaterial.StandardChildSlots.PbrBaseColor:
+					return TextureType.PBR_BaseColor;
+				case RenderMaterial.StandardChildSlots.PbrOpacity:
+					return TextureType.Opacity;
+				case RenderMaterial.StandardChildSlots.Bump:
+					return TextureType.Bump;
+				case RenderMaterial.StandardChildSlots.Environment:
+					return TextureType.Emap;
+				case RenderMaterial.StandardChildSlots.PbrSubsurface:
+					return TextureType.PBR_Subsurface;
+				case RenderMaterial.StandardChildSlots.PbrSubSurfaceScattering:
+					return TextureType.PBR_SubsurfaceScattering;
+				case RenderMaterial.StandardChildSlots.PbrSubsurfaceScatteringRadius:
+					return TextureType.PBR_SubsurfaceScatteringRadius;
+				case RenderMaterial.StandardChildSlots.PbrMetallic:
+					return TextureType.PBR_Metallic;
+				case RenderMaterial.StandardChildSlots.PbrSpecular:
+					return TextureType.PBR_Specular;
+				case RenderMaterial.StandardChildSlots.PbrSpecularTint:
+					return TextureType.PBR_SpecularTint;
+				case RenderMaterial.StandardChildSlots.PbrRoughness:
+					return TextureType.PBR_Roughness;
+				case RenderMaterial.StandardChildSlots.PbrAnisotropic:
+					return TextureType.PBR_Anisotropic;
+				case RenderMaterial.StandardChildSlots.PbrAnisotropicRotation:
+					return TextureType.PBR_Anisotropic_Rotation;
+				case RenderMaterial.StandardChildSlots.PbrSheen:
+					return TextureType.PBR_Sheen;
+				case RenderMaterial.StandardChildSlots.PbrSheenTint:
+					return TextureType.PBR_SheenTint;
+				case RenderMaterial.StandardChildSlots.PbrClearcoat:
+					return TextureType.PBR_Clearcoat;
+				case RenderMaterial.StandardChildSlots.PbrClearcoatRoughness:
+					return TextureType.PBR_ClearcoatRoughness;
+				case RenderMaterial.StandardChildSlots.PbrOpacityIor:
+					return TextureType.PBR_OpacityIor;
+				case RenderMaterial.StandardChildSlots.PbrOpacityRoughness:
+					return TextureType.PBR_OpacityRoughness;
+				case RenderMaterial.StandardChildSlots.PbrEmission:
+					return TextureType.PBR_Emission;
+				case RenderMaterial.StandardChildSlots.PbrAmbientOcclusion:
+					return TextureType.PBR_AmbientOcclusion;
+				case RenderMaterial.StandardChildSlots.PbrDisplacement:
+					return TextureType.PBR_Displacement;
+				case RenderMaterial.StandardChildSlots.PbrClearcoatBump:
+					return TextureType.PBR_ClearcoatBump;
+				case RenderMaterial.StandardChildSlots.PbrAlpha:
+					return TextureType.PBR_Alpha;
+				default:
+					{
+						System.Diagnostics.Debug.Assert(false);
+						return TextureType.None;
+					}
+			}
 		}
 	}
 }
