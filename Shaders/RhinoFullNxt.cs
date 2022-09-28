@@ -22,6 +22,7 @@ using RhinoCyclesCore.ExtensionMethods;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using RhinoCyclesCore.Converters;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -319,6 +320,139 @@ namespace RhinoCyclesCore.Shaders
 			return nodeToBindIntoShader;
 		}
 
+		private ShaderNode CreateProceduralNode(Procedural procedural, TextureCoordinateNode uv_node)
+		{
+			if (procedural is CheckerTexture2dProcedural checker_texture_2d)
+			{
+				var checker_texture_2d_node = new CheckerTexture2dProceduralNode();
+				m_shader.AddNode(checker_texture_2d_node);
+
+				checker_texture_2d_node.UvwTransform = checker_texture_2d.MappingTransform;
+
+				if (checker_texture_2d.Child1 != null)
+				{
+					// Recursive call
+					ShaderNode child_node = CreateProceduralNode(checker_texture_2d.Child1, uv_node);
+
+					if (child_node is CheckerTexture2dProceduralNode child_checker_texture_2d_node)
+					{
+						child_checker_texture_2d_node.outs.Color.Connect(checker_texture_2d_node.ins.Color1);
+					}
+					else if (child_node is NoiseTextureProceduralNode child_noise_texture_procedural_node)
+					{
+						child_noise_texture_procedural_node.outs.Color.Connect(checker_texture_2d_node.ins.Color1);
+					}
+				}
+				else
+				{
+					checker_texture_2d_node.ins.Color1.Value = checker_texture_2d.Color1.ToFloat4();
+				}
+
+				if (checker_texture_2d.Child2 != null)
+				{
+					// Recursive call
+					ShaderNode child_node = CreateProceduralNode(checker_texture_2d.Child2, uv_node);
+
+					if (child_node is CheckerTexture2dProceduralNode child_checker_texture_2d_node)
+					{
+						child_checker_texture_2d_node.outs.Color.Connect(checker_texture_2d_node.ins.Color2);
+					}
+					else if (child_node is NoiseTextureProceduralNode child_noise_texture_procedural_node)
+					{
+						child_noise_texture_procedural_node.outs.Color.Connect(checker_texture_2d_node.ins.Color2);
+					}
+				}
+				else
+				{
+					checker_texture_2d_node.ins.Color2.Value = checker_texture_2d.Color2.ToFloat4();
+				}
+
+				uv_node.outs.UV.Connect(checker_texture_2d_node.ins.UVW);
+
+				return checker_texture_2d_node;
+			}
+
+			if (procedural is NoiseTextureProcedural noise_texture)
+			{
+				var noise_texture_node = new NoiseTextureProceduralNode();
+				m_shader.AddNode(noise_texture_node);
+
+				noise_texture_node.UvwTransform = noise_texture.MappingTransform;
+
+				if (noise_texture.Child1 != null)
+				{
+					// Recursive call
+					ShaderNode child_node = CreateProceduralNode(noise_texture.Child1, uv_node);
+
+					if (child_node is CheckerTexture2dProceduralNode child_checker_texture_2d_node)
+					{
+						child_checker_texture_2d_node.outs.Color.Connect(noise_texture_node.ins.Color1);
+					}
+					else if (child_node is NoiseTextureProceduralNode child_noise_texture_procedural_node)
+					{
+						child_noise_texture_procedural_node.outs.Color.Connect(noise_texture_node.ins.Color1);
+					}
+				}
+				else
+				{
+					noise_texture_node.ins.Color1.Value = noise_texture.Color1.ToFloat4();
+				}
+
+				if (noise_texture.Child2 != null)
+				{
+					// Recursive call
+					ShaderNode child_node = CreateProceduralNode(noise_texture.Child2, uv_node);
+
+					if (child_node is CheckerTexture2dProceduralNode child_checker_texture_2d_node)
+					{
+						child_checker_texture_2d_node.outs.Color.Connect(noise_texture_node.ins.Color2);
+					}
+					else if(child_node is NoiseTextureProceduralNode child_noise_texture_procedural_node)
+					{
+						child_noise_texture_procedural_node.outs.Color.Connect(noise_texture_node.ins.Color2);
+					}
+				}
+				else
+				{
+					noise_texture_node.ins.Color2.Value = noise_texture.Color2.ToFloat4();
+				}
+
+				noise_texture_node.NoiseType = (NoiseTextureProceduralNode.NoiseTypes)noise_texture.NoiseType;
+				noise_texture_node.SpecSynthType = (NoiseTextureProceduralNode.SpecSynthTypes)noise_texture.SpecSynthType;
+				noise_texture_node.OctaveCount = noise_texture.OctaveCount;
+				noise_texture_node.FrequencyMultiplier = noise_texture.FrequencyMultiplier;
+				noise_texture_node.AmplitudeMultiplier = noise_texture.AmplitudeMultiplier;
+				noise_texture_node.ClampMin = noise_texture.ClampMin;
+				noise_texture_node.ClampMax = noise_texture.ClampMax;
+				noise_texture_node.ScaleToClamp = noise_texture.ScaleToClamp;
+				noise_texture_node.Inverse = noise_texture.Inverse;
+				noise_texture_node.Gain = noise_texture.Gain;
+
+				uv_node.outs.UV.Connect(noise_texture_node.ins.UVW);
+
+				return noise_texture_node;
+			}
+
+			return null;
+		}
+
+		private void CreateProceduralNodeGraph(Procedural procedural, ColorSocket output_color_socket)
+		{
+			var uv_node = new TextureCoordinateNode();
+			m_shader.AddNode(uv_node);
+
+			ShaderNode procedural_node = CreateProceduralNode(procedural, uv_node);
+
+			if(procedural_node is CheckerTexture2dProceduralNode checker_texture_2d_node)
+			{
+				checker_texture_2d_node.outs.Color.Connect(output_color_socket);
+			}
+			else if(procedural_node is NoiseTextureProceduralNode noise_texture_node)
+			{
+				noise_texture_node.outs.Color.Connect(output_color_socket);
+			}
+		}
+
 		private ShaderNode GetShaderPart(ShaderBody part)
 		{
 			MixNode decalMixin = HandleDecals();
@@ -416,16 +550,9 @@ namespace RhinoCyclesCore.Shaders
 					alpha_invert_basecolalpha_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value1);
 				}
 
-				if(m_original.Procedurals != null && m_original.Procedurals.TryGetValue(Rhino.DocObjects.TextureType.PBR_BaseColor, out Tuple<float4, float4> color_pair))
+				if(m_original.Procedurals != null && m_original.Procedurals.TryGetValue(Rhino.DocObjects.TextureType.PBR_BaseColor, out Procedural procedural))
 				{
-					var texcoord = new TextureCoordinateNode();
-					m_shader.AddNode(texcoord);
-					var checker = new CheckerTexture2d();
-					texcoord.outs.UV.Connect(checker.ins.UV);
-					checker.ins.Color1.Value = color_pair.Item1;
-					checker.ins.Color2.Value = color_pair.Item2;
-					m_shader.AddNode(checker);
-					checker.outs.Color.Connect(principled.ins.BaseColor);
+					CreateProceduralNodeGraph(procedural, principled.ins.BaseColor);
 				}
 				else
 				{

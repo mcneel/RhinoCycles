@@ -118,7 +118,12 @@ namespace RhinoCycles
 
 				CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
 
-				if(RhinoApp.RunningOnVMWare() || SkipOpenCl()) {
+				// TODO: Is this the right spot?
+				IntPtr perlin_noise_array = RenderTexture.GetProceduralPerlinNoiseArrayPointer();
+				uint perlin_noise_array_size = RenderTexture.GetProceduralPerlinNoiseArraySize();
+				CSycles.set_rhino_perlin_noise_table(perlin_noise_array, perlin_noise_array_size);
+
+				if (RhinoApp.RunningOnVMWare() || SkipOpenCl()) {
 					CSycles.debug_set_opencl_device_type(0);
 				} else {
 					CSycles.debug_set_opencl_device_type(RcCore.It.AllSettings.OpenClDeviceType);

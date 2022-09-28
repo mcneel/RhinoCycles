@@ -26,68 +26,182 @@ using Rhino.Geometry;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
 using RhinoCyclesCore.Core;
-using RhinoCyclesCore.ExtensionMethods;
 using Light = Rhino.Render.ChangeQueue.Light;
 
 namespace RhinoCyclesCore.Converters
 {
+	public abstract class Procedural
+	{
+		public ccl.Transform MappingTransform { get; set; } = ccl.Transform.Identity();
+	}
+
+	public abstract class TwoColorProcedural : Procedural
+	{
+		public Color4f Color1 { get; set; } = Color4f.Black;
+		public Color4f Color2 { get; set; } = Color4f.White;
+		public double Amount1 { get; set; } = 1.0;
+		public double Amount2 { get; set; } = 1.0;
+		public Procedural Child1 { get; set; } = null;
+		public Procedural Child2 { get; set; } = null;
+	}
+
+	public class CheckerTexture2dProcedural : TwoColorProcedural
+	{
+		public bool RemapTextures { get; set; } = true;
+	}
+
+	public class NoiseTextureProcedural : TwoColorProcedural
+	{
+		public int NoiseType { get; set; } = 0;
+		public int SpecSynthType { get; set; } = 0;
+		public int OctaveCount { get; set; } = 0;
+		public float FrequencyMultiplier { get; set; } = 1.0f;
+		public float AmplitudeMultiplier { get; set; } = 1.0f;
+		public float ClampMin { get; set; } = 0.0f;
+		public float ClampMax { get; set; } = 1.0f;
+		public bool ScaleToClamp { get; set; } = false;
+		public bool Inverse { get; set; } = false;
+		public float Gain { get; set; } = 1.0f;
+	}
+
 	public class ShaderConverter
 	{
 
 		private Guid realtimDisplaMaterialId = new Guid("e6cd1973-b739-496e-ab69-32957fa48492");
 
-		protected void RecurseIntoChild(RenderTexture render_texture, string child_name, TextureType texture_type, Dictionary<TextureType, Tuple<float4, float4>> procedurals)
+		protected Procedural RecurseIntoChild(RenderTexture render_texture, string child_name, ccl.Transform transform)
 		{
+			Procedural procedural = null;
+
 			if (render_texture.ChildSlotOn(child_name) && render_texture.ChildSlotAmount(child_name) > 0.1)
 			{
 				var render_texture_child = (RenderTexture)render_texture.FindChild(child_name);
 
 				// Recursive call
-				GetProceduralData(render_texture_child, texture_type, procedurals);
+				procedural = GetProceduralData(render_texture_child, transform);
 			}
+
+			return procedural;
 		}
 
-		protected void GetProceduralData(RenderTexture render_texture, TextureType texture_type, Dictionary<TextureType, Tuple<float4, float4>> procedurals)
+		protected ccl.Transform ToCyclesTransform(Rhino.Geometry.Transform transform)
 		{
+			return new ccl.Transform(
+				(float)transform[0, 0], (float)transform[0, 1], (float)transform[0, 2], (float)transform[0, 3],
+				(float)transform[1, 0], (float)transform[1, 1], (float)transform[1, 2], (float)transform[1, 3],
+				(float)transform[2, 0], (float)transform[2, 1], (float)transform[2, 2], (float)transform[2, 3]);
+		}
+
+		protected Procedural GetProceduralData(RenderTexture render_texture, ccl.Transform transform)
+		{
+			if (render_texture == null)
+				return null;
+
 			if (render_texture.TypeName.Equals("2D Checker Texture"))
 			{
-				render_texture.Fields.TryGetValue<bool>("swap-colors", out bool swap_colors);
+				var procedural = new CheckerTexture2dProcedural();
 
-				var child_name1 = swap_colors ? "color-two" : "color-one";
-				var child_name2 = swap_colors ? "color-one" : "color-two";
+				procedural.MappingTransform = transform;
+				procedural.MappingTransform *= ToCyclesTransform(render_texture.LocalMappingTransform);
+				procedural.MappingTransform *= ccl.Transform.Scale(2.0f, 2.0f, 2.0f);
 
-				if (!render_texture.Fields.TryGetValue<Color4f>(child_name1, out Color4f color1))
+				if (render_texture.Fields.TryGetValue("color-one", out Color4f color1))
+					procedural.Color1 = color1;
+
+				if (render_texture.Fields.TryGetValue("color-two", out Color4f color2))
+					procedural.Color2 = color2;
+
+				if (render_texture.Fields.TryGetValue("texture-amount-one", out double texture_amount1))
+					procedural.Amount1 = texture_amount1;
+
+				if (render_texture.Fields.TryGetValue("texture-amount-two", out double texture_amount2))
+					procedural.Amount2 = texture_amount2;
+
+				if (render_texture.Fields.TryGetValue("remap-textures", out bool remap_textures))
+					procedural.RemapTextures = remap_textures;
+
+				var child_transform = procedural.RemapTextures ? procedural.MappingTransform : transform;
+				procedural.Child1 = RecurseIntoChild(render_texture, "color-one", child_transform);
+				procedural.Child2 = RecurseIntoChild(render_texture, "color-two", child_transform);
+
+				if (render_texture.Fields.TryGetValue("swap-colors", out bool swap_colors) && swap_colors)
 				{
-					color1 = swap_colors ? Color4f.White : Color4f.Black;
+					(procedural.Color1, procedural.Color2) = (procedural.Color2, procedural.Color1);
+					(procedural.Amount1, procedural.Amount2) = (procedural.Amount2, procedural.Amount1);
+					(procedural.Child1, procedural.Child2) = (procedural.Child2, procedural.Child1);
 				}
 
-				if (!render_texture.Fields.TryGetValue<Color4f>(child_name2, out Color4f color2))
-				{
-					color2 = swap_colors ? Color4f.Black : Color4f.White;
-				}
-
-				var texture_amount_string1 = swap_colors ? "texture-amount-two" : "texture-amount-one";
-				var texture_amount_string2 = swap_colors ? "texture-amount-one" : "texture-amount-two";
-				if (!render_texture.Fields.TryGetValue<double>(texture_amount_string1, out double texture_amount1))
-				{
-					texture_amount1 = 1.0;
-				}
-
-				if (!render_texture.Fields.TryGetValue<double>(texture_amount_string2, out double texture_amount2))
-				{
-					texture_amount2 = 1.0;
-				}
-
-				RecurseIntoChild(render_texture, child_name1, texture_type, procedurals);
-				RecurseIntoChild(render_texture, child_name2, texture_type, procedurals);
-
-				procedurals.Add(texture_type, new Tuple<float4, float4>(color1.ToFloat4(), color2.ToFloat4()));
+				return procedural;
 			}
+
+			if (render_texture.TypeName.Equals("Noise Texture"))
+			{
+				var procedural = new NoiseTextureProcedural();
+
+				procedural.MappingTransform = transform;
+				procedural.MappingTransform *= ToCyclesTransform(render_texture.LocalMappingTransform);
+
+				if (render_texture.Fields.TryGetValue("color-one", out Color4f color1))
+					procedural.Color1 = color1;
+
+				if (render_texture.Fields.TryGetValue("color-two", out Color4f color2))
+					procedural.Color2 = color2;
+
+				if (render_texture.Fields.TryGetValue("texture-amount-one", out double texture_amount1))
+					procedural.Amount1 = texture_amount1;
+
+				if (render_texture.Fields.TryGetValue("texture-amount-two", out double texture_amount2))
+					procedural.Amount2 = texture_amount2;
+
+				if (render_texture.Fields.TryGetValue("noise-type", out int noise_type))
+					procedural.NoiseType = noise_type;
+
+				if (render_texture.Fields.TryGetValue("spectral-synthesis-type", out int spec_synth_type))
+					procedural.SpecSynthType = spec_synth_type;
+
+				if (render_texture.Fields.TryGetValue("octave-count", out int octave_count))
+					procedural.OctaveCount = octave_count;
+
+				if (render_texture.Fields.TryGetValue("frequency-multiplier", out double frequency_multiplier))
+					procedural.FrequencyMultiplier = (float)frequency_multiplier;
+
+				if (render_texture.Fields.TryGetValue("amplitude-multiplier", out double amplitude_multiplier))
+					procedural.AmplitudeMultiplier = (float)amplitude_multiplier;
+
+				if (render_texture.Fields.TryGetValue("clamp-min", out double clamp_min))
+					procedural.ClampMin = (float)clamp_min;
+
+				if (render_texture.Fields.TryGetValue("clamp-max", out double clamp_max))
+					procedural.ClampMax = (float)clamp_max;
+
+				if (render_texture.Fields.TryGetValue("scale-to-clamp", out bool scale_to_clamp))
+					procedural.ScaleToClamp = scale_to_clamp;
+
+				if (render_texture.Fields.TryGetValue("inverse", out bool inverse))
+					procedural.Inverse = inverse;
+
+				if (render_texture.Fields.TryGetValue("gain", out double gain))
+					procedural.Gain = (float)gain;
+
+				procedural.Child1 = RecurseIntoChild(render_texture, "color-one", transform);
+				procedural.Child2 = RecurseIntoChild(render_texture, "color-two", transform);
+
+				if (render_texture.Fields.TryGetValue("swap-colors", out bool swap_colors) && swap_colors)
+				{
+					(procedural.Color1, procedural.Color2) = (procedural.Color2, procedural.Color1);
+					(procedural.Amount1, procedural.Amount2) = (procedural.Amount2, procedural.Amount1);
+					(procedural.Child1, procedural.Child2) = (procedural.Child2, procedural.Child1);
+				}
+
+				return procedural;
+			}
+
+			return null;
 		}
 
-		protected Dictionary<TextureType, Tuple<float4, float4>> ProcessProcedurals(RenderMaterial rm)
+		protected Dictionary<TextureType, Procedural> ProcessProcedurals(RenderMaterial rm)
 		{
-			var procedurals = new Dictionary<TextureType, Tuple<float4, float4>>();
+			var procedurals = new Dictionary<TextureType, Procedural>();
 
 			foreach (var child_slot in Enum.GetValues(typeof(RenderMaterial.StandardChildSlots)).Cast<RenderMaterial.StandardChildSlots>())
 			{
@@ -104,7 +218,10 @@ namespace RhinoCyclesCore.Converters
 
 				if (render_texture != null && child_slot == RenderMaterial.StandardChildSlots.PbrBaseColor)
 				{
-					GetProceduralData(render_texture, texture_type, procedurals);
+					var procedural = GetProceduralData(render_texture, ccl.Transform.Identity());
+
+					if(procedural != null)
+						procedurals.Add(texture_type, procedural);
 				}
 			}
 
