@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using ccl;
+using ccl.ShaderNodes;
 using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
@@ -52,8 +53,8 @@ namespace RhinoCyclesCore.Converters
 
 	public class NoiseTextureProcedural : TwoColorProcedural
 	{
-		public int NoiseType { get; set; } = 0;
-		public int SpecSynthType { get; set; } = 0;
+		public NoiseTextureProceduralNode.NoiseTypes NoiseType { get; set; } = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+		public NoiseTextureProceduralNode.SpecSynthTypes SpecSynthType { get; set; } = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
 		public int OctaveCount { get; set; } = 0;
 		public float FrequencyMultiplier { get; set; } = 1.0f;
 		public float AmplitudeMultiplier { get; set; } = 1.0f;
@@ -90,6 +91,32 @@ namespace RhinoCyclesCore.Converters
 				(float)transform[0, 0], (float)transform[0, 1], (float)transform[0, 2], (float)transform[0, 3],
 				(float)transform[1, 0], (float)transform[1, 1], (float)transform[1, 2], (float)transform[1, 3],
 				(float)transform[2, 0], (float)transform[2, 1], (float)transform[2, 2], (float)transform[2, 3]);
+		}
+
+		protected NoiseTextureProceduralNode.NoiseTypes StringToNoiseType(string enum_string)
+		{
+			switch(enum_string)
+			{
+				case "perlin": return NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+				case "valuenoise": return NoiseTextureProceduralNode.NoiseTypes.VALUE_NOISE;
+				case "perlin_plus_value": return NoiseTextureProceduralNode.NoiseTypes.PERLIN_PLUS_VALUE;
+				case "simplex": return NoiseTextureProceduralNode.NoiseTypes.SIMPLEX;
+				case "sparseconvolution": return NoiseTextureProceduralNode.NoiseTypes.SPARSE_CONVOLUTION;
+				case "latticeconvolution": return NoiseTextureProceduralNode.NoiseTypes.LATTICE_CONVOLUTION;
+				case "wardshermite": return NoiseTextureProceduralNode.NoiseTypes.WARDS_HERMITE;
+				case "aaltonen": return NoiseTextureProceduralNode.NoiseTypes.AALTONEN;
+				default: return NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+			}
+		}
+
+		protected NoiseTextureProceduralNode.SpecSynthTypes StringToSpecSynthType(string enum_string)
+		{
+			switch (enum_string)
+			{
+				case "fractalsum": return NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
+				case "turbulence": return NoiseTextureProceduralNode.SpecSynthTypes.TURBULENCE;
+				default: return NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
+			}
 		}
 
 		protected Procedural GetProceduralData(RenderTexture render_texture, ccl.Transform transform)
@@ -153,11 +180,11 @@ namespace RhinoCyclesCore.Converters
 				if (render_texture.Fields.TryGetValue("texture-amount-two", out double texture_amount2))
 					procedural.Amount2 = texture_amount2;
 
-				if (render_texture.Fields.TryGetValue("noise-type", out int noise_type))
-					procedural.NoiseType = noise_type;
+				if (render_texture.Fields.TryGetValue("noise-type", out string noise_type))
+					procedural.NoiseType = StringToNoiseType(noise_type);
 
-				if (render_texture.Fields.TryGetValue("spectral-synthesis-type", out int spec_synth_type))
-					procedural.SpecSynthType = spec_synth_type;
+				if (render_texture.Fields.TryGetValue("spectral-synthesis-type", out string spec_synth_type))
+					procedural.SpecSynthType = StringToSpecSynthType(spec_synth_type);
 
 				if (render_texture.Fields.TryGetValue("octave-count", out int octave_count))
 					procedural.OctaveCount = octave_count;
