@@ -27,50 +27,14 @@ using Rhino.Geometry;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
 using RhinoCyclesCore.Core;
+using RhinoCyclesCore.ExtensionMethods;
 using Light = Rhino.Render.ChangeQueue.Light;
 
 namespace RhinoCyclesCore.Converters
 {
 	public abstract class Procedural
 	{
-		public ccl.Transform MappingTransform { get; set; } = ccl.Transform.Identity();
-	}
-
-	public abstract class TwoColorProcedural : Procedural
-	{
-		public Color4f Color1 { get; set; } = Color4f.Black;
-		public Color4f Color2 { get; set; } = Color4f.White;
-		public double Amount1 { get; set; } = 1.0;
-		public double Amount2 { get; set; } = 1.0;
-		public Procedural Child1 { get; set; } = null;
-		public Procedural Child2 { get; set; } = null;
-	}
-
-	public class CheckerTexture2dProcedural : TwoColorProcedural
-	{
-		public bool RemapTextures { get; set; } = true;
-	}
-
-	public class NoiseTextureProcedural : TwoColorProcedural
-	{
-		public NoiseTextureProceduralNode.NoiseTypes NoiseType { get; set; } = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-		public NoiseTextureProceduralNode.SpecSynthTypes SpecSynthType { get; set; } = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
-		public int OctaveCount { get; set; } = 0;
-		public float FrequencyMultiplier { get; set; } = 1.0f;
-		public float AmplitudeMultiplier { get; set; } = 1.0f;
-		public float ClampMin { get; set; } = 0.0f;
-		public float ClampMax { get; set; } = 1.0f;
-		public bool ScaleToClamp { get; set; } = false;
-		public bool Inverse { get; set; } = false;
-		public float Gain { get; set; } = 1.0f;
-	}
-
-	public class ShaderConverter
-	{
-
-		private Guid realtimDisplaMaterialId = new Guid("e6cd1973-b739-496e-ab69-32957fa48492");
-
-		protected Procedural RecurseIntoChild(RenderTexture render_texture, string child_name, ccl.Transform transform)
+		public static Procedural CreateProceduralFromChild(RenderTexture render_texture, string child_name, ccl.Transform transform)
 		{
 			Procedural procedural = null;
 
@@ -79,13 +43,44 @@ namespace RhinoCyclesCore.Converters
 				var render_texture_child = (RenderTexture)render_texture.FindChild(child_name);
 
 				// Recursive call
-				procedural = GetProceduralData(render_texture_child, transform);
+				procedural = CreateProcedural(render_texture_child, transform);
 			}
 
 			return procedural;
 		}
 
-		protected ccl.Transform ToCyclesTransform(Rhino.Geometry.Transform transform)
+		public static Procedural CreateProcedural(RenderTexture render_texture, ccl.Transform transform)
+		{
+			if (render_texture == null)
+				return null;
+
+			Procedural procedural = null;
+
+			if (render_texture.TypeName.Equals("2D Checker Texture"))
+			{
+				procedural = new CheckerTexture2dProcedural(render_texture, transform);
+			}
+			else if(render_texture.TypeName.Equals("Noise Texture"))
+			{
+				procedural = new NoiseTextureProcedural(render_texture, transform);
+			}
+
+			if (procedural is TwoColorProcedural two_color)
+			{
+				ccl.Transform child_transform = two_color.GetChildTransform();
+				two_color.Child1 = CreateProceduralFromChild(render_texture, "color-one", child_transform);
+				two_color.Child2 = CreateProceduralFromChild(render_texture, "color-two", child_transform);
+
+				if(two_color.SwapColors)
+				{
+					(two_color.Child1, two_color.Child2) = (two_color.Child2, two_color.Child1);
+				}
+			}
+
+			return procedural;
+		}
+
+		protected static ccl.Transform ToCyclesTransform(Rhino.Geometry.Transform transform)
 		{
 			return new ccl.Transform(
 				(float)transform[0, 0], (float)transform[0, 1], (float)transform[0, 2], (float)transform[0, 3],
@@ -93,9 +88,265 @@ namespace RhinoCyclesCore.Converters
 				(float)transform[2, 0], (float)transform[2, 1], (float)transform[2, 2], (float)transform[2, 3]);
 		}
 
-		protected NoiseTextureProceduralNode.NoiseTypes StringToNoiseType(string enum_string)
+		public Procedural(RenderTexture render_texture, ccl.Transform transform)
 		{
-			switch(enum_string)
+			RenderTexture = render_texture;
+
+			if(render_texture != null)
+			{
+				InputTransform = transform;
+				MappingTransform = ToCyclesTransform(render_texture.LocalMappingTransform) * transform;
+			}
+		}
+
+		public abstract ShaderNode CreateProceduralNode(Shader shader, TextureCoordinateNode uv_node);
+		public ccl.Transform InputTransform { get; set; } = ccl.Transform.Identity();
+		public ccl.Transform MappingTransform { get; set; } = ccl.Transform.Identity();
+
+		protected virtual ccl.Transform GetChildTransform() { return InputTransform; }
+		protected RenderTexture RenderTexture { get; set; } = null;
+	}
+
+	public abstract class TwoColorProcedural : Procedural
+	{
+		public TwoColorProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+		}
+
+		public Color4f Color1
+		{
+			get {
+				return SwapColors ?
+					RenderTexture.Fields.TryGetValue("color-two", out Color4f color2) ? color2 : Color4f.White :
+					RenderTexture.Fields.TryGetValue("color-one", out Color4f color1) ? color1 : Color4f.Black;
+			}
+		}
+
+		public Color4f Color2
+		{
+			get
+			{
+				return SwapColors ?
+					RenderTexture.Fields.TryGetValue("color-one", out Color4f color1) ? color1 : Color4f.Black :
+					RenderTexture.Fields.TryGetValue("color-two", out Color4f color2) ? color2 : Color4f.White;
+			}
+		}
+
+		public double Amount1
+		{
+			get { return SwapColors ?
+					RenderTexture.Fields.TryGetValue("texture-amount-two", out double texture_amount2) ? texture_amount2 : 1.0f :
+					RenderTexture.Fields.TryGetValue("texture-amount-one", out double texture_amount1) ? texture_amount1 : 1.0f; }
+		}
+
+		public double Amount2
+		{
+			get
+			{
+				return SwapColors ?
+					RenderTexture.Fields.TryGetValue("texture-amount-one", out double texture_amount1) ? texture_amount1 : 1.0f :
+					RenderTexture.Fields.TryGetValue("texture-amount-two", out double texture_amount2) ? texture_amount2 : 1.0f;
+			}
+		}
+
+		public bool SwapColors
+		{
+			get
+			{
+				return RenderTexture.Fields.TryGetValue("swap-colors", out bool swap_colors) ? swap_colors : false;
+			}
+		}
+
+		public Procedural Child1 { get; set; } = null;
+		public Procedural Child2 { get; set; } = null;
+	}
+
+	public class CheckerTexture2dProcedural : TwoColorProcedural
+	{
+		public CheckerTexture2dProcedural(RenderTexture render_texture, ccl.Transform transform)
+			: base(render_texture, transform)
+		{
+			MappingTransform *= ccl.Transform.Scale(2.0f, 2.0f, 2.0f);
+		}
+
+		protected override ccl.Transform GetChildTransform()
+		{
+			return RemapTextures ? MappingTransform : InputTransform;
+		}
+
+		public override ShaderNode CreateProceduralNode(Shader shader, TextureCoordinateNode uv_node)
+		{
+			var node = new CheckerTexture2dProceduralNode();
+			shader.AddNode(node);
+
+			node.UvwTransform = MappingTransform;
+
+			if (Child1 != null)
+			{
+				// Recursive call
+				ShaderNode child_node = Child1.CreateProceduralNode(shader, uv_node);
+
+				if (child_node is CheckerTexture2dProceduralNode child_checker_texture_2d_node)
+				{
+					child_checker_texture_2d_node.outs.Color.Connect(node.ins.Color1);
+				}
+				else if (child_node is NoiseTextureProceduralNode child_noise_texture_procedural_node)
+				{
+					child_noise_texture_procedural_node.outs.Color.Connect(node.ins.Color1);
+				}
+			}
+			else
+			{
+				node.ins.Color1.Value = Color1.ToFloat4();
+			}
+
+			if (Child2 != null)
+			{
+				// Recursive call
+				ShaderNode child_node = Child2.CreateProceduralNode(shader, uv_node);
+
+				if (child_node is CheckerTexture2dProceduralNode child_checker_texture_2d_node)
+				{
+					child_checker_texture_2d_node.outs.Color.Connect(node.ins.Color2);
+				}
+				else if (child_node is NoiseTextureProceduralNode child_noise_texture_procedural_node)
+				{
+					child_noise_texture_procedural_node.outs.Color.Connect(node.ins.Color2);
+				}
+			}
+			else
+			{
+				node.ins.Color2.Value = Color2.ToFloat4();
+			}
+
+			uv_node.outs.UV.Connect(node.ins.UVW);
+
+			return node;
+		}
+
+		public bool RemapTextures
+		{
+			get { return RenderTexture.Fields.TryGetValue("remap-textures", out bool remap_textures) ? remap_textures : true; }
+		}
+	}
+
+	public class NoiseTextureProcedural : TwoColorProcedural
+	{
+		public NoiseTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+		}
+
+		public override ShaderNode CreateProceduralNode(Shader shader, TextureCoordinateNode uv_node)
+		{
+			var node = new NoiseTextureProceduralNode();
+			shader.AddNode(node);
+
+			node.UvwTransform = MappingTransform;
+
+			if (Child1 != null)
+			{
+				// Recursive call
+				ShaderNode child_node = Child1.CreateProceduralNode(shader, uv_node);
+
+				if (child_node is CheckerTexture2dProceduralNode child_checker_texture_2d_node)
+				{
+					child_checker_texture_2d_node.outs.Color.Connect(node.ins.Color1);
+				}
+				else if (child_node is NoiseTextureProceduralNode child_noise_texture_procedural_node)
+				{
+					child_noise_texture_procedural_node.outs.Color.Connect(node.ins.Color1);
+				}
+			}
+			else
+			{
+				node.ins.Color1.Value = Color1.ToFloat4();
+			}
+
+			if (Child2 != null)
+			{
+				// Recursive call
+				ShaderNode child_node = Child2.CreateProceduralNode(shader, uv_node);
+
+				if (child_node is CheckerTexture2dProceduralNode child_checker_texture_2d_node)
+				{
+					child_checker_texture_2d_node.outs.Color.Connect(node.ins.Color2);
+				}
+				else if (child_node is NoiseTextureProceduralNode child_noise_texture_procedural_node)
+				{
+					child_noise_texture_procedural_node.outs.Color.Connect(node.ins.Color2);
+				}
+			}
+			else
+			{
+				node.ins.Color2.Value = Color2.ToFloat4();
+			}
+
+			node.NoiseType = NoiseType;
+			node.SpecSynthType = SpecSynthType;
+			node.OctaveCount = OctaveCount;
+			node.FrequencyMultiplier = FrequencyMultiplier;
+			node.AmplitudeMultiplier = AmplitudeMultiplier;
+			node.ClampMin = ClampMin;
+			node.ClampMax = ClampMax;
+			node.ScaleToClamp = ScaleToClamp;
+			node.Inverse = Inverse;
+			node.Gain = Gain;
+
+			uv_node.outs.UV.Connect(node.ins.UVW);
+
+			return node;
+		}
+
+		public NoiseTextureProceduralNode.NoiseTypes NoiseType {
+			get { return RenderTexture.Fields.TryGetValue("noise-type", out string noise_type) ? StringToNoiseType(noise_type) : NoiseTextureProceduralNode.NoiseTypes.PERLIN; }
+		}
+
+		public NoiseTextureProceduralNode.SpecSynthTypes SpecSynthType {
+			get { return RenderTexture.Fields.TryGetValue("spectral-synthesis-type", out string spec_synth_type) ? StringToSpecSynthType(spec_synth_type) : NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM; }
+		}
+
+		public int OctaveCount {
+			get { return RenderTexture.Fields.TryGetValue("octave-count", out int octave_count) ? octave_count : 3; }
+		}
+
+		public float FrequencyMultiplier
+		{
+			get { return RenderTexture.Fields.TryGetValue("frequency-multiplier", out double frequency_multiplier) ? (float)frequency_multiplier : 2.0f; }
+		}
+
+		public float AmplitudeMultiplier
+		{
+			get { return RenderTexture.Fields.TryGetValue("amplitude-multiplier", out double amplitude_multiplier) ? (float)amplitude_multiplier : 0.5f; }
+		}
+
+		public float ClampMin
+		{
+			get { return RenderTexture.Fields.TryGetValue("clamp-min", out double clamp_min) ? (float)clamp_min : -1.0f; }
+		}
+
+		public float ClampMax
+		{
+			get { return RenderTexture.Fields.TryGetValue("clamp-max", out double clamp_max) ? (float)clamp_max : 1.0f; }
+		}
+
+		public bool ScaleToClamp
+		{
+			get { return RenderTexture.Fields.TryGetValue("scale-to-clamp", out bool scale_to_clamp) ? scale_to_clamp : false; }
+		}
+
+		public bool Inverse
+		{
+			get { return RenderTexture.Fields.TryGetValue("inverse", out bool inverse) ? inverse : false; }
+		}
+
+		public float Gain
+		{
+			get { return RenderTexture.Fields.TryGetValue("gain", out double gain) ? (float)gain : 1.0f; }
+		}
+
+		private NoiseTextureProceduralNode.NoiseTypes StringToNoiseType(string enum_string)
+		{
+			switch (enum_string)
 			{
 				case "perlin": return NoiseTextureProceduralNode.NoiseTypes.PERLIN;
 				case "valuenoise": return NoiseTextureProceduralNode.NoiseTypes.VALUE_NOISE;
@@ -109,7 +360,7 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		protected NoiseTextureProceduralNode.SpecSynthTypes StringToSpecSynthType(string enum_string)
+		private NoiseTextureProceduralNode.SpecSynthTypes StringToSpecSynthType(string enum_string)
 		{
 			switch (enum_string)
 			{
@@ -118,113 +369,12 @@ namespace RhinoCyclesCore.Converters
 				default: return NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
 			}
 		}
+	}
 
-		protected Procedural GetProceduralData(RenderTexture render_texture, ccl.Transform transform)
-		{
-			if (render_texture == null)
-				return null;
+	public class ShaderConverter
+	{
 
-			if (render_texture.TypeName.Equals("2D Checker Texture"))
-			{
-				var procedural = new CheckerTexture2dProcedural();
-
-				procedural.MappingTransform = transform;
-				procedural.MappingTransform *= ToCyclesTransform(render_texture.LocalMappingTransform);
-				procedural.MappingTransform *= ccl.Transform.Scale(2.0f, 2.0f, 2.0f);
-
-				if (render_texture.Fields.TryGetValue("color-one", out Color4f color1))
-					procedural.Color1 = color1;
-
-				if (render_texture.Fields.TryGetValue("color-two", out Color4f color2))
-					procedural.Color2 = color2;
-
-				if (render_texture.Fields.TryGetValue("texture-amount-one", out double texture_amount1))
-					procedural.Amount1 = texture_amount1;
-
-				if (render_texture.Fields.TryGetValue("texture-amount-two", out double texture_amount2))
-					procedural.Amount2 = texture_amount2;
-
-				if (render_texture.Fields.TryGetValue("remap-textures", out bool remap_textures))
-					procedural.RemapTextures = remap_textures;
-
-				var child_transform = procedural.RemapTextures ? procedural.MappingTransform : transform;
-				procedural.Child1 = RecurseIntoChild(render_texture, "color-one", child_transform);
-				procedural.Child2 = RecurseIntoChild(render_texture, "color-two", child_transform);
-
-				if (render_texture.Fields.TryGetValue("swap-colors", out bool swap_colors) && swap_colors)
-				{
-					(procedural.Color1, procedural.Color2) = (procedural.Color2, procedural.Color1);
-					(procedural.Amount1, procedural.Amount2) = (procedural.Amount2, procedural.Amount1);
-					(procedural.Child1, procedural.Child2) = (procedural.Child2, procedural.Child1);
-				}
-
-				return procedural;
-			}
-
-			if (render_texture.TypeName.Equals("Noise Texture"))
-			{
-				var procedural = new NoiseTextureProcedural();
-
-				procedural.MappingTransform = transform;
-				procedural.MappingTransform *= ToCyclesTransform(render_texture.LocalMappingTransform);
-
-				if (render_texture.Fields.TryGetValue("color-one", out Color4f color1))
-					procedural.Color1 = color1;
-
-				if (render_texture.Fields.TryGetValue("color-two", out Color4f color2))
-					procedural.Color2 = color2;
-
-				if (render_texture.Fields.TryGetValue("texture-amount-one", out double texture_amount1))
-					procedural.Amount1 = texture_amount1;
-
-				if (render_texture.Fields.TryGetValue("texture-amount-two", out double texture_amount2))
-					procedural.Amount2 = texture_amount2;
-
-				if (render_texture.Fields.TryGetValue("noise-type", out string noise_type))
-					procedural.NoiseType = StringToNoiseType(noise_type);
-
-				if (render_texture.Fields.TryGetValue("spectral-synthesis-type", out string spec_synth_type))
-					procedural.SpecSynthType = StringToSpecSynthType(spec_synth_type);
-
-				if (render_texture.Fields.TryGetValue("octave-count", out int octave_count))
-					procedural.OctaveCount = octave_count;
-
-				if (render_texture.Fields.TryGetValue("frequency-multiplier", out double frequency_multiplier))
-					procedural.FrequencyMultiplier = (float)frequency_multiplier;
-
-				if (render_texture.Fields.TryGetValue("amplitude-multiplier", out double amplitude_multiplier))
-					procedural.AmplitudeMultiplier = (float)amplitude_multiplier;
-
-				if (render_texture.Fields.TryGetValue("clamp-min", out double clamp_min))
-					procedural.ClampMin = (float)clamp_min;
-
-				if (render_texture.Fields.TryGetValue("clamp-max", out double clamp_max))
-					procedural.ClampMax = (float)clamp_max;
-
-				if (render_texture.Fields.TryGetValue("scale-to-clamp", out bool scale_to_clamp))
-					procedural.ScaleToClamp = scale_to_clamp;
-
-				if (render_texture.Fields.TryGetValue("inverse", out bool inverse))
-					procedural.Inverse = inverse;
-
-				if (render_texture.Fields.TryGetValue("gain", out double gain))
-					procedural.Gain = (float)gain;
-
-				procedural.Child1 = RecurseIntoChild(render_texture, "color-one", transform);
-				procedural.Child2 = RecurseIntoChild(render_texture, "color-two", transform);
-
-				if (render_texture.Fields.TryGetValue("swap-colors", out bool swap_colors) && swap_colors)
-				{
-					(procedural.Color1, procedural.Color2) = (procedural.Color2, procedural.Color1);
-					(procedural.Amount1, procedural.Amount2) = (procedural.Amount2, procedural.Amount1);
-					(procedural.Child1, procedural.Child2) = (procedural.Child2, procedural.Child1);
-				}
-
-				return procedural;
-			}
-
-			return null;
-		}
+		private Guid realtimDisplaMaterialId = new Guid("e6cd1973-b739-496e-ab69-32957fa48492");
 
 		protected Dictionary<TextureType, Procedural> ProcessProcedurals(RenderMaterial rm)
 		{
@@ -245,7 +395,7 @@ namespace RhinoCyclesCore.Converters
 
 				if (render_texture != null && child_slot == RenderMaterial.StandardChildSlots.PbrBaseColor)
 				{
-					var procedural = GetProceduralData(render_texture, ccl.Transform.Identity());
+					var procedural = Procedural.CreateProcedural(render_texture, ccl.Transform.Identity());
 
 					if(procedural != null)
 						procedurals.Add(texture_type, procedural);
