@@ -325,16 +325,7 @@ namespace RhinoCyclesCore.Shaders
 			var uv_node = new TextureCoordinateNode();
 			m_shader.AddNode(uv_node);
 
-			ShaderNode procedural_node = procedural.CreateProceduralNode(m_shader, uv_node);
-
-			if (procedural_node is CheckerTexture2dProceduralNode checker_texture_2d_node)
-			{
-				checker_texture_2d_node.outs.Color.Connect(output_color_socket);
-			}
-			else if(procedural_node is NoiseTextureProceduralNode noise_texture_node)
-			{
-				noise_texture_node.outs.Color.Connect(output_color_socket);
-			}
+			procedural.CreateAndConnectProceduralNode(m_shader, uv_node.outs.UV, output_color_socket);
 		}
 
 		private ShaderNode GetShaderPart(ShaderBody part)
