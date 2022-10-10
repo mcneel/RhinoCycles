@@ -64,6 +64,10 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new NoiseTextureProcedural(render_texture, transform);
 			}
+			else if (render_texture.TypeName.Equals("Waves Texture"))
+			{
+				procedural = new WavesTextureProcedural(render_texture, transform);
+			}
 
 			if (procedural is TwoColorProcedural two_color)
 			{
@@ -265,7 +269,7 @@ namespace RhinoCyclesCore.Converters
 		public bool Inverse { get; set; } = false;
 		public float Gain { get; set; } = 0.5f;
 
-		private NoiseTextureProceduralNode.NoiseTypes StringToNoiseType(string enum_string)
+		private static NoiseTextureProceduralNode.NoiseTypes StringToNoiseType(string enum_string)
 		{
 			switch (enum_string)
 			{
@@ -281,7 +285,7 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		private NoiseTextureProceduralNode.SpecSynthTypes StringToSpecSynthType(string enum_string)
+		private static NoiseTextureProceduralNode.SpecSynthTypes StringToSpecSynthType(string enum_string)
 		{
 			switch (enum_string)
 			{
@@ -292,7 +296,68 @@ namespace RhinoCyclesCore.Converters
 		}
 	}
 
-	public class ShaderConverter
+	public class WavesTextureProcedural : TwoColorProcedural
+	{
+		public WavesTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("wave-type", out int wave_type))
+				WaveType = (WavesTextureProceduralNode.WaveTypes)wave_type;
+
+			if (rtf.TryGetValue("wave-width", out double wave_width))
+				WaveWidth = (float)wave_width;
+
+			if (rtf.TryGetValue("wave-width-tex-on", out bool wave_width_texture_on))
+				WaveWidthTextureOn = wave_width_texture_on;
+
+			if (rtf.TryGetValue("contrast1", out double contrast1))
+				Contrast1 = (float)contrast1;
+
+			if (rtf.TryGetValue("contrast2", out double contrast2))
+				Contrast2 = (float)contrast2;
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var node = new WavesTextureProceduralNode();
+			shader.AddNode(node);
+
+			node.UvwTransform = MappingTransform;
+			node.WaveType = WaveType;
+			node.WaveWidth = WaveWidth;
+			node.WaveWidthTextureOn = WaveWidthTextureOn;
+			node.Contrast1 = Contrast1;
+			node.Contrast2 = Contrast2;
+
+			// TODO: Create and connect WavesWidthProceduralNode here and send as input to below function.
+
+			// Recursive call
+			ConnectChildNodes(shader, uvw_output, node.ins.Color1, node.ins.Color2);
+
+			ConnectInputOutputNodes(uvw_output, parent_color_input, node.outs.Color, node.ins.UVW);
+
+			return node;
+		}
+
+		public WavesTextureProceduralNode.WaveTypes WaveType { get; set; } = WavesTextureProceduralNode.WaveTypes.LINEAR;
+		public float WaveWidth { get; set; } = 0.5f;
+		public bool WaveWidthTextureOn { get; set; } = false;
+		public float Contrast1 { get; set; } = 1.0f;
+		public float Contrast2 { get; set; } = 0.5f;
+
+		private static WavesTextureProceduralNode.WaveTypes StringToWaveType(string enum_string)
+		{
+			switch (enum_string)
+			{
+				case "linear": return WavesTextureProceduralNode.WaveTypes.LINEAR;
+				case "radial": return WavesTextureProceduralNode.WaveTypes.RADIAL;
+				default: return WavesTextureProceduralNode.WaveTypes.LINEAR;
+			}
+		}
+	}
+
+		public class ShaderConverter
 	{
 
 		private Guid realtimDisplaMaterialId = new Guid("e6cd1973-b739-496e-ab69-32957fa48492");
