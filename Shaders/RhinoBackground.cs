@@ -56,7 +56,9 @@ namespace RhinoCyclesCore.Shaders
 			{
 				var texcoord210 = new TextureCoordinateNode("texcoord");
 
-				RhinoAzimuthAltitudeTransformNode azimuthAltitudeTransformNode = new RhinoAzimuthAltitudeTransformNode("azimuthAltitudeTransform");
+				RhinoAzimuthAltitudeTransformNode bgAzimuthAltitudeTransformNode = new RhinoAzimuthAltitudeTransformNode("bgAzimuthAltitudeTransform");
+				RhinoAzimuthAltitudeTransformNode reflAzimuthAltitudeTransformNode = new RhinoAzimuthAltitudeTransformNode("reflAzimuthAltitudeTransform");
+				RhinoAzimuthAltitudeTransformNode skyAzimuthAltitudeTransformNode = new RhinoAzimuthAltitudeTransformNode("skyAzimuthAltitudeTransform");
 
 				var bg_env_texture255 = new EnvironmentTextureNode("bg_env_texture");
 				bg_env_texture255.Projection = TextureNode.EnvironmentProjection.Equirectangular;
@@ -242,7 +244,9 @@ namespace RhinoCyclesCore.Shaders
 				var final_bg277 = new BackgroundNode("final_bg");
 				final_bg277.ins.Strength.Value = 1f;
 
-				m_shader.AddNode(azimuthAltitudeTransformNode);
+				m_shader.AddNode(bgAzimuthAltitudeTransformNode);
+				m_shader.AddNode(reflAzimuthAltitudeTransformNode);
+				m_shader.AddNode(skyAzimuthAltitudeTransformNode);
 				m_shader.AddNode(texcoord210);
 				m_shader.AddNode(bg_env_texture255);
 				m_shader.AddNode(bg_color_or_texture259);
@@ -289,10 +293,12 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(mix292);
 				m_shader.AddNode(final_bg277);
 
-				texcoord210.outs.Generated.Connect(azimuthAltitudeTransformNode.ins.Vector);
+				texcoord210.outs.Generated.Connect(bgAzimuthAltitudeTransformNode.ins.Vector);
+				texcoord210.outs.Generated.Connect(reflAzimuthAltitudeTransformNode.ins.Vector);
+				texcoord210.outs.Generated.Connect(skyAzimuthAltitudeTransformNode.ins.Vector);
 
 
-				azimuthAltitudeTransformNode.outs.Vector.Connect(bg_env_texture255.ins.Vector);
+				bgAzimuthAltitudeTransformNode.outs.Vector.Connect(bg_env_texture255.ins.Vector);
 				bg_env_texture255.outs.Color.Connect(bg_color_or_texture259.ins.Color2);
 				bg_color_or_texture259.outs.Color.Connect(separate_bg_color265.ins.Image);
 				separate_bg_color265.outs.R.Connect(factor_r262.ins.Value1);
@@ -316,7 +322,7 @@ namespace RhinoCyclesCore.Shaders
 				light_path235.outs.IsSingularRay.Connect(maximum306.ins.Value2);
 				gradient_or_other280.outs.Color.Connect(bg_no_customs301.ins.Color);
 				maximum306.outs.Value.Connect(bg_no_customs301.ins.Strength);
-				azimuthAltitudeTransformNode.outs.Vector.Connect(refl_env_texture256.ins.Vector);
+				reflAzimuthAltitudeTransformNode.outs.Vector.Connect(refl_env_texture256.ins.Vector);
 				refl_env_texture256.outs.Color.Connect(refl_color_or_texture260.ins.Color2);
 				refl_color_or_texture260.outs.Color.Connect(separate_refl_color270.ins.Image);
 				separate_refl_color270.outs.R.Connect(factor_refl_r267.ins.Value1);
@@ -332,7 +338,7 @@ namespace RhinoCyclesCore.Shaders
 				factor_refl_b269.outs.Value.Connect(factored_refl_color271.ins.B);
 				use_reflect_refract_when_glossy_and_reflection282.outs.Value.Connect(refl_env_when_enabled283.ins.Value2);
 				gradient_or_other280.outs.Color.Connect(skycolor_or_final_bg281.ins.Color1);
-				azimuthAltitudeTransformNode.outs.Vector.Connect(sky_env_texture257.ins.Vector);
+				skyAzimuthAltitudeTransformNode.outs.Vector.Connect(sky_env_texture257.ins.Vector);
 				skycolor_or_final_bg281.outs.Color.Connect(sky_color_or_texture258.ins.Color1);
 				sky_env_texture257.outs.Color.Connect(sky_color_or_texture258.ins.Color2);
 				sky_color_or_texture258.outs.Color.Connect(separate_sky_color275.ins.Image);
@@ -378,8 +384,8 @@ namespace RhinoCyclesCore.Shaders
 				{
 					RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.BgTexture);
 					_SetEnvironmentProjection(m_original_background.BgTexture, bg_env_texture255);
-					azimuthAltitudeTransformNode.Altitude = m_original_background.BgTexture.Transform.z.x;
-					azimuthAltitudeTransformNode.Azimuth = m_original_background.BgTexture.Transform.z.z;
+					bgAzimuthAltitudeTransformNode.Altitude = m_original_background.BgTexture.Transform.z.x;
+					bgAzimuthAltitudeTransformNode.Azimuth = m_original_background.BgTexture.Transform.z.z;
 				}
 				if (m_original_background.BackgroundFill == BackgroundStyle.WallpaperImage && m_original_background.Wallpaper.HasTextureImage)
 				{
@@ -390,17 +396,15 @@ namespace RhinoCyclesCore.Shaders
 				{
 					RenderEngine.SetTextureImage(refl_env_texture256, m_original_background.ReflectionTexture);
 					_SetEnvironmentProjection(m_original_background.ReflectionTexture, refl_env_texture256);
-					//refl_env_texture256.Translation = m_original_background.ReflectionTexture.Transform.x;
-					//refl_env_texture256.Scale = m_original_background.ReflectionTexture.Transform.y;
-					//refl_env_texture256.Rotation = m_original_background.ReflectionTexture.Transform.z;
+					reflAzimuthAltitudeTransformNode.Altitude = m_original_background.ReflectionTexture.Transform.z.x;
+					reflAzimuthAltitudeTransformNode.Azimuth = m_original_background.ReflectionTexture.Transform.z.z;
 				}
 				if (m_original_background.HasSkyEnvTexture)
 				{
 					RenderEngine.SetTextureImage(sky_env_texture257, m_original_background.SkyTexture);
 					_SetEnvironmentProjection(m_original_background.SkyTexture, sky_env_texture257);
-					//sky_env_texture257.Translation = m_original_background.SkyTexture.Transform.x;
-					//sky_env_texture257.Scale = m_original_background.SkyTexture.Transform.y;
-					//sky_env_texture257.Rotation = m_original_background.SkyTexture.Transform.z;
+					skyAzimuthAltitudeTransformNode.Altitude = m_original_background.SkyTexture.Transform.z.x;
+					skyAzimuthAltitudeTransformNode.Azimuth = m_original_background.SkyTexture.Transform.z.z;
 				}
 
 				if (m_original_background.NoCustomsWithSkylightEnabled)
