@@ -99,10 +99,16 @@ namespace RhinoCyclesCore.Converters
 
 			if(procedural is PerturbingTextureProcedural perturbing_texture)
 			{
-				RenderTexture wave_width_child = (RenderTexture)render_texture.FindChild("wave-width-tex");
-				if (wave_width_child != null)
+				RenderTexture perturbing_source_child = (RenderTexture)render_texture.FindChild("source");
+				if (perturbing_source_child != null)
 				{
-					waves_texture.WaveWidthChild = CreateProcedural(wave_width_child, child_transform); // Recursive call
+					perturbing_texture.SourceChild = CreateProcedural(perturbing_source_child, child_transform); // Recursive call
+				}
+
+				RenderTexture perturbing_perturb_child = (RenderTexture)render_texture.FindChild("perturb");
+				if (perturbing_perturb_child != null)
+				{
+					perturbing_texture.PerturbChild = CreateProcedural(perturbing_perturb_child, child_transform); // Recursive call
 				}
 			}
 
@@ -382,7 +388,7 @@ namespace RhinoCyclesCore.Converters
 		public Procedural WaveWidthChild { get; set; } = null;
 	}
 
-	public class PerturbingTextureProcedural : TwoColorProcedural
+	public class PerturbingTextureProcedural : Procedural
 	{
 		public PerturbingTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
 		{
@@ -406,28 +412,20 @@ namespace RhinoCyclesCore.Converters
 
 			perturbing_part2_node.Amount = Amount;
 
-			//var waves_width_node = new WavesWidthTextureProceduralNode();
-			//shader.AddNode(waves_width_node);
+			perturbing_part1_node.outs.UVW0.Connect(perturbing_part2_node.ins.UVW);
 
-			//waves_width_node.UvwTransform = MappingTransform;
-			//waves_width_node.WaveType = WaveType;
+			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW0, perturbing_part2_node.ins.Color0);
+			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW1, perturbing_part2_node.ins.Color1);
+			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW2, perturbing_part2_node.ins.Color2);
 
-			//uvw_output.Connect(waves_width_node.ins.UVW);
+			var output_node = SourceChild?.CreateAndConnectProceduralNode(shader, perturbing_part2_node.outs.PerturbedUVW, parent_color_input);
 
-			//// Recursive call
-			//ConnectChildNodes(shader, uvw_output, waves_node.ins.Color1, waves_node.ins.Color2);
-
-			//if(WaveWidthChild != null)
-			//{
-			//	WaveWidthChild.CreateAndConnectProceduralNode(shader, waves_width_node.outs.UVW, waves_node.ins.Color3); // Recursive call
-			//}
-
-			//ConnectInputOutputNodes(uvw_output, parent_color_input, waves_node.outs.Color, waves_node.ins.UVW);
-
-			//return waves_node;
+			return output_node;
 		}
 
 		public float Amount { get; set; } = 0.1f;
+		public Procedural SourceChild { get; set; } = null;
+		public Procedural PerturbChild { get; set; } = null;
 	}
 
 	public class ShaderConverter
