@@ -60,7 +60,7 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new CheckerTexture2dProcedural(render_texture, transform);
 			}
-			else if(render_texture.TypeName.Equals("Noise Texture"))
+			else if (render_texture.TypeName.Equals("Noise Texture"))
 			{
 				procedural = new NoiseTextureProcedural(render_texture, transform);
 			}
@@ -68,9 +68,13 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new WavesTextureProcedural(render_texture, transform);
 			}
-			else if(render_texture.TypeName.Equals("Perturbing Texture"))
+			else if (render_texture.TypeName.Equals("Perturbing Texture"))
 			{
 				procedural = new PerturbingTextureProcedural(render_texture, transform);
+			}
+			else if (render_texture.TypeName.Equals("Wood Texture"))
+			{
+				procedural = new WoodTextureProcedural(render_texture, transform);
 			}
 
 			ccl.Transform child_transform = procedural.GetChildTransform();
@@ -153,8 +157,8 @@ namespace RhinoCyclesCore.Converters
 		{
 			Color1 = render_texture.Fields.TryGetValue("color-one", out Color4f color1) ? color1 : Color4f.Black;
 			Color2 = render_texture.Fields.TryGetValue("color-two", out Color4f color2) ? color2 : Color4f.White;
-			Amount1 = render_texture.Fields.TryGetValue("texture-amount-one", out double texture_amount1) ? texture_amount1 : 1.0f;
-			Amount2 = render_texture.Fields.TryGetValue("texture-amount-two", out double texture_amount2) ? texture_amount2 : 1.0f;
+			Amount1 = render_texture.Fields.TryGetValue("texture-amount-one", out double texture_amount1) ? (float)texture_amount1 : 1.0f;
+			Amount2 = render_texture.Fields.TryGetValue("texture-amount-two", out double texture_amount2) ? (float)texture_amount2 : 1.0f;
 			SwapColors = render_texture.Fields.TryGetValue("swap-colors", out bool swap_colors) ? swap_colors : false;
 		}
 
@@ -183,8 +187,8 @@ namespace RhinoCyclesCore.Converters
 
 		public Color4f Color1 { get; set; }
 		public Color4f Color2 { get; set; }
-		public double Amount1 { get; set; }
-		public double Amount2 { get; set; }
+		public float Amount1 { get; set; }
+		public float Amount2 { get; set; }
 		public bool SwapColors { get; set; }
 
 		public Procedural Child1 { get; set; } = null;
@@ -426,6 +430,122 @@ namespace RhinoCyclesCore.Converters
 		public float Amount { get; set; } = 0.1f;
 		public Procedural SourceChild { get; set; } = null;
 		public Procedural PerturbChild { get; set; } = null;
+	}
+
+	public class WoodTextureProcedural : TwoColorProcedural
+	{
+		public WoodTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("grain-thickness", out double gain_thickness))
+				GrainThickness = (float)gain_thickness;
+			if (rtf.TryGetValue("radial-noise", out double radial_noise))
+				RadialNoise = (float)radial_noise;
+			if (rtf.TryGetValue("axial-noise", out double axial_noise))
+				AxialNoise = (float)axial_noise;
+			if (rtf.TryGetValue("blur-1", out double blur1))
+				Blur1 = (float)blur1;
+			if (rtf.TryGetValue("blur-2", out double blur2))
+				Blur2 = (float)blur2;
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			NoiseTextureProceduralNode noise1 = new NoiseTextureProceduralNode();
+			noise1.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+			noise1.OctaveCount = 2;
+			noise1.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
+			noise1.FrequencyMultiplier = 2.17f;
+			noise1.AmplitudeMultiplier = 0.5f;
+			noise1.ClampMin = -1.0f;
+			noise1.ClampMax = 1.0f;
+			noise1.ScaleToClamp = false;
+			noise1.Inverse = false;
+			noise1.Gain = 0.5f;
+			noise1.UvwTransform *= ccl.Transform.Scale(1.0f, 1.0f, AxialNoise);
+
+			NoiseTextureProceduralNode noise2 = new NoiseTextureProceduralNode();
+			noise2.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+			noise2.OctaveCount = 2;
+			noise2.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
+			noise2.FrequencyMultiplier = 2.17f;
+			noise2.AmplitudeMultiplier = 0.5f;
+			noise2.ClampMin = -1.0f;
+			noise2.ClampMax = 1.0f;
+			noise2.ScaleToClamp = false;
+			noise2.Inverse = false;
+			noise2.Gain = 0.5f;
+			noise2.UvwTransform *= ccl.Transform.Scale(1.0f, 1.0f, AxialNoise);
+
+			NoiseTextureProceduralNode noise3 = new NoiseTextureProceduralNode();
+			noise3.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+			noise3.OctaveCount = 2;
+			noise3.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
+			noise3.FrequencyMultiplier = 2.17f;
+			noise3.AmplitudeMultiplier = 0.5f;
+			noise3.ClampMin = -1.0f;
+			noise3.ClampMax = 1.0f;
+			noise3.ScaleToClamp = false;
+			noise3.Inverse = false;
+			noise3.Gain = 0.5f;
+			noise3.UvwTransform *= ccl.Transform.Scale(1.0f, 1.0f, AxialNoise);
+
+			shader.AddNode(noise1);
+			shader.AddNode(noise2);
+			shader.AddNode(noise3);
+
+			WavesTextureProceduralNode waves = new WavesTextureProceduralNode();
+			waves.WaveType = WavesTextureProceduralNode.WaveTypes.RADIAL;
+			waves.WaveWidth = GrainThickness;
+			waves.Contrast1 = 1.0f - Blur1;
+			waves.Contrast2 = 1.0f - Blur2;
+			waves.WaveWidthTextureOn = false;
+			waves.ins.Color1.Value = Color1.ToFloat4();
+			//waves.TextureAmount1 = TextureAmount1; // TODO
+			waves.ins.Color2.Value = Color2.ToFloat4();
+			//waves.TextureAmount2 = TextureAmount2; // TODO
+
+			Child1?.CreateAndConnectProceduralNode(shader, uvw_output, waves.ins.Color1);
+			Child2?.CreateAndConnectProceduralNode(shader, uvw_output, waves.ins.Color2);
+
+			shader.AddNode(waves);
+
+			PerturbingPart1TextureProceduralNode perturbing1 = new PerturbingPart1TextureProceduralNode();
+			perturbing1.UvwTransform = MappingTransform;
+			//perturbing1.Repeat = Repeat; // TODO
+			//perturbing1.Offset = Offset; // TODO
+			//perturbing1.Rotation = Rotation; // TODO
+
+			PerturbingPart2TextureProceduralNode perturbing2 = new PerturbingPart2TextureProceduralNode();
+			perturbing2.Amount = RadialNoise;
+
+			shader.AddNode(perturbing1);
+			shader.AddNode(perturbing2);
+
+			uvw_output.Connect(perturbing1.ins.UVW);
+			perturbing1.outs.UVW0.Connect(noise1.ins.UVW);
+			perturbing1.outs.UVW1.Connect(noise2.ins.UVW);
+			perturbing1.outs.UVW2.Connect(noise3.ins.UVW);
+
+			perturbing1.outs.UVW0.Connect(perturbing2.ins.UVW);
+			noise1.outs.Color.Connect(perturbing2.ins.Color0);
+			noise2.outs.Color.Connect(perturbing2.ins.Color1);
+			noise3.outs.Color.Connect(perturbing2.ins.Color2);
+
+			perturbing2.outs.PerturbedUVW.Connect(waves.ins.UVW);
+			waves.outs.Color.Connect(parent_color_input);
+
+			//ConnectInputOutputNodes(perturbing2.outs.PerturbedUVW, parent_color_input, waves.outs.Color, waves.ins.UVW);
+
+			return waves;
+		}
+
+		public float GrainThickness { get; set; } = 0.0f;
+		public float RadialNoise { get; set; } = 0.0f;
+		public float AxialNoise { get; set; } = 0.0f;
+		public float Blur1 { get; set; } = 0.0f;
+		public float Blur2 { get; set; } = 0.0f;
 	}
 
 	public class ShaderConverter
