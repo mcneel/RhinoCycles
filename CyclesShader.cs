@@ -405,7 +405,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		protected void ProcessProcedurals(RenderMaterial rm, StdCS child_slot, List<CyclesTextureImage> texture_list, Dictionary<TextureType, Procedural> procedurals)
+		protected void ProcessProcedurals(RenderMaterial rm, StdCS child_slot, List<CyclesTextureImage> texture_list, Dictionary<TextureType, Procedural> procedurals, BitmapConverter _bitmapConverter)
 		{
 			if (procedurals == null)
 				return;
@@ -424,7 +424,7 @@ namespace RhinoCyclesCore
 			if (render_texture == null)
 				return;
 
-			var procedural = Procedural.CreateProcedural(render_texture, Transform.Identity(), texture_list);
+			var procedural = Procedural.CreateProcedural(render_texture, Transform.Identity(), texture_list, _bitmapConverter);
 
 			if (procedural == null)
 				return;
@@ -436,7 +436,7 @@ namespace RhinoCyclesCore
 		{
 			tv.Value = v;
 
-			ProcessProcedurals(rm, childSlot, cti_list, Procedurals);
+			ProcessProcedurals(rm, childSlot, cti_list, Procedurals, _bitmapConverter);
 
 			//If we manage to get a texture from the usage, that means that either the material supports handing
 			//off actual textures for specific usages, or it's actually a Rhino Physically Based material.
