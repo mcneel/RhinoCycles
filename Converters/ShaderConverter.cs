@@ -49,7 +49,7 @@ namespace RhinoCyclesCore.Converters
 			return procedural;
 		}
 
-		public static Procedural CreateProcedural(RenderTexture render_texture, ccl.Transform transform, List<CyclesTextureImage> texture_list, BitmapConverter _bitmapConverter)
+		public static Procedural CreateProcedural(RenderTexture render_texture, ccl.Transform transform, List<CyclesTextureImage> texture_list, BitmapConverter bitmap_converter)
 		{
 			if (render_texture == null)
 				return null;
@@ -58,37 +58,37 @@ namespace RhinoCyclesCore.Converters
 
 			if (render_texture.TypeName.Equals("2D Checker Texture"))
 			{
-				procedural = new CheckerTexture2dProcedural(render_texture, transform, _bitmapConverter);
+				procedural = new CheckerTexture2dProcedural(render_texture, transform);
 			}
 			else if (render_texture.TypeName.Equals("Noise Texture"))
 			{
-				procedural = new NoiseTextureProcedural(render_texture, transform, _bitmapConverter);
+				procedural = new NoiseTextureProcedural(render_texture, transform);
 			}
 			else if (render_texture.TypeName.Equals("Waves Texture"))
 			{
-				procedural = new WavesTextureProcedural(render_texture, transform, _bitmapConverter);
+				procedural = new WavesTextureProcedural(render_texture, transform);
 			}
 			else if (render_texture.TypeName.Equals("Perturbing Texture"))
 			{
-				procedural = new PerturbingTextureProcedural(render_texture, transform, _bitmapConverter);
+				procedural = new PerturbingTextureProcedural(render_texture, transform);
 			}
 			else if (render_texture.TypeName.Equals("Wood Texture"))
 			{
-				procedural = new WoodTextureProcedural(render_texture, transform, _bitmapConverter);
+				procedural = new WoodTextureProcedural(render_texture, transform);
 			}
 			else if( render_texture.TypeName.Equals("Bitmap Texture"))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);
-				procedural = new BitmapTextureProcedural(render_texture, transform, cycles_texture, _bitmapConverter);
+				procedural = new BitmapTextureProcedural(render_texture, transform, cycles_texture, bitmap_converter);
 			}
 
 			ccl.Transform child_transform = procedural != null ? procedural.GetChildTransform() : ccl.Transform.Identity();
 
 			if (procedural is TwoColorProcedural two_color)
 			{
-				two_color.Child1 = CreateProceduralFromChild(render_texture, "color-one", child_transform, texture_list, _bitmapConverter);
-				two_color.Child2 = CreateProceduralFromChild(render_texture, "color-two", child_transform, texture_list, _bitmapConverter);
+				two_color.Child1 = CreateProceduralFromChild(render_texture, "color-one", child_transform, texture_list, bitmap_converter);
+				two_color.Child2 = CreateProceduralFromChild(render_texture, "color-two", child_transform, texture_list, bitmap_converter);
 
 				if(two_color.SwapColors)
 				{
@@ -103,7 +103,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture wave_width_child = (RenderTexture)render_texture.FindChild("wave-width-tex");
 				if(wave_width_child != null)
 				{
-					waves_texture.WaveWidthChild = CreateProcedural(wave_width_child, child_transform, texture_list, _bitmapConverter); // Recursive call
+					waves_texture.WaveWidthChild = CreateProcedural(wave_width_child, child_transform, texture_list, bitmap_converter); // Recursive call
 				}
 			}
 
@@ -112,13 +112,13 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture perturbing_source_child = (RenderTexture)render_texture.FindChild("source");
 				if (perturbing_source_child != null)
 				{
-					perturbing_texture.SourceChild = CreateProcedural(perturbing_source_child, child_transform, texture_list, _bitmapConverter); // Recursive call
+					perturbing_texture.SourceChild = CreateProcedural(perturbing_source_child, child_transform, texture_list, bitmap_converter); // Recursive call
 				}
 
 				RenderTexture perturbing_perturb_child = (RenderTexture)render_texture.FindChild("perturb");
 				if (perturbing_perturb_child != null)
 				{
-					perturbing_texture.PerturbChild = CreateProcedural(perturbing_perturb_child, child_transform, texture_list, _bitmapConverter); // Recursive call
+					perturbing_texture.PerturbChild = CreateProcedural(perturbing_perturb_child, child_transform, texture_list, bitmap_converter); // Recursive call
 				}
 			}
 
@@ -133,9 +133,8 @@ namespace RhinoCyclesCore.Converters
 				(float)transform[2, 0], (float)transform[2, 1], (float)transform[2, 2], (float)transform[2, 3]);
 		}
 
-		public Procedural(RenderTexture render_texture, ccl.Transform transform, BitmapConverter _bitmapConverter)
+		public Procedural(RenderTexture render_texture, ccl.Transform transform)
 		{
-			BitmapConverter = _bitmapConverter;
 			if(render_texture != null)
 			{
 				InputTransform = transform;
@@ -155,14 +154,12 @@ namespace RhinoCyclesCore.Converters
 		public ccl.Transform InputTransform { get; set; } = ccl.Transform.Identity();
 		public ccl.Transform MappingTransform { get; set; } = ccl.Transform.Identity();
 
-		public BitmapConverter BitmapConverter { get; set; }
-
 		protected virtual ccl.Transform GetChildTransform() { return InputTransform; }
 	}
 
 	public abstract class TwoColorProcedural : Procedural
 	{
-		public TwoColorProcedural(RenderTexture render_texture, ccl.Transform transform, BitmapConverter _bitmapConverter) : base(render_texture, transform, _bitmapConverter)
+		public TwoColorProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
 		{
 			Color1 = render_texture.Fields.TryGetValue("color-one", out Color4f color1) ? color1 : Color4f.Black;
 			Color2 = render_texture.Fields.TryGetValue("color-two", out Color4f color2) ? color2 : Color4f.White;
@@ -206,8 +203,8 @@ namespace RhinoCyclesCore.Converters
 
 	public class CheckerTexture2dProcedural : TwoColorProcedural
 	{
-		public CheckerTexture2dProcedural(RenderTexture render_texture, ccl.Transform transform, BitmapConverter _bitmapConverter)
-			: base(render_texture, transform, _bitmapConverter)
+		public CheckerTexture2dProcedural(RenderTexture render_texture, ccl.Transform transform)
+			: base(render_texture, transform)
 		{
 			MappingTransform *= ccl.Transform.Scale(2.0f, 2.0f, 2.0f);
 
@@ -240,7 +237,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class NoiseTextureProcedural : TwoColorProcedural
 	{
-		public NoiseTextureProcedural(RenderTexture render_texture, ccl.Transform transform, BitmapConverter _bitmapConverter) : base(render_texture, transform, _bitmapConverter)
+		public NoiseTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
 		{
 			var rtf = render_texture.Fields;
 
@@ -340,7 +337,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class WavesTextureProcedural : TwoColorProcedural
 	{
-		public WavesTextureProcedural(RenderTexture render_texture, ccl.Transform transform, BitmapConverter _bitmapConverter) : base(render_texture, transform, _bitmapConverter)
+		public WavesTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
 		{
 			var rtf = render_texture.Fields;
 
@@ -403,7 +400,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class PerturbingTextureProcedural : Procedural
 	{
-		public PerturbingTextureProcedural(RenderTexture render_texture, ccl.Transform transform, BitmapConverter _bitmapConverter) : base(render_texture, transform, _bitmapConverter)
+		public PerturbingTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
 		{
 			var rtf = render_texture.Fields;
 
@@ -443,7 +440,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class WoodTextureProcedural : TwoColorProcedural
 	{
-		public WoodTextureProcedural(RenderTexture render_texture, ccl.Transform transform, BitmapConverter _bitmapConverter) : base(render_texture, transform, _bitmapConverter)
+		public WoodTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
 		{
 			var rtf = render_texture.Fields;
 
@@ -559,14 +556,21 @@ namespace RhinoCyclesCore.Converters
 
 	public class BitmapTextureProcedural : Procedural
 	{
-		public BitmapTextureProcedural(RenderTexture render_texture, ccl.Transform transform, CyclesTextureImage cycles_texture, BitmapConverter _bitmapConverter) : base(render_texture, transform, _bitmapConverter)
+		public BitmapTextureProcedural(RenderTexture render_texture, ccl.Transform transform, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter) : base(render_texture, transform)
 		{
-			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, BitmapConverter, 1.0f);
 			CyclesTexture = cycles_texture;
+			BitmapConverter = bitmap_converter;
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, bitmap_converter, 1.0f);
 		}
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
 		{
+			var transform_node = new MatrixMathNode();
+			shader.AddNode(transform_node);
+
+			transform_node.Operation = MatrixMathNode.Operations.Point;
+			transform_node.Transform = MappingTransform;
+
 			var image_texture_node = new ImageTextureNode();
 			shader.AddNode(image_texture_node);
 
@@ -586,13 +590,15 @@ namespace RhinoCyclesCore.Converters
 			}
 			image_texture_node.Interpolation = InterpolationType.Cubic;
 
-			uvw_output.Connect(image_texture_node.ins.Vector);
+			uvw_output.Connect(transform_node.ins.Vector);
+			transform_node.outs.Vector.Connect(image_texture_node.ins.Vector);
 			image_texture_node.outs.Color.Connect(parent_color_input);
 
 			return image_texture_node;
 		}
 
 		public CyclesTextureImage CyclesTexture { get; set; } = null;
+		public BitmapConverter BitmapConverter { get; set; } = null;
 	}
 
 	public class ShaderConverter
