@@ -26,6 +26,7 @@ using static Rhino.Render.RenderWindow;
 using Rhino.UI;
 using Eto.Forms;
 using Rhino.Runtime;
+using ccl.ShaderNodes.Sockets;
 
 namespace RhinoCyclesCore
 {
@@ -348,6 +349,64 @@ namespace RhinoCyclesCore
 			else
 			{
 				texture_coordinates.outs.UV.Connect(image_node.ins.Vector);
+			}
+		}
+
+		public static void SetProjectionModeSimple(CyclesTextureImage texture, VectorSocket vector_socket_output,
+			TextureCoordinateNode texture_coordinates)
+		{
+			if (texture.ProjectionMode == TextureProjectionMode.WcsBox)
+			{
+				texture_coordinates.outs.WcsBox.Connect(vector_socket_output);
+			}
+			else if (texture.ProjectionMode == TextureProjectionMode.Wcs)
+			{
+				texture_coordinates.outs.Object.Connect(vector_socket_output);
+			}
+			else if (texture.ProjectionMode == TextureProjectionMode.Screen)
+			{
+				texture_coordinates.outs.Window.Connect(vector_socket_output);
+			}
+			else if (texture.ProjectionMode == TextureProjectionMode.View)
+			{
+				texture_coordinates.outs.Camera.Connect(vector_socket_output);
+			}
+			else if (texture.ProjectionMode == TextureProjectionMode.EnvironmentMap)
+			{
+				switch (texture.EnvProjectionMode)
+				{
+					case TextureEnvironmentMappingMode.Spherical:
+						texture_coordinates.outs.EnvSpherical.Connect(vector_socket_output);
+						break;
+					case TextureEnvironmentMappingMode.EnvironmentMap:
+						texture_coordinates.outs.EnvEmap.Connect(vector_socket_output);
+						break;
+					case TextureEnvironmentMappingMode.Box:
+						texture_coordinates.outs.EnvBox.Connect(vector_socket_output);
+						break;
+					case TextureEnvironmentMappingMode.LightProbe:
+						texture_coordinates.outs.EnvLightProbe.Connect(vector_socket_output);
+						break;
+					case TextureEnvironmentMappingMode.Cube:
+						texture_coordinates.outs.EnvCubemap.Connect(vector_socket_output);
+						break;
+					case TextureEnvironmentMappingMode.VerticalCrossCube:
+						texture_coordinates.outs.EnvCubemapVerticalCross.Connect(vector_socket_output);
+						break;
+					case TextureEnvironmentMappingMode.HorizontalCrossCube:
+						texture_coordinates.outs.EnvCubemapHorizontalCross.Connect(vector_socket_output);
+						break;
+					case TextureEnvironmentMappingMode.Hemispherical:
+						texture_coordinates.outs.EnvHemispherical.Connect(vector_socket_output);
+						break;
+					default:
+						texture_coordinates.outs.EnvEmap.Connect(vector_socket_output);
+						break;
+				}
+			}
+			else
+			{
+				texture_coordinates.outs.UV.Connect(vector_socket_output);
 			}
 		}
 	}

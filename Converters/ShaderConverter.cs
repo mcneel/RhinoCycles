@@ -561,10 +561,22 @@ namespace RhinoCyclesCore.Converters
 			CyclesTexture = cycles_texture;
 			BitmapConverter = bitmap_converter;
 			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, bitmap_converter, 1.0f);
+
+			if (render_texture.Fields.TryGetValue("filter", out bool filter))
+				Filter = filter;
+
+			if (render_texture.Fields.TryGetValue("mirror-alternate-tiles", out bool alternate_tiles))
+				AlternateTiles = alternate_tiles;
+
+			if (render_texture.Fields.TryGetValue("use-alpha-channel", out bool use_alpha))
+				UseAlpha = use_alpha;
 		}
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
 		{
+			var texture_coordinate_node = new TextureCoordinateNode();
+			shader.AddNode(texture_coordinate_node);
+
 			var transform_node = new MatrixMathNode();
 			shader.AddNode(transform_node);
 
@@ -573,6 +585,8 @@ namespace RhinoCyclesCore.Converters
 
 			var image_texture_node = new ImageTextureNode();
 			shader.AddNode(image_texture_node);
+
+			RenderEngine.SetProjectionModeSimple(CyclesTexture, transform_node.ins.Vector, texture_coordinate_node);
 
 			if (CyclesTexture.HasTextureImage)
 			{
@@ -588,7 +602,10 @@ namespace RhinoCyclesCore.Converters
 				image_texture_node.Width = (uint)CyclesTexture.TexWidth;
 				image_texture_node.Height = (uint)CyclesTexture.TexHeight;
 			}
-			image_texture_node.Interpolation = InterpolationType.Cubic;
+
+			image_texture_node.UseAlpha = UseAlpha;
+			image_texture_node.AlternateTiles = AlternateTiles;
+			image_texture_node.Interpolation = Filter ? InterpolationType.Cubic : InterpolationType.Closest;
 
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(image_texture_node.ins.Vector);
@@ -599,6 +616,9 @@ namespace RhinoCyclesCore.Converters
 
 		public CyclesTextureImage CyclesTexture { get; set; } = null;
 		public BitmapConverter BitmapConverter { get; set; } = null;
+		public bool UseAlpha { get; set; } = true;
+		public bool AlternateTiles { get; set; } = false;
+		public bool Filter { get; set; } = true;
 	}
 
 	public class ShaderConverter

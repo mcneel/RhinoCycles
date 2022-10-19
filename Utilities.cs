@@ -159,7 +159,7 @@ namespace RhinoCyclesCore
 		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, Converters.BitmapConverter bitmapConverter, float gamma = 1.0f)
 		{
 			if (rt == null) return;
-			if(bitmapConverter==null) bitmapConverter = new Converters.BitmapConverter();
+			if (bitmapConverter == null) return;
 
 			// JohnC: I had to change this to also exclude linear workflow because when I changed from using
 			// the incorrect TextureRenderHashFlags to the correct CrcRenderHashFlags, an assert started firing
