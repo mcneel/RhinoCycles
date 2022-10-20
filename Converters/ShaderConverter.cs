@@ -76,7 +76,11 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new WoodTextureProcedural(render_texture, transform);
 			}
-			else if( render_texture.TypeName.Equals("Bitmap Texture"))
+			else if( render_texture.TypeName.Equals("Add Texture"))
+			{
+				procedural = new AddTextureProcedural(render_texture, transform);
+			}
+			else if( render_texture.TypeName.Equals("Bitmap Texture") || render_texture.TypeName.Equals("Simple Bitmap Texture"))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);
@@ -164,8 +168,8 @@ namespace RhinoCyclesCore.Converters
 		}
 
 		public abstract ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input);
-		public ccl.Transform InputTransform { get; set; } = ccl.Transform.Identity();
-		public ccl.Transform MappingTransform { get; set; } = ccl.Transform.Identity();
+		protected ccl.Transform InputTransform { get; set; } = ccl.Transform.Identity();
+		protected ccl.Transform MappingTransform { get; set; } = ccl.Transform.Identity();
 
 		public uint Id { get; set; } = 0;
 
@@ -222,6 +226,9 @@ namespace RhinoCyclesCore.Converters
 			: base(render_texture, transform)
 		{
 			MappingTransform *= ccl.Transform.Scale(2.0f, 2.0f, 2.0f);
+			MappingTransform.x.w *= 2.0f;
+			MappingTransform.y.w *= 2.0f;
+			MappingTransform.z.w *= 2.0f;
 
 			if (render_texture.Fields.TryGetValue("remap-textures", out bool remap_textures))
 				RemapTextures = remap_textures;
@@ -577,20 +584,22 @@ namespace RhinoCyclesCore.Converters
 			BitmapConverter = bitmap_converter;
 			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, bitmap_converter, 1.0f);
 
-			if (render_texture.Fields.TryGetValue("filter", out bool filter))
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("filter", out bool filter))
 				Filter = filter;
 
-			if (render_texture.Fields.TryGetValue("mirror-alternate-tiles", out bool alternate_tiles))
+			if (rtf.TryGetValue("mirror-alternate-tiles", out bool alternate_tiles))
 				AlternateTiles = alternate_tiles;
 
-			if (render_texture.Fields.TryGetValue("use-alpha-channel", out bool use_alpha))
+			if (rtf.TryGetValue("use-alpha-channel", out bool use_alpha))
 				UseAlpha = use_alpha;
 		}
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
 		{
-			var texture_coordinate_node = new TextureCoordinateNode();
-			shader.AddNode(texture_coordinate_node);
+			//var texture_coordinate_node = new TextureCoordinateNode();
+			//shader.AddNode(texture_coordinate_node);
 
 			var transform_node = new MatrixMathNode();
 			shader.AddNode(transform_node);
@@ -601,7 +610,9 @@ namespace RhinoCyclesCore.Converters
 			var image_texture_node = new ImageTextureNode();
 			shader.AddNode(image_texture_node);
 
-			RenderEngine.SetProjectionModeSimple(CyclesTexture, transform_node.ins.Vector, texture_coordinate_node);
+			// This might be pointless, because we don't support setting projection modes on child textures.
+			// If this bitmap texture is not a child texture, then it is not a procedural, so this code won't be executed.
+			//RenderEngine.SetProjectionModeSimple(CyclesTexture, transform_node.ins.Vector, texture_coordinate_node);
 
 			if (CyclesTexture.HasTextureImage)
 			{
@@ -636,7 +647,30 @@ namespace RhinoCyclesCore.Converters
 		public bool Filter { get; set; } = true;
 	}
 
-	public class ShaderConverter
+	public class AddTextureProcedural : TwoColorProcedural
+	{
+		public AddTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var mix_node = new MixNode();
+			shader.AddNode(mix_node);
+
+			mix_node.BlendType = MixNode.BlendTypes.Add;
+			mix_node.ins.Fac.Value = 1.0f;
+
+			// Recursive call
+			ConnectChildNodes(shader, uvw_output, mix_node.ins.Color1, mix_node.ins.Color2);
+
+			mix_node.outs.Color.Connect(parent_color_input);
+
+			return mix_node;
+		}
+	}
+
+		public class ShaderConverter
 	{
 		private Guid realtimDisplaMaterialId = new Guid("e6cd1973-b739-496e-ab69-32957fa48492");
 

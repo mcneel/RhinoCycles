@@ -199,7 +199,12 @@ namespace RhinoCyclesCore
 				}
 			}
 
-			var procedural = Procedural.CreateProcedural(rt, Transform.Identity(), tex.TextureList, bitmapConverter);
+			Procedural procedural = null;
+
+			if (!rt.TypeName.Equals("Bitmap Texture") && !rt.TypeName.Equals("Simple Bitmap Texture"))
+			{
+				procedural = Procedural.CreateProcedural(rt, Transform.Identity(), tex.TextureList, bitmapConverter);
+			}
 
 			if(procedural != null) {
 				tex.Procedural = procedural;
