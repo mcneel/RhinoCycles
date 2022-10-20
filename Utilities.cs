@@ -384,7 +384,6 @@ namespace RhinoCyclesCore
 			if(IsOn && null != teximg && teximg.HasProcedural)
 			{
 				var texco = new ccl.ShaderNodes.TextureCoordinateNode($"texco for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var imtexnode = new ccl.ShaderNodes.ImageTextureNode($"image texture for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
 				var invcol = new ccl.ShaderNodes.InvertNode($"invert color for imtexnode for {valueSocket?.Parent.VariableName ?? "unknown input"}");
 				var normalmapnode = new ccl.ShaderNodes.NormalMapNode($"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}");
 				var tobwnode = new ccl.ShaderNodes.RgbToBwNode($"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
@@ -399,12 +398,11 @@ namespace RhinoCyclesCore
 
 				sh.AddNode(texco);
 				sh.AddNode(mixerNode);
-				sh.AddNode(imtexnode);
 
 				var gamma_node = new GammaNode();
 				sh.AddNode(gamma_node);
 
-				gamma_node.ins.Gamma.Value = 1f;
+				gamma_node.ins.Gamma.Value = 2.2f;
 				//gamma_node.outs.Color.Connect(output_color_socket);
 
 				teximg.Procedural.CreateAndConnectProceduralNode(sh, texco.outs.UV, gamma_node.ins.Color);
@@ -414,19 +412,10 @@ namespace RhinoCyclesCore
 
 				valueSocket?.Connect(mixerNode.ins.Color1);
 
-				RenderEngine.SetTextureImage(imtexnode, teximg);
-				imtexnode.Extension = teximg.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
-				imtexnode.ColorSpace = ccl.ShaderNodes.TextureNode.TextureColorSpace.None;
-				imtexnode.Projection = ccl.ShaderNodes.TextureNode.TextureProjection.Flat;
-				imtexnode.AlternateTiles = teximg.AlternateTiles;
-				imtexnode.UseAlpha = true;
-				imtexnode.IsLinear = false;
-				RenderEngine.SetProjectionMode(sh, teximg, imtexnode, texco);
 				if (valueSocket == null) {
 					mixerNode.ins.Fac.Value = 1.0f;
 				} else {
 					sh.AddNode(alphamult);
-					imtexnode.outs.Alpha.Connect(alphamult.ins.Value2);
 					alphamult.outs.Value.Connect(mixerNode.ins.Fac);
 				}
 				if (normalMap)
@@ -434,7 +423,6 @@ namespace RhinoCyclesCore
 					// ideally we calculate the tangents and switch to Tangent space here.
 					normalmapnode.SpaceType = ccl.ShaderNodes.NormalMapNode.Space.Tangent;
 					sh.AddNode(normalmapnode);
-					//imtexnode.outs.Color.Connect(normalmapnode.ins.Color);
 					gamma_node.outs.Color.Connect(normalmapnode.ins.Color);
 					normalmapnode.ins.Strength.Value = amount * RcCore.It.AllSettings.NormalStrengthFactor;
 					foreach(var sock in socks) {
