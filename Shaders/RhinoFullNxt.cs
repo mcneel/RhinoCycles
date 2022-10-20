@@ -417,29 +417,22 @@ namespace RhinoCyclesCore.Shaders
 					aoamount.outs.Color.Connect(basewithao.ins.Color2);
 				}
 
-				ImageTextureNode basecoltex;
+				ISocket basecoltexAlphaOut;
 
 				if(decalMixin!=null) {
-					basecoltex = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, decalMixin.ins.Color1.ToList(), texco, false);
+					basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, decalMixin.ins.Color1.ToList(), texco, false);
 					decalMixin.outs.Color.Connect(basewithao.ins.Color1);
 				} else {
-					basecoltex = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1.ToList(), texco, false);
+					basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1.ToList(), texco, false);
 				}
 
-				if(basecoltex != null && part.UseBaseColorTextureAlphaAsObjectAlpha) {
-					basecoltex.outs.Alpha.Connect(alpha_invert_basecolalpha_component.ins.Value2);
+				if(basecoltexAlphaOut != null && part.UseBaseColorTextureAlphaAsObjectAlpha) {
+					basecoltexAlphaOut.Connect(alpha_invert_basecolalpha_component.ins.Value2);
 					alpha_invert_basecolalpha_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value1);
 				}
 
-				if(m_original.Procedurals != null && m_original.Procedurals.TryGetValue(Rhino.DocObjects.TextureType.PBR_BaseColor, out Procedural procedural))
-				{
-					CreateProceduralNodeGraph(procedural, principled.ins.BaseColor);
-				}
-				else
-				{
-					basewithao.outs.Color.Connect(principled.ins.BaseColor);
-					basewithao.outs.Color.Connect(coloured_shadow.ins.Color);
-				}
+				basewithao.outs.Color.Connect(principled.ins.BaseColor);
+				basewithao.outs.Color.Connect(coloured_shadow.ins.Color);
 
 
 				Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic, texco, false);

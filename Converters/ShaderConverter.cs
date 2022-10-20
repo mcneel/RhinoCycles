@@ -32,7 +32,7 @@ using Light = Rhino.Render.ChangeQueue.Light;
 
 namespace RhinoCyclesCore.Converters
 {
-	public abstract class Procedural
+	public abstract class Procedural : IDisposable
 	{
 		public static Procedural CreateProceduralFromChild(RenderTexture render_texture, string child_name, ccl.Transform transform, List<CyclesTextureImage> texture_list, BitmapConverter _bitmapConverter)
 		{
@@ -139,6 +139,7 @@ namespace RhinoCyclesCore.Converters
 			{
 				InputTransform = transform;
 				MappingTransform = ToCyclesTransform(render_texture.LocalMappingTransform) * transform;
+				Id = render_texture.RenderHash;
 			}
 		}
 
@@ -150,9 +151,23 @@ namespace RhinoCyclesCore.Converters
 			uvw_output.Connect(node_uvw_input);
 		}
 
+		protected virtual void Dispose(bool disposing)
+		{
+
+		}
+
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
+
 		public abstract ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input);
 		public ccl.Transform InputTransform { get; set; } = ccl.Transform.Identity();
 		public ccl.Transform MappingTransform { get; set; } = ccl.Transform.Identity();
+
+		public uint Id { get; set; } = 0;
 
 		protected virtual ccl.Transform GetChildTransform() { return InputTransform; }
 	}

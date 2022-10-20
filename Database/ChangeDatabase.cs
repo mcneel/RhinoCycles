@@ -2084,7 +2084,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		protected override BakingFunctions BakeFor()
 		{
-			return /*BakingFunctions.ProceduralTextures | */BakingFunctions.CustomObjectMappings;
+			return BakingFunctions.None;
 		}
 
 		protected override int BakingSize(RhinoObject ro, RenderMaterial material, TextureType type)
