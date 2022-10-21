@@ -141,8 +141,8 @@ namespace RhinoCyclesCore.Converters
 		{
 			if(render_texture != null)
 			{
-				InputTransform = transform;
-				MappingTransform = ToCyclesTransform(render_texture.LocalMappingTransform) * transform;
+				InputTransform = new ccl.Transform(transform);
+				MappingTransform = ToCyclesTransform(render_texture.LocalMappingTransform) * InputTransform;
 				Id = render_texture.RenderHash;
 			}
 		}
@@ -236,7 +236,7 @@ namespace RhinoCyclesCore.Converters
 
 		protected override ccl.Transform GetChildTransform()
 		{
-			return RemapTextures ? MappingTransform : InputTransform;
+			return RemapTextures ? new ccl.Transform(MappingTransform) : new ccl.Transform(InputTransform);
 		}
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
@@ -244,7 +244,7 @@ namespace RhinoCyclesCore.Converters
 			var node = new CheckerTexture2dProceduralNode();
 			shader.AddNode(node);
 
-			node.UvwTransform = MappingTransform;
+			node.UvwTransform = new ccl.Transform(MappingTransform);
 
 			// Recursive call
 			ConnectChildNodes(shader, uvw_output, node.ins.Color1, node.ins.Color2);
@@ -299,7 +299,7 @@ namespace RhinoCyclesCore.Converters
 			var node = new NoiseTextureProceduralNode();
 			shader.AddNode(node);
 
-			node.UvwTransform = MappingTransform;
+			node.UvwTransform = new ccl.Transform(MappingTransform);
 			node.NoiseType = NoiseType;
 			node.SpecSynthType = SpecSynthType;
 			node.OctaveCount = OctaveCount;
@@ -384,7 +384,7 @@ namespace RhinoCyclesCore.Converters
 			var waves_node = new WavesTextureProceduralNode();
 			shader.AddNode(waves_node);
 
-			waves_node.UvwTransform = MappingTransform;
+			waves_node.UvwTransform = new ccl.Transform(MappingTransform);
 			waves_node.WaveType = WaveType;
 			waves_node.WaveWidth = WaveWidth;
 			waves_node.WaveWidthTextureOn = WaveWidthTextureOn;
@@ -394,7 +394,7 @@ namespace RhinoCyclesCore.Converters
 			var waves_width_node = new WavesWidthTextureProceduralNode();
 			shader.AddNode(waves_width_node);
 
-			waves_width_node.UvwTransform = MappingTransform;
+			waves_width_node.UvwTransform = new ccl.Transform(MappingTransform);
 			waves_width_node.WaveType = WaveType;
 
 			uvw_output.Connect(waves_width_node.ins.UVW);
@@ -435,7 +435,7 @@ namespace RhinoCyclesCore.Converters
 			var perturbing_part1_node = new PerturbingPart1TextureProceduralNode();
 			shader.AddNode(perturbing_part1_node);
 
-			perturbing_part1_node.UvwTransform = MappingTransform;
+			perturbing_part1_node.UvwTransform = new ccl.Transform(MappingTransform);
 
 			uvw_output.Connect(perturbing_part1_node.ins.UVW);
 
@@ -540,7 +540,7 @@ namespace RhinoCyclesCore.Converters
 			shader.AddNode(waves);
 
 			PerturbingPart1TextureProceduralNode perturbing1 = new PerturbingPart1TextureProceduralNode();
-			perturbing1.UvwTransform = MappingTransform;
+			perturbing1.UvwTransform = new ccl.Transform(MappingTransform);
 			//perturbing1.Repeat = Repeat; // TODO? Or is this being handled in the line above?
 			//perturbing1.Offset = Offset; // TODO?
 			//perturbing1.Rotation = Rotation; // TODO?
@@ -563,8 +563,6 @@ namespace RhinoCyclesCore.Converters
 
 			perturbing2.outs.PerturbedUVW.Connect(waves.ins.UVW);
 			waves.outs.Color.Connect(parent_color_input);
-
-			//ConnectInputOutputNodes(perturbing2.outs.PerturbedUVW, parent_color_input, waves.outs.Color, waves.ins.UVW);
 
 			return waves;
 		}
@@ -598,14 +596,11 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
 		{
-			//var texture_coordinate_node = new TextureCoordinateNode();
-			//shader.AddNode(texture_coordinate_node);
-
 			var transform_node = new MatrixMathNode();
 			shader.AddNode(transform_node);
 
 			transform_node.Operation = MatrixMathNode.Operations.Point;
-			transform_node.Transform = MappingTransform;
+			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var image_texture_node = new ImageTextureNode();
 			shader.AddNode(image_texture_node);
