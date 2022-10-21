@@ -566,7 +566,7 @@ namespace RhinoCyclesCore.Shaders
 
 				tangent.outs.Tangent.Connect(principled.ins.Tangent);
 
-				if(part.PbrDisplacement.On && part.PbrDisplacementTexture.HasTextureImage)
+				if(part.PbrDisplacement.On && part.PbrDisplacementTexture.HasProcedural)
 				{
 					var displacement = new DisplacementNode();
 					var strength = new MathMultiply();
