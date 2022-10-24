@@ -80,6 +80,14 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new AddTextureProcedural(render_texture, transform);
 			}
+			else if( render_texture.TypeName.Equals("Blend Texture"))
+			{
+				procedural = new BlendTextureProcedural(render_texture, transform);
+			}
+			else if (render_texture.TypeName.Equals("Gradient Texture"))
+			{
+				procedural = new GradientTextureProcedural(render_texture, transform);
+			}
 			else if( render_texture.TypeName.Equals("Bitmap Texture") || render_texture.TypeName.Equals("Simple Bitmap Texture"))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
@@ -143,7 +151,6 @@ namespace RhinoCyclesCore.Converters
 			{
 				InputTransform = new ccl.Transform(transform);
 				MappingTransform = ToCyclesTransform(render_texture.LocalMappingTransform) * InputTransform;
-				Id = render_texture.RenderHash;
 			}
 		}
 
@@ -444,11 +451,11 @@ namespace RhinoCyclesCore.Converters
 
 			perturbing_part2_node.Amount = Amount;
 
-			perturbing_part1_node.outs.UVW0.Connect(perturbing_part2_node.ins.UVW);
+			perturbing_part1_node.outs.UVW1.Connect(perturbing_part2_node.ins.UVW);
 
-			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW0, perturbing_part2_node.ins.Color0);
 			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW1, perturbing_part2_node.ins.Color1);
 			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW2, perturbing_part2_node.ins.Color2);
+			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW3, perturbing_part2_node.ins.Color3);
 
 			var output_node = SourceChild?.CreateAndConnectProceduralNode(shader, perturbing_part2_node.outs.PerturbedUVW, parent_color_input);
 
@@ -552,14 +559,14 @@ namespace RhinoCyclesCore.Converters
 			shader.AddNode(perturbing2);
 
 			uvw_output.Connect(perturbing1.ins.UVW);
-			perturbing1.outs.UVW0.Connect(noise1.ins.UVW);
-			perturbing1.outs.UVW1.Connect(noise2.ins.UVW);
-			perturbing1.outs.UVW2.Connect(noise3.ins.UVW);
+			perturbing1.outs.UVW1.Connect(noise1.ins.UVW);
+			perturbing1.outs.UVW2.Connect(noise2.ins.UVW);
+			perturbing1.outs.UVW3.Connect(noise3.ins.UVW);
 
-			perturbing1.outs.UVW0.Connect(perturbing2.ins.UVW);
-			noise1.outs.Color.Connect(perturbing2.ins.Color0);
-			noise2.outs.Color.Connect(perturbing2.ins.Color1);
-			noise3.outs.Color.Connect(perturbing2.ins.Color2);
+			perturbing1.outs.UVW1.Connect(perturbing2.ins.UVW);
+			noise1.outs.Color.Connect(perturbing2.ins.Color1);
+			noise2.outs.Color.Connect(perturbing2.ins.Color2);
+			noise3.outs.Color.Connect(perturbing2.ins.Color3);
 
 			perturbing2.outs.PerturbedUVW.Connect(waves.ins.UVW);
 			waves.outs.Color.Connect(parent_color_input);
@@ -665,7 +672,80 @@ namespace RhinoCyclesCore.Converters
 		}
 	}
 
-		public class ShaderConverter
+	public class BlendTextureProcedural : TwoColorProcedural
+	{
+		public BlendTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var mix_node = new MixNode();
+			shader.AddNode(mix_node);
+
+			mix_node.BlendType = MixNode.BlendTypes.Blend;
+			mix_node.ins.Fac.Value = 0.5f;
+
+			// Recursive call
+			ConnectChildNodes(shader, uvw_output, mix_node.ins.Color1, mix_node.ins.Color2);
+
+			mix_node.outs.Color.Connect(parent_color_input);
+
+			return mix_node;
+		}
+	}
+
+	public class GradientTextureProcedural : TwoColorProcedural
+	{
+		public GradientTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("gradient-type", out int gradient_type))
+				GradientType = (GradientTextureProceduralNode.GradientTypes)gradient_type;
+
+			if (rtf.TryGetValue("flip-alternate", out bool flip_alternate))
+				FlipAlternate = flip_alternate;
+
+			if (rtf.TryGetValue("custom-curve", out bool use_custom_curve))
+				UseCustomCurve = use_custom_curve;
+
+			//if (rtf.TryGetValue("point-width", out int point_width))
+			//	PointWidth = point_width;
+
+			//if (rtf.TryGetValue("point-height", out int point_height))
+			//	PointHeight = point_height;
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var gradient_node = new GradientTextureProceduralNode();
+			shader.AddNode(gradient_node);
+
+			gradient_node.UvwTransform = new ccl.Transform(MappingTransform);
+			gradient_node.GradientType = GradientType;
+			gradient_node.FlipAlternate = FlipAlternate;
+			gradient_node.UseCustomCurve = UseCustomCurve;
+			gradient_node.PointWidth = PointWidth;
+			gradient_node.PointHeight = PointHeight;
+
+			// Recursive call
+			ConnectChildNodes(shader, uvw_output, gradient_node.ins.Color1, gradient_node.ins.Color2);
+
+			uvw_output.Connect(gradient_node.ins.UVW);
+			gradient_node.outs.Color.Connect(parent_color_input);
+
+			return gradient_node;
+		}
+
+		public GradientTextureProceduralNode.GradientTypes GradientType { get; set; }
+		public bool FlipAlternate { get; set; }
+		public bool UseCustomCurve { get; set; }
+		public int PointWidth { get; set; }
+		public int PointHeight { get; set; }
+	}
+
+	public class ShaderConverter
 	{
 		private Guid realtimDisplaMaterialId = new Guid("e6cd1973-b739-496e-ab69-32957fa48492");
 
