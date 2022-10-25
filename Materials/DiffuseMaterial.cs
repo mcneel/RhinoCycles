@@ -49,7 +49,7 @@ namespace RhinoCyclesCore.Materials
 		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			HandleTexturedValue(_Diffuse, Diffuse);
-			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, bitmapConverter, Gamma);
+			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, true, bitmapConverter, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()

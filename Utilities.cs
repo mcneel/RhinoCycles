@@ -109,7 +109,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, true, bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
+							HandleRenderTexture(rt, tex, true, rt.IsBitmapTexture(), bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
 							tex.Amount = amount;
 						}
 					}
@@ -147,7 +147,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, true, bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
+							HandleRenderTexture(rt, tex, true, rt.IsBitmapTexture(), bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
 							tex.Amount = amount;
 						}
 					}
@@ -157,7 +157,7 @@ namespace RhinoCyclesCore
 			return (success, rc, onness, amount);
 		}
 
-		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, Converters.BitmapConverter bitmapConverter, float gamma = 1.0f)
+		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool isLeafBitmap, Converters.BitmapConverter bitmapConverter, float gamma = 1.0f)
 		{
 			if (rt == null) return;
 
@@ -201,10 +201,7 @@ namespace RhinoCyclesCore
 
 			Procedural procedural = null;
 
-			if (!rt.TypeName.Equals("Bitmap Texture") && !rt.TypeName.Equals("Simple Bitmap Texture"))
-			{
-				procedural = Procedural.CreateProcedural(rt, Transform.Identity(), tex.TextureList, bitmapConverter);
-			}
+			if(!isLeafBitmap) procedural = Procedural.CreateProcedural(rt, Transform.Identity(), tex.TextureList, bitmapConverter);
 
 			if(procedural != null) {
 				tex.Procedural = procedural;
@@ -396,7 +393,7 @@ namespace RhinoCyclesCore
 				gamma_node.ins.Gamma.Value = 2.2f;
 				//gamma_node.outs.Color.Connect(output_color_socket);
 
-				teximg.Procedural.CreateAndConnectProceduralNode(sh, texco.outs.UV, gamma_node.ins.Color);
+				teximg.Procedural.CreateAndConnectProceduralNode(sh, texco.outs.UV, gamma_node.ins.Color, true);
 
 				texco.UvMap = teximg.GetUvMapForChannel();
 				normalmapnode.Attribute = teximg.GetUvMapForChannel();

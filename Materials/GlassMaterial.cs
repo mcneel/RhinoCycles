@@ -59,11 +59,11 @@ namespace RhinoCyclesCore.Materials
 		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			HandleTexturedValue(_Color, Color);
-			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, bitmapConverter, Gamma);
+			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, true, bitmapConverter, Gamma);
 			HandleTexturedValue(_Frost, Frost);
-			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, false, bitmapConverter, Gamma);
+			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, false, true, bitmapConverter, Gamma);
 			HandleTexturedValue(_Color, Color);
-			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, bitmapConverter, Gamma);
+			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, true, bitmapConverter, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()

@@ -587,7 +587,7 @@ namespace RhinoCyclesCore.Converters
 		{
 			CyclesTexture = cycles_texture;
 			BitmapConverter = bitmap_converter;
-			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, bitmap_converter, 1.0f);
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, true, bitmap_converter, 1.0f);
 
 			var rtf = render_texture.Fields;
 
