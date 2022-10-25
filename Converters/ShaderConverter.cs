@@ -88,7 +88,7 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new GradientTextureProcedural(render_texture, transform);
 			}
-			else if( render_texture.TypeName.Equals("Bitmap Texture") || render_texture.TypeName.Equals("Simple Bitmap Texture"))
+			else if( render_texture.IsBitmapTexture() )
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);

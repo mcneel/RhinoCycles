@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using ccl.ShaderNodes.Sockets;
 using Rhino.Geometry.Collections;
+using Rhino.Render;
 
 namespace RhinoCyclesCore.ExtensionMethods
 {
@@ -60,6 +61,14 @@ namespace RhinoCyclesCore.ExtensionMethods
 		{
 			if (count != cl.Count) return null;
 			return cl.ToFloatArray();
+		}
+	}
+
+	public static class RenderTextureExtensions
+	{
+		public static bool IsBitmapTexture(this RenderTexture tex)
+		{
+			return tex.TypeName.Equals("Bitmap Texture") || tex.TypeName.Equals("Simple Bitmap Texture");
 		}
 	}
 
