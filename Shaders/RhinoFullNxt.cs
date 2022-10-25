@@ -320,20 +320,6 @@ namespace RhinoCyclesCore.Shaders
 			return nodeToBindIntoShader;
 		}
 
-		private void CreateProceduralNodeGraph(Procedural procedural, ColorSocket output_color_socket)
-		{
-			var uv_node = new TextureCoordinateNode();
-			m_shader.AddNode(uv_node);
-
-			var gamma_node = new GammaNode();
-			m_shader.AddNode(gamma_node);
-
-			gamma_node.ins.Gamma.Value = 2.2f;
-			gamma_node.outs.Color.Connect(output_color_socket);
-
-			procedural.CreateAndConnectProceduralNode(m_shader, uv_node.outs.UV, gamma_node.ins.Color);
-		}
-
 		private ShaderNode GetShaderPart(ShaderBody part)
 		{
 			MixNode decalMixin = HandleDecals();

@@ -341,100 +341,10 @@ namespace RhinoCyclesCore
 			HandleCustomTexture(StdCS.Environment, shb, shb.EnvironmentTexture, rm, false);
 		}
 
-		protected TextureType ConvertChildSlotToTextureType(RenderMaterial.StandardChildSlots child_slot)
-		{
-			switch (child_slot)
-			{
-				case StdCS.None:
-					return TextureType.None;
-				case StdCS.PbrBaseColor:
-					return TextureType.PBR_BaseColor;
-				case StdCS.PbrOpacity:
-					return TextureType.Opacity;
-				case StdCS.Bump:
-					return TextureType.Bump;
-				case StdCS.Environment:
-					return TextureType.Emap;
-				case StdCS.PbrSubsurface:
-					return TextureType.PBR_Subsurface;
-				case StdCS.PbrSubSurfaceScattering:
-					return TextureType.PBR_SubsurfaceScattering;
-				case StdCS.PbrSubsurfaceScatteringRadius:
-					return TextureType.PBR_SubsurfaceScatteringRadius;
-				case StdCS.PbrMetallic:
-					return TextureType.PBR_Metallic;
-				case StdCS.PbrSpecular:
-					return TextureType.PBR_Specular;
-				case StdCS.PbrSpecularTint:
-					return TextureType.PBR_SpecularTint;
-				case StdCS.PbrRoughness:
-					return TextureType.PBR_Roughness;
-				case StdCS.PbrAnisotropic:
-					return TextureType.PBR_Anisotropic;
-				case StdCS.PbrAnisotropicRotation:
-					return TextureType.PBR_Anisotropic_Rotation;
-				case StdCS.PbrSheen:
-					return TextureType.PBR_Sheen;
-				case StdCS.PbrSheenTint:
-					return TextureType.PBR_SheenTint;
-				case StdCS.PbrClearcoat:
-					return TextureType.PBR_Clearcoat;
-				case StdCS.PbrClearcoatRoughness:
-					return TextureType.PBR_ClearcoatRoughness;
-				case StdCS.PbrOpacityIor:
-					return TextureType.PBR_OpacityIor;
-				case StdCS.PbrOpacityRoughness:
-					return TextureType.PBR_OpacityRoughness;
-				case StdCS.PbrEmission:
-					return TextureType.PBR_Emission;
-				case StdCS.PbrAmbientOcclusion:
-					return TextureType.PBR_AmbientOcclusion;
-				case StdCS.PbrDisplacement:
-					return TextureType.PBR_Displacement;
-				case StdCS.PbrClearcoatBump:
-					return TextureType.PBR_ClearcoatBump;
-				case StdCS.PbrAlpha:
-					return TextureType.PBR_Alpha;
-				default:
-					{
-						System.Diagnostics.Debug.Assert(false);
-						return TextureType.None;
-					}
-			}
-		}
-
-		protected void ProcessProcedurals(RenderMaterial rm, StdCS child_slot, List<CyclesTextureImage> texture_list, Dictionary<TextureType, Procedural> procedurals, BitmapConverter _bitmapConverter)
-		{
-			if (procedurals == null)
-				return;
-
-			// TODO: Remove this
-			if (child_slot != StdCS.PbrBaseColor)
-				return;
-
-			if (child_slot == StdCS.None || child_slot == StdCS.Environment)
-				return;
-
-			var texture_type = ConvertChildSlotToTextureType(child_slot);
-
-			RenderTexture render_texture = rm.GetTextureFromUsage(child_slot);
-
-			if (render_texture == null)
-				return;
-
-			var procedural = Procedural.CreateProcedural(render_texture, Transform.Identity(), texture_list, _bitmapConverter);
-
-			if (procedural == null)
-				return;
-
-			procedurals.Add(texture_type, procedural);
-		}
 
 		void HandlePbrTexturedProperty<T>(RenderMaterial.StandardChildSlots childSlot, T v, RenderMaterial rm, TexturedValue<T> tv, CyclesTextureImage cti, float gamma = 1.0f)
 		{
 			tv.Value = v;
-
-			//ProcessProcedurals(rm, childSlot, cti_list, Procedurals, _bitmapConverter);
 
 			//If we manage to get a texture from the usage, that means that either the material supports handing
 			//off actual textures for specific usages, or it's actually a Rhino Physically Based material.
