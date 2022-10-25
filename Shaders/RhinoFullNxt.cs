@@ -389,7 +389,7 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(alpha_transparency_final);
 				m_shader.AddNode(alpha_basecolalpha_plus_alphatransp);
 
-				if(part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasTextureImage) {
+				if(part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasProcedural) {
 					m_shader.AddNode(aotex);
 					m_shader.AddNode(aoamount);
 
@@ -462,7 +462,7 @@ namespace RhinoCyclesCore.Shaders
 					}
 				}
 
-				if (part.PbrBump.On && part.PbrBumpTexture.HasTextureImage)
+				if (part.PbrBump.On && part.PbrBumpTexture.HasProcedural)
 				{
 					if (!part.PbrBumpTexture.IsNormalMap)
 					{
@@ -478,7 +478,7 @@ namespace RhinoCyclesCore.Shaders
 						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal.ToList(), texco, false, true, false);
 					}
 				}
-				if (part.PbrClearcoatBump.On && part.PbrClearcoatBumpTexture.HasTextureImage)
+				if (part.PbrClearcoatBump.On && part.PbrClearcoatBumpTexture.HasProcedural)
 				{
 					if (!part.PbrClearcoatBumpTexture.IsNormalMap)
 					{
@@ -495,7 +495,7 @@ namespace RhinoCyclesCore.Shaders
 					}
 				}
 
-				if (part.PbrScratch.On && part.PbrScratch.Amount > 0.001)
+				if (part.PbrScratch.On && part.PbrScratch.Amount > 0.001 && part.PbrScratchTexture.HasProcedural)
 				{
 					m_shader.AddNode(scratchtex);
 					m_shader.AddNode(bumpwithscratch);
@@ -529,7 +529,7 @@ namespace RhinoCyclesCore.Shaders
 
 				float emission_strength = part.PbrEmission.Value.LargestComponent();
 
-				if(part.PbrEmission.On && part.PbrEmissionTexture.HasTextureImage)
+				if(part.PbrEmission.On && part.PbrEmissionTexture.HasProcedural)
 				{
 					emissive.ins.Strength.Value = emission_strength;
 					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, emissive.ins.Color, texco, false);
@@ -624,6 +624,8 @@ namespace RhinoCyclesCore.Shaders
 				var diff_tex_weighted_alpha_for_basecol_mix182 = new MathMultiply("diff_tex_weighted_alpha_for_basecol_mix_");
 					diff_tex_weighted_alpha_for_basecol_mix182.Operation = MathNode.Operations.Multiply;
 					diff_tex_weighted_alpha_for_basecol_mix182.UseClamp = false;
+					// TODO diffuse_texture85.outs.Alpha.Connect(diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2);
+					diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2.Value = 1.0f;
 
 				var diffuse_base_color_through_alpha180 = new MixNode("diffuse_base_color_through_alpha_");
 					diffuse_base_color_through_alpha180.ins.Color1.Value = part.BaseColor;
@@ -805,6 +807,8 @@ namespace RhinoCyclesCore.Shaders
 				var max_of_texalpha_or_usealpha179 = new MathMaximum("max_of_texalpha_or_usealpha_");
 					max_of_texalpha_or_usealpha179.Operation = MathNode.Operations.Maximum;
 					max_of_texalpha_or_usealpha179.UseClamp = false;
+					// TODO alpha support procedurals
+					max_of_texalpha_or_usealpha179.ins.Value1.Value = 1.0f;
 
 				var invert_alpha70 = new MathSubtract("invert_alpha_");
 					invert_alpha70.ins.Value1.Value = 1f;
@@ -959,15 +963,15 @@ namespace RhinoCyclesCore.Shaders
 				invert_transparency68.outs.Value.Connect(diff_tex_amount_multiplied_with_inv_transparency181.ins.Value2);
 				texcoord84.outs.UV.Connect(diffuse_texture85.ins.Vector);
 				diff_tex_amount_multiplied_with_inv_transparency181.outs.Value.Connect(diff_tex_weighted_alpha_for_basecol_mix182.ins.Value1);
-				diffuse_texture85.outs.Alpha.Connect(diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2);
-				diffuse_texture85.outs.Color.Connect(diffuse_base_color_through_alpha180.ins.Color2);
+				// TODO diffuse_texture85.outs.Alpha.Connect(diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2);
+				//diffuse_texture85.outs.Color.Connect(diffuse_base_color_through_alpha180.ins.Color2);
 				diff_tex_weighted_alpha_for_basecol_mix182.outs.Value.Connect(diffuse_base_color_through_alpha180.ins.Fac);
 				weight_diffuse_amount_by_transparency_inv69.outs.Value.Connect(use_alpha_weighted_with_modded_amount71.ins.Value2);
 				texcoord84bump.outs.UV.Connect(bump_texture86.ins.Vector);
-				bump_texture86.outs.Color.Connect(bump_texture_to_bw87.ins.Color);
-				bump_texture86.outs.Color.Connect(normalmap.ins.Color);
+				//bump_texture86.outs.Color.Connect(bump_texture_to_bw87.ins.Color);
+				//bump_texture86.outs.Color.Connect(normalmap.ins.Color);
 				diffuse_base_color_through_alpha180.outs.Color.Connect(diffuse_base_color_through_alpha120.ins.Color1);
-				diffuse_texture85.outs.Color.Connect(diffuse_base_color_through_alpha120.ins.Color2);
+				//diffuse_texture85.outs.Color.Connect(diffuse_base_color_through_alpha120.ins.Color2);
 				use_alpha_weighted_with_modded_amount71.outs.Value.Connect(diffuse_base_color_through_alpha120.ins.Fac);
 				bump_texture_to_bw87.outs.Val.Connect(bump88.ins.Height);
 				bump_amount72.outs.Value.Connect(bump88.ins.Strength);
@@ -1003,7 +1007,7 @@ namespace RhinoCyclesCore.Shaders
 				flip_sign_envmap_texco_y74.outs.Value.Connect(recombine_envmap_texco104.ins.Y);
 				separate_envmap_texco103.outs.Z.Connect(recombine_envmap_texco104.ins.Z);
 				recombine_envmap_texco104.outs.Vector.Connect(environment_texture105.ins.Vector);
-				environment_texture105.outs.Color.Connect(attenuated_environment_color106.ins.Color2);
+				//environment_texture105.outs.Color.Connect(attenuated_environment_color106.ins.Color2);
 				diffuse_plus_glossy101.outs.Closure.Connect(diffuse_glossy_and_refraction107.ins.Closure1);
 				blend_in_transparency102.outs.Closure.Connect(diffuse_glossy_and_refraction107.ins.Closure2);
 				attenuated_environment_color106.outs.Color.Connect(environment_map_diffuse108.ins.Color);
@@ -1020,11 +1024,11 @@ namespace RhinoCyclesCore.Shaders
 				diffuse_from_emission_color123.outs.BSDF.Connect(diffuse_or_shadeless_emission126.ins.Closure1);
 				shadeless_emission125.outs.Emission.Connect(diffuse_or_shadeless_emission126.ins.Closure2);
 				shadeless_on_cameraray122.outs.Value.Connect(diffuse_or_shadeless_emission126.ins.Fac);
-				diffuse_texture85.outs.Alpha.Connect(max_of_texalpha_or_usealpha179.ins.Value1);
+				// TODO diffuse_texture85.outs.Alpha.Connect(max_of_texalpha_or_usealpha179.ins.Value1);
 				one_if_usealphatransp_turned_off178.outs.Value.Connect(max_of_texalpha_or_usealpha179.ins.Value2);
 				max_of_texalpha_or_usealpha179.outs.Value.Connect(invert_alpha70.ins.Value2);
 				texcoord84transp.outs.UV.Connect(transparency_texture112.ins.Vector);
-				transparency_texture112.outs.Color.Connect(transpluminance113.ins.Color);
+				//transparency_texture112.outs.Color.Connect(transpluminance113.ins.Color);
 				transpluminance113.outs.Val.Connect(invert_luminence79.ins.Value2);
 				invert_luminence79.outs.Value.Connect(transparency_texture_amount80.ins.Value1);
 				invert_alpha70.outs.Value.Connect(toggle_diffuse_texture_alpha_usage81.ins.Value1);
@@ -1048,7 +1052,7 @@ namespace RhinoCyclesCore.Shaders
 
 				/* extra code */
 
-				if (part.BumpTexture.HasTextureImage && part.BumpTexture.Amount > 0.0f)
+				if (part.BumpTexture.HasProcedural && part.BumpTexture.Amount > 0.0f)
 				{
 					if (!part.BumpTexture.IsNormalMap)
 					{
@@ -1068,31 +1072,38 @@ namespace RhinoCyclesCore.Shaders
 					}
 				}
 
-				if (part.HasTransparencyTexture)
+				if (part.TransparencyTexture.HasProcedural)
 				{
 					texcoord84transp.UvMap = part.TransparencyTexture.GetUvMapForChannel();
-					RenderEngine.SetTextureImage(transparency_texture112, part.TransparencyTexture);
-					RenderEngine.SetProjectionMode(m_shader, part.TransparencyTexture, transparency_texture112, texcoord84transp);
+					Utilities.GraphForSlot(m_shader, null, true, part.TransparencyTexture.Amount, part.TransparencyTexture, transpluminance113.ins.Color.ToList(), texcoord84transp);
+					//RenderEngine.SetTextureImage(transparency_texture112, part.TransparencyTexture);
+					//RenderEngine.SetProjectionMode(m_shader, part.TransparencyTexture, transparency_texture112, texcoord84transp);
 				}
 
-				if (part.HasDiffuseTexture)
+				if (part.DiffuseTexture.HasProcedural)
 				{
 					texcoord84.UvMap = part.DiffuseTexture.GetUvMapForChannel();
-					RenderEngine.SetTextureImage(diffuse_texture85, part.DiffuseTexture);
-					RenderEngine.SetProjectionMode(m_shader, part.DiffuseTexture, diffuse_texture85, texcoord84);
+					List<ISocket> socks = new List<ISocket>();
+					socks.Add(diffuse_base_color_through_alpha120.ins.Color2);
+					socks.Add(diffuse_base_color_through_alpha180.ins.Color2);
+					Utilities.GraphForSlot(m_shader, null, true, part.DiffuseTexture.Amount, part.DiffuseTexture, socks, texcoord84, false, false, false);
 				}
 
-				if (part.HasBumpTexture)
+				if (part.HasBumpTexture && part.BumpTexture.HasProcedural)
 				{
 					texcoord84bump.UvMap = part.BumpTexture.GetUvMapForChannel();
-					RenderEngine.SetTextureImage(bump_texture86, part.BumpTexture);
-					RenderEngine.SetProjectionMode(m_shader, part.BumpTexture, bump_texture86, texcoord84bump);
+					List<ISocket> socks = new List<ISocket>();
+					socks.Add(bump_texture_to_bw87.ins.Color);
+					socks.Add(normalmap.ins.Color);
+					Utilities.GraphForSlot(m_shader, null, true, part.BumpTexture.Amount, part.BumpTexture, socks, texcoord84bump);
 				}
 
-				if (part.HasEnvironmentTexture)
+				if (part.EnvironmentTexture.HasProcedural)
 				{
-					RenderEngine.SetTextureImage(environment_texture105, part.EnvironmentTexture);
-					RenderEngine.SetProjectionMode(m_shader, part.EnvironmentTexture, environment_texture105, texcoord84env);
+					texcoord84env.UvMap = part.TransparencyTexture.GetUvMapForChannel();
+					List<ISocket> socks = new List<ISocket>();
+					socks.Add(environment_texture105.outs.Color);
+					Utilities.GraphForSlot(m_shader, null, true, part.EnvironmentTexture.Amount, part.EnvironmentTexture, socks, texcoord84env);
 				}
 
 				if (part.CyclesMaterialType == ShaderBody.CyclesMaterial.Glass

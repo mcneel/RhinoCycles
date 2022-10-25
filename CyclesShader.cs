@@ -220,7 +220,7 @@ namespace RhinoCyclesCore
 				var on_material = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow);
 				var on_texture = on_material.GetTexture(RenderMaterial.TextureTypeFromSlot(childSlot));
 
-				if (null != on_texture && on_texture.Enabled)
+				/*if (null != on_texture && on_texture.Enabled)
 				{
 					//Note that the simulated texture is created with the RenderMaterial's document association
 					//so that when the new bitmap texture is created below, the WCS transforms are not applied.
@@ -232,12 +232,12 @@ namespace RhinoCyclesCore
 					on_texture.GetAlphaBlendValues(out double c, out double a0, out double a1, out double a2, out double a3);
 
 					amount = (float)c;
-				}
+				}*/
 			}
-			/*if(texture!=null && enabled) {
-				Utilities.HandleRenderTexture(texture, ti, checkForNormal, _bitmapConverter, shb.Gamma);
+			if(texture!=null && enabled) {
+				Utilities.HandleRenderTexture(texture, ti, checkForNormal, false, _bitmapConverter, shb.Gamma);
 				ti.Amount = amount;
-			}*/
+			}
 		}
 
 		private void CreateCustomShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
@@ -389,7 +389,7 @@ namespace RhinoCyclesCore
 
 			bool checkForNormal = childSlot == StdCS.Bump || childSlot == StdCS.PbrClearcoatBump || childSlot == StdCS.PbrDisplacement;
 
-			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, _bitmapConverter, gamma);
+			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, false, _bitmapConverter, gamma);
 		}
 
 		private void CreatePbrShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
