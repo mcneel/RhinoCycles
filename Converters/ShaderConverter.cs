@@ -134,6 +134,15 @@ namespace RhinoCyclesCore.Converters
 				}
 			}
 
+			if(procedural is BlendTextureProcedural blend_texture)
+			{
+				RenderTexture blend_child = (RenderTexture)render_texture.FindChild("blend-texture");
+				if (blend_child != null)
+				{
+					blend_texture.BlendChild = CreateProcedural(blend_child, child_transform, texture_list, bitmap_converter); // Recursive call
+				}
+			}
+
 			return procedural;
 		}
 
@@ -152,14 +161,6 @@ namespace RhinoCyclesCore.Converters
 				InputTransform = new ccl.Transform(transform);
 				MappingTransform = ToCyclesTransform(render_texture.LocalMappingTransform) * InputTransform;
 			}
-		}
-
-		protected static void ConnectInputOutputNodes(VectorSocket uvw_output, ColorSocket parent_color_input, ColorSocket node_color_output, VectorSocket node_uvw_input)
-		{
-			if (parent_color_input != null && node_color_output != null)
-				node_color_output.Connect(parent_color_input);
-
-			uvw_output.Connect(node_uvw_input);
 		}
 
 		protected virtual void Dispose(bool disposing)
@@ -256,7 +257,8 @@ namespace RhinoCyclesCore.Converters
 			// Recursive call
 			ConnectChildNodes(shader, uvw_output, node.ins.Color1, node.ins.Color2);
 
-			ConnectInputOutputNodes(uvw_output, parent_color_input, node.outs.Color, node.ins.UVW);
+			uvw_output.Connect(node.ins.UVW);
+			node.outs.Color.Connect(parent_color_input);
 
 			return node;
 		}
@@ -321,7 +323,8 @@ namespace RhinoCyclesCore.Converters
 			// Recursive call
 			ConnectChildNodes(shader, uvw_output, node.ins.Color1, node.ins.Color2);
 
-			ConnectInputOutputNodes(uvw_output, parent_color_input, node.outs.Color, node.ins.UVW);
+			uvw_output.Connect(node.ins.UVW);
+			node.outs.Color.Connect(parent_color_input);
 
 			return node;
 		}
@@ -414,7 +417,8 @@ namespace RhinoCyclesCore.Converters
 				WaveWidthChild.CreateAndConnectProceduralNode(shader, waves_width_node.outs.UVW, waves_node.ins.Color3); // Recursive call
 			}
 
-			ConnectInputOutputNodes(uvw_output, parent_color_input, waves_node.outs.Color, waves_node.ins.UVW);
+			uvw_output.Connect(waves_node.ins.UVW);
+			waves_node.outs.Color.Connect(parent_color_input);
 
 			return waves_node;
 		}
@@ -672,29 +676,6 @@ namespace RhinoCyclesCore.Converters
 		}
 	}
 
-	public class BlendTextureProcedural : TwoColorProcedural
-	{
-		public BlendTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
-		{
-		}
-
-		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
-		{
-			var mix_node = new MixNode();
-			shader.AddNode(mix_node);
-
-			mix_node.BlendType = MixNode.BlendTypes.Blend;
-			mix_node.ins.Fac.Value = 0.5f;
-
-			// Recursive call
-			ConnectChildNodes(shader, uvw_output, mix_node.ins.Color1, mix_node.ins.Color2);
-
-			mix_node.outs.Color.Connect(parent_color_input);
-
-			return mix_node;
-		}
-	}
-
 	public class GradientTextureProcedural : TwoColorProcedural
 	{
 		public GradientTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
@@ -743,6 +724,50 @@ namespace RhinoCyclesCore.Converters
 		public bool UseCustomCurve { get; set; }
 		public int PointWidth { get; set; }
 		public int PointHeight { get; set; }
+	}
+
+	public class BlendTextureProcedural : TwoColorProcedural
+	{
+		public BlendTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("texture-on", out bool texture_on))
+				UseBlendColor = texture_on;
+
+			if (rtf.TryGetValue("blend-factor", out double blend_factor))
+				BlendFactor = (float)blend_factor;
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var transform_node = new MatrixMathNode();
+			shader.AddNode(transform_node);
+
+			transform_node.Transform = MappingTransform;
+
+			var blend_node = new BlendTextureProceduralNode();
+			shader.AddNode(blend_node);
+
+			blend_node.UseBlendColor = UseBlendColor;
+			blend_node.BlendFactor = BlendFactor;
+
+			uvw_output.Connect(transform_node.ins.Vector);
+
+			// Recursive call
+			ConnectChildNodes(shader, transform_node.outs.Vector, blend_node.ins.Color1, blend_node.ins.Color2);
+
+			// Recursive call
+			BlendChild?.CreateAndConnectProceduralNode(shader, transform_node.outs.Vector, blend_node.ins.BlendColor);
+
+			blend_node.outs.Color.Connect(parent_color_input);
+
+			return blend_node;
+		}
+
+		public bool UseBlendColor { get; set; }
+		public float BlendFactor { get; set; }
+		public Procedural BlendChild { get; set; } = null;
 	}
 
 	public class ShaderConverter
