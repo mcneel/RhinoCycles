@@ -88,6 +88,10 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new GradientTextureProcedural(render_texture, transform);
 			}
+			else if( render_texture.TypeName.Equals("Exposure Texture"))
+			{
+				procedural = new ExposureTextureProcedural(render_texture, transform);
+			}
 			else if( render_texture.TypeName.Equals("Bitmap Texture") || render_texture.TypeName.Equals("Simple Bitmap Texture"))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
@@ -96,6 +100,11 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			ccl.Transform child_transform = procedural != null ? procedural.GetChildTransform() : ccl.Transform.Identity();
+
+			if (procedural is OneColorProcedural one_color)
+			{
+				one_color.Child = CreateProceduralFromChild(render_texture, "color-one", child_transform, texture_list, bitmap_converter);
+			}
 
 			if (procedural is TwoColorProcedural two_color)
 			{
@@ -143,6 +152,15 @@ namespace RhinoCyclesCore.Converters
 				}
 			}
 
+			if(procedural is ExposureTextureProcedural exposure_texture)
+			{
+				RenderTexture exposure_child = (RenderTexture)render_texture.FindChild("input-texture");
+				if (exposure_child != null)
+				{
+					exposure_texture.ExposureChild = CreateProcedural(exposure_child, child_transform, texture_list, bitmap_converter); // Recursive call
+				}
+			}
+
 			return procedural;
 		}
 
@@ -182,6 +200,33 @@ namespace RhinoCyclesCore.Converters
 		public uint Id { get; set; } = 0;
 
 		protected virtual ccl.Transform GetChildTransform() { return InputTransform; }
+	}
+
+	public abstract class OneColorProcedural : Procedural
+	{
+		public OneColorProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			Color = render_texture.Fields.TryGetValue("color-one", out Color4f color1) ? color1 : Color4f.Black;
+			Amount = render_texture.Fields.TryGetValue("texture-amount-one", out double texture_amount1) ? (float)texture_amount1 : 1.0f;
+		}
+
+		protected void ConnectChildNode(Shader shader, VectorSocket uvw_output, ColorSocket color_input)
+		{
+			if (Child != null)
+			{
+				// Recursive call
+				Child.CreateAndConnectProceduralNode(shader, uvw_output, color_input);
+			}
+			else
+			{
+				color_input.Value = Color.ToFloat4();
+			}
+		}
+
+		public Color4f Color { get; set; }
+		public float Amount { get; set; }
+
+		public Procedural Child { get; set; } = null;
 	}
 
 	public abstract class TwoColorProcedural : Procedural
@@ -768,6 +813,57 @@ namespace RhinoCyclesCore.Converters
 		public bool UseBlendColor { get; set; }
 		public float BlendFactor { get; set; }
 		public Procedural BlendChild { get; set; } = null;
+	}
+
+	public class ExposureTextureProcedural : Procedural
+	{
+		public ExposureTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("exposure", out double exposure))
+				Exposure = (float)exposure;
+
+			if (rtf.TryGetValue("multiplier", out double multiplier))
+				Multiplier = (float)multiplier;
+
+			object world_luminance = render_texture.GetParameter("world-luminance");
+			WorldLuminance = (float)Convert.ToDouble(world_luminance);
+
+			object max_luminance = render_texture.GetParameter("max-luminance");
+			MaxLuminance = (float)Convert.ToDouble(max_luminance);
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var transform_node = new MatrixMathNode();
+			shader.AddNode(transform_node);
+
+			transform_node.Transform = MappingTransform;
+
+			var exposure_node = new ExposureTextureProceduralNode();
+			shader.AddNode(exposure_node);
+
+			exposure_node.Exposure = Exposure;
+			exposure_node.Multiplier = Multiplier;
+			exposure_node.WorldLuminance = WorldLuminance;
+			exposure_node.MaxLuminance = MaxLuminance;
+
+			uvw_output.Connect(transform_node.ins.Vector);
+
+			// Recursive call
+			ExposureChild?.CreateAndConnectProceduralNode(shader, transform_node.outs.Vector, exposure_node.ins.Color);
+
+			exposure_node.outs.Color.Connect(parent_color_input);
+
+			return exposure_node;
+		}
+
+		public float Exposure { get; set; }
+		public float Multiplier { get; set; }
+		public float WorldLuminance { get; set; }
+		public float MaxLuminance { get; set; }
+		public Procedural ExposureChild { get; set; }
 	}
 
 	public class ShaderConverter
