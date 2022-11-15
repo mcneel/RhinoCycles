@@ -201,7 +201,7 @@ namespace RhinoCyclesCore
 
 			Procedural procedural = null;
 
-			if (!rt.TypeName.Equals("Bitmap Texture") && !rt.TypeName.Equals("Simple Bitmap Texture"))
+			if (!rt.TypeName.Equals("Bitmap Texture") && !rt.TypeName.Equals("Simple Bitmap Texture") && !rt.TypeName.Equals("High Dynamic Range Texture"))
 			{
 				procedural = Procedural.CreateProcedural(rt, Transform.Identity(), tex.TextureList, bitmapConverter);
 			}

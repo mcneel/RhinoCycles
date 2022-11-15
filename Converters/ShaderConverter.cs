@@ -76,11 +76,11 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new WoodTextureProcedural(render_texture, transform);
 			}
-			else if( render_texture.TypeName.Equals("Add Texture"))
+			else if (render_texture.TypeName.Equals("Add Texture"))
 			{
 				procedural = new AddTextureProcedural(render_texture, transform);
 			}
-			else if( render_texture.TypeName.Equals("Blend Texture"))
+			else if (render_texture.TypeName.Equals("Blend Texture"))
 			{
 				procedural = new BlendTextureProcedural(render_texture, transform);
 			}
@@ -88,7 +88,7 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new GradientTextureProcedural(render_texture, transform);
 			}
-			else if( render_texture.TypeName.Equals("Exposure Texture"))
+			else if (render_texture.TypeName.Equals("Exposure Texture"))
 			{
 				procedural = new ExposureTextureProcedural(render_texture, transform);
 			}
@@ -112,11 +112,21 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new ProjectionChangerTextureProcedural(render_texture, transform);
 			}
-			else if( render_texture.TypeName.Equals("Bitmap Texture") || render_texture.TypeName.Equals("Simple Bitmap Texture"))
+			else if (render_texture.TypeName.Equals("Marble Texture"))
+			{
+				procedural = new MarbleTextureProcedural(render_texture, transform);
+			}
+			else if (render_texture.TypeName.Equals("Bitmap Texture") || render_texture.TypeName.Equals("Simple Bitmap Texture"))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);
 				procedural = new BitmapTextureProcedural(render_texture, transform, cycles_texture, bitmap_converter);
+			}
+			else if (render_texture.TypeName.Equals("High Dynamic Range Texture"))
+			{
+				CyclesTextureImage cycles_texture = new CyclesTextureImage();
+				texture_list.Add(cycles_texture);
+				procedural = new HighDynamicRangeTextureProcedural(render_texture, transform, cycles_texture, bitmap_converter);
 			}
 
 			ccl.Transform child_transform = procedural != null ? procedural.GetChildTransform() : ccl.Transform.Identity();
@@ -690,10 +700,6 @@ namespace RhinoCyclesCore.Converters
 			var image_texture_node = new ImageTextureNode();
 			shader.AddNode(image_texture_node);
 
-			// This might be pointless, because we don't support setting projection modes on child textures.
-			// If this bitmap texture is not a child texture, then it is not a procedural, so this code won't be executed.
-			//RenderEngine.SetProjectionModeSimple(CyclesTexture, transform_node.ins.Vector, texture_coordinate_node);
-
 			if (CyclesTexture.HasTextureImage)
 			{
 				if (CyclesTexture.HasByteImage)
@@ -818,7 +824,7 @@ namespace RhinoCyclesCore.Converters
 			var transform_node = new MatrixMathNode();
 			shader.AddNode(transform_node);
 
-			transform_node.Transform = MappingTransform;
+			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var blend_node = new BlendTextureProceduralNode();
 			shader.AddNode(blend_node);
@@ -868,7 +874,7 @@ namespace RhinoCyclesCore.Converters
 			var transform_node = new MatrixMathNode();
 			shader.AddNode(transform_node);
 
-			transform_node.Transform = MappingTransform;
+			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var exposure_node = new ExposureTextureProceduralNode();
 			shader.AddNode(exposure_node);
@@ -918,7 +924,7 @@ namespace RhinoCyclesCore.Converters
 			var transform_node = new MatrixMathNode();
 			shader.AddNode(transform_node);
 
-			transform_node.Transform = MappingTransform;
+			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var fbm_node = new FbmTextureProceduralNode();
 			shader.AddNode(fbm_node);
@@ -996,7 +1002,7 @@ namespace RhinoCyclesCore.Converters
 			var blend_transform_node = new MatrixMathNode();
 			shader.AddNode(blend_transform_node);
 
-			blend_transform_node.Transform = MappingTransform;
+			blend_transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var blend_node = new BlendTextureProceduralNode();
 			shader.AddNode(blend_node);
@@ -1039,7 +1045,7 @@ namespace RhinoCyclesCore.Converters
 			var transform_node = new MatrixMathNode();
 			shader.AddNode(transform_node);
 
-			transform_node.Transform = MappingTransform;
+			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var grid_node = new GridTextureProceduralNode();
 			shader.AddNode(grid_node);
@@ -1107,7 +1113,7 @@ namespace RhinoCyclesCore.Converters
 			var transform_node = new MatrixMathNode();
 			shader.AddNode(transform_node);
 
-			transform_node.Transform = MappingTransform;
+			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var projection_changer_node = new ProjectionChangerTextureProceduralNode();
 			shader.AddNode(projection_changer_node);
@@ -1125,10 +1131,6 @@ namespace RhinoCyclesCore.Converters
 			var output_node = ProjectionChangerChild?.CreateAndConnectProceduralNode(shader, projection_changer_node.outs.OutputUVW, parent_color_input);
 
 			return output_node;
-
-			//projection_changer_node.outs.OutputUVW.Connect(parent_color_input);
-
-			//return projection_changer_node;
 		}
 
 		public ProjectionChangerTextureProceduralNode.ProjectionTypes InputProjectionType;
@@ -1136,6 +1138,254 @@ namespace RhinoCyclesCore.Converters
 		public float Azimuth { get; set; }
 		public float Altitude { get; set; }
 		public Procedural ProjectionChangerChild { get; set; } = null;
+	}
+
+	public class HighDynamicRangeTextureProcedural : Procedural
+	{
+		public HighDynamicRangeTextureProcedural(RenderTexture render_texture, ccl.Transform transform, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter) : base(render_texture, transform)
+		{
+			CyclesTexture = cycles_texture;
+			BitmapConverter = bitmap_converter;
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, bitmap_converter, 1.0f);
+
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("input-projection", out string input_projection_type))
+				InputProjectionType = StringToProjectionType(input_projection_type);
+
+			if (rtf.TryGetValue("output-projection", out string output_projection_type))
+				OutputProjectionType = StringToProjectionType(output_projection_type);
+
+			if (rtf.TryGetValue("azimuth", out double azimuth))
+				Azimuth = (float)azimuth;
+
+			if (rtf.TryGetValue("altitude", out double altitude))
+				Altitude = (float)altitude;
+
+			if (rtf.TryGetValue("filter", out bool filter))
+				Filter = filter;
+
+			if (rtf.TryGetValue("multiplier", out double multiplier))
+				Multiplier = (float)multiplier;
+		}
+
+		private static ProjectionChangerTextureProceduralNode.ProjectionTypes StringToProjectionType(string enum_string)
+		{
+			switch (enum_string)
+			{
+				case "planar": return ProjectionChangerTextureProceduralNode.ProjectionTypes.PLANAR;
+				case "light-probe": return ProjectionChangerTextureProceduralNode.ProjectionTypes.LIGHTPROBE;
+				case "equirect": return ProjectionChangerTextureProceduralNode.ProjectionTypes.EQUIRECT;
+				case "cube-map": return ProjectionChangerTextureProceduralNode.ProjectionTypes.CUBEMAP;
+				case "vertical-cross-cube-map": return ProjectionChangerTextureProceduralNode.ProjectionTypes.VERTICAL_CROSS_CUBEMAP;
+				case "horizontal-cross-cube-map": return ProjectionChangerTextureProceduralNode.ProjectionTypes.HORIZONTAL_CROSS_CUBEMAP;
+				case "emap": return ProjectionChangerTextureProceduralNode.ProjectionTypes.EMAP;
+				case "same-as-input": return ProjectionChangerTextureProceduralNode.ProjectionTypes.SAME_AS_INPUT;
+				case "hemispherical": return ProjectionChangerTextureProceduralNode.ProjectionTypes.HEMISPHERICAL;
+				default:
+					{
+						System.Diagnostics.Debug.Assert(false);
+						return ProjectionChangerTextureProceduralNode.ProjectionTypes.EQUIRECT;
+					}
+			}
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var transform_node = new MatrixMathNode();
+			shader.AddNode(transform_node);
+
+			transform_node.Transform = new ccl.Transform(MappingTransform);
+
+			var projection_changer_node = new ProjectionChangerTextureProceduralNode();
+			shader.AddNode(projection_changer_node);
+
+			projection_changer_node.InputProjectionType = InputProjectionType;
+			projection_changer_node.OutputProjectionType = OutputProjectionType;
+			projection_changer_node.Altitude = Altitude;
+			projection_changer_node.Azimuth = Azimuth;
+
+			var image_texture_node = new ImageTextureNode();
+			shader.AddNode(image_texture_node);
+
+			if (CyclesTexture.HasTextureImage)
+			{
+				if (CyclesTexture.HasByteImage)
+				{
+					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Array();
+				}
+				else if (CyclesTexture.HasFloatImage)
+				{
+					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Array();
+				}
+				image_texture_node.Filename = CyclesTexture.Name;
+				image_texture_node.Width = (uint)CyclesTexture.TexWidth;
+				image_texture_node.Height = (uint)CyclesTexture.TexHeight;
+			}
+
+			image_texture_node.UseAlpha = false;
+			image_texture_node.AlternateTiles = false;
+			image_texture_node.Interpolation = Filter ? InterpolationType.Cubic : InterpolationType.Closest;
+
+			var multiplier_node = new MathNode();
+			multiplier_node.Operation = MathNode.Operations.Multiply;
+			multiplier_node.ins.Value2.Value = Multiplier;
+
+			uvw_output.Connect(transform_node.ins.Vector);
+
+			transform_node.outs.Vector.Connect(projection_changer_node.ins.UVW);
+			projection_changer_node.outs.OutputUVW.Connect(image_texture_node.ins.Vector);
+			image_texture_node.outs.Color.Connect(multiplier_node.ins.Value1);
+			multiplier_node.outs.Value.Connect(parent_color_input);
+
+			return multiplier_node;
+		}
+
+		public CyclesTextureImage CyclesTexture { get; set; } = null;
+		public BitmapConverter BitmapConverter { get; set; } = null;
+		public ProjectionChangerTextureProceduralNode.ProjectionTypes InputProjectionType;
+		public ProjectionChangerTextureProceduralNode.ProjectionTypes OutputProjectionType;
+		public float Azimuth { get; set; }
+		public float Altitude { get; set; }
+		public bool Filter { get; set; }
+		public float Multiplier { get; set; }
+	}
+
+	public class MarbleTextureProcedural : TwoColorProcedural
+	{
+		public MarbleTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("size", out double size))
+				Size = (float)size;
+			if (rtf.TryGetValue("vein-width", out double vein_width))
+				VeinWidth = (float)vein_width;
+			if (rtf.TryGetValue("blue", out double blur))
+				Blur = (float)blur;
+			if (rtf.TryGetValue("noise", out double noise))
+				Noise = (float)noise;
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			NoiseTextureProceduralNode noise1 = new NoiseTextureProceduralNode();
+			noise1.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+			noise1.OctaveCount = 5;
+			noise1.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
+			noise1.FrequencyMultiplier = 2.17f;
+			noise1.AmplitudeMultiplier = 0.5f;
+			noise1.ClampMin = -1.0f;
+			noise1.ClampMax = 1.0f;
+			noise1.ScaleToClamp = false;
+			noise1.Inverse = false;
+			noise1.Gain = 0.5f;
+
+			NoiseTextureProceduralNode noise2 = new NoiseTextureProceduralNode();
+			noise2.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+			noise2.OctaveCount = 5;
+			noise2.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
+			noise2.FrequencyMultiplier = 2.17f;
+			noise2.AmplitudeMultiplier = 0.5f;
+			noise2.ClampMin = -1.0f;
+			noise2.ClampMax = 1.0f;
+			noise2.ScaleToClamp = false;
+			noise2.Inverse = false;
+			noise2.Gain = 0.5f;
+
+			NoiseTextureProceduralNode noise3 = new NoiseTextureProceduralNode();
+			noise3.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+			noise3.OctaveCount = 5;
+			noise3.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
+			noise3.FrequencyMultiplier = 2.17f;
+			noise3.AmplitudeMultiplier = 0.5f;
+			noise3.ClampMin = -1.0f;
+			noise3.ClampMax = 1.0f;
+			noise3.ScaleToClamp = false;
+			noise3.Inverse = false;
+			noise3.Gain = 0.5f;
+
+			shader.AddNode(noise1);
+			shader.AddNode(noise2);
+			shader.AddNode(noise3);
+
+			var noise_transform1 = new MatrixMathNode();
+			var noise_transform2 = new MatrixMathNode();
+			var noise_transform3 = new MatrixMathNode();
+
+			noise_transform1.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
+			noise_transform2.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
+			noise_transform3.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
+
+			shader.AddNode(noise_transform1);
+			shader.AddNode(noise_transform2);
+			shader.AddNode(noise_transform3);
+
+			WavesTextureProceduralNode waves = new WavesTextureProceduralNode();
+			waves.WaveType = WavesTextureProceduralNode.WaveTypes.LINEAR;
+			waves.WaveWidth = VeinWidth;
+			waves.Contrast1 = 1.0f - Blur;
+			waves.Contrast2 = 1.0f - Blur;
+			waves.WaveWidthTextureOn = false;
+			waves.ins.Color1.Value = Color1.ToFloat4();
+			//waves.TextureAmount1 = TextureAmount1; // TODO
+			waves.ins.Color2.Value = Color2.ToFloat4();
+			//waves.TextureAmount2 = TextureAmount2; // TODO
+
+			var waves_transform = new MatrixMathNode();
+			waves_transform.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
+
+			shader.AddNode(waves_transform);
+
+			Child1?.CreateAndConnectProceduralNode(shader, waves_transform.outs.Vector, waves.ins.Color1);
+			Child2?.CreateAndConnectProceduralNode(shader, waves_transform.outs.Vector, waves.ins.Color2);
+
+			shader.AddNode(waves);
+
+			var perturbing_transform = new MatrixMathNode();
+			perturbing_transform.Transform = new ccl.Transform(MappingTransform);
+
+			shader.AddNode(perturbing_transform);
+
+			PerturbingPart1TextureProceduralNode perturbing1 = new PerturbingPart1TextureProceduralNode();
+			PerturbingPart2TextureProceduralNode perturbing2 = new PerturbingPart2TextureProceduralNode();
+			perturbing2.Amount = 0.1f * Noise;
+
+			shader.AddNode(perturbing1);
+			shader.AddNode(perturbing2);
+
+			uvw_output.Connect(perturbing_transform.ins.Vector);
+			perturbing_transform.outs.Vector.Connect(perturbing1.ins.UVW);
+			perturbing_transform.outs.Vector.Connect(perturbing2.ins.UVW);
+
+			uvw_output.Connect(noise_transform1.ins.Vector);
+			uvw_output.Connect(noise_transform2.ins.Vector);
+			uvw_output.Connect(noise_transform3.ins.Vector);
+
+			perturbing1.outs.UVW1.Connect(noise_transform1.ins.Vector);
+			noise_transform1.outs.Vector.Connect(noise1.ins.UVW);
+
+			perturbing1.outs.UVW2.Connect(noise_transform2.ins.Vector);
+			noise_transform2.outs.Vector.Connect(noise2.ins.UVW);
+
+			perturbing1.outs.UVW3.Connect(noise_transform3.ins.Vector);
+			noise_transform3.outs.Vector.Connect(noise3.ins.UVW);
+
+			noise1.outs.Color.Connect(perturbing2.ins.Color1);
+			noise2.outs.Color.Connect(perturbing2.ins.Color2);
+			noise3.outs.Color.Connect(perturbing2.ins.Color3);
+
+			perturbing2.outs.PerturbedUVW.Connect(waves_transform.ins.Vector);
+			waves_transform.outs.Vector.Connect(waves.ins.UVW);
+			waves.outs.Color.Connect(parent_color_input);
+
+			return waves;
+		}
+
+		public float Size { get; set; } = 0.0f;
+		public float VeinWidth { get; set; } = 0.0f;
+		public float Blur { get; set; } = 0.0f;
+		public float Noise { get; set; } = 0.0f;
 	}
 
 	public class ShaderConverter
