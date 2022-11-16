@@ -116,6 +116,14 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new MarbleTextureProcedural(render_texture, transform);
 			}
+			else if (render_texture.TypeName.Equals("Mask Texture"))
+			{
+				procedural = new MaskTextureProcedural(render_texture, transform);
+			}
+			else if (render_texture.TypeName.Equals("Perlin Marble Texture"))
+			{
+				procedural = new PerlinMarbleTextureProcedural(render_texture, transform);
+			}
 			else if (render_texture.TypeName.Equals("Bitmap Texture") || render_texture.TypeName.Equals("Simple Bitmap Texture"))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
@@ -197,6 +205,15 @@ namespace RhinoCyclesCore.Converters
 				if (projection_changer_child != null)
 				{
 					projection_changer_texture.ProjectionChangerChild = CreateProcedural(projection_changer_child, child_transform, texture_list, bitmap_converter); // Recursive call
+				}
+			}
+
+			if (procedural is MaskTextureProcedural mask_texture)
+			{
+				RenderTexture mask_child = (RenderTexture)render_texture.FindChild("source-texture");
+				if (mask_texture != null)
+				{
+					mask_texture.MaskChild = CreateProcedural(mask_child, child_transform, texture_list, bitmap_converter); // Recursive call
 				}
 			}
 
@@ -1386,6 +1403,113 @@ namespace RhinoCyclesCore.Converters
 		public float VeinWidth { get; set; } = 0.0f;
 		public float Blur { get; set; } = 0.0f;
 		public float Noise { get; set; } = 0.0f;
+	}
+
+	public class MaskTextureProcedural : Procedural
+	{
+		public MaskTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("mask-type", out string mask_type))
+				MaskType = StringToProjectionType(mask_type);
+		}
+
+		private static MaskTextureProceduralNode.MaskTypes StringToProjectionType(string enum_string)
+		{
+			switch (enum_string)
+			{
+				case "luminance": return MaskTextureProceduralNode.MaskTypes.LUMINANCE;
+				case "red": return MaskTextureProceduralNode.MaskTypes.RED;
+				case "green": return MaskTextureProceduralNode.MaskTypes.GREEN;
+				case "blue": return MaskTextureProceduralNode.MaskTypes.BLUE;
+				case "alpha": return MaskTextureProceduralNode.MaskTypes.ALPHA;
+				default:
+					{
+						System.Diagnostics.Debug.Assert(false);
+						return MaskTextureProceduralNode.MaskTypes.LUMINANCE;
+					}
+			}
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var mask_node = new MaskTextureProceduralNode();
+			shader.AddNode(mask_node);
+
+			mask_node.MaskType = MaskType;
+
+			// Recursive call
+			MaskChild?.CreateAndConnectProceduralNode(shader, uvw_output, mask_node.ins.Color); // TODO: Need alpha too!
+			mask_node.ins.Alpha.Value = 1.0f;
+
+			mask_node.outs.Color.Connect(parent_color_input);
+
+			return mask_node;
+		}
+
+		public MaskTextureProceduralNode.MaskTypes MaskType;
+		public Procedural MaskChild { get; set; }
+	}
+
+	public class PerlinMarbleTextureProcedural : TwoColorProcedural
+	{
+		public PerlinMarbleTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("levels", out int levels))
+				Levels = levels;
+
+			if (rtf.TryGetValue("noise", out double noise))
+				Noise = (float)noise;
+
+			if (rtf.TryGetValue("blur", out double blur))
+				Blur = (float)blur;
+
+			if (rtf.TryGetValue("size", out double size))
+				Size = (float)size;
+
+			if (rtf.TryGetValue("color-1-saturation", out double color1_saturation))
+				Color1Saturation = (float)color1_saturation;
+
+			if (rtf.TryGetValue("color-2-saturation", out double color2_saturation))
+				Color2Saturation = (float)color2_saturation;
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var transform_node = new MatrixMathNode();
+			transform_node.Transform = new ccl.Transform(MappingTransform);
+			shader.AddNode(transform_node);
+
+			var perlin_marble_node = new PerlinMarbleTextureProceduralNode();
+			shader.AddNode(perlin_marble_node);
+
+			perlin_marble_node.Levels = Levels;
+			perlin_marble_node.Noise = Noise;
+			perlin_marble_node.Blur = Blur;
+			perlin_marble_node.Size = Size;
+			perlin_marble_node.Color1Saturation = Color1Saturation;
+			perlin_marble_node.Color2Saturation = Color2Saturation;
+
+			// Recursive call
+			ConnectChildNodes(shader, uvw_output, perlin_marble_node.ins.Color1, perlin_marble_node.ins.Color2);
+
+			uvw_output.Connect(transform_node.ins.Vector);
+			transform_node.outs.Vector.Connect(perlin_marble_node.ins.UVW);
+
+			perlin_marble_node.outs.Color.Connect(parent_color_input);
+
+			return perlin_marble_node;
+		}
+
+		public int Levels { get; set; }
+		public float Noise { get; set; }
+		public float Blur { get; set; }
+		public float Size { get; set; }
+		public float Color1Saturation { get; set; }
+		public float Color2Saturation { get; set; }
 	}
 
 	public class ShaderConverter
