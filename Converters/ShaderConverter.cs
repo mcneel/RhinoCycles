@@ -124,6 +124,10 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new PerlinMarbleTextureProcedural(render_texture, transform);
 			}
+			else if (render_texture.TypeName.Equals("Physical Sky Texture"))
+			{
+				procedural = new PhysicalSkyTextureProcedural(render_texture, transform);
+			}
 			else if (render_texture.TypeName.Equals("Bitmap Texture") || render_texture.TypeName.Equals("Simple Bitmap Texture"))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
@@ -1510,6 +1514,87 @@ namespace RhinoCyclesCore.Converters
 		public float Size { get; set; }
 		public float Color1Saturation { get; set; }
 		public float Color2Saturation { get; set; }
+	}
+
+	public class PhysicalSkyTextureProcedural : Procedural
+	{
+		public PhysicalSkyTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var sun_direction = render_texture.GetParameter("physical-sky-sun-direction") as IConvertible;
+			SunDirection = ConvertibleExtensions.ToVector3d(sun_direction);
+
+			var atmospheric_density = render_texture.GetParameter("physical-sky-atmospheric-density");
+			AtmosphericDensity = (float)Convert.ToDouble(atmospheric_density);
+
+			var rayleigh_scattering = render_texture.GetParameter("physical-sky-rayleigh-scattering");
+			RayleighScattering = (float)Convert.ToDouble(rayleigh_scattering);
+
+			var mie_scattering = render_texture.GetParameter("physical-sky-mie-scattering");
+			MieScattering = (float)Convert.ToDouble(mie_scattering);
+
+			var show_sun = render_texture.GetParameter("physical-sky-show-sun");
+			ShowSun = Convert.ToBoolean(show_sun);
+
+			var sun_brightness = render_texture.GetParameter("physical-sky-sun-brightness");
+			SunBrightness = (float)Convert.ToDouble(sun_brightness);
+
+			var sun_size = render_texture.GetParameter("physical-sky-sun-size");
+			SunSize = (float)Convert.ToDouble(sun_size);
+
+			var sun_color = render_texture.GetParameter("physical-sky-sun-color") as IConvertible;
+			SunColor = ConvertibleExtensions.ToVector3d(sun_color);
+
+			var inverse_wavelengths = render_texture.GetParameter("physical-sky-inverse-wavelengths") as IConvertible;
+			InverseWavelengths = ConvertibleExtensions.ToVector3d(inverse_wavelengths);
+
+			var exposure = render_texture.GetParameter("physical-sky-exposure");
+			Exposure = (float)Convert.ToDouble(exposure);
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var transform_node = new MatrixMathNode();
+			transform_node.Transform = new ccl.Transform(MappingTransform);
+			shader.AddNode(transform_node);
+
+			var physical_sky_node = new PhysicalSkyTextureProceduralNode();
+			shader.AddNode(physical_sky_node);
+
+			physical_sky_node.SunDirectionX = (float)SunDirection.X;
+			physical_sky_node.SunDirectionY = (float)SunDirection.Y;
+			physical_sky_node.SunDirectionZ = (float)SunDirection.Z;
+			physical_sky_node.AtmosphericDensity = AtmosphericDensity;
+			physical_sky_node.RayleighScattering = RayleighScattering;
+			physical_sky_node.MieScattering = MieScattering;
+			physical_sky_node.ShowSun = ShowSun;
+			physical_sky_node.SunBrightness = SunBrightness;
+			physical_sky_node.SunSize = SunSize;
+			physical_sky_node.SunColorRed = (float)SunColor.X;
+			physical_sky_node.SunColorGreen = (float)SunColor.Y;
+			physical_sky_node.SunColorBlue = (float)SunColor.Z;
+			physical_sky_node.InverseWavelengthsX = (float)InverseWavelengths.X;
+			physical_sky_node.InverseWavelengthsY = (float)InverseWavelengths.Y;
+			physical_sky_node.InverseWavelengthsZ = (float)InverseWavelengths.Z;
+			physical_sky_node.Exposure = Exposure;
+
+			uvw_output.Connect(transform_node.ins.Vector);
+			transform_node.outs.Vector.Connect(physical_sky_node.ins.UVW);
+
+			physical_sky_node.outs.Color.Connect(parent_color_input);
+
+			return physical_sky_node;
+		}
+
+		public Vector3d SunDirection { get; set; }
+		public float AtmosphericDensity { get; set; }
+		public float RayleighScattering { get; set; }
+		public float MieScattering { get; set; }
+		public bool ShowSun { get; set; }
+		public float SunBrightness { get; set; }
+		public float SunSize { get; set; }
+		public Vector3d SunColor { get; set; }
+		public Vector3d InverseWavelengths { get; set; }
+		public float Exposure { get; set; }
 	}
 
 	public class ShaderConverter
