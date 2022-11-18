@@ -128,6 +128,14 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new PhysicalSkyTextureProcedural(render_texture, transform);
 			}
+			else if (render_texture.TypeName.Equals("Single Color Texture"))
+			{
+				procedural = new SingleColorTextureProcedural(render_texture, transform);
+			}
+			else if (render_texture.TypeName.Equals("Stucco Texture"))
+			{
+				procedural = new StuccoTextureProcedural(render_texture, transform);
+			}
 			else if (render_texture.TypeName.Equals("Bitmap Texture") || render_texture.TypeName.Equals("Simple Bitmap Texture"))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
@@ -139,6 +147,12 @@ namespace RhinoCyclesCore.Converters
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);
 				procedural = new HighDynamicRangeTextureProcedural(render_texture, transform, cycles_texture, bitmap_converter);
+			}
+			else if (render_texture.TypeName.Equals("Resample Texture"))
+			{
+				CyclesTextureImage cycles_texture = new CyclesTextureImage();
+				texture_list.Add(cycles_texture);
+				procedural = new ResampleTextureProcedural(render_texture, transform, cycles_texture, bitmap_converter);
 			}
 
 			ccl.Transform child_transform = procedural != null ? procedural.GetChildTransform() : ccl.Transform.Identity();
@@ -1595,6 +1609,161 @@ namespace RhinoCyclesCore.Converters
 		public Vector3d SunColor { get; set; }
 		public Vector3d InverseWavelengths { get; set; }
 		public float Exposure { get; set; }
+	}
+
+	public class ResampleTextureProcedural : Procedural
+	{
+		public ResampleTextureProcedural(RenderTexture render_texture, ccl.Transform transform, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter) : base(render_texture, transform)
+		{
+			CyclesTexture = cycles_texture;
+			BitmapConverter = bitmap_converter;
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, bitmap_converter, 1.0f);
+
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("interpolate", out bool interpolate))
+				Interpolate = interpolate;
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			var transform_node = new MatrixMathNode();
+			shader.AddNode(transform_node);
+
+			transform_node.Operation = MatrixMathNode.Operations.Point;
+			transform_node.Transform = new ccl.Transform(MappingTransform);
+
+			var image_texture_node = new ImageTextureNode();
+			shader.AddNode(image_texture_node);
+
+			if (CyclesTexture.HasTextureImage)
+			{
+				if (CyclesTexture.HasByteImage)
+				{
+					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Array();
+				}
+				else if (CyclesTexture.HasFloatImage)
+				{
+					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Array();
+				}
+				image_texture_node.Filename = CyclesTexture.Name;
+				image_texture_node.Width = (uint)CyclesTexture.TexWidth;
+				image_texture_node.Height = (uint)CyclesTexture.TexHeight;
+			}
+
+			image_texture_node.UseAlpha = false;
+			image_texture_node.AlternateTiles = false;
+			image_texture_node.Interpolation = Interpolate ? InterpolationType.Cubic : InterpolationType.Closest;
+
+			uvw_output.Connect(transform_node.ins.Vector);
+			transform_node.outs.Vector.Connect(image_texture_node.ins.Vector);
+			image_texture_node.outs.Color.Connect(parent_color_input);
+
+			return image_texture_node;
+		}
+
+		public CyclesTextureImage CyclesTexture { get; set; } = null;
+		public BitmapConverter BitmapConverter { get; set; } = null;
+		public bool Interpolate { get; set; } = true;
+	}
+
+	public class SingleColorTextureProcedural : OneColorProcedural
+	{
+		public SingleColorTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("use-object-color", out bool use_object_color))
+				UseObjectColor = use_object_color;
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			if (UseObjectColor)
+			{
+				parent_color_input.Value = new float4(0.5f, 0.5f, 0.5f, 1.0f);
+			}
+			else
+			{
+				// Recursive call
+				ConnectChildNode(shader, uvw_output, parent_color_input);
+			}
+
+			return null;
+		}
+
+		public bool UseObjectColor { get; set; }
+	}
+
+	public class StuccoTextureProcedural : TwoColorProcedural
+	{
+		public StuccoTextureProcedural(RenderTexture render_texture, ccl.Transform transform) : base(render_texture, transform)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("size", out double size))
+				Size = (float)size;
+			if (rtf.TryGetValue("thickness", out double thickness))
+				Thickness = (float)thickness;
+			if (rtf.TryGetValue("threshold", out double threshold))
+				Threshold = (float)threshold;
+		}
+
+		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			NoiseTextureProceduralNode noise = new NoiseTextureProceduralNode();
+			noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+			noise.OctaveCount = 2;
+			noise.FrequencyMultiplier = 1.0f + Thickness;
+			noise.AmplitudeMultiplier = 1.0f;
+			noise.ClampMin = 0.6f * Threshold;
+			noise.ClampMax = 0.6f;
+			noise.ScaleToClamp = true;
+			noise.Inverse = false;
+			noise.Gain = 0.5f;
+
+			shader.AddNode(noise);
+
+			var noise_transform = new MatrixMathNode();
+
+			noise_transform.Transform = ccl.Transform.Scale(8.0f / Size, 8.0f / Size, 8.0f / Size);
+
+			shader.AddNode(noise_transform);
+
+			BlendTextureProceduralNode blend = new BlendTextureProceduralNode();
+			blend.UseBlendColor = true;
+			blend.ins.Color1.Value = Color1.ToFloat4();
+			//pBlendTexture->SetTextureOn1(TextureOn1()); // TODO
+			//pBlendTexture->SetTextureAmount1(TextureAmount1()); // TODO
+			blend.ins.Color2.Value = Color2.ToFloat4();
+			//pBlendTexture->SetTextureOn2(TextureOn2()); // TODO
+			//pBlendTexture->SetTextureAmount2(TextureAmount2()); // TODO
+
+			var blend_transform = new MatrixMathNode();
+			blend_transform.Transform = new ccl.Transform(MappingTransform);
+
+			shader.AddNode(blend_transform);
+
+			Child1?.CreateAndConnectProceduralNode(shader, blend_transform.outs.Vector, blend.ins.Color1);
+			Child2?.CreateAndConnectProceduralNode(shader, blend_transform.outs.Vector, blend.ins.Color2);
+
+			uvw_output.Connect(noise_transform.ins.Vector);
+			uvw_output.Connect(blend_transform.ins.Vector);
+
+			noise_transform.outs.Vector.Connect(noise.ins.UVW);
+			blend_transform.outs.Vector.Connect(blend.ins.UVW);
+
+			noise.outs.Color.Connect(blend.ins.BlendColor);
+			blend.outs.Color.Connect(parent_color_input);
+
+			shader.AddNode(blend);
+
+			return blend;
+		}
+
+		public float Size { get; set; } = 0.0f;
+		public float Thickness { get; set; } = 0.0f;
+		public float Threshold { get; set; } = 0.0f;
 	}
 
 	public class ShaderConverter

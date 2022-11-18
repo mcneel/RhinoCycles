@@ -201,7 +201,10 @@ namespace RhinoCyclesCore
 
 			Procedural procedural = null;
 
-			if (!rt.TypeName.Equals("Bitmap Texture") && !rt.TypeName.Equals("Simple Bitmap Texture") && !rt.TypeName.Equals("High Dynamic Range Texture"))
+			if (!rt.TypeName.Equals("Bitmap Texture")
+				&& !rt.TypeName.Equals("Simple Bitmap Texture")
+				&& !rt.TypeName.Equals("High Dynamic Range Texture")
+				&& !rt.TypeName.Equals("Resample Texture"))
 			{
 				procedural = Procedural.CreateProcedural(rt, Transform.Identity(), tex.TextureList, bitmapConverter);
 			}
@@ -367,20 +370,6 @@ namespace RhinoCyclesCore
 		public static ISocket GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap)
 		{
 			return GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socks, texco, toBw, normalMap, false);
-		}
-
-		private static void CreateProceduralNodeGraph(Shader m_shader, Procedural procedural, ColorSocket output_color_socket)
-		{
-			var uv_node = new TextureCoordinateNode();
-			m_shader.AddNode(uv_node);
-
-			var gamma_node = new GammaNode();
-			m_shader.AddNode(gamma_node);
-
-			gamma_node.ins.Gamma.Value = 2.2f;
-			gamma_node.outs.Color.Connect(output_color_socket);
-
-			procedural.CreateAndConnectProceduralNode(m_shader, uv_node.outs.UV, gamma_node.ins.Color);
 		}
 
 		public static ISocket GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texcoObsolete, bool toBw, bool normalMap, bool invert)
