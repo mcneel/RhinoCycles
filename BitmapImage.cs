@@ -27,8 +27,8 @@ namespace RhinoCyclesCore
 {
 	public abstract class BitmapImage<T> : IDisposable
 	{
-		internal object Original;   //SimpleArrayByte or SimpleArrayFloat
-		internal object Corrected;  //SimpleArrayByte or SimpleArrayFloat
+		internal object Original;   //StdVectorByte or StdVectorFloat
+		internal object Corrected;  //StdVectorByte or StdVectorFloat
 
 		protected int W;
 		protected int H;
@@ -109,7 +109,7 @@ namespace RhinoCyclesCore
 	public class ByteBitmap : BitmapImage<byte>
 	{
 
-		public ByteBitmap(uint id, SimpleArrayByte data, int w, int h, bool linear) : base(id, data, w, h, linear)
+		public ByteBitmap(uint id, StdVectorByte data, int w, int h, bool linear) : base(id, data, w, h, linear)
 		{ }
 
 		override public void ApplyGamma(float gamma)
@@ -120,12 +120,12 @@ namespace RhinoCyclesCore
 				{
 					if (Corrected == null)
 					{
-						Corrected = new SimpleArrayByte(Original as SimpleArrayByte);
+						Corrected = new StdVectorByte(Original as StdVectorByte);
 					}
 
-					(Original as SimpleArrayByte).CopyTo(Corrected as SimpleArrayByte);
+					(Original as StdVectorByte).CopyTo(Corrected as StdVectorByte);
 
-					ccl.CSycles.apply_gamma_to_byte_buffer((Corrected as SimpleArrayByte).Array(), W*H*4, gamma);
+					ccl.CSycles.apply_gamma_to_byte_buffer((Corrected as StdVectorByte).Memory(), W*H*4, gamma);
 				}
 				GammaApplied = true;
 				GammaValueApplied = gamma;
@@ -139,14 +139,14 @@ namespace RhinoCyclesCore
 
 		protected override void CustomDispose()
 		{
-			(Corrected as SimpleArrayByte)?.Dispose();
-			(Original as SimpleArrayByte)?.Dispose();
+			(Corrected as StdVectorByte)?.Dispose();
+			(Original as StdVectorByte)?.Dispose();
 		}
 
 		protected override void SavePixels(object oPixels, string name)
 		{
 			Eto.Forms.Application.Instance.AsyncInvoke(() => {
-				var pixels = (oPixels as SimpleArrayByte).ToArray();
+				var pixels = (oPixels as StdVectorByte).ToArray();
 
 				using (var rw = RenderWindow.Create(new Size(W, H)))
 				{
@@ -170,7 +170,7 @@ namespace RhinoCyclesCore
 
 	public class FloatBitmap : BitmapImage<float>
 	{
-		public FloatBitmap(uint id, SimpleArrayFloat data, int w, int h, bool linear) : base(id, data, w, h, linear)
+		public FloatBitmap(uint id, StdVectorFloat data, int w, int h, bool linear) : base(id, data, w, h, linear)
 		{ }
 
 		override public void ApplyGamma(float gamma)
@@ -181,11 +181,11 @@ namespace RhinoCyclesCore
 				{
 					if (Corrected == null)
 					{
-						Corrected = new SimpleArrayFloat(Original as SimpleArrayFloat);
+						Corrected = new StdVectorFloat(Original as StdVectorFloat);
 					}
-					(Original as SimpleArrayFloat).CopyTo(Corrected as SimpleArrayFloat);
+					(Original as StdVectorFloat).CopyTo(Corrected as StdVectorFloat);
 
-					ccl.CSycles.apply_gamma_to_float_buffer((Corrected as SimpleArrayFloat).Array(), W*H*4*4, gamma);
+					ccl.CSycles.apply_gamma_to_float_buffer((Corrected as StdVectorFloat).Memory(), W*H*4*4, gamma);
 
 				}
 				GammaApplied = true;
@@ -200,15 +200,15 @@ namespace RhinoCyclesCore
 
 		protected override void CustomDispose()
 		{
-			(Original as SimpleArrayFloat)?.Dispose();
-			(Corrected as SimpleArrayFloat)?.Dispose();
+			(Original as StdVectorFloat)?.Dispose();
+			(Corrected as StdVectorFloat)?.Dispose();
 		}
 
 		protected override void SavePixels(object oPixels, string name)
 		{
 			Eto.Forms.Application.Instance.AsyncInvoke(() =>
 			{
-				var pixels = (oPixels as SimpleArrayFloat).ToArray();
+				var pixels = (oPixels as StdVectorFloat).ToArray();
 
 				using (var rw = RenderWindow.Create(new Size(W, H)))
 				{
