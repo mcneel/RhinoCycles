@@ -239,14 +239,14 @@ namespace RhinoCyclesCore.Converters
 				{
 					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false, projection == (TextureEnvironmentMappingMode)4); ;
 					img.ApplyGamma(gamma);
-					teximg.TexFloat = img.Data as SimpleArrayFloat;
+					teximg.TexFloat = img.Data as StdVectorFloat;
 					teximg.TexByte = null;
 				}
 				else
 				{
 					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false, projection == (TextureEnvironmentMappingMode)4);
 					img.ApplyGamma(gamma);
-					teximg.TexByte = img.Data as SimpleArrayByte;
+					teximg.TexByte = img.Data as StdVectorByte;
 					teximg.TexFloat = null;
 				}
 				teximg.Name = rId.ToString(CultureInfo.InvariantCulture);

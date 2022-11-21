@@ -368,7 +368,7 @@ namespace RhinoCyclesCore
 				}
 				var wallpaperbm = _bitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap, false);
 				wallpaperbm.ApplyGamma(Gamma);
-				Wallpaper.TexByte = wallpaperbm.Data as SimpleArrayByte;
+				Wallpaper.TexByte = wallpaperbm.Data as StdVectorByte;
 				if (RcCore.It.AllSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
 				Wallpaper.TexWidth = newBitmap.Width;
 				Wallpaper.TexHeight = newBitmap.Height;
