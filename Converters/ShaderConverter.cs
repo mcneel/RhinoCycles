@@ -838,11 +838,11 @@ namespace RhinoCyclesCore.Converters
 			{
 				if (CyclesTexture.HasByteImage)
 				{
-					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Array();
+					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Memory();
 				}
 				else if (CyclesTexture.HasFloatImage)
 				{
-					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Array();
+					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Memory();
 				}
 				image_texture_node.Filename = CyclesTexture.Name;
 				image_texture_node.Width = (uint)CyclesTexture.TexWidth;
@@ -1331,11 +1331,11 @@ namespace RhinoCyclesCore.Converters
 			{
 				if (CyclesTexture.HasByteImage)
 				{
-					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Array();
+					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Memory();
 				}
 				else if (CyclesTexture.HasFloatImage)
 				{
-					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Array();
+					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Memory();
 				}
 				image_texture_node.Filename = CyclesTexture.Name;
 				image_texture_node.Width = (uint)CyclesTexture.TexWidth;
@@ -1716,11 +1716,11 @@ namespace RhinoCyclesCore.Converters
 			{
 				if (CyclesTexture.HasByteImage)
 				{
-					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Array();
+					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Memory();
 				}
 				else if (CyclesTexture.HasFloatImage)
 				{
-					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Array();
+					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Memory();
 				}
 				image_texture_node.Filename = CyclesTexture.Name;
 				image_texture_node.Width = (uint)CyclesTexture.TexWidth;
