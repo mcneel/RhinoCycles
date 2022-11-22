@@ -280,6 +280,36 @@ namespace RhinoCyclesCore
 						tex.AlternateTiles = alternate;
 						tex.MappingChannel = rt.GetMappingChannel();
 					}
+
+
+					var imgbased = rt.IsImageBased();
+					var linear = rt.IsLinear();
+					var isFloat = rt.IsHdrCapable();
+					if (isFloat)
+					{
+						var img = bitmapConverter.RetrieveFloatsImg(rid, pwidth, pheight, eval, linear, imgbased, canuse, use_color_mask, false);
+						img.ApplyGamma(gamma);
+						tex.TexFloat = img.Data as StdVectorFloat;
+						tex.TexByte = null;
+					}
+					else
+					{
+						var img = bitmapConverter.RetrieveBytesImg(rid, pwidth, pheight, eval, linear, imgbased, canuse, use_color_mask, false);
+						img.ApplyGamma(gamma);
+						tex.TexByte = img.Data as StdVectorByte;
+						tex.TexFloat = null;
+					}
+					tex.TexWidth = pwidth;
+					tex.TexHeight = pheight;
+					tex.Name = rid.ToString(CultureInfo.InvariantCulture);
+					tex.IsLinear = linear;
+					tex.IsNormalMap = check_for_normal_map ? rt.IsNormalMap() : false;
+					tex.ProjectionMode = projectionMode;
+					tex.EnvProjectionMode = envProjectionMode;
+					tex.Transform = tt;
+					tex.Repeat = repeat;
+					tex.AlternateTiles = alternate;
+					tex.MappingChannel = rt.GetMappingChannel();
 				}
 			}
 		}

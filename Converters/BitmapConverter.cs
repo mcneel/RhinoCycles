@@ -245,14 +245,14 @@ namespace RhinoCyclesCore.Converters
 				{
 					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false, projection == (TextureEnvironmentMappingMode)4); ;
 					img.ApplyGamma(gamma);
-					teximg.TexFloat = img.Data as SimpleArrayFloat;
+					teximg.TexFloat = img.Data as StdVectorFloat;
 					teximg.TexByte = null;
 				}
 				else
 				{
 					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false, projection == (TextureEnvironmentMappingMode)4);
 					img.ApplyGamma(gamma);
-					teximg.TexByte = img.Data as SimpleArrayByte;
+					teximg.TexByte = img.Data as StdVectorByte;
 					teximg.TexFloat = null;
 				}
 				teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
@@ -366,7 +366,7 @@ namespace RhinoCyclesCore.Converters
 		public ByteBitmap ReadByteBitmapFromBitmap(uint id, int pwidth, int pheight, Bitmap bm, bool flip)
 		{
 			var read = ByteImagesNew.ContainsKey(id);
-			var img = read ? ByteImagesNew[id] : new ByteBitmap(id, new SimpleArrayByte(new MyDumbBitmapByteList(bm, flip)), pwidth, pheight, false);
+			var img = read ? ByteImagesNew[id] : new ByteBitmap(id, new StdVectorByte(new MyDumbBitmapByteList(bm, flip)), pwidth, pheight, false);
 			if (!read)
 			{
 				if (RcCore.It.AllSettings.SaveDebugImages) img.SaveBitmaps();
@@ -468,7 +468,7 @@ namespace RhinoCyclesCore.Converters
 		};
 
 
-		private SimpleArrayByte ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse, bool hasTransparentColor, bool flip)
+		private StdVectorByte ReadByteBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse, bool hasTransparentColor, bool flip)
 		{
 			if (!hasTransparentColor && !flip)
 			{
@@ -479,10 +479,10 @@ namespace RhinoCyclesCore.Converters
 					byte[] conv = new byte[4];
 					c4f.ToArray(ref conv);
 
-					return new SimpleArrayByte(conv);
+					return new StdVectorByte(conv);
 				}
 
-				var bytes = textureEvaluator.WriteToByteArray(pwidth, pheight);
+				var bytes = textureEvaluator.WriteToByteArray2(pwidth, pheight);
 				if (null != bytes)
 				{
 					return bytes;
@@ -490,7 +490,7 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			//Otherwise, we do this the slow way.
-			return new SimpleArrayByte(new EvaluatorToByteList(textureEvaluator, pwidth, pheight, isImageBased, flip));
+			return new StdVectorByte(new EvaluatorToByteList(textureEvaluator, pwidth, pheight, isImageBased, flip));
 		}
 
 
@@ -586,7 +586,7 @@ namespace RhinoCyclesCore.Converters
 			}
 		};
 
-		private SimpleArrayFloat ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse, bool hasTransparentColor, bool flip)
+		private StdVectorFloat ReadFloatBitmapFromEvaluator(int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isImageBased, bool canUse, bool hasTransparentColor, bool flip)
 		{
 			if (!hasTransparentColor && !flip)
 			{
@@ -597,10 +597,10 @@ namespace RhinoCyclesCore.Converters
 					float[] conv = new float[4];
 					c4f.ToArray(ref conv);
 
-					return new SimpleArrayFloat(conv);
+					return new StdVectorFloat(conv);
 				}
 
-				var floats = textureEvaluator.WriteToFloatArray(pwidth, pheight);
+				var floats = textureEvaluator.WriteToFloatArray2(pwidth, pheight);
 				if (null != floats)
 				{
 					return floats;
@@ -608,7 +608,7 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			//Otherwise, we do this the slow way.
-			return new SimpleArrayFloat(new EvaluatorToFloatList(textureEvaluator, pwidth, pheight, isImageBased, flip));
+			return new StdVectorFloat(new EvaluatorToFloatList(textureEvaluator, pwidth, pheight, isImageBased, flip));
 		}
 
 		public ByteBitmap RetrieveBytesImg(uint rId, int pwidth, int pheight, TextureEvaluator textureEvaluator, bool isLinear, bool isImageBased, bool canUse, bool hasTransparentColor, bool flip)
