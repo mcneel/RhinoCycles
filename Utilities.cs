@@ -206,7 +206,7 @@ namespace RhinoCyclesCore
 				&& !rt.TypeName.Equals("High Dynamic Range Texture")
 				&& !rt.TypeName.Equals("Resample Texture"))
 			{
-				procedural = Procedural.CreateProcedural(rt, Transform.Identity(), tex.TextureList, bitmapConverter);
+				procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter);
 			}
 
 			if (procedural != null)
@@ -397,9 +397,10 @@ namespace RhinoCyclesCore
 				sh.AddNode(gamma_node);
 
 				gamma_node.ins.Gamma.Value = 2.2f;
-				//gamma_node.outs.Color.Connect(output_color_socket);
 
-				teximg.Procedural.CreateAndConnectProceduralNode(sh, texco.outs.UV, gamma_node.ins.Color);
+				teximg.Procedural.CreateAndConnectProceduralNode(sh, texco.outs.UV, mixerNode.ins.Color2);
+
+				mixerNode.ins.Color2.Value = new float4(1.0f, 1.0f, 1.0f, 0.5f);
 
 				texco.UvMap = teximg.GetUvMapForChannel();
 				normalmapnode.Attribute = teximg.GetUvMapForChannel();
@@ -417,7 +418,7 @@ namespace RhinoCyclesCore
 					// ideally we calculate the tangents and switch to Tangent space here.
 					normalmapnode.SpaceType = ccl.ShaderNodes.NormalMapNode.Space.Tangent;
 					sh.AddNode(normalmapnode);
-					gamma_node.outs.Color.Connect(normalmapnode.ins.Color);
+					mixerNode.outs.Color.Connect(normalmapnode.ins.Color);
 					normalmapnode.ins.Strength.Value = amount * RcCore.It.AllSettings.NormalStrengthFactor;
 					foreach(var sock in socks) {
 						normalmapnode.outs.Normal.Connect(sock);
@@ -431,23 +432,23 @@ namespace RhinoCyclesCore
 						gamma_node.outs.Color.Connect(invcol.ins.Color);
 
 						invcol.ins.Fac.Value = 1.0f;
-						invcol.outs.Color.Connect(mixerNode.ins.Color2);
+						invcol.outs.Color.Connect(gamma_node.ins.Color);
 					}
 					else
 					{
-						ccl.ShaderNodes.Sockets.ISocket outsock = gamma_node.outs.Color;
+						ccl.ShaderNodes.Sockets.ISocket outsock = mixerNode.outs.Color;
 						if(toBw) {
 							sh.AddNode(tobwnode);
 							outsock.Connect(tobwnode.ins.Color);
 							outsock = tobwnode.outs.Val;
 						}
-						outsock.Connect(mixerNode.ins.Color2);
+						outsock.Connect(gamma_node.ins.Color);
 					}
 					if (amount >= 0.0f && amount <= 1.0f)
 					{
 						foreach (var sock in socks)
 						{
-							mixerNode.outs.Color.Connect(sock);
+							gamma_node.outs.Color.Connect(sock);
 						}
 					} else { // multiply the output of mixerNode.outs.Color with amount.
 						SeparateRgbNode separateRgbNode = new SeparateRgbNode($"separating the color for multiplication {valueSocket?.Parent.VariableName ?? "unknown input"}");
@@ -470,7 +471,7 @@ namespace RhinoCyclesCore
 						multiplyG.ins.Value1.Value = amount;
 						multiplyB.ins.Value1.Value = amount;
 
-						mixerNode.outs.Color.Connect(separateRgbNode.ins.Image);
+						gamma_node.outs.Color.Connect(separateRgbNode.ins.Image);
 
 						separateRgbNode.outs.R.Connect(multiplyR.ins.Value2);
 						separateRgbNode.outs.G.Connect(multiplyG.ins.Value2);

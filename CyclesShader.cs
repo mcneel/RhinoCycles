@@ -422,7 +422,7 @@ namespace RhinoCyclesCore
 			if (render_texture == null)
 				return;
 
-			var procedural = Procedural.CreateProcedural(render_texture, Transform.Identity(), texture_list, _bitmapConverter);
+			var procedural = Procedural.CreateProcedural(render_texture, texture_list, _bitmapConverter);
 
 			if (procedural == null)
 				return;
