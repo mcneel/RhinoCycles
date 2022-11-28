@@ -204,7 +204,8 @@ namespace RhinoCyclesCore
 			if (!rt.TypeName.Equals("Bitmap Texture")
 				&& !rt.TypeName.Equals("Simple Bitmap Texture")
 				&& !rt.TypeName.Equals("High Dynamic Range Texture")
-				&& !rt.TypeName.Equals("Resample Texture"))
+				&& !rt.TypeName.Equals("Resample Texture")
+				&& !rt.TypeName.Equals("Dots Texture") /* Not supported yet */)
 			{
 				procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter);
 			}

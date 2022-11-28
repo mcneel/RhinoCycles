@@ -148,6 +148,10 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new TileTextureProcedural(render_texture);
 			}
+			else if (render_texture.TypeName.Equals("Dots Texture"))
+			{
+				procedural = new DotsTextureProcedural(render_texture);
+			}
 			else if (render_texture.TypeName.Equals("Bitmap Texture") || render_texture.TypeName.Equals("Simple Bitmap Texture"))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
@@ -2100,6 +2104,63 @@ namespace RhinoCyclesCore.Converters
 		public TileTextureProceduralNode.TileTypes TileType { get; set; }
 		public Vector3d Phase { get; set; }
 		public Vector3d JoinWidth { get; set; }
+	}
+
+	public class DotsTextureProcedural : TwoColorProcedural
+	{
+		public DotsTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		{
+			var rtf = render_texture.Fields;
+
+			if (rtf.TryGetValue("sample-area-size", out int sample_area_size))
+				SampleAreaSize = sample_area_size;
+
+			if (rtf.TryGetValue("rings", out bool rings))
+				Rings = rings;
+
+			if (rtf.TryGetValue("ring-radius", out double ring_radius))
+				RingRadius = (float)ring_radius;
+
+			if (rtf.TryGetValue("fall-off-type", out int falloff_type))
+				FalloffType = (DotsTextureProceduralNode.FalloffTypes)falloff_type;
+
+			if (rtf.TryGetValue("composition", out int composition_type))
+				CompositionType = (DotsTextureProceduralNode.CompositionTypes)composition_type;
+		}
+
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input)
+		{
+			//var transform_node = new MatrixMathNode();
+			//transform_node.Transform = new ccl.Transform(MappingTransform);
+			//shader.AddNode(transform_node);
+
+			//var dots_node = new DotsTextureProceduralNode();
+			//shader.AddNode(dots_node);
+
+			//dots_node.DataCount = DataCount;
+			//dots_node.TreeNodeCount = TreeNodeCount;
+			//dots_node.SampleAreaSize = SampleAreaSize;
+			//dots_node.Rings = Rings;
+			//dots_node.RingRadius = RingRadius;
+			//dots_node.FalloffType = FalloffType;
+			//dots_node.CompositionType = CompositionType;
+
+			//uvw_output.Connect(transform_node.ins.Vector);
+
+			//ConnectChildNodes(shader, uvw_output, dots_node.ins.Color1, dots_node.ins.Color2);
+
+			//transform_node.outs.Vector.Connect(dots_node.ins.UVW);
+
+			//dots_node.outs.Color.Connect(parent_color_input);
+		}
+
+		public int DataCount { get; set; }
+		public int TreeNodeCount { get; set; }
+		public float SampleAreaSize { get; set; }
+		public bool Rings { get; set; }
+		public float RingRadius { get; set; }
+		public DotsTextureProceduralNode.FalloffTypes FalloffType { get; set; }
+		public DotsTextureProceduralNode.CompositionTypes CompositionType { get; set; }
 	}
 
 	public class ShaderConverter
