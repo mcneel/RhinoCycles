@@ -190,14 +190,11 @@ namespace RhinoCyclesCore
 				}
 			}
 
-			var alternate = false;
-			{
-				var alternateob = rt.GetParameter("mirror-alternate-tiles");
-				if (alternateob != null)
-				{
-					alternate = Convert.ToBoolean(alternateob);
-				}
-			}
+			bool alternate = false;
+			if (rt.Fields.TryGetValue("mirror-alternate-tiles", out bool mirror_alternate_tiles))
+				alternate = mirror_alternate_tiles;
+			else if (rt.Fields.TryGetValue("flip-alternate", out bool flip_alternate))
+				alternate = flip_alternate;
 
 			tex.ProjectionMode = projectionMode;
 
