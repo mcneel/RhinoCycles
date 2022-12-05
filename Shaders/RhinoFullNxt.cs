@@ -472,7 +472,7 @@ namespace RhinoCyclesCore.Shaders
 						bump.Invert = part.PbrBump.Amount < 0.0f;
 						bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 						part.PbrBump.Amount = 1.0f;
-						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), texco, true);
+						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), texco, true, false, false);
 						bump.outs.Normal.Connect(principled.ins.Normal);
 					} else {
 						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal.ToList(), texco, false, true, false);
@@ -488,7 +488,7 @@ namespace RhinoCyclesCore.Shaders
 						bump.Invert = part.PbrClearcoatBump.Amount < 0.0f;
 						part.PbrClearcoatBump.Amount = 1.0f;
 						bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
-						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), texco, true);
+						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), texco, true, false, false);
 						bump.outs.Normal.Connect(principled.ins.ClearcoatNormal);
 					} else {
 						Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal.ToList(), texco, false, true, false);

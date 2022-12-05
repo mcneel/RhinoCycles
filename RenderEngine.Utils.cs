@@ -198,6 +198,7 @@ namespace RhinoCyclesCore
 		}
 
 		static public float4 CreateFloat4(double x, double y, double z) { return new float4((float)x, (float)y, (float)z, 0.0f); }
+		static public float4 CreateFloat4(double x, double y, double z, double w) { return new float4((float)x, (float)y, (float)z, (float)w); }
 		static public float4 CreateFloat4(byte x, byte y, byte z, byte w) { return new float4(x / 255.0f, y / 255.0f, z / 255.0f, w / 255.0f); }
 		static public float4 CreateFloat4(Color color) { return CreateFloat4(color.R, color.G, color.B, color.A); }
 
@@ -352,61 +353,51 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public static void SetProjectionModeSimple(CyclesTextureImage texture, VectorSocket vector_socket_output,
-			TextureCoordinateNode texture_coordinates)
+		public static VectorSocket GetProjectionModeOutputSocket(CyclesTextureImage texture, TextureCoordinateNode texture_coordinates)
 		{
 			if (texture.ProjectionMode == TextureProjectionMode.WcsBox)
 			{
-				texture_coordinates.outs.WcsBox.Connect(vector_socket_output);
+				return texture_coordinates.outs.WcsBox;
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.Wcs)
 			{
-				texture_coordinates.outs.Object.Connect(vector_socket_output);
+				return texture_coordinates.outs.Object;
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.Screen)
 			{
-				texture_coordinates.outs.Window.Connect(vector_socket_output);
+				return texture_coordinates.outs.Window;
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.View)
 			{
-				texture_coordinates.outs.Camera.Connect(vector_socket_output);
+				return texture_coordinates.outs.Camera;
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.EnvironmentMap)
 			{
 				switch (texture.EnvProjectionMode)
 				{
 					case TextureEnvironmentMappingMode.Spherical:
-						texture_coordinates.outs.EnvSpherical.Connect(vector_socket_output);
-						break;
+						return texture_coordinates.outs.EnvSpherical;
 					case TextureEnvironmentMappingMode.EnvironmentMap:
-						texture_coordinates.outs.EnvEmap.Connect(vector_socket_output);
-						break;
+						return texture_coordinates.outs.EnvEmap;
 					case TextureEnvironmentMappingMode.Box:
-						texture_coordinates.outs.EnvBox.Connect(vector_socket_output);
-						break;
+						return texture_coordinates.outs.EnvBox;
 					case TextureEnvironmentMappingMode.LightProbe:
-						texture_coordinates.outs.EnvLightProbe.Connect(vector_socket_output);
-						break;
+						return texture_coordinates.outs.EnvLightProbe;
 					case TextureEnvironmentMappingMode.Cube:
-						texture_coordinates.outs.EnvCubemap.Connect(vector_socket_output);
-						break;
+						return texture_coordinates.outs.EnvCubemap;
 					case TextureEnvironmentMappingMode.VerticalCrossCube:
-						texture_coordinates.outs.EnvCubemapVerticalCross.Connect(vector_socket_output);
-						break;
+						return texture_coordinates.outs.EnvCubemapVerticalCross;
 					case TextureEnvironmentMappingMode.HorizontalCrossCube:
-						texture_coordinates.outs.EnvCubemapHorizontalCross.Connect(vector_socket_output);
-						break;
+						return texture_coordinates.outs.EnvCubemapHorizontalCross;
 					case TextureEnvironmentMappingMode.Hemispherical:
-						texture_coordinates.outs.EnvHemispherical.Connect(vector_socket_output);
-						break;
+						return texture_coordinates.outs.EnvHemispherical;
 					default:
-						texture_coordinates.outs.EnvEmap.Connect(vector_socket_output);
-						break;
+						return texture_coordinates.outs.EnvEmap;
 				}
 			}
 			else
 			{
-				texture_coordinates.outs.UV.Connect(vector_socket_output);
+				return texture_coordinates.outs.UV;
 			}
 		}
 	}

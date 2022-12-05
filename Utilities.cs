@@ -199,6 +199,8 @@ namespace RhinoCyclesCore
 				}
 			}
 
+			tex.ProjectionMode = projectionMode;
+
 			Procedural procedural = null;
 
 			if (!rt.TypeName.Equals("Bitmap Texture")
@@ -274,7 +276,6 @@ namespace RhinoCyclesCore
 						tex.Name = rid.ToString(CultureInfo.InvariantCulture);
 						tex.IsLinear = linear;
 						tex.IsNormalMap = check_for_normal_map ? rt.IsNormalMap() : false;
-						tex.ProjectionMode = projectionMode;
 						tex.EnvProjectionMode = envProjectionMode;
 						tex.Transform = tt;
 						tex.Repeat = repeat;
@@ -312,18 +313,18 @@ namespace RhinoCyclesCore
 		/// <param name="teximg"></param>
 		/// <param name="socks"></param>
 		/// <param name="texco"></param>
-		public static ISocket PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco, bool invert)
+		public static ISocket PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, List<ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco, bool invert)
 		{
 			Type t = typeof(T);
-			ccl.ShaderNodes.Sockets.ISocket valsock = null;
+			ISocket valsock = null;
 			if (t == typeof(float))
 			{
-				ccl.ShaderNodes.ValueNode vn = new ccl.ShaderNodes.ValueNode($"input_value_for_{slot.Name}_");
+				ValueNode vn = new ValueNode($"input_value_for_{slot.Name}_");
 				sh.AddNode(vn);
 				vn.Value = (float)(object)slot.Value;
 				if (invert)
 				{
-					ccl.ShaderNodes.MathSubtract invval = new ccl.ShaderNodes.MathSubtract($"invert_value_for_{slot.Name}_");
+					MathSubtract invval = new MathSubtract($"invert_value_for_{slot.Name}_");
 					invval.ins.Value1.Value = 1.0f;
 					sh.AddNode(invval);
 					vn.outs.Value.Connect(invval.ins.Value2);
@@ -336,12 +337,12 @@ namespace RhinoCyclesCore
 			}
 			else if (t == typeof(Color4f))
 			{
-				ccl.ShaderNodes.ColorNode cn = new ccl.ShaderNodes.ColorNode($"input_color_for_{slot.Name}_");
+				ColorNode cn = new ColorNode($"input_color_for_{slot.Name}_");
 				sh.AddNode(cn);
 				cn.Value = ((Color4f)(object)slot.Value).ToFloat4();
 				if (invert)
 				{
-					ccl.ShaderNodes.InvertNode invcol = new ccl.ShaderNodes.InvertNode($"invert_input_color_for_{slot.Name}_");
+					InvertNode invcol = new InvertNode($"invert_input_color_for_{slot.Name}_");
 					invcol.ins.Fac.Value = 1.0f;
 					sh.AddNode(invcol);
 					cn.outs.Color.Connect(invcol.ins.Color);
@@ -358,33 +359,18 @@ namespace RhinoCyclesCore
 			return GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, socks, texco, false, false, invert);
 		}
 
-		public static ISocket GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco)
-		{
-			return GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socks, texco, false, false, false);
-		}
-
-		public static ISocket GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw)
-		{
-			return GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socks, texco, toBw, false, false);
-		}
-
-		public static ISocket GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texco, bool toBw, bool normalMap)
-		{
-			return GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socks, texco, toBw, normalMap, false);
-		}
-
 		public static ISocket GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socks, ccl.ShaderNodes.TextureCoordinateNode texcoObsolete, bool toBw, bool normalMap, bool invert)
 		{
 			ISocket alphaOut = null;
 			if(IsOn && null != teximg && teximg.HasProcedural)
 			{
-				var texco = new ccl.ShaderNodes.TextureCoordinateNode($"texco for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var invcol = new ccl.ShaderNodes.InvertNode($"invert color for imtexnode for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var normalmapnode = new ccl.ShaderNodes.NormalMapNode($"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var tobwnode = new ccl.ShaderNodes.RgbToBwNode($"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var alphamult = new ccl.ShaderNodes.MathMultiply($"alpha multiplier for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var texco = new TextureCoordinateNode($"texco for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var invcol = new InvertNode($"invert color for imtexnode for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var normalmapnode = new NormalMapNode($"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var tobwnode = new RgbToBwNode($"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var alphamult = new MathMultiply($"alpha multiplier for {valueSocket?.Parent.VariableName ?? "unknown input"}");
 
-				var mixerNode = new ccl.ShaderNodes.MixNode($"rgb mix node for imtexnode and {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var mixerNode = new MixNode($"rgb mix node for imtexnode and {valueSocket?.Parent.VariableName ?? "unknown input"}");
 
 				alphamult.ins.Value1.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
 				alphamult.ins.Value2.Value = 1.0f;
@@ -399,9 +385,17 @@ namespace RhinoCyclesCore
 
 				gamma_node.ins.Gamma.Value = 2.2f;
 
-				teximg.Procedural.CreateAndConnectProceduralNode(sh, texco.outs.UV, mixerNode.ins.Color2);
+				var alpha_node = new MathNode();
+				sh.AddNode(alpha_node);
+				alpha_node.Operation = MathNode.Operations.Add;
+				alpha_node.ins.Value1.Value = 0.0f;
+				alpha_node.ins.Value2.Value = 1.0f;
 
-				mixerNode.ins.Color2.Value = new float4(1.0f, 1.0f, 1.0f, 0.5f);
+				VectorSocket uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(teximg, texco);
+
+				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, mixerNode.ins.Color2, alpha_node.ins.Value2);
+
+				alphaOut = alpha_node.outs.Value;
 
 				texco.UvMap = teximg.GetUvMapForChannel();
 				normalmapnode.Attribute = teximg.GetUvMapForChannel();
