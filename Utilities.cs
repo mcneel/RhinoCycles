@@ -390,7 +390,34 @@ namespace RhinoCyclesCore
 
 				VectorSocket uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(teximg, texco);
 
-				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, mixerNode.ins.Color2, alpha_node.ins.Value2);
+				ColorSocket color_input_node = mixerNode.ins.Color2;
+				FloatSocket alpha_input_node = alpha_node.ins.Value2;
+
+				if (normalMap)
+				{
+					var normal1_node = new NormalPart1TextureProceduralNode();
+					sh.AddNode(normal1_node);
+
+					var normal2_node = new NormalPart2TextureProceduralNode();
+					sh.AddNode(normal2_node);
+
+					uv_output_socket.Connect(normal1_node.ins.UVW);
+
+					teximg.Procedural.CreateAndConnectProceduralNode(sh, normal1_node.outs.UVW1, normal2_node.ins.Color1, null);
+					teximg.Procedural.CreateAndConnectProceduralNode(sh, normal1_node.outs.UVW2, normal2_node.ins.Color2, null);
+					teximg.Procedural.CreateAndConnectProceduralNode(sh, normal1_node.outs.UVW3, normal2_node.ins.Color3, null);
+					teximg.Procedural.CreateAndConnectProceduralNode(sh, normal1_node.outs.UVW4, normal2_node.ins.Color4, null);
+					teximg.Procedural.CreateAndConnectProceduralNode(sh, normal1_node.outs.UVW5, normal2_node.ins.Color5, null);
+					teximg.Procedural.CreateAndConnectProceduralNode(sh, normal1_node.outs.UVW6, normal2_node.ins.Color6, null);
+					teximg.Procedural.CreateAndConnectProceduralNode(sh, normal1_node.outs.UVW7, normal2_node.ins.Color7, null);
+					teximg.Procedural.CreateAndConnectProceduralNode(sh, normal1_node.outs.UVW8, normal2_node.ins.Color8, null);
+
+					normal2_node.outs.Color.Connect(color_input_node);
+				}
+				else
+				{
+					teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alpha_input_node);
+				}
 
 				alphaOut = alpha_node.outs.Value;
 

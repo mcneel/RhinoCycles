@@ -462,9 +462,9 @@ namespace RhinoCyclesCore.Shaders
 					}
 				}
 
-				if (part.PbrBump.On && part.PbrBumpTexture.HasTextureImage)
+				if (part.PbrBump.On && (part.PbrBumpTexture.HasTextureImage || part.PbrBumpTexture.HasProcedural))
 				{
-					if (!part.PbrBumpTexture.IsNormalMap)
+					if (!part.PbrBumpTexture.IsNormalMap && !part.PbrBumpTexture.HasProcedural)
 					{
 						var bump = new ccl.ShaderNodes.BumpNode("bump");
 						m_shader.AddNode(bump);
