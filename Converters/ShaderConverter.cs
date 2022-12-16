@@ -269,10 +269,17 @@ namespace RhinoCyclesCore.Converters
 				(float)transform[2, 0], (float)transform[2, 1], (float)transform[2, 2], (float)transform[2, 3]);
 		}
 
+		public bool IsBitmapTexture
+		{
+			get;
+			private set;
+		} = false;
+
 		public Procedural(RenderTexture render_texture)
 		{
 			if (render_texture != null)
 			{
+				IsBitmapTexture = render_texture.IsBitmapTexture();
 				MappingTransform = ToCyclesTransform(render_texture.LocalMappingTransform);
 
 				var rtf = render_texture.Fields;
