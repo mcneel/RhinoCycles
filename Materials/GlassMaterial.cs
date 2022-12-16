@@ -58,12 +58,18 @@ namespace RhinoCyclesCore.Materials
 
 		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
+			bool isLeafBitmap = true;
 			HandleTexturedValue(_Color, Color);
-			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, bitmapConverter, Gamma);
+			if(Color.Texture != null) isLeafBitmap = Color.Texture.IsBitmapTexture();
+			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, isLeafBitmap, bitmapConverter, Gamma);
 			HandleTexturedValue(_Frost, Frost);
-			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, false, bitmapConverter, Gamma);
-			HandleTexturedValue(_Color, Color);
-			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, bitmapConverter, Gamma);
+			isLeafBitmap = true;
+			if(Frost.Texture != null) isLeafBitmap = Frost.Texture.IsBitmapTexture();
+			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, false, isLeafBitmap, bitmapConverter, Gamma);
+			HandleTexturedValue(_Ior, Ior);
+			isLeafBitmap = true;
+			if(Ior.Texture != null) isLeafBitmap = Ior.Texture.IsBitmapTexture();
+			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, isLeafBitmap, bitmapConverter, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()

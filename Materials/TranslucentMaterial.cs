@@ -45,7 +45,9 @@ namespace RhinoCyclesCore.Materials
 		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			HandleTexturedValue(_DiffuseColor, Diffuse);
-			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, bitmapConverter, Gamma);
+			bool isLeafBitmap = true;
+			if(Diffuse.Texture != null) isLeafBitmap = Diffuse.Texture.IsBitmapTexture();
+			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, isLeafBitmap, bitmapConverter, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()

@@ -109,7 +109,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, true, bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
+							HandleRenderTexture(rt, tex, true, rt.IsBitmapTexture(), bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
 							tex.Amount = amount;
 						}
 					}
@@ -147,7 +147,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, true, bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
+							HandleRenderTexture(rt, tex, true, rt.IsBitmapTexture(), bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
 							tex.Amount = amount;
 						}
 					}
@@ -157,7 +157,7 @@ namespace RhinoCyclesCore
 			return (success, rc, onness, amount);
 		}
 
-		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, Converters.BitmapConverter bitmapConverter, float gamma = 1.0f)
+		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool is_leaf_bitmap, Converters.BitmapConverter bitmapConverter, float gamma = 1.0f)
 		{
 			if (rt == null) return;
 
@@ -200,8 +200,7 @@ namespace RhinoCyclesCore
 
 			Procedural procedural = null;
 
-			if (!rt.TypeName.Equals("Bitmap Texture")
-				&& !rt.TypeName.Equals("Simple Bitmap Texture")
+			if (!is_leaf_bitmap
 				&& !rt.TypeName.Equals("High Dynamic Range Texture")
 				&& !rt.TypeName.Equals("Resample Texture")
 				&& !rt.TypeName.Equals("Dots Texture") /* Not supported yet */)
