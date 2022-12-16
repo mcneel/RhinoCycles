@@ -109,7 +109,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, true, rt.IsBitmapTexture(), bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
+							HandleRenderTexture(rt, tex, true, false, bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
 							tex.Amount = amount;
 						}
 					}
@@ -147,7 +147,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, true, rt.IsBitmapTexture(), bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
+							HandleRenderTexture(rt, tex, true, false, bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
 							tex.Amount = amount;
 						}
 					}
@@ -201,7 +201,6 @@ namespace RhinoCyclesCore
 			Procedural procedural = null;
 
 			if (!is_leaf_bitmap
-				&& !rt.TypeName.Equals("High Dynamic Range Texture")
 				&& !rt.TypeName.Equals("Resample Texture")
 				&& !rt.TypeName.Equals("Dots Texture") /* Not supported yet */)
 			{
@@ -523,123 +522,6 @@ namespace RhinoCyclesCore
 				}
 				return alphaOut;
 
-			}
-			if (IsOn && null != teximg && teximg.HasTextureImage)
-			{
-				var texco = new ccl.ShaderNodes.TextureCoordinateNode($"texco for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var imtexnode = new ccl.ShaderNodes.ImageTextureNode($"image texture for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var invcol = new ccl.ShaderNodes.InvertNode($"invert color for imtexnode for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var normalmapnode = new ccl.ShaderNodes.NormalMapNode($"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var tobwnode = new ccl.ShaderNodes.RgbToBwNode($"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var alphamult = new ccl.ShaderNodes.MathMultiply($"alpha multiplier for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-
-				var mixerNode = new ccl.ShaderNodes.MixNode($"rgb mix node for imtexnode and {valueSocket?.Parent.VariableName ?? "unknown input"}");
-
-				alphamult.ins.Value1.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
-				alphamult.ins.Value2.Value = 1.0f;
-
-				mixerNode.ins.Fac.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
-
-				sh.AddNode(texco);
-				sh.AddNode(mixerNode);
-				sh.AddNode(imtexnode);
-
-				texco.UvMap = teximg.GetUvMapForChannel();
-				normalmapnode.Attribute = teximg.GetUvMapForChannel();
-
-				valueSocket?.Connect(mixerNode.ins.Color1);
-
-				RenderEngine.SetTextureImage(imtexnode, teximg);
-				imtexnode.Extension = teximg.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
-				imtexnode.ColorSpace = ccl.ShaderNodes.TextureNode.TextureColorSpace.None;
-				imtexnode.Projection = ccl.ShaderNodes.TextureNode.TextureProjection.Flat;
-				imtexnode.AlternateTiles = teximg.AlternateTiles;
-				imtexnode.UseAlpha = true;
-				imtexnode.IsLinear = false;
-				RenderEngine.SetProjectionMode(sh, teximg, imtexnode, texco);
-				if (valueSocket == null) {
-					mixerNode.ins.Fac.Value = 1.0f;
-				} else {
-					sh.AddNode(alphamult);
-					imtexnode.outs.Alpha.Connect(alphamult.ins.Value2);
-					alphamult.outs.Value.Connect(mixerNode.ins.Fac);
-				}
-				if (normalMap)
-				{
-					// ideally we calculate the tangents and switch to Tangent space here.
-					normalmapnode.SpaceType = ccl.ShaderNodes.NormalMapNode.Space.Tangent;
-					sh.AddNode(normalmapnode);
-					imtexnode.outs.Color.Connect(normalmapnode.ins.Color);
-					normalmapnode.ins.Strength.Value = amount * RcCore.It.AllSettings.NormalStrengthFactor;
-					foreach(var sock in socks) {
-						normalmapnode.outs.Normal.Connect(sock);
-					}
-				}
-				else
-				{
-					if (invert)
-					{
-						sh.AddNode(invcol);
-						imtexnode.outs.Color.Connect(invcol.ins.Color);
-
-						invcol.ins.Fac.Value = 1.0f;
-						invcol.outs.Color.Connect(mixerNode.ins.Color2);
-					}
-					else
-					{
-						ccl.ShaderNodes.Sockets.ISocket outsock = imtexnode.outs.Color;
-						if(toBw) {
-							sh.AddNode(tobwnode);
-							outsock.Connect(tobwnode.ins.Color);
-							outsock = tobwnode.outs.Val;
-						}
-						outsock.Connect(mixerNode.ins.Color2);
-					}
-					if (amount >= 0.0f && amount <= 1.0f)
-					{
-						foreach (var sock in socks)
-						{
-							mixerNode.outs.Color.Connect(sock);
-						}
-					} else { // multiply the output of mixerNode.outs.Color with amount.
-						SeparateRgbNode separateRgbNode = new SeparateRgbNode($"separating the color for multiplication {valueSocket?.Parent.VariableName ?? "unknown input"}");
-						MathMultiply multiplyR = new MathMultiply($"multiplier for R {valueSocket?.Parent.VariableName ?? "unknown input"}");
-						MathMultiply multiplyG = new MathMultiply($"multiplier for G {valueSocket?.Parent.VariableName ?? "unknown input"}");
-						MathMultiply multiplyB = new MathMultiply($"multiplier for B {valueSocket?.Parent.VariableName ?? "unknown input"}");
-						CombineRgbNode combineRgbNode = new CombineRgbNode($"combining the new color values {valueSocket?.Parent.VariableName ?? "unknown input"}");
-
-						sh.AddNode(separateRgbNode);
-						sh.AddNode(multiplyR);
-						sh.AddNode(multiplyG);
-						sh.AddNode(multiplyB);
-						sh.AddNode(combineRgbNode);
-
-						multiplyR.UseClamp = false;
-						multiplyG.UseClamp = false;
-						multiplyB.UseClamp = false;
-
-						multiplyR.ins.Value1.Value = amount;
-						multiplyG.ins.Value1.Value = amount;
-						multiplyB.ins.Value1.Value = amount;
-
-						mixerNode.outs.Color.Connect(separateRgbNode.ins.Image);
-
-						separateRgbNode.outs.R.Connect(multiplyR.ins.Value2);
-						separateRgbNode.outs.G.Connect(multiplyG.ins.Value2);
-						separateRgbNode.outs.B.Connect(multiplyB.ins.Value2);
-
-						multiplyR.outs.Value.Connect(combineRgbNode.ins.R);
-						multiplyG.outs.Value.Connect(combineRgbNode.ins.G);
-						multiplyB.outs.Value.Connect(combineRgbNode.ins.B);
-
-						foreach (var sock in socks)
-						{
-							combineRgbNode.outs.Image.Connect(sock);
-						}
-					}
-
-				}
-				return imtexnode.outs.Alpha;
 			}
 			else
 			{

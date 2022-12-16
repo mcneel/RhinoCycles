@@ -388,10 +388,7 @@ namespace RhinoCyclesCore
 
 			bool checkForNormal = childSlot == StdCS.Bump || childSlot == StdCS.PbrClearcoatBump || childSlot == StdCS.PbrDisplacement;
 
-			bool isLeafBitmap = true;
-			if(tv.Texture!=null) isLeafBitmap = tv.Texture.IsBitmapTexture();
-
-			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, isLeafBitmap, _bitmapConverter, gamma);
+			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, false, _bitmapConverter, gamma);
 		}
 
 		private void CreatePbrShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)

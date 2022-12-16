@@ -68,7 +68,10 @@ namespace RhinoCyclesCore.ExtensionMethods
 	{
 		public static bool IsBitmapTexture(this RenderTexture tex)
 		{
-			return tex.TypeName.Equals("Bitmap Texture") || tex.TypeName.Equals("Simple Bitmap Texture");
+			return tex.TypeName.Equals("Bitmap Texture")
+						|| tex.TypeName.Equals("Simple Bitmap Texture")
+						|| tex.TypeName.Equals("High Dynamic Range Texture")
+						;
 		}
 	}
 

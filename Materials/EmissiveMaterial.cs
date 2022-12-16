@@ -73,9 +73,7 @@ namespace RhinoCyclesCore.Materials
 		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
 		{
 			HandleTexturedValue(_Emissive, Emission);
-			bool isLeafBitmap = false;
-			if(Emission.Texture!=null) isLeafBitmap = Emission.Texture.IsBitmapTexture();
-			Utilities.HandleRenderTexture(Emission.Texture, EmissionTexture, false, isLeafBitmap, bitmapConverter, 1.0f);
+			Utilities.HandleRenderTexture(Emission.Texture, EmissionTexture, false, false, bitmapConverter, 1.0f);
 			if (Fields.TryGetValue(_Strength, out float strength))
 			{
 				Strength = strength;
