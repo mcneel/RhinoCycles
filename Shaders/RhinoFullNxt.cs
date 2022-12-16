@@ -329,13 +329,6 @@ namespace RhinoCyclesCore.Shaders
 				var principled = new PrincipledBsdfNode("pbr_principled");
 				var texco = new TextureCoordinateNode("pbr_texco");
 				var basewithao = new MixNode("pbr_basewithao");
-				var aoamount = new MixNode("pbr_aoamount");
-				var aotex = new ImageTextureNode("pbr_aotex");
-
-				var roughwithsmudge = new MixNode("pbr_roughwithsmudge");
-				var smudgetex = new ImageTextureNode("pbr_smudgetex");
-				var bumpwithscratch = new BumpNode("pbr_bumpwithscratch");
-				var scratchtex = new ImageTextureNode("pbr_scratchtex");
 
 				var tangent = new TangentNode("tangents");
 
@@ -344,10 +337,6 @@ namespace RhinoCyclesCore.Shaders
 				var coloured_shadow_switch = new MathMultiply("coloured_shadow_switch");
 				var coloured_shadow = new TransparentBsdfNode("coloured_shadow_transp_bsdf");
 
-				aoamount.BlendType = MixNode.BlendTypes.Blend;
-				aoamount.ins.Color1.Value = Rhino.Display.Color4f.Black.ToFloat4();
-				aoamount.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
-				aoamount.ins.Fac.Value = 1.0f;
 				basewithao.BlendType = MixNode.BlendTypes.Multiply;
 				basewithao.ins.Fac.Value = 1.0f;
 				basewithao.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
@@ -389,20 +378,6 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(alpha_transparency_final);
 				m_shader.AddNode(alpha_basecolalpha_plus_alphatransp);
 
-				if(part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasTextureImage) {
-					m_shader.AddNode(aotex);
-					m_shader.AddNode(aoamount);
-
-					RenderEngine.SetTextureImage(aotex, part.PbrAmbientOcclusionTexture);
-					aotex.Extension = part.PbrAmbientOcclusionTexture.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
-					aotex.ColorSpace = TextureNode.TextureColorSpace.None;
-					aotex.Projection = TextureNode.TextureProjection.Flat;
-					RenderEngine.SetProjectionMode(m_shader, part.PbrAmbientOcclusionTexture, aotex, texco);
-					aotex.outs.Color.Connect(aoamount.ins.Color2);
-					aoamount.ins.Fac.Value = part.PbrAmbientOcclusion.Amount;
-					aoamount.outs.Color.Connect(basewithao.ins.Color2);
-				}
-
 				ISocket basecoltexAlphaOut;
 
 				if(decalMixin!=null) {
@@ -439,32 +414,9 @@ namespace RhinoCyclesCore.Shaders
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic, texco, false);
 				Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation, texco, false);
 
-				if (part.PbrSmudge.On && part.PbrSmudge.Amount > 0.001)
+				if (part.PbrBump.On && part.PbrBumpTexture.HasProcedural)
 				{
-					m_shader.AddNode(smudgetex);
-					m_shader.AddNode(roughwithsmudge);
-
-					roughwithsmudge.BlendType = MixNode.BlendTypes.Screen;
-					roughwithsmudge.ins.Fac.Value = part.PbrSmudge.Amount;
-					RenderEngine.SetTextureImage(smudgetex, part.PbrSmudgeTexture);
-					smudgetex.Extension = part.PbrSmudgeTexture.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
-					smudgetex.ColorSpace = TextureNode.TextureColorSpace.None;
-					smudgetex.Projection = TextureNode.TextureProjection.Flat;
-					RenderEngine.SetProjectionMode(m_shader, part.PbrSmudgeTexture, smudgetex, texco);
-
-					var curcon = principled.ins.Roughness.ConnectionFrom;
-					if(curcon!=null) {
-						curcon.Connect(roughwithsmudge.ins.Color1);
-						smudgetex.outs.Color.Connect(roughwithsmudge.ins.Color2);
-						roughwithsmudge.outs.Color.Connect(principled.ins.Roughness);
-					} else {
-						smudgetex.outs.Color.Connect(principled.ins.Roughness);
-					}
-				}
-
-				if (part.PbrBump.On && (part.PbrBumpTexture.HasTextureImage || part.PbrBumpTexture.HasProcedural))
-				{
-					if (!part.PbrBumpTexture.IsNormalMap && !part.PbrBumpTexture.HasProcedural)
+					if (!part.PbrBumpTexture.IsNormalMap)
 					{
 						var bump = new ccl.ShaderNodes.BumpNode("bump");
 						m_shader.AddNode(bump);
@@ -474,11 +426,12 @@ namespace RhinoCyclesCore.Shaders
 						part.PbrBump.Amount = 1.0f;
 						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), texco, true, false, false);
 						bump.outs.Normal.Connect(principled.ins.Normal);
-					} else {
+					} else
+					{
 						Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal.ToList(), texco, false, true, false);
 					}
 				}
-				if (part.PbrClearcoatBump.On && part.PbrClearcoatBumpTexture.HasTextureImage)
+				if (part.PbrClearcoatBump.On && part.PbrClearcoatBumpTexture.HasProcedural)
 				{
 					if (!part.PbrClearcoatBumpTexture.IsNormalMap)
 					{
@@ -495,31 +448,6 @@ namespace RhinoCyclesCore.Shaders
 					}
 				}
 
-				if (part.PbrScratch.On && part.PbrScratch.Amount > 0.001)
-				{
-					m_shader.AddNode(scratchtex);
-					m_shader.AddNode(bumpwithscratch);
-
-					bumpwithscratch.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
-					bumpwithscratch.ins.Strength.Value = Math.Abs(part.PbrScratch.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
-					bumpwithscratch.Invert = part.PbrScratch.Amount < 0.0f;
-					RenderEngine.SetTextureImage(scratchtex, part.PbrScratchTexture);
-					scratchtex.Extension = part.PbrScratchTexture.Repeat ? ccl.ShaderNodes.TextureNode.TextureExtension.Repeat : ccl.ShaderNodes.TextureNode.TextureExtension.Clip;
-					scratchtex.ColorSpace = TextureNode.TextureColorSpace.None;
-					scratchtex.Projection = TextureNode.TextureProjection.Flat;
-					RenderEngine.SetProjectionMode(m_shader, part.PbrScratchTexture, scratchtex, texco);
-					scratchtex.outs.Color.Connect(bumpwithscratch.ins.Height);
-
-					var curcon = principled.ins.Normal.ConnectionFrom;
-					if(curcon!=null) {
-
-						curcon.Connect(bumpwithscratch.ins.Normal);
-						bumpwithscratch.outs.Normal.Connect(principled.ins.Normal);
-					} else {
-						bumpwithscratch.outs.Normal.Connect(principled.ins.Normal);
-					}
-				}
-
 				lightpath.outs.IsShadowRay.Connect(coloured_shadow_switch.ins.Value1);
 				coloured_shadow_switch.outs.Value.Connect(coloured_shadow_mix_custom.ins.Fac);
 				coloured_shadow.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure2);
@@ -529,7 +457,7 @@ namespace RhinoCyclesCore.Shaders
 
 				float emission_strength = part.PbrEmission.Value.LargestComponent();
 
-				if(part.PbrEmission.On && part.PbrEmissionTexture.HasTextureImage)
+				if(part.PbrEmission.On && part.PbrEmissionTexture.HasProcedural)
 				{
 					emissive.ins.Strength.Value = emission_strength;
 					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, emissive.ins.Color, texco, false);
