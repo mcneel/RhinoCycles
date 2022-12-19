@@ -213,31 +213,10 @@ namespace RhinoCyclesCore
 					texture = null;
 				}
 			}
-			else
-			{
-				//In all other cases, we have to simulate the material and use the textures as presented
-				//to us in the simulation.
-				var on_material = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow);
-				var on_texture = on_material.GetTexture(RenderMaterial.TextureTypeFromSlot(childSlot));
-
-				if (null != on_texture && on_texture.Enabled)
-				{
-					//Note that the simulated texture is created with the RenderMaterial's document association
-					//so that when the new bitmap texture is created below, the WCS transforms are not applied.
-					var simtex = new SimulatedTexture(rm.DocumentAssoc, on_texture);
-
-					texture = RenderTexture.NewBitmapTexture(simtex, rm.DocumentAssoc);
-
-					//Always use the actual values given by the simualtion at this point.
-					on_texture.GetAlphaBlendValues(out double c, out double a0, out double a1, out double a2, out double a3);
-
-					amount = (float)c;
-				}
-			}
-			/*if(texture!=null && enabled) {
-				Utilities.HandleRenderTexture(texture, ti, checkForNormal, _bitmapConverter, shb.Gamma);
+			if(texture!=null && enabled) {
+				Utilities.HandleRenderTexture(texture, ti, checkForNormal, false, _bitmapConverter, shb.Gamma);
 				ti.Amount = amount;
-			}*/
+			}
 		}
 
 		private void CreateCustomShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
@@ -850,6 +829,7 @@ namespace RhinoCyclesCore
 
 		public CyclesTextureImage DiffuseTexture { get; set; }
 		public bool HasDiffuseTexture => DiffuseTexture.HasTextureImage;
+		public bool HasDiffuseProcedural => DiffuseTexture.HasProcedural;
 		public float HasDiffuseTextureAsFloat => HasDiffuseTexture ? 1.0f : 0.0f;
 		public CyclesTextureImage BumpTexture { get; set; }
 		public bool HasBumpTexture => BumpTexture.HasTextureImage;

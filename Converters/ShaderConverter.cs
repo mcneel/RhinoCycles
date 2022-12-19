@@ -353,27 +353,28 @@ namespace RhinoCyclesCore.Converters
 			if (!AdjustNeeded)
 			{
 				color_output.Connect(parent_color_input);
+			} else
+			{
+				var texture_adjustment_node = new TextureAdjustmentTextureProceduralNode();
+
+				shader.AddNode(texture_adjustment_node);
+
+				texture_adjustment_node.Grayscale = AdjustGrayscale;
+				texture_adjustment_node.Invert = AdjustInvert;
+				texture_adjustment_node.Clamp = AdjustClamp;
+				texture_adjustment_node.ScaleToClamp = AdjustScaleToClamp;
+				texture_adjustment_node.Multiplier = AdjustMultiplier;
+				texture_adjustment_node.ClampMin = AdjustClampMin;
+				texture_adjustment_node.ClampMax = AdjustClampMax;
+				texture_adjustment_node.Gain = AdjustGain;
+				texture_adjustment_node.Gamma = AdjustGamma;
+				texture_adjustment_node.Saturation = AdjustSaturation;
+				texture_adjustment_node.HueShift = AdjustHueShift;
+				texture_adjustment_node.IsHdr = AdjustIsHdr;
+
+				color_output.Connect(texture_adjustment_node.ins.Color);
+				texture_adjustment_node.outs.Color.Connect(parent_color_input);
 			}
-
-			var texture_adjustment_node = new TextureAdjustmentTextureProceduralNode();
-
-			shader.AddNode(texture_adjustment_node);
-
-			texture_adjustment_node.Grayscale = AdjustGrayscale;
-			texture_adjustment_node.Invert = AdjustInvert;
-			texture_adjustment_node.Clamp = AdjustClamp;
-			texture_adjustment_node.ScaleToClamp = AdjustScaleToClamp;
-			texture_adjustment_node.Multiplier = AdjustMultiplier;
-			texture_adjustment_node.ClampMin = AdjustClampMin;
-			texture_adjustment_node.ClampMax = AdjustClampMax;
-			texture_adjustment_node.Gain = AdjustGain;
-			texture_adjustment_node.Gamma = AdjustGamma;
-			texture_adjustment_node.Saturation = AdjustSaturation;
-			texture_adjustment_node.HueShift = AdjustHueShift;
-			texture_adjustment_node.IsHdr = AdjustIsHdr;
-
-			color_output.Connect(texture_adjustment_node.ins.Color);
-			texture_adjustment_node.outs.Color.Connect(parent_color_input);
 		}
 
 		public void ConnectAlphaNode(FloatSocket alpha_output, FloatSocket parent_alpha_input)
