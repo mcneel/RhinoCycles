@@ -308,7 +308,7 @@ namespace RhinoCyclesCore.Settings
 		{
 			var bounceTable = new TableLayout()
 			{
-				Spacing = new Eto.Drawing.Size(1, 5),
+				Spacing = new Eto.Drawing.Size(5, 5),
 				Rows =
 				{
 					new TableRow(LblMaxBounces, StepperMaxBounces),
@@ -321,7 +321,7 @@ namespace RhinoCyclesCore.Settings
 			};
 			var sampleTable = new TableLayout()
 			{
-				Spacing = new Eto.Drawing.Size(1, 5),
+				Spacing = new Eto.Drawing.Size(5, 5),
 				Rows =
 				{
 					new TableRow(LblSamples, StepperSamples),
@@ -330,7 +330,7 @@ namespace RhinoCyclesCore.Settings
 			};
 			var textureTable = new TableLayout()
 			{
-				Spacing = new Eto.Drawing.Size(1, 5),
+				Spacing = new Eto.Drawing.Size(5, 5),
 				Rows =
 				{
 					new TableRow(LblTextureBakeQuality, ListboxTextureBakeQuality),
