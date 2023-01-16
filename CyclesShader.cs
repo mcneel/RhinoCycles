@@ -52,7 +52,7 @@ namespace RhinoCyclesCore
 		}
 
 		public List<CyclesDecal> Decals { get; set; } = null;
-		
+
 		/// <summary>
 		/// RenderHash of the RenderMaterial for which this intermediary is created.
 		/// </summary>
@@ -389,39 +389,66 @@ namespace RhinoCyclesCore
 			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, _bitmapConverter, gamma);
 		}
 
+		private Guid blendMaterialTypeId = new Guid("0322370F-A9AF-4264-A57C-58FF8E4345DD");
 		private void CreatePbrShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
-			var pbrmat = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow).PhysicallyBased;
+			if(rm.TypeId.Equals(blendMaterialTypeId))
+			{
+				shb.Name = rm.Name ?? "Blend material";
+				if (rm.FindChild("material-1") is RenderMaterial first)
+				{
+					ShaderBody materialOne = new ShaderBody(first.RenderHash);
+					CreateShaderPart(materialOne, first, gamma);
+					shb.MaterialOne = materialOne;
+					shb.MaterialOne.Name = "material-1";
+				}
+				if (rm.FindChild("material-2") is RenderMaterial second)
+				{
+					ShaderBody materialTwo = new ShaderBody(second.RenderHash);
+					CreateShaderPart(materialTwo, second, gamma);
+					shb.MaterialTwo = materialTwo;
+					shb.MaterialTwo.Name = "material-2";
+				}
+				shb.BlendMixAmount = (float)Convert.ToDouble(rm.GetParameter("mix-amount"));
+				if(rm.FindChild("mix-amount") is RenderTexture mixTexture)
+				{
+					Utilities.HandleRenderTexture(mixTexture, shb.BlendMixAmountTexture, false, _bitmapConverter, gamma);
+				}
+			}
+			else
+			{
+				var pbrmat = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow).PhysicallyBased;
 
-			shb.IsPbr = true;
-			shb.Name = rm.Name ?? "";
-			shb.Gamma = gamma;
-			shb.UseBaseColorTextureAlphaAsObjectAlpha = pbrmat.UseBaseColorTextureAlphaForObjectAlphaTransparencyTexture;
+				shb.IsPbr = true;
+				shb.Name = rm.Name ?? "";
+				shb.Gamma = gamma;
+				shb.UseBaseColorTextureAlphaAsObjectAlpha = pbrmat.UseBaseColorTextureAlphaForObjectAlphaTransparencyTexture;
 
-			HandlePbrTexturedProperty(StdCS.PbrBaseColor, pbrmat.BaseColor.ApplyGamma(gamma), rm, shb.PbrBase, shb.PbrBaseTexture, gamma);
-			HandlePbrTexturedProperty(StdCS.PbrSubSurfaceScattering, pbrmat.SubsurfaceScatteringColor.ApplyGamma(gamma), rm, shb.PbrSubsurfaceColor, shb.PbrSubsurfaceColorTexture, gamma);
-			HandlePbrTexturedProperty(StdCS.PbrEmission, pbrmat.Emission.ApplyGamma(gamma), rm, shb.PbrEmission, shb.PbrEmissionTexture, gamma);
+				HandlePbrTexturedProperty(StdCS.PbrBaseColor, pbrmat.BaseColor.ApplyGamma(gamma), rm, shb.PbrBase, shb.PbrBaseTexture, gamma);
+				HandlePbrTexturedProperty(StdCS.PbrSubSurfaceScattering, pbrmat.SubsurfaceScatteringColor.ApplyGamma(gamma), rm, shb.PbrSubsurfaceColor, shb.PbrSubsurfaceColorTexture, gamma);
+				HandlePbrTexturedProperty(StdCS.PbrEmission, pbrmat.Emission.ApplyGamma(gamma), rm, shb.PbrEmission, shb.PbrEmissionTexture, gamma);
 
-			HandlePbrTexturedProperty(StdCS.PbrMetallic,           (float)pbrmat.Metallic,            rm, shb.PbrMetallic,            shb.PbrMetallicTexture);
-			HandlePbrTexturedProperty(StdCS.PbrSubsurface,         (float)pbrmat.Subsurface,          rm, shb.PbrSubsurface,          shb.PbrSubsurfaceTexture);
-			HandlePbrTexturedProperty(StdCS.PbrSubsurfaceScatteringRadius, (float)pbrmat.SubsurfaceScatteringRadius, rm, shb.PbrSubsurfaceRadius, shb.PbrSubsurfaceRadiusTexture);
-			HandlePbrTexturedProperty(StdCS.PbrRoughness,          (float)pbrmat.Roughness,           rm, shb.PbrRoughness,           shb.PbrRoughnessTexture);
-			HandlePbrTexturedProperty(StdCS.PbrSpecular,           (float)pbrmat.Specular,            rm, shb.PbrSpecular,            shb.PbrSpecularTexture);
-			HandlePbrTexturedProperty(StdCS.PbrSpecularTint,       (float)pbrmat.SpecularTint,        rm, shb.PbrSpecularTint,        shb.PbrSpecularTintTexture);
-			HandlePbrTexturedProperty(StdCS.PbrAnisotropic,        (float)pbrmat.Anisotropic,         rm, shb.PbrAnisotropic,         shb.PbrAnisotropicTexture);
-			HandlePbrTexturedProperty(StdCS.PbrAnisotropicRotation,(float)pbrmat.AnisotropicRotation, rm, shb.PbrAnisotropicRotation, shb.PbrAnisotropicRotationTexture);
-			HandlePbrTexturedProperty(StdCS.PbrSheen,              (float)pbrmat.Sheen,               rm, shb.PbrSheen,               shb.PbrSheenTexture);
-			HandlePbrTexturedProperty(StdCS.PbrSheenTint,          (float)pbrmat.SheenTint,           rm, shb.PbrSheenTint,           shb.PbrSheenTintTexture);
-			HandlePbrTexturedProperty(StdCS.PbrClearcoat,          (float)pbrmat.Clearcoat,           rm, shb.PbrClearcoat,           shb.PbrClearcoatTexture);
-			HandlePbrTexturedProperty(StdCS.PbrClearcoatRoughness, (float)pbrmat.ClearcoatRoughness,  rm, shb.PbrClearcoatRoughness,  shb.PbrClearcoatRoughnessTexture);
-			HandlePbrTexturedProperty(StdCS.PbrClearcoatBump,      Color4f.Black,                     rm, shb.PbrClearcoatBump,       shb.PbrClearcoatBumpTexture);
-			HandlePbrTexturedProperty(StdCS.PbrOpacity,            (float)pbrmat.Opacity,             rm, shb.PbrTransmission,        shb.PbrTransmissionTexture);
-			HandlePbrTexturedProperty(StdCS.PbrOpacityIor,         (float)pbrmat.OpacityIOR,          rm, shb.PbrIor,                 shb.PbrIorTexture);
-			HandlePbrTexturedProperty(StdCS.PbrOpacityRoughness,   (float)pbrmat.OpacityRoughness,    rm, shb.PbrTransmissionRoughness, shb.PbrTransmissionRoughnessTexture);
-			HandlePbrTexturedProperty(StdCS.Bump,                  Color4f.Black,                     rm, shb.PbrBump,                shb.PbrBumpTexture);
-			HandlePbrTexturedProperty(StdCS.PbrDisplacement,       Color4f.Black,                     rm, shb.PbrDisplacement,        shb.PbrDisplacementTexture);
-			HandlePbrTexturedProperty(StdCS.PbrAmbientOcclusion,   0.0f,                              rm, shb.PbrAmbientOcclusion,    shb.PbrAmbientOcclusionTexture);
-			HandlePbrTexturedProperty(StdCS.PbrAlpha,              (float)pbrmat.Alpha,               rm, shb.PbrAlpha,               shb.PbrAlphaTexture);
+				HandlePbrTexturedProperty(StdCS.PbrMetallic, (float)pbrmat.Metallic, rm, shb.PbrMetallic, shb.PbrMetallicTexture);
+				HandlePbrTexturedProperty(StdCS.PbrSubsurface, (float)pbrmat.Subsurface, rm, shb.PbrSubsurface, shb.PbrSubsurfaceTexture);
+				HandlePbrTexturedProperty(StdCS.PbrSubsurfaceScatteringRadius, (float)pbrmat.SubsurfaceScatteringRadius, rm, shb.PbrSubsurfaceRadius, shb.PbrSubsurfaceRadiusTexture);
+				HandlePbrTexturedProperty(StdCS.PbrRoughness, (float)pbrmat.Roughness, rm, shb.PbrRoughness, shb.PbrRoughnessTexture);
+				HandlePbrTexturedProperty(StdCS.PbrSpecular, (float)pbrmat.Specular, rm, shb.PbrSpecular, shb.PbrSpecularTexture);
+				HandlePbrTexturedProperty(StdCS.PbrSpecularTint, (float)pbrmat.SpecularTint, rm, shb.PbrSpecularTint, shb.PbrSpecularTintTexture);
+				HandlePbrTexturedProperty(StdCS.PbrAnisotropic, (float)pbrmat.Anisotropic, rm, shb.PbrAnisotropic, shb.PbrAnisotropicTexture);
+				HandlePbrTexturedProperty(StdCS.PbrAnisotropicRotation, (float)pbrmat.AnisotropicRotation, rm, shb.PbrAnisotropicRotation, shb.PbrAnisotropicRotationTexture);
+				HandlePbrTexturedProperty(StdCS.PbrSheen, (float)pbrmat.Sheen, rm, shb.PbrSheen, shb.PbrSheenTexture);
+				HandlePbrTexturedProperty(StdCS.PbrSheenTint, (float)pbrmat.SheenTint, rm, shb.PbrSheenTint, shb.PbrSheenTintTexture);
+				HandlePbrTexturedProperty(StdCS.PbrClearcoat, (float)pbrmat.Clearcoat, rm, shb.PbrClearcoat, shb.PbrClearcoatTexture);
+				HandlePbrTexturedProperty(StdCS.PbrClearcoatRoughness, (float)pbrmat.ClearcoatRoughness, rm, shb.PbrClearcoatRoughness, shb.PbrClearcoatRoughnessTexture);
+				HandlePbrTexturedProperty(StdCS.PbrClearcoatBump, Color4f.Black, rm, shb.PbrClearcoatBump, shb.PbrClearcoatBumpTexture);
+				HandlePbrTexturedProperty(StdCS.PbrOpacity, (float)pbrmat.Opacity, rm, shb.PbrTransmission, shb.PbrTransmissionTexture);
+				HandlePbrTexturedProperty(StdCS.PbrOpacityIor, (float)pbrmat.OpacityIOR, rm, shb.PbrIor, shb.PbrIorTexture);
+				HandlePbrTexturedProperty(StdCS.PbrOpacityRoughness, (float)pbrmat.OpacityRoughness, rm, shb.PbrTransmissionRoughness, shb.PbrTransmissionRoughnessTexture);
+				HandlePbrTexturedProperty(StdCS.Bump, Color4f.Black, rm, shb.PbrBump, shb.PbrBumpTexture);
+				HandlePbrTexturedProperty(StdCS.PbrDisplacement, Color4f.Black, rm, shb.PbrDisplacement, shb.PbrDisplacementTexture);
+				HandlePbrTexturedProperty(StdCS.PbrAmbientOcclusion, 0.0f, rm, shb.PbrAmbientOcclusion, shb.PbrAmbientOcclusionTexture);
+				HandlePbrTexturedProperty(StdCS.PbrAlpha, (float)pbrmat.Alpha, rm, shb.PbrAlpha, shb.PbrAlphaTexture);
+			}
 		}
 
 		private void CreateCyclesShaderPart(ShaderBody shb, ICyclesMaterial cyclesMaterial, string name, float gamma)
@@ -528,6 +555,17 @@ namespace RhinoCyclesCore
 
 	public class ShaderBody : IDisposable
 	{
+		#region Blend Material parts
+		/**** Blend Material ****/
+		public ShaderBody MaterialOne { get; set; } = null;
+		public ShaderBody MaterialTwo { get; set; } = null;
+		public float BlendMixAmount = 0.5f;
+		public CyclesTextureImage BlendMixAmountTexture = new CyclesTextureImage();
+		public bool BlendMaterial => MaterialOne != null || MaterialTwo != null;
+		#endregion
+
+		/**** Blend Material ****/
+
 		#region PBR style parameters
 		public bool IsPbr { get; set; }
 
