@@ -661,10 +661,21 @@ namespace RhinoCyclesCore.Database
 				vp.FrustumAspect = targetw / targeth;
 			}
 
-			// camera transform, camera to world conversion
-			var rhinocam = vp.GetXform(CoordinateSystem.Camera, CoordinateSystem.World);
+			double[] viewScale = vp.GetViewScale();
+			bool isReflectedView = RhinoMath.EpsilonEquals(viewScale[2], -1.0, 0.00001) & false;
+			if (isReflectedView)
+			{
+				vp.SetViewScale(viewScale[0], viewScale[1], 1);
+				vp.ChangeToParallelProjection(true);
+				bool success = vp.RotateCamera(RhinoMath.ToRadians(180), vp.CameraUp, vp.TargetPoint);
+				if (success) { Console.WriteLine("parallel reflected view"); }
+			}
+
 			// lens length
 			var lenslength = vp.Camera35mmLensLength;
+
+			// camera transform, camera to world conversion
+			var rhinocam = vp.GetXform(CoordinateSystem.Camera, CoordinateSystem.World);
 
 			// lets see if we need to do magic for two-point perspective
 			var twopoint = vp.IsTwoPointPerspectiveProjection || vp.IsPerspectiveProjection;
@@ -754,8 +765,10 @@ namespace RhinoCyclesCore.Database
 
 			// convert rhino transform to ccsycles transform
 			var rt = rhinocam.ToCyclesTransform();
+			var ccltrans = isReflectedView ? ccl.Transform.RhinoToCyclesCamReflected : ccl.Transform.RhinoToCyclesCam;
 			// then convert to Cycles orientation
-			var t = rt * (vp.IsTwoPointPerspectiveProjection ? ccl.Transform.RhinoToCyclesCamNoFlip : ccl.Transform.RhinoToCyclesCam);
+			var t = rt * (vp.IsTwoPointPerspectiveProjection ? ccl.Transform.RhinoToCyclesCamNoFlip : ccltrans);
+
 
 			// ready, lets push our data
 			var cyclesview = new CyclesView
