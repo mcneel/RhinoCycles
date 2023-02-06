@@ -2082,6 +2082,9 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		protected override BakingFunctions BakeFor()
 		{
+			if(_renderEngine._textureBakeQuality == 4) { // Disable
+				return BakingFunctions.None;
+			}
 			return BakingFunctions.ProceduralTextures | BakingFunctions.CustomObjectMappings;
 		}
 
@@ -2094,6 +2097,8 @@ namespace RhinoCyclesCore.Database
 					return 2048*4;
 				case 3:
 					return 2048*8;
+				case 4:
+					return 2; // Disabled, give some value other than 0 in case we get here
 				default:
 					return 2048;
 			}

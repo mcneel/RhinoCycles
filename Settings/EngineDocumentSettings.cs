@@ -74,10 +74,10 @@ namespace RhinoCyclesCore.Settings
 		{
 			get {
 				var quali = mDict.GetInteger(SettingNames.TextureBakeQuality, DefaultEngineSettings.TextureBakeQuality);
-				return Math.Max(0, Math.Min(3, quali));
+				return Math.Max(0, Math.Min(4, quali));
 			}
 			set {
-				var quali  = Math.Max(0, Math.Min(3, value));
+				var quali  = Math.Max(0, Math.Min(4, value));
 				mDict[SettingNames.TextureBakeQuality] = quali;
 			}
 		}

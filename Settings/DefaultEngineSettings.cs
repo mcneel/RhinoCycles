@@ -65,6 +65,7 @@ namespace RhinoCyclesCore.Settings
 		/// 1 = standard
 		/// 2 = high
 		/// 3 = ultra
+		/// 4 = disabled
 		/// </summary>
 		static public int TextureBakeQuality => 0;
 		static public int Seed => 128;
