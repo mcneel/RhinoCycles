@@ -298,7 +298,7 @@ namespace RhinoCyclesCore.Settings
 					Localization.LocalizeString("Standard", 9),
 					Localization.LocalizeString("High", 10),
 					Localization.LocalizeString("Ultra", 11),
-					LOC.STR("Disable"),
+					Localization.LocalizeString("Disable", 77),
 				}
 			};
 
