@@ -160,10 +160,10 @@ namespace RhinoCyclesCore.RenderEngines
 			Action switchToWireframe = () =>
 			{
 				RhinoApp.RunScript("_SetDisplayMode _Rendered", false);
-				CrashReporterDialog dlg = new CrashReporterDialog(Localization.LocalizeString("Error while using Final Render display mode", 68), Localization.LocalizeString(
-@"An error was detected while using the Final Render display mode.
+				CrashReporterDialog dlg = new CrashReporterDialog(Localization.LocalizeString("Error while using Raytraced display mode", 68), Localization.LocalizeString(
+@"An error was detected while using the Raytraced display mode.
 
-To ensure stability the display mode was switched to Preview Render.
+To ensure stability the display mode was switched to Rendered.
 
 Please click the link below for more information.", 69));
 				dlg.ShowModal(RhinoEtoApp.MainWindow);
