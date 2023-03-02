@@ -381,15 +381,38 @@ namespace RhinoCyclesCore
 			}
 		}
 
+#pragma warning disable 618
+		// This is supposed to be a global utility but I don't know where to put it. Sorry. JohnC.
+		internal static RenderSettings.EnvironmentUsage EnvUsageToUsage(RenderEnvironment.Usage usage)
+		{
+			switch (usage)
+			{
+			default:
+			case RenderEnvironment.Usage.Background:              return RenderSettings.EnvironmentUsage.Background;
+			case RenderEnvironment.Usage.Skylighting:             return RenderSettings.EnvironmentUsage.Skylighting;
+			case RenderEnvironment.Usage.ReflectionAndRefraction: return RenderSettings.EnvironmentUsage.Reflection;
+			}
+		}
+#pragma warning restore 618
+
 		/// <summary>
 		/// Read texture data and bg color from environments
 		/// </summary>
+		[Obsolete("Use the one that takes RenderSettings.EnvironmentUsage")]
 		public void HandleEnvironments(RenderEnvironment.Usage usage)
+		{
+			HandleEnvironments(EnvUsageToUsage(usage));
+		}
+
+		/// <summary>
+		/// Read texture data and bg color from environments
+		/// </summary>
+		public void HandleEnvironments(RenderSettings.EnvironmentUsage usage)
 		{
 			SimulatedEnvironment simenv;
 			switch (usage)
 			{
-				case RenderEnvironment.Usage.Background:
+				case RenderSettings.EnvironmentUsage.Background:
 
 					if (BackgroundEnvironment != null)
 					{
@@ -406,7 +429,7 @@ namespace RhinoCyclesCore
 						BgTexture.Clear();
 					}
 					break;
-				case RenderEnvironment.Usage.Skylighting:
+				case RenderSettings.EnvironmentUsage.Skylighting:
 					if (SkylightEnvironment != null)
 					{
 						simenv = SkylightEnvironment.SimulateEnvironment(true);
@@ -422,7 +445,7 @@ namespace RhinoCyclesCore
 						SkyTexture.Clear();
 					}
 					break;
-				case RenderEnvironment.Usage.ReflectionAndRefraction:
+				case RenderSettings.EnvironmentUsage.Reflection:
 					if (ReflectionEnvironment != null)
 					{
 						simenv = ReflectionEnvironment.SimulateEnvironment(true);
