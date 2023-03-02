@@ -107,7 +107,18 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		/// <param name="environment"></param>
 		/// <param name="usage"></param>
+		[Obsolete("Use the one that takes RenderSettings.EnvironmentUsage")]
 		public void SetBackground(RenderEnvironment environment, RenderEnvironment.Usage usage)
+		{
+			SetBackground(environment, CyclesBackground.EnvUsageToUsage(usage));
+		}
+
+		/// <summary>
+		/// Set the RenderEnvironment for usage
+		/// </summary>
+		/// <param name="environment"></param>
+		/// <param name="usage"></param>
+		public void SetBackground(RenderEnvironment environment, RenderSettings.EnvironmentUsage usage)
 		{
 			if(environment!=null)
 			{
@@ -115,7 +126,7 @@ namespace RhinoCyclesCore.Database
 			}
 			switch (usage)
 			{
-				case RenderEnvironment.Usage.Background:
+				case RenderSettings.EnvironmentUsage.Background:
 					//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
 
 					uint newEnvHash = environment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "") ?? 0;
@@ -144,11 +155,11 @@ namespace RhinoCyclesCore.Database
 						_cqBackground.PlanarProjection = false;
 					}
 					break;
-				case RenderEnvironment.Usage.Skylighting:
+				case RenderSettings.EnvironmentUsage.Skylighting:
 					_cqBackground.SkylightEnvironment?.Dispose();
 					_cqBackground.SkylightEnvironment = environment;
 					break;
-				case RenderEnvironment.Usage.ReflectionAndRefraction:
+				case RenderSettings.EnvironmentUsage.Reflection:
 					_cqBackground.ReflectionEnvironment?.Dispose();
 					_cqBackground.ReflectionEnvironment = environment;
 					break;
@@ -156,7 +167,13 @@ namespace RhinoCyclesCore.Database
 			_cqBackground.Modified = true;
 		}
 
+		[Obsolete("Use the one that takes RenderSettings.EnvironmentUsage")]
 		public void HandleEnvironments(RenderEnvironment.Usage usage)
+		{
+			_cqBackground.HandleEnvironments(usage);
+		}
+
+		public void HandleEnvironments(RenderSettings.EnvironmentUsage usage)
 		{
 			_cqBackground.HandleEnvironments(usage);
 		}
