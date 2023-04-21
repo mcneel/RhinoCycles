@@ -427,11 +427,13 @@ namespace RhinoCyclesCore
 		{
 #region register callbacks with Cycles session
 
+			/* TODO: XXXX revisit output/display driver approach
 			Session.UpdateCallback = m_update_callback;
 			Session.UpdateTileCallback = m_update_render_tile_callback;
 			Session.WriteTileCallback = m_write_render_tile_callback;
 			Session.TestCancelCallback = m_test_cancel_callback;
 			Session.DisplayUpdateCallback = m_display_update_callback;
+			*/
 
 #endregion
 		}

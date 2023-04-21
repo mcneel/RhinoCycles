@@ -255,7 +255,7 @@ Please click the link below for more information.", 69));
 			Session = RcCore.It.CreateSession(client, sessionParams);
 			#endregion
 
-			CreateScene(client, Session, RenderDevice, this, eds);
+			//CreateScene(client, Session, RenderDevice, this, eds);
 
 			// Set up passes
 			foreach (var reqPass in reqPassTypes)
@@ -269,6 +269,7 @@ Please click the link below for more information.", 69));
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
+			/* TODO: XXXX disable data/change queue stuff for now
 			_textureBakeQuality = eds.TextureBakeQuality;
 
 			if (this != null && !CancelRender)
@@ -280,6 +281,7 @@ Please click the link below for more information.", 69));
 				Synchronize();
 				Flush = false;
 			}
+			*/
 
 			if (this != null && !CancelRender)
 			{
@@ -291,6 +293,22 @@ Please click the link below for more information.", 69));
 			// We've got Cycles rendering now, notify anyone who cares
 			RenderStarted?.Invoke(this, new RenderStartedEventArgs(!CancelRender));
 
+			Session.Start();
+			while (this != null && !IsStopped)
+			{
+				if (this != null && _needReset)
+				{
+					// do all change queue handling here
+					// also viewport resize handling
+					_needReset = false;
+				}
+				else
+				{
+					Thread.Sleep(_throttle);
+				}
+			}
+
+			/*
 			while (this != null && !IsStopped)
 			{
 				if (this != null && _needReset)
@@ -342,7 +360,7 @@ Please click the link below for more information.", 69));
 				{
 					Thread.Sleep(_throttle);
 				}
-			}
+			}*/
 
 			if (this != null)
 			{
