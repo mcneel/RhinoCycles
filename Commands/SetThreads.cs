@@ -44,14 +44,14 @@ namespace RhinoCycles.Commands
 			getNumber.SetLowerLimit(0, false);
 			getNumber.SetUpperLimit(RhinoCyclesCore.Utilities.GetSystemProcessorCount(), false);
 			getNumber.SetDefaultInteger(RcCore.It.AllSettings.Threads);
-			getNumber.SetCommandPrompt($"Set CPU render threads (max {RhinoCyclesCore.Utilities.GetSystemProcessorCount()}, 0 for automatic)");
+			getNumber.SetCommandPrompt($"Set Cpu render threads (max {RhinoCyclesCore.Utilities.GetSystemProcessorCount()}, 0 for automatic)");
 			var getRc = getNumber.Get();
 			if (getNumber.CommandResult() != Result.Success) return getNumber.CommandResult();
 			if (getRc == GetResult.Number)
 			{
 				var nr = getNumber.Number();
 				var endS = nr != 1 ? "s" : "";
-				RhinoApp.WriteLine($"User wants {nr} CPU thread{endS}");
+				RhinoApp.WriteLine($"User wants {nr} Cpu thread{endS}");
 				RcCore.It.AllSettings.Threads = nr;
 				return Result.Success;
 			}

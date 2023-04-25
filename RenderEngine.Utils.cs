@@ -248,18 +248,7 @@ namespace RhinoCyclesCore
 			var tiley = RcCore.It.AllSettings.TileY;
 			if (!RcCore.It.AllSettings.DebugNoOverrideTileSize)
 			{
-				if (device.IsOpenCl)
-				{
-					tilex = tiley = 1024;
-				}
-				else if (device.IsCuda)
-				{
-					tilex = tiley = 512;
-				}
-				else if (device.IsCpu)
-				{
-					tilex = tiley = 32;
-				}
+				tilex = tiley = 2048;
 			}
 
 			return new Size(tilex, tiley);

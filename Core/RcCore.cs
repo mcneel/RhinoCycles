@@ -254,7 +254,7 @@ namespace RhinoCyclesCore.Core
 		/// the device checked.
 		///
 		/// If it is not ready isDeviceReady will be set to false and the
-		/// actualDevice will be set to the default device (CPU).
+		/// actualDevice will be set to the default device (Cpu).
 		/// </summary>
 		/// <param name="device">Device to check for readiness</param>
 		/// <returns>Tuple with isDeviceReady set to true and device in actualDevice
@@ -263,12 +263,14 @@ namespace RhinoCyclesCore.Core
 		/// Otherwise isDeviceReady will be false and actualDevice Device.Default.
 		/// </returns>
 		public (bool isDeviceReady, Device actualDevice) IsDeviceReady(Device device) {
-			if(!device.IsOpenCl) return (true, device);
+			return (true, device);
+			/*
 			lock(accessOpenClDevicesReadiness) {
 				var devReadiness = openClDevicesReadiness.Find(d => d.Device.Equals(device));
 				if(devReadiness.IsReady) return (true, device);
 			}
 			return (false, Device.Default);
+			*/
 
 		}
 
@@ -287,6 +289,7 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		public void InitialiseOpenCl()
 		{
+#if OPENCLCRUFT
 			lock (accessOpenClDevicesReadiness)
 			{
 				foreach (var device in ccl.Device.Devices)
@@ -302,6 +305,7 @@ namespace RhinoCyclesCore.Core
 
 			checkOpenClCompilationCompletedThread = new Thread(CheckOpenClCompileFinished);
 			checkOpenClCompilationCompletedThread.Start();
+#endif
 		}
 
 		/// <summary>

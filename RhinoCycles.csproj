@@ -58,7 +58,6 @@
     <Compile Include="Commands\TestCleanupRhinoCyclesSettings.cs" />
     <Compile Include="Commands\TestSetNoShadows.cs" />
     <Compile Include="Commands\TestToggleIsClippingObject.cs" />
-    <Compile Include="Commands\TestCreateMultiOpenCl.cs" />
     <Compile Include="Commands\TestCreateMultiCuda.cs" />
     <Compile Include="Commands\TestAddUserData.cs" />
     <Compile Include="Commands\TestSetBumpDistance.cs" />

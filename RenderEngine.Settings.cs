@@ -52,7 +52,7 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
-		/// The amount of threads requested for raytracing (on CPU).
+		/// The amount of threads requested for raytracing (on Cpu).
 		/// </summary>
 		public int ThreadCount { get; set; } = 0;
 		private uint _oldIntegratorHash = 0;

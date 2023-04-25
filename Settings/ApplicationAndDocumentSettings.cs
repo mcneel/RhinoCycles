@@ -213,8 +213,6 @@ namespace RhinoCyclesCore.Settings
 
 		public bool RenderDeviceIsCuda => RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
 
-		public bool RenderDeviceIsOpenCl => RenderDevice.IsMultiOpenCl || RenderDevice.IsOpenCl;
-
 		public Device RenderDevice
 		{
 			get
@@ -319,8 +317,8 @@ namespace RhinoCyclesCore.Settings
 		}
 
 		/// <summary>
-		/// Set the amount of rendering threads to create. Especially useful for CPU rendering where
-		/// one doesn't want to use 100% CPU to retain responsiveness. By default set to
+		/// Set the amount of rendering threads to create. Especially useful for Cpu rendering where
+		/// one doesn't want to use 100% Cpu to retain responsiveness. By default set to
 		/// (logical) processor count - 2, at minimum 1.
 		/// </summary>
 		public virtual int Threads

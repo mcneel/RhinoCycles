@@ -183,7 +183,6 @@ namespace RhinoCyclesCore.Settings
 		private GridDevicePage m_tabpage_cpu;
 		private GridDevicePage m_tabpage_cuda;
 		private GridDevicePage m_tabpage_optix;
-		private GridDevicePage m_tabpage_opencl;
 		private ccl.Device m_currentDevice;
 		private Label m_lb_threadcount;
 		private Slider m_threadcount;
@@ -229,7 +228,6 @@ namespace RhinoCyclesCore.Settings
 			if (rd.IsCpu) m_tc.SelectedPage = m_tabpage_cpu;
 			if (rd.IsCuda || rd.IsMultiCuda) m_tc.SelectedPage = m_tabpage_cuda;
 			if (rd.IsOptix|| rd.IsMultiOptix) m_tc.SelectedPage = m_tabpage_optix;
-			if (rd.IsOpenCl || rd.IsMultiOpenCl) m_tc.SelectedPage = m_tabpage_opencl;
 			base.OnShown(e);
 		}
 
@@ -273,7 +271,6 @@ namespace RhinoCyclesCore.Settings
 			var rd = ActiveDevice(vud);
 			if (rd.IsCuda || rd.IsMultiCuda) m_tc.SelectedPage = m_tabpage_cuda;
 			else if (rd.IsOptix || rd.IsMultiOptix) m_tc.SelectedPage = m_tabpage_optix;
-			else if (rd.IsOpenCl || rd.IsMultiOpenCl) m_tc.SelectedPage = m_tabpage_opencl;
 			else m_tc.SelectedPage = m_tabpage_cpu;
 		}
 
@@ -286,10 +283,9 @@ namespace RhinoCyclesCore.Settings
 					SuspendLayout();
 					UnRegisterControlEvents();
 					ShowDeviceData();
-					SetupDeviceData(e.AllSettings, m_tabpage_cpu.Collection, ccl.DeviceType.CPU);
-					SetupDeviceData(e.AllSettings, m_tabpage_cuda.Collection, ccl.DeviceType.CUDA);
+					SetupDeviceData(e.AllSettings, m_tabpage_cpu.Collection, ccl.DeviceType.Cpu);
+					SetupDeviceData(e.AllSettings, m_tabpage_cuda.Collection, ccl.DeviceType.Cuda);
 					SetupDeviceData(e.AllSettings, m_tabpage_optix.Collection, ccl.DeviceType.Optix);
-					SetupDeviceData(e.AllSettings, m_tabpage_opencl.Collection, ccl.DeviceType.OpenCL);
 					ActivateDevicePage(e.AllSettings);
 					m_lb_threadcount.Visible = m_currentDevice.IsCpu;
 					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
@@ -309,14 +305,12 @@ namespace RhinoCyclesCore.Settings
 		{
 			m_tc = new TabControl();
 
-			m_tabpage_cpu = new GridDevicePage { Text = "CPU", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CPU.ico").WithSize(16, 16)  , ToolTip = Localization.LocalizeString("Show all the render devices in the CPU category.", 24)};
-			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CUDA.ico").WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the CUDA category.\nThese are the NVidia graphics and compute cards.", 25) };
-			m_tabpage_optix = new GridDevicePage { Text = "Optix", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CUDA.ico").WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the Optix category.\nThese are the NVidia graphics and compute cards from Maxwell architecture and newer.", 41) };
-			m_tabpage_opencl = new GridDevicePage { Text = "OpenCL", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.OpenCL.ico").WithSize(16 ,16), ToolTip = Localization.LocalizeString("Show all the render devices in the OpenCL category.\nThese include all devices that support the OpenCL technology, including CPUs and most graphics cards.", 26) };
+			m_tabpage_cpu = new GridDevicePage { Text = "Cpu", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.Cpu.ico").WithSize(16, 16)  , ToolTip = Localization.LocalizeString("Show all the render devices in the Cpu category.", 24)};
+			m_tabpage_cuda = new GridDevicePage { Text = "Cuda", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.Cuda.ico").WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the Cuda category.\nThese are the NVidia graphics and compute cards.", 25) };
+			m_tabpage_optix = new GridDevicePage { Text = "Optix", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.Cuda.ico").WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the Optix category.\nThese are the NVidia graphics and compute cards from Maxwell architecture and newer.", 41) };
 			m_tc.Pages.Add(m_tabpage_cpu);
 			m_tc.Pages.Add(m_tabpage_cuda);
 			m_tc.Pages.Add(m_tabpage_optix);
-			m_tc.Pages.Add(m_tabpage_opencl);
 
 			m_lb_curdev = new Label { Text = Localization.LocalizeString("Current render device:", 27) };
 			m_curdev = new Label { Text = "...", Wrap = WrapMode.Word };
@@ -331,7 +325,7 @@ namespace RhinoCyclesCore.Settings
 				Width = 130,
 				Orientation = Orientation.Horizontal
 			};
-			m_lb_threadcount = new Label { Text = Localization.LocalizeString("CPU Utilization", 13), ToolTip = Localization.LocalizeString("Utilization percentage of CPU to use when set as render device", 42) };
+			m_lb_threadcount = new Label { Text = Localization.LocalizeString("Cpu Utilization", 13), ToolTip = Localization.LocalizeString("Utilization percentage of Cpu to use when set as render device", 42) };
 			m_lb_threadcount_currentval = new Label { Text = "-" };
 
 			m_lb_gpusdisabled_message = new Label
@@ -374,8 +368,6 @@ namespace RhinoCyclesCore.Settings
 			m_tabpage_cuda.RegisterEventHandlers();
 			m_tabpage_optix.SelectionChanged += DeviceSelectionChanged;
 			m_tabpage_optix.RegisterEventHandlers();
-			m_tabpage_opencl.SelectionChanged += DeviceSelectionChanged;
-			m_tabpage_opencl.RegisterEventHandlers();
 			m_threadcount.ValueChanged += M_threadcount_ValueChanged;
 			m_btn_enablegpus.Click += m_btn_enablegpus_Clicked;
 		}
@@ -456,8 +448,6 @@ namespace RhinoCyclesCore.Settings
 			m_tabpage_cuda.UnregisterEventHandlers();
 			m_tabpage_optix.SelectionChanged -= DeviceSelectionChanged;
 			m_tabpage_optix.UnregisterEventHandlers();
-			m_tabpage_opencl.SelectionChanged -= DeviceSelectionChanged;
-			m_tabpage_opencl.UnregisterEventHandlers();
 			m_threadcount.ValueChanged -= M_threadcount_ValueChanged;
 			m_btn_enablegpus.Click -= m_btn_enablegpus_Clicked;
 		}
