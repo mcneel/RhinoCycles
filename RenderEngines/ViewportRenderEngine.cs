@@ -294,73 +294,13 @@ Please click the link below for more information.", 69));
 			RenderStarted?.Invoke(this, new RenderStartedEventArgs(!CancelRender));
 
 			Session.Start();
+
 			while (this != null && !IsStopped)
 			{
-				if (this != null && _needReset)
-				{
-					// do all change queue handling here
-					// also viewport resize handling
-					_needReset = false;
-				}
-				else
-				{
-					Thread.Sleep(_throttle);
-				}
+				PassRendered?.Invoke(this, new PassRenderedEventArgs(1, View));
+
+				Thread.Sleep(_throttle);
 			}
-
-			/*
-			while (this != null && !IsStopped)
-			{
-				if (this != null && _needReset)
-				{
-					_needReset = false;
-					
-					HandleIntegrator(eds);
-
-					Session.Scene.Integrator.NoShadows = eds.NoShadows;
-					Session.Scene.Integrator.TagForUpdate();
-
-					var size = CalculateNativeRenderSize();
-
-					// lets reset session
-					if (Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height) != 0)
-					{
-						HandleRenderCrash();
-						break;
-					}
-				}
-				if (this != null && !Flush && IsRendering)
-				{
-					var smpl = Session.Sample();
-					if (smpl == -13)
-					{
-						HandleRenderCrash();
-						break;
-					}
-					if (smpl > -1 && !Flush)
-					{
-						PassRendered?.Invoke(this, new PassRenderedEventArgs(smpl + 1, View));
-						Database.ResetChangeQueue();
-					}
-				}
-				_bvhUploaded = true;
-				if (this != null && !Locked && !CancelRender && !IsStopped && Flush)
-				{
-					if (_sessionCancelFlagged)
-					{
-						Session?.Cancel("Changes detected");
-					}
-					CheckFlushQueue();
-					Synchronize();
-					_needReset = true;
-					Flush = false;
-					_sessionCancelFlagged = false;
-				}
-				else
-				{
-					Thread.Sleep(_throttle);
-				}
-			}*/
 
 			if (this != null)
 			{

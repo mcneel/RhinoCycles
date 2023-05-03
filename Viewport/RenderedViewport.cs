@@ -323,7 +323,7 @@ namespace RhinoCycles.Viewport
 							_frameAvailable = true;
 							PutResultsIntoRenderWindowBuffer();
 						}
-						SetView(e.View);
+						//SetView(e.View);
 						_samples = e.Sample;
 
 						_lastTime = DateTime.UtcNow;
