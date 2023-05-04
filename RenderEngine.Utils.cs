@@ -115,6 +115,7 @@ namespace RhinoCyclesCore
 		protected static /*Scene*/ void CreateScene(Client client, Session session, Device render_device,
 			RenderEngine cycles_engine, IAllSettings engineSettings)
 		{
+#if LEGACY
 			#region set up scene parameters
 			BvhLayout bvhLayout = BvhLayout.Default;
 			if(render_device.IsOptix) {
@@ -195,6 +196,7 @@ namespace RhinoCyclesCore
 			#endregion
 
 			session.Scene = scene;
+#endif
 		}
 
 		static public float4 CreateFloat4(double x, double y, double z) { return new float4((float)x, (float)y, (float)z, 0.0f); }
@@ -242,16 +244,15 @@ namespace RhinoCyclesCore
 			return ang * (float)Math.PI / 180.0f;
 		}
 
-		public static Size TileSize(ccl.Device device)
+		public static int TileSize(ccl.Device device)
 		{
 			var tilex = RcCore.It.AllSettings.TileX;
-			var tiley = RcCore.It.AllSettings.TileY;
 			if (!RcCore.It.AllSettings.DebugNoOverrideTileSize)
 			{
-				tilex = tiley = 2048;
+				tilex = 2048;
 			}
 
-			return new Size(tilex, tiley);
+			return tilex;
 		}
 
 		/// <summary>

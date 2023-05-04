@@ -14,6 +14,8 @@ namespace RhinoCyclesOpenClCompiler {
 
 		static int Main(string[] args) {
 
+			return 0;
+#if NOLONGER
 			bool debugging = args.Contains("d");
 
 			if (debugging)
@@ -62,8 +64,7 @@ namespace RhinoCyclesOpenClCompiler {
 								{
 									Experimental = false,
 									Samples = 2,
-									TileSize = new Size(32, 32),
-									TileOrder = TileOrder.Center,
+									TileSize = 32,
 									Threads = 0,
 									ShadingSystem = ShadingSystem.SVM,
 									SkipLinearToSrgbConversion = true,
@@ -74,7 +75,7 @@ namespace RhinoCyclesOpenClCompiler {
 									PixelSize = 1,
 								};
 								SceneParameters sceneParameters = new SceneParameters(client, ShadingSystem.SVM, BvhType.Static, false, BvhLayout.Default, false);
-								Session session = new Session(client, sessionParameters);
+								Session session = new Session(sessionParameters);
 								Scene scene = new Scene(client, sceneParameters, session)
 								{
 									Integrator =
@@ -144,6 +145,7 @@ namespace RhinoCyclesOpenClCompiler {
 				}
 			}
 			return -1;
+#endif
 		} /* end of Main */
 	}
 }

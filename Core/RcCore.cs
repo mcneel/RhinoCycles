@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -152,7 +152,7 @@ namespace RhinoCyclesCore.Core
 #endif
 		}
 
-		ConcurrentDictionary<uint, Session> sessions = new ConcurrentDictionary<uint, Session>();
+		ConcurrentDictionary<IntPtr, Session> sessions = new ConcurrentDictionary<IntPtr, Session>();
 		/// <summary>
 		/// Shut down Cycles on all levels. Wait for all active session to complete.
 		/// </summary>
@@ -198,13 +198,12 @@ namespace RhinoCyclesCore.Core
 		/// Sessions created with this function have to be released/destroyed using
 		/// the function ReleaseSession
 		/// </summary>
-		/// <param name="client"></param>
 		/// <param name="sessionParameters"></param>
 		/// <returns></returns>
-		public Session CreateSession(Client client, SessionParameters sessionParameters) {
+		public Session CreateSession(SessionParameters sessionParameters) {
 			lock (sessionsLock)
 			{
-				var session = new Session(client, sessionParameters);
+				var session = new Session(sessionParameters);
 
 				if (sessions.ContainsKey(session.Id))
 				{

@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,7 +35,6 @@ namespace RhinoCyclesCore.RenderEngines
 		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
 		public PreviewRenderEngine(CreatePreviewEventArgs createPreviewEventArgs, Guid pluginId) : base (pluginId, createPreviewEventArgs, false)
 		{
-			Client = new Client();
 			State = State.Rendering;
 
 #region create callbacks for Cycles
@@ -48,11 +47,11 @@ namespace RhinoCyclesCore.RenderEngines
 #endregion
 		}
 
-		public void PreviewRendererUpdateRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
+		public void PreviewRendererUpdateRenderTileCallback(IntPtr sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
 		}
 
-		public void PreviewRendererWriteRenderTileCallback(uint sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
+		public void PreviewRendererWriteRenderTileCallback(IntPtr sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
 			//if (IsStopped) return;
 
@@ -86,8 +85,6 @@ namespace RhinoCyclesCore.RenderEngines
 			var cyclesEngine = (PreviewRenderEngine)oPipe;
 			cyclesEngine.Success = false;
 
-			var client = cyclesEngine.Client;
-
 			var size = cyclesEngine.RenderDimension;
 			cyclesEngine.PreviewSamples = Math.Max(1, RcCore.It.AllSettings.PreviewSamples);
 			cyclesEngine.MaxSamples = cyclesEngine.PreviewSamples;
@@ -108,12 +105,11 @@ namespace RhinoCyclesCore.RenderEngines
 			var pixelSize = (int)(RcCore.It.AllSettings.DpiScale);
 
 			#region set up session parameters
-			var sessionParams = new SessionParameters(client, renderDevice)
+			var sessionParams = new SessionParameters(renderDevice)
 			{
 				Experimental = false,
 				Samples = cyclesEngine.MaxSamples,
 				TileSize = gpusize,
-				TileOrder = TileOrder.Center,
 				Threads = threads,
 				ShadingSystem = ShadingSystem.SVM,
 				SkipLinearToSrgbConversion = true,
@@ -128,10 +124,10 @@ namespace RhinoCyclesCore.RenderEngines
 			if (cyclesEngine.CancelRender) return;
 
 #region create session for scene
-			cyclesEngine.Session = RcCore.It.CreateSession(client, sessionParams);
+			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
 #endregion
 
-			CreateScene(client, cyclesEngine.Session, renderDevice, cyclesEngine, RcCore.It.AllSettings);
+			// TODO: XXXX fix up scene creation CreateScene(cyclesEngine.Session, renderDevice, cyclesEngine, RcCore.It.AllSettings);
 
 			cyclesEngine.Session.AddPass(PassType.Combined);
 
@@ -203,7 +199,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			Database?.Dispose();
 			Database = null;
-			Client?.Dispose();
+			// TODO: XXXX session disposal Session?.Dispose();
 			_disposed = true;
 		}
 

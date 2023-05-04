@@ -1,4 +1,4 @@
-﻿namespace RhinoCyclesCore.Settings
+namespace RhinoCyclesCore.Settings
 {
 	public static class SettingNames
 	{

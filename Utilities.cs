@@ -1,4 +1,4 @@
-﻿using ccl;
+using ccl;
 using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;

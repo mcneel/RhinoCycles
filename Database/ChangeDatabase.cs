@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -171,7 +171,7 @@ namespace RhinoCyclesCore.Database
 					if (newShader != null)
 					{
 						cob.Shader = _shaderDatabase.GetShaderIdForMatId(obshad.NewShaderHash);
-						cob.Shader = this._renderEngine.Client.Scene.GetShaderSceneId(newShader);
+						cob.Shader = this._renderEngine.Session.Scene.GetShaderSceneId(newShader);
 						newShader.Tag();
 					}
 					oldShader?.Tag(false); // tag old shader to be no longer used (on this object)
@@ -309,12 +309,13 @@ namespace RhinoCyclesCore.Database
 					shid = 0;
 				}
 
-				var shader = _renderEngine.Client.Scene.ShaderFromSceneId(shid);
+				// TODO: XXXX var shader = _renderEngine.Session.Scene.ShaderFromSceneId(shid);
+				var shader = new ccl.Shader(Shader.ShaderType.Material);
 
 				// creat a new mesh to upload mesh data to
 				if (newme)
 				{
-					me = new CclMesh(_renderEngine.Client, shader);
+					me = new CclMesh(_renderEngine.Session, shader);
 				}
 
 				me.Resize((uint)cyclesMesh.Verts.Length/3, (uint)cyclesMesh.Faces.Length/3);
@@ -514,11 +515,11 @@ namespace RhinoCyclesCore.Database
 		{
 			if (HasClippingPlaneChanges)
 			{
-				_renderEngine.Client.Scene.ClearClippingPlanes();
+				_renderEngine.Session.Scene.ClearClippingPlanes();
 				foreach (var cp in ClippingPlanes)
 				{
 					var equation = new float4(cp.Value.GetPlaneEquation());
-					var cclcp = new CclClippingPlane(_renderEngine.Client, equation);
+					var cclcp = new CclClippingPlane(_renderEngine.Session, equation);
 				}
 				HasClippingPlaneChanges = false;
 			}
@@ -537,7 +538,7 @@ namespace RhinoCyclesCore.Database
 				UploadCamera(view);
 			}
 			var fb = _cameraDatabase.GetBlur();
-			UploadFocalBlur(fb);
+			// TODO: XXXX UploadFocalBlur(fb);
 		}
 
 		/// <summary>
@@ -1330,7 +1331,7 @@ namespace RhinoCyclesCore.Database
 				_shaderDatabase.RecordRhCclShaderRelation(shader.Id, sh);
 				_shaderDatabase.Add(shader, sh);
 				// add the new shader to scene
-				var scshid = _renderEngine.Client.Scene.AddShader(sh);
+				var scshid = _renderEngine.Session.Scene.AddShader(sh);
 				_shaderDatabase.RecordCclShaderSceneId(shader.Id, scshid);
 
 				sh.Tag();
@@ -1523,13 +1524,13 @@ namespace RhinoCyclesCore.Database
 				var lgsh = l.Type!=LightType.Background ? _renderEngine.CreateSimpleEmissionShader(l) : _renderEngine.Session.Scene.Background.Shader;
 				if (l.Type != LightType.Background)
 				{
-					_renderEngine.Client.Scene.AddShader(lgsh);
+					_renderEngine.Session.Scene.AddShader(lgsh);
 					_shaderDatabase.Add(l, lgsh);
 				}
 
 				if (_renderEngine.CancelRender) return;
 
-				var light = new CclLight(_renderEngine.Client, _renderEngine.Client.Scene, lgsh)
+				var light = new CclLight(_renderEngine.Session, _renderEngine.Session.Scene, lgsh)
 				{
 					Type = l.Type,
 					Size = l.Size,
@@ -1874,7 +1875,7 @@ namespace RhinoCyclesCore.Database
 				// new object, so lets create it and record necessary stuff about it
 				if (newcob)
 				{
-					cob = new CclObject(_renderEngine.Client);
+					cob = new CclObject(_renderEngine.Session);
 					_objectDatabase.RecordObjectRelation(ob.obid, cob);
 					_objectDatabase.RecordObjectIdMeshIdRelation(ob.obid, ob.meshid);
 				}

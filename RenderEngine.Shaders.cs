@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ namespace RhinoCyclesCore
 						sh = CreateCyclesShaderFromXml(shader.Front);
 						break;
 					case ShaderBody.CyclesMaterial.CustomRenderMaterial:
-						sh = new CclShader(Client, CclShader.ShaderType.Material);
+						sh = new CclShader(Session, CclShader.ShaderType.Material);
 						shader.Front.Crm.GetShader(sh, true);
 						break;
 					default:
@@ -68,7 +68,7 @@ namespace RhinoCyclesCore
 						sh = RecreateCyclesShaderFromXml(shader.Front, existing);
 						break;
 					case ShaderBody.CyclesMaterial.CustomRenderMaterial:
-						sh = new CclShader(Client, CclShader.ShaderType.Material);
+						sh = new CclShader(Session, CclShader.ShaderType.Material);
 						shader.Front.Crm.GetShader(sh, true);
 						break;
 					default:
@@ -82,7 +82,7 @@ namespace RhinoCyclesCore
 
 		internal CclShader CreateCyclesShaderFromXml(ShaderBody shader)
 		{
-			var sh = new CclShader(Client, CclShader.ShaderType.Material)
+			var sh = new CclShader(Session, CclShader.ShaderType.Material)
 			{
 				UseMis = true,
 				UseTransparentShadow = true,
@@ -142,14 +142,14 @@ namespace RhinoCyclesCore
 
 		internal CclShader CreateCyclesShaderFromRhinoV6BasicMat(CyclesShader shader)
 		{
-			var v6 = RhinoShader.CreateRhinoMaterialShader(Client, shader);
+			var v6 = RhinoShader.CreateRhinoMaterialShader(Session, shader);
 
 			return v6.GetShader();
 		}
 
 		internal CclShader RecreateCyclesShaderFromRhinoV6BasicMat(CyclesShader shader, CclShader existing)
 		{
-			var v6 = RhinoShader.RecreateRhinoMaterialShader(Client, shader, existing);
+			var v6 = RhinoShader.RecreateRhinoMaterialShader(Session, shader, existing);
 
 			return v6.GetShader();
 		}
@@ -157,20 +157,20 @@ namespace RhinoCyclesCore
 		internal void RecreateBackgroundShader(CyclesBackground background)
 		{
 			var bg = Session.Scene.Background.Shader;
-			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Client, background, bg);
+			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Session, background, bg);
 			Session.Scene.Background.Shader = rhinobg.GetShader();
 		}
 
 		internal CclShader CreateSimpleEmissionShader(CyclesLight light)
 		{
-			var rhinolight = RhinoShader.CreateRhinoLightShader(Client, light, null);
+			var rhinolight = RhinoShader.CreateRhinoLightShader(Session, light, null);
 
 			return rhinolight.GetShader();
 		}
 
 		internal CclShader ReCreateSimpleEmissionShader(CyclesLight light, CclShader emission_shader)
 		{
-			var rhinolight = RhinoShader.CreateRhinoLightShader(Client, light, emission_shader);
+			var rhinolight = RhinoShader.CreateRhinoLightShader(Session, light, emission_shader);
 
 			return rhinolight.GetShader();
 		}

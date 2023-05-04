@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,19 +28,19 @@ namespace RhinoCyclesCore.Shaders
 {
 	public class RhinoFullNxt : RhinoShader
 	{
-		public RhinoFullNxt(Client client, CyclesShader intermediate) : this(client, intermediate, null, intermediate.Front.Name, true)
+		public RhinoFullNxt(Session client, CyclesShader intermediate) : this(client, intermediate, null, intermediate.Front.Name, true)
 		{
 		}
 
-		public RhinoFullNxt(Client client, CyclesShader intermediate, Shader existing, bool recreate) : this(client, intermediate, existing, intermediate.Front.Name, recreate)
+		public RhinoFullNxt(Session client, CyclesShader intermediate, Shader existing, bool recreate) : this(client, intermediate, existing, intermediate.Front.Name, recreate)
 		{
 		}
 
-		public RhinoFullNxt(Client client, CyclesShader intermediate, Shader existing) : this(client, intermediate, existing, intermediate.Front.Name, true)
+		public RhinoFullNxt(Session client, CyclesShader intermediate, Shader existing) : this(client, intermediate, existing, intermediate.Front.Name, true)
 		{
 		}
 
-		public RhinoFullNxt(Client client, CyclesShader intermediate, Shader existing, string name, bool recreate) : base(client, intermediate, name, existing, recreate)
+		public RhinoFullNxt(Session client, CyclesShader intermediate, Shader existing, string name, bool recreate) : base(client, intermediate, name, existing, recreate)
 		{
 		}
 

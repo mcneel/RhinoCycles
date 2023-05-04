@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,10 +48,7 @@ namespace RhinoCyclesCore
 
 		public RenderWindow RenderWindow { get; set; }
 
-		/// <summary>
-		/// Reference to the client representation of this render engine instance.
-		/// </summary>
-		public Client Client { get; set; }
+		public Session Session { get; set; } = null;
 
 		/// <summary>
 		/// True when State.Rendering
@@ -77,11 +74,6 @@ namespace RhinoCyclesCore
 		/// Current render engine state.
 		/// </summary>
 		public State State { get; set; }
-
-		/// <summary>
-		/// Reference to the session of this render engine instance.
-		/// </summary>
-		public Session Session = null;
 
 		/// <summary>
 		/// Reference to the bitmap we're rendering into.
@@ -231,7 +223,7 @@ namespace RhinoCyclesCore
 			return Database.IsPreview;
 		}
 
-		public void TestCancel(uint sid)
+		public void TestCancel(IntPtr sid)
 		{
 			if (IsStopped) return;
 
@@ -275,17 +267,17 @@ namespace RhinoCyclesCore
 		/// Handle status updates
 		/// </summary>
 		/// <param name="sid"></param>
-		public void UpdateCallback(uint sid)
+		public void UpdateCallback(IntPtr sid)
 		{
 			if (IsStopped) return;
 
-			var status = CSycles.progress_get_status(Client.Id, sid);
-			var substatus = CSycles.progress_get_substatus(Client.Id, sid);
-			RenderedSamples = CSycles.progress_get_sample(Client.Id, sid);
+			var status = CSycles.progress_get_status(sid);
+			var substatus = CSycles.progress_get_substatus(sid);
+			RenderedSamples = CSycles.progress_get_sample(sid);
 			float progress;
 			double total_time, sample_time;
-			CSycles.progress_get_time(Client.Id, sid, out total_time, out sample_time);
-			CSycles.progress_get_progress(Client.Id, sid, out progress);
+			CSycles.progress_get_time(sid, out total_time, out sample_time);
+			CSycles.progress_get_progress(sid, out progress);
 			int hr = ((int)total_time) / (60 * 60);
 			int min = (((int)total_time) / 60) % 60;
 			int sec = ((int)total_time) % 60;

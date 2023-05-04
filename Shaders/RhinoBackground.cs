@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,11 +24,11 @@ namespace RhinoCyclesCore.Shaders
 	public class RhinoBackground : RhinoShader
 	{
 
-		public RhinoBackground(Client client, CyclesBackground intermediate, Shader existing) : this(client, intermediate, existing, "background", true)
+		public RhinoBackground(Session client, CyclesBackground intermediate, Shader existing) : this(client, intermediate, existing, "background", true)
 		{
 		}
 
-		public RhinoBackground(Client client, CyclesBackground intermediate, Shader existing, string name, bool recreate) : base(client, intermediate, name, existing, recreate)
+		public RhinoBackground(Session client, CyclesBackground intermediate, Shader existing, string name, bool recreate) : base(client, intermediate, name, existing, recreate)
 		{
 		}
 

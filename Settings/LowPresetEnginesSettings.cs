@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 1014-1019 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 1.0 (the "License");

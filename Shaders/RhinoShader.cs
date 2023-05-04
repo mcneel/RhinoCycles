@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,7 @@ namespace RhinoCyclesCore.Shaders
 		protected CyclesBackground m_original_background;
 		protected CyclesLight m_original_light;
 
-		protected Client m_client;
+		protected Session m_client;
 
 		private void InitShader(string name, Shader existing, Shader.ShaderType shaderType, bool recreate)
 		{
@@ -48,7 +48,7 @@ namespace RhinoCyclesCore.Shaders
 			}
 
 		}
-		protected RhinoShader(Client client, CyclesShader intermediate, string name, Shader existing, bool recreate)
+		protected RhinoShader(Session client, CyclesShader intermediate, string name, Shader existing, bool recreate)
 		{
 			m_client = client;
 			m_original = intermediate;
@@ -58,14 +58,14 @@ namespace RhinoCyclesCore.Shaders
 
 		}
 
-		protected RhinoShader(Client client, CyclesBackground intermediateBackground, string name, Shader existing, bool recreate)
+		protected RhinoShader(Session client, CyclesBackground intermediateBackground, string name, Shader existing, bool recreate)
 		{
 			m_client = client;
 			m_original_background = intermediateBackground;
 			InitShader(name, existing, Shader.ShaderType.World, recreate);
 		}
 
-		protected RhinoShader(Client client, CyclesLight intermediateLight, string name, Shader existing, bool recreate)
+		protected RhinoShader(Session client, CyclesLight intermediateLight, string name, Shader existing, bool recreate)
 		{
 			m_client = client;
 			m_original_light = intermediateLight;
@@ -77,27 +77,27 @@ namespace RhinoCyclesCore.Shaders
 			m_shader?.Recreate();
 		}
 
-		public static RhinoShader CreateRhinoMaterialShader(Client client, CyclesShader intermediate)
+		public static RhinoShader CreateRhinoMaterialShader(Session client, CyclesShader intermediate)
 		{
 			RhinoShader theShader = new RhinoFullNxt(client, intermediate);
 
 			return theShader;
 		}
 
-		public static RhinoShader RecreateRhinoMaterialShader(Client client, CyclesShader intermediate, Shader existing)
+		public static RhinoShader RecreateRhinoMaterialShader(Session client, CyclesShader intermediate, Shader existing)
 		{
 			RhinoShader theShader = new RhinoFullNxt(client, intermediate, existing);
 
 			return theShader;
 		}
 
-		public static RhinoShader CreateRhinoBackgroundShader(Client client, CyclesBackground intermediateBackground, Shader existingShader)
+		public static RhinoShader CreateRhinoBackgroundShader(Session client, CyclesBackground intermediateBackground, Shader existingShader)
 		{
 			RhinoShader theShader = new RhinoBackground(client, intermediateBackground, existingShader);
 			return theShader;
 		}
 
-		public static RhinoShader CreateRhinoLightShader(Client client, CyclesLight intermediateLight, Shader existingShader)
+		public static RhinoShader CreateRhinoLightShader(Session client, CyclesLight intermediateLight, Shader existingShader)
 		{
 			RhinoShader shader = new RhinoLight(client, intermediateLight, existingShader);
 			return shader;

@@ -34,7 +34,6 @@ namespace RhinoCyclesCore.RenderEngines
 	{
 		public ViewportRenderEngine(uint docRuntimeSerialNumber, Guid pluginId, ViewInfo view, Rhino.Display.DisplayPipelineAttributes attr) : base(pluginId, docRuntimeSerialNumber, view, null, attr, true)
 		{
-			Client = new Client();
 			State = State.Rendering;
 
 			Database.ViewChanged += Database_ViewChanged;
@@ -50,7 +49,7 @@ namespace RhinoCyclesCore.RenderEngines
 			m_logger_callback = ViewportLoggerCallback;
 
 			CSycles.log_to_stdout(false);
-			//CSycles.set_logger(Client.Id, m_logger_callback);
+			//CSycles.set_logger(m_logger_callback);
 #endregion
 
 		}
@@ -81,7 +80,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			Database?.Dispose();
 			Database = null;
-			Client?.Dispose();
+			// TODO: XXXX session disposal Client?.Dispose();
 			base.Dispose(isDisposing);
 			_disposed = true;
 		}
@@ -183,7 +182,6 @@ Please click the link below for more information.", 69));
 			var vi = new ViewInfo(doc.Views.ActiveView.ActiveViewport);
 			var vpi = vi.Viewport;
 
-			var client = Client;
 			var rw = RenderWindow;
 
 			if (rw == null) return;
@@ -231,12 +229,11 @@ Please click the link below for more information.", 69));
 
 			#region set up session parameters
 			ThreadCount = (RenderDevice.IsCpu ? eds.Threads : 0);
-			var sessionParams = new SessionParameters(client, RenderDevice)
+			var sessionParams = new SessionParameters(RenderDevice)
 			{
 				Experimental = false,
 				Samples = (int)MaxSamples,
 				TileSize = TileSize(RenderDevice),
-				TileOrder = TileOrder.Center,
 				Threads = (uint)ThreadCount,
 				ShadingSystem = ShadingSystem.SVM,
 				SkipLinearToSrgbConversion = true,
@@ -252,7 +249,7 @@ Please click the link below for more information.", 69));
 			if (this == null || CancelRender) return;
 
 			#region create session for scene
-			Session = RcCore.It.CreateSession(client, sessionParams);
+			Session = RcCore.It.CreateSession( sessionParams);
 			#endregion
 
 			//CreateScene(client, Session, RenderDevice, this, eds);

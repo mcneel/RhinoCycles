@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,7 +66,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// viewport changes
-			// TODO: XXXX Database.UploadCameraChanges();
+			Database.UploadCameraChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.5f, "Viewport uploaded"));
 
 			if (CancelRender) return false;

@@ -1,4 +1,4 @@
-﻿/**
+/**
 Copyright 2014-2021 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,7 +55,7 @@ namespace RhinoCyclesCore.Shaders
 		/// </summary>
 		/// <param name="client"></param>
 		/// <param name="intermediate"></param>
-		public RhinoNotYetImplemented(Client client, CyclesShader intermediate) : this(client, intermediate, intermediate.Front.Name)
+		public RhinoNotYetImplemented(Session client, CyclesShader intermediate) : this(client, intermediate, intermediate.Front.Name)
 		{
 		}
 
@@ -65,7 +65,7 @@ namespace RhinoCyclesCore.Shaders
 		/// <param name="client"></param>
 		/// <param name="intermediate"></param>
 		/// <param name="name"></param>
-		public RhinoNotYetImplemented(Client client, CyclesShader intermediate, string name) : base(client, intermediate, name, null, true)
+		public RhinoNotYetImplemented(Session client, CyclesShader intermediate, string name) : base(client, intermediate, name, null, true)
 		{
 		}
 

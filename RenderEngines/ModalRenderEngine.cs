@@ -47,7 +47,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 		private void ModalRenderEngineCommonConstruct()
 		{
-			Client = new Client();
+			//Client = new Client();
 			State = State.Rendering;
 
 			Database.ViewChanged += MRE_Database_ViewChanged;
@@ -100,7 +100,6 @@ namespace RhinoCyclesCore.RenderEngines
 					.Select(chan => PassTypeForStandardChannel(chan))
 					.ToList();
 
-			var client = cyclesEngine.Client;
 			var size = cyclesEngine.RenderDimension;
 
 			IAllSettings engineSettings = eds;
@@ -144,7 +143,7 @@ namespace RhinoCyclesCore.RenderEngines
 			#endregion
 
 			#region set up session parameters
-			var sessionParams = new SessionParameters(client, RenderDevice)
+			var sessionParams = new SessionParameters(RenderDevice)
 			{
 				Experimental = false,
 				Samples = MaxSamples,
@@ -164,10 +163,10 @@ namespace RhinoCyclesCore.RenderEngines
 			if (cyclesEngine.CancelRender) return;
 
 			#region create session for scene
-			cyclesEngine.Session = RcCore.It.CreateSession(client, sessionParams);
+			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
 			#endregion
 
-			CreateScene(client, Session, RenderDevice, cyclesEngine, engineSettings);
+			// TODO: XXXX fix up scene creation CreateScene(client, Session, RenderDevice, cyclesEngine, engineSettings);
 			HandleIntegrator(eds);
 
 			// Set up passes
