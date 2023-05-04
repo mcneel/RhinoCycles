@@ -263,6 +263,9 @@ Please click the link below for more information.", 69));
 			// register callbacks before starting any rendering
 			SetCallbacks();
 
+			// TODO: XXXX figure out better way for session reset. For now put here right before rendering
+			Session.Reset(FullSize.Width, FullSize.Height, 100, 0, 0, FullSize.Width, FullSize.Height);
+
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
@@ -291,6 +294,8 @@ Please click the link below for more information.", 69));
 			RenderStarted?.Invoke(this, new RenderStartedEventArgs(!CancelRender));
 
 			Session.Start();
+
+			Thread.Sleep(250);
 
 			while (this != null && !IsStopped)
 			{
