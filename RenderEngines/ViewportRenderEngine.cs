@@ -57,12 +57,10 @@ namespace RhinoCyclesCore.RenderEngines
 		public IRenderedViewportCallbacks RenderedViewport { get; set; }
 
 		private bool _bvhUploaded = false;
-		private bool _sessionCancelFlagged = false;
 		private void ViewportRenderEngine_BeginChangesNotified(object sender, EventArgs e)
 		{
 			if (IsUploading || !_bvhUploaded)
 			{
-				_sessionCancelFlagged = true;
 				return;
 			}
 			Session?.Cancel("Begin changes notification");

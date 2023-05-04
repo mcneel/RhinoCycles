@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -323,16 +324,21 @@ namespace RhinoCyclesCore
 			{
 				IntPtr pixel_buffer = IntPtr.Zero;
 				var channel = StandardChannelForPassType(pass);
-				Session.GetPixelBuffer(pass, ref pixel_buffer);
+
+				//Stopwatch stopwatch = Stopwatch.StartNew();
+
+				Session.RetainPixelBuffer(pass, ref pixel_buffer);
 				if (pixel_buffer != IntPtr.Zero)
 				{
 					using (var rgba = RenderWindow.OpenChannel(channel))
 					{
-						Rhino.Render.PixelBuffer pb = new Rhino.Render.PixelBuffer(pixel_buffer);
+						PixelBuffer pb = new PixelBuffer(pixel_buffer);
 						rgba?.SetValues(rect, rect.Size, pb);
 					}
 				}
+				Session.ReleasePixelBuffer(pass);
 
+				//RhinoApp.WriteLine("Time to write pixels to Render Window Channel: {0} ms.", stopwatch.ElapsedMilliseconds);
 			}
 		}
 
