@@ -293,11 +293,22 @@ Please click the link below for more information.", 69));
 
 			Session.Start();
 
-			Thread.Sleep(250);
+			bool renderingDone = false;
 
 			while (this != null && !IsStopped)
 			{
-				PassRendered?.Invoke(this, new PassRenderedEventArgs(1, View));
+				if(!Finished) UpdateCallback(Session.Id);
+				if(!Finished && RenderedSamples < MaxSamples)
+				{
+					PassRendered?.Invoke(this, new PassRenderedEventArgs(RenderedSamples, View));
+				}
+				if(!renderingDone && Finished)
+				{
+					PassRendered?.Invoke(this, new PassRenderedEventArgs(RenderedSamples, View));
+					renderingDone = true;
+
+				}
+
 
 				Thread.Sleep(_throttle);
 			}

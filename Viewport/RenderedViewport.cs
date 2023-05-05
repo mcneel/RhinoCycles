@@ -312,10 +312,9 @@ namespace RhinoCycles.Viewport
 
 		void CyclesPassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
+			_samples = e.Sample;
 			if (_cycles?.IsRendering ?? false)
 			{
-				//lock (timerLock)
-				{
 					if (!IsSynchronizing)
 					{
 						if (e.Sample>-1)
@@ -330,7 +329,6 @@ namespace RhinoCycles.Viewport
 
 						if (!_cycles.CancelRender) SignalRedraw();
 					}
-				}
 			}
 		}
 

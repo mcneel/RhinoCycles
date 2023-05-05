@@ -88,7 +88,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public bool CancelRender { get; set; }
 
-		public int RenderedSamples;
+		public int RenderedSamples { get; set; }
+		public bool Finished { get; set; } = false;
 
 		public string TimeString;
 
@@ -241,16 +242,18 @@ namespace RhinoCyclesCore
 
 		public class StatusTextEventArgs
 		{
-			public StatusTextEventArgs(string s, float progress, int samples)
+			public StatusTextEventArgs(string s, float progress, int samples, bool finished)
 			{
 				StatusText = s;
 				Progress = progress;
 				Samples = samples;
+				Finished = finished;
 			}
 
 			public string StatusText { get; private set; }
 			public float Progress { get; private set; }
 			public int Samples { get; private set; }
+			public bool Finished { get; private set; }
 		}
 
 		public event EventHandler<StatusTextEventArgs> StatusTextUpdated;
@@ -286,6 +289,10 @@ namespace RhinoCyclesCore
 
 			if (!substatus.Equals(string.Empty)) status = status + ": " + substatus;
 
+			bool finished = status.Contains("Finished");
+			if (finished) RenderedSamples = MaxSamples;
+			Finished = finished;
+
 			TimeString = $"{hr}h {min}m {sec}.{hun}s";
 
 			status = $"{status} {TimeString}";
@@ -295,8 +302,7 @@ namespace RhinoCyclesCore
 
 			if (MaxSamples == int.MaxValue) progress = -1.0f;
 			RenderWindow?.SetProgress(status, progress);
-
-			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples>0 ? (RenderedSamples+1) : RenderedSamples));
+			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples, finished));
 		}
 
 		/// <summary>
@@ -414,7 +420,7 @@ namespace RhinoCyclesCore
 		/// <param name="progress"></param>
 		public void SetProgress(RenderWindow rw, string msg, float progress)
 		{
-			TriggerStatusTextUpdated(new StatusTextEventArgs(msg, progress, progress < 0 ? -1 : 0));
+			TriggerStatusTextUpdated(new StatusTextEventArgs(msg, progress, progress < 0 ? -1 : 0, false));
 			rw?.SetProgress(msg, progress);
 		}
 
