@@ -281,6 +281,12 @@ Please click the link below for more information.", 69));
 			}
 			*/
 
+			Database.Flush();
+			
+			UploadData();
+
+			Database.ResetChangeQueue();
+
 			if (this != null && !CancelRender)
 			{
 				Session.PrepareRun();

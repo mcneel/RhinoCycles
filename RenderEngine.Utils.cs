@@ -105,14 +105,14 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
-		/// create a ccl.Scene
+		/// create a ccl.Session
 		/// </summary>
 		/// <param name="client">Client to create scene for</param>
 		/// <param name="session">Session this scene is created for</param>
 		/// <param name="render_device">Render device this scene is created for</param>
 		/// <param name="cycles_engine">Engine instance to create for</param>
 		/// <returns></returns>
-		protected static /*Scene*/ void CreateScene(Client client, Session session, Device render_device,
+		protected static /*Session*/ void CreateScene(Client client, Session session, Device render_device,
 			RenderEngine cycles_engine, IAllSettings engineSettings)
 		{
 #if LEGACY
