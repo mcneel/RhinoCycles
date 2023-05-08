@@ -230,6 +230,7 @@ namespace RhinoCyclesCore.Core
 					Session tempSession = sessions[session.Id];
 					if (tempSession != null)
 					{
+						tempSession.Cancel("done");
 						tempSession.EndRun();
 						tempSession.Destroy();
 						while (!sessions.TryRemove(session.Id, out tempSession))
