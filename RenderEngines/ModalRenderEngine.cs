@@ -166,7 +166,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
 			#endregion
 
-			// TODO: XXXX fix up scene creation CreateScene(client, Session, RenderDevice, cyclesEngine, engineSettings);
+			// TODO: XXXX fix up scene creation InitializeSceneSettings(client, Session, RenderDevice, cyclesEngine, engineSettings);
 			HandleIntegrator(eds);
 
 			// Set up passes

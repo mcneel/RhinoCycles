@@ -112,7 +112,7 @@ namespace RhinoCyclesCore
 		/// <param name="render_device">Render device this scene is created for</param>
 		/// <param name="cycles_engine">Engine instance to create for</param>
 		/// <returns></returns>
-		protected static /*Session*/ void CreateScene(Client client, Session session, Device render_device,
+		protected static /*Session*/ void InitializeSceneSettings(Session session, Device render_device,
 			RenderEngine cycles_engine, IAllSettings engineSettings)
 		{
 #if LEGACY
@@ -130,42 +130,9 @@ namespace RhinoCyclesCore
 			#region create scene
 			var scene = new Scene(client, scene_params, session)
 			{
-				#region integrator settings
-				Integrator =
-				{
-					MaxBounce = engineSettings.MaxBounce,
-					TransparentMaxBounce = engineSettings.TransparentMaxBounce,
-					MaxDiffuseBounce = engineSettings.MaxDiffuseBounce,
-					MaxGlossyBounce = engineSettings.MaxGlossyBounce,
-					MaxTransmissionBounce = engineSettings.MaxTransmissionBounce,
-					MaxVolumeBounce = engineSettings.MaxVolumeBounce,
-					NoCaustics = engineSettings.NoCaustics,
-					DiffuseSamples = engineSettings.DiffuseSamples,
-					GlossySamples = engineSettings.GlossySamples,
-					TransmissionSamples = engineSettings.TransmissionSamples,
-					AoSamples = engineSettings.AoSamples,
-					MeshLightSamples = engineSettings.MeshLightSamples,
-					SubsurfaceSamples = engineSettings.SubsurfaceSamples,
-					VolumeSamples = engineSettings.VolumeSamples,
-					AaSamples = engineSettings.AaSamples,
-					FilterGlossy = engineSettings.FilterGlossy,
-					IntegratorMethod = engineSettings.IntegratorMethod,
-					SampleAllLightsDirect = engineSettings.SampleAllLights,
-					SampleAllLightsIndirect = engineSettings.SampleAllLightsIndirect,
-					SampleClampDirect = engineSettings.SampleClampDirect,
-					SampleClampIndirect = engineSettings.SampleClampIndirect,
-					LightSamplingThreshold =  engineSettings.LightSamplingThreshold,
-					SamplingPattern = SamplingPattern.Sobol,
-					Seed = engineSettings.Seed,
-					NoShadows = engineSettings.NoShadows,
-				}
-				#endregion
 			};
 			#endregion
 
-			scene.Film.SetFilter(FilterType.Gaussian, 1.5f);
-			scene.Film.Exposure = 1.0f;
-			scene.Film.Update();
 
 
 			#region background shader
@@ -197,6 +164,36 @@ namespace RhinoCyclesCore
 
 			session.Scene = scene;
 #endif
+			session.Scene.Film.SetFilter(FilterType.Gaussian, 1.5f);
+			session.Scene.Film.Exposure = 1.0f;
+			session.Scene.Film.Update();
+			#region integrator settings
+			session.Scene.Integrator.MaxBounce = engineSettings.MaxBounce;
+			session.Scene.Integrator.TransparentMaxBounce = engineSettings.TransparentMaxBounce;
+			session.Scene.Integrator.MaxDiffuseBounce = engineSettings.MaxDiffuseBounce;
+			session.Scene.Integrator.MaxGlossyBounce = engineSettings.MaxGlossyBounce;
+			session.Scene.Integrator.MaxTransmissionBounce = engineSettings.MaxTransmissionBounce;
+			session.Scene.Integrator.MaxVolumeBounce = engineSettings.MaxVolumeBounce;
+			session.Scene.Integrator.NoCaustics = engineSettings.NoCaustics;
+			session.Scene.Integrator.DiffuseSamples = engineSettings.DiffuseSamples;
+			session.Scene.Integrator.GlossySamples = engineSettings.GlossySamples;
+			session.Scene.Integrator.TransmissionSamples = engineSettings.TransmissionSamples;
+			session.Scene.Integrator.AoSamples = engineSettings.AoSamples;
+			session.Scene.Integrator.MeshLightSamples = engineSettings.MeshLightSamples;
+			session.Scene.Integrator.SubsurfaceSamples = engineSettings.SubsurfaceSamples;
+			session.Scene.Integrator.VolumeSamples = engineSettings.VolumeSamples;
+			session.Scene.Integrator.AaSamples = engineSettings.AaSamples;
+			session.Scene.Integrator.FilterGlossy = engineSettings.FilterGlossy;
+			session.Scene.Integrator.IntegratorMethod = engineSettings.IntegratorMethod;
+			session.Scene.Integrator.SampleAllLightsDirect = engineSettings.SampleAllLights;
+			session.Scene.Integrator.SampleAllLightsIndirect = engineSettings.SampleAllLightsIndirect;
+			session.Scene.Integrator.SampleClampDirect = engineSettings.SampleClampDirect;
+			session.Scene.Integrator.SampleClampIndirect = engineSettings.SampleClampIndirect;
+			session.Scene.Integrator.LightSamplingThreshold =  engineSettings.LightSamplingThreshold;
+			session.Scene.Integrator.SamplingPattern = SamplingPattern.Sobol;
+			session.Scene.Integrator.Seed = engineSettings.Seed;
+			session.Scene.Integrator.NoShadows = engineSettings.NoShadows;
+			#endregion
 		}
 
 		static public float4 CreateFloat4(double x, double y, double z) { return new float4((float)x, (float)y, (float)z, 0.0f); }

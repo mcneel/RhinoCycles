@@ -250,7 +250,7 @@ Please click the link below for more information.", 69));
 			Session = RcCore.It.CreateSession( sessionParams);
 			#endregion
 
-			//CreateScene(client, Session, RenderDevice, this, eds);
+			InitializeSceneSettings(Session, RenderDevice, this, eds);
 
 			// Set up passes
 			foreach (var reqPass in reqPassTypes)
