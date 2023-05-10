@@ -8,6 +8,8 @@
     <GenerateResourceUsePreserializedResources>True</GenerateResourceUsePreserializedResources>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <FileAlignment>512</FileAlignment>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -232,4 +234,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Icons\OpenCL.ico" />
   </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="powershell ../cycles/cycles/build_cycles_for_rhino.ps1" />
+  </Target>
 </Project>
