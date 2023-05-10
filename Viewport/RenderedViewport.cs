@@ -315,20 +315,20 @@ namespace RhinoCycles.Viewport
 			_samples = e.Sample;
 			if (_cycles?.IsRendering ?? false)
 			{
-					if (!IsSynchronizing)
+				if (!IsSynchronizing)
+				{
+					if (e.Sample > -1)
 					{
-						if (e.Sample>-1)
-						{
-							_frameAvailable = true;
-							PutResultsIntoRenderWindowBuffer();
-						}
-						//SetView(e.View);
-						_samples = e.Sample;
-
-						_lastTime = DateTime.UtcNow;
-
-						if (!_cycles.CancelRender) SignalRedraw();
+						_frameAvailable = true;
+						PutResultsIntoRenderWindowBuffer();
 					}
+					
+					SetView(e.View);
+					_samples = e.Sample;
+					_lastTime = DateTime.UtcNow;
+
+					if (!_cycles.CancelRender) SignalRedraw();
+				}
 			}
 		}
 

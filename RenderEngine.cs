@@ -278,6 +278,9 @@ namespace RhinoCyclesCore
 			var status = CSycles.progress_get_status(sid);
 			var substatus = CSycles.progress_get_substatus(sid);
 			RenderedSamples = CSycles.progress_get_sample(sid);
+
+			//Debug.WriteLine("Current sample: {0}", RenderedSamples);
+
 			float progress;
 			double total_time, sample_time;
 			CSycles.progress_get_time(sid, out total_time, out sample_time);
@@ -325,7 +328,9 @@ namespace RhinoCyclesCore
 		public void BlitPixelsToRenderWindowChannel()
 		{
 			var native_render_size = CalculateNativeRenderSize();
-			var rect = new Rectangle(0, 0, native_render_size.Width, native_render_size.Height);
+			int width = native_render_size.Width;
+			int height = native_render_size.Height;
+			var rect = new Rectangle(0, 0, width, height);
 			foreach (var pass in Session.Passes)
 			{
 				IntPtr pixel_buffer = IntPtr.Zero;
@@ -333,7 +338,7 @@ namespace RhinoCyclesCore
 
 				//Stopwatch stopwatch = Stopwatch.StartNew();
 
-				Session.RetainPixelBuffer(pass, ref pixel_buffer);
+				Session.RetainPixelBuffer(pass, width, height, ref pixel_buffer);
 				if (pixel_buffer != IntPtr.Zero)
 				{
 					using (var rgba = RenderWindow.OpenChannel(channel))
@@ -341,8 +346,9 @@ namespace RhinoCyclesCore
 						PixelBuffer pb = new PixelBuffer(pixel_buffer);
 						rgba?.SetValues(rect, rect.Size, pb);
 					}
+
+					Session.ReleasePixelBuffer(pass);
 				}
-				Session.ReleasePixelBuffer(pass);
 
 				//RhinoApp.WriteLine("Time to write pixels to Render Window Channel: {0} ms.", stopwatch.ElapsedMilliseconds);
 			}

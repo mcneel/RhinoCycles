@@ -27,6 +27,7 @@ using Rhino.UI;
 using System.Collections.Generic;
 using RhinoCyclesCore.Settings;
 using System.Linq;
+using System.Diagnostics;
 
 namespace RhinoCyclesCore.RenderEngines
 {
@@ -299,20 +300,40 @@ Please click the link below for more information.", 69));
 
 			Session.Start();
 
+			int lastRenderedSample = -1;
 			bool renderingDone = false;
 
 			while (this != null && !IsStopped)
 			{
-				if(!Finished) UpdateCallback(Session.Id);
-				if(!Finished && RenderedSamples < MaxSamples)
+				if (Flush)
 				{
-					PassRendered?.Invoke(this, new PassRenderedEventArgs(RenderedSamples, View));
-				}
-				if(!renderingDone && Finished)
-				{
-					PassRendered?.Invoke(this, new PassRenderedEventArgs(RenderedSamples, View));
-					renderingDone = true;
+					CheckFlushQueue();
+					Synchronize();
+					Flush = false;
 
+					var size = CalculateNativeRenderSize();
+					Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height);
+					lastRenderedSample = -1;
+				}
+
+				if (!Finished)
+				{
+					UpdateCallback(Session.Id);
+				}
+
+				if(RenderedSamples > lastRenderedSample)
+				{
+					if (!Finished && RenderedSamples < MaxSamples)
+					{
+						PassRendered?.Invoke(this, new PassRenderedEventArgs(RenderedSamples, View));
+					}
+					if (!renderingDone && Finished)
+					{
+						PassRendered?.Invoke(this, new PassRenderedEventArgs(RenderedSamples, View));
+						renderingDone = true;
+					}
+
+					lastRenderedSample = RenderedSamples;
 				}
 
 

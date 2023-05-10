@@ -69,7 +69,7 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// Sleep in ms between each pass
 		/// </summary>
-		protected int _throttle { get; set; } = 10;
+		protected int _throttle { get; set; } = 30;
 		/// <summary>
 		/// Maximum samples this session will render
 		/// </summary>
