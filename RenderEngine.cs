@@ -34,6 +34,7 @@ namespace RhinoCyclesCore
 
 	public enum State
 	{
+		Unset,
 		Waiting,
 		Uploading,
 		Rendering,

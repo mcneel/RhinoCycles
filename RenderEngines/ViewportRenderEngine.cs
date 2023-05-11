@@ -300,11 +300,28 @@ Please click the link below for more information.", 69));
 
 			Session.Start();
 
+			State lastState = State.Unset;
 			int lastRenderedSample = -1;
 			bool renderingDone = false;
 
 			while (this != null && !IsStopped)
 			{
+				// If state changed
+				if(State != lastState)
+				{
+					// Pause behavior
+					if (State == State.Waiting)
+					{
+						Session.SetPause(true);
+					}
+					else if (lastState == State.Waiting)
+					{
+						Session.SetPause(false);
+					}
+
+					lastState = State;
+				}
+
 				if (Flush)
 				{
 					CheckFlushQueue();
@@ -321,6 +338,7 @@ Please click the link below for more information.", 69));
 					UpdateCallback(Session.Id);
 				}
 
+				// If we have rendered a new sample
 				if(RenderedSamples > lastRenderedSample)
 				{
 					if (!Finished && RenderedSamples < MaxSamples)
@@ -335,7 +353,6 @@ Please click the link below for more information.", 69));
 
 					lastRenderedSample = RenderedSamples;
 				}
-
 
 				Thread.Sleep(_throttle);
 			}
