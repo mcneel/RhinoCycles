@@ -88,8 +88,6 @@ namespace RhinoCyclesCore
 				{
 					var integrator = Session.Scene.Integrator;
 					integrator.Seed = settings.Seed;
-					integrator.DiffuseSamples = settings.DiffuseSamples;
-					integrator.GlossySamples = settings.GlossySamples;
 					integrator.MaxBounce = settings.MaxBounce;
 					integrator.MaxDiffuseBounce = settings.MaxDiffuseBounce;
 					integrator.MaxGlossyBounce = settings.MaxGlossyBounce;
@@ -122,8 +120,6 @@ namespace RhinoCyclesCore
 				{
 					var integrator = Session.Scene.Integrator;
 					integrator.Seed = settings.Seed;
-					integrator.DiffuseSamples = settings.DiffuseSamples;
-					integrator.GlossySamples = settings.GlossySamples;
 					integrator.MaxBounce = settings.MaxBounce;
 					integrator.MaxDiffuseBounce = settings.MaxDiffuseBounce;
 					integrator.MaxGlossyBounce = settings.MaxGlossyBounce;

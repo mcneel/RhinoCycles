@@ -404,6 +404,24 @@ namespace RhinoCyclesCore.Settings
 			}
 			set => SetBool(SettingNames.NoCaustics, value);
 		}
+		public bool CausticsReflective
+		{
+			get
+			{
+				GetBool(SettingNames.CausticsReflective, DefaultEngineSettings.CausticsReflective, out bool outVal);
+				return outVal;
+			}
+			set => SetBool(SettingNames.CausticsReflective, value);
+		}
+		public bool CausticsRefractive
+		{
+			get
+			{
+				GetBool(SettingNames.CausticsRefractive, DefaultEngineSettings.CausticsRefractive, out bool outVal);
+				return outVal;
+			}
+			set => SetBool(SettingNames.CausticsRefractive, value);
+		}
 
 		public int AaSamples
 		{
@@ -415,14 +433,41 @@ namespace RhinoCyclesCore.Settings
 			set => SetInt(SettingNames.AaSamples, value);
 		}
 
-		public int AoSamples
+		public int AoBounces
 		{
 			get
 			{
-				GetInt(SettingNames.AoSamples, DefaultEngineSettings.AoSamples, out int outVal);
+				GetInt(SettingNames.AoBounces, DefaultEngineSettings.AoBounces, out int outVal);
 				return outVal;
 			}
-			set => SetInt(SettingNames.AoSamples, value);
+			set => SetInt(SettingNames.AoBounces, value);
+		}
+		public float AoFactor
+		{
+			get
+			{
+				GetFloat(SettingNames.AoFactor, DefaultEngineSettings.AoFactor, out float outVal);
+				return outVal;
+			}
+			set => SetFloat(SettingNames.AoFactor, value);
+		}
+		public float AoDistance
+		{
+			get
+			{
+				GetFloat(SettingNames.AoDistance, DefaultEngineSettings.AoDistance, out float outVal);
+				return outVal;
+			}
+			set => SetFloat(SettingNames.AoDistance, value);
+		}
+		public float AoAdditiveFactor
+		{
+			get
+			{
+				GetFloat(SettingNames.AoAdditiveFactor, DefaultEngineSettings.AoAdditiveFactor, out float outVal);
+				return outVal;
+			}
+			set => SetFloat(SettingNames.AoAdditiveFactor, value);
 		}
 
 		public int MeshLightSamples

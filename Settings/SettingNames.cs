@@ -53,8 +53,13 @@ namespace RhinoCyclesCore.Settings
 		public static string BumpDistance => "BumpDistance";
 		public static string SelectedDevice => "SelectedDevice";
 		public static string NoCaustics => "NoCaustics";
+		public static string CausticsReflective => "CausticsReflective";
+		public static string CausticsRefractive => "CausticsRefractive";
 		public static string AaSamples => "AaSamples";
-		public static string AoSamples => "AoSamples";
+		public static string AoBounces => "AoBounces";
+		public static string AoFactor => "AoFactor";
+		public static string AoDistance => "AoDistance";
+		public static string AoAdditiveFactor => "AoAdditiveFactor";
 		public static string MeshLightSamples => "MeshLightSamples";
 		public static string SubSurfaceSamples => "SubsurfaceSamples";
 		public static string VolumeSamples => "VolumeSamples";

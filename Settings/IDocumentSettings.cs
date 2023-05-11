@@ -51,10 +51,15 @@ namespace RhinoCyclesCore.Settings
 		float BumpStrengthFactor { get; set; }
 
 		bool NoCaustics { get; set; }
+		bool CausticsReflective { get; set; }
+		bool CausticsRefractive { get; set; }
 
 		int AaSamples { get; set; }
 
-		int AoSamples { get; set; }
+		int AoBounces { get; set; }
+		float AoFactor { get; set; }
+		float AoDistance { get; set; }
+		float AoAdditiveFactor { get; set; }
 
 		int MeshLightSamples { get; set; }
 		int SubsurfaceSamples { get; set; }

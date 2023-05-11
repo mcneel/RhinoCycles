@@ -61,6 +61,8 @@ namespace RhinoCyclesCore.Settings
 			MaxBounce = MaxBounce;
 
 			NoCaustics = NoCaustics;
+			CausticsReflective = CausticsReflective;
+			CausticsRefractive = CausticsRefractive;
 
 			MaxDiffuseBounce = MaxDiffuseBounce;
 			MaxGlossyBounce = MaxGlossyBounce;
@@ -74,7 +76,10 @@ namespace RhinoCyclesCore.Settings
 			GlossySamples = GlossySamples;
 			TransmissionSamples = TransmissionSamples;
 
-			AoSamples = AoSamples;
+			AoBounces = AoBounces;
+			AoAdditiveFactor = AoAdditiveFactor;
+			AoDistance = AoDistance;
+			AoFactor = AoFactor;
 
 			MeshLightSamples = MeshLightSamples;
 			SubsurfaceSamples = SubsurfaceSamples;
@@ -155,6 +160,8 @@ namespace RhinoCyclesCore.Settings
 			MaxBounce = DefaultEngineSettings.MaxBounce;
 
 			NoCaustics = DefaultEngineSettings.NoCaustics;
+			CausticsReflective = DefaultEngineSettings.CausticsReflective;
+			CausticsRefractive = DefaultEngineSettings.CausticsRefractive;
 
 			MaxDiffuseBounce = DefaultEngineSettings.MaxDiffuseBounce;
 			MaxGlossyBounce = DefaultEngineSettings.MaxGlossyBounce;
@@ -168,7 +175,7 @@ namespace RhinoCyclesCore.Settings
 			GlossySamples = DefaultEngineSettings.GlossySamples;
 			TransmissionSamples = DefaultEngineSettings.TransmissionSamples;
 
-			AoSamples = DefaultEngineSettings.AoSamples;
+			AoBounces = DefaultEngineSettings.AoBounces;
 
 			MeshLightSamples = DefaultEngineSettings.MeshLightSamples;
 			SubsurfaceSamples = DefaultEngineSettings.SubSurfaceSamples;
@@ -430,6 +437,16 @@ namespace RhinoCyclesCore.Settings
 			get { return RcPlugIn.Settings.GetBool(SettingNames.NoCaustics, DefaultEngineSettings.NoCaustics); }
 			set { RcPlugIn.Settings.SetBool(SettingNames.NoCaustics, value); }
 		}
+		public virtual bool CausticsReflective
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.CausticsReflective, DefaultEngineSettings.CausticsReflective); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.CausticsReflective, value); }
+		}
+		public virtual bool CausticsRefractive
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.CausticsRefractive, DefaultEngineSettings.CausticsRefractive); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.CausticsRefractive, value); }
+		}
 		public virtual int MaxDiffuseBounce
 		{
 			get { return RcPlugIn.Settings.GetInteger(SettingNames.MaxDiffuseBounce, DefaultEngineSettings.MaxDiffuseBounce); }
@@ -470,10 +487,25 @@ namespace RhinoCyclesCore.Settings
 			get { return RcPlugIn.Settings.GetInteger(SettingNames.TransmissionSamples, DefaultEngineSettings.TransmissionSamples); }
 			set { RcPlugIn.Settings.SetInteger(SettingNames.TransmissionSamples, value); }
 		}
-		public virtual int AoSamples
+		public virtual int AoBounces
 		{
-			get { return RcPlugIn.Settings.GetInteger(SettingNames.AoSamples, DefaultEngineSettings.AoSamples); }
-			set { RcPlugIn.Settings.SetInteger(SettingNames.AoSamples, value); }
+			get { return RcPlugIn.Settings.GetInteger(SettingNames.AoBounces, DefaultEngineSettings.AoBounces); }
+			set { RcPlugIn.Settings.SetInteger(SettingNames.AoBounces, value); }
+		}
+		public virtual float AoFactor
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.AoFactor, DefaultEngineSettings.AoFactor); }
+			set { RcPlugIn.Settings.SetDouble(SettingNames.AoFactor, value); }
+		}
+		public virtual float AoDistance
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.AoDistance, DefaultEngineSettings.AoDistance); }
+			set { RcPlugIn.Settings.SetDouble(SettingNames.AoDistance, value); }
+		}
+		public virtual float AoAdditiveFactor
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.AoAdditiveFactor, DefaultEngineSettings.AoAdditiveFactor); }
+			set { RcPlugIn.Settings.SetDouble(SettingNames.AoAdditiveFactor, value); }
 		}
 		public virtual int MeshLightSamples
 		{

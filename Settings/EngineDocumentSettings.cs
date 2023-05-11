@@ -205,6 +205,16 @@ namespace RhinoCyclesCore.Settings
 			get => mDict.GetBool(SettingNames.NoCaustics, DefaultEngineSettings.NoCaustics);
 			set => throw new InvalidOperationException();
 		}
+		public bool CausticsReflective
+		{
+			get => mDict.GetBool(SettingNames.CausticsReflective, DefaultEngineSettings.CausticsReflective);
+			set => throw new InvalidOperationException();
+		}
+		public bool CausticsRefractive
+		{
+			get => mDict.GetBool(SettingNames.CausticsRefractive, DefaultEngineSettings.CausticsRefractive);
+			set => throw new InvalidOperationException();
+		}
 
 		public int AaSamples
 		{
@@ -212,9 +222,24 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
-		public int AoSamples
+		public int AoBounces
 		{
-			get => mDict.GetInteger(SettingNames.AoSamples, DefaultEngineSettings.AoSamples);
+			get => mDict.GetInteger(SettingNames.AoBounces, DefaultEngineSettings.AoBounces);
+			set => throw new InvalidOperationException();
+		}
+		public float AoFactor
+		{
+			get => mDict.GetFloat(SettingNames.AoFactor, DefaultEngineSettings.AoFactor);
+			set => throw new InvalidOperationException();
+		}
+		public float AoDistance
+		{
+			get => mDict.GetFloat(SettingNames.AoDistance, DefaultEngineSettings.AoDistance);
+			set => throw new InvalidOperationException();
+		}
+		public float AoAdditiveFactor
+		{
+			get => mDict.GetFloat(SettingNames.AoAdditiveFactor, DefaultEngineSettings.AoAdditiveFactor);
 			set => throw new InvalidOperationException();
 		}
 

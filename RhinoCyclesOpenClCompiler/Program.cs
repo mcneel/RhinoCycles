@@ -90,7 +90,7 @@ namespace RhinoCyclesOpenClCompiler {
 									DiffuseSamples = 1,
 									GlossySamples = 1,
 									TransmissionSamples = 1,
-									AoSamples = 1,
+									AoBounces = 1,
 									MeshLightSamples = 1,
 									SubsurfaceSamples = 1,
 									VolumeSamples = 1,

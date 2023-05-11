@@ -37,6 +37,8 @@ namespace RhinoCyclesCore.Settings
 		static public int MaxBounce => 32;
 
 		static public bool NoCaustics => false;
+		static public bool CausticsReflective => true;
+		static public bool CausticsRefractive => true;
 
 		static public int MaxDiffuseBounce => 4;
 		static public int MaxGlossyBounce => 16;
@@ -50,7 +52,10 @@ namespace RhinoCyclesCore.Settings
 		static public int GlossySamples => 32;
 		static public int TransmissionSamples => 32;
 
-		static public int AoSamples => 32;
+		static public int AoBounces => 0;
+		static public float AoFactor => 0.0f;
+		static public float AoDistance => float.MaxValue;
+		static public float AoAdditiveFactor => 0.0f;
 
 		static public int MeshLightSamples => 32;
 		static public int SubSurfaceSamples => 32;
