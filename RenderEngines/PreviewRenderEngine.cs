@@ -138,7 +138,6 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Database.Flush();
 			cyclesEngine.UploadData();
 
-			cyclesEngine.Session.PrepareRun();
 
 			bool goodrender = true;
 			bool stillrendering = true;

@@ -293,7 +293,7 @@ namespace RhinoCyclesCore
 
 			if (!substatus.Equals(string.Empty)) status = status + ": " + substatus;
 
-			bool finished = status.Contains("Finished");
+			bool finished = status.Contains("Finished") || status.Contains("Rendering Done");
 			if (finished) RenderedSamples = MaxSamples;
 			Finished = finished;
 

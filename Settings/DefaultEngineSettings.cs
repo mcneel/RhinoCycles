@@ -17,7 +17,7 @@ namespace RhinoCyclesCore.Settings
 		static public float AreaLightFactor => 17.2f;
 		static public float PolishFactor => 0.09f;
 
-		static public int ThrottleMs => 5;
+		static public int ThrottleMs => 100;
 		static public int Threads => Math.Max(1, Utilities.GetSystemProcessorCount() - 2);
 		static public float BumpDistance => 1.0f;
 		static public float NormalStrengthFactor => 1.0f;

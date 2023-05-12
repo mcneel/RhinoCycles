@@ -181,67 +181,48 @@ namespace RhinoCyclesCore.RenderEngines
 			// main render loop, including restarts
 			#region start the rendering loop, wait for it to complete, we're rendering now!
 
-			if (cyclesEngine.CancelRender) return;
+			if (cyclesEngine.CancelRender)
+				return;
 
 			cyclesEngine.Database?.Flush();
-			var rc = cyclesEngine.UploadData();
+			var renderSuccess = cyclesEngine.UploadData();
 
-			bool goodrender = rc;
-
-			if (rc)
+			if (renderSuccess)
 			{
-				cyclesEngine.Session.PrepareRun();
+				cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, BufferRectangle.Top, FullSize.Width, FullSize.Height);
+				cyclesEngine.Session.Start();
 
-				long lastUpdate = DateTime.Now.Ticks;
-				long curUpdate = DateTime.Now.Ticks; // remember, 10000 ticks in a millisecond
-				const long updateInterval = 1000 * 10000;
+				var throttle = Math.Max(0, engineSettings.ThrottleMs);
+				int lastRenderedSample = -1;
 
-				// lets first reset session
-				if (cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, BufferRectangle.Top, FullSize.Width, FullSize.Height)==0)
+				while (!Finished)
 				{
-					// and actually start
-					bool stillrendering = true;
-					var throttle = Math.Max(0, engineSettings.ThrottleMs);
-					int sample = -1;
-					while (stillrendering)
+					UpdateCallback(cyclesEngine.Session.Id);
+
+					if (RenderedSamples == -13)
 					{
-						if (cyclesEngine.IsRendering)
-						{
-							sample = cyclesEngine.Session.Sample();
-							stillrendering = sample > -1;
-							curUpdate = DateTime.Now.Ticks;
-							if (sample == -13)
-							{
-								goodrender = false;
-								stillrendering = false;
-								cyclesEngine.CancelRender = true;
-							}
-							else if (!capturing && stillrendering && (sample >= 0 || (curUpdate - lastUpdate) > updateInterval))
-							{
-								lastUpdate = curUpdate;
-								cyclesEngine.BlitPixelsToRenderWindowChannel();
-								cyclesEngine.RenderWindow.Invalidate();
-								if (sample >= 0)
-								{
-									cyclesEngine.Database.ResetChangeQueue();
-								}
-							}
-						}
-						Thread.Sleep(throttle);
-						if (cyclesEngine.IsStopped) break;
+						renderSuccess = false;
+						Finished = true;
+						cyclesEngine.CancelRender = true;
 					}
+					else if (!capturing && !Finished && RenderedSamples > lastRenderedSample)
+					{
+						cyclesEngine.BlitPixelsToRenderWindowChannel();
+						cyclesEngine.RenderWindow.Invalidate();
+						cyclesEngine.Database.ResetChangeQueue();
+					}
+
+					Thread.Sleep(throttle);
+
+					if (cyclesEngine.IsStopped)
+						break;
 				}
-				else
-				{
-					goodrender = false;
-					cyclesEngine.CancelRender = true;
-				}
+
 				if (!cyclesEngine.CancelRender)
 				{
 					cyclesEngine.BlitPixelsToRenderWindowChannel();
 					cyclesEngine.RenderWindow.Invalidate();
 				}
-
 			}
 			#endregion
 
@@ -258,14 +239,14 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Database = null;
 			cyclesEngine.State = State.Stopped;
 
-			if (!capturing && goodrender)
+			if (!capturing && renderSuccess)
 			{
 				// set final status string and progress to 1.0f to signal completed render
 				cyclesEngine.SetProgress(rw,
 					String.Format(Localization.LocalizeString("Render ready {0} samples, duration {1}", 39), cyclesEngine.RenderedSamples + 1, cyclesEngine.TimeString), 1.0f);
 			}
 
-			if (!goodrender)
+			if (!renderSuccess)
 			{
 				rw.SetProgress(Localization.LocalizeString("An error occured while trying to render. The render may be incomplete or not started.", 65), 1.0f);
 				Action showErrorDialog = () =>

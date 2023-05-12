@@ -288,11 +288,6 @@ Please click the link below for more information.", 69));
 
 			Database.ResetChangeQueue();
 
-			if (this != null && !CancelRender)
-			{
-				Session.PrepareRun();
-			}
-
 			#endregion
 
 			// We've got Cycles rendering now, notify anyone who cares
