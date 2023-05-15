@@ -207,6 +207,8 @@ namespace RhinoCyclesCore.RenderEngines
 					}
 					else if (!capturing && !Finished && RenderedSamples > lastRenderedSample)
 					{
+						lastRenderedSample = RenderedSamples;
+
 						cyclesEngine.BlitPixelsToRenderWindowChannel();
 						cyclesEngine.RenderWindow.Invalidate();
 						cyclesEngine.Database.ResetChangeQueue();

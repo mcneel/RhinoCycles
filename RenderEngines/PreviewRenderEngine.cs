@@ -26,8 +26,6 @@ namespace RhinoCyclesCore.RenderEngines
 {
 	public class PreviewRenderEngine : RenderEngine
 	{
-		int m_sample_count = -1;
-
 		/// <summary>
 		/// Construct a render engine for preview rendering
 		/// </summary>
@@ -57,20 +55,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 		  //DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 	  }
-
-		public void SignalUpdate(int sample)
-		{
-			if (sample > 0 && (sample == 1 || sample == 10 || sample % 50 == 0 || sample >= (PreviewSamples-1)))
-			{
-				if (m_sample_count != sample)
-				{
-					RenderWindow.Invalidate();
-					PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
-					m_sample_count = sample;
-				}
-			}
-		}
-
 
 		public bool Success { get; set; } = false;
 
@@ -138,50 +122,54 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Database.Flush();
 			cyclesEngine.UploadData();
 
+			bool renderSuccess = true;
 
-			bool goodrender = true;
-			bool stillrendering = true;
-			// lets first reset session
-			if (cyclesEngine.Session.Reset(size.Width, size.Height, cyclesEngine.MaxSamples, 0, 0, size.Width, size.Height) == 0)
+			// then reset scene
+			// Note: Don't reset the scene now, otherwise it will remove our custom background shader.
+			//cyclesEngine.Session.Scene.Reset();
+
+			cyclesEngine.Session.Reset(size.Width, size.Height, cyclesEngine.MaxSamples, 0, 0, size.Width, size.Height);
+			cyclesEngine.Session.Start();
+
+			int lastRenderedSample = -1;
+
+			// and actually start
+			while (!cyclesEngine.Finished)
 			{
-				// then reset scene
-				cyclesEngine.Session.Scene.Reset();
-				// and actually start
-				while (stillrendering)
+				if (cyclesEngine.IsRendering)
 				{
-					if (cyclesEngine.IsRendering)
+					cyclesEngine.UpdateCallback(cyclesEngine.Session.Id);
+
+					if (cyclesEngine.RenderedSamples == -13)
 					{
-						var sample = cyclesEngine.Session.Sample();
-						stillrendering = sample > -1;
-						if (sample == -13)
-						{
-							cyclesEngine.Success = false;
-							goodrender = false;
-							stillrendering = false;
-							cyclesEngine.StopRendering();
-						}
-						if (sample >= 0)
-						{
-							cyclesEngine.BlitPixelsToRenderWindowChannel();
-							cyclesEngine.SignalUpdate(sample);
-						}
-						Thread.Sleep(2);
+						cyclesEngine.Success = false;
+						renderSuccess = false;
+						cyclesEngine.Finished = true;
+						cyclesEngine.StopRendering();
 					}
-					else
+
+					if (!cyclesEngine.Finished && cyclesEngine.RenderedSamples > lastRenderedSample)
 					{
-						break;
+						lastRenderedSample = cyclesEngine.RenderedSamples;
+
+						cyclesEngine.BlitPixelsToRenderWindowChannel();
+						cyclesEngine.RenderWindow.Invalidate();
+						cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
 					}
-					if (cyclesEngine.IsStopped) break;
-					if (cyclesEngine.CancelRender) break;
+
+					Thread.Sleep(100);
 				}
-			} else {
-				// reset failed
-				goodrender = false;
+				else
+				{
+					break;
+				}
+				if (cyclesEngine.IsStopped) break;
+				if (cyclesEngine.CancelRender) break;
 			}
 
 			cyclesEngine?.Database.ResetChangeQueue();
 
-			cyclesEngine.Success = goodrender;
+			cyclesEngine.Success = renderSuccess;
 
 			// we're done now, so lets clean up our session.
 			RcCore.It.ReleaseSession(cyclesEngine.Session);
