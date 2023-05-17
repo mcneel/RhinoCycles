@@ -296,7 +296,7 @@ Please click the link below for more information.", 69));
 			Session.Start();
 
 			State lastState = State.Unset;
-			int lastRenderedSample = -1;
+			int lastRenderedSample = 0;
 			bool renderingDone = false;
 
 			while (this != null && !IsStopped)
@@ -322,10 +322,11 @@ Please click the link below for more information.", 69));
 					CheckFlushQueue();
 					Synchronize();
 					Flush = false;
+					Finished = false;
 
 					var size = CalculateNativeRenderSize();
 					Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height);
-					lastRenderedSample = -1;
+					lastRenderedSample = 0;
 				}
 
 				if (!Finished)

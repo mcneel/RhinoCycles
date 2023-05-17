@@ -317,7 +317,7 @@ namespace RhinoCycles.Viewport
 			{
 				if (!IsSynchronizing)
 				{
-					if (e.Sample > -1)
+					if (e.Sample > 0)
 					{
 						_frameAvailable = true;
 						PutResultsIntoRenderWindowBuffer();
@@ -414,7 +414,7 @@ namespace RhinoCycles.Viewport
 			if (_cycles?.IsWaiting ?? false) _status = Localization.LocalizeString("Paused", 1);
 			else
 			{
-				_status = e.Samples < 0 ? e.StatusText : "";
+				_status = e.Samples <= 0 ? e.StatusText : "";
 				if(!_cycles.CancelRender && _cycles.IsUploading) SignalRedraw();
 			}
 		}
