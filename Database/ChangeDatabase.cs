@@ -271,7 +271,7 @@ namespace RhinoCyclesCore.Database
 
 				foreach (var cob in cobs)
 				{
-					RcCore.OutputDebugString($"\tDeleting mesh {cob.Id}.{cob.Mesh?.Id} ({meshDelete}\n");
+					RcCore.OutputDebugString($"\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete}\n");
 					// remove mesh data
 					cob.Mesh?.ClearData();
 					cob.Mesh?.TagRebuild();
@@ -1129,7 +1129,7 @@ namespace RhinoCyclesCore.Database
 					{
 						var delob = new CyclesObject {cob = cob};
 						_objectDatabase.DeleteObject(delob);
-						RcCore.OutputDebugString($"\tDeleting mesh instance {d} {cob.Id}\n");
+						RcCore.OutputDebugString($"\tDeleting mesh instance {d} {cob.ObjectPtr}\n");
 					}
 					else
 					{
@@ -1840,7 +1840,7 @@ namespace RhinoCyclesCore.Database
 			{
 				if (ob.cob != null)
 				{
-					RcCore.OutputDebugString($"UploadObjectChanges: deleting object {ob.obid} {ob.cob.Id}\n");
+					RcCore.OutputDebugString($"UploadObjectChanges: deleting object {ob.obid} {ob.cob.ObjectPtr}\n");
 					var cob = ob.cob;
 					// deleting we do (for now?) by marking object as hidden.
 					// we *don't* clear mesh data here, since that very mesh
@@ -1880,7 +1880,7 @@ namespace RhinoCyclesCore.Database
 					_objectDatabase.RecordObjectIdMeshIdRelation(ob.obid, ob.meshid);
 				}
 
-				RcCore.OutputDebugString($"\tadding/modifying object {ob.obid} {ob.meshid} {cob.Id}\n");
+				RcCore.OutputDebugString($"\tadding/modifying object {ob.obid} {ob.meshid} {cob.ObjectPtr}\n");
 
 				// set mesh reference and other stuff
 				cob.Mesh = mesh;
