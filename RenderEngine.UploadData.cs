@@ -78,7 +78,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// mesh changes (new ones, updated ones)
-			// TODO: XXXX Database.UploadMeshChanges();
+			Database.UploadMeshChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.8f, "Mesh data uploaded"));
 
 			if (CancelRender) return false;
@@ -90,7 +90,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// object changes (new ones, deleted ones)
-			// TODO: XXXX Database.UploadObjectChanges();
+			Database.UploadObjectChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(1.0f, "Object changes uploaded"));
 
 			if (CancelRender) return false;
