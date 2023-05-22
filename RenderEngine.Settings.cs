@@ -75,7 +75,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public int MaxSamples { get; set; } = 1;
 
-		protected bool _needReset;
+		protected bool _needReset { get; set; }
 
 		public int _textureBakeQuality { get; set; } = 0;
 

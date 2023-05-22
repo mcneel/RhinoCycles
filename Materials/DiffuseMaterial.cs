@@ -75,7 +75,7 @@ namespace RhinoCyclesCore.Materials
 		ClosureSocket outsocket = null;
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
-			ccl.ShaderNodes.DiffuseBsdfNode diffuse = new ccl.ShaderNodes.DiffuseBsdfNode("diffuse");
+			ccl.ShaderNodes.DiffuseBsdfNode diffuse = new ccl.ShaderNodes.DiffuseBsdfNode(sh, "diffuse");
 			sh.AddNode(diffuse);
 
 			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, diffuse.ins.Color.ToList(), false);

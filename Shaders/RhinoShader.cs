@@ -26,7 +26,7 @@ namespace RhinoCyclesCore.Shaders
 		protected CyclesBackground m_original_background;
 		protected CyclesLight m_original_light;
 
-		protected Session m_client;
+		protected Session m_session;
 
 		private void InitShader(string name, Shader existing, Shader.ShaderType shaderType, bool recreate)
 		{
@@ -37,7 +37,7 @@ namespace RhinoCyclesCore.Shaders
 			}
 			else
 			{
-				m_shader = new Shader(m_client, shaderType)
+				m_shader = new Shader(m_session, shaderType)
 				{
 					UseMis = true,
 					UseTransparentShadow = true,
@@ -48,9 +48,9 @@ namespace RhinoCyclesCore.Shaders
 			}
 
 		}
-		protected RhinoShader(Session client, CyclesShader intermediate, string name, Shader existing, bool recreate)
+		protected RhinoShader(Session session, CyclesShader intermediate, string name, Shader existing, bool recreate)
 		{
-			m_client = client;
+			m_session = session;
 			m_original = intermediate;
 			if (m_original.Front != null) m_original.Front.Gamma = m_original.Gamma;
 			if (m_original.Back != null) m_original.Back.Gamma = m_original.Gamma;
@@ -58,16 +58,16 @@ namespace RhinoCyclesCore.Shaders
 
 		}
 
-		protected RhinoShader(Session client, CyclesBackground intermediateBackground, string name, Shader existing, bool recreate)
+		protected RhinoShader(Session session, CyclesBackground intermediateBackground, string name, Shader existing, bool recreate)
 		{
-			m_client = client;
+			m_session = session;
 			m_original_background = intermediateBackground;
 			InitShader(name, existing, Shader.ShaderType.World, recreate);
 		}
 
-		protected RhinoShader(Session client, CyclesLight intermediateLight, string name, Shader existing, bool recreate)
+		protected RhinoShader(Session session, CyclesLight intermediateLight, string name, Shader existing, bool recreate)
 		{
-			m_client = client;
+			m_session = session;
 			m_original_light = intermediateLight;
 			InitShader(name, existing, Shader.ShaderType.Material, recreate);
 		}
@@ -77,29 +77,29 @@ namespace RhinoCyclesCore.Shaders
 			m_shader?.Recreate();
 		}
 
-		public static RhinoShader CreateRhinoMaterialShader(Session client, CyclesShader intermediate)
+		public static RhinoShader CreateRhinoMaterialShader(Session session, CyclesShader intermediate)
 		{
-			RhinoShader theShader = new RhinoFullNxt(client, intermediate);
+			RhinoShader theShader = new RhinoFullNxt(session, intermediate);
 
 			return theShader;
 		}
 
-		public static RhinoShader RecreateRhinoMaterialShader(Session client, CyclesShader intermediate, Shader existing)
+		public static RhinoShader RecreateRhinoMaterialShader(Session session, CyclesShader intermediate, Shader existing)
 		{
-			RhinoShader theShader = new RhinoFullNxt(client, intermediate, existing);
+			RhinoShader theShader = new RhinoFullNxt(session, intermediate, existing);
 
 			return theShader;
 		}
 
-		public static RhinoShader CreateRhinoBackgroundShader(Session client, CyclesBackground intermediateBackground, Shader existingShader)
+		public static RhinoShader CreateRhinoBackgroundShader(Session session, CyclesBackground intermediateBackground, Shader existingShader)
 		{
-			RhinoShader theShader = new RhinoBackground(client, intermediateBackground, existingShader);
+			RhinoShader theShader = new RhinoBackground(session, intermediateBackground, existingShader);
 			return theShader;
 		}
 
-		public static RhinoShader CreateRhinoLightShader(Session client, CyclesLight intermediateLight, Shader existingShader)
+		public static RhinoShader CreateRhinoLightShader(Session session, CyclesLight intermediateLight, Shader existingShader)
 		{
-			RhinoShader shader = new RhinoLight(client, intermediateLight, existingShader);
+			RhinoShader shader = new RhinoLight(session, intermediateLight, existingShader);
 			return shader;
 		}
 

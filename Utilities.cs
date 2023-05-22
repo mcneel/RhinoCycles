@@ -310,12 +310,12 @@ namespace RhinoCyclesCore
 			ISocket valsock = null;
 			if (t == typeof(float))
 			{
-				ValueNode vn = new ValueNode($"input_value_for_{slot.Name}_");
+				ValueNode vn = new ValueNode(sh, $"input_value_for_{slot.Name}_");
 				sh.AddNode(vn);
 				vn.Value = (float)(object)slot.Value;
 				if (invert)
 				{
-					MathSubtract invval = new MathSubtract($"invert_value_for_{slot.Name}_");
+					MathSubtract invval = new MathSubtract(sh, $"invert_value_for_{slot.Name}_");
 					invval.ins.Value1.Value = 1.0f;
 					sh.AddNode(invval);
 					vn.outs.Value.Connect(invval.ins.Value2);
@@ -328,12 +328,12 @@ namespace RhinoCyclesCore
 			}
 			else if (t == typeof(Color4f))
 			{
-				ColorNode cn = new ColorNode($"input_color_for_{slot.Name}_");
+				ColorNode cn = new ColorNode(sh, $"input_color_for_{slot.Name}_");
 				sh.AddNode(cn);
 				cn.Value = ((Color4f)(object)slot.Value).ToFloat4();
 				if (invert)
 				{
-					InvertNode invcol = new InvertNode($"invert_input_color_for_{slot.Name}_");
+					InvertNode invcol = new InvertNode(sh, $"invert_input_color_for_{slot.Name}_");
 					invcol.ins.Fac.Value = 1.0f;
 					sh.AddNode(invcol);
 					cn.outs.Color.Connect(invcol.ins.Color);
@@ -370,13 +370,13 @@ namespace RhinoCyclesCore
 			ISocket alphaOut = null;
 			if(IsOn && null != teximg && teximg.HasProcedural)
 			{
-				var texco = new TextureCoordinateNode($"texco for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var invcol = new InvertNode($"invert color for imtexnode for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var normalmapnode = new NormalMapNode($"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var tobwnode = new RgbToBwNode($"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var alphamult = new MathMultiply($"alpha multiplier for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var texco = new TextureCoordinateNode(sh, $"texco for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var invcol = new InvertNode(sh, $"invert color for imtexnode for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var normalmapnode = new NormalMapNode(sh, $"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var tobwnode = new RgbToBwNode(sh, $"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var alphamult = new MathMultiply(sh, $"alpha multiplier for {valueSocket?.Parent.VariableName ?? "unknown input"}");
 
-				var mixerNode = new MixNode($"rgb mix node for imtexnode and {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				var mixerNode = new MixNode(sh, $"rgb mix node for imtexnode and {valueSocket?.Parent.VariableName ?? "unknown input"}");
 
 				alphamult.ins.Value1.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
 				alphamult.ins.Value2.Value = 1.0f;
@@ -386,12 +386,12 @@ namespace RhinoCyclesCore
 				sh.AddNode(texco);
 				sh.AddNode(mixerNode);
 
-				var gamma_node = new GammaNode();
+				var gamma_node = new GammaNode(sh);
 				sh.AddNode(gamma_node);
 
 				gamma_node.ins.Gamma.Value = 2.2f;
 
-				var alpha_node = new MathNode();
+				var alpha_node = new MathNode(sh);
 				sh.AddNode(alpha_node);
 				alpha_node.Operation = MathNode.Operations.Add;
 				alpha_node.ins.Value1.Value = 0.0f;
@@ -455,11 +455,11 @@ namespace RhinoCyclesCore
 							gamma_node.outs.Color.Connect(sock);
 						}
 					} else { // multiply the output of mixerNode.outs.Color with amount.
-						SeparateRgbNode separateRgbNode = new SeparateRgbNode($"separating the color for multiplication {valueSocket?.Parent.VariableName ?? "unknown input"}");
-						MathMultiply multiplyR = new MathMultiply($"multiplier for R {valueSocket?.Parent.VariableName ?? "unknown input"}");
-						MathMultiply multiplyG = new MathMultiply($"multiplier for G {valueSocket?.Parent.VariableName ?? "unknown input"}");
-						MathMultiply multiplyB = new MathMultiply($"multiplier for B {valueSocket?.Parent.VariableName ?? "unknown input"}");
-						CombineRgbNode combineRgbNode = new CombineRgbNode($"combining the new color values {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						SeparateRgbNode separateRgbNode = new SeparateRgbNode(sh, $"separating the color for multiplication {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						MathMultiply multiplyR = new MathMultiply(sh, $"multiplier for R {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						MathMultiply multiplyG = new MathMultiply(sh, $"multiplier for G {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						MathMultiply multiplyB = new MathMultiply(sh, $"multiplier for B {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						CombineRgbNode combineRgbNode = new CombineRgbNode(sh, $"combining the new color values {valueSocket?.Parent.VariableName ?? "unknown input"}");
 
 						sh.AddNode(separateRgbNode);
 						sh.AddNode(multiplyR);

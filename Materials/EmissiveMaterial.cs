@@ -120,12 +120,12 @@ namespace RhinoCyclesCore.Materials
 
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
-			ccl.ShaderNodes.TransparentBsdfNode transp = new ccl.ShaderNodes.TransparentBsdfNode("transp");
+			ccl.ShaderNodes.TransparentBsdfNode transp = new ccl.ShaderNodes.TransparentBsdfNode(sh, "transp");
 
-			ccl.ShaderNodes.EmissionNode emission = new ccl.ShaderNodes.EmissionNode("emission");
-			ccl.ShaderNodes.LightFalloffNode lfo = new ccl.ShaderNodes.LightFalloffNode("lfo");
-			ccl.ShaderNodes.LightPathNode lp = new ccl.ShaderNodes.LightPathNode("lp");
-			ccl.ShaderNodes.MixClosureNode mix = new ccl.ShaderNodes.MixClosureNode("mix");
+			ccl.ShaderNodes.EmissionNode emission = new ccl.ShaderNodes.EmissionNode(sh, "emission");
+			ccl.ShaderNodes.LightFalloffNode lfo = new ccl.ShaderNodes.LightFalloffNode(sh, "lfo");
+			ccl.ShaderNodes.LightPathNode lp = new ccl.ShaderNodes.LightPathNode(sh, "lp");
+			ccl.ShaderNodes.MixClosureNode mix = new ccl.ShaderNodes.MixClosureNode(sh, "mix");
 
 			sh.AddNode(transp);
 			sh.AddNode(emission);

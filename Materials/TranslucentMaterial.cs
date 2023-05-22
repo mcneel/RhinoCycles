@@ -72,7 +72,7 @@ namespace RhinoCyclesCore.Materials
 
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
-			ccl.ShaderNodes.TranslucentBsdfNode translucent = new ccl.ShaderNodes.TranslucentBsdfNode("translucent");
+			ccl.ShaderNodes.TranslucentBsdfNode translucent = new ccl.ShaderNodes.TranslucentBsdfNode(sh, "translucent");
 			sh.AddNode(translucent);
 
 			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, translucent.ins.Color.ToList(), false);

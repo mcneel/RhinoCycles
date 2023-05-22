@@ -309,8 +309,7 @@ namespace RhinoCyclesCore.Database
 					shid = 0;
 				}
 
-				var shader = _renderEngine.Session.Scene.ShaderFromSceneId(shid);
-				//var shader = new ccl.Shader(Shader.ShaderType.Material);
+				var shader = new ccl.Shader(_renderEngine.Session, Shader.ShaderType.Material);
 
 				// creat a new mesh to upload mesh data to
 				if (newme)

@@ -94,11 +94,11 @@ namespace RhinoCyclesCore.Materials
 		ClosureSocket outsocket = null;
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
-			ccl.ShaderNodes.TransparentBsdfNode transp = new ccl.ShaderNodes.TransparentBsdfNode("transp");
-			ccl.ShaderNodes.PrincipledBsdfNode glass = new ccl.ShaderNodes.PrincipledBsdfNode("glass");
-			ccl.ShaderNodes.LightPathNode lp = new ccl.ShaderNodes.LightPathNode("lp");
-			ccl.ShaderNodes.MathMaximum max = new ccl.ShaderNodes.MathMaximum("max");
-			ccl.ShaderNodes.MixClosureNode mix = new ccl.ShaderNodes.MixClosureNode("mix");
+			ccl.ShaderNodes.TransparentBsdfNode transp = new ccl.ShaderNodes.TransparentBsdfNode(sh, "transp");
+			ccl.ShaderNodes.PrincipledBsdfNode glass = new ccl.ShaderNodes.PrincipledBsdfNode(sh, "glass");
+			ccl.ShaderNodes.LightPathNode lp = new ccl.ShaderNodes.LightPathNode(sh, "lp");
+			ccl.ShaderNodes.MathMaximum max = new ccl.ShaderNodes.MathMaximum(sh, "max");
+			ccl.ShaderNodes.MixClosureNode mix = new ccl.ShaderNodes.MixClosureNode(sh, "mix");
 
 			sh.AddNode(transp);
 			sh.AddNode(glass);

@@ -39,7 +39,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// TODO: XXXX Database.UploadDisplayPipelineAttributesChanges();
-			// TODO: XXXX Database.UploadIntegratorChanges();
+			Database.UploadIntegratorChanges();
 
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.1f, "Start data upload"));
 
@@ -54,7 +54,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// environment changes
-			// TODO: XXXX Database.UploadEnvironmentChanges();
+			Database.UploadEnvironmentChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.3f, "Environments uploaded"));
 
 			if (CancelRender) return false;

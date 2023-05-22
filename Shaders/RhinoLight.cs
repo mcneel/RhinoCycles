@@ -37,14 +37,14 @@ namespace RhinoCyclesCore.Shaders
 				m_original_light.Type == LightType.Point ||
 				m_original_light.Type == LightType.Area;
 
-			var emnode = new EmissionNode();
+			var emnode = new EmissionNode(m_shader);
 			emnode.ins.Color.Value = m_original_light.DiffuseColor ^ m_original_light.Gamma;
 			emnode.ins.Strength.Value = m_original_light.Strength;
 			m_shader.AddNode(emnode);
 
 			if (use_falloff)
 			{
-				var falloffnode = new LightFalloffNode();
+				var falloffnode = new LightFalloffNode(m_shader);
 				falloffnode.ins.Strength.Value = m_original_light.Strength;
 				falloffnode.ins.Smooth.Value = 0.5f;
 

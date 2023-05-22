@@ -323,10 +323,16 @@ Please click the link below for more information.", 69));
 					Synchronize();
 					Flush = false;
 					Finished = false;
+					_needReset = true;
 
+				}
+
+				if (_needReset)
+				{
 					var size = CalculateNativeRenderSize();
 					Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height);
-					lastRenderedSample = 0;
+					lastRenderedSample = -1;
+					_needReset = false;
 				}
 
 				if (!Finished)
@@ -352,6 +358,8 @@ Please click the link below for more information.", 69));
 
 				Thread.Sleep(_throttle);
 			}
+
+			Session.Cancel("done");
 
 			if (this != null)
 			{
