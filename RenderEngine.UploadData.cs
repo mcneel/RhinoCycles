@@ -54,7 +54,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// environment changes
-			Database.UploadEnvironmentChanges();
+			//Database.UploadEnvironmentChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.3f, "Environments uploaded"));
 
 			if (CancelRender) return false;
