@@ -1887,7 +1887,7 @@ namespace RhinoCyclesCore.Database
 				cob.Transform = ob.Transform;
 				cob.OcsFrame = ob.OcsFrame;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
-				cob.IsBlockInstance = true;
+				//cob.IsBlockInstance = true;
 				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
 				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;
 				if (ob.CastShadow == false)
