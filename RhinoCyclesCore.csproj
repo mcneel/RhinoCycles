@@ -223,10 +223,10 @@
     <None Include="Icons\Cycles_material.ico" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Icons\CPU.ico" />
+    <EmbeddedResource Include="Icons\Cpu.ico" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Icons\CUDA.ico" />
+    <EmbeddedResource Include="Icons\Cuda.ico" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Icons\Cycles_viewport_properties.ico" />

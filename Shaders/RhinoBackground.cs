@@ -44,7 +44,7 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.AddNode(bg);
 
 				bg.outs.Background.Connect(m_shader.Output.ins.Surface);
-				//m_shader.FinalizeGraph();
+				m_shader.FinalizeGraph();
 				//m_shader.Tag();
 			}
 			else if (!string.IsNullOrEmpty(m_original_background.Xml))
@@ -54,7 +54,7 @@ namespace RhinoCyclesCore.Shaders
 			}
 			else
 			{
-				var texcoord210 = new TextureCoordinateNode(m_shader, "texcoord");
+				var texcoord210 = new RhinoTextureCoordinateNode(m_shader, "texcoord");
 
 				RhinoAzimuthAltitudeTransformNode bgAzimuthAltitudeTransformNode = new RhinoAzimuthAltitudeTransformNode(m_shader, "bgAzimuthAltitudeTransform");
 				RhinoAzimuthAltitudeTransformNode reflAzimuthAltitudeTransformNode = new RhinoAzimuthAltitudeTransformNode(m_shader, "reflAzimuthAltitudeTransform");

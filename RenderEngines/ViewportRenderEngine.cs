@@ -332,6 +332,7 @@ Please click the link below for more information.", 69));
 					var size = CalculateNativeRenderSize();
 					Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height);
 					lastRenderedSample = -1;
+					renderingDone = false;
 					_needReset = false;
 				}
 
