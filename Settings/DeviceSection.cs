@@ -305,9 +305,9 @@ namespace RhinoCyclesCore.Settings
 		{
 			m_tc = new TabControl();
 
-			m_tabpage_cpu = new GridDevicePage { Text = "Cpu", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.Cpu.ico").WithSize(16, 16)  , ToolTip = Localization.LocalizeString("Show all the render devices in the Cpu category.", 24)};
-			m_tabpage_cuda = new GridDevicePage { Text = "Cuda", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.Cuda.ico").WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the Cuda category.\nThese are the NVidia graphics and compute cards.", 25) };
-			m_tabpage_optix = new GridDevicePage { Text = "Optix", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.Cuda.ico").WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the Optix category.\nThese are the NVidia graphics and compute cards from Maxwell architecture and newer.", 41) };
+			m_tabpage_cpu = new GridDevicePage { Text = "CPU", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CPU.ico").WithSize(16, 16)  , ToolTip = Localization.LocalizeString("Show all the render devices in the Cpu category.", 24)};
+			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CUDA.ico").WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the Cuda category.\nThese are the NVidia graphics and compute cards.", 25) };
+			m_tabpage_optix = new GridDevicePage { Text = "Optix", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CUDA.ico").WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the Optix category.\nThese are the NVidia graphics and compute cards from Maxwell architecture and newer.", 41) };
 			m_tc.Pages.Add(m_tabpage_cpu);
 			m_tc.Pages.Add(m_tabpage_cuda);
 			m_tc.Pages.Add(m_tabpage_optix);
