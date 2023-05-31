@@ -94,8 +94,8 @@ namespace RhinoCyclesCore.Settings
 			SampleClampIndirect = SampleClampIndirect;
 			LightSamplingThreshold = LightSamplingThreshold;
 
-			SampleAllLights = SampleAllLights;
-			SampleAllLightsIndirect = SampleAllLightsIndirect;
+			UseDirectLight = UseDirectLight;
+			UseIndirectLight = UseIndirectLight;
 
 			Blades = Blades;
 			BladesRotation = BladesRotation;
@@ -190,8 +190,8 @@ namespace RhinoCyclesCore.Settings
 			SampleClampIndirect = DefaultEngineSettings.SampleClampIndirect;
 			LightSamplingThreshold = DefaultEngineSettings.LightSamplingThreshold;
 
-			SampleAllLights = DefaultEngineSettings.SampleAllLights;
-			SampleAllLightsIndirect = DefaultEngineSettings.SampleAllLightsIndirect;
+			UseDirectLight = DefaultEngineSettings.UseDirectLight;
+			UseIndirectLight = DefaultEngineSettings.UseIndirectLight;
 
 			Blades = DefaultEngineSettings.Blades;
 			BladesRotation = DefaultEngineSettings.BladesRotation;
@@ -576,16 +576,16 @@ namespace RhinoCyclesCore.Settings
 			set { RcPlugIn.Settings.SetDouble(SettingNames.LightSamplingThreshold, value); }
 		}
 
-		public virtual bool SampleAllLights
+		public virtual bool UseDirectLight
 		{
-			get { return RcPlugIn.Settings.GetBool(SettingNames.SampleAllLights, DefaultEngineSettings.SampleAllLights); }
-			set { RcPlugIn.Settings.SetBool(SettingNames.SampleAllLights, value); }
+			get { return RcPlugIn.Settings.GetBool(SettingNames.UseDirectLight, DefaultEngineSettings.UseDirectLight); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.UseDirectLight, value); }
 		}
 
-		public virtual bool SampleAllLightsIndirect
+		public virtual bool UseIndirectLight
 		{
-			get { return RcPlugIn.Settings.GetBool(SettingNames.SampleAllLightsIndirect, DefaultEngineSettings.SampleAllLightsIndirect); }
-			set { RcPlugIn.Settings.SetBool(SettingNames.SampleAllLightsIndirect, value); }
+			get { return RcPlugIn.Settings.GetBool(SettingNames.UseIndirectLight, DefaultEngineSettings.UseIndirectLight); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.UseIndirectLight, value); }
 		}
 
 		public virtual int Blades

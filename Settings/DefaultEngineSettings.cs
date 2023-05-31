@@ -81,8 +81,8 @@ namespace RhinoCyclesCore.Settings
 		static public float SampleClampIndirect => 3.0f;
 		static public float LightSamplingThreshold => 0.05f;
 
-		static public bool SampleAllLights => true;
-		static public bool SampleAllLightsIndirect => true;
+		static public bool UseDirectLight => true;
+		static public bool UseIndirectLight => true;
 
 		static public int Blades => 0;
 		static public float BladesRotation => 0.0f;

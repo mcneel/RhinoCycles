@@ -151,11 +151,7 @@ namespace RhinoCyclesCore.RenderEngines
 				TileOrder = TileOrder.Center,
 				Threads = (uint)(RenderDevice.IsGpu ? 0 : engineSettings.Threads),
 				ShadingSystem = ShadingSystem.SVM,
-				SkipLinearToSrgbConversion = true,
-				DisplayBufferLinear = true,
 				Background = false,
-				ProgressiveRefine = true,
-				Progressive = true,
 				PixelSize = 1,
 			};
 			#endregion

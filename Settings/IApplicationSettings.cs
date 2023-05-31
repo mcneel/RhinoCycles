@@ -30,8 +30,6 @@ namespace RhinoCyclesCore.Settings
 
 		bool CPUSplitKernel { get; set; }
 
-		bool NoShadows { get; set; }
-
 		float DpiScale { get; set; }
 
 		int PreviewSamples { get; set; }

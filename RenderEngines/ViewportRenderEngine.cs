@@ -235,12 +235,7 @@ Please click the link below for more information.", 69));
 				TileSize = TileSize(RenderDevice),
 				Threads = (uint)ThreadCount,
 				ShadingSystem = ShadingSystem.SVM,
-				SkipLinearToSrgbConversion = true,
-				DisplayBufferLinear = true,
 				Background = false,
-				ProgressiveRefine = eds.UseStartResolution,
-				Progressive = true,
-				StartResolution = eds.StartResolution,
 				PixelSize = 1,
 			};
 			#endregion

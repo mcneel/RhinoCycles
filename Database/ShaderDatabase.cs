@@ -62,10 +62,6 @@ namespace RhinoCyclesCore.Database
 		/// record RenderMaterial CRC and Shader relationship. Key is RenderHash, Value is Shader.
 		/// </summary>
 		private readonly Dictionary<uint, CclShader> _rhCclShaders = new Dictionary<uint, CclShader>();
-		/// <summary>
-		/// record shader in scene relationship. Key is RenderMaterial.RenderHash, Value is shader id in scene.
-		/// </summary>
-		private readonly Dictionary<uint, uint> _rhCclSceneShaderIds = new Dictionary<uint, uint>();
 		private bool disposedValue;
 
 		/// <summary>
@@ -100,28 +96,6 @@ namespace RhinoCyclesCore.Database
 		public void RecordRhCclShaderRelation(uint id, CclShader shader)
 		{
 				_rhCclShaders.Add(id, shader);
-		}
-
-		/// <summary>
-		/// Record the Cycles shader id in scene for RenderHash
-		/// </summary>
-		/// <param name="shaderId">Rhino material RenderHash</param>
-		/// <param name="shaderSceneId">Cycles shader scene id</param>
-		public void RecordCclShaderSceneId(uint shaderId, uint shaderSceneId)
-		{
-				_rhCclSceneShaderIds.Add(shaderId, shaderSceneId);
-		}
-
-		/// <summary>
-		/// Get Cycles shader scene id for Rhino material RenderHash.
-		/// @todo check this is correct naming and dictionary to query from
-		/// </summary>
-		/// <param name="id"></param>
-		/// <returns>Cycles shader scene id</returns>
-		public uint GetShaderIdForMatId(uint id)
-		{
-			if (!_rhCclSceneShaderIds.ContainsKey(id)) return 0;
-			return _rhCclSceneShaderIds[id];
 		}
 
 		/// <summary>
@@ -236,7 +210,6 @@ namespace RhinoCyclesCore.Database
 						cclshader.Value?.Dispose();
 					}
 					_rhCclShaders.Clear(); // uint, CclShader
-					_rhCclSceneShaderIds.Clear(); //
 				}
 
 				// TODO: free unmanaged resources (unmanaged objects) and override finalizer

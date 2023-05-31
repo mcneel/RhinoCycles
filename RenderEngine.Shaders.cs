@@ -40,7 +40,7 @@ namespace RhinoCyclesCore
 						sh = CreateCyclesShaderFromXml(shader.Front);
 						break;
 					case ShaderBody.CyclesMaterial.CustomRenderMaterial:
-						sh = new CclShader(Session, CclShader.ShaderType.Material);
+						sh = new CclShader(Session.Scene);
 						shader.Front.Crm.GetShader(sh, true);
 						break;
 					default:
@@ -68,7 +68,7 @@ namespace RhinoCyclesCore
 						sh = RecreateCyclesShaderFromXml(shader.Front, existing);
 						break;
 					case ShaderBody.CyclesMaterial.CustomRenderMaterial:
-						sh = new CclShader(Session, CclShader.ShaderType.Material);
+						sh = new CclShader(Session.Scene);
 						shader.Front.Crm.GetShader(sh, true);
 						break;
 					default:
@@ -82,7 +82,7 @@ namespace RhinoCyclesCore
 
 		internal CclShader CreateCyclesShaderFromXml(ShaderBody shader)
 		{
-			var sh = new CclShader(Session, CclShader.ShaderType.Material)
+			var sh = new CclShader(Session.Scene)
 			{
 				UseMis = true,
 				UseTransparentShadow = true,

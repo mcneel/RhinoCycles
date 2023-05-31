@@ -536,23 +536,23 @@ namespace RhinoCyclesCore.Settings
 			set => SetFloat(SettingNames.LightSamplingThreshold, value);
 		}
 
-		public bool SampleAllLights
+		public bool UseDirectLight
 		{
 			get
 			{
-				GetBool(SettingNames.SampleAllLights, DefaultEngineSettings.SampleAllLights, out bool outVal);
+				GetBool(SettingNames.UseDirectLight, DefaultEngineSettings.UseDirectLight, out bool outVal);
 				return outVal;
 			}
-			set => SetBool(SettingNames.SampleAllLights, value);
+			set => SetBool(SettingNames.UseDirectLight, value);
 		}
-		public bool SampleAllLightsIndirect
+		public bool UseIndirectLight
 		{
 			get
 			{
-				GetBool(SettingNames.SampleAllLightsIndirect, DefaultEngineSettings.SampleAllLightsIndirect, out bool outVal);
+				GetBool(SettingNames.UseIndirectLight, DefaultEngineSettings.UseIndirectLight, out bool outVal);
 				return outVal;
 			}
-			set => SetBool(SettingNames.SampleAllLightsIndirect, value);
+			set => SetBool(SettingNames.UseIndirectLight, value);
 		}
 
 		public int Blades

@@ -181,19 +181,16 @@ namespace RhinoCyclesCore
 			session.Scene.Integrator.AoFactor = engineSettings.AoFactor;
 			session.Scene.Integrator.AoDistance = engineSettings.AoDistance;
 			session.Scene.Integrator.AoAdditiveFactor = engineSettings.AoAdditiveFactor;
-			session.Scene.Integrator.MeshLightSamples = engineSettings.MeshLightSamples;
 			session.Scene.Integrator.VolumeSamples = engineSettings.VolumeSamples;
 			session.Scene.Integrator.AaSamples = engineSettings.AaSamples;
 			session.Scene.Integrator.FilterGlossy = engineSettings.FilterGlossy;
-			session.Scene.Integrator.IntegratorMethod = engineSettings.IntegratorMethod;
-			session.Scene.Integrator.SampleAllLightsDirect = engineSettings.SampleAllLights;
-			session.Scene.Integrator.SampleAllLightsIndirect = engineSettings.SampleAllLightsIndirect;
+			session.Scene.Integrator.UseDirectLight = engineSettings.UseDirectLight;
+			session.Scene.Integrator.UseIndirectLight = engineSettings.UseIndirectLight;
 			session.Scene.Integrator.SampleClampDirect = engineSettings.SampleClampDirect;
 			session.Scene.Integrator.SampleClampIndirect = engineSettings.SampleClampIndirect;
 			session.Scene.Integrator.LightSamplingThreshold =  engineSettings.LightSamplingThreshold;
 			session.Scene.Integrator.SamplingPattern = SamplingPattern.Sobol;
 			session.Scene.Integrator.Seed = engineSettings.Seed;
-			session.Scene.Integrator.NoShadows = engineSettings.NoShadows;
 			#endregion
 		}
 
@@ -264,7 +261,7 @@ namespace RhinoCyclesCore
 		/// <param name="image_node"></param>
 		/// <param name="texture_coordinates"></param>
 		public static void SetProjectionMode(Shader shader, CyclesTextureImage texture, ImageTextureNode image_node,
-			TextureCoordinateNode texture_coordinates)
+			RhinoTextureCoordinateNode texture_coordinates)
 		{
 			if (!texture.HasTextureImage) return;
 
@@ -341,7 +338,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public static VectorSocket GetProjectionModeOutputSocket(CyclesTextureImage texture, TextureCoordinateNode texture_coordinates)
+		public static VectorSocket GetProjectionModeOutputSocket(CyclesTextureImage texture, RhinoTextureCoordinateNode texture_coordinates)
 		{
 			if (texture.ProjectionMode == TextureProjectionMode.WcsBox)
 			{

@@ -72,7 +72,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// new shaders we've got
-			// TODO: XXXX Database.UploadShaderChanges();
+			Database.UploadShaderChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.6f, "Shaders uploaded"));
 
 			if (CancelRender) return false;
@@ -96,7 +96,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// shader changes on objects (replacement)
-			// TODO: XXXX Database.UploadObjectShaderChanges();
+			Database.UploadObjectShaderChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.9f, "Shader assignments uploaded"));
 
 			if (CancelRender) return false;

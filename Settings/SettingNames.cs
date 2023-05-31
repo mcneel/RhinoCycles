@@ -67,8 +67,8 @@ namespace RhinoCyclesCore.Settings
 		public static string SampleClampDirect => "SampleClampDirect";
 		public static string SampleClampIndirect => "SampleClampIndirect";
 		public static string LightSamplingThreshold => "LightSamplingThreshold";
-		public static string SampleAllLights => "SampleAllLights";
-		public static string SampleAllLightsIndirect => "SampleAllLightsIndirect";
+		public static string UseDirectLight => "UseDirectLight";
+		public static string UseIndirectLight => "UseIndirectLight";
 		public static string Blades => "Blades";
 		public static string BladesRotation => "BladesRotation";
 		public static string ApertureRatio => "ApertureRatio";

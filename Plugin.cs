@@ -64,26 +64,6 @@ namespace RhinoCycles
 			return false;
 		}
 
-		private bool SkipOpenCl() {
-#if ON_RUNTIME_WIN
-			SkipList skipList = new SkipList(SettingsDirectory);
-
-			var gpuNames = DisplayDeviceInfo.GpuNames();
-
-			bool shouldskip = false;
-
-			foreach (string gpuName in gpuNames)
-			{
-				shouldskip |= skipList.Hit(gpuName);
-
-			}
-
-			bool v = RcCore.It.AllSettings.OpenClDeviceType == 0 || shouldskip | IsIntelOpenClSdkInstalled();
-			return v;
-#else
-			return true;
-#endif
-		}
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			if(!pluginLoaded) {
@@ -137,15 +117,6 @@ namespace RhinoCycles
 				IntPtr aaltonen_noise_array = RenderTexture.GetProceduralAaltonenNoiseArrayPointer();
 				uint aaltonen_noise_array_size = RenderTexture.GetProceduralAaltonenNoiseArraySize();
 				CSycles.set_rhino_aaltonen_noise_table(aaltonen_noise_array, aaltonen_noise_array_size);
-
-				if (RhinoApp.RunningOnVMWare() || SkipOpenCl()) {
-					CSycles.debug_set_opencl_device_type(0);
-				} else {
-					CSycles.debug_set_opencl_device_type(RcCore.It.AllSettings.OpenClDeviceType);
-					CSycles.debug_set_opencl_kernel(RcCore.It.AllSettings.OpenClKernelType);
-					CSycles.debug_set_opencl_single_program(RcCore.It.AllSettings.OpenClSingleProgram);
-				}
-				CSycles.debug_set_cpu_kernel(RcCore.It.AllSettings.CPUSplitKernel);
 
 				RcCore.It.Initialised = false;
 #if ON_RUNTIME_WIN

@@ -115,7 +115,7 @@ namespace RhinoCyclesCore.Shaders
 			return m_shader;
 		}
 
-		static private void SetupOneDecalNodes(CyclesDecal decal, TextureCoordinateNode texco, ImageTextureNode imgtex, MathMultiply transp)
+		static private void SetupOneDecalNodes(CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, MathMultiply transp)
 		{
 			texco.ObjectTransform = decal.Transform;
 			texco.UseTransform = true;
@@ -199,7 +199,7 @@ namespace RhinoCyclesCore.Shaders
 
 			if (count > 0)
 			{
-				List<TextureCoordinateNode> texcos = new List<TextureCoordinateNode>(count);
+				List<RhinoTextureCoordinateNode> texcos = new List<RhinoTextureCoordinateNode>(count);
 				List<ImageTextureNode> imgtexs= new List<ImageTextureNode>(count);
 				List<MixNode> mixrgbs = new List<MixNode>(count);
 				List<MathMultiply> transparencies = new List<MathMultiply>(count);
@@ -210,7 +210,7 @@ namespace RhinoCyclesCore.Shaders
 				// for this material.
 				for (int i = 0; i < count; i++)
 				{
-					texcos.Add(new TextureCoordinateNode(m_shader, $"Decal_{idx}_texco_"));
+					texcos.Add(new RhinoTextureCoordinateNode(m_shader, $"Decal_{idx}_texco_"));
 					imgtexs.Add(new ImageTextureNode(m_shader, $"Texture_for_decal_{idx}_"));
 					mixrgbs.Add(new MixNode(m_shader, $"Decal_mixer_{idx}_"));
 					transparencies.Add(new MathMultiply(m_shader, $"Decal_transparency_multiplier_{idx}_"));
@@ -355,7 +355,7 @@ namespace RhinoCyclesCore.Shaders
 				materialTwo.GetClosureSocket().Connect(blender.ins.Closure2);
 
 				if (part.BlendMixAmountTexture.HasTextureImage) {
-					TextureCoordinateNode blendTexCo = new TextureCoordinateNode(m_shader, "texco for blend");
+					RhinoTextureCoordinateNode blendTexCo = new RhinoTextureCoordinateNode(m_shader, "texco for blend");
 					ImageTextureNode blendTexture = new ImageTextureNode(m_shader, "blendmaterial texture");
 					m_shader.AddNode(blendTexture);
 					m_shader.AddNode(blendTexCo);

@@ -96,11 +96,7 @@ namespace RhinoCyclesCore.RenderEngines
 				TileSize = gpusize,
 				Threads = threads,
 				ShadingSystem = ShadingSystem.SVM,
-				SkipLinearToSrgbConversion = true,
-				DisplayBufferLinear = true,
 				Background = false,
-				ProgressiveRefine = true,
-				Progressive = true,
 				PixelSize = pixelSize, //renderDevice.IsCpu ? pixelSize : 1,
 			};
 #endregion

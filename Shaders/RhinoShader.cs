@@ -28,7 +28,7 @@ namespace RhinoCyclesCore.Shaders
 
 		protected Session m_session;
 
-		private void InitShader(string name, Shader existing, Shader.ShaderType shaderType, bool recreate)
+		private void InitShader(string name, Shader existing, bool recreate)
 		{
 			if (existing != null)
 			{
@@ -37,13 +37,13 @@ namespace RhinoCyclesCore.Shaders
 			}
 			else
 			{
-				m_shader = new Shader(m_session, shaderType)
+				m_shader = new Shader(m_session.Scene)
 				{
 					UseMis = true,
 					UseTransparentShadow = true,
 					HeterogeneousVolume = false,
 					Name = name,
-					Verbose = shaderType == Shader.ShaderType.Material ? RcCore.It.AllSettings.Verbose : false
+					Verbose = false
 				};
 			}
 
@@ -54,7 +54,7 @@ namespace RhinoCyclesCore.Shaders
 			m_original = intermediate;
 			if (m_original.Front != null) m_original.Front.Gamma = m_original.Gamma;
 			if (m_original.Back != null) m_original.Back.Gamma = m_original.Gamma;
-			InitShader(name, existing, Shader.ShaderType.Material, recreate);
+			InitShader(name, existing, recreate);
 
 		}
 
@@ -62,14 +62,14 @@ namespace RhinoCyclesCore.Shaders
 		{
 			m_session = session;
 			m_original_background = intermediateBackground;
-			InitShader(name, existing, Shader.ShaderType.World, recreate);
+			InitShader(name, existing, recreate);
 		}
 
 		protected RhinoShader(Session session, CyclesLight intermediateLight, string name, Shader existing, bool recreate)
 		{
 			m_session = session;
 			m_original_light = intermediateLight;
-			InitShader(name, existing, Shader.ShaderType.Material, recreate);
+			InitShader(name, existing, recreate);
 		}
 
 		public void Reset()

@@ -170,8 +170,7 @@ namespace RhinoCyclesCore.Database
 					var oldShader = _shaderDatabase.GetShaderFromHash(obshad.OldShaderHash);
 					if (newShader != null)
 					{
-						cob.Shader = _shaderDatabase.GetShaderIdForMatId(obshad.NewShaderHash);
-						cob.Shader = this._renderEngine.Session.Scene.GetShaderSceneId(newShader);
+						cob.Shader = newShader.Id;
 						newShader.Tag();
 					}
 					oldShader?.Tag(false); // tag old shader to be no longer used (on this object)
@@ -296,20 +295,7 @@ namespace RhinoCyclesCore.Database
 
 				if (_renderEngine.CancelRender) return;
 
-				// lets find the shader for this, or use 0 if none found.
-				uint shid;
-				var matid = _objectShaderDatabase.FindRenderHashForMeshId(cyclesMesh.MeshId);
-				try
-				{
-					// @todo check this is correct naming and dictionary to query from
-					shid = _shaderDatabase.GetShaderIdForMatId(matid);
-				}
-				catch (Exception)
-				{
-					shid = 0;
-				}
-
-				var shader = new ccl.Shader(_renderEngine.Session, Shader.ShaderType.Material);
+				var shader = new ccl.Shader(_renderEngine.Session.Scene);
 
 				// creat a new mesh to upload mesh data to
 				if (newme)
@@ -321,7 +307,7 @@ namespace RhinoCyclesCore.Database
 
 				// update status bar of render window.
 				var stat =
-					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.Verts.Length/3}, t: {cyclesMesh.Faces.Length/3} using shader {shid}]";
+					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.Verts.Length/3}, t: {cyclesMesh.Faces.Length/3}]";
 				RcCore.OutputDebugString($"\t\t{stat}\n");
 
 				// set progress, but without rendering percentage (hence the -1.0f)
@@ -1329,9 +1315,6 @@ namespace RhinoCyclesCore.Database
 				var sh = _renderEngine.CreateMaterialShader(shader);
 				_shaderDatabase.RecordRhCclShaderRelation(shader.Id, sh);
 				_shaderDatabase.Add(shader, sh);
-				// add the new shader to scene
-				var scshid = _renderEngine.Session.Scene.AddShader(sh);
-				_shaderDatabase.RecordCclShaderSceneId(shader.Id, scshid);
 
 				sh.Tag();
 			}
@@ -1523,7 +1506,6 @@ namespace RhinoCyclesCore.Database
 				var lgsh = l.Type!=LightType.Background ? _renderEngine.CreateSimpleEmissionShader(l) : _renderEngine.Session.Scene.Background.Shader;
 				if (l.Type != LightType.Background)
 				{
-					_renderEngine.Session.Scene.AddShader(lgsh);
 					_shaderDatabase.Add(l, lgsh);
 				}
 
@@ -1895,13 +1877,10 @@ namespace RhinoCyclesCore.Database
 					vis &= ~PathRay.Shadow;
 				}
 				cob.MeshLightNoCastShadow = ob.CastNoShadow;
-				cob.Cutout = ob.Cutout;
-				if (ob.Cutout) {
-					vis = PathRay.Camera;
-				}
-				cob.IgnoreCutout = ob.IgnoreCutout;
 				cob.Visibility = vis;
-				cob.Shader = _shaderDatabase.GetShaderIdForMatId(ob.matid);
+
+				Shader shader = _shaderDatabase.GetShaderFromHash(ob.matid);
+				cob.Shader = shader.Id;
 				//cob.Cutout = false;
 				cob.TagUpdate();
 			}

@@ -281,14 +281,14 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
-		public bool SampleAllLights
+		public bool UseDirectLight
 		{
-			get => mDict.GetBool(SettingNames.SampleAllLights, DefaultEngineSettings.SampleAllLights);
+			get => mDict.GetBool(SettingNames.UseDirectLight, DefaultEngineSettings.UseDirectLight);
 			set => throw new InvalidOperationException();
 		}
-		public bool SampleAllLightsIndirect
+		public bool UseIndirectLight
 		{
-			get => mDict.GetBool(SettingNames.SampleAllLightsIndirect, DefaultEngineSettings.SampleAllLightsIndirect);
+			get => mDict.GetBool(SettingNames.UseIndirectLight, DefaultEngineSettings.UseIndirectLight);
 			set => throw new InvalidOperationException();
 		}
 

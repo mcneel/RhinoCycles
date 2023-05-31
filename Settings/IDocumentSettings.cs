@@ -20,7 +20,6 @@ namespace RhinoCyclesCore.Settings
 {
 	public interface IDocumentSettings
 	{
-		IntegratorMethod IntegratorMethod { get; set; }
 		uint IntegratorHash { get;  }
 		int Samples { get; set; }
 		bool UseDocumentSamples { get; set; }
@@ -61,7 +60,6 @@ namespace RhinoCyclesCore.Settings
 		float AoDistance { get; set; }
 		float AoAdditiveFactor { get; set; }
 
-		int MeshLightSamples { get; set; }
 		int SubsurfaceSamples { get; set; }
 		int VolumeSamples { get; set; }
 
@@ -71,8 +69,8 @@ namespace RhinoCyclesCore.Settings
 		float SampleClampIndirect { get; set; }
 		float LightSamplingThreshold { get; set; }
 
-		bool SampleAllLights { get; set; }
-		bool SampleAllLightsIndirect { get; set; }
+		bool UseDirectLight { get; set; }
+		bool UseIndirectLight { get; set; }
 
 		int Blades { get; set; }
 		float BladesRotation { get; set; }

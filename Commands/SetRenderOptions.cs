@@ -75,8 +75,8 @@ namespace RhinoCycles.Commands
 			var sampleClampDirect = new OptionDouble(RcCore.It.AllSettings.SampleClampDirect, 0.0, 100.0);
 			var sampleClampIndirect = new OptionDouble(RcCore.It.AllSettings.SampleClampIndirect, 0.0, 100.0);
 			var lightSamplingThreshold = new OptionDouble(RcCore.It.AllSettings.LightSamplingThreshold, 0.0, 1.0);
-			var sampleAllLights = new OptionToggle(RcCore.It.AllSettings.SampleAllLights, "no", "yes");
-			var sampleAllLightsIndirect = new OptionToggle(RcCore.It.AllSettings.SampleAllLightsIndirect, "no", "yes");
+			var useDirectLight = new OptionToggle(RcCore.It.AllSettings.UseDirectLight, "no", "yes");
+			var useIndirectLight = new OptionToggle(RcCore.It.AllSettings.UseIndirectLight, "no", "yes");
 
 			getNumber.AddOptionToggle("show_max_passes", ref showMaxPasses);
 			getNumber.AddOptionInteger("max_bounces", ref maxBounce);
@@ -105,8 +105,8 @@ namespace RhinoCycles.Commands
 			getNumber.AddOptionDouble("sample_clamp_direct", ref sampleClampDirect);
 			getNumber.AddOptionDouble("sample_clamp_indirect", ref sampleClampIndirect);
 			getNumber.AddOptionDouble("light_sampling_threshold", ref lightSamplingThreshold);
-			getNumber.AddOptionToggle("sample_all_lights", ref sampleAllLights);
-			getNumber.AddOptionToggle("sample_all_lights_indirect", ref sampleAllLightsIndirect);
+			getNumber.AddOptionToggle("sample_all_lights", ref useDirectLight);
+			getNumber.AddOptionToggle("sample_all_lights_indirect", ref useIndirectLight);
 
 			while (true)
 			{
@@ -137,8 +137,8 @@ namespace RhinoCycles.Commands
 						RcCore.It.AllSettings.SampleClampDirect = (float)sampleClampDirect.CurrentValue;
 						RcCore.It.AllSettings.SampleClampIndirect = (float)sampleClampIndirect.CurrentValue;
 						RcCore.It.AllSettings.LightSamplingThreshold = (float)lightSamplingThreshold.CurrentValue;
-						RcCore.It.AllSettings.SampleAllLights = sampleAllLights.CurrentValue;
-						RcCore.It.AllSettings.SampleAllLightsIndirect = sampleAllLightsIndirect.CurrentValue;
+						RcCore.It.AllSettings.UseDirectLight = useDirectLight.CurrentValue;
+						RcCore.It.AllSettings.UseIndirectLight = useIndirectLight.CurrentValue;
 						break;
 					case GetResult.Option:
 						continue;
