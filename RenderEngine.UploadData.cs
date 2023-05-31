@@ -60,7 +60,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// transforms on objects, no geometry changes
-			// TODO: XXXX Database.UploadDynamicObjectTransforms();
+			Database.UploadDynamicObjectTransforms();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.4f, "Dynamic object transforms uploaded"));
 
 			if (CancelRender) return false;
