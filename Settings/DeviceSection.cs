@@ -183,6 +183,9 @@ namespace RhinoCyclesCore.Settings
 		private GridDevicePage m_tabpage_cpu;
 		private GridDevicePage m_tabpage_cuda;
 		private GridDevicePage m_tabpage_optix;
+		private GridDevicePage m_tabpage_metal;
+		private GridDevicePage m_tabpage_hip;
+		private GridDevicePage m_tabpage_oneapi;
 		private ccl.Device m_currentDevice;
 		private Label m_lb_threadcount;
 		private Slider m_threadcount;
@@ -226,8 +229,11 @@ namespace RhinoCyclesCore.Settings
 			IDocumentSettings vud = Utilities.GetEngineDocumentSettings(m_doc_serialnumber);
 			var rd = ActiveDevice(vud);
 			if (rd.IsCpu) m_tc.SelectedPage = m_tabpage_cpu;
-			if (rd.IsCuda || rd.IsMultiCuda) m_tc.SelectedPage = m_tabpage_cuda;
-			if (rd.IsOptix|| rd.IsMultiOptix) m_tc.SelectedPage = m_tabpage_optix;
+			if (ccl.Device.CudaAvailable() && (rd.IsCuda || rd.IsMultiCuda)) m_tc.SelectedPage = m_tabpage_cuda;
+			if (ccl.Device.OptixAvailable() && (rd.IsOptix|| rd.IsMultiOptix)) m_tc.SelectedPage = m_tabpage_optix;
+			if (ccl.Device.MetalAvailable() && rd.IsMetal) m_tc.SelectedPage = m_tabpage_metal;
+			if (ccl.Device.HipAvailable() && rd.IsHip) m_tc.SelectedPage = m_tabpage_hip;
+			if (ccl.Device.OneApiAvailable() && rd.IsOneApi) m_tc.SelectedPage = m_tabpage_oneapi;
 			base.OnShown(e);
 		}
 
@@ -269,8 +275,11 @@ namespace RhinoCyclesCore.Settings
 		private void ActivateDevicePage(IDocumentSettings vud)
 		{
 			var rd = ActiveDevice(vud);
-			if (rd.IsCuda || rd.IsMultiCuda) m_tc.SelectedPage = m_tabpage_cuda;
-			else if (rd.IsOptix || rd.IsMultiOptix) m_tc.SelectedPage = m_tabpage_optix;
+			if (ccl.Device.CudaAvailable() && (rd.IsCuda || rd.IsMultiCuda)) m_tc.SelectedPage = m_tabpage_cuda;
+			else if (ccl.Device.OptixAvailable() && (rd.IsOptix || rd.IsMultiOptix)) m_tc.SelectedPage = m_tabpage_optix;
+			else if (ccl.Device.MetalAvailable() && rd.IsMetal) m_tc.SelectedPage = m_tabpage_metal;
+			else if (ccl.Device.HipAvailable() && rd.IsHip) m_tc.SelectedPage = m_tabpage_hip;
+			else if (ccl.Device.OneApiAvailable() && rd.IsOneApi) m_tc.SelectedPage = m_tabpage_oneapi;
 			else m_tc.SelectedPage = m_tabpage_cpu;
 		}
 
@@ -284,8 +293,11 @@ namespace RhinoCyclesCore.Settings
 					UnRegisterControlEvents();
 					ShowDeviceData();
 					SetupDeviceData(e.AllSettings, m_tabpage_cpu.Collection, ccl.DeviceType.Cpu);
-					SetupDeviceData(e.AllSettings, m_tabpage_cuda.Collection, ccl.DeviceType.Cuda);
-					SetupDeviceData(e.AllSettings, m_tabpage_optix.Collection, ccl.DeviceType.Optix);
+					if(ccl.Device.CudaAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_cuda.Collection, ccl.DeviceType.Cuda);
+					if(ccl.Device.OptixAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_optix.Collection, ccl.DeviceType.Optix);
+					if(ccl.Device.MetalAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_metal.Collection, ccl.DeviceType.Metal);
+					if(ccl.Device.HipAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_hip.Collection, ccl.DeviceType.Hip);
+					if(ccl.Device.OneApiAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_oneapi.Collection, ccl.DeviceType.OneApi);
 					ActivateDevicePage(e.AllSettings);
 					m_lb_threadcount.Visible = m_currentDevice.IsCpu;
 					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
@@ -308,9 +320,26 @@ namespace RhinoCyclesCore.Settings
 			m_tabpage_cpu = new GridDevicePage { Text = "CPU", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CPU.ico").WithSize(16, 16)  , ToolTip = Localization.LocalizeString("Show all the render devices in the Cpu category.", 24)};
 			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CUDA.ico").WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the Cuda category.\nThese are the NVidia graphics and compute cards.", 25) };
 			m_tabpage_optix = new GridDevicePage { Text = "Optix", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CUDA.ico").WithSize(16, 16), ToolTip = Localization.LocalizeString("Show all the render devices in the Optix category.\nThese are the NVidia graphics and compute cards from Maxwell architecture and newer.", 41) };
+			m_tabpage_metal = new GridDevicePage { Text = "Metal", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CUDA.ico").WithSize(16, 16), ToolTip = LOC.STR("Show all the render devices in the Metal category.\nThese include GPU devices on MacOS systems.") };
+			m_tabpage_hip = new GridDevicePage { Text = "HIP", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CPU.ico").WithSize(16, 16), ToolTip = LOC.STR("Show all the render devices in the HIP category.\nThese include AMD GPU and supported devices.") };
+			m_tabpage_oneapi = new GridDevicePage { Text = "OneAPI", Image = Eto.Drawing.Icon.FromResource("RhinoCyclesCore.Icons.CPU.ico").WithSize(16, 16), ToolTip = LOC.STR("Show all the render devices in the OneAPI category.\nThese include Intel GPU and supported devices.") };
+
 			m_tc.Pages.Add(m_tabpage_cpu);
-			m_tc.Pages.Add(m_tabpage_cuda);
-			m_tc.Pages.Add(m_tabpage_optix);
+			if(ccl.Device.CudaAvailable()) {
+				m_tc.Pages.Add(m_tabpage_cuda);
+			}
+			if(ccl.Device.OptixAvailable()) {
+				m_tc.Pages.Add(m_tabpage_optix);
+			}
+			if(ccl.Device.MetalAvailable()) {
+				m_tc.Pages.Add(m_tabpage_metal);
+			}
+			if(ccl.Device.HipAvailable()) {
+				m_tc.Pages.Add(m_tabpage_hip);
+			}
+			if(ccl.Device.OneApiAvailable()) {
+				m_tc.Pages.Add(m_tabpage_oneapi);
+			}
 
 			m_lb_curdev = new Label { Text = Localization.LocalizeString("Current render device:", 27) };
 			m_curdev = new Label { Text = "...", Wrap = WrapMode.Word };
@@ -364,10 +393,31 @@ namespace RhinoCyclesCore.Settings
 		{
 			m_tabpage_cpu.SelectionChanged += DeviceSelectionChanged;
 			m_tabpage_cpu.RegisterEventHandlers();
-			m_tabpage_cuda.SelectionChanged += DeviceSelectionChanged;
-			m_tabpage_cuda.RegisterEventHandlers();
-			m_tabpage_optix.SelectionChanged += DeviceSelectionChanged;
-			m_tabpage_optix.RegisterEventHandlers();
+			if (ccl.Device.CudaAvailable())
+			{
+				m_tabpage_cuda.SelectionChanged += DeviceSelectionChanged;
+				m_tabpage_cuda.RegisterEventHandlers();
+			}
+			if (ccl.Device.OptixAvailable())
+			{
+				m_tabpage_optix.SelectionChanged += DeviceSelectionChanged;
+				m_tabpage_optix.RegisterEventHandlers();
+			}
+			if (ccl.Device.MetalAvailable())
+			{
+				m_tabpage_metal.SelectionChanged += DeviceSelectionChanged;
+				m_tabpage_metal.RegisterEventHandlers();
+			}
+			if (ccl.Device.HipAvailable())
+			{
+				m_tabpage_hip.SelectionChanged += DeviceSelectionChanged;
+				m_tabpage_hip.RegisterEventHandlers();
+			}
+			if (ccl.Device.OneApiAvailable())
+			{
+				m_tabpage_oneapi.SelectionChanged += DeviceSelectionChanged;
+				m_tabpage_oneapi.RegisterEventHandlers();
+			}
 			m_threadcount.ValueChanged += M_threadcount_ValueChanged;
 			m_btn_enablegpus.Click += m_btn_enablegpus_Clicked;
 		}
@@ -444,10 +494,31 @@ namespace RhinoCyclesCore.Settings
 		{
 			m_tabpage_cpu.SelectionChanged -= DeviceSelectionChanged;
 			m_tabpage_cpu.UnregisterEventHandlers();
-			m_tabpage_cuda.SelectionChanged -= DeviceSelectionChanged;
-			m_tabpage_cuda.UnregisterEventHandlers();
-			m_tabpage_optix.SelectionChanged -= DeviceSelectionChanged;
-			m_tabpage_optix.UnregisterEventHandlers();
+			if (ccl.Device.CudaAvailable())
+			{
+				m_tabpage_cuda.SelectionChanged -= DeviceSelectionChanged;
+				m_tabpage_cuda.UnregisterEventHandlers();
+			}
+			if (ccl.Device.OptixAvailable())
+			{
+				m_tabpage_optix.SelectionChanged -= DeviceSelectionChanged;
+				m_tabpage_optix.UnregisterEventHandlers();
+			}
+			if (ccl.Device.MetalAvailable())
+			{
+				m_tabpage_metal.SelectionChanged -= DeviceSelectionChanged;
+				m_tabpage_metal.UnregisterEventHandlers();
+			}
+			if (ccl.Device.HipAvailable())
+			{
+				m_tabpage_hip.SelectionChanged -= DeviceSelectionChanged;
+				m_tabpage_hip.UnregisterEventHandlers();
+			}
+			if (ccl.Device.OneApiAvailable())
+			{
+				m_tabpage_oneapi.SelectionChanged -= DeviceSelectionChanged;
+				m_tabpage_oneapi.UnregisterEventHandlers();
+			}
 			m_threadcount.ValueChanged -= M_threadcount_ValueChanged;
 			m_btn_enablegpus.Click -= m_btn_enablegpus_Clicked;
 		}
