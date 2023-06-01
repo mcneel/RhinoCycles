@@ -162,6 +162,7 @@ namespace RhinoCyclesCore.RenderEngines
 				if (cyclesEngine.IsStopped) break;
 				if (cyclesEngine.CancelRender) break;
 			}
+			cyclesEngine.Session.Cancel("done");
 
 			cyclesEngine?.Database.ResetChangeQueue();
 
