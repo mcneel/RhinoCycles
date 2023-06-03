@@ -221,7 +221,7 @@ namespace RhinoCyclesCore
 
 		private void CreateCustomShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
-			var onMaterial = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow);
+			var onMaterial = rm.ToMaterial(RenderTexture.TextureGeneration.Allow);
 
 			// figure out what type of material we are.
 			var probemat = WhatMaterial(rm, onMaterial);
@@ -345,7 +345,7 @@ namespace RhinoCyclesCore
 				//to us in the simulation.  A good example of this is Substance - which doesn't actually
 				//have any children, but it fills out the textures slots of an ON_Material in response to
 				//simulate material.
-				var mat = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow);
+				var mat = rm.ToMaterial(RenderTexture.TextureGeneration.Allow);
 				var tex = mat.GetTexture(RenderMaterial.TextureTypeFromSlot(childSlot));
 
 				if (null != tex)
@@ -398,7 +398,7 @@ namespace RhinoCyclesCore
 			}
 			else
 			{
-				var pbrmat = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Allow).PhysicallyBased;
+				var pbrmat = rm.ToMaterial(RenderTexture.TextureGeneration.Allow).PhysicallyBased;
 
 				shb.IsPbr = true;
 				shb.Name = rm.Name ?? "";
@@ -473,7 +473,7 @@ namespace RhinoCyclesCore
 			//the CreateXXXShaderPart will look at the actual textures in the RenderMaterial first.
 			//Even so, at this point, we can decide which shader we're going to create based on whether it simulates
 			//as a PBR or not.
-			bool isPbr = rm.SimulatedMaterial(RenderTexture.TextureGeneration.Skip).IsPhysicallyBased;
+			bool isPbr = rm.ToMaterial(RenderTexture.TextureGeneration.Skip).IsPhysicallyBased;
 
 			if (isPbr)
 			{
