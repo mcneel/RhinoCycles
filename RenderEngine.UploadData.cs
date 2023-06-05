@@ -45,7 +45,7 @@ namespace RhinoCyclesCore
 
 			if (CancelRender) return false;
 
-			// TODO: XXXX Database.UploadClippingPlaneChanges();
+			Database.UploadClippingPlaneChanges();
 
 			// linear workflow & gamma changes
 			// TODO: XXXX Database.UploadGammaChanges();
