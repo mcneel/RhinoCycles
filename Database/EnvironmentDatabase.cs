@@ -34,10 +34,10 @@ namespace RhinoCyclesCore.Database
 		private readonly CyclesBackground _cqBackground;
 
 		private readonly BitmapConverter _bitmapConverter;
-		public EnvironmentDatabase(BitmapConverter bitmapConverter)
+		public EnvironmentDatabase(BitmapConverter bitmapConverter, uint docsrn)
 		{
 			_bitmapConverter = bitmapConverter;
-			_cqBackground = new CyclesBackground(_bitmapConverter);
+			_cqBackground = new CyclesBackground(_bitmapConverter, docsrn);
 		}
 
 		public void Dispose()

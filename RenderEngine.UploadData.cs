@@ -102,7 +102,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// done, now clear out our change queue stuff so we're ready for the next time around :)
-			//Database.ResetChangeQueue();
+			Database.ResetChangeQueue();
 
 			if (CancelRender) return false;
 			return true;

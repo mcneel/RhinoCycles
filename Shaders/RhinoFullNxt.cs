@@ -111,7 +111,7 @@ namespace RhinoCyclesCore.Shaders
 				var lc = GetClosureSocket();
 				lc.Connect(m_shader.Output.ins.Surface);
 			}
-			m_shader.FinalizeGraph();
+			m_shader.WriteDataToNodes();
 			return m_shader;
 		}
 
@@ -311,7 +311,7 @@ namespace RhinoCyclesCore.Shaders
 				nodeToBindIntoShader = lastMixer;
 				//lastMixer.outs.Color.Connect(m_codeshader.Output.ins.Surface);
 
-				//m_codeshader.FinalizeGraph();
+				//m_codeshader.WriteDataToNodes();
 
 				//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
 			}
@@ -1029,7 +1029,6 @@ namespace RhinoCyclesCore.Shaders
 						if (!part.BumpTexture.IsNormalMap)
 						{
 							bump88.outs.Normal.Connect(final_diffuse89.ins.Normal);
-							bump88.outs.Normal.Connect(fresnel_based_on_constant92.ins.Normal);
 							bump88.outs.Normal.Connect(principledbsdf117.ins.Normal);
 							bump88.outs.Normal.Connect(principledbsdf117.ins.ClearcoatNormal);
 							bump88.outs.Normal.Connect(refraction100.ins.Normal);
@@ -1038,7 +1037,6 @@ namespace RhinoCyclesCore.Shaders
 						else
 						{
 							normalmap.outs.Normal.Connect(final_diffuse89.ins.Normal);
-							normalmap.outs.Normal.Connect(fresnel_based_on_constant92.ins.Normal);
 							normalmap.outs.Normal.Connect(principledbsdf117.ins.Normal);
 							normalmap.outs.Normal.Connect(principledbsdf117.ins.ClearcoatNormal);
 							normalmap.outs.Normal.Connect(refraction100.ins.Normal);

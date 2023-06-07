@@ -122,7 +122,7 @@ namespace RhinoCyclesCore.Materials
 
 			outsocket = mix.outs.Closure;
 
-			if (finalize) sh.FinalizeGraph();
+			if (finalize) sh.WriteDataToNodes();
 			return true;
 		}
 		public ClosureSocket GetClosureSocket(ccl.Shader sh)

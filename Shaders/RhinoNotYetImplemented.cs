@@ -24,7 +24,7 @@ namespace RhinoCyclesCore.Shaders
 
 
 		/// <summary>
-		/// Create a new shader, using intermediate.Name as name
+		/// Create a new shader, using intermediate.UiName as name
 		/// </summary>
 		/// <param name="client"></param>
 		/// <param name="intermediate"></param>
@@ -33,7 +33,7 @@ namespace RhinoCyclesCore.Shaders
 		}
 
 		/// <summary>
-		/// Create a new shader, with name overriding intermediate.Name
+		/// Create a new shader, with name overriding intermediate.UiName
 		/// </summary>
 		/// <param name="client"></param>
 		/// <param name="intermediate"></param>
@@ -51,7 +51,7 @@ namespace RhinoCyclesCore.Shaders
 			diffuse_bsdf.outs.BSDF.Connect(m_shader.Output.ins.Surface);
 
 			// done
-			m_shader.FinalizeGraph();
+			m_shader.WriteDataToNodes();
 
 			return m_shader;
 		}

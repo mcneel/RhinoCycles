@@ -65,7 +65,7 @@ namespace RhinoCyclesCore.Shaders
 			}
 
 			emnode.outs.Emission.Connect(m_shader.Output.ins.Surface);
-			m_shader.FinalizeGraph();
+			m_shader.WriteDataToNodes();
 			m_shader.Tag();
 
 			return m_shader;

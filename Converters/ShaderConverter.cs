@@ -2261,7 +2261,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="lw">LinearWorkflow data for this shader (gamma)</param>
 		/// <param name="decals">Decals to integrate into the shader</param>
 		/// <returns>The CyclesShader</returns>
-		public CyclesShader CreateCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid, BitmapConverter bitmapConverter, List<CyclesDecal> decals)
+		public CyclesShader RecordDataToSetupCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid, BitmapConverter bitmapConverter, List<CyclesDecal> decals)
 		{
 			var shader = new CyclesShader(mid, bitmapConverter)
 			{
@@ -2273,11 +2273,11 @@ namespace RhinoCyclesCore.Converters
 			{
 				if (rm.FindChild("front") is RenderMaterial front)
 				{
-					shader.CreateFrontShader(front, lw.PreProcessGamma);
+					shader.RecordDataForFrontShader(front, lw.PreProcessGamma);
 				}
 				if (rm.FindChild("back") is RenderMaterial back)
 				{
-					shader.CreateBackShader(back, lw.PreProcessGamma);
+					shader.RecordDataForBackShader(back, lw.PreProcessGamma);
 				}
 				/* Now ensure we have a valid front part of the shader. When a
 				 * double-sided material is added without having a front material
@@ -2286,13 +2286,13 @@ namespace RhinoCyclesCore.Converters
 				{
 					using (RenderMaterial defrm = RenderMaterial.CreateBasicMaterial(null, null))
 					{
-						shader.CreateFrontShader(defrm, lw.PreProcessGamma);
+						shader.RecordDataForFrontShader(defrm, lw.PreProcessGamma);
 					}
 				}
 			}
 			else
 			{
-				shader.CreateFrontShader(rm, lw.PreProcessGamma);
+				shader.RecordDataForFrontShader(rm, lw.PreProcessGamma);
 			}
 
 			return shader;

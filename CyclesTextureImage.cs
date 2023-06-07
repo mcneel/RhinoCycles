@@ -25,7 +25,7 @@ namespace RhinoCyclesCore
 	{
 		public Procedural Procedural { get; set; } = null;
 		public bool HasProcedural => Procedural != null;
-		public bool HasTextureImage => TexByte != null || TexFloat != null;
+		public bool HasTextureImage => !string.IsNullOrEmpty(Filename);
 		public List<CyclesTextureImage> TextureList = new List<CyclesTextureImage>();
 		public bool HasFloatImage => TexFloat != null;
 		public bool HasByteImage => TexByte != null;
@@ -37,6 +37,8 @@ namespace RhinoCyclesCore
 		public bool UseAlpha;
 		public bool AlternateTiles;
 		private bool disposedValue;
+
+		public string Filename { get; set; }
 
 		public float UseAlphaAsFloat => UseAlpha ? 1.0f : 0.0f;
 		public float Amount { get; set; }

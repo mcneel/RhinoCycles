@@ -19,6 +19,7 @@ using CclShader = ccl.Shader;
 using ccl.ShaderNodes;
 using RhinoCyclesCore.Shaders;
 using Rhino.Runtime.InteropWrappers;
+using System.Net;
 
 namespace RhinoCyclesCore
 {
@@ -123,21 +124,10 @@ namespace RhinoCyclesCore
 
 		internal static void SetTextureImage(EnvironmentTextureNode envnode, CyclesTextureImage texture)
 		{
-			if (texture.HasTextureImage)
-			{
-				if (texture.HasByteImage)
-				{
-					envnode.ByteImagePtr = texture.TexByte.Memory();
-				}
-				else if (texture.HasFloatImage)
-				{
-					envnode.FloatImagePtr = texture.TexFloat.Memory();
-					envnode.Interpolation = InterpolationType.Cubic;
-				}
-				envnode.Filename = texture.Name;
-				envnode.Width = (uint) texture.TexWidth;
-				envnode.Height = (uint) texture.TexHeight;
-			}
+			if (string.IsNullOrEmpty(texture.Filename)) return;
+
+			envnode.Filename = texture.Name;
+			envnode.ins.Filename.Value = texture.Filename;
 		}
 
 		internal CclShader CreateCyclesShaderFromRhinoV6BasicMat(CyclesShader shader)

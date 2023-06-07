@@ -165,7 +165,7 @@ namespace RhinoCyclesCore.Materials
 				outsocket = emission.outs.Emission;
 			}
 
-			if (finalize) sh.FinalizeGraph();
+			if (finalize) sh.WriteDataToNodes();
 
 			return true;
 		}

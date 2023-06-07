@@ -65,7 +65,7 @@ namespace RhinoCyclesCore.Settings
 
 
 		private void InitializeComponents() {
-			m_labelSharpness = new Label { Text = Localization.LocalizeString("Sharpness", 55), ToolTip=Localization.LocalizeString("Sharpness of rendering in viewport and thumbnail previews.", 56) };
+			m_labelSharpness = new Label { Text = Localization.LocalizeString("Anisotropy", 55), ToolTip=Localization.LocalizeString("Anisotropy of rendering in viewport and thumbnail previews.", 56) };
 			m_labelSharpnessPixelized = new Label { Text = Localization.LocalizeString("Pixelized (fastest)", 57), ToolTip=Localization.LocalizeString("Rendering happens faster, but results are more pixelized. Also affects thumbnail previews.", 58) };
 			m_sliderSharpness = new Slider()
 			{

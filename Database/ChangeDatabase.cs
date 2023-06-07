@@ -120,7 +120,7 @@ namespace RhinoCyclesCore.Database
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal, BitmapConverter bitmapConverter) : base(pluginId, doc, view, attributes, true, !modal)
 		{
 			BitmapConverter = bitmapConverter;
-			_environmentDatabase = new EnvironmentDatabase(BitmapConverter);
+			_environmentDatabase = new EnvironmentDatabase(BitmapConverter, doc);
 			_renderEngine = engine;
 			_doc_serialnr = doc;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
@@ -137,7 +137,7 @@ namespace RhinoCyclesCore.Database
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, CreatePreviewEventArgs createPreviewEventArgs, BitmapConverter bitmapConverter) : base(pluginId, createPreviewEventArgs)
 		{
 			BitmapConverter = bitmapConverter;
-			_environmentDatabase = new EnvironmentDatabase(BitmapConverter);
+			_environmentDatabase = new EnvironmentDatabase(BitmapConverter, 0);
 			_renderEngine = engine;
 			_modalRenderer = true;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);
@@ -194,6 +194,8 @@ namespace RhinoCyclesCore.Database
 
 				_environmentDatabase.CurrentBackgroundShader?.Reset();
 
+				/*
+				 * TODO: XXXX revisit gammastuff
 				foreach (var tup in _shaderDatabase.AllShaders)
 				{
 					var cclsh = tup.Item2;
@@ -214,6 +216,7 @@ namespace RhinoCyclesCore.Database
 					}
 
 				}
+				*/
 
 				TriggerLinearWorkflowUploaded();
 				TriggerFilmUpdateTagged();
@@ -1223,7 +1226,7 @@ namespace RhinoCyclesCore.Database
 			}
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = _shaderConverter.CreateCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals);
+			var sh = _shaderConverter.RecordDataToSetupCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals);
 			sh.InvisibleUnderside = invisibleUnderside;
 			_shaderDatabase.AddShader(sh);
 		}
@@ -1314,7 +1317,7 @@ namespace RhinoCyclesCore.Database
 				// create a cycles shader
 				var sh = _renderEngine.CreateMaterialShader(shader);
 				_shaderDatabase.RecordRhCclShaderRelation(shader.Id, sh);
-				_shaderDatabase.Add(shader, sh);
+				//_shaderDatabase.Add(shader, sh);
 
 				sh.Tag();
 			}
@@ -1504,10 +1507,12 @@ namespace RhinoCyclesCore.Database
 				l.Gamma = PreProcessGamma;
 
 				var lgsh = l.Type!=LightType.Background ? _renderEngine.CreateSimpleEmissionShader(l) : _renderEngine.Session.Scene.Background.Shader;
+				/*
 				if (l.Type != LightType.Background)
 				{
 					_shaderDatabase.Add(l, lgsh);
 				}
+				*/
 
 				if (_renderEngine.CancelRender) return;
 
@@ -1624,7 +1629,7 @@ namespace RhinoCyclesCore.Database
 			emissive.EndChange();
 			emissive.BakeParameters(BitmapConverter);
 			var shader = new CyclesShader(matid, BitmapConverter);
-			shader.CreateFrontShader(emissive, PreProcessGamma);
+			shader.RecordDataForFrontShader(emissive, PreProcessGamma);
 			shader.Type = CyclesShader.Shader.Diffuse;
 
 			_shaderDatabase.AddShader(shader);

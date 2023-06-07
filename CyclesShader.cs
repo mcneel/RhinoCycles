@@ -71,10 +71,10 @@ namespace RhinoCyclesCore
 			return other != null && Id.Equals(other.Id);
 		}
 
-		public bool CreateFrontShader(RenderMaterial rm, float gamma)
+		public bool RecordDataForFrontShader(RenderMaterial rm, float gamma)
 		{
 			_front = new ShaderBody(Id);
-			return CreateShaderPart(_front, rm, gamma);
+			return RecordDataForShaderPart(_front, rm, gamma);
 		}
 
 		/// <summary>
@@ -97,10 +97,10 @@ namespace RhinoCyclesCore
 
 		public bool InvisibleUnderside { get; set; } = false;
 
-		public bool CreateBackShader(RenderMaterial rm, float gamma)
+		public bool RecordDataForBackShader(RenderMaterial rm, float gamma)
 		{
 			_back = new ShaderBody(Id);
-			return CreateShaderPart(_back, rm, gamma);
+			return RecordDataForShaderPart(_back, rm, gamma);
 		}
 
 		public ShaderBody Front => _front;
@@ -219,7 +219,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		private void CreateCustomShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
+		private void RecordDataForCustomShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
 			var onMaterial = rm.ToMaterial(RenderTexture.TextureGeneration.Allow);
 
@@ -371,7 +371,7 @@ namespace RhinoCyclesCore
 		}
 
 		private Guid blendMaterialTypeId = new Guid("0322370F-A9AF-4264-A57C-58FF8E4345DD");
-		private void CreatePbrShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
+		private void RecordDataForPbrShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
 			if(rm.TypeId.Equals(blendMaterialTypeId))
 			{
@@ -379,14 +379,14 @@ namespace RhinoCyclesCore
 				if (rm.FindChild("material-1") is RenderMaterial first)
 				{
 					ShaderBody materialOne = new ShaderBody(first.RenderHash);
-					CreateShaderPart(materialOne, first, gamma);
+					RecordDataForShaderPart(materialOne, first, gamma);
 					shb.MaterialOne = materialOne;
 					shb.MaterialOne.Name = "material-1";
 				}
 				if (rm.FindChild("material-2") is RenderMaterial second)
 				{
 					ShaderBody materialTwo = new ShaderBody(second.RenderHash);
-					CreateShaderPart(materialTwo, second, gamma);
+					RecordDataForShaderPart(materialTwo, second, gamma);
 					shb.MaterialTwo = materialTwo;
 					shb.MaterialTwo.Name = "material-2";
 				}
@@ -432,7 +432,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		private void CreateCyclesShaderPart(ShaderBody shb, ICyclesMaterial cyclesMaterial, string name, float gamma)
+		private void RecordDataForNativeCyclesShaderPart(ShaderBody shb, ICyclesMaterial cyclesMaterial, string name, float gamma)
 		{
 			cyclesMaterial.Gamma = gamma;
 			cyclesMaterial.BitmapConverter = _bitmapConverter;
@@ -455,7 +455,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		private bool CreateShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
+		private bool RecordDataForShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
 			if (null == rm)
 				return false;
@@ -464,7 +464,7 @@ namespace RhinoCyclesCore
 			//So special case those
 			if (null != rm as ICyclesMaterial)
 			{
-				CreateCyclesShaderPart(shb, rm as ICyclesMaterial, rm.Name, gamma);
+				RecordDataForNativeCyclesShaderPart(shb, rm as ICyclesMaterial, rm.Name, gamma);
 				return true;
 			}
 
@@ -477,11 +477,11 @@ namespace RhinoCyclesCore
 
 			if (isPbr)
 			{
-				CreatePbrShaderPart(shb, rm, gamma);
+				RecordDataForPbrShaderPart(shb, rm, gamma);
 			}
 			else
 			{
-				CreateCustomShaderPart(shb, rm, gamma);
+				RecordDataForCustomShaderPart(shb, rm, gamma);
 			}
 
 			return true;

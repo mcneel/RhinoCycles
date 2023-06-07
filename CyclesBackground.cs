@@ -29,6 +29,7 @@ using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
 using Rhino.Runtime;
 using Rhino.Runtime.InteropWrappers;
+using Rhino.Render.Fields;
 
 namespace RhinoCyclesCore
 {
@@ -39,9 +40,11 @@ namespace RhinoCyclesCore
 	{
 
 		BitmapConverter _bitmapConverter;
-		public CyclesBackground(BitmapConverter bitmapConverter)
+		uint _docsrn;
+		public CyclesBackground(BitmapConverter bitmapConverter, uint docsrn)
 		{
 			_bitmapConverter = bitmapConverter;
+			_docsrn = docsrn;
 		}
 
 		ccl.float4 _tst = new ccl.float4(0.0f, 0.0f, 0.0f);
@@ -409,6 +412,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public void HandleEnvironments(RenderSettings.EnvironmentUsage usage)
 		{
+			RhinoDoc rhinoDoc = RhinoDoc.FromRuntimeSerialNumber(_docsrn);
 			SimulatedEnvironment simenv;
 			switch (usage)
 			{
@@ -421,7 +425,17 @@ namespace RhinoCyclesCore
 						{
 							BgColor = simenv.BackgroundColor;
 						}
-						_bitmapConverter.EnvironmentBitmapFromEvaluator(BackgroundEnvironment, BgTexture, Gamma);
+
+						RenderContent tex = BackgroundEnvironment.FindChild("texture");
+						Field tf = tex.Fields.GetField("filename");
+						var ofs = tf.GetValue<string>();
+						var fs = "";
+						if(rhinoDoc!=null)
+						{
+							fs = Rhino.Render.Utilities.FindFile(rhinoDoc, ofs, true);
+						}
+
+						BgTexture.Filename = string.IsNullOrEmpty(fs) ? null : fs;
 					}
 					else
 					{
@@ -437,7 +451,7 @@ namespace RhinoCyclesCore
 						{
 							SkyColor = simenv.BackgroundColor;
 						}
-						_bitmapConverter.EnvironmentBitmapFromEvaluator(SkylightEnvironment, SkyTexture, Gamma);
+						SkyTexture.Filename = string.IsNullOrEmpty(SkylightEnvironment.Filename) ? null : SkylightEnvironment.Filename;
 					}
 					else
 					{
@@ -453,7 +467,7 @@ namespace RhinoCyclesCore
 						{
 							ReflectionColor = simenv.BackgroundColor;
 						}
-						_bitmapConverter.EnvironmentBitmapFromEvaluator(ReflectionEnvironment, ReflectionTexture, Gamma);
+						ReflectionTexture.Filename = string.IsNullOrEmpty(ReflectionEnvironment.Filename) ? null : ReflectionEnvironment.Filename;
 					}
 					else
 					{

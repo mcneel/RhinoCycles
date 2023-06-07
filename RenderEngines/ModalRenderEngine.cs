@@ -139,7 +139,7 @@ namespace RhinoCyclesCore.RenderEngines
 			IsFallbackRenderDevice = !isReady;
 
 			/*if (engineSettings.Verbose) sdd.WriteLine(
-				$"Using device {RenderDevice.Name + " " + RenderDevice.Description}");*/
+				$"Using device {RenderDevice.UiName + " " + RenderDevice.Description}");*/
 			#endregion
 
 			#region set up session parameters
