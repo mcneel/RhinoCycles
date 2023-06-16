@@ -23,7 +23,7 @@ namespace RhinoCyclesCore.Settings
 	///<summary>
 	/// Base class for all the sections
 	///</summary>
-	public abstract class Section : EtoCollapsibleSection
+	public abstract class Section : EtoCollapsibleSection2
 	{
 		protected int m_table_padding = 10;
 

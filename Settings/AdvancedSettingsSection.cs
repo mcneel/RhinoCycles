@@ -87,8 +87,40 @@ namespace RhinoCyclesCore.Settings
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
-			ViewModelActivated += IntegratorSection_ViewModelActivated;
-			DataChanged += AdvancedSettingsSection_DataChanged;
+		}
+
+		public override void HolderVisible(bool visible)
+		{
+			if (visible)
+			{
+				HookListeners();
+				DisplayData();
+			}
+			else
+				UnHookListeners();
+		}
+
+		private bool m_hook = false;
+		private void HookListeners()
+		{
+			if (!m_hook)
+			{
+				ViewModelActivated += IntegratorSection_ViewModelActivated;
+				DataChanged += AdvancedSettingsSection_DataChanged;
+
+				m_hook = true;
+			}
+		}
+
+		private void UnHookListeners()
+		{
+			if (m_hook)
+			{
+				ViewModelActivated -= IntegratorSection_ViewModelActivated;
+				DataChanged -= AdvancedSettingsSection_DataChanged;
+
+				m_hook = false;
+			}
 		}
 
 		private void AdvancedSettingsSection_DataChanged(object sender, Rhino.UI.Controls.DataSource.EventArgs e)
