@@ -34,10 +34,12 @@ namespace RhinoCyclesCore.Database
 		private readonly CyclesBackground _cqBackground;
 
 		private readonly BitmapConverter _bitmapConverter;
+		private readonly uint _docsrn;
 		public EnvironmentDatabase(BitmapConverter bitmapConverter, uint docsrn)
 		{
 			_bitmapConverter = bitmapConverter;
 			_cqBackground = new CyclesBackground(_bitmapConverter, docsrn);
+			_docsrn = docsrn;
 		}
 
 		public void Dispose()
@@ -140,7 +142,7 @@ namespace RhinoCyclesCore.Database
 					var xmlenv = (environment?.TopLevelParent as Materials.ICyclesMaterial);
 					if(xmlenv?.MaterialType == RhinoCyclesCore.ShaderBody.CyclesMaterial.XmlEnvironment || xmlenv?.MaterialType == RhinoCyclesCore.ShaderBody.CyclesMaterial.SimpleNoiseEnvironment)
 					{
-						xmlenv.BakeParameters(_bitmapConverter);
+						xmlenv.BakeParameters(_bitmapConverter, _docsrn);
 						_cqBackground.Xml = xmlenv.MaterialXml;
 					}
 					_cqBackground.BackgroundEnvironment?.Dispose();

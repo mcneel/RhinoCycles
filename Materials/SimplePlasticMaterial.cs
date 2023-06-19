@@ -52,7 +52,7 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("reflectivity", Reflectivity, "Reflectivity");
 		}
 
-		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			Color4f col;
 			if (Fields.TryGetValue("diffuse", out col))

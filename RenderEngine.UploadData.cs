@@ -84,7 +84,7 @@ namespace RhinoCyclesCore
 			if (CancelRender) return false;
 
 			// light changes
-			// TODO: XXXX Database.UploadLightChanges();
+			Database.UploadLightChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.7f, "Lights uploaded"));
 
 			if (CancelRender) return false;

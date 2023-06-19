@@ -105,20 +105,9 @@ namespace RhinoCyclesCore
 
 		internal static void SetTextureImage(ImageTextureNode imnode, CyclesTextureImage texture)
 		{
-			if (texture.HasTextureImage)
-			{
-				if (texture.HasByteImage)
-				{
-					imnode.ByteImagePtr = texture.TexByte.Memory();
-				}
-				else if (texture.HasFloatImage)
-				{
-					imnode.FloatImagePtr = texture.TexFloat.Memory();
-				}
-				imnode.Filename = texture.Name;
-				imnode.Width = (uint) texture.TexWidth;
-				imnode.Height = (uint) texture.TexHeight;
-			}
+			if (string.IsNullOrEmpty(texture.Filename)) return; 
+
+			imnode.ins.Filename.Value = texture.Filename;
 			imnode.Interpolation = InterpolationType.Cubic;
 		}
 

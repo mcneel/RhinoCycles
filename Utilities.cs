@@ -18,6 +18,7 @@ using Rhino.Runtime;
 using System.Collections.Generic;
 using ccl.ShaderNodes;
 using ccl.ShaderNodes.Sockets;
+using Rhino.Render.Fields;
 
 namespace RhinoCyclesCore
 {
@@ -78,7 +79,7 @@ namespace RhinoCyclesCore
 			return (success, rc, onness, amount, rmchild);
 		}
 
-		public static (bool Success, float4 Result, bool IsOn, float Amount) HandleTexturedColor(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter)
+		public static (bool Success, float4 Result, bool IsOn, float Amount) HandleTexturedColor(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			bool success = false;
 			float4 rc = new float4(0.0f);
@@ -109,7 +110,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, true, false, bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
+							HandleRenderTexture(rt, tex, true, false, bitmapConverter, docsrn, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
 							tex.Amount = amount;
 						}
 					}
@@ -119,7 +120,7 @@ namespace RhinoCyclesCore
 			return (success, rc, onness, amount);
 		}
 
-		public static (bool Success, float Result, bool IsOn, float Amount) HandleTexturedValue(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter)
+		public static (bool Success, float Result, bool IsOn, float Amount) HandleTexturedValue(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			bool success = false;
 			float rc = 0.0f;
@@ -147,7 +148,7 @@ namespace RhinoCyclesCore
 					{
 						if (rm.FindChild(slotname) is RenderTexture rt)
 						{
-							HandleRenderTexture(rt, tex, true, false, bitmapConverter, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
+							HandleRenderTexture(rt, tex, true, false, bitmapConverter, docsrn, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
 							tex.Amount = amount;
 						}
 					}
@@ -157,7 +158,7 @@ namespace RhinoCyclesCore
 			return (success, rc, onness, amount);
 		}
 
-		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool is_leaf_bitmap, Converters.BitmapConverter bitmapConverter, float gamma = 1.0f)
+		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool is_leaf_bitmap, Converters.BitmapConverter bitmapConverter, uint docsrn, float gamma = 1.0f)
 		{
 			if (rt == null) return;
 
@@ -202,7 +203,7 @@ namespace RhinoCyclesCore
 
 			if (!is_leaf_bitmap)
 			{
-				procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter);
+				procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter, docsrn);
 			}
 
 			if (procedural != null)
@@ -211,71 +212,22 @@ namespace RhinoCyclesCore
 			}
 			else
 			{
-				using (var textureEvaluator = rt.CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
+				RhinoDoc rhinoDoc = RhinoDoc.FromRuntimeSerialNumber(docsrn);
+				Field tf = rt.Fields.GetField("filename");
+				var ofs = tf.GetValue<string>();
+				var fs = "";
+				if (rhinoDoc != null)
 				{
-					SimulatedTexture st = textureEvaluator == null ? rt.SimulatedTexture(RenderTexture.TextureGeneration.Disallow) : null;
-					using (
-						var eval = textureEvaluator ?? RenderTexture.NewBitmapTexture(st, rt.DocumentAssoc).CreateEvaluator(RenderTexture.TextureEvaluatorFlags.DisableLocalMapping))
-					{
-						var canuse = eval.Initialize();
-
-						int pwidth;
-						int pheight;
-
-						if (!canuse)
-						{
-							pwidth = pheight = 1;
-						}
-						else
-						{
-							try
-							{
-								rt.PixelSize(out int width, out int height, out int depth);
-								if (width == 0 || height == 0)
-								{
-									pwidth = pheight = 1024;
-								}
-								else
-								{
-									pwidth = width;
-									pheight = height;
-								}
-							}
-							catch
-							{
-								pwidth = pheight = 1024;
-							}
-						}
-
-						var imgbased = rt.IsImageBased();
-						var linear = rt.IsLinear();
-						var isFloat = rt.IsHdrCapable();
-						if (isFloat)
-						{
-							var img = bitmapConverter.RetrieveFloatsImg(rid, pwidth, pheight, eval, linear, imgbased, canuse, use_color_mask, false);
-							img.ApplyGamma(gamma);
-							tex.TexFloat = img.Data as StdVectorFloat;
-							tex.TexByte = null;
-						}
-						else
-						{
-							var img = bitmapConverter.RetrieveBytesImg(rid, pwidth, pheight, eval, linear, imgbased, canuse, use_color_mask, false);
-							img.ApplyGamma(gamma);
-							tex.TexByte = img.Data as StdVectorByte;
-							tex.TexFloat = null;
-						}
-						tex.TexWidth = pwidth;
-						tex.TexHeight = pheight;
-						tex.Name = rid.ToString(CultureInfo.InvariantCulture);
-						tex.IsLinear = linear;
-						tex.IsNormalMap = check_for_normal_map ? rt.IsNormalMap() : false;
-						tex.EnvProjectionMode = envProjectionMode;
-						tex.Transform = tt;
-						tex.Repeat = repeat;
-						tex.AlternateTiles = alternate;
-						tex.MappingChannel = rt.GetMappingChannel();
-					}
+					fs = Rhino.Render.Utilities.FindFile(rhinoDoc, ofs, true);
 				}
+
+				tex.Filename = string.IsNullOrEmpty(fs) ? null : fs;
+				tex.Name = rid.ToString(CultureInfo.InvariantCulture);
+				tex.EnvProjectionMode = envProjectionMode;
+				tex.Transform = tt;
+				tex.Repeat = repeat;
+				tex.AlternateTiles = alternate;
+				tex.MappingChannel = rt.GetMappingChannel();
 			}
 		}
 

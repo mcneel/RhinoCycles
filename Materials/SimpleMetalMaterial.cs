@@ -47,7 +47,7 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("metal-polish", 0.0f, "Roughness");
 		}
 
-		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			Color4f col;
 			if (Fields.TryGetValue("metal-color", out col))

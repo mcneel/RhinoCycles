@@ -48,7 +48,7 @@ namespace RhinoCyclesCore.Environments
 			Fields.Add("strength", Strength, "Background Strength");
 		}
 
-		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			float val;
 			if (Fields.TryGetValue("scale", out val))

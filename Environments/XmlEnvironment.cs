@@ -41,7 +41,7 @@ namespace RhinoCyclesCore.Environments
 			Fields.Add("xmlcode", XmlString, "XML definition");
 		}
 
-		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			string xml;
 			if (Fields.TryGetValue("xmlcode", out xml))

@@ -30,7 +30,7 @@ namespace RhinoCyclesCore.Materials
 		/// need access to your own custom render material Fields dictionary
 		/// after a flush.
 		/// </summary>
-		void BakeParameters(Converters.BitmapConverter bitmapConverter);
+		void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn);
 
 		/// <summary>
 		/// Get the XML representing the material. Note that if you need to access

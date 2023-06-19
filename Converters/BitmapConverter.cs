@@ -26,6 +26,8 @@ using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
 using Transform = ccl.Transform;
 using Rhino.Runtime.InteropWrappers;
+using Rhino;
+using Rhino.Render.Fields;
 
 namespace RhinoCyclesCore.Converters
 {
@@ -122,12 +124,14 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="teximg"></param>
 		/// <param name="gamma"></param>
 		/// <param name="floatAsByte"></param>
-		public void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma)
+		public void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma, uint docsrn = 0)
 		{
 			RenderTexture renderTexture = null;
 
 			if (rm != null)
 				renderTexture = rm.FindChild("texture") as RenderTexture;
+
+			RhinoDoc rhinoDoc = RhinoDoc.FromRuntimeSerialNumber(docsrn);
 
 			if (renderTexture == null)
 			{
@@ -137,6 +141,20 @@ namespace RhinoCyclesCore.Converters
 				teximg.Name = "";
 				return;
 			}
+
+			if (renderTexture.IsImageBased())
+			{
+				Field tf = renderTexture.Fields.GetField("filename");
+				var ofs = tf.GetValue<string>();
+				var fs = "";
+				if (rhinoDoc != null)
+				{
+					fs = Rhino.Render.Utilities.FindFile(rhinoDoc, ofs, true);
+				}
+
+				teximg.Filename = string.IsNullOrEmpty(fs) ? null : fs;
+			}
+
 
 			var projection = get_environment_mapping(rm, renderTexture);
 			var rhinotfm = renderTexture.LocalMappingTransform;
@@ -191,83 +209,6 @@ namespace RhinoCyclesCore.Converters
 				|| !alti.FuzzyEquals(0.0f)
 				|| !intensity.FuzzyEquals(1.0f);
 
-			if (restore)
-			{
-				renderTexture.BeginChange(RenderContent.ChangeContexts.Ignore);
-				renderTexture.SetParameter("rdk-texture-adjust-multiplier", 1.0);
-				renderTexture.SetParameter("azimuth", 0.0);
-				renderTexture.SetParameter("altitude", 0.0);
-				renderTexture.SetParameter("intensity", 1.0);
-				renderTexture.SetParameter("multiplier", 1.0);
-				renderTexture.EndChange();
-			}
-
-			using (var textureEvaluator =
-				renderTexture.CreateEvaluator(
-					RenderTexture.TextureEvaluatorFlags.DisableLocalMapping |
-					RenderTexture.TextureEvaluatorFlags.DisableProjectionChange |
-					RenderTexture.TextureEvaluatorFlags.DisableFiltering
-					))
-			{
-				if (textureEvaluator == null)
-				{
-					teximg.TexByte = null;
-					teximg.TexFloat = null;
-					teximg.TexWidth = teximg.TexHeight = 0;
-					teximg.Name = "";
-					return;
-				}
-				bool canUse = textureEvaluator.Initialize();
-				try
-				{
-					int u, v, w;
-					renderTexture.PixelSize(out u, out v, out w);
-					teximg.TexWidth = u;
-					teximg.TexHeight = v;
-				}
-				catch (Exception)
-				{
-					teximg.TexHeight = teximg.TexWidth = 1024;
-				}
-
-				if (teximg.TexHeight == 0 || teximg.TexWidth == 0)
-				{
-					teximg.TexHeight = teximg.TexWidth = 1024;
-				}
-				if (!canUse) { teximg.TexHeight = teximg.TexWidth = 1; }
-
-				var isFloat = renderTexture.IsHdrCapable();
-
-				var isLinear = teximg.IsLinear = renderTexture.IsLinear();
-				var isImageBased = renderTexture.IsImageBased();
-
-				if (isFloat)
-				{
-					var img = RetrieveFloatsImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false, projection == (TextureEnvironmentMappingMode)4); ;
-					img.ApplyGamma(gamma);
-					teximg.TexFloat = img.Data as StdVectorFloat;
-					teximg.TexByte = null;
-				}
-				else
-				{
-					var img = RetrieveBytesImg(rId, teximg.TexWidth, teximg.TexHeight, textureEvaluator, isLinear, isImageBased, canUse, false, projection == (TextureEnvironmentMappingMode)4);
-					img.ApplyGamma(gamma);
-					teximg.TexByte = img.Data as StdVectorByte;
-					teximg.TexFloat = null;
-				}
-				teximg.Name = rId.ToString(CultureInfo.InvariantCulture);
-
-			}
-			if (restore)
-			{
-				renderTexture.BeginChange(RenderContent.ChangeContexts.Ignore);
-				renderTexture.SetParameter("rdk-texture-adjust-multiplier", (double)multadj);
-				renderTexture.SetParameter("azimuth", (double)azi);
-				renderTexture.SetParameter("altitude", (double)alti);
-				renderTexture.SetParameter("intensity", (double)intensity);
-				renderTexture.SetParameter("multiplier", (double)mult);
-				renderTexture.EndChange();
-			}
 			teximg.EnvProjectionMode = projection;
 			teximg.ProjectionMode = TextureProjectionMode.EnvironmentMap;
 

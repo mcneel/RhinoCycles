@@ -30,7 +30,7 @@ namespace RhinoCyclesCore.Materials
 
 		public float Gamma { get; set; }
 
-		public void BakeParameters(Converters.BitmapConverter bitmapConverter) { }
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn) { }
 
 		public override void SimulateMaterial(ref Rhino.DocObjects.Material simulatedMaterial, bool forDataOnly)
 		{

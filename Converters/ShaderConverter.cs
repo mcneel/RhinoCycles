@@ -34,7 +34,7 @@ namespace RhinoCyclesCore.Converters
 {
 	public abstract class Procedural : IDisposable
 	{
-		public static Procedural CreateProceduralFromChild(RenderTexture render_texture, string child_name, List<CyclesTextureImage> texture_list, BitmapConverter _bitmapConverter)
+		public static Procedural CreateProceduralFromChild(RenderTexture render_texture, string child_name, List<CyclesTextureImage> texture_list, BitmapConverter _bitmapConverter, uint docsrn)
 		{
 			Procedural procedural = null;
 
@@ -43,13 +43,13 @@ namespace RhinoCyclesCore.Converters
 				var render_texture_child = (RenderTexture)render_texture.FindChild(child_name);
 
 				// Recursive call
-				procedural = CreateProcedural(render_texture_child, texture_list, _bitmapConverter);
+				procedural = CreateProcedural(render_texture_child, texture_list, _bitmapConverter, docsrn);
 			}
 
 			return procedural;
 		}
 
-		public static Procedural CreateProcedural(RenderTexture render_texture, List<CyclesTextureImage> texture_list, BitmapConverter bitmap_converter)
+		public static Procedural CreateProcedural(RenderTexture render_texture, List<CyclesTextureImage> texture_list, BitmapConverter bitmap_converter, uint docsrn)
 		{
 			if (render_texture == null)
 				return null;
@@ -163,13 +163,13 @@ namespace RhinoCyclesCore.Converters
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);
-				procedural = new BitmapTextureProcedural(render_texture, cycles_texture, bitmap_converter);
+				procedural = new BitmapTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn);
 			}
 			else if (type_id == ContentUuids.HDRTextureType)
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);
-				procedural = new HighDynamicRangeTextureProcedural(render_texture, cycles_texture, bitmap_converter);
+				procedural = new HighDynamicRangeTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn);
 			}
 			/* TODO: re-enable this once resample texture is natively supported. Until then handle as bitmap texture
 			else if (type_id == ContentUuids.ResampleTextureType)
@@ -181,13 +181,13 @@ namespace RhinoCyclesCore.Converters
 
 			if (procedural is OneColorProcedural one_color)
 			{
-				one_color.Child = CreateProceduralFromChild(render_texture, "color-one", texture_list, bitmap_converter);
+				one_color.Child = CreateProceduralFromChild(render_texture, "color-one", texture_list, bitmap_converter, docsrn);
 			}
 
 			if (procedural is TwoColorProcedural two_color)
 			{
-				two_color.Child1 = CreateProceduralFromChild(render_texture, "color-one", texture_list, bitmap_converter);
-				two_color.Child2 = CreateProceduralFromChild(render_texture, "color-two", texture_list, bitmap_converter);
+				two_color.Child1 = CreateProceduralFromChild(render_texture, "color-one", texture_list, bitmap_converter, docsrn);
+				two_color.Child2 = CreateProceduralFromChild(render_texture, "color-two", texture_list, bitmap_converter, docsrn);
 
 				if(two_color.SwapColors)
 				{
@@ -202,7 +202,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture wave_width_child = (RenderTexture)render_texture.FindChild("wave-width-tex");
 				if(wave_width_child != null)
 				{
-					waves_texture.WaveWidthChild = CreateProcedural(wave_width_child, texture_list, bitmap_converter); // Recursive call
+					waves_texture.WaveWidthChild = CreateProcedural(wave_width_child, texture_list, bitmap_converter, docsrn); // Recursive call
 				}
 			}
 
@@ -211,13 +211,13 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture perturbing_source_child = (RenderTexture)render_texture.FindChild("source");
 				if (perturbing_source_child != null)
 				{
-					perturbing_texture.SourceChild = CreateProcedural(perturbing_source_child, texture_list, bitmap_converter); // Recursive call
+					perturbing_texture.SourceChild = CreateProcedural(perturbing_source_child, texture_list, bitmap_converter, docsrn); // Recursive call
 				}
 
 				RenderTexture perturbing_perturb_child = (RenderTexture)render_texture.FindChild("perturb");
 				if (perturbing_perturb_child != null)
 				{
-					perturbing_texture.PerturbChild = CreateProcedural(perturbing_perturb_child, texture_list, bitmap_converter); // Recursive call
+					perturbing_texture.PerturbChild = CreateProcedural(perturbing_perturb_child, texture_list, bitmap_converter, docsrn); // Recursive call
 				}
 			}
 
@@ -226,7 +226,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture blend_child = (RenderTexture)render_texture.FindChild("blend-texture");
 				if (blend_child != null)
 				{
-					blend_texture.BlendChild = CreateProcedural(blend_child, texture_list, bitmap_converter); // Recursive call
+					blend_texture.BlendChild = CreateProcedural(blend_child, texture_list, bitmap_converter, docsrn); // Recursive call
 				}
 			}
 
@@ -235,7 +235,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture exposure_child = (RenderTexture)render_texture.FindChild("input-texture");
 				if (exposure_child != null)
 				{
-					exposure_texture.ExposureChild = CreateProcedural(exposure_child, texture_list, bitmap_converter); // Recursive call
+					exposure_texture.ExposureChild = CreateProcedural(exposure_child, texture_list, bitmap_converter, docsrn); // Recursive call
 				}
 			}
 
@@ -244,7 +244,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture projection_changer_child = (RenderTexture)render_texture.FindChild("input-texture");
 				if (projection_changer_child != null)
 				{
-					projection_changer_texture.ProjectionChangerChild = CreateProcedural(projection_changer_child, texture_list, bitmap_converter); // Recursive call
+					projection_changer_texture.ProjectionChangerChild = CreateProcedural(projection_changer_child, texture_list, bitmap_converter, docsrn); // Recursive call
 				}
 			}
 
@@ -253,7 +253,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture mask_child = (RenderTexture)render_texture.FindChild("source-texture");
 				if (mask_texture != null)
 				{
-					mask_texture.MaskChild = CreateProcedural(mask_child, texture_list, bitmap_converter); // Recursive call
+					mask_texture.MaskChild = CreateProcedural(mask_child, texture_list, bitmap_converter, docsrn); // Recursive call
 				}
 			}
 
@@ -262,7 +262,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture texture_adjustment_child = (RenderTexture)render_texture.FindChild("input-texture");
 				if (texture_adjustment_child != null)
 				{
-					texture_adjustment_texture.TextureAdjustmentChild = CreateProcedural(texture_adjustment_child, texture_list, bitmap_converter); // Recursive call
+					texture_adjustment_texture.TextureAdjustmentChild = CreateProcedural(texture_adjustment_child, texture_list, bitmap_converter, docsrn); // Recursive call
 				}
 			}
 
@@ -949,11 +949,11 @@ namespace RhinoCyclesCore.Converters
 
 	public class BitmapTextureProcedural : Procedural
 	{
-		public BitmapTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter) : base(render_texture)
+		public BitmapTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn) : base(render_texture)
 		{
 			CyclesTexture = cycles_texture;
 			BitmapConverter = bitmap_converter;
-			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, true, bitmap_converter, 1.0f);
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, true, bitmap_converter, docsrn, 1.0f);
 
 			var rtf = render_texture.Fields;
 
@@ -979,17 +979,7 @@ namespace RhinoCyclesCore.Converters
 
 			if (CyclesTexture.HasTextureImage)
 			{
-				if (CyclesTexture.HasByteImage)
-				{
-					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Memory();
-				}
-				else if (CyclesTexture.HasFloatImage)
-				{
-					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Memory();
-				}
-				image_texture_node.Filename = CyclesTexture.Name;
-				image_texture_node.Width = (uint)CyclesTexture.TexWidth;
-				image_texture_node.Height = (uint)CyclesTexture.TexHeight;
+				image_texture_node.ins.Filename.Value = CyclesTexture.Filename;
 			}
 
 			image_texture_node.UseAlpha = UseAlpha;
@@ -1442,11 +1432,11 @@ namespace RhinoCyclesCore.Converters
 
 	public class HighDynamicRangeTextureProcedural : Procedural
 	{
-		public HighDynamicRangeTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter) : base(render_texture)
+		public HighDynamicRangeTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn) : base(render_texture)
 		{
 			CyclesTexture = cycles_texture;
 			BitmapConverter = bitmap_converter;
-			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, IsBitmapTexture, bitmap_converter, 1.0f);
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, IsBitmapTexture, bitmap_converter, docsrn, 1.0f);
 
 			var rtf = render_texture.Fields;
 
@@ -1874,11 +1864,11 @@ namespace RhinoCyclesCore.Converters
 
 	public class ResampleTextureProcedural : Procedural
 	{
-		public ResampleTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter) : base(render_texture)
+		public ResampleTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn) : base(render_texture)
 		{
 			CyclesTexture = cycles_texture;
 			BitmapConverter = bitmap_converter;
-			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, IsBitmapTexture, bitmap_converter, 1.0f);
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, IsBitmapTexture, bitmap_converter, docsrn, 1.0f);
 
 			var rtf = render_texture.Fields;
 
@@ -2261,9 +2251,9 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="lw">LinearWorkflow data for this shader (gamma)</param>
 		/// <param name="decals">Decals to integrate into the shader</param>
 		/// <returns>The CyclesShader</returns>
-		public CyclesShader RecordDataToSetupCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid, BitmapConverter bitmapConverter, List<CyclesDecal> decals)
+		public CyclesShader RecordDataToSetupCyclesShader(RenderMaterial rm, LinearWorkflow lw, uint mid, BitmapConverter bitmapConverter, List<CyclesDecal> decals, uint docsrn)
 		{
-			var shader = new CyclesShader(mid, bitmapConverter)
+			var shader = new CyclesShader(mid, bitmapConverter, docsrn)
 			{
 				Type = CyclesShader.Shader.Diffuse,
 				Decals = decals,

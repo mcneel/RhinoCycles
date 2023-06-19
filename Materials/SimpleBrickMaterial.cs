@@ -46,7 +46,7 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("offset", Offset, "Offset");
 		}
 
-		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			Color4f col;
 			if (Fields.TryGetValue("color1", out col))

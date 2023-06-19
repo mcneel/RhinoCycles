@@ -18,6 +18,7 @@ using ccl;
 using ccl.ShaderNodes;
 using Rhino.Display;
 using RhinoCyclesCore.Core;
+using System;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -37,15 +38,58 @@ namespace RhinoCyclesCore.Shaders
 		{
 			if(RcCore.It.AllSettings.DebugSimpleShaders)
 			{
-				var bg = new BackgroundNode(m_shader);
-				bg.ins.Color.Value = new float4(0.7f);
-				bg.ins.Strength.Value = 1.0f;
+				var texco = new RhinoTextureCoordinateNode(m_shader, "texcoord");
+				RhinoAzimuthAltitudeTransformNode bgAzimuthAltitudeTransformNode = new RhinoAzimuthAltitudeTransformNode(m_shader, "bgAzimuthAltitudeTransform");
+				var bgenv = new EnvironmentTextureNode(m_shader, "bg_env_texture");
+				var mixcol = new MixNode(m_shader, "color_mixer");
+				var mixbgs = new MixClosureNode(m_shader, "mix_bgs");
+				RenderEngine.SetTextureImage(bgenv, m_original_background.BgTexture);
+				//_SetEnvironmentProjection(m_original_background.BgTexture, bgenv);
+				bgenv.Projection = TextureNode.EnvironmentProjection.Equirectangular;
+				var bg = new BackgroundNode(m_shader, "debug_bg_node");
+				var bg2 = new BackgroundNode(m_shader, "debug_bg2_node");
+				var lp = new LightPathNode(m_shader, "lp");
+				bg.ins.Color.Value = new float4(1.0f);
+				bg.ins.Strength.Value = m_original_background.SkyStrength;
+				bg2.ins.Color.Value = new float4(0.8f, 0.1f, 0.1f);
+				bg2.ins.Strength.Value = 1.0f;
 
+				bgAzimuthAltitudeTransformNode.Altitude = m_original_background.BgTexture.Transform.z.x;
+				bgAzimuthAltitudeTransformNode.Azimuth = m_original_background.BgTexture.Transform.z.z;
+
+				mixcol.ins.Color2.Value = new float4(0.1f, 0.8f, 0.1f);
+				mixcol.ins.Fac.Value = 0.8f;
+
+				mixbgs.ins.Fac.Value = 0.8f;
+
+				m_shader.AddNode(bgAzimuthAltitudeTransformNode);
+				m_shader.AddNode(mixcol);
+				m_shader.AddNode(lp);
+				m_shader.AddNode(mixbgs);
 				m_shader.AddNode(bg);
+				m_shader.AddNode(bg2);
+				m_shader.AddNode(texco);
+				m_shader.AddNode(bgenv);
+				/*
 
+				texco.outs.Generated.Connect(bgAzimuthAltitudeTransformNode.ins.Vector);
+				bgAzimuthAltitudeTransformNode.outs.Vector.Connect(bgenv.ins.Vector);
+
+				bg.outs.Background.Connect(mixbgs.ins.Closure1);
+				bg2.outs.Background.Connect(mixbgs.ins.Closure2);
+
+				lp.outs.IsCameraRay.Connect(mixbgs.ins.Fac);
+
+				bgenv.outs.Color.Connect(mixcol.ins.Color1);
+
+				mixcol.outs.Color.Connect(bg.ins.Color);
+
+				mixbgs.outs.Closure.Connect(m_shader.Output.ins.Surface);
+				*/
+				bg.ins.Strength.Value = 1.0f;
 				bg.outs.Background.Connect(m_shader.Output.ins.Surface);
 				m_shader.WriteDataToNodes();
-				//m_shader.Tag();
+				m_shader.Tag();
 			}
 			else if (!string.IsNullOrEmpty(m_original_background.Xml))
 			{

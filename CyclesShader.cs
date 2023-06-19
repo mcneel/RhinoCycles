@@ -42,14 +42,16 @@ namespace RhinoCyclesCore
 		private ShaderBody _front;
 		private ShaderBody _back;
 		private BitmapConverter _bitmapConverter;
+		private readonly uint _docsrn;
 		private bool disposedValue;
 
-		public CyclesShader(uint id, BitmapConverter bitmapConverter)
+		public CyclesShader(uint id, BitmapConverter bitmapConverter, uint docsrn)
 		{
 			Id = id;
 			_front = null;
 			_back = null;
 			_bitmapConverter = bitmapConverter;
+			_docsrn = docsrn;
 		}
 
 		public List<CyclesDecal> Decals { get; set; } = null;
@@ -214,7 +216,7 @@ namespace RhinoCyclesCore
 				}
 			}
 			if(texture!=null && enabled) {
-				Utilities.HandleRenderTexture(texture, ti, checkForNormal, false, _bitmapConverter, shb.Gamma);
+				Utilities.HandleRenderTexture(texture, ti, checkForNormal, false, _bitmapConverter, _docsrn, shb.Gamma);
 				ti.Amount = amount;
 			}
 		}
@@ -367,7 +369,7 @@ namespace RhinoCyclesCore
 
 			bool checkForNormal = childSlot == StdCS.Bump || childSlot == StdCS.PbrClearcoatBump || childSlot == StdCS.PbrDisplacement;
 
-			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, false, _bitmapConverter, gamma);
+			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, false, _bitmapConverter, _docsrn, gamma);
 		}
 
 		private Guid blendMaterialTypeId = new Guid("0322370F-A9AF-4264-A57C-58FF8E4345DD");
@@ -393,7 +395,7 @@ namespace RhinoCyclesCore
 				shb.BlendMixAmount = (float)Convert.ToDouble(rm.GetParameter("mix-amount"));
 				if(rm.FindChild("mix-amount") is RenderTexture mixTexture)
 				{
-					Utilities.HandleRenderTexture(mixTexture, shb.BlendMixAmountTexture, false, false, _bitmapConverter, gamma);
+					Utilities.HandleRenderTexture(mixTexture, shb.BlendMixAmountTexture, false, false, _bitmapConverter, _docsrn, gamma);
 				}
 			}
 			else
@@ -436,7 +438,7 @@ namespace RhinoCyclesCore
 		{
 			cyclesMaterial.Gamma = gamma;
 			cyclesMaterial.BitmapConverter = _bitmapConverter;
-			cyclesMaterial.BakeParameters(_bitmapConverter);
+			cyclesMaterial.BakeParameters(_bitmapConverter, _docsrn);
 			if (cyclesMaterial.MaterialType == ShaderBody.CyclesMaterial.CustomRenderMaterial)
 			{
 				shb.Crm = cyclesMaterial;
@@ -447,7 +449,7 @@ namespace RhinoCyclesCore
 			else
 			{
 				cyclesMaterial.Gamma = gamma;
-				cyclesMaterial.BakeParameters(_bitmapConverter);
+				cyclesMaterial.BakeParameters(_bitmapConverter, _docsrn);
 				shb.Crm = cyclesMaterial;
 				shb.CyclesMaterialType = ShaderBody.CyclesMaterial.Xml;
 				shb.Gamma = gamma;

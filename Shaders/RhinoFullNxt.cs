@@ -101,9 +101,13 @@ namespace RhinoCyclesCore.Shaders
 		{
 			if (RcCore.It.AllSettings.DebugSimpleShaders)
 			{
+				RhinoTextureCoordinateNode texco = new RhinoTextureCoordinateNode(m_shader, "debug_texco");
+				texco.UvMap = "uvmap1";
 				ccl.ShaderNodes.DiffuseBsdfNode diff = new DiffuseBsdfNode(m_shader, "debug_diff_");
 				diff.ins.Color.Value = new float4(0.8f, 0.6f, 0.5f, 1.0f);
 				m_shader.AddNode(diff);
+				m_shader.AddNode(texco);
+				texco.outs.UV.Connect(diff.ins.Color);
 				diff.outs.BSDF.Connect(m_shader.Output.ins.Surface);
 			}
 			else

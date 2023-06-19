@@ -426,16 +426,7 @@ namespace RhinoCyclesCore
 							BgColor = simenv.BackgroundColor;
 						}
 
-						RenderContent tex = BackgroundEnvironment.FindChild("texture");
-						Field tf = tex.Fields.GetField("filename");
-						var ofs = tf.GetValue<string>();
-						var fs = "";
-						if(rhinoDoc!=null)
-						{
-							fs = Rhino.Render.Utilities.FindFile(rhinoDoc, ofs, true);
-						}
-
-						BgTexture.Filename = string.IsNullOrEmpty(fs) ? null : fs;
+						_bitmapConverter.EnvironmentBitmapFromEvaluator(BackgroundEnvironment, BgTexture, Gamma, _docsrn);
 					}
 					else
 					{
@@ -451,7 +442,7 @@ namespace RhinoCyclesCore
 						{
 							SkyColor = simenv.BackgroundColor;
 						}
-						SkyTexture.Filename = string.IsNullOrEmpty(SkylightEnvironment.Filename) ? null : SkylightEnvironment.Filename;
+						_bitmapConverter.EnvironmentBitmapFromEvaluator(SkylightEnvironment, SkyTexture, Gamma, _docsrn);
 					}
 					else
 					{
@@ -467,7 +458,7 @@ namespace RhinoCyclesCore
 						{
 							ReflectionColor = simenv.BackgroundColor;
 						}
-						ReflectionTexture.Filename = string.IsNullOrEmpty(ReflectionEnvironment.Filename) ? null : ReflectionEnvironment.Filename;
+						_bitmapConverter.EnvironmentBitmapFromEvaluator(ReflectionEnvironment, ReflectionTexture, Gamma, _docsrn);
 					}
 					else
 					{

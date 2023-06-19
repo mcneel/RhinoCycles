@@ -40,7 +40,7 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add("attribute", "vertexcolor", "Attribute");
 		}
 
-		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 		}
 

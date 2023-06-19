@@ -42,10 +42,10 @@ namespace RhinoCyclesCore.Materials
 			ModifyRenderContentStyles(RenderContentStyles.None, RenderContentStyles.TextureSummary);
 		}
 
-		public void BakeParameters(Converters.BitmapConverter bitmapConverter)
+		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			HandleTexturedValue(_DiffuseColor, Diffuse);
-			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, false, bitmapConverter, Gamma);
+			Utilities.HandleRenderTexture(Diffuse.Texture, DiffuseTexture, false, false, bitmapConverter, docsrn, Gamma);
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -56,7 +56,7 @@ namespace RhinoCyclesCore.Materials
 		public override void SimulateMaterial(ref Rhino.DocObjects.Material simulatedMaterial, bool forDataOnly)
 		{
 			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
-			BakeParameters(BitmapConverter);
+			BakeParameters(BitmapConverter, 0);
 
 
 			simulatedMaterial.DiffuseColor = Diffuse.Value.AsSystemColor();

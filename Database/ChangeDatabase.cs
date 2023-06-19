@@ -947,7 +947,7 @@ namespace RhinoCyclesCore.Database
 				RenderTexture rt = TextureForId(decal.TextureRenderHash(flags));
 
 				CyclesTextureImage tex = new CyclesTextureImage();
-				Utilities.HandleRenderTexture(rt, tex, false, true, BitmapConverter, LinearWorkflow.PreProcessGamma);
+				Utilities.HandleRenderTexture(rt, tex, false, true, BitmapConverter, _doc_serialnr, LinearWorkflow.PreProcessGamma);
 
 				var rtid = rt?.Id ?? Guid.Empty;
 				string textype = tex.HasTextureImage ? (tex.HasByteImage ? "byte" : "float") : "no image";
@@ -1226,7 +1226,7 @@ namespace RhinoCyclesCore.Database
 			}
 
 			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
-			var sh = _shaderConverter.RecordDataToSetupCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals);
+			var sh = _shaderConverter.RecordDataToSetupCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals, _doc_serialnr);
 			sh.InvisibleUnderside = invisibleUnderside;
 			_shaderDatabase.AddShader(sh);
 		}
@@ -1627,8 +1627,8 @@ namespace RhinoCyclesCore.Database
 			}
 			emissive.SetParameter(Materials.EmissiveMaterial._Strength, (float)rgl.Intensity * RcCore.It.AllSettings.LinearLightFactor * (rgl.IsEnabled ? 1 : 0)*sizeterm*sizeterm);
 			emissive.EndChange();
-			emissive.BakeParameters(BitmapConverter);
-			var shader = new CyclesShader(matid, BitmapConverter);
+			emissive.BakeParameters(BitmapConverter, _doc_serialnr);
+			var shader = new CyclesShader(matid, BitmapConverter, _doc_serialnr);
 			shader.RecordDataForFrontShader(emissive, PreProcessGamma);
 			shader.Type = CyclesShader.Shader.Diffuse;
 
