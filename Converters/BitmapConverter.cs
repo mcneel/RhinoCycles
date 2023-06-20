@@ -131,8 +131,6 @@ namespace RhinoCyclesCore.Converters
 			if (rm != null)
 				renderTexture = rm.FindChild("texture") as RenderTexture;
 
-			RhinoDoc rhinoDoc = RhinoDoc.FromRuntimeSerialNumber(docsrn);
-
 			if (renderTexture == null)
 			{
 				teximg.TexByte = null;
@@ -147,10 +145,7 @@ namespace RhinoCyclesCore.Converters
 				Field tf = renderTexture.Fields.GetField("filename");
 				var ofs = tf.GetValue<string>();
 				var fs = "";
-				if (rhinoDoc != null)
-				{
-					fs = Rhino.Render.Utilities.FindFile(rhinoDoc, ofs, true);
-				}
+				fs = Rhino.Render.Utilities.FindFile(rm.DocumentAssoc, ofs, true);
 
 				teximg.Filename = string.IsNullOrEmpty(fs) ? null : fs;
 			}

@@ -212,14 +212,10 @@ namespace RhinoCyclesCore
 			}
 			else
 			{
-				RhinoDoc rhinoDoc = RhinoDoc.FromRuntimeSerialNumber(docsrn);
 				Field tf = rt.Fields.GetField("filename");
 				var ofs = tf.GetValue<string>();
 				var fs = "";
-				if (rhinoDoc != null)
-				{
-					fs = Rhino.Render.Utilities.FindFile(rhinoDoc, ofs, true);
-				}
+				fs = Rhino.Render.Utilities.FindFile(rt.DocumentAssoc, ofs, true);
 
 				tex.Filename = string.IsNullOrEmpty(fs) ? null : fs;
 				tex.Name = rid.ToString(CultureInfo.InvariantCulture);
