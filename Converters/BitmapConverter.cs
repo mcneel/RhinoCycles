@@ -228,7 +228,7 @@ namespace RhinoCyclesCore.Converters
 
 				rhinotfm.M20 = -alti;
 				rhinotfm.M21 = -Rhino.RhinoMath.ToRadians(rot.Z);
-				rhinotfm.M22 = azi - RhinoMath.ToRadians(180);
+				rhinotfm.M22 = -(azi + RhinoMath.ToRadians(180));
 			}
 			else
 			{
