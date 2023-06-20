@@ -215,7 +215,8 @@ namespace RhinoCyclesCore
 				Field tf = rt.Fields.GetField("filename");
 				var ofs = tf.GetValue<string>();
 				var fs = "";
-				fs = Rhino.Render.Utilities.FindFile(rt.DocumentAssoc, ofs, true);
+				RhinoDoc doc = rt.DocumentAssoc != null ? rt.DocumentAssoc : rt.DocumentOwner;
+				fs = Rhino.Render.Utilities.FindFile(doc, ofs, true);
 
 				tex.Filename = string.IsNullOrEmpty(fs) ? null : fs;
 				tex.Name = rid.ToString(CultureInfo.InvariantCulture);

@@ -145,7 +145,8 @@ namespace RhinoCyclesCore.Converters
 				Field tf = renderTexture.Fields.GetField("filename");
 				var ofs = tf.GetValue<string>();
 				var fs = "";
-				fs = Rhino.Render.Utilities.FindFile(rm.DocumentAssoc, ofs, true);
+				RhinoDoc doc = rm.DocumentAssoc != null ? rm.DocumentAssoc : rm.DocumentOwner;
+				fs = Rhino.Render.Utilities.FindFile(doc, ofs, true);
 
 				teximg.Filename = string.IsNullOrEmpty(fs) ? null : fs;
 			}
