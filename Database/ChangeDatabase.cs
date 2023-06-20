@@ -1437,6 +1437,8 @@ namespace RhinoCyclesCore.Database
 
 			isGpShadowsOnly = gp.IsShadowOnly;
 
+			CSycles.film_set_use_approximate_shadow_catcher(_renderEngine.Session.Id, isGpShadowsOnly);
+
 			var matrenderhash = materialId;
 			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 			var cyclesObject = new CyclesObject
@@ -1447,11 +1449,9 @@ namespace RhinoCyclesCore.Database
 				Transform = t,
 				Visible = gp.Enabled,
 				CastShadow = true,
-				IsShadowCatcher = false, // TODO: fix shadows-only GP: isGpShadowsOnly,
+				IsShadowCatcher = isGpShadowsOnly,
 				IgnoreCutout = true,
 			};
-
-
 
 			HandleShaderChange(GroundPlaneMeshInstanceId, currentGpRenderMaterial, matrenderhash, gpid);
 			currentGpRenderMaterial = matrenderhash;
