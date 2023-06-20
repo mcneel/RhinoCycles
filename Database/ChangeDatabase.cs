@@ -833,6 +833,10 @@ namespace RhinoCyclesCore.Database
 
 		public List<CyclesDecal> HandleMeshDecals(Guid meshguid, Decals decals, Rhino.Geometry.Transform instanceTransform)
 		{
+			return null;
+			// TODO: fix decals
+#if FIXUPDECALS
+			// remove preprocessor stuff when working on this
 			if (decals == null) return null;
 			if(decals.Count()<1) return null;
 			int idx = 0;
@@ -979,6 +983,7 @@ namespace RhinoCyclesCore.Database
 			string sbstr = sb.ToString();
 			RhinoApp.OutputDebugString($"{sbstr}\n\n");
 			return decalList;
+#endif
 		}
 
 		public void HandleMeshTextureCoordinates(Rhino.Geometry.Mesh meshdata, int[] findices, List<float[]> cmuvList)
@@ -1134,7 +1139,7 @@ namespace RhinoCyclesCore.Database
 
 				if (_renderEngine.CancelRender) return;
 
-				#pragma warning disable CS0618
+#pragma warning disable CS0618
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				var cyclesDecals = HandleMeshDecals(a.MeshId, a.Decals, a.Transform);
 
@@ -1442,7 +1447,7 @@ namespace RhinoCyclesCore.Database
 				Transform = t,
 				Visible = gp.Enabled,
 				CastShadow = true,
-				IsShadowCatcher = isGpShadowsOnly,
+				IsShadowCatcher = false, // TODO: fix shadows-only GP: isGpShadowsOnly,
 				IgnoreCutout = true,
 			};
 
