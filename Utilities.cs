@@ -213,18 +213,13 @@ namespace RhinoCyclesCore
 			else
 			{
 				Field tf = rt.Fields.GetField("filename");
-				var ofs = tf.GetValue<string>();
 				var fs = "";
-				RhinoDoc doc = rt.DocumentAssoc != null ? rt.DocumentAssoc : rt.DocumentOwner;
-				if (doc != null)
+				if (tf != null)
 				{
+					var ofs = tf.GetValue<string>();
+					RhinoDoc doc = rt.DocumentAssoc;
 					fs = Rhino.Render.Utilities.FindFile(doc, ofs, true);
-				} else
-				{
-					fs = ofs;
 				}
-
-
 
 				tex.Filename = string.IsNullOrEmpty(fs) ? null : fs;
 				tex.Name = rid.ToString(CultureInfo.InvariantCulture);

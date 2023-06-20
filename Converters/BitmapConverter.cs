@@ -143,16 +143,11 @@ namespace RhinoCyclesCore.Converters
 			if (renderTexture.IsImageBased())
 			{
 				Field tf = renderTexture.Fields.GetField("filename");
-				var ofs = tf.GetValue<string>();
 				var fs = "";
-				RhinoDoc doc = rm.DocumentAssoc != null ? rm.DocumentAssoc : rm.DocumentOwner;
-				if (doc != null)
-				{
+				if(tf != null) {
+					var ofs = tf.GetValue<string>();
+					RhinoDoc doc = rm.DocumentAssoc;
 					fs = Rhino.Render.Utilities.FindFile(doc, ofs, true);
-				}
-				else
-				{
-					fs = ofs;
 				}
 
 				teximg.Filename = string.IsNullOrEmpty(fs) ? null : fs;
