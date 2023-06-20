@@ -134,10 +134,11 @@ namespace RhinoCyclesCore.Database
 		/// <param name="pluginId">Id of the plugin instantiating the render change queue</param>
 		/// <param name="engine">Reference to our render engine</param>
 		/// <param name="createPreviewEventArgs">preview event arguments</param>
-		internal ChangeDatabase(Guid pluginId, RenderEngine engine, CreatePreviewEventArgs createPreviewEventArgs, BitmapConverter bitmapConverter) : base(pluginId, createPreviewEventArgs)
+		internal ChangeDatabase(Guid pluginId, RenderEngine engine, CreatePreviewEventArgs createPreviewEventArgs, BitmapConverter bitmapConverter, uint docsrn) : base(pluginId, createPreviewEventArgs)
 		{
 			BitmapConverter = bitmapConverter;
-			_environmentDatabase = new EnvironmentDatabase(BitmapConverter, 0);
+			_doc_serialnr = docsrn;
+			_environmentDatabase = new EnvironmentDatabase(BitmapConverter, docsrn);
 			_renderEngine = engine;
 			_modalRenderer = true;
 			_objectShaderDatabase = new ObjectShaderDatabase(_objectDatabase);

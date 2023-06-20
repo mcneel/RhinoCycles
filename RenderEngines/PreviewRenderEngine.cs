@@ -31,7 +31,7 @@ namespace RhinoCyclesCore.RenderEngines
 		/// </summary>
 		/// <param name="createPreviewEventArgs"></param>
 		/// <param name="pluginId">Id of the plugin for which the render engine is created</param>
-		public PreviewRenderEngine(CreatePreviewEventArgs createPreviewEventArgs, Guid pluginId) : base (pluginId, createPreviewEventArgs, false)
+		public PreviewRenderEngine(CreatePreviewEventArgs createPreviewEventArgs, Guid pluginId, uint docsrn) : base (pluginId, createPreviewEventArgs, false, docsrn)
 		{
 			State = State.Rendering;
 
@@ -51,9 +51,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void PreviewRendererWriteRenderTileCallback(IntPtr sessionId, uint x, uint y, uint w, uint h, uint sample, uint depth, PassType passtype, float[] pixels, int pixlen)
 		{
-			//if (IsStopped) return;
-
-		  //DisplayBuffer(sessionId, x, y, w, h, passtype, ref pixels, pixlen, (int)depth);
 	  }
 
 		public bool Success { get; set; } = false;

@@ -191,10 +191,11 @@ namespace RhinoCyclesCore
 			RegisterEventHandler();
 		}
 
-		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive)
+		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive, uint docsrn)
 		{
 			PreviewEventArgs = previewEventArgs;
-			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs, _bitmapConverter);
+			m_doc_serialnumber = docsrn;
+			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs, _bitmapConverter, docsrn);
 			RegisterEventHandler();
 		}
 
