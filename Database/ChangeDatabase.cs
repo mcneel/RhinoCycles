@@ -833,9 +833,6 @@ namespace RhinoCyclesCore.Database
 
 		public List<CyclesDecal> HandleMeshDecals(Guid meshguid, Decals decals, Rhino.Geometry.Transform instanceTransform)
 		{
-			return null;
-			// TODO: fix decals
-#if FIXUPDECALS
 			// remove preprocessor stuff when working on this
 			if (decals == null) return null;
 			if(decals.Count()<1) return null;
@@ -948,7 +945,7 @@ namespace RhinoCyclesCore.Database
 				// To further confuse matters, the incorrect value of TextureRenderHashFlags.ExcludeLocalMapping
 				// which is (1 << 32) is actually 1 which is in fact ExcludeLinearWorkflow! So this was always
 				// excluding linear workflow anyway. Now it is also excluding local mapping as originally intended.
-				var flags = CrcRenderHashFlags.ExcludeLocalMapping | CrcRenderHashFlags.ExcludeLinearWorkflow;
+				var flags = CrcRenderHashFlags.ExcludeLinearWorkflow;
 				RenderTexture rt = TextureForId(decal.TextureRenderHash(flags));
 
 				CyclesTextureImage tex = new CyclesTextureImage();
@@ -983,7 +980,6 @@ namespace RhinoCyclesCore.Database
 			string sbstr = sb.ToString();
 			RhinoApp.OutputDebugString($"{sbstr}\n\n");
 			return decalList;
-#endif
 		}
 
 		public void HandleMeshTextureCoordinates(Rhino.Geometry.Mesh meshdata, int[] findices, List<float[]> cmuvList)
