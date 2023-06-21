@@ -243,9 +243,9 @@
   </Target>
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' And '$(RHINOCYCLESDEV)' == '' ">
-      Copy /Y $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\* $(OutputPath)\.
-      XCopy $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\source $(OutputPath)\RhinoCycles\source /Y /I /Q
-      XCopy $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\lib $(OutputPath)\RhinoCycles\lib /Y /I /Q
+      Copy /Y $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\* $(OutputPath).
+      XCopy $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\lib $(OutputPath)RhinoCycles\lib /Y /I /S /Q
+      XCopy $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\source $(OutputPath)RhinoCycles\source /Y /I /S /Q
     </PostBuildEvent>
   </PropertyGroup>
 </Project>
