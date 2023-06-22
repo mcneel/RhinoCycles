@@ -47,12 +47,10 @@ namespace RhinoCyclesCore.Database
 
 	public class ShaderDatabase : IReadWriteShaderDatabase, IDisposable
 	{
-		/*
 		/// <summary>
 		/// RhinoCycles shaders and Cycles shaders relations
 		/// </summary>
 		private readonly List<Tuple<object, CclShader>> _allShaders = new List<Tuple<object, CclShader>>();
-		*/
 
 		/// <summary>
 		/// record material changes for objects
@@ -87,12 +85,10 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public List<CyclesShader> ShaderChanges => _cqShaders;
 
-		/*
 		/// <summary>
 		/// Get a list of all shaders.
 		/// </summary>
 		public List<Tuple<object, CclShader>> AllShaders => _allShaders;
-		*/
 
 		/// <summary>
 		/// Record the CclShader for given id.
@@ -104,7 +100,6 @@ namespace RhinoCyclesCore.Database
 				_rhCclShaders.Add(id, shader);
 		}
 
-		/*
 		/// <summary>
 		/// Add a CyclesLight and its shader
 		/// </summary>
@@ -124,7 +119,6 @@ namespace RhinoCyclesCore.Database
 		{
 			_allShaders.Add(new Tuple<object, CclShader>(s, shader));
 		}
-		*/
 
 		public void AddObjectMaterialChange(CyclesObjectShader o)
 		{

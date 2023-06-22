@@ -38,7 +38,7 @@ namespace RhinoCyclesCore
 		{
 			if (CancelRender) return false;
 
-			// TODO: XXXX Database.UploadDisplayPipelineAttributesChanges();
+			Database.UploadDisplayPipelineAttributesChanges();
 			Database.UploadIntegratorChanges();
 
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.1f, "Start data upload"));
@@ -48,7 +48,7 @@ namespace RhinoCyclesCore
 			Database.UploadClippingPlaneChanges();
 
 			// linear workflow & gamma changes
-			// TODO: XXXX Database.UploadGammaChanges();
+			Database.UploadGammaChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.2f, "Linear workflow (gamma changes) uploaded"));
 
 			if (CancelRender) return false;

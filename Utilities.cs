@@ -158,7 +158,7 @@ namespace RhinoCyclesCore
 			return (success, rc, onness, amount);
 		}
 
-		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool is_leaf_bitmap, Converters.BitmapConverter bitmapConverter, uint docsrn, float gamma = 1.0f)
+		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool is_leaf_bitmap, Converters.BitmapConverter bitmapConverter, uint docsrn, float gamma)
 		{
 			if (rt == null) return;
 
@@ -203,7 +203,7 @@ namespace RhinoCyclesCore
 
 			if (!is_leaf_bitmap)
 			{
-				procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter, docsrn);
+				procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter, docsrn, gamma);
 			}
 
 			if (procedural != null)

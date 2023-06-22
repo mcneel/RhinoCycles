@@ -191,12 +191,8 @@ namespace RhinoCyclesCore.Database
 		{
 			if (LinearWorkflowHasChanged)
 			{
-				BitmapConverter.ApplyGammaToTextures(PreProcessGamma);
+				//_environmentDatabase.CurrentBackgroundShader?.Reset();
 
-				_environmentDatabase.CurrentBackgroundShader?.Reset();
-
-				/*
-				 * TODO: XXXX revisit gammastuff
 				foreach (var tup in _shaderDatabase.AllShaders)
 				{
 					var cclsh = tup.Item2;
@@ -217,10 +213,10 @@ namespace RhinoCyclesCore.Database
 					}
 
 				}
-				*/
 
 				TriggerLinearWorkflowUploaded();
 				TriggerFilmUpdateTagged();
+
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Gamma handled", -1.0f);
 			}
 		}
@@ -706,7 +702,7 @@ namespace RhinoCyclesCore.Database
 				"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
 				*/
 
-			var screenport = vp.GetScreenPort(out int near, out int far);
+				var screenport = vp.GetScreenPort(out int near, out int far);
 			var bottom = screenport.Bottom;
 			var top = screenport.Top;
 			var left = screenport.Left;
@@ -1319,7 +1315,7 @@ namespace RhinoCyclesCore.Database
 				// create a cycles shader
 				var sh = _renderEngine.CreateMaterialShader(shader);
 				_shaderDatabase.RecordRhCclShaderRelation(shader.Id, sh);
-				//_shaderDatabase.Add(shader, sh);
+				_shaderDatabase.Add(shader, sh);
 
 				sh.Tag();
 			}
@@ -1509,12 +1505,11 @@ namespace RhinoCyclesCore.Database
 				l.Gamma = PreProcessGamma;
 
 				var lgsh = l.Type!=LightType.Background ? _renderEngine.CreateSimpleEmissionShader(l) : _renderEngine.Session.Scene.Background.Shader;
-				/*
+				
 				if (l.Type != LightType.Background)
 				{
 					_shaderDatabase.Add(l, lgsh);
 				}
-				*/
 
 				if (_renderEngine.CancelRender) return;
 
