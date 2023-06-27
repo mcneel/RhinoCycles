@@ -81,7 +81,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (cyclesEngine.CancelRender) return;
 
 			var gpusize = TileSize(renderDevice);
-			var threads = renderDevice.IsGpu ? 0 : (uint)Math.Max(1, Utilities.GetSystemProcessorCount() - 1);
+			uint threads = renderDevice.IsGpu ? 0u : (uint)RcCore.It.AllSettings.Threads;
 
 			var pixelSize = (int)(RcCore.It.AllSettings.DpiScale);
 
