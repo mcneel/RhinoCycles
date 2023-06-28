@@ -90,6 +90,7 @@ namespace RhinoCyclesCore
 		public bool CancelRender { get; set; }
 
 		public int RenderedSamples { get; set; }
+		public int RenderedTiles { get; set; }
 		public bool Finished { get; set; } = false;
 
 		public string TimeString;
@@ -271,6 +272,7 @@ namespace RhinoCyclesCore
 			var status = CSycles.progress_get_status(sid);
 			var substatus = CSycles.progress_get_substatus(sid);
 			RenderedSamples = CSycles.progress_get_sample(sid);
+			RenderedTiles = CSycles.progress_get_rendered_tiles(sid);
 
 			//Debug.WriteLine("Current sample: {0}", RenderedSamples);
 

@@ -100,6 +100,9 @@ namespace RhinoCyclesCore.RenderEngines
 					.Select(chan => PassTypeForStandardChannel(chan))
 					.ToList();
 
+			// Due to code above we will have many duplicate passes. For now, delete duplicates.
+			reqPassTypes = reqPassTypes.Distinct().ToList();
+
 			var size = cyclesEngine.RenderDimension;
 
 			IAllSettings engineSettings = eds;
@@ -189,6 +192,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 				var throttle = Math.Max(0, engineSettings.ThrottleMs);
 				int lastRenderedSample = -1;
+				int lastRenderedTiles = -1;
 
 				while (!Finished)
 				{
@@ -200,9 +204,15 @@ namespace RhinoCyclesCore.RenderEngines
 						Finished = true;
 						cyclesEngine.CancelRender = true;
 					}
-					else if (!capturing && !Finished && RenderedSamples > lastRenderedSample)
+					else if (!capturing && !Finished && (RenderedSamples > lastRenderedSample || RenderedTiles > lastRenderedTiles))
 					{
+						if(RenderedTiles > lastRenderedTiles && lastRenderedTiles >= 0)
+						{
+							RenderedSamples = -1;
+						}
+
 						lastRenderedSample = RenderedSamples;
+						lastRenderedTiles = RenderedTiles;
 
 						cyclesEngine.BlitPixelsToRenderWindowChannel();
 						cyclesEngine.RenderWindow.Invalidate();
