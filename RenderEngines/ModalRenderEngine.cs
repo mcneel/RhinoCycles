@@ -191,8 +191,8 @@ namespace RhinoCyclesCore.RenderEngines
 				cyclesEngine.Session.Start();
 
 				var throttle = Math.Max(0, engineSettings.ThrottleMs);
-				int lastRenderedSample = -1;
-				int lastRenderedTiles = -1;
+				int lastRenderedSample = 0;
+				int lastRenderedTiles = 0;
 
 				while (!Finished)
 				{
@@ -208,7 +208,7 @@ namespace RhinoCyclesCore.RenderEngines
 					{
 						if(RenderedTiles > lastRenderedTiles && lastRenderedTiles >= 0)
 						{
-							RenderedSamples = -1;
+							RenderedSamples = 0;
 						}
 
 						lastRenderedSample = RenderedSamples;
@@ -250,7 +250,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				// set final status string and progress to 1.0f to signal completed render
 				cyclesEngine.SetProgress(rw,
-					String.Format(Localization.LocalizeString("Render ready {0} samples, duration {1}", 39), cyclesEngine.RenderedSamples + 1, cyclesEngine.TimeString), 1.0f);
+					String.Format(Localization.LocalizeString("Render ready {0} samples, duration {1}", 39), cyclesEngine.RenderedSamples, cyclesEngine.TimeString), 1.0f);
 			}
 
 			if (!renderSuccess)
