@@ -837,8 +837,8 @@ namespace RhinoCyclesCore.Database
 
 			StringBuilder sb = new StringBuilder();
 			foreach (Decal decal in decals) {
-				var mapping = decal.DecalMapping;
-				var projection = decal.DecalProjection;
+				var mapping = decal.Mapping;
+				var projection = decal.Projection;
 
 				var across = decal.VectorAcross;
 				var up = decal.VectorUp;
