@@ -61,7 +61,7 @@ namespace RhinoCyclesCore.Settings
 		static public int SubSurfaceSamples => 32;
 		static public int VolumeSamples => 32;
 
-		static public int Samples => 100;
+		static public int Samples => 1000;
 		static public bool UseDocumentSamples => false;
 		/// <summary>
 		/// Texture bake quality 0-3
