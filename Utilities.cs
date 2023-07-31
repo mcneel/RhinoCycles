@@ -1,4 +1,5 @@
 using ccl;
+using sdd = System.Diagnostics.Debug;
 using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
@@ -19,6 +20,7 @@ using System.Collections.Generic;
 using ccl.ShaderNodes;
 using ccl.ShaderNodes.Sockets;
 using Rhino.Render.Fields;
+using System.Linq;
 
 namespace RhinoCyclesCore
 {
@@ -158,7 +160,7 @@ namespace RhinoCyclesCore
 			return (success, rc, onness, amount);
 		}
 
-		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool is_leaf_bitmap, Converters.BitmapConverter bitmapConverter, uint docsrn, float gamma)
+		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool is_leaf_bitmap, Converters.BitmapConverter bitmapConverter, uint docsrn, float gamma, bool should_simulate = false)
 		{
 			if (rt == null) return;
 
@@ -204,23 +206,36 @@ namespace RhinoCyclesCore
 			if (!is_leaf_bitmap)
 			{
 				procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter, docsrn, gamma);
+				sdd.WriteLine($"===========>> {is_leaf_bitmap} [{procedural}]");
 			}
 
 			if (procedural != null)
 			{
+				sdd.WriteLine($"===========>> procedural set");
 				tex.Procedural = procedural;
+				tex.IsNormalMap = tex.TextureList.Any<CyclesTextureImage>(cti => cti.IsNormalMap == true);
 			}
 			else
 			{
-				Field tf = rt.Fields.GetField("filename");
 				var fs = "";
-				if (tf != null)
+				if (!should_simulate)
 				{
-					var ofs = tf.GetValue<string>();
+					Field tf = rt.Fields.GetField("filename");
+					if (tf != null)
+					{
+						var ofs = tf.GetValue<string>();
+						RhinoDoc doc = rt.DocumentAssoc;
+						fs = Rhino.Render.Utilities.FindFile(doc, ofs, true);
+					}
+				} else {
+					SimulatedTexture simtex = rt.SimulatedTexture(RenderTexture.TextureGeneration.Allow);
 					RhinoDoc doc = rt.DocumentAssoc;
-					fs = Rhino.Render.Utilities.FindFile(doc, ofs, true);
+					fs = simtex.Filename; //Rhino.Render.Utilities.FindFile(doc, simtex.Filename, true);
+					sdd.WriteLine($"===========>> FILENAME SIMTEX: [{fs}]");
 				}
 
+				tex.IsNormalMap = rt.IsNormalMap();
+				sdd.WriteLine($"===========>> IsNormalMap: [{tex.IsNormalMap}]");
 				tex.Filename = string.IsNullOrEmpty(fs) ? null : fs;
 				tex.Name = rid.ToString(CultureInfo.InvariantCulture);
 				tex.EnvProjectionMode = envProjectionMode;

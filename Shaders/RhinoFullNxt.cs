@@ -23,6 +23,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using RhinoCyclesCore.Converters;
+using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -470,6 +471,7 @@ namespace RhinoCyclesCore.Shaders
 					{
 						if (!part.PbrBumpTexture.IsNormalMap)
 						{
+							sdd.WriteLine("~~~~> BUMP TEXTURE");
 							var bump = new ccl.ShaderNodes.BumpNode(m_shader, "bump");
 							m_shader.AddNode(bump);
 							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
@@ -481,6 +483,7 @@ namespace RhinoCyclesCore.Shaders
 						}
 						else
 						{
+							sdd.WriteLine("~~~~> NORMAL TEXTURE");
 							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal.ToList(), false, true, false);
 						}
 					}

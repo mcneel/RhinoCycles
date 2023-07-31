@@ -49,6 +49,11 @@ namespace RhinoCyclesCore.Converters
 			return procedural;
 		}
 
+		private static bool ShouldSimulate(RenderTexture rt) {
+			Guid type_id = rt.TypeId;
+			return type_id == ContentUuids.ResampleTextureType || type_id == ContentUuids.AdvancedDotTextureType || type_id == ContentUuids.GritBumpTexture || type_id == ContentUuids.DotBumpTexture || type_id == ContentUuids.WoodBumpTexture || type_id == ContentUuids.HatchBumpTexture || type_id == ContentUuids.LeatherBumpTexture || type_id == ContentUuids.SpeckleBumpTexture || type_id == ContentUuids.CrossHatchBumpTexture;
+		}
+
 		public static Procedural CreateProcedural(RenderTexture render_texture, List<CyclesTextureImage> texture_list, BitmapConverter bitmap_converter, uint docsrn, float gamma)
 		{
 			if (render_texture == null)
@@ -159,11 +164,11 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new DotsTextureProcedural(render_texture);
 			}*/
-			else if (render_texture.IsBitmapTexture() || type_id == ContentUuids.ResampleTextureType || type_id == ContentUuids.AdvancedDotTextureType)
+			else if (render_texture.IsBitmapTexture() || Procedural.ShouldSimulate(render_texture))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);
-				procedural = new BitmapTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn, gamma);
+				procedural = new BitmapTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn, gamma, Procedural.ShouldSimulate(render_texture));
 			}
 			else if (type_id == ContentUuids.HDRTextureType)
 			{
@@ -949,12 +954,12 @@ namespace RhinoCyclesCore.Converters
 
 	public class BitmapTextureProcedural : Procedural
 	{
-		public BitmapTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn, float gamma) : base(render_texture)
+		public BitmapTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn, float gamma, bool should_simulate) : base(render_texture)
 		{
 			CyclesTexture = cycles_texture;
 			BitmapConverter = bitmap_converter;
 			Gamma = gamma;
-			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, true, bitmap_converter, docsrn, gamma);
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, true, bitmap_converter, docsrn, gamma, should_simulate);
 
 			var rtf = render_texture.Fields;
 
