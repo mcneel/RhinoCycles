@@ -124,8 +124,6 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.Reset(size.Width, size.Height, cyclesEngine.MaxSamples, 0, 0, size.Width, size.Height);
 			cyclesEngine.Session.Start();
 
-			int lastRenderedSample = 0;
-
 			// and actually start
 			while (!cyclesEngine.Finished)
 			{
