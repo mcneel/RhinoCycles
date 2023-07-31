@@ -70,7 +70,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.PreviewSamples = Math.Max(1, RcCore.It.AllSettings.PreviewSamples);
 			cyclesEngine.MaxSamples = cyclesEngine.PreviewSamples;
 
-			#region pick a render device
+#region pick a render device
 			(bool isReady, Device renderDevice) = RcCore.It.IsDeviceReady(RcCore.It.AllSettings.RenderDevice);
 			cyclesEngine.IsFallbackRenderDevice = !isReady;
 
@@ -141,16 +141,11 @@ namespace RhinoCyclesCore.RenderEngines
 						cyclesEngine.StopRendering();
 					}
 
-					if (!cyclesEngine.Finished && cyclesEngine.RenderedSamples > lastRenderedSample)
-					{
-						lastRenderedSample = cyclesEngine.RenderedSamples;
+					cyclesEngine.BlitPixelsToRenderWindowChannel();
+					cyclesEngine.RenderWindow.Invalidate();
+					cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
 
-						cyclesEngine.BlitPixelsToRenderWindowChannel();
-						cyclesEngine.RenderWindow.Invalidate();
-						cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
-					}
-
-					Thread.Sleep(100);
+					Thread.Sleep(50);
 				}
 				else
 				{
@@ -159,6 +154,9 @@ namespace RhinoCyclesCore.RenderEngines
 				if (cyclesEngine.IsStopped) break;
 				if (cyclesEngine.CancelRender) break;
 			}
+			cyclesEngine.BlitPixelsToRenderWindowChannel();
+			cyclesEngine.RenderWindow.Invalidate();
+			cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
 			cyclesEngine.Session.Cancel("done");
 
 			cyclesEngine?.Database.ResetChangeQueue();
