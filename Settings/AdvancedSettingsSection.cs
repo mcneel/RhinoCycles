@@ -59,7 +59,6 @@ namespace RhinoCyclesCore.Settings
 
 		public Label LblSeed { get; set; }
 		public Label LblSamples { get; set; }
-		public Label LblUseDocumentSamples { get; set; }
 		public Label LblMaxBounces { get; set; }
 		public Label LblMaxDiffuseBounces { get; set; }
 		public Label LblMaxGlossyBounces { get; set; }
@@ -203,14 +202,11 @@ namespace RhinoCyclesCore.Settings
 				Width = 75,
 				Tag = AdvancedSettings.Samples,
 			};
-			LblUseDocumentSamples = new Label()
-			{
-				Text = Localization.LocalizeString("Override Production Render Quality", 1),
-				VerticalAlignment = VerticalAlignment.Center,
-			};
+
 			CheckboxUseSamples = new CheckBox()
 			{
 				Checked = false,
+				Text = Localization.LocalizeString("Override Production Render Quality", 1),
 				ToolTip = Localization.LocalizeString("Check to override render quality setting. If unchecked affects only viewport sample count", 2),
 			};
 
@@ -339,8 +335,17 @@ namespace RhinoCyclesCore.Settings
 
 		private void InitializeLayout()
 		{
+			var bounceTableTitle = new TableLayout()
+			{
+				Rows = 
+				{
+					new TableRow(Localization.LocalizeString("Ray Bounces", 35), new Rhino.UI.Controls.Divider())
+				}
+			};
+
 			var bounceTable = new TableLayout()
 			{
+				Padding = new Eto.Drawing.Padding(14, 0, 0, 0),
 				Spacing = new Eto.Drawing.Size(5, 5),
 				Rows =
 				{
@@ -352,17 +357,69 @@ namespace RhinoCyclesCore.Settings
 					new TableRow(LblMaxTransparencyBounces, StepperMaxTransparencyBounces),
 				}
 			};
-			var sampleTable = new TableLayout()
+
+			var bounceMainTable = new TableLayout()
+			{
+				Spacing = new Eto.Drawing.Size(5, 5),
+				ToolTip = Localization.LocalizeString("Settings controlling the bounce limits\nfor different types of rays.", 36),
+				Rows = 
+				{
+					new TableRow(bounceTableTitle),
+					new TableRow(bounceTable),
+				}
+			};
+
+			var sampleTableTitle = new TableLayout()
+			{
+				Rows = 
+				{
+					new TableRow(Localization.LocalizeString("Session", 12), new Rhino.UI.Controls.Divider())
+				}
+			};
+
+			var sampleTableStpper = new TableLayout()
 			{
 				Spacing = new Eto.Drawing.Size(5, 5),
 				Rows =
 				{
 					new TableRow(LblSamples, StepperSamples),
-					new TableRow(LblUseDocumentSamples, CheckboxUseSamples),
 				}
 			};
+
+			var sampleTable = new TableLayout()
+			{
+				Padding = new Eto.Drawing.Padding(14, 0, 0, 0),
+				Spacing = new Eto.Drawing.Size(5, 5),
+				Rows =
+				{
+					new TableRow(sampleTableStpper),
+					new TableRow(CheckboxUseSamples),
+				}
+			};
+
+			var sampleMainTable = new TableLayout()
+			{
+				Spacing = new Eto.Drawing.Size(5, 5),
+				ToolTip = Localization.LocalizeString("Settings for controlling Cycles in a session", 20),
+				Rows = 
+				{
+					new TableRow(sampleTableTitle),
+					new TableRow(sampleTable),
+				}
+			};
+
+
+			var textureTableTitle = new TableLayout()
+			{
+				Rows = 
+				{
+					new TableRow(Localization.LocalizeString("Texture Baking", 21), new Rhino.UI.Controls.Divider())
+				}
+			};
+
 			var textureTable = new TableLayout()
 			{
+				Padding = new Eto.Drawing.Padding(14, 0, 0, 0),
 				Spacing = new Eto.Drawing.Size(5, 5),
 				Rows =
 				{
@@ -370,6 +427,45 @@ namespace RhinoCyclesCore.Settings
 				}
 			};
 
+			var textureMainTable = new TableLayout()
+			{
+				Spacing = new Eto.Drawing.Size(5, 5),
+				ToolTip = Localization.LocalizeString("Setting for controlling texture bake resolution", 28),
+				Rows = 
+				{
+					new TableRow(textureTableTitle),
+					new TableRow(textureTable),
+				}
+			};
+
+			var seedTableTitle = new TableLayout()
+			{
+				Rows = 
+				{
+					new TableRow(Localization.LocalizeString("Seed", 4), new Rhino.UI.Controls.Divider())
+				}
+			};
+
+			var seedTable = new TableLayout()
+			{
+				Spacing = new Eto.Drawing.Size(5, 5),
+				Padding = new Eto.Drawing.Padding(14, 0, 0, 0),
+				Rows =
+				{
+				  new TableRow(new TableCell(StepperSeed, true)) 
+				}
+			};
+
+			var seedMainTable = new TableLayout()
+			{
+				Spacing = new Eto.Drawing.Size(5, 5),
+				ToolTip = Localization.LocalizeString("Set the seed for the random number generator.", 34),
+				Rows = 
+				{
+					new TableRow(seedTableTitle),
+					new TableRow(seedTable),
+				}
+			};
 
 			MainLayout = new StackLayout()
 			{
@@ -378,44 +474,20 @@ namespace RhinoCyclesCore.Settings
 				// Spacing between table cells
 				HorizontalContentAlignment = HorizontalAlignment.Stretch,
 				MinimumSize = new Eto.Drawing.Size(200, 400),
+				Spacing = 10,
 				Items =
 				{
 				TableLayout.Horizontal(10,
-					new GroupBox() {
-						Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
-						Text = Localization.LocalizeString("Seed", 4),
-						ToolTip = Localization.LocalizeString("Set the seed for the random number generator.", 34),
-						Content = new TableLayout
-						{
-							Rows = { new TableRow(new TableCell(StepperSeed, true)) }
-						}
-					}),
-					TableLayout.Horizontal(10,
-						new GroupBox()
-						{
-							Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
-							Text = Localization.LocalizeString("Session", 12),
-							ToolTip = Localization.LocalizeString("Settings for controlling Cycles in a session", 20),
-							Content = sampleTable,
-						}
+						seedMainTable
 					),
 					TableLayout.Horizontal(10,
-						new GroupBox()
-						{
-							Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
-							Text = Localization.LocalizeString("Ray Bounces", 35),
-							ToolTip = Localization.LocalizeString("Settings controlling the bounce limits\nfor different types of rays.", 36),
-							Content = bounceTable,
-						}
+						sampleMainTable
 					),
 					TableLayout.Horizontal(10,
-						new GroupBox()
-						{
-							Padding = new Eto.Drawing.Padding(10, 5, 5, 10),
-							Text = Localization.LocalizeString("Texture Baking", 21),
-							ToolTip = Localization.LocalizeString("Setting for controlling texture bake resolution", 28),
-							Content = textureTable,
-						}
+						bounceMainTable
+					),
+					TableLayout.Horizontal(10,
+						textureMainTable
 					),
 				}
 			};

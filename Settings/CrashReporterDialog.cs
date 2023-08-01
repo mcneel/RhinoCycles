@@ -58,6 +58,12 @@ namespace RhinoCyclesCore.Settings
 				Wrap = WrapMode.Word,
 				Text = explanation,
 			};
+
+			if (HostUtils.RunningOnWindows)
+			{
+				m_crashExplanation.TextColor = AppearanceSettings.GetPaintColor(PaintColor.TextEnabled).ToEto();
+			}
+
 			m_linkToUrl = new LinkButton()
 			{
 				Text = Localization.LocalizeString("More information and potential solutions", 70),
