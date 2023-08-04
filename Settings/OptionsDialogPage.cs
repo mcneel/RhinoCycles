@@ -16,6 +16,7 @@ limitations under the License.
 using Rhino.UI;
 using RhinoCyclesCore.Core;
 using System.Drawing;
+using Rhino.Resources;
 
 namespace RhinoCyclesCore.Settings
 {
@@ -33,14 +34,8 @@ namespace RhinoCyclesCore.Settings
 		public override string LocalPageTitle => Localization.LocalizeString("Rhino Render", 7);
 		public override void OnHelp() => RhinoHelp.Show("options/cycles.htm");
 
-		public override Image PageImage
-		{
-			get
-			{
-				var icon = Properties.IconResources.Cycles_viewport_properties;
-				return icon.ToBitmap();
-			}
-		}
+		System.Drawing.Image g_page_image = null;
+		public override System.Drawing.Image PageImage => g_page_image ?? (g_page_image = Rhino.Resources.Assets.Rhino.SystemDrawing.Bitmaps.TryGet(Rhino.Resources.ResourceIds.Svg_CyclesViewportPropertiesSvg, new System.Drawing.Size(48, 48)));
 
 		public override void OnDefaults()
 		{

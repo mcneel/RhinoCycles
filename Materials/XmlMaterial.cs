@@ -16,8 +16,11 @@ limitations under the License.
 
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using Rhino.DocObjects;
 using Rhino.Render;
+using Rhino;
+using Rhino.UI;
 using System;
 using ccl.ShaderNodes.Sockets;
 
@@ -27,11 +30,17 @@ namespace RhinoCyclesCore.Materials
 	[CustomRenderContent(IsPrivate = true)]
 	public class XmlMaterial : RenderMaterial, ICyclesMaterial
 	{
+		static private Dictionary<Size, Bitmap> material_icons = new Dictionary<Size, Bitmap>();
 		public override bool Icon(Size size, out Bitmap bitmap)
 		{
-			var icon = new Icon(Core.Properties.Resources.Cycles_material, size);
-			bitmap = icon.ToBitmap();
-			return bitmap != null;
+			if (false == material_icons.ContainsKey(size)) {
+				Image img = Rhino.Resources.Assets.Rhino.SystemDrawing.Bitmaps.TryGet(Rhino.Resources.ResourceIds.Svg_CyclesMaterialSvg, new System.Drawing.Size(48, 48));
+				material_icons.Add(size, new Bitmap(img));
+			}
+
+			Bitmap icon = material_icons[size];
+			bitmap = icon;
+			return icon != null;
 		}
 
 		public override bool VirtualIcon(Size size, out Bitmap bitmap)
