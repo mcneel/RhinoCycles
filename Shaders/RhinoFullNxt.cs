@@ -396,7 +396,7 @@ namespace RhinoCyclesCore.Shaders
 					emissive.ins.Strength.Value = 1.0f;
 					var addemissive = new AddClosureNode(m_shader, "pbr_addinemissive");
 
-					principled.Sss = SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.AllSettings.SssMethod);
+					principled.Sss = PrincipledBsdfNode.ScatterMethod.RandomWalk; //SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.AllSettings.SssMethod);
 
 					var alpha_transparency_bsdf = new TransparentBsdfNode(m_shader, "alpha_transparency_bsdf");
 					var alpha_transparency_mixer = new MixClosureNode(m_shader, "alpha_transparency_mixer");
