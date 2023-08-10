@@ -999,7 +999,7 @@ namespace RhinoCyclesCore.Converters
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(image_texture_node.ins.Vector);
 			image_texture_node.outs.Color.Connect(gammanode.ins.Color);
-			gammanode.outs.Color.Connect(parent_color_input);
+			CreateAndConnectAdjustmentNode(shader, gammanode.outs.Color, parent_color_input);
 			ConnectAlphaNode(image_texture_node.outs.Alpha, parent_alpha_input);
 		}
 
