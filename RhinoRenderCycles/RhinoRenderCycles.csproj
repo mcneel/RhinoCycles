@@ -1,0 +1,107 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props" Condition="Exists('..\..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props')" />
+  <Import Project="..\..\..\..\..\RhinoProjectPropertySheets\Rhino.CS.PlugIn.props" Condition="Exists('..\..\..\..\..\RhinoProjectPropertySheets\Rhino.CS.PlugIn.props')" />
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <EnableDefaultItems>False</EnableDefaultItems>
+
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(RhinoBinDir)\$(Configuration)\Plug-ins</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(RhinoBinDir)\$(Configuration)\Plug-ins</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RhinoCyclesCore.csproj">
+      <Project>{509FC709-9478-43FF-B669-A1A4E3BA8B4A}</Project>
+      <Name>RhinoCyclesCore</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj">
+      <Project>{35EF0A4E-2A1A-492C-8BED-106774EA09F2}</Project>
+      <Name>Eto</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj">
+      <Project>{3D7C4CFA-38E3-46ED-A689-862A34F6656C}</Project>
+      <Name>Rhino.UI</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj">
+      <Project>{ED38373E-290C-4BDE-ACBA-1601484E582A}</Project>
+      <Name>RhinoCommon</Name>
+      <Private>False</Private>
+    </ProjectReference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Plugin.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="..\..\..\..\..\version.cs">
+      <Link>Properties\version.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\cs-cz\XML\cs-czRhinoRenderCycles.xml">
+      <Link>Localization\cs-czRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\de-de\XML\de-deRhinoRenderCycles.xml">
+      <Link>Localization\de-deRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\es-es\XML\es-esRhinoRenderCycles.xml">
+      <Link>Localization\es-esRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\fr-fr\XML\fr-frRhinoRenderCycles.xml">
+      <Link>Localization\fr-frRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\it-it\XML\it-itRhinoRenderCycles.xml">
+      <Link>Localization\it-itRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\ja-jp\XML\ja-jpRhinoRenderCycles.xml">
+      <Link>Localization\ja-jpRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\ko-kr\XML\ko-krRhinoRenderCycles.xml">
+      <Link>Localization\ko-krRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\pl-pl\XML\pl-plRhinoRenderCycles.xml">
+      <Link>Localization\pl-plRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\pt-pt\XML\pt-ptRhinoRenderCycles.xml">
+      <Link>Localization\pt-ptRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\ru-ru\XML\ru-ruRhinoRenderCycles.xml">
+      <Link>Localization\ru-ruRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\zh-cn\XML\zh-cnRhinoRenderCycles.xml">
+      <Link>Localization\zh-cnRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\..\..\..\..\Localization\Rhino\zh-tw\XML\zh-twRhinoRenderCycles.xml">
+      <Link>Localization\zh-twRhinoRenderCycles.xml</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>
