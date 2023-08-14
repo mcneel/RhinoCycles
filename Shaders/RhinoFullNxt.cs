@@ -609,7 +609,7 @@ namespace RhinoCyclesCore.Shaders
 					diffuse_base_color_through_alpha180.UseClamp = false;
 
 					var use_alpha_weighted_with_modded_amount71 = new MathMultiply(m_shader, "use_alpha_weighted_with_modded_amount_");
-					use_alpha_weighted_with_modded_amount71.ins.Value1.Value = part.DiffuseTexture.UseAlphaAsFloat;
+					use_alpha_weighted_with_modded_amount71.ins.Value1.Value = 0.0f;
 					use_alpha_weighted_with_modded_amount71.Operation = MathNode.Operations.Multiply;
 					use_alpha_weighted_with_modded_amount71.UseClamp = false;
 
@@ -775,7 +775,7 @@ namespace RhinoCyclesCore.Shaders
 					var diffuse_or_shadeless_emission126 = new MixClosureNode(m_shader, "diffuse_or_shadeless_emission_");
 
 					var one_if_usealphatransp_turned_off178 = new MathLess_Than(m_shader, "one_if_usealphatransp_turned_off_");
-					one_if_usealphatransp_turned_off178.ins.Value1.Value = part.DiffuseTexture.UseAlphaAsFloat;
+					one_if_usealphatransp_turned_off178.ins.Value1.Value = 0.0f;
 					one_if_usealphatransp_turned_off178.ins.Value2.Value = 1f;
 					one_if_usealphatransp_turned_off178.Operation = MathNode.Operations.Less_Than;
 					one_if_usealphatransp_turned_off178.UseClamp = false;
@@ -811,7 +811,7 @@ namespace RhinoCyclesCore.Shaders
 					transparency_texture_amount80.UseClamp = false;
 
 					var toggle_diffuse_texture_alpha_usage81 = new MathMultiply(m_shader, "toggle_diffuse_texture_alpha_usage_");
-					toggle_diffuse_texture_alpha_usage81.ins.Value2.Value = part.DiffuseTexture.UseAlphaAsFloat;
+					toggle_diffuse_texture_alpha_usage81.ins.Value2.Value = 0.0f;
 					toggle_diffuse_texture_alpha_usage81.Operation = MathNode.Operations.Multiply;
 					toggle_diffuse_texture_alpha_usage81.UseClamp = false;
 
@@ -1063,9 +1063,23 @@ namespace RhinoCyclesCore.Shaders
 					{
 						//RenderEngine.SetTextureImage(diffuse_texture85, part.DiffuseTexture);
 						//RenderEngine.SetProjectionMode(m_shader, part.DiffuseTexture, diffuse_texture85, texcoord84);
-						List<ISocket> sockets = new List<ISocket>();
-						sockets.Add(diffuse_base_color_through_alpha120.ins.Color2);
-						sockets.Add(diffuse_base_color_through_alpha180.ins.Color2);
+						//toggle_diffuse_texture_alpha_usage81.ins.Value2.Value = part.DiffuseTexture.UseAlphaAsFloat;
+						//use_alpha_weighted_with_modded_amount71.ins.Value1.Value = part.DiffuseTexture.UseAlphaAsFloat;
+						//one_if_usealphatransp_turned_off178.ins.Value1.Value = part.DiffuseTexture.UseAlphaAsFloat;
+						float useAlpha = 0.0f;
+						if(part.DiffuseTexture.Procedural is BitmapTextureProcedural bmtp)
+						{
+							useAlpha = bmtp.UseAlpha ? 1.0f : 0.0f;
+						}
+						toggle_diffuse_texture_alpha_usage81.ins.Value2.Value = useAlpha;
+						use_alpha_weighted_with_modded_amount71.ins.Value1.Value = useAlpha;
+						one_if_usealphatransp_turned_off178.ins.Value1.Value = useAlpha;
+
+						List<ISocket> sockets = new List<ISocket>
+						{
+							diffuse_base_color_through_alpha120.ins.Color2,
+							diffuse_base_color_through_alpha180.ins.Color2
+						};
 						var alpha = Utilities.GraphForSlot(m_shader, null, true, part.DiffuseTexture.Amount, part.DiffuseTexture, sockets, false, false, false);
 						if (alpha != null)
 						{

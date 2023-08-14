@@ -164,11 +164,11 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new DotsTextureProcedural(render_texture);
 			}*/
-			else if (render_texture.IsBitmapTexture() || Procedural.ShouldSimulate(render_texture))
+			else if (render_texture.IsBitmapTexture() || ShouldSimulate(render_texture))
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);
-				procedural = new BitmapTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn, gamma, Procedural.ShouldSimulate(render_texture));
+				procedural = new BitmapTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn, gamma, ShouldSimulate(render_texture));
 			}
 			else if (type_id == ContentUuids.HDRTextureType)
 			{
@@ -971,6 +971,9 @@ namespace RhinoCyclesCore.Converters
 
 			if (rtf.TryGetValue("use-alpha-channel", out bool use_alpha))
 				UseAlpha = use_alpha;
+
+			if (rtf.TryGetValue("alpha-transparency", out bool use_alpha_transp))
+				UseAlpha |= use_alpha_transp;
 		}
 
 		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
