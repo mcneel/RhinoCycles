@@ -1057,6 +1057,11 @@ namespace RhinoCyclesCore.Shaders
 						RenderEngine.SetTextureImage(transparency_texture112, part.TransparencyTexture);
 						RenderEngine.SetProjectionMode(m_shader, part.TransparencyTexture, transparency_texture112);
 						*/
+						List<ISocket> sockets = new List<ISocket>
+						{
+							transpluminance113.ins.Color
+						};
+						Utilities.GraphForSlot(m_shader, null, true, part.TransparencyTexture.Amount, part.TransparencyTexture, sockets, false, false, false);
 					}
 
 					if (part.HasDiffuseProcedural)
