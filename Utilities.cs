@@ -400,10 +400,13 @@ namespace RhinoCyclesCore
 					if (invert)
 					{
 						sh.AddNode(invcol);
-						gamma_node.outs.Color.Connect(invcol.ins.Color);
+						mixerNode.outs.Color.Connect(invcol.ins.Color);
 
 						invcol.ins.Fac.Value = 1.0f;
-						invcol.outs.Color.Connect(gamma_node.ins.Color);
+						foreach (var sock in socketsToConnectTo)
+						{
+							invcol.outs.Color.Connect(sock);
+						}
 					}
 					else
 					{

@@ -1031,7 +1031,7 @@ namespace RhinoCyclesCore.Shaders
 
 					/* extra code */
 
-					if (part.BumpTexture.HasTextureImage && part.BumpTexture.Amount > 0.0f)
+					/*if (part.BumpTexture.HasTextureImage && part.BumpTexture.Amount > 0.0f)
 					{
 						if (!part.BumpTexture.IsNormalMap)
 						{
@@ -1049,14 +1049,10 @@ namespace RhinoCyclesCore.Shaders
 							normalmap.outs.Normal.Connect(refraction100.ins.Normal);
 							normalmap.outs.Normal.Connect(glossy97.ins.Normal);
 						}
-					}
+					}*/
 
 					if (part.HasTransparencyTexture)
 					{
-						/*
-						RenderEngine.SetTextureImage(transparency_texture112, part.TransparencyTexture);
-						RenderEngine.SetProjectionMode(m_shader, part.TransparencyTexture, transparency_texture112);
-						*/
 						List<ISocket> sockets = new List<ISocket>
 						{
 							transpluminance113.ins.Color
@@ -1066,12 +1062,8 @@ namespace RhinoCyclesCore.Shaders
 
 					if (part.HasDiffuseProcedural)
 					{
-						//RenderEngine.SetTextureImage(diffuse_texture85, part.DiffuseTexture);
-						//RenderEngine.SetProjectionMode(m_shader, part.DiffuseTexture, diffuse_texture85, texcoord84);
-						//toggle_diffuse_texture_alpha_usage81.ins.Value2.Value = part.DiffuseTexture.UseAlphaAsFloat;
-						//use_alpha_weighted_with_modded_amount71.ins.Value1.Value = part.DiffuseTexture.UseAlphaAsFloat;
-						//one_if_usealphatransp_turned_off178.ins.Value1.Value = part.DiffuseTexture.UseAlphaAsFloat;
 						float useAlpha = 0.0f;
+				//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
 						if(part.DiffuseTexture.Procedural is BitmapTextureProcedural bmtp)
 						{
 							useAlpha = bmtp.UseAlpha ? 1.0f : 0.0f;
@@ -1098,12 +1090,14 @@ namespace RhinoCyclesCore.Shaders
 						}
 					}
 
-					if (part.HasBumpTexture)
+					if (null != part.BumpTexture.Procedural)
 					{
-						/*
-						RenderEngine.SetTextureImage(bump_texture86, part.BumpTexture);
-						RenderEngine.SetProjectionMode(m_shader, part.BumpTexture, bump_texture86);
-						*/
+						List<ISocket> sockets = new List<ISocket>
+						{
+							bump_texture_to_bw87.ins.Color,
+							normalmap.ins.Color,
+						};
+						Utilities.GraphForSlot(m_shader, null, true, part.TransparencyTexture.Amount, part.TransparencyTexture, sockets, true, false, false);
 					}
 
 					if (part.HasEnvironmentTexture)
