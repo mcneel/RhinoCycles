@@ -1074,6 +1074,35 @@ namespace RhinoCyclesCore.Database
 		public double ModelAngleToleranceRadians { get; set; }
 		public Rhino.UnitSystem ModelUnitSystem { get; set; }
 
+		/// <summary>
+		/// Create a jiggled transform of the MeshInstance transform.
+		///
+		/// To ensure the jiggling is stable use the MeshId GUID to generate a
+		/// jiggle vector.
+		/// </summary>
+		/// <param name="a">MeshInstance to create jiggled transform for</param>
+		/// <returns>Transform with jiggle translation applied</returns>
+		private Rhino.Geometry.Transform Jiggle(MeshInstance a)
+		{
+			var objectXform = a.Transform;
+			var p = a.MeshId.ToByteArray();
+			long l0 = BitConverter.ToInt64(p, 0);
+			long l1 = BitConverter.ToInt64(p, 4);
+			long l2 = BitConverter.ToInt64(p, 8);
+
+			float f0 = (float)(l0 / (double)int.MaxValue);
+			float f1 = (float)(l1 / (double)int.MaxValue);
+			float f2 = (float)(l2 / (double)int.MaxValue);
+
+			Vector3f jiggleVector = new Vector3f(f0, f1, f2);
+			jiggleVector.Unitize();
+			jiggleVector *= 0.0001f;
+
+			var jiggleTranslationXform = Rhino.Geometry.Transform.Translation(jiggleVector);
+
+			return objectXform * jiggleTranslationXform;
+		}
+
 		protected override void ApplyMeshInstanceChanges(List<uint> deleted, List<MeshInstance> addedOrChanged)
 		{
 			// helper list to ensure we don't add same material multiple times.
@@ -1159,11 +1188,15 @@ namespace RhinoCyclesCore.Database
 				Rhino.Geometry.Transform ocsInv;
 				a.OcsTransform.TryGetInverse(out ocsInv);
 				var t = ocsInv.ToCyclesTransform();
+				// Cycles does not cope well with coincident surfaces. Therefor it is
+				// important to ever so slightly move around the objects - to jiggle
+				// them.
+				var obxform = Jiggle(a);
 				var ob = new CyclesObject
 				{
 					obid = a.InstanceId,
 					meshid = meshid,
-					Transform = a.Transform.ToCyclesTransform(),
+					Transform = obxform.ToCyclesTransform(),
 					OcsFrame = t,
 					matid = matid,
 					CastShadow = a.CastShadows,
