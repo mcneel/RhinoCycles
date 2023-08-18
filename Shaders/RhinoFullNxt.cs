@@ -55,9 +55,6 @@ namespace RhinoCyclesCore.Shaders
 				var backfacing=  new GeometryInfoNode(m_shader, "backfacepicker_");
 				var flipper = new MixClosureNode(m_shader, "front_or_back_");
 
-				m_shader.AddNode(backfacing);
-				m_shader.AddNode(flipper);
-
 				backfacing.outs.Backfacing.Connect(flipper.ins.Fac);
 
 				var frontclosure = front.GetClosureSocket();
@@ -83,9 +80,6 @@ namespace RhinoCyclesCore.Shaders
 					transparent.ins.Color.Value = new float4(1.0, 1.0, 1.0, 1.0);
 					var backfacing = new GeometryInfoNode(m_shader, "backfacepicker_");
 					var flipper = new MixClosureNode(m_shader, "front_or_back_");
-					m_shader.AddNode(transparent);
-					m_shader.AddNode(backfacing);
-					m_shader.AddNode(flipper);
 
 					lastclosure.Connect(flipper.ins.Closure1);
 					transparent.outs.BSDF.Connect(flipper.ins.Closure2);
@@ -106,8 +100,6 @@ namespace RhinoCyclesCore.Shaders
 				texco.UvMap = "uvmap1";
 				ccl.ShaderNodes.DiffuseBsdfNode diff = new DiffuseBsdfNode(m_shader, "debug_diff_");
 				diff.ins.Color.Value = new float4(0.8f, 0.6f, 0.5f, 1.0f);
-				m_shader.AddNode(diff);
-				m_shader.AddNode(texco);
 				texco.outs.UV.Connect(diff.ins.Color);
 				diff.outs.BSDF.Connect(m_shader.Output.ins.Surface);
 			}
@@ -117,6 +109,7 @@ namespace RhinoCyclesCore.Shaders
 				lc.Connect(m_shader.Output.ins.Surface);
 			}
 			m_shader.WriteDataToNodes();
+			//m_shader.DumpGraph($"/Users/nathan/rhinofullnxt_{m_shader.Id}.dot");
 			return m_shader;
 		}
 
@@ -226,19 +219,6 @@ namespace RhinoCyclesCore.Shaders
 					idx++;
 				}
 
-				// Add the nodes to the shader.
-				texcos.ForEach(sn => m_shader.AddNode(sn));
-				imgtexs.ForEach(sn => m_shader.AddNode(sn));
-				mixrgbs.ForEach(sn => m_shader.AddNode(sn));
-				transparencies.ForEach(sn => m_shader.AddNode(sn));
-				alphamaths.ForEach(sn => m_shader.AddNode(sn));
-
-				/*texcos.ForEach(sn => m_codeshader.AddNode(sn));
-				imgtexs.ForEach(sn => m_codeshader.AddNode(sn));
-				mixrgbs.ForEach(sn => m_codeshader.AddNode(sn));
-				transparencies.ForEach(sn => m_codeshader.AddNode(sn));
-				alphamaths.ForEach(sn => m_codeshader.AddNode(sn));*/
-
 				MixNode lastMixer = mixrgbs.Last();
 
 				if(count == 1) {
@@ -333,7 +313,6 @@ namespace RhinoCyclesCore.Shaders
 				ShaderNode materialTwo = null;
 				MixClosureNode blender = new MixClosureNode(m_shader, "blend material blender");
 				blender.ins.Fac.Value = part.BlendMixAmount;
-				m_shader.AddNode(blender);
 				if (part.MaterialOne != null)
 				{
 					materialOne = GetShaderPart(part.MaterialOne);
@@ -342,7 +321,6 @@ namespace RhinoCyclesCore.Shaders
 				{
 					DiffuseBsdfNode diff = new DiffuseBsdfNode(m_shader, "materialOne diffuse bsdf");
 					diff.ins.Color.Value = new float4(0.9, 0.9, 0.9, 1.0);
-					m_shader.AddNode(diff);
 					materialOne = diff;
 				}
 				if (part.MaterialTwo != null)
@@ -353,7 +331,6 @@ namespace RhinoCyclesCore.Shaders
 				{
 					DiffuseBsdfNode diff = new DiffuseBsdfNode(m_shader, "materialTwo diffuse bsdf");
 					diff.ins.Color.Value = new float4(0.9, 0.9, 0.9, 1.0);
-					m_shader.AddNode(diff);
 					materialTwo = diff;
 				}
 				materialOne.GetClosureSocket().Connect(blender.ins.Closure1);
@@ -362,8 +339,6 @@ namespace RhinoCyclesCore.Shaders
 				if (part.BlendMixAmountTexture.HasTextureImage) {
 					RhinoTextureCoordinateNode blendTexCo = new RhinoTextureCoordinateNode(m_shader, "texco for blend");
 					ImageTextureNode blendTexture = new ImageTextureNode(m_shader, "blendmaterial texture");
-					m_shader.AddNode(blendTexture);
-					m_shader.AddNode(blendTexCo);
 					blendTexCo.UvMap = part.BlendMixAmountTexture.GetUvMapForChannel();
 					RenderEngine.SetTextureImage(blendTexture, part.BlendMixAmountTexture);
 					RenderEngine.SetProjectionMode(m_shader, part.BlendMixAmountTexture, blendTexture, blendTexCo);
@@ -378,7 +353,6 @@ namespace RhinoCyclesCore.Shaders
 				if (part.IsPbr)
 				{
 					var principled = new PrincipledBsdfNode(m_shader, "pbr_principled");
-					var basewithao = new MixNode(m_shader, "pbr_basewithao");
 
 					var tangent = new TangentNode(m_shader, "tangents");
 
@@ -387,19 +361,8 @@ namespace RhinoCyclesCore.Shaders
 					var coloured_shadow_switch = new MathMultiply(m_shader, "coloured_shadow_switch");
 					var coloured_shadow = new TransparentBsdfNode(m_shader, "coloured_shadow_transp_bsdf");
 
-					basewithao.BlendType = MixNode.BlendTypes.Multiply;
-					basewithao.ins.Fac.Value = 1.0f;
-					basewithao.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
-
-
-					var emissive = new EmissionNode(m_shader, "pbr_emission");
-					emissive.ins.Strength.Value = 1.0f;
-					var addemissive = new AddClosureNode(m_shader, "pbr_addinemissive");
-
 					principled.Sss = PrincipledBsdfNode.ScatterMethod.RandomWalk; //SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.AllSettings.SssMethod);
 
-					var alpha_transparency_bsdf = new TransparentBsdfNode(m_shader, "alpha_transparency_bsdf");
-					var alpha_transparency_mixer = new MixClosureNode(m_shader, "alpha_transparency_mixer");
 					var alpha_transp_component = new MathSubtract(m_shader, "alpha_transp_component");
 					alpha_transp_component.ins.Value1.Value = 1.0f;
 					var alpha_invert_basecolalpha_component = new MathSubtract(m_shader, "alpha_invert_basecolalpha_component");
@@ -409,34 +372,31 @@ namespace RhinoCyclesCore.Shaders
 					var alpha_transparency_final = new MathSubtract(m_shader, "alpha_transparency_final");
 					alpha_transparency_final.ins.Value1.Value = 1.0f;
 
-					m_shader.AddNode(emissive);
-					m_shader.AddNode(addemissive);
-					m_shader.AddNode(principled);
-					m_shader.AddNode(basewithao);
-					m_shader.AddNode(tangent);
+					var alpha_cutter_bsdf = new TransparentBsdfNode(m_shader, "alpha_cutter_on_coloured_shadow");
+					alpha_cutter_bsdf.ins.Color.Value = new float4(1.0f);
 
-					m_shader.AddNode(coloured_shadow_mix_custom);
-					m_shader.AddNode(lightpath);
-					m_shader.AddNode(coloured_shadow_switch);
-					m_shader.AddNode(coloured_shadow);
-
-					m_shader.AddNode(alpha_transparency_bsdf);
-					m_shader.AddNode(alpha_transparency_mixer);
-					m_shader.AddNode(alpha_transp_component);
-					m_shader.AddNode(alpha_invert_basecolalpha_component);
-					m_shader.AddNode(alpha_transparency_final);
-					m_shader.AddNode(alpha_basecolalpha_plus_alphatransp);
+					var alpha_cutter_mixer = new MixClosureNode(m_shader, "alpha_cutter_on_coloured_shadow_mixer");
+					alpha_cutter_bsdf.outs.BSDF.Connect(alpha_cutter_mixer.ins.Closure1);
 
 					ISocket basecoltexAlphaOut;
 
+					List<ISocket> colsocks = new()
+					{
+						principled.ins.BaseColor,
+						coloured_shadow.ins.Color
+					};
+
 					if (decalMixin != null)
 					{
-						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, decalMixin.ins.Color1.ToList(), false);
-						decalMixin.outs.Color.Connect(basewithao.ins.Color1);
+						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, decalMixin.ins.Color1.ToList(), false, part.Gamma, false);
+						foreach(var colsock in colsocks)
+						{
+							decalMixin.outs.Color.Connect(colsock);
+						}
 					}
 					else
 					{
-						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basewithao.ins.Color1.ToList(), false);
+						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, colsocks, false, part.Gamma, false);
 					}
 
 					if (basecoltexAlphaOut != null && part.UseBaseColorTextureAlphaAsObjectAlpha)
@@ -445,64 +405,61 @@ namespace RhinoCyclesCore.Shaders
 						alpha_invert_basecolalpha_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value1);
 					}
 
-					basewithao.outs.Color.Connect(principled.ins.BaseColor);
-					basewithao.outs.Color.Connect(coloured_shadow.ins.Color);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, principled.ins.SpecularTint.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture, principled.ins.Roughness.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, principled.ins.SheenTint.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.Clearcoat.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.ClearcoatGloss.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor.ToList(), false, part.Gamma, false);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true);
 
+					List<ISocket> transmissionSockets = new() {
+						principled.ins.Transmission,
+						coloured_shadow_switch.ins.Value2
+					};
+					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, transmissionSockets, true, part.Gamma, true);
 
-					Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, principled.ins.SpecularTint, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture, principled.ins.Roughness, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, principled.ins.SheenTint, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.Clearcoat, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.ClearcoatGloss, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, principled.ins.Transmission, true);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, coloured_shadow_switch.ins.Value2, true);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation, false);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic.ToList(), false, part.Gamma, true);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation.ToList(), false, part.Gamma, true);
 
 					if (part.PbrBump.On && part.PbrBumpTexture.HasProcedural)
 					{
 						if (!part.PbrBumpTexture.IsNormalMap)
 						{
-							sdd.WriteLine("~~~~> BUMP TEXTURE");
-							var bump = new ccl.ShaderNodes.BumpNode(m_shader, "bump");
-							m_shader.AddNode(bump);
+							var bump = new BumpNode(m_shader, "bump");
 							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
 							bump.Invert = part.PbrBump.Amount < 0.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 							part.PbrBump.Amount = 1.0f;
-							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), true, false, false);
+							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma);
 							bump.outs.Normal.Connect(principled.ins.Normal);
 						}
 						else
 						{
-							sdd.WriteLine("~~~~> NORMAL TEXTURE");
-							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal.ToList(), false, true, false);
+							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal.ToList(), false, true, false, true, part.Gamma);
 						}
 					}
 					if (part.PbrClearcoatBump.On && part.PbrClearcoatBumpTexture.HasProcedural)
 					{
 						if (!part.PbrClearcoatBumpTexture.IsNormalMap)
 						{
-							var bump = new ccl.ShaderNodes.BumpNode(m_shader, "clearcoat_bump");
-							m_shader.AddNode(bump);
+							var bump = new BumpNode(m_shader, "clearcoat_bump");
 							bump.ins.Strength.Value = Math.Abs(part.PbrClearcoatBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
 							bump.Invert = part.PbrClearcoatBump.Amount < 0.0f;
 							part.PbrClearcoatBump.Amount = 1.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
-							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), true, false, false);
+							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma);
 							bump.outs.Normal.Connect(principled.ins.ClearcoatNormal);
 						}
 						else
 						{
-							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal.ToList(), false, true, false);
+							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal.ToList(), false, true, false, true, part.Gamma);
 						}
 					}
 
@@ -511,30 +468,26 @@ namespace RhinoCyclesCore.Shaders
 					coloured_shadow.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure2);
 					principled.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure1);
 
-					coloured_shadow_mix_custom.outs.Closure.Connect(addemissive.ins.Closure1);
-
 					float emission_strength = part.PbrEmission.Value.LargestComponent();
 
 					if (part.PbrEmission.On && part.PbrEmissionTexture.HasProcedural)
 					{
-						emissive.ins.Strength.Value = emission_strength;
-						Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, emissive.ins.Color, false);
-						emissive.outs.Emission.Connect(addemissive.ins.Closure2);
+						principled.ins.EmissionStrength.Value = emission_strength;
+						Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, principled.ins.Emission.ToList(), false, part.Gamma, false);
 					}
 					else if (!part.PbrEmission.Value.Equals(Rhino.Display.Color4f.Black))
 					{
-						emissive.ins.Color.Value = part.PbrEmission.Value.ToFloat4();
-						emissive.outs.Emission.Connect(addemissive.ins.Closure2);
+						principled.ins.Emission.Value = part.PbrEmission.Value.ToFloat4();
+						principled.ins.EmissionStrength.Value = emission_strength;
 					}
 
-					addemissive.outs.Closure.Connect(alpha_transparency_mixer.ins.Closure2);
-					alpha_transparency_bsdf.outs.BSDF.Connect(alpha_transparency_mixer.ins.Closure1);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrAlpha, part.PbrAlphaTexture, alpha_transp_component.ins.Value2, false);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrAlpha, part.PbrAlphaTexture, alpha_transp_component.ins.Value2.ToList(), false, part.Gamma, true);
 
 					alpha_transp_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value2);
 
 					alpha_basecolalpha_plus_alphatransp.outs.Value.Connect(alpha_transparency_final.ins.Value2);
-					alpha_transparency_final.outs.Value.Connect(alpha_transparency_mixer.ins.Fac);
+					alpha_transparency_final.outs.Value.Connect(principled.ins.Alpha);
+					alpha_transparency_final.outs.Value.Connect(alpha_cutter_mixer.ins.Fac);
 
 					tangent.outs.Tangent.Connect(principled.ins.Tangent);
 
@@ -545,35 +498,20 @@ namespace RhinoCyclesCore.Shaders
 						var adjust = new MathSubtract(m_shader);
 						displacement.ins.Midlevel.Value = 0.0f;
 						adjust.ins.Value2.Value = 0.5f;
-						m_shader.AddNode(displacement);
-						m_shader.AddNode(strength);
-						m_shader.AddNode(adjust);
 						strength.ins.Value1.Value = part.PbrDisplacement.Amount * 2.0f;
 						part.PbrDisplacement.Amount = 1.0f;
-						Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, adjust.ins.Value1, false);
+						Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, adjust.ins.Value1.ToList(), false, part.Gamma, true);
 						adjust.outs.Value.Connect(strength.ins.Value2);
 						strength.outs.Value.Connect(displacement.ins.Height);
 						displacement.outs.Displacement.Connect(m_shader.Output.ins.Displacement);
 					}
 
-					return alpha_transparency_mixer;
-
+					coloured_shadow_mix_custom.outs.Closure.Connect(alpha_cutter_mixer.ins.Closure2);
+					return alpha_cutter_mixer;
 				}
 				else
 				{
-					// NOTE: need to add separate texture coordinate nodes for each channel, since different channels
-					// can have different texture mappings with different transform matrices. Using only the one would
-					// result in only one transform being applied and the rest will appear untouched.
-					// See https://mcneel.myjetbrains.com/youtrack/issue/RH-51531
-
 					// NOTE: decalMixin is manually added outside of GH definition
-
-					// NOTE THAT NORMALMAP NODE IS OUTSIDE OF GH DEFINITION ADDED
-					var normalmap = new NormalMapNode(m_shader, "normal_map_for_bumpslot_");
-					normalmap.SpaceType = NormalMapNode.Space.Tangent;
-					m_shader.AddNode(normalmap);
-					// NOTE THAT NORMALMAP NODE IS OUTSIDE OF GH DEFINITION ADDED
-
 
 					var invert_transparency68 = new MathSubtract(m_shader, "invert_transparency_");
 					invert_transparency68.ins.Value1.Value = 1f;
@@ -590,15 +528,6 @@ namespace RhinoCyclesCore.Shaders
 					diff_tex_amount_multiplied_with_inv_transparency181.Operation = MathNode.Operations.Multiply;
 					diff_tex_amount_multiplied_with_inv_transparency181.UseClamp = false;
 
-					/*var diffuse_texture85 = new ImageTextureNode(m_shader, "diffuse_texture_");
-						diffuse_texture85.Projection = TextureNode.TextureProjection.Flat;
-						diffuse_texture85.ColorSpace = TextureNode.TextureColorSpace.None;
-						diffuse_texture85.Extension = part.DiffuseTexture.Repeat ? TextureNode.TextureExtension.Repeat : TextureNode.TextureExtension.Clip;
-						diffuse_texture85.Interpolation = InterpolationType.Smart;
-						diffuse_texture85.UseAlpha = true;
-						diffuse_texture85.IsLinear = false;
-						diffuse_texture85.AlternateTiles = part.DiffuseTexture.AlternateTiles;*/
-
 					var diff_tex_weighted_alpha_for_basecol_mix182 = new MathMultiply(m_shader, "diff_tex_weighted_alpha_for_basecol_mix_");
 					diff_tex_weighted_alpha_for_basecol_mix182.Operation = MathNode.Operations.Multiply;
 					diff_tex_weighted_alpha_for_basecol_mix182.UseClamp = false;
@@ -613,20 +542,11 @@ namespace RhinoCyclesCore.Shaders
 					use_alpha_weighted_with_modded_amount71.Operation = MathNode.Operations.Multiply;
 					use_alpha_weighted_with_modded_amount71.UseClamp = false;
 
-					/*var bump_texture86 = new ImageTextureNode(m_shader, "bump_texture_");
-						bump_texture86.Projection = TextureNode.TextureProjection.Flat;
-						bump_texture86.ColorSpace = TextureNode.TextureColorSpace.None;
-						bump_texture86.Extension = TextureNode.TextureExtension.Repeat;
-						bump_texture86.Interpolation = InterpolationType.Smart;
-						bump_texture86.UseAlpha = true;
-						bump_texture86.IsLinear = false;
-						bump_texture86.AlternateTiles = part.BumpTexture.AlternateTiles;*/
-
 					var bump_texture_to_bw87 = new RgbToBwNode(m_shader, "bump_texture_to_bw_");
 
 					var bump_amount72 = new MathMultiply(m_shader, "bump_amount_");
-					bump_amount72.ins.Value1.Value = 4.66f;
-					bump_amount72.ins.Value2.Value = part.BumpTexture.Amount;
+					bump_amount72.ins.Value1.Value = 1.0f;
+					bump_amount72.ins.Value2.Value = part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor * 4.66f;
 					bump_amount72.Operation = MathNode.Operations.Multiply;
 					bump_amount72.UseClamp = false;
 
@@ -636,8 +556,9 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump88 = new BumpNode(m_shader, "bump_");
 					bump88.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					bump88.ins.Strength.Value = RcCore.It.AllSettings.BumpStrengthFactor;
-					bump88.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
+					bump88.ins.Strength.Value = 1.0f;  //RcCore.It.AllSettings.BumpStrengthFactor; // * 100.0f;
+					bump88.ins.Distance.Value = 1.0f;  //RcCore.It.AllSettings.BumpDistance;
+					bump88.ins.UseObjectSpace.Value = true;
 
 					var light_path109 = new LightPathNode(m_shader, "light_path_");
 
@@ -653,10 +574,10 @@ namespace RhinoCyclesCore.Shaders
 					shadeless_on_cameraray122.UseClamp = false;
 
 					var attenuated_reflection_color91 = new MixNode(m_shader, "attenuated_reflection_color_");
-					attenuated_reflection_color91.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
+					attenuated_reflection_color91.ins.Color1.Value = new float4(0f, 0f, 0f, 1f);
 					attenuated_reflection_color91.ins.Color2.Value = part.ReflectionColorGamma;
 					attenuated_reflection_color91.ins.Fac.Value = part.Reflectivity;
-					attenuated_reflection_color91.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
+					attenuated_reflection_color91.BlendType = MixNode.BlendTypes.Blend;
 					attenuated_reflection_color91.UseClamp = false;
 
 					var fresnel_based_on_constant92 = new FresnelNode(m_shader, "fresnel_based_on_constant_");
@@ -705,24 +626,6 @@ namespace RhinoCyclesCore.Shaders
 					var blend_in_transparency102 = new MixClosureNode(m_shader, "blend_in_transparency_");
 					blend_in_transparency102.ins.Fac.Value = part.Transparency;
 
-					var separate_envmap_texco103 = new SeparateXyzNode(m_shader, "separate_envmap_texco_");
-
-					var flip_sign_envmap_texco_y74 = new MathMultiply(m_shader, "flip_sign_envmap_texco_y_");
-					flip_sign_envmap_texco_y74.ins.Value2.Value = -1f;
-					flip_sign_envmap_texco_y74.Operation = MathNode.Operations.Multiply;
-					flip_sign_envmap_texco_y74.UseClamp = false;
-
-					var recombine_envmap_texco104 = new CombineXyzNode(m_shader, "recombine_envmap_texco_");
-
-					/*var environment_texture105 = new ImageTextureNode(m_shader, "environment_texture_");
-						environment_texture105.Projection = TextureNode.TextureProjection.Flat;
-						environment_texture105.ColorSpace = TextureNode.TextureColorSpace.None;
-						environment_texture105.Extension = TextureNode.TextureExtension.Repeat;
-						environment_texture105.Interpolation = InterpolationType.Smart;
-						environment_texture105.UseAlpha = true;
-						environment_texture105.IsLinear = false;
-						environment_texture105.AlternateTiles = part.EnvironmentTexture.AlternateTiles;*/
-
 					var attenuated_environment_color106 = new MixNode(m_shader, "attenuated_environment_color_");
 					attenuated_environment_color106.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
 					attenuated_environment_color106.ins.Fac.Value = part.EnvironmentTexture.Amount;
@@ -731,10 +634,6 @@ namespace RhinoCyclesCore.Shaders
 
 					var diffuse_glossy_and_refraction107 = new MixClosureNode(m_shader, "diffuse_glossy_and_refraction_");
 					diffuse_glossy_and_refraction107.ins.Fac.Value = part.Transparency;
-
-					var environment_map_diffuse108 = new DiffuseBsdfNode(m_shader, "environment_map_diffuse_");
-					environment_map_diffuse108.ins.Roughness.Value = 0f;
-					environment_map_diffuse108.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
 
 					var invert_roughness75 = new MathSubtract(m_shader, "invert_roughness_");
 					invert_roughness75.ins.Value1.Value = 1f;
@@ -750,9 +649,6 @@ namespace RhinoCyclesCore.Shaders
 					var multiply_with_shadowray77 = new MathMultiply(m_shader, "multiply_with_shadowray_");
 					multiply_with_shadowray77.Operation = MathNode.Operations.Multiply;
 					multiply_with_shadowray77.UseClamp = false;
-
-					var custom_environment_blend110 = new MixClosureNode(m_shader, "custom_environment_blend_");
-					custom_environment_blend110.ins.Fac.Value = part.EnvironmentTexture.Amount;
 
 					var coloured_shadow_trans_color111 = new TransparentBsdfNode(m_shader, "coloured_shadow_trans_color_");
 
@@ -789,15 +685,6 @@ namespace RhinoCyclesCore.Shaders
 					invert_alpha70.Operation = MathNode.Operations.Subtract;
 					invert_alpha70.UseClamp = false;
 
-					/*var transparency_texture112 = new ImageTextureNode(m_shader, "transparency_texture_");
-						transparency_texture112.Projection = TextureNode.TextureProjection.Flat;
-						transparency_texture112.ColorSpace = TextureNode.TextureColorSpace.None;
-						transparency_texture112.Extension = TextureNode.TextureExtension.Repeat;
-						transparency_texture112.Interpolation = InterpolationType.Smart;
-						transparency_texture112.UseAlpha = true;
-						transparency_texture112.IsLinear = false;
-						transparency_texture112.AlternateTiles = part.TransparencyTexture.AlternateTiles;*/
-
 					var transpluminance113 = new RgbToLuminanceNode(m_shader, "transpluminance_");
 
 					var invert_luminence79 = new MathSubtract(m_shader, "invert_luminence_");
@@ -833,13 +720,13 @@ namespace RhinoCyclesCore.Shaders
 
 					var mix_diffuse_and_transparency_color187 = new MixNode(m_shader, "mix_diffuse_and_transparency_color_");
 					mix_diffuse_and_transparency_color187.ins.Fac.Value = part.Transparency;
-					mix_diffuse_and_transparency_color187.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
+					mix_diffuse_and_transparency_color187.BlendType = MixNode.BlendTypes.Blend;
 					mix_diffuse_and_transparency_color187.UseClamp = false;
 
 					var principledbsdf117 = new PrincipledBsdfNode(m_shader, "principledbsdf_");
 					principledbsdf117.ins.Subsurface.Value = 0f;
-					principledbsdf117.ins.SubsurfaceRadius.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					principledbsdf117.ins.SubsurfaceColor.Value = new ccl.float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+					principledbsdf117.ins.SubsurfaceRadius.Value = new float4(0f, 0f, 0f, 1f);
+					principledbsdf117.ins.SubsurfaceColor.Value = new float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 					principledbsdf117.ins.Metallic.Value = part.Metallic;
 					principledbsdf117.ins.Specular.Value = part.Specular;
 					principledbsdf117.ins.SpecularTint.Value = part.SpecularTint;
@@ -853,103 +740,26 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.IOR.Value = part.IOR;
 					principledbsdf117.ins.Transmission.Value = part.Transparency;
 					principledbsdf117.ins.TransmissionRoughness.Value = part.RefractionRoughness;
-					principledbsdf117.ins.Tangent.Value = new ccl.float4(0f, 0f, 0f, 1f);
+					principledbsdf117.ins.Tangent.Value = new float4(0f, 0f, 0f, 1f);
 
-					var custom_environment_blend195 = new MixClosureNode(m_shader, "custom_environment_blend_");
-					custom_environment_blend195.ins.Fac.Value = part.EnvironmentTexture.Amount;
+					var custom_environment_blend = new MixNode(m_shader, "environment map color mixin");
+					custom_environment_blend.BlendType = MixNode.BlendTypes.Blend;
+					custom_environment_blend.ins.Fac.Value = part.EnvironmentTexture.Amount;
 
 					var coloured_shadow_trans_color_for_principled188 = new TransparentBsdfNode(m_shader, "coloured_shadow_trans_color_for_principled_");
 
 					var coloured_shadow_mix_glass_principled118 = new MixClosureNode(m_shader, "coloured_shadow_mix_glass_principled_");
 
-					//m_shader.AddNode(texcoord84);
-					//m_shader.AddNode(texcoord84bump);
-					//m_shader.AddNode(texcoord84env);
-					//m_shader.AddNode(texcoord84transp);
-					m_shader.AddNode(invert_transparency68);
-					m_shader.AddNode(weight_diffuse_amount_by_transparency_inv69);
-					m_shader.AddNode(diff_tex_amount_multiplied_with_inv_transparency181);
-					//m_shader.AddNode(diffuse_texture85);
-					m_shader.AddNode(diff_tex_weighted_alpha_for_basecol_mix182);
-					m_shader.AddNode(diffuse_base_color_through_alpha180);
-					m_shader.AddNode(use_alpha_weighted_with_modded_amount71);
-					//m_shader.AddNode(bump_texture86);
-					m_shader.AddNode(bump_texture_to_bw87);
-					m_shader.AddNode(bump_amount72);
-					m_shader.AddNode(diffuse_base_color_through_alpha120);
-					m_shader.AddNode(bump88);
-					m_shader.AddNode(light_path109);
-					m_shader.AddNode(final_diffuse89);
-					m_shader.AddNode(shadeless_bsdf90);
-					m_shader.AddNode(shadeless_on_cameraray122);
-					m_shader.AddNode(attenuated_reflection_color91);
-					m_shader.AddNode(fresnel_based_on_constant92);
-					m_shader.AddNode(simple_reflection93);
-					m_shader.AddNode(fresnel_reflection94);
-					m_shader.AddNode(fresnel_reflection_if_reflection_used73);
-					m_shader.AddNode(select_reflection_or_fresnel_reflection95);
-					m_shader.AddNode(shadeless96);
-					m_shader.AddNode(glossy97);
-					m_shader.AddNode(reflection_factor98);
-					m_shader.AddNode(attennuated_refraction_color99);
-					m_shader.AddNode(refraction100);
-					m_shader.AddNode(diffuse_plus_glossy101);
-					m_shader.AddNode(blend_in_transparency102);
-					m_shader.AddNode(separate_envmap_texco103);
-					m_shader.AddNode(flip_sign_envmap_texco_y74);
-					m_shader.AddNode(recombine_envmap_texco104);
-					//m_shader.AddNode(environment_texture105);
-					m_shader.AddNode(attenuated_environment_color106);
-					m_shader.AddNode(diffuse_glossy_and_refraction107);
-					m_shader.AddNode(environment_map_diffuse108);
-					m_shader.AddNode(invert_roughness75);
-					m_shader.AddNode(multiply_transparency76);
-					m_shader.AddNode(multiply_with_shadowray77);
-					m_shader.AddNode(custom_environment_blend110);
-					m_shader.AddNode(coloured_shadow_trans_color111);
-					m_shader.AddNode(weight_for_shadowray_coloured_shadow78);
-					m_shader.AddNode(diffuse_from_emission_color123);
-					m_shader.AddNode(shadeless_emission125);
-					m_shader.AddNode(coloured_shadow_mix_custom114);
-					m_shader.AddNode(diffuse_or_shadeless_emission126);
-					m_shader.AddNode(one_if_usealphatransp_turned_off178);
-					m_shader.AddNode(max_of_texalpha_or_usealpha179);
-					m_shader.AddNode(invert_alpha70);
-					//m_shader.AddNode(transparency_texture112);
-					m_shader.AddNode(transpluminance113);
-					m_shader.AddNode(invert_luminence79);
-					m_shader.AddNode(transparency_texture_amount80);
-					m_shader.AddNode(toggle_diffuse_texture_alpha_usage81);
-					m_shader.AddNode(toggle_transparency_texture82);
-					m_shader.AddNode(add_emission_to_final124);
-					m_shader.AddNode(transparent115);
-					m_shader.AddNode(add_diffuse_texture_alpha83);
-					m_shader.AddNode(custom_alpha_cutter116);
-					m_shader.AddNode(mix_diffuse_and_transparency_color187);
-					m_shader.AddNode(principledbsdf117);
-					m_shader.AddNode(custom_environment_blend195);
-					m_shader.AddNode(coloured_shadow_trans_color_for_principled188);
-					m_shader.AddNode(coloured_shadow_mix_glass_principled118);
-
-
 					invert_transparency68.outs.Value.Connect(weight_diffuse_amount_by_transparency_inv69.ins.Value2);
 					weight_diffuse_amount_by_transparency_inv69.outs.Value.Connect(diff_tex_amount_multiplied_with_inv_transparency181.ins.Value1);
 					invert_transparency68.outs.Value.Connect(diff_tex_amount_multiplied_with_inv_transparency181.ins.Value2);
-					//texcoord84.outs.UV.Connect(diffuse_texture85.ins.Vector);
 					diff_tex_amount_multiplied_with_inv_transparency181.outs.Value.Connect(diff_tex_weighted_alpha_for_basecol_mix182.ins.Value1);
-					//diffuse_texture85.outs.Alpha.Connect(diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2);
 					diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2.Value = 1.0f;
-					//diffuse_texture85.outs.Color.Connect(diffuse_base_color_through_alpha180.ins.Color2);
 					diff_tex_weighted_alpha_for_basecol_mix182.outs.Value.Connect(diffuse_base_color_through_alpha180.ins.Fac);
 					weight_diffuse_amount_by_transparency_inv69.outs.Value.Connect(use_alpha_weighted_with_modded_amount71.ins.Value2);
-					//texcoord84bump.outs.UV.Connect(bump_texture86.ins.Vector);
-					//bump_texture86.outs.Color.Connect(bump_texture_to_bw87.ins.Color);
-					//bump_texture86.outs.Color.Connect(normalmap.ins.Color);
 					diffuse_base_color_through_alpha180.outs.Color.Connect(diffuse_base_color_through_alpha120.ins.Color1);
-					//diffuse_texture85.outs.Color.Connect(diffuse_base_color_through_alpha120.ins.Color2);
 					use_alpha_weighted_with_modded_amount71.outs.Value.Connect(diffuse_base_color_through_alpha120.ins.Fac);
-					bump_texture_to_bw87.outs.Val.Connect(bump88.ins.Height);
-					bump_amount72.outs.Value.Connect(bump88.ins.Strength);
+					bump_amount72.outs.Value.Connect(bump88.ins.Height);
 
 					if (decalMixin != null)
 					{
@@ -980,34 +790,25 @@ namespace RhinoCyclesCore.Shaders
 					shadeless96.outs.Closure.Connect(blend_in_transparency102.ins.Closure1);
 					refraction100.outs.BSDF.Connect(blend_in_transparency102.ins.Closure2);
 					//texcoord84.outs.EnvEmap.Connect(separate_envmap_texco103.ins.Vector);
-					separate_envmap_texco103.outs.Y.Connect(flip_sign_envmap_texco_y74.ins.Value1);
-					separate_envmap_texco103.outs.X.Connect(recombine_envmap_texco104.ins.X);
-					flip_sign_envmap_texco_y74.outs.Value.Connect(recombine_envmap_texco104.ins.Y);
-					separate_envmap_texco103.outs.Z.Connect(recombine_envmap_texco104.ins.Z);
 					//recombine_envmap_texco104.outs.Vector.Connect(environment_texture105.ins.Vector);
 					//environment_texture105.outs.Color.Connect(attenuated_environment_color106.ins.Color2);
 					diffuse_plus_glossy101.outs.Closure.Connect(diffuse_glossy_and_refraction107.ins.Closure1);
 					blend_in_transparency102.outs.Closure.Connect(diffuse_glossy_and_refraction107.ins.Closure2);
-					attenuated_environment_color106.outs.Color.Connect(environment_map_diffuse108.ins.Color);
+					attenuated_environment_color106.outs.Color.Connect(custom_environment_blend.ins.Color2);
+					custom_environment_blend.outs.Color.Connect(principledbsdf117.ins.BaseColor);
 					invert_roughness75.outs.Value.Connect(multiply_transparency76.ins.Value1);
 					multiply_transparency76.outs.Value.Connect(multiply_with_shadowray77.ins.Value1);
 					light_path109.outs.IsShadowRay.Connect(multiply_with_shadowray77.ins.Value2);
-					diffuse_glossy_and_refraction107.outs.Closure.Connect(custom_environment_blend110.ins.Closure1);
-					environment_map_diffuse108.outs.BSDF.Connect(custom_environment_blend110.ins.Closure2);
 					diffuse_base_color_through_alpha120.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
 					multiply_with_shadowray77.outs.Value.Connect(weight_for_shadowray_coloured_shadow78.ins.Value1);
-					custom_environment_blend110.outs.Closure.Connect(coloured_shadow_mix_custom114.ins.Closure1);
-					coloured_shadow_trans_color111.outs.BSDF.Connect(coloured_shadow_mix_custom114.ins.Closure2);
+					coloured_shadow_mix_glass_principled118.outs.Closure.Connect(coloured_shadow_mix_custom114.ins.Closure1);
 					weight_for_shadowray_coloured_shadow78.outs.Value.Connect(coloured_shadow_mix_custom114.ins.Fac);
 					diffuse_from_emission_color123.outs.BSDF.Connect(diffuse_or_shadeless_emission126.ins.Closure1);
 					shadeless_emission125.outs.Emission.Connect(diffuse_or_shadeless_emission126.ins.Closure2);
 					shadeless_on_cameraray122.outs.Value.Connect(diffuse_or_shadeless_emission126.ins.Fac);
-					//diffuse_texture85.outs.Alpha.Connect(max_of_texalpha_or_usealpha179.ins.Value1);
 					max_of_texalpha_or_usealpha179.ins.Value1.Value = 1.0f;
 					one_if_usealphatransp_turned_off178.outs.Value.Connect(max_of_texalpha_or_usealpha179.ins.Value2);
 					max_of_texalpha_or_usealpha179.outs.Value.Connect(invert_alpha70.ins.Value2);
-					//texcoord84transp.outs.UV.Connect(transparency_texture112.ins.Vector);
-					//transparency_texture112.outs.Color.Connect(transpluminance113.ins.Color);
 					transpluminance113.outs.Val.Connect(invert_luminence79.ins.Value2);
 					invert_luminence79.outs.Value.Connect(transparency_texture_amount80.ins.Value1);
 					invert_alpha70.outs.Value.Connect(toggle_diffuse_texture_alpha_usage81.ins.Value1);
@@ -1021,46 +822,24 @@ namespace RhinoCyclesCore.Shaders
 					add_diffuse_texture_alpha83.outs.Value.Connect(custom_alpha_cutter116.ins.Fac);
 					diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
 					attennuated_refraction_color99.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color2);
-					mix_diffuse_and_transparency_color187.outs.Color.Connect(principledbsdf117.ins.BaseColor);
-					principledbsdf117.outs.BSDF.Connect(custom_environment_blend195.ins.Closure1);
-					environment_map_diffuse108.outs.BSDF.Connect(custom_environment_blend195.ins.Closure2);
+					mix_diffuse_and_transparency_color187.outs.Color.Connect(custom_environment_blend.ins.Color1);
+					principledbsdf117.outs.BSDF.Connect(coloured_shadow_mix_glass_principled118.ins.Closure1);
 					mix_diffuse_and_transparency_color187.outs.Color.Connect(coloured_shadow_trans_color_for_principled188.ins.Color);
-					custom_environment_blend195.outs.Closure.Connect(coloured_shadow_mix_glass_principled118.ins.Closure1);
 					coloured_shadow_trans_color_for_principled188.outs.BSDF.Connect(coloured_shadow_mix_glass_principled118.ins.Closure2);
 					weight_for_shadowray_coloured_shadow78.outs.Value.Connect(coloured_shadow_mix_glass_principled118.ins.Fac);
 
 					/* extra code */
 
-					/*if (part.BumpTexture.HasTextureImage && part.BumpTexture.Amount > 0.0f)
-					{
-						if (!part.BumpTexture.IsNormalMap)
-						{
-							bump88.outs.Normal.Connect(final_diffuse89.ins.Normal);
-							bump88.outs.Normal.Connect(principledbsdf117.ins.Normal);
-							bump88.outs.Normal.Connect(principledbsdf117.ins.ClearcoatNormal);
-							bump88.outs.Normal.Connect(refraction100.ins.Normal);
-							bump88.outs.Normal.Connect(glossy97.ins.Normal);
-						}
-						else
-						{
-							normalmap.outs.Normal.Connect(final_diffuse89.ins.Normal);
-							normalmap.outs.Normal.Connect(principledbsdf117.ins.Normal);
-							normalmap.outs.Normal.Connect(principledbsdf117.ins.ClearcoatNormal);
-							normalmap.outs.Normal.Connect(refraction100.ins.Normal);
-							normalmap.outs.Normal.Connect(glossy97.ins.Normal);
-						}
-					}*/
-
-					if (part.HasTransparencyTexture)
+					if (part.TransparencyTexture.HasProcedural)
 					{
 						List<ISocket> sockets = new List<ISocket>
 						{
 							transpluminance113.ins.Color
 						};
-						Utilities.GraphForSlot(m_shader, null, true, part.TransparencyTexture.Amount, part.TransparencyTexture, sockets, false, false, false);
+						Utilities.GraphForSlot(m_shader, null, true, part.TransparencyTexture.Amount, part.TransparencyTexture, sockets, false, false, false, true, part.Gamma);
 					}
 
-					if (part.HasDiffuseProcedural)
+					if (part.DiffuseTexture.HasProcedural)
 					{
 						float useAlpha = 0.0f;
 				//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
@@ -1077,7 +856,7 @@ namespace RhinoCyclesCore.Shaders
 							diffuse_base_color_through_alpha120.ins.Color2,
 							diffuse_base_color_through_alpha180.ins.Color2
 						};
-						var alpha = Utilities.GraphForSlot(m_shader, null, true, part.DiffuseTexture.Amount, part.DiffuseTexture, sockets, false, false, false);
+						var alpha = Utilities.GraphForSlot(m_shader, null, true, part.DiffuseTexture.Amount, part.DiffuseTexture, sockets, false, false, false, false, part.Gamma);
 						if (alpha != null)
 						{
 							alpha.Connect(diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2);
@@ -1090,22 +869,16 @@ namespace RhinoCyclesCore.Shaders
 						}
 					}
 
-					if (null != part.BumpTexture.Procedural)
+					if (part.BumpTexture.HasProcedural)
 					{
-						List<ISocket> sockets = new List<ISocket>
-						{
-							bump_texture_to_bw87.ins.Color,
-							normalmap.ins.Color,
-						};
-						Utilities.GraphForSlot(m_shader, null, true, part.TransparencyTexture.Amount, part.TransparencyTexture, sockets, true, false, false);
+						Utilities.GraphForSlot(m_shader, null, true, part.BumpTexture.Amount, part.BumpTexture, bump_amount72.ins.Value1.ToList(), true, false, false, true, part.Gamma);
+						bump88.outs.Normal.Connect(principledbsdf117.ins.Normal);
 					}
 
-					if (part.HasEnvironmentTexture)
+					if (part.EnvironmentTexture.HasProcedural)
 					{
-						/*
-						RenderEngine.SetTextureImage(environment_texture105, part.EnvironmentTexture);
-						RenderEngine.SetProjectionMode(m_shader, part.EnvironmentTexture, environment_texture105);
-						*/
+						part.EnvironmentTexture.ProjectionMode = Rhino.Render.TextureProjectionMode.EnvironmentMap;
+						Utilities.GraphForSlot(m_shader, null, true, part.EnvironmentTexture.Amount, part.EnvironmentTexture, attenuated_environment_color106.ins.Color2.ToList(), false, false, false, false, part.Gamma);
 					}
 
 					if (part.CyclesMaterialType == ShaderBody.CyclesMaterial.Glass

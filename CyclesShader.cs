@@ -200,7 +200,7 @@ namespace RhinoCyclesCore
 			return ProbableMaterial.Custom;
 		}
 
-		private void HandleCustomTexture(RenderMaterial.StandardChildSlots childSlot, ShaderBody shb, CyclesTextureImage ti, RenderMaterial rm, bool checkForNormal)
+		private void HandleCustomTexture(RenderMaterial.StandardChildSlots childSlot, ShaderBody shb, CyclesTextureImage ti, RenderMaterial rm, bool checkForNormal, bool isColor)
 		{
 			var texture = rm.GetTextureFromUsage(childSlot);
 			float amount = 0.0f;
@@ -217,7 +217,7 @@ namespace RhinoCyclesCore
 				}
 			}
 			if(texture!=null && enabled) {
-				Utilities.HandleRenderTexture(texture, ti, checkForNormal, false, _bitmapConverter, _docsrn, shb.Gamma);
+				Utilities.HandleRenderTexture(texture, ti, checkForNormal, false, _bitmapConverter, _docsrn, shb.Gamma, false, isColor);
 				ti.Amount = amount;
 			}
 		}
@@ -311,16 +311,16 @@ namespace RhinoCyclesCore
 			shb.TransparencyTexture.Amount = 0.0f;
 			shb.EnvironmentTexture.Amount = 0.0f;
 
-			HandleCustomTexture(StdCS.Diffuse, shb, shb.DiffuseTexture, rm, false);
+			HandleCustomTexture(StdCS.Diffuse, shb, shb.DiffuseTexture, rm, false, true);
 			if (shb.HasDiffuseTexture)
 			{
 				shb.DiffuseTexture.UseAlpha = difftexAlpha;
 			} else {
 				shb.DiffuseTexture.UseAlpha = false;
 			}
-			HandleCustomTexture(StdCS.Bump, shb, shb.BumpTexture, rm, true);
-			HandleCustomTexture(StdCS.Transparency, shb, shb.TransparencyTexture, rm, false);
-			HandleCustomTexture(StdCS.Environment, shb, shb.EnvironmentTexture, rm, false);
+			HandleCustomTexture(StdCS.Bump, shb, shb.BumpTexture, rm, true, false);
+			HandleCustomTexture(StdCS.Transparency, shb, shb.TransparencyTexture, rm, false, false);
+			HandleCustomTexture(StdCS.Environment, shb, shb.EnvironmentTexture, rm, false, true);
 		}
 
 		void HandlePbrTexturedProperty<T>(RenderMaterial.StandardChildSlots childSlot, T v, RenderMaterial rm, TexturedValue<T> tv, CyclesTextureImage cti, float gamma = 1.0f)
@@ -375,9 +375,10 @@ namespace RhinoCyclesCore
 			}
 
 			bool checkForNormal = childSlot == StdCS.Bump || childSlot == StdCS.PbrClearcoatBump || childSlot == StdCS.PbrDisplacement;
+			bool isColor = childSlot == StdCS.Diffuse || childSlot == StdCS.PbrBaseColor || childSlot == StdCS.PbrEmission || childSlot == StdCS.PbrSubSurfaceScattering || childSlot == StdCS.Environment;
 			sdd.WriteLine($"Checking for normal: {checkForNormal}");
 
-			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, false, _bitmapConverter, _docsrn, gamma);
+			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, false, _bitmapConverter, _docsrn, gamma, false, isColor);
 			if(checkForNormal) {
 				sdd.WriteLine($"The handled render texture has at the end IsNormalMap: {cti.IsNormalMap}");
 			}
@@ -406,7 +407,7 @@ namespace RhinoCyclesCore
 				shb.BlendMixAmount = (float)Convert.ToDouble(rm.GetParameter("mix-amount"));
 				if(rm.FindChild("mix-amount") is RenderTexture mixTexture)
 				{
-					Utilities.HandleRenderTexture(mixTexture, shb.BlendMixAmountTexture, false, false, _bitmapConverter, _docsrn, gamma);
+					Utilities.HandleRenderTexture(mixTexture, shb.BlendMixAmountTexture, false, false, _bitmapConverter, _docsrn, gamma, false, false);
 				}
 			}
 			else
@@ -511,19 +512,6 @@ namespace RhinoCyclesCore
 		}
 
 		public Shader Type { get; set; }
-
-		/// <summary>
-		/// A shader should override this function if it needs to reload textures.
-		///
-		/// Textures change after i.e. gamma changes.
-		/// </summary>
-		/// <param name="bytes"></param>
-		/// <param name="floats"></param>
-		public void ReloadTextures(ConcurrentDictionary<uint, ByteBitmap> bytes, ConcurrentDictionary<uint, FloatBitmap> floats)
-		{
-			_front?.ReloadTextures(bytes, floats);
-			_back?.ReloadTextures(bytes, floats);
-		}
 
 		protected virtual void Dispose(bool disposing)
 		{
@@ -733,67 +721,6 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
-		/// A shader should override this function if it needs to reload textures.
-		///
-		/// Textures change after i.e. gamma changes.
-		/// </summary>
-		/// <param name="bytes"></param>
-		/// <param name="floats"></param>
-		public void ReloadTextures(ConcurrentDictionary<uint, ByteBitmap> bytes, ConcurrentDictionary<uint, FloatBitmap> floats)
-		{
-
-			if (HasDiffuseTexture)
-			{
-				LoadOneTexture(DiffuseTexture, bytes, floats);
-			}
-			if (HasBumpTexture)
-			{
-				LoadOneTexture(BumpTexture, bytes, floats);
-			}
-			if (HasTransparencyTexture)
-			{
-				LoadOneTexture(TransparencyTexture, bytes, floats);
-			}
-			if (HasEnvironmentTexture)
-			{
-				LoadOneTexture(EnvironmentTexture, bytes, floats);
-			}
-			if (HasGiEnvTexture)
-			{
-				LoadOneTexture(GiEnvTexture, bytes, floats);
-			}
-			if (HasBgEnvTexture)
-			{
-				LoadOneTexture(BgEnvTexture, bytes, floats);
-			}
-			if (HasReflRefrEnvTexture)
-			{
-				LoadOneTexture(ReflRefrEnvTexture, bytes, floats);
-			}
-		}
-
-		static private void LoadOneTexture(CyclesTextureImage tex, ConcurrentDictionary<uint, ByteBitmap> bytes, ConcurrentDictionary<uint, FloatBitmap> floats)
-		{
-			if (uint.TryParse(tex.Name, out uint rid))
-			{
-				if (tex.HasByteImage)
-				{
-					if (bytes.ContainsKey(rid))
-					{
-						tex.TexByte = bytes[rid].Data as StdVectorByte;
-					}
-				}
-				else if (tex.HasFloatImage)
-				{
-					if (floats.ContainsKey(rid))
-					{
-						tex.TexFloat = floats[rid].Data as StdVectorFloat;
-					}
-				}
-			}
-		}
-
-		/// <summary>
 		/// Set to true if a shadeless effect is wanted (self-illuminating).
 		/// </summary>
 		public bool Shadeless { get; set; }
@@ -831,46 +758,11 @@ namespace RhinoCyclesCore
 
 		public float4 DiffuseColor { get; set; } = new float4();
 
-		public bool HasOnlyDiffuseColor => !HasDiffuseTexture
-		                                   && !HasBumpTexture
-		                                   && !HasTransparencyTexture
-		                                   && !HasEmission
-		                                   && !Shadeless
-		                                   && NoTransparency
-		                                   && NoReflectivity;
-
-		public bool HasOnlyDiffuseTexture => HasDiffuseTexture
-		                                     && !HasBumpTexture
-		                                     && !HasTransparencyTexture
-		                                     && !HasEmission
-		                                     && !Shadeless
-		                                     && NoTransparency
-		                                     && NoReflectivity;
-
-		public bool DiffuseAndBumpTexture => HasDiffuseTexture
-		                                     && HasBumpTexture
-		                                     && !HasTransparencyTexture
-		                                     && !HasEmission
-		                                     && !Shadeless
-		                                     && NoTransparency
-		                                     && NoReflectivity;
-
-		public bool HasOnlyReflectionColor => HasReflectivity
-		                                      && !HasDiffuseTexture
-		                                      && !HasEmission
-		                                      && !Shadeless
-		                                      && NoTransparency
-		                                      && !HasTransparency
-		                                      && !HasBumpTexture;
-
 		public float4 SpecularColor { get; set; } = new float4();
-		public float4 SpecularColorGamma => SpecularColor ^ Gamma;
 		public float4 ReflectionColor { get; set; } = new float4();
 		public float4 ReflectionColorGamma => ReflectionColor ^ Gamma;
 		public float ReflectionRoughness { get; set; }
-		public float ReflectionRoughnessPow2 => ReflectionRoughness * ReflectionRoughness;
 		public float4 RefractionColor { get; set; } = new float4();
-		public float4 RefractionColorGamma => RefractionColor ^ Gamma;
 		public float RefractionRoughness { get; set; }
 		public float RefractionRoughnessPow2 => RefractionRoughness * RefractionRoughness;
 		public float4 TransparencyColor { get; set; } = new float4();
@@ -880,17 +772,16 @@ namespace RhinoCyclesCore
 		public bool HasEmission => !EmissionColor.IsZero(false);
 
 		public CyclesTextureImage DiffuseTexture { get; set; }
-		public bool HasDiffuseTexture => DiffuseTexture.HasTextureImage;
-		public bool HasDiffuseProcedural => DiffuseTexture.HasProcedural;
+		public bool HasDiffuseTexture => DiffuseTexture.HasProcedural;
 		public float HasDiffuseTextureAsFloat => HasDiffuseTexture ? 1.0f : 0.0f;
 		public CyclesTextureImage BumpTexture { get; set; }
-		public bool HasBumpTexture => BumpTexture.HasTextureImage;
+		public bool HasBumpTexture => BumpTexture.HasProcedural;
 		public float HasBumpTextureAsFloat => HasBumpTexture ? 1.0f : 0.0f;
 		public CyclesTextureImage TransparencyTexture { get; set; }
-		public bool HasTransparencyTexture => TransparencyTexture.HasTextureImage;
+		public bool HasTransparencyTexture => TransparencyTexture.HasProcedural;
 		public float HasTransparencyTextureAsFloat => HasTransparencyTexture ? 1.0f : 0.0f;
 		public CyclesTextureImage EnvironmentTexture { get; set; }
-		public bool HasEnvironmentTexture => EnvironmentTexture.HasTextureImage;
+		public bool HasEnvironmentTexture => EnvironmentTexture.HasProcedural;
 		public float HasEnvironmentTextureAsFloat => HasEnvironmentTexture ? 1.0f : 0.0f;
 
 		public CyclesTextureImage GiEnvTexture { get; set; }

@@ -148,7 +148,6 @@ namespace RhinoCyclesCore
 			bgnode.ins.Color.Value = new float4(1.0f);
 			bgnode.ins.Strength.Value = 1.0f;
 
-			background_shader.AddNode(bgnode);
 			bgnode.outs.Background.Connect(background_shader.Output.ins.Surface);
 			background_shader.FinalizeGraph();
 
@@ -338,7 +337,7 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public static VectorSocket GetProjectionModeOutputSocket(CyclesTextureImage texture, RhinoTextureCoordinateNode texture_coordinates)
+		public static VectorSocket GetProjectionModeOutputSocket(Shader sh, CyclesTextureImage texture, RhinoTextureCoordinateNode texture_coordinates)
 		{
 			if (texture.ProjectionMode == TextureProjectionMode.WcsBox)
 			{
@@ -377,7 +376,31 @@ namespace RhinoCyclesCore
 					case TextureEnvironmentMappingMode.Hemispherical:
 						return texture_coordinates.outs.EnvHemispherical;
 					default:
-						return texture_coordinates.outs.EnvEmap;
+						{
+								var separate_envmap_texco = new SeparateXyzNode(sh, "envmap texco separate vector");
+
+								var flip_sign_envmap_texco_y = new MathMultiply(sh, "flip sign envmap texco y");
+								flip_sign_envmap_texco_y.ins.Value2.Value = -1.0f;
+								flip_sign_envmap_texco_y.Operation = MathNode.Operations.Multiply;
+								flip_sign_envmap_texco_y.UseClamp = false;
+
+								var flip_sign_envmap_texco_o = new MathMultiply(sh, "flip sign envmap texco o");
+								flip_sign_envmap_texco_o.ins.Value2.Value = -1.0f;
+								flip_sign_envmap_texco_o.Operation = MathNode.Operations.Multiply;
+								flip_sign_envmap_texco_o.UseClamp = false;
+
+								var recombine_envmap_texco = new CombineXyzNode(sh, "recombine envmap texco");
+
+								separate_envmap_texco.outs.X.Connect(flip_sign_envmap_texco_o.ins.Value1);
+								separate_envmap_texco.outs.Y.Connect(flip_sign_envmap_texco_y.ins.Value1);
+
+								flip_sign_envmap_texco_o.outs.Value.Connect(recombine_envmap_texco.ins.X);
+								flip_sign_envmap_texco_y.outs.Value.Connect(recombine_envmap_texco.ins.Y);
+								separate_envmap_texco.outs.Z.Connect(recombine_envmap_texco.ins.Z);
+								texture_coordinates.outs.EnvEmap.Connect(separate_envmap_texco.ins.Vector);
+								return recombine_envmap_texco.outs.Vector;
+
+						}
 				}
 			}
 			else

@@ -59,11 +59,11 @@ namespace RhinoCyclesCore.Materials
 		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			HandleTexturedValue(_Color, Color);
-			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, false, bitmapConverter, docsrn, Gamma);
+			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, false, bitmapConverter, docsrn, Gamma, false, true);
 			HandleTexturedValue(_Frost, Frost);
-			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, false, false, bitmapConverter, docsrn, Gamma);
+			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, false, false, bitmapConverter, docsrn, Gamma, false, false);
 			HandleTexturedValue(_Ior, Ior);
-			Utilities.HandleRenderTexture(Color.Texture, ColorTexture, false, false, bitmapConverter, docsrn, Gamma);
+			Utilities.HandleRenderTexture(Ior.Texture, ColorTexture, false, false, bitmapConverter, docsrn, Gamma, false, false);
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -100,18 +100,12 @@ namespace RhinoCyclesCore.Materials
 			ccl.ShaderNodes.MathMaximum max = new ccl.ShaderNodes.MathMaximum(sh, "max");
 			ccl.ShaderNodes.MixClosureNode mix = new ccl.ShaderNodes.MixClosureNode(sh, "mix");
 
-			sh.AddNode(transp);
-			sh.AddNode(glass);
-			sh.AddNode(lp);
-			sh.AddNode(max);
-			sh.AddNode(mix);
-
 			glass.ins.Transmission.Value = 1.0f;
 
-			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, glass.ins.BaseColor.ToList(), false);
-			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, transp.ins.Color.ToList(), false);
-			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.TransmissionRoughness.ToList(), false);
-			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.IOR.ToList(), false);
+			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, glass.ins.BaseColor.ToList(), false, Gamma, false);
+			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, transp.ins.Color.ToList(), false, Gamma, false);
+			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.TransmissionRoughness.ToList(), false, Gamma, true);
+			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.IOR.ToList(), false, Gamma, true);
 
 			transp.outs.BSDF.Connect(mix.ins.Closure2);
 			glass.outs.BSDF.Connect(mix.ins.Closure1);

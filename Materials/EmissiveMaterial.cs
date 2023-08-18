@@ -73,7 +73,7 @@ namespace RhinoCyclesCore.Materials
 		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			HandleTexturedValue(_Emissive, Emission);
-			Utilities.HandleRenderTexture(Emission.Texture, EmissionTexture, false, false, bitmapConverter, docsrn, 1.0f);
+			Utilities.HandleRenderTexture(Emission.Texture, EmissionTexture, false, false, bitmapConverter, docsrn, 1.0f, false, true);
 			if (Fields.TryGetValue(_Strength, out float strength))
 			{
 				Strength = strength;
@@ -127,15 +127,9 @@ namespace RhinoCyclesCore.Materials
 			ccl.ShaderNodes.LightPathNode lp = new ccl.ShaderNodes.LightPathNode(sh, "lp");
 			ccl.ShaderNodes.MixClosureNode mix = new ccl.ShaderNodes.MixClosureNode(sh, "mix");
 
-			sh.AddNode(transp);
-			sh.AddNode(emission);
-			sh.AddNode(lfo);
-			sh.AddNode(lp);
-			sh.AddNode(mix);
-
 			transp.ins.Color.Value = new ccl.float4(1.0f);
 
-			Utilities.PbrGraphForSlot(sh, Emission, EmissionTexture, emission.ins.Color.ToList(), false);
+			Utilities.PbrGraphForSlot(sh, Emission, EmissionTexture, emission.ins.Color.ToList(), false, Gamma, false);
 
 			lfo.ins.Strength.Value = Strength;
 			lfo.ins.Smooth.Value = Smooth;

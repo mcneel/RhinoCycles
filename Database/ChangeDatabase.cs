@@ -945,8 +945,9 @@ namespace RhinoCyclesCore.Database
 				RenderTexture rt = TextureForId(decal.TextureRenderHash(flags));
 
 				CyclesTextureImage tex = new CyclesTextureImage();
-				Utilities.HandleRenderTexture(rt, tex, false, true, BitmapConverter, _doc_serialnr, LinearWorkflow.PreProcessGamma);
+				Utilities.HandleRenderTexture(rt, tex, false, true, BitmapConverter, _doc_serialnr, LinearWorkflow.PreProcessGamma, false, true);
 
+				// TODO XXX
 				var rtid = rt?.Id ?? Guid.Empty;
 				string textype = tex.HasTextureImage ? (tex.HasByteImage ? "byte" : "float") : "no image";
 

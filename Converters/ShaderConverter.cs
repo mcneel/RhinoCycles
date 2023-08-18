@@ -34,7 +34,7 @@ namespace RhinoCyclesCore.Converters
 {
 	public abstract class Procedural : IDisposable
 	{
-		public static Procedural CreateProceduralFromChild(RenderTexture render_texture, string child_name, List<CyclesTextureImage> texture_list, BitmapConverter _bitmapConverter, uint docsrn, float gamma)
+		public static Procedural CreateProceduralFromChild(RenderTexture render_texture, string child_name, List<CyclesTextureImage> texture_list, BitmapConverter _bitmapConverter, uint docsrn, float gamma, bool is_color)
 		{
 			Procedural procedural = null;
 
@@ -43,7 +43,7 @@ namespace RhinoCyclesCore.Converters
 				var render_texture_child = (RenderTexture)render_texture.FindChild(child_name);
 
 				// Recursive call
-				procedural = CreateProcedural(render_texture_child, texture_list, _bitmapConverter, docsrn, gamma);
+				procedural = CreateProcedural(render_texture_child, texture_list, _bitmapConverter, docsrn, gamma, is_color);
 			}
 
 			return procedural;
@@ -54,7 +54,7 @@ namespace RhinoCyclesCore.Converters
 			return type_id == ContentUuids.ResampleTextureType || type_id == ContentUuids.AdvancedDotTextureType || type_id == ContentUuids.GritBumpTexture || type_id == ContentUuids.DotBumpTexture || type_id == ContentUuids.WoodBumpTexture || type_id == ContentUuids.HatchBumpTexture || type_id == ContentUuids.LeatherBumpTexture || type_id == ContentUuids.SpeckleBumpTexture || type_id == ContentUuids.CrossHatchBumpTexture;
 		}
 
-		public static Procedural CreateProcedural(RenderTexture render_texture, List<CyclesTextureImage> texture_list, BitmapConverter bitmap_converter, uint docsrn, float gamma)
+		public static Procedural CreateProcedural(RenderTexture render_texture, List<CyclesTextureImage> texture_list, BitmapConverter bitmap_converter, uint docsrn, float gamma, bool is_color)
 		{
 			if (render_texture == null)
 				return null;
@@ -65,99 +65,99 @@ namespace RhinoCyclesCore.Converters
 
 			if (type_id == ContentUuids.Texture2DCheckerTextureType)
 			{
-				procedural = new CheckerTextureProcedural(render_texture, true);
+				procedural = new CheckerTextureProcedural(render_texture, true, is_color);
 			}
 			else if (type_id == ContentUuids.Texture3DCheckerTextureType)
 			{
-				procedural = new CheckerTextureProcedural(render_texture, false);
+				procedural = new CheckerTextureProcedural(render_texture, false, is_color);
 			}
 			else if (type_id == ContentUuids.NoiseTextureType)
 			{
-				procedural = new NoiseTextureProcedural(render_texture);
+				procedural = new NoiseTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.WavesTextureType)
 			{
-				procedural = new WavesTextureProcedural(render_texture);
+				procedural = new WavesTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.PerturbingTextureType)
 			{
-				procedural = new PerturbingTextureProcedural(render_texture);
+				procedural = new PerturbingTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.WoodTextureType)
 			{
-				procedural = new WoodTextureProcedural(render_texture);
+				procedural = new WoodTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.AddTextureType)
 			{
-				procedural = new AddTextureProcedural(render_texture);
+				procedural = new AddTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.MultiplyTextureType)
 			{
-				procedural = new MultiplicationTextureProcedural(render_texture);
+				procedural = new MultiplicationTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.BlendTextureType)
 			{
-				procedural = new BlendTextureProcedural(render_texture);
+				procedural = new BlendTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.GradientTextureType)
 			{
-				procedural = new GradientTextureProcedural(render_texture);
+				procedural = new GradientTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.ExposureTextureType)
 			{
-				procedural = new ExposureTextureProcedural(render_texture);
+				procedural = new ExposureTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.FBmTextureType)
 			{
-				procedural = new FbmTextureProcedural(render_texture, false);
+				procedural = new FbmTextureProcedural(render_texture, false, is_color);
 			}
 			else if (type_id == ContentUuids.TurbulenceTextureType)
 			{
-				procedural = new FbmTextureProcedural(render_texture, true);
+				procedural = new FbmTextureProcedural(render_texture, true, is_color);
 			}
 			else if (type_id == ContentUuids.GraniteTextureType)
 			{
-				procedural = new GraniteTextureProcedural(render_texture);
+				procedural = new GraniteTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.GridTextureType)
 			{
-				procedural = new GridTextureProcedural(render_texture);
+				procedural = new GridTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.ProjectionChangerTextureType)
 			{
-				procedural = new ProjectionChangerTextureProcedural(render_texture);
+				procedural = new ProjectionChangerTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.MarbleTextureType)
 			{
-				procedural = new MarbleTextureProcedural(render_texture);
+				procedural = new MarbleTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.MaskTextureType)
 			{
-				procedural = new MaskTextureProcedural(render_texture);
+				procedural = new MaskTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.PerlinMarbleTextureType)
 			{
-				procedural = new PerlinMarbleTextureProcedural(render_texture);
+				procedural = new PerlinMarbleTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.PhysicalSkyTextureType)
 			{
-				procedural = new PhysicalSkyTextureProcedural(render_texture);
+				procedural = new PhysicalSkyTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.SingleColorTextureType)
 			{
-				procedural = new SingleColorTextureProcedural(render_texture);
+				procedural = new SingleColorTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.StuccoTextureType)
 			{
-				procedural = new StuccoTextureProcedural(render_texture);
+				procedural = new StuccoTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.TextureAdjustmentTextureType)
 			{
-				procedural = new TextureAdjustmentTextureProcedural(render_texture);
+				procedural = new TextureAdjustmentTextureProcedural(render_texture, is_color);
 			}
 			else if (type_id == ContentUuids.TileTextureType)
 			{
-				procedural = new TileTextureProcedural(render_texture);
+				procedural = new TileTextureProcedural(render_texture, is_color);
 			}
 			/* TODO: re-enable this once dot texture is natively supported. Until then handle as bitmap texture
 			 else if (type_id == ContentUuids.AdvancedDotTextureType)
@@ -168,13 +168,13 @@ namespace RhinoCyclesCore.Converters
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);
-				procedural = new BitmapTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn, gamma, ShouldSimulate(render_texture));
+				procedural = new BitmapTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn, gamma, ShouldSimulate(render_texture), is_color);
 			}
 			else if (type_id == ContentUuids.HDRTextureType)
 			{
 				CyclesTextureImage cycles_texture = new CyclesTextureImage();
 				texture_list.Add(cycles_texture);
-				procedural = new HighDynamicRangeTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn);
+				procedural = new HighDynamicRangeTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn, is_color);
 			}
 			/* TODO: re-enable this once resample texture is natively supported. Until then handle as bitmap texture
 			else if (type_id == ContentUuids.ResampleTextureType)
@@ -186,13 +186,13 @@ namespace RhinoCyclesCore.Converters
 
 			if (procedural is OneColorProcedural one_color)
 			{
-				one_color.Child = CreateProceduralFromChild(render_texture, "color-one", texture_list, bitmap_converter, docsrn, gamma);
+				one_color.Child = CreateProceduralFromChild(render_texture, "color-one", texture_list, bitmap_converter, docsrn, gamma, is_color);
 			}
 
 			if (procedural is TwoColorProcedural two_color)
 			{
-				two_color.Child1 = CreateProceduralFromChild(render_texture, "color-one", texture_list, bitmap_converter, docsrn, gamma);
-				two_color.Child2 = CreateProceduralFromChild(render_texture, "color-two", texture_list, bitmap_converter, docsrn, gamma);
+				two_color.Child1 = CreateProceduralFromChild(render_texture, "color-one", texture_list, bitmap_converter, docsrn, gamma, is_color);
+				two_color.Child2 = CreateProceduralFromChild(render_texture, "color-two", texture_list, bitmap_converter, docsrn, gamma, is_color);
 
 				if(two_color.SwapColors)
 				{
@@ -207,7 +207,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture wave_width_child = (RenderTexture)render_texture.FindChild("wave-width-tex");
 				if(wave_width_child != null)
 				{
-					waves_texture.WaveWidthChild = CreateProcedural(wave_width_child, texture_list, bitmap_converter, docsrn, gamma); // Recursive call
+					waves_texture.WaveWidthChild = CreateProcedural(wave_width_child, texture_list, bitmap_converter, docsrn, gamma, is_color); // Recursive call
 				}
 			}
 
@@ -216,13 +216,13 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture perturbing_source_child = (RenderTexture)render_texture.FindChild("source");
 				if (perturbing_source_child != null)
 				{
-					perturbing_texture.SourceChild = CreateProcedural(perturbing_source_child, texture_list, bitmap_converter, docsrn, gamma); // Recursive call
+					perturbing_texture.SourceChild = CreateProcedural(perturbing_source_child, texture_list, bitmap_converter, docsrn, gamma, is_color); // Recursive call
 				}
 
 				RenderTexture perturbing_perturb_child = (RenderTexture)render_texture.FindChild("perturb");
 				if (perturbing_perturb_child != null)
 				{
-					perturbing_texture.PerturbChild = CreateProcedural(perturbing_perturb_child, texture_list, bitmap_converter, docsrn, gamma); // Recursive call
+					perturbing_texture.PerturbChild = CreateProcedural(perturbing_perturb_child, texture_list, bitmap_converter, docsrn, gamma, is_color); // Recursive call
 				}
 			}
 
@@ -231,7 +231,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture blend_child = (RenderTexture)render_texture.FindChild("blend-texture");
 				if (blend_child != null)
 				{
-					blend_texture.BlendChild = CreateProcedural(blend_child, texture_list, bitmap_converter, docsrn, gamma); // Recursive call
+					blend_texture.BlendChild = CreateProcedural(blend_child, texture_list, bitmap_converter, docsrn, gamma, is_color); // Recursive call
 				}
 			}
 
@@ -240,7 +240,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture exposure_child = (RenderTexture)render_texture.FindChild("input-texture");
 				if (exposure_child != null)
 				{
-					exposure_texture.ExposureChild = CreateProcedural(exposure_child, texture_list, bitmap_converter, docsrn, gamma); // Recursive call
+					exposure_texture.ExposureChild = CreateProcedural(exposure_child, texture_list, bitmap_converter, docsrn, gamma, is_color); // Recursive call
 				}
 			}
 
@@ -249,7 +249,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture projection_changer_child = (RenderTexture)render_texture.FindChild("input-texture");
 				if (projection_changer_child != null)
 				{
-					projection_changer_texture.ProjectionChangerChild = CreateProcedural(projection_changer_child, texture_list, bitmap_converter, docsrn, gamma); // Recursive call
+					projection_changer_texture.ProjectionChangerChild = CreateProcedural(projection_changer_child, texture_list, bitmap_converter, docsrn, gamma, is_color); // Recursive call
 				}
 			}
 
@@ -258,7 +258,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture mask_child = (RenderTexture)render_texture.FindChild("source-texture");
 				if (mask_texture != null)
 				{
-					mask_texture.MaskChild = CreateProcedural(mask_child, texture_list, bitmap_converter, docsrn, gamma); // Recursive call
+					mask_texture.MaskChild = CreateProcedural(mask_child, texture_list, bitmap_converter, docsrn, gamma, is_color); // Recursive call
 				}
 			}
 
@@ -267,7 +267,7 @@ namespace RhinoCyclesCore.Converters
 				RenderTexture texture_adjustment_child = (RenderTexture)render_texture.FindChild("input-texture");
 				if (texture_adjustment_child != null)
 				{
-					texture_adjustment_texture.TextureAdjustmentChild = CreateProcedural(texture_adjustment_child, texture_list, bitmap_converter, docsrn, gamma); // Recursive call
+					texture_adjustment_texture.TextureAdjustmentChild = CreateProcedural(texture_adjustment_child, texture_list, bitmap_converter, docsrn, gamma, is_color); // Recursive call
 				}
 			}
 
@@ -282,16 +282,23 @@ namespace RhinoCyclesCore.Converters
 				(float)transform[2, 0], (float)transform[2, 1], (float)transform[2, 2], (float)transform[2, 3]);
 		}
 
+		public bool IsColor
+		{
+			get;
+			private set;
+		} = false;
+
 		public bool IsBitmapTexture
 		{
 			get;
 			private set;
 		} = false;
 
-		public Procedural(RenderTexture render_texture)
+		public Procedural(RenderTexture render_texture, bool is_color)
 		{
 			if (render_texture != null)
 			{
+				IsColor = is_color;
 				IsBitmapTexture = render_texture.IsBitmapTexture();
 				MappingTransform = ToCyclesTransform(render_texture.LocalMappingTransform);
 
@@ -370,8 +377,6 @@ namespace RhinoCyclesCore.Converters
 			{
 				var texture_adjustment_node = new TextureAdjustmentTextureProceduralNode(shader);
 
-				shader.AddNode(texture_adjustment_node);
-
 				texture_adjustment_node.Grayscale = AdjustGrayscale;
 				texture_adjustment_node.Invert = AdjustInvert;
 				texture_adjustment_node.Clamp = AdjustClamp;
@@ -398,7 +403,7 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		public abstract void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input);
+		public abstract void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData);
 		protected ccl.Transform MappingTransform { get; set; } = ccl.Transform.Identity();
 
 		public bool AdjustGrayscale { get; set; }
@@ -420,33 +425,32 @@ namespace RhinoCyclesCore.Converters
 
 	public abstract class OneColorProcedural : Procedural
 	{
-		public OneColorProcedural(RenderTexture render_texture) : base(render_texture)
+		public OneColorProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			Color = render_texture.Fields.TryGetValue("color-one", out Color4f color1) ? color1 : Color4f.Black;
 			Amount = render_texture.Fields.TryGetValue("texture-amount-one", out double texture_amount1) ? (float)texture_amount1 : 1.0f;
 		}
 
-		protected void ConnectChildNode(Shader shader, VectorSocket uvw_output, ColorSocket color_input, FloatSocket alpha_input)
+		protected void ConnectChildNode(Shader shader, VectorSocket uvw_output, ColorSocket color_input, FloatSocket alpha_input, bool IsData)
 		{
 			if (Child != null)
 			{
 				if (Amount < 1.0f)
 				{
 					var mixer = new MixNode(shader);
-					shader.AddNode(mixer);
 
 					mixer.ins.Fac.Value = Amount;
 					mixer.ins.Color1.Value = Color.ToFloat4();
 
 					// Recursive call
-					Child.CreateAndConnectProceduralNode(shader, uvw_output, mixer.ins.Color2, alpha_input);
+					Child.CreateAndConnectProceduralNode(shader, uvw_output, mixer.ins.Color2, alpha_input, IsData);
 
 					mixer.outs.Color.Connect(color_input);
 				}
 				else
 				{
 					// Recursive call
-					Child.CreateAndConnectProceduralNode(shader, uvw_output, color_input, alpha_input);
+					Child.CreateAndConnectProceduralNode(shader, uvw_output, color_input, alpha_input, IsData);
 				}
 			}
 			else
@@ -463,7 +467,7 @@ namespace RhinoCyclesCore.Converters
 
 	public abstract class TwoColorProcedural : Procedural
 	{
-		public TwoColorProcedural(RenderTexture render_texture) : base(render_texture)
+		public TwoColorProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			Color1 = render_texture.Fields.TryGetValue("color-one", out Color4f color1) ? color1 : Color4f.Black;
 			Color2 = render_texture.Fields.TryGetValue("color-two", out Color4f color2) ? color2 : Color4f.White;
@@ -472,12 +476,12 @@ namespace RhinoCyclesCore.Converters
 			SwapColors = render_texture.Fields.TryGetValue("swap-colors", out bool swap_colors) ? swap_colors : false;
 		}
 
-		protected void ConnectChildNodes(Shader shader, VectorSocket uvw_output, ColorSocket color1_input, ColorSocket color2_input)
+		protected void ConnectChildNodes(Shader shader, VectorSocket uvw_output, ColorSocket color1_input, ColorSocket color2_input, bool IsData)
 		{
-			ConnectChildNodes(shader, uvw_output, color1_input, null, color2_input, null);
+			ConnectChildNodes(shader, uvw_output, color1_input, null, color2_input, null, IsData);
 		}
 
-			protected void ConnectChildNodes(Shader shader, VectorSocket uvw_output, ColorSocket color1_input, FloatSocket alpha1_input, ColorSocket color2_input, FloatSocket alpha2_input)
+			protected void ConnectChildNodes(Shader shader, VectorSocket uvw_output, ColorSocket color1_input, FloatSocket alpha1_input, ColorSocket color2_input, FloatSocket alpha2_input, bool IsData)
 		{
 			if (Child1 != null)
 			{
@@ -489,20 +493,19 @@ namespace RhinoCyclesCore.Converters
 					//mult.ins.Value2 =
 
 					var mixer = new MixNode(shader);
-					shader.AddNode(mixer);
 
 					mixer.ins.Fac.Value = Amount1;
 					mixer.ins.Color1.Value = Color1.ToFloat4();
 
 					// Recursive call
-					Child1.CreateAndConnectProceduralNode(shader, uvw_output, mixer.ins.Color2, alpha1_input);
+					Child1.CreateAndConnectProceduralNode(shader, uvw_output, mixer.ins.Color2, alpha1_input, IsData);
 
 					mixer.outs.Color.Connect(color1_input);
 				}
 				else
 				{
 					// Recursive call
-					Child1.CreateAndConnectProceduralNode(shader, uvw_output, color1_input, alpha1_input);
+					Child1.CreateAndConnectProceduralNode(shader, uvw_output, color1_input, alpha1_input, IsData);
 				}
 			}
 			else
@@ -518,20 +521,19 @@ namespace RhinoCyclesCore.Converters
 				if (Amount2 < 1.0f)
 				{
 					var mixer = new MixNode(shader);
-					shader.AddNode(mixer);
 
 					mixer.ins.Fac.Value = Amount2;
 					mixer.ins.Color1.Value = Color2.ToFloat4();
 
 					// Recursive call
-					Child2.CreateAndConnectProceduralNode(shader, uvw_output, mixer.ins.Color2, alpha2_input);
+					Child2.CreateAndConnectProceduralNode(shader, uvw_output, mixer.ins.Color2, alpha2_input, IsData);
 
 					mixer.outs.Color.Connect(color2_input);
 				}
 				else
 				{
 					// Recursive call
-					Child2.CreateAndConnectProceduralNode(shader, uvw_output, color2_input, alpha2_input);
+					Child2.CreateAndConnectProceduralNode(shader, uvw_output, color2_input, alpha2_input, IsData);
 				}
 			}
 			else
@@ -555,8 +557,8 @@ namespace RhinoCyclesCore.Converters
 
 	public class CheckerTextureProcedural : TwoColorProcedural
 	{
-		public CheckerTextureProcedural(RenderTexture render_texture, bool is_2d)
-			: base(render_texture)
+		public CheckerTextureProcedural(RenderTexture render_texture, bool is_2d, bool is_color)
+			: base(render_texture, is_color)
 		{
 			MappingTransform *= ccl.Transform.Scale(2.0f, 2.0f, 2.0f);
 			MappingTransform.x.w *= 2.0f;
@@ -572,21 +574,19 @@ namespace RhinoCyclesCore.Converters
 				RemapTextures = remap_textures;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var node = new CheckerTextureProceduralNode(shader);
-			shader.AddNode(node);
 
 			var transform_node = new MatrixMathNode(shader)
 			{
 				Transform = new ccl.Transform(MappingTransform)
 			};
-			shader.AddNode(transform_node);
 
 			uvw_output.Connect(transform_node.ins.Vector);
 
 			// Recursive call
-			ConnectChildNodes(shader, RemapTextures ? transform_node.outs.Vector : uvw_output, node.ins.Color1, node.ins.Alpha1, node.ins.Color2, node.ins.Alpha2);
+			ConnectChildNodes(shader, RemapTextures ? transform_node.outs.Vector : uvw_output, node.ins.Color1, node.ins.Alpha1, node.ins.Color2, node.ins.Alpha2, IsData);
 
 			transform_node.outs.Vector.Connect(node.ins.UVW);
 
@@ -599,7 +599,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class NoiseTextureProcedural : TwoColorProcedural
 	{
-		public NoiseTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public NoiseTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -634,16 +634,14 @@ namespace RhinoCyclesCore.Converters
 				Gain = (float)gain;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader)
 			{
 				Transform = new ccl.Transform(MappingTransform)
 			};
-			shader.AddNode(transform_node);
 
 			var node = new NoiseTextureProceduralNode(shader);
-			shader.AddNode(node);
 
 			node.NoiseType = NoiseType;
 			node.SpecSynthType = SpecSynthType;
@@ -657,7 +655,7 @@ namespace RhinoCyclesCore.Converters
 			node.Gain = Gain;
 
 			// Recursive call
-			ConnectChildNodes(shader, uvw_output, node.ins.Color1, node.ins.Alpha1, node.ins.Color2, node.ins.Alpha2);
+			ConnectChildNodes(shader, uvw_output, node.ins.Color1, node.ins.Alpha1, node.ins.Color2, node.ins.Alpha2, IsData);
 
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(node.ins.UVW);
@@ -706,7 +704,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class WavesTextureProcedural : TwoColorProcedural
 	{
-		public WavesTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public WavesTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -726,16 +724,14 @@ namespace RhinoCyclesCore.Converters
 				Contrast2 = (float)contrast2;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader)
 			{
 				Transform = new ccl.Transform(MappingTransform)
 			};
-			shader.AddNode(transform_node);
 
 			var waves_node = new WavesTextureProceduralNode(shader);
-			shader.AddNode(waves_node);
 
 			waves_node.WaveType = WaveType;
 			waves_node.WaveWidth = WaveWidth;
@@ -744,7 +740,6 @@ namespace RhinoCyclesCore.Converters
 			waves_node.Contrast2 = Contrast2;
 
 			var waves_width_node = new WavesWidthTextureProceduralNode(shader);
-			shader.AddNode(waves_width_node);
 
 			waves_width_node.WaveType = WaveType;
 
@@ -752,11 +747,11 @@ namespace RhinoCyclesCore.Converters
 			transform_node.outs.Vector.Connect(waves_width_node.ins.UVW);
 
 			// Recursive call
-			ConnectChildNodes(shader, uvw_output, waves_node.ins.Color1, waves_node.ins.Alpha1, waves_node.ins.Color2, waves_node.ins.Alpha2);
+			ConnectChildNodes(shader, uvw_output, waves_node.ins.Color1, waves_node.ins.Alpha1, waves_node.ins.Color2, waves_node.ins.Alpha2, IsData);
 
 			if (WaveWidthChild != null)
 			{
-				WaveWidthChild.CreateAndConnectProceduralNode(shader, waves_width_node.outs.UVW, waves_node.ins.Color3, null); // Recursive call
+				WaveWidthChild.CreateAndConnectProceduralNode(shader, waves_width_node.outs.UVW, waves_node.ins.Color3, null, IsData); // Recursive call
 			}
 
 			transform_node.outs.Vector.Connect(waves_node.ins.UVW);
@@ -775,7 +770,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class PerturbingTextureProcedural : Procedural
 	{
-		public PerturbingTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public PerturbingTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -783,32 +778,29 @@ namespace RhinoCyclesCore.Converters
 				Amount = (float)amount;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader)
 			{
 				Transform = new ccl.Transform(MappingTransform)
 			};
-			shader.AddNode(transform_node);
 
 			var perturbing_part1_node = new PerturbingPart1TextureProceduralNode(shader);
-			shader.AddNode(perturbing_part1_node);
 
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(perturbing_part1_node.ins.UVW);
 
 			var perturbing_part2_node = new PerturbingPart2TextureProceduralNode(shader);
-			shader.AddNode(perturbing_part2_node);
 
 			perturbing_part2_node.Amount = Amount;
 
 			perturbing_part1_node.outs.UVW1.Connect(perturbing_part2_node.ins.UVW);
 
-			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW1, perturbing_part2_node.ins.Color1, null);
-			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW2, perturbing_part2_node.ins.Color2, null);
-			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW3, perturbing_part2_node.ins.Color3, null);
+			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW1, perturbing_part2_node.ins.Color1, null, IsData);
+			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW2, perturbing_part2_node.ins.Color2, null, IsData);
+			PerturbChild?.CreateAndConnectProceduralNode(shader, perturbing_part1_node.outs.UVW3, perturbing_part2_node.ins.Color3, null, IsData);
 
-			SourceChild?.CreateAndConnectProceduralNode(shader, perturbing_part2_node.outs.PerturbedUVW, parent_color_input, parent_alpha_input);
+			SourceChild?.CreateAndConnectProceduralNode(shader, perturbing_part2_node.outs.PerturbedUVW, parent_color_input, parent_alpha_input, IsData);
 		}
 
 		public float Amount { get; set; } = 0.1f;
@@ -818,7 +810,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class WoodTextureProcedural : TwoColorProcedural
 	{
-		public WoodTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public WoodTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -834,7 +826,7 @@ namespace RhinoCyclesCore.Converters
 				Blur2 = (float)blur2;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			NoiseTextureProceduralNode noise1 = new NoiseTextureProceduralNode(shader);
 			noise1.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
@@ -852,7 +844,6 @@ namespace RhinoCyclesCore.Converters
 			{
 				Transform = ccl.Transform.Scale(1.0f, 1.0f, AxialNoise)
 			};
-			shader.AddNode(noise1_transform_node);
 
 			NoiseTextureProceduralNode noise2 = new NoiseTextureProceduralNode(shader);
 			noise2.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
@@ -870,7 +861,6 @@ namespace RhinoCyclesCore.Converters
 			{
 				Transform = ccl.Transform.Scale(1.0f, 1.0f, AxialNoise)
 			};
-			shader.AddNode(noise2_transform_node);
 
 			NoiseTextureProceduralNode noise3 = new NoiseTextureProceduralNode(shader);
 			noise3.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
@@ -888,11 +878,6 @@ namespace RhinoCyclesCore.Converters
 			{
 				Transform = ccl.Transform.Scale(1.0f, 1.0f, AxialNoise)
 			};
-			shader.AddNode(noise3_transform_node);
-
-			shader.AddNode(noise1);
-			shader.AddNode(noise2);
-			shader.AddNode(noise3);
 
 			WavesTextureProceduralNode waves = new WavesTextureProceduralNode(shader);
 			waves.WaveType = WavesTextureProceduralNode.WaveTypes.RADIAL;
@@ -907,23 +892,17 @@ namespace RhinoCyclesCore.Converters
 			waves.ins.Alpha2.Value = Color2.ToFloat4().w;
 			//waves.TextureAmount2 = TextureAmount2; // TODO
 
-			Child1?.CreateAndConnectProceduralNode(shader, uvw_output, waves.ins.Color1, waves.ins.Alpha1);
-			Child2?.CreateAndConnectProceduralNode(shader, uvw_output, waves.ins.Color2, waves.ins.Alpha2);
-
-			shader.AddNode(waves);
+			Child1?.CreateAndConnectProceduralNode(shader, uvw_output, waves.ins.Color1, waves.ins.Alpha1, IsData);
+			Child2?.CreateAndConnectProceduralNode(shader, uvw_output, waves.ins.Color2, waves.ins.Alpha2, IsData);
 
 			var perturbing1_transform_node = new MatrixMathNode(shader)
 			{
 				Transform = new ccl.Transform(MappingTransform)
 			};
-			shader.AddNode(perturbing1_transform_node);
 
 			PerturbingPart1TextureProceduralNode perturbing1 = new PerturbingPart1TextureProceduralNode(shader);
 			PerturbingPart2TextureProceduralNode perturbing2 = new PerturbingPart2TextureProceduralNode(shader);
 			perturbing2.Amount = RadialNoise;
-
-			shader.AddNode(perturbing1);
-			shader.AddNode(perturbing2);
 
 			uvw_output.Connect(perturbing1_transform_node.ins.Vector);
 			perturbing1_transform_node.outs.Vector.Connect(perturbing1.ins.UVW);
@@ -954,12 +933,12 @@ namespace RhinoCyclesCore.Converters
 
 	public class BitmapTextureProcedural : Procedural
 	{
-		public BitmapTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn, float gamma, bool should_simulate) : base(render_texture)
+		public BitmapTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn, float gamma, bool should_simulate, bool is_color) : base(render_texture, is_color)
 		{
 			CyclesTexture = cycles_texture;
 			BitmapConverter = bitmap_converter;
 			Gamma = gamma;
-			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, true, bitmap_converter, docsrn, gamma, should_simulate);
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, true, bitmap_converter, docsrn, gamma, should_simulate, is_color);
 
 			var rtf = render_texture.Fields;
 
@@ -976,33 +955,34 @@ namespace RhinoCyclesCore.Converters
 				UseAlpha |= use_alpha_transp;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
-			var transform_node = new MatrixMathNode(shader);
-			shader.AddNode(transform_node);
+			var transform_node = new MatrixMathNode(shader, "matrix math node");
 
 			transform_node.Transform = new ccl.Transform(MappingTransform);
 
-			var image_texture_node = new ImageTextureNode(shader);
-			var gammanode = new GammaNode(shader);
-			shader.AddNode(image_texture_node);
-			shader.AddNode(gammanode);
+			var image_texture_node = new ImageTextureNode(shader, "image texture node");
 
 			if (CyclesTexture.HasTextureImage)
 			{
 				image_texture_node.ins.Filename.Value = CyclesTexture.Filename;
 			}
 
-			gammanode.ins.Gamma.Value = 1.0f / Gamma;
-
 			image_texture_node.UseAlpha = UseAlpha;
+			if(IsData)
+			{
+				image_texture_node.ColorSpace = TextureNode.TextureColorSpace.None;
+			}
+			else
+			{
+				image_texture_node.ColorSpace = TextureNode.TextureColorSpace.Color;
+			}
 			image_texture_node.AlternateTiles = AlternateTiles;
 			image_texture_node.Interpolation = Filter ? InterpolationType.Cubic : InterpolationType.Closest;
 
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(image_texture_node.ins.Vector);
-			image_texture_node.outs.Color.Connect(gammanode.ins.Color);
-			CreateAndConnectAdjustmentNode(shader, gammanode.outs.Color, parent_color_input);
+			CreateAndConnectAdjustmentNode(shader, image_texture_node.outs.Color, parent_color_input);
 			ConnectAlphaNode(image_texture_node.outs.Alpha, parent_alpha_input);
 		}
 
@@ -1016,20 +996,19 @@ namespace RhinoCyclesCore.Converters
 
 	public class AddTextureProcedural : TwoColorProcedural
 	{
-		public AddTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public AddTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var mix_node = new MixNode(shader);
-			shader.AddNode(mix_node);
 
 			mix_node.BlendType = MixNode.BlendTypes.Add;
 			mix_node.ins.Fac.Value = 1.0f;
 
 			// Recursive call
-			ConnectChildNodes(shader, uvw_output, mix_node.ins.Color1, mix_node.ins.Color2);
+			ConnectChildNodes(shader, uvw_output, mix_node.ins.Color1, mix_node.ins.Color2, IsData);
 
 			mix_node.outs.Color.Connect(parent_color_input);
 		}
@@ -1037,20 +1016,19 @@ namespace RhinoCyclesCore.Converters
 
 	public class MultiplicationTextureProcedural : TwoColorProcedural
 	{
-		public MultiplicationTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public MultiplicationTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var mix_node = new MixNode(shader);
-			shader.AddNode(mix_node);
 
 			mix_node.BlendType = MixNode.BlendTypes.Multiply;
 			mix_node.ins.Fac.Value = 1.0f;
 
 			// Recursive call
-			ConnectChildNodes(shader, uvw_output, mix_node.ins.Color1, mix_node.ins.Color2);
+			ConnectChildNodes(shader, uvw_output, mix_node.ins.Color1, mix_node.ins.Color2, IsData);
 
 			mix_node.outs.Color.Connect(parent_color_input);
 		}
@@ -1058,7 +1036,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class GradientTextureProcedural : TwoColorProcedural
 	{
-		public GradientTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public GradientTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1079,14 +1057,12 @@ namespace RhinoCyclesCore.Converters
 			//	PointHeight = point_height;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			shader.AddNode(transform_node);
 			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var gradient_node = new GradientTextureProceduralNode(shader);
-			shader.AddNode(gradient_node);
 
 			gradient_node.GradientType = GradientType;
 			gradient_node.FlipAlternate = FlipAlternate;
@@ -1095,7 +1071,7 @@ namespace RhinoCyclesCore.Converters
 			gradient_node.PointHeight = PointHeight;
 
 			// Recursive call
-			ConnectChildNodes(shader, uvw_output, gradient_node.ins.Color1, gradient_node.ins.Alpha1, gradient_node.ins.Color2, gradient_node.ins.Alpha2);
+			ConnectChildNodes(shader, uvw_output, gradient_node.ins.Color1, gradient_node.ins.Alpha1, gradient_node.ins.Color2, gradient_node.ins.Alpha2, IsData);
 
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(gradient_node.ins.UVW);
@@ -1113,7 +1089,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class BlendTextureProcedural : TwoColorProcedural
 	{
-		public BlendTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public BlendTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1124,15 +1100,13 @@ namespace RhinoCyclesCore.Converters
 				BlendFactor = (float)blend_factor;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			shader.AddNode(transform_node);
 
 			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var blend_node = new BlendTextureProceduralNode(shader);
-			shader.AddNode(blend_node);
 
 			blend_node.UseBlendColor = UseBlendColor;
 			blend_node.BlendFactor = BlendFactor;
@@ -1140,10 +1114,10 @@ namespace RhinoCyclesCore.Converters
 			uvw_output.Connect(transform_node.ins.Vector);
 
 			// Recursive call
-			ConnectChildNodes(shader, transform_node.outs.Vector, blend_node.ins.Color1, blend_node.ins.Alpha1, blend_node.ins.Color2, blend_node.ins.Alpha2);
+			ConnectChildNodes(shader, transform_node.outs.Vector, blend_node.ins.Color1, blend_node.ins.Alpha1, blend_node.ins.Color2, blend_node.ins.Alpha2, IsData);
 
 			// Recursive call
-			BlendChild?.CreateAndConnectProceduralNode(shader, transform_node.outs.Vector, blend_node.ins.BlendColor, null);
+			BlendChild?.CreateAndConnectProceduralNode(shader, transform_node.outs.Vector, blend_node.ins.BlendColor, null, IsData);
 
 			CreateAndConnectAdjustmentNode(shader, blend_node.outs.Color, parent_color_input);
 			ConnectAlphaNode(blend_node.outs.Alpha, parent_alpha_input);
@@ -1156,7 +1130,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class ExposureTextureProcedural : Procedural
 	{
-		public ExposureTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public ExposureTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1173,15 +1147,13 @@ namespace RhinoCyclesCore.Converters
 			MaxLuminance = (float)Convert.ToDouble(max_luminance);
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			shader.AddNode(transform_node);
 
 			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var exposure_node = new ExposureTextureProceduralNode(shader);
-			shader.AddNode(exposure_node);
 
 			exposure_node.Exposure = Exposure;
 			exposure_node.Multiplier = Multiplier;
@@ -1191,7 +1163,7 @@ namespace RhinoCyclesCore.Converters
 			uvw_output.Connect(transform_node.ins.Vector);
 
 			// Recursive call
-			ExposureChild?.CreateAndConnectProceduralNode(shader, transform_node.outs.Vector, exposure_node.ins.Color, parent_alpha_input);
+			ExposureChild?.CreateAndConnectProceduralNode(shader, transform_node.outs.Vector, exposure_node.ins.Color, parent_alpha_input, IsData);
 
 			exposure_node.outs.Color.Connect(parent_color_input);
 		}
@@ -1205,7 +1177,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class FbmTextureProcedural : TwoColorProcedural
 	{
-		public FbmTextureProcedural(RenderTexture render_texture, bool is_turbulent) : base(render_texture)
+		public FbmTextureProcedural(RenderTexture render_texture, bool is_turbulent, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1221,15 +1193,13 @@ namespace RhinoCyclesCore.Converters
 				Roughness = (float)roughness;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			shader.AddNode(transform_node);
 
 			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var fbm_node = new FbmTextureProceduralNode(shader);
-			shader.AddNode(fbm_node);
 
 			fbm_node.IsTurbulent = IsTurbulent;
 			fbm_node.MaxOctaves = MaxOctaves;
@@ -1239,7 +1209,7 @@ namespace RhinoCyclesCore.Converters
 			uvw_output.Connect(transform_node.ins.Vector);
 
 			// Recursive call
-			ConnectChildNodes(shader, uvw_output, fbm_node.ins.Color1, fbm_node.ins.Alpha1, fbm_node.ins.Color2, fbm_node.ins.Alpha2);
+			ConnectChildNodes(shader, uvw_output, fbm_node.ins.Color1, fbm_node.ins.Alpha1, fbm_node.ins.Color2, fbm_node.ins.Alpha2, IsData);
 
 			transform_node.outs.Vector.Connect(fbm_node.ins.UVW);
 
@@ -1255,7 +1225,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class GraniteTextureProcedural : TwoColorProcedural
 	{
-		public GraniteTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public GraniteTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1269,10 +1239,9 @@ namespace RhinoCyclesCore.Converters
 				Size = size;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var noise_node = new NoiseTextureProceduralNode(shader);
-			shader.AddNode(noise_node);
 
 			noise_node.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
 			noise_node.OctaveCount = 2;
@@ -1304,15 +1273,12 @@ namespace RhinoCyclesCore.Converters
 			{
 				Transform = ccl.Transform.Scale(scale_size, scale_size, scale_size)
 			};
-			shader.AddNode(noise_transform_node);
 
 			var blend_transform_node = new MatrixMathNode(shader);
-			shader.AddNode(blend_transform_node);
 
 			blend_transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var blend_node = new BlendTextureProceduralNode(shader);
-			shader.AddNode(blend_node);
 
 			blend_node.BlendFactor = 0.5f;
 			blend_node.UseBlendColor = true;
@@ -1323,7 +1289,7 @@ namespace RhinoCyclesCore.Converters
 			noise_transform_node.outs.Vector.Connect(noise_node.ins.UVW);
 			noise_node.outs.Color.Connect(blend_node.ins.BlendColor);
 
-			ConnectChildNodes(shader, blend_transform_node.outs.Vector, blend_node.ins.Color1, blend_node.ins.Alpha1, blend_node.ins.Color2, blend_node.ins.Alpha2);
+			ConnectChildNodes(shader, blend_transform_node.outs.Vector, blend_node.ins.Color1, blend_node.ins.Alpha1, blend_node.ins.Color2, blend_node.ins.Alpha2, IsData);
 
 			CreateAndConnectAdjustmentNode(shader, blend_node.outs.Color, parent_color_input);
 			ConnectAlphaNode(blend_node.outs.Alpha, parent_alpha_input);
@@ -1336,7 +1302,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class GridTextureProcedural : TwoColorProcedural
 	{
-		public GridTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public GridTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1347,15 +1313,13 @@ namespace RhinoCyclesCore.Converters
 				FontThickness = (float)font_thickness;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			shader.AddNode(transform_node);
 
 			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var grid_node = new GridTextureProceduralNode(shader);
-			shader.AddNode(grid_node);
 
 			grid_node.Cells = Cells;
 			grid_node.FontThickness = FontThickness;
@@ -1363,7 +1327,7 @@ namespace RhinoCyclesCore.Converters
 			uvw_output.Connect(transform_node.ins.Vector);
 
 			// Recursive call
-			ConnectChildNodes(shader, uvw_output, grid_node.ins.Color1, grid_node.ins.Alpha1, grid_node.ins.Color2, grid_node.ins.Alpha2);
+			ConnectChildNodes(shader, uvw_output, grid_node.ins.Color1, grid_node.ins.Alpha1, grid_node.ins.Color2, grid_node.ins.Alpha2, IsData);
 
 			transform_node.outs.Vector.Connect(grid_node.ins.UVW);
 
@@ -1377,7 +1341,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class ProjectionChangerTextureProcedural : Procedural
 	{
-		public ProjectionChangerTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public ProjectionChangerTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1415,15 +1379,13 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			shader.AddNode(transform_node);
 
 			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var projection_changer_node = new ProjectionChangerTextureProceduralNode(shader);
-			shader.AddNode(projection_changer_node);
 
 			projection_changer_node.InputProjectionType = InputProjectionType;
 			projection_changer_node.OutputProjectionType = OutputProjectionType;
@@ -1435,7 +1397,7 @@ namespace RhinoCyclesCore.Converters
 			transform_node.outs.Vector.Connect(projection_changer_node.ins.UVW);
 
 			// Recursive call
-			ProjectionChangerChild?.CreateAndConnectProceduralNode(shader, projection_changer_node.outs.OutputUVW, parent_color_input, parent_alpha_input);
+			ProjectionChangerChild?.CreateAndConnectProceduralNode(shader, projection_changer_node.outs.OutputUVW, parent_color_input, parent_alpha_input, IsData);
 		}
 
 		public ProjectionChangerTextureProceduralNode.ProjectionTypes InputProjectionType;
@@ -1447,11 +1409,11 @@ namespace RhinoCyclesCore.Converters
 
 	public class HighDynamicRangeTextureProcedural : Procedural
 	{
-		public HighDynamicRangeTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn) : base(render_texture)
+		public HighDynamicRangeTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn, bool is_color) : base(render_texture, is_color)
 		{
 			CyclesTexture = cycles_texture;
 			BitmapConverter = bitmap_converter;
-			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, IsBitmapTexture, bitmap_converter, docsrn, 1.0f);
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, IsBitmapTexture, bitmap_converter, docsrn, 1.0f, false, is_color);
 
 			var rtf = render_texture.Fields;
 
@@ -1495,15 +1457,13 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			shader.AddNode(transform_node);
 
 			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var projection_changer_node = new ProjectionChangerTextureProceduralNode(shader);
-			shader.AddNode(projection_changer_node);
 
 			projection_changer_node.InputProjectionType = InputProjectionType;
 			projection_changer_node.OutputProjectionType = OutputProjectionType;
@@ -1511,21 +1471,18 @@ namespace RhinoCyclesCore.Converters
 			projection_changer_node.Azimuth = Azimuth;
 
 			var image_texture_node = new ImageTextureNode(shader);
-			shader.AddNode(image_texture_node);
 
 			if (CyclesTexture.HasTextureImage)
 			{
-				if (CyclesTexture.HasByteImage)
-				{
-					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Memory();
-				}
-				else if (CyclesTexture.HasFloatImage)
-				{
-					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Memory();
-				}
-				image_texture_node.Filename = CyclesTexture.Name;
-				image_texture_node.Width = (uint)CyclesTexture.TexWidth;
-				image_texture_node.Height = (uint)CyclesTexture.TexHeight;
+				image_texture_node.ins.Filename.Value = CyclesTexture.Filename;
+			}
+			if(IsData)
+			{
+				image_texture_node.ColorSpace = TextureNode.TextureColorSpace.None;
+			}
+			else
+			{
+				image_texture_node.ColorSpace = TextureNode.TextureColorSpace.Color;
 			}
 
 			image_texture_node.UseAlpha = false;
@@ -1557,7 +1514,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class MarbleTextureProcedural : TwoColorProcedural
 	{
-		public MarbleTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public MarbleTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1571,7 +1528,7 @@ namespace RhinoCyclesCore.Converters
 				Noise = (float)noise;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			NoiseTextureProceduralNode noise1 = new NoiseTextureProceduralNode(shader);
 			noise1.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
@@ -1609,10 +1566,6 @@ namespace RhinoCyclesCore.Converters
 			noise3.Inverse = false;
 			noise3.Gain = 0.5f;
 
-			shader.AddNode(noise1);
-			shader.AddNode(noise2);
-			shader.AddNode(noise3);
-
 			var noise_transform1 = new MatrixMathNode(shader);
 			var noise_transform2 = new MatrixMathNode(shader);
 			var noise_transform3 = new MatrixMathNode(shader);
@@ -1620,10 +1573,6 @@ namespace RhinoCyclesCore.Converters
 			noise_transform1.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
 			noise_transform2.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
 			noise_transform3.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
-
-			shader.AddNode(noise_transform1);
-			shader.AddNode(noise_transform2);
-			shader.AddNode(noise_transform3);
 
 			WavesTextureProceduralNode waves = new WavesTextureProceduralNode(shader);
 			waves.WaveType = WavesTextureProceduralNode.WaveTypes.LINEAR;
@@ -1641,20 +1590,12 @@ namespace RhinoCyclesCore.Converters
 			var waves_transform = new MatrixMathNode(shader);
 			waves_transform.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
 
-			shader.AddNode(waves_transform);
-			shader.AddNode(waves);
-
 			var perturbing_transform = new MatrixMathNode(shader);
 			perturbing_transform.Transform = new ccl.Transform(MappingTransform);
-
-			shader.AddNode(perturbing_transform);
 
 			PerturbingPart1TextureProceduralNode perturbing1 = new PerturbingPart1TextureProceduralNode(shader);
 			PerturbingPart2TextureProceduralNode perturbing2 = new PerturbingPart2TextureProceduralNode(shader);
 			perturbing2.Amount = 0.1f * Noise;
-
-			shader.AddNode(perturbing1);
-			shader.AddNode(perturbing2);
 
 			uvw_output.Connect(perturbing_transform.ins.Vector);
 			perturbing_transform.outs.Vector.Connect(perturbing1.ins.UVW);
@@ -1677,8 +1618,8 @@ namespace RhinoCyclesCore.Converters
 			noise2.outs.Color.Connect(perturbing2.ins.Color2);
 			noise3.outs.Color.Connect(perturbing2.ins.Color3);
 
-			Child1?.CreateAndConnectProceduralNode(shader, perturbing2.outs.PerturbedUVW, waves.ins.Color1, waves.ins.Alpha1);
-			Child2?.CreateAndConnectProceduralNode(shader, perturbing2.outs.PerturbedUVW, waves.ins.Color2, waves.ins.Alpha2);
+			Child1?.CreateAndConnectProceduralNode(shader, perturbing2.outs.PerturbedUVW, waves.ins.Color1, waves.ins.Alpha1, IsData);
+			Child2?.CreateAndConnectProceduralNode(shader, perturbing2.outs.PerturbedUVW, waves.ins.Color2, waves.ins.Alpha2, IsData);
 
 			perturbing2.outs.PerturbedUVW.Connect(waves_transform.ins.Vector);
 			waves_transform.outs.Vector.Connect(waves.ins.UVW);
@@ -1695,7 +1636,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class MaskTextureProcedural : Procedural
 	{
-		public MaskTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public MaskTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1720,15 +1661,14 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var mask_node = new MaskTextureProceduralNode(shader);
-			shader.AddNode(mask_node);
 
 			mask_node.MaskType = MaskType;
 
 			// Recursive call
-			MaskChild?.CreateAndConnectProceduralNode(shader, uvw_output, mask_node.ins.Color, mask_node.ins.Alpha);
+			MaskChild?.CreateAndConnectProceduralNode(shader, uvw_output, mask_node.ins.Color, mask_node.ins.Alpha, IsData);
 			mask_node.ins.Alpha.Value = 1.0f;
 
 			mask_node.outs.Color.Connect(parent_color_input);
@@ -1741,7 +1681,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class PerlinMarbleTextureProcedural : TwoColorProcedural
 	{
-		public PerlinMarbleTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public PerlinMarbleTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1764,14 +1704,12 @@ namespace RhinoCyclesCore.Converters
 				Color2Saturation = (float)color2_saturation;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
 			transform_node.Transform = new ccl.Transform(MappingTransform);
-			shader.AddNode(transform_node);
 
 			var perlin_marble_node = new PerlinMarbleTextureProceduralNode(shader);
-			shader.AddNode(perlin_marble_node);
 
 			perlin_marble_node.Levels = Levels;
 			perlin_marble_node.Noise = Noise;
@@ -1781,7 +1719,7 @@ namespace RhinoCyclesCore.Converters
 			perlin_marble_node.Color2Saturation = Color2Saturation;
 
 			// Recursive call
-			ConnectChildNodes(shader, uvw_output, perlin_marble_node.ins.Color1, perlin_marble_node.ins.Color2);
+			ConnectChildNodes(shader, uvw_output, perlin_marble_node.ins.Color1, perlin_marble_node.ins.Color2, IsData);
 
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(perlin_marble_node.ins.UVW);
@@ -1800,7 +1738,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class PhysicalSkyTextureProcedural : Procedural
 	{
-		public PhysicalSkyTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public PhysicalSkyTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var sun_direction = render_texture.GetParameter("physical-sky-sun-direction") as IConvertible;
 			SunDirection = ConvertibleExtensions.ToVector3d(sun_direction);
@@ -1833,14 +1771,12 @@ namespace RhinoCyclesCore.Converters
 			Exposure = (float)Convert.ToDouble(exposure);
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
 			transform_node.Transform = new ccl.Transform(MappingTransform);
-			shader.AddNode(transform_node);
 
 			var physical_sky_node = new PhysicalSkyTextureProceduralNode(shader);
-			shader.AddNode(physical_sky_node);
 
 			physical_sky_node.SunDirectionX = (float)SunDirection.X;
 			physical_sky_node.SunDirectionY = (float)SunDirection.Y;
@@ -1879,11 +1815,11 @@ namespace RhinoCyclesCore.Converters
 
 	public class ResampleTextureProcedural : Procedural
 	{
-		public ResampleTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn) : base(render_texture)
+		public ResampleTextureProcedural(RenderTexture render_texture, CyclesTextureImage cycles_texture, BitmapConverter bitmap_converter, uint docsrn, bool is_color) : base(render_texture, is_color)
 		{
 			CyclesTexture = cycles_texture;
 			BitmapConverter = bitmap_converter;
-			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, IsBitmapTexture, bitmap_converter, docsrn, 1.0f);
+			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, IsBitmapTexture, bitmap_converter, docsrn, 1.0f, false, is_color);
 
 			var rtf = render_texture.Fields;
 
@@ -1891,16 +1827,14 @@ namespace RhinoCyclesCore.Converters
 				Interpolate = interpolate;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			shader.AddNode(transform_node);
 
 			transform_node.Operation = MatrixMathNode.Operations.Point;
 			transform_node.Transform = new ccl.Transform(MappingTransform);
 
 			var image_texture_node = new ImageTextureNode(shader);
-			shader.AddNode(image_texture_node);
 
 			if (CyclesTexture.HasTextureImage)
 			{
@@ -1933,7 +1867,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class SingleColorTextureProcedural : OneColorProcedural
 	{
-		public SingleColorTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public SingleColorTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1941,7 +1875,7 @@ namespace RhinoCyclesCore.Converters
 				UseObjectColor = use_object_color;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			// Color adjustments don't work here because of the way this node is set up.
 			// TODO: Create an actual node here so that we can connect the adjust node
@@ -1955,7 +1889,7 @@ namespace RhinoCyclesCore.Converters
 			else
 			{
 				// Recursive call
-				ConnectChildNode(shader, uvw_output, parent_color_input, parent_alpha_input);
+				ConnectChildNode(shader, uvw_output, parent_color_input, parent_alpha_input, IsData);
 			}
 		}
 
@@ -1964,7 +1898,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class StuccoTextureProcedural : TwoColorProcedural
 	{
-		public StuccoTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public StuccoTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -1976,7 +1910,7 @@ namespace RhinoCyclesCore.Converters
 				Threshold = (float)threshold;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			NoiseTextureProceduralNode noise = new NoiseTextureProceduralNode(shader);
 			noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
@@ -1989,16 +1923,12 @@ namespace RhinoCyclesCore.Converters
 			noise.Inverse = false;
 			noise.Gain = 0.5f;
 
-			shader.AddNode(noise);
 
 			var noise_transform = new MatrixMathNode(shader);
 
 			noise_transform.Transform = ccl.Transform.Scale(8.0f / Size, 8.0f / Size, 8.0f / Size);
 
-			shader.AddNode(noise_transform);
-
 			BlendTextureProceduralNode blend = new BlendTextureProceduralNode(shader);
-			shader.AddNode(blend);
 
 			blend.UseBlendColor = true;
 			blend.ins.Color1.Value = Color1.ToFloat4();
@@ -2013,10 +1943,8 @@ namespace RhinoCyclesCore.Converters
 			var blend_transform = new MatrixMathNode(shader);
 			blend_transform.Transform = new ccl.Transform(MappingTransform);
 
-			shader.AddNode(blend_transform);
-
-			Child1?.CreateAndConnectProceduralNode(shader, blend_transform.outs.Vector, blend.ins.Color1, blend.ins.Alpha1);
-			Child2?.CreateAndConnectProceduralNode(shader, blend_transform.outs.Vector, blend.ins.Color2, blend.ins.Alpha2);
+			Child1?.CreateAndConnectProceduralNode(shader, blend_transform.outs.Vector, blend.ins.Color1, blend.ins.Alpha1, IsData);
+			Child2?.CreateAndConnectProceduralNode(shader, blend_transform.outs.Vector, blend.ins.Color2, blend.ins.Alpha2, IsData);
 
 			uvw_output.Connect(noise_transform.ins.Vector);
 			uvw_output.Connect(blend_transform.ins.Vector);
@@ -2037,7 +1965,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class TextureAdjustmentTextureProcedural : Procedural
 	{
-		public TextureAdjustmentTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public TextureAdjustmentTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -2083,7 +2011,7 @@ namespace RhinoCyclesCore.Converters
 			AdjustIsHdr = render_texture.IsHdrCapable();
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
 
@@ -2097,10 +2025,7 @@ namespace RhinoCyclesCore.Converters
 
 			transform_node.Transform = ccl.Transform.Translate(tx, ty, 0.0f) * diagonal_transform * MappingTransform;
 
-			shader.AddNode(transform_node);
-
 			var texture_adjustment_node = new TextureAdjustmentTextureProceduralNode(shader);
-			shader.AddNode(texture_adjustment_node);
 
 			texture_adjustment_node.Grayscale = AdjustGrayscale;
 			texture_adjustment_node.Invert = AdjustInvert;
@@ -2117,7 +2042,7 @@ namespace RhinoCyclesCore.Converters
 
 			uvw_output.Connect(transform_node.ins.Vector);
 
-			TextureAdjustmentChild?.CreateAndConnectProceduralNode(shader, transform_node.outs.Vector, texture_adjustment_node.ins.Color, parent_alpha_input);
+			TextureAdjustmentChild?.CreateAndConnectProceduralNode(shader, transform_node.outs.Vector, texture_adjustment_node.ins.Color, parent_alpha_input, IsData);
 
 			texture_adjustment_node.outs.Color.Connect(parent_color_input);
 		}
@@ -2129,7 +2054,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class TileTextureProcedural : TwoColorProcedural
 	{
-		public TileTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public TileTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -2166,14 +2091,12 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
 			transform_node.Transform = new ccl.Transform(MappingTransform);
-			shader.AddNode(transform_node);
 
 			var tile_node = new TileTextureProceduralNode(shader);
-			shader.AddNode(tile_node);
 
 			tile_node.TileType = TileType;
 			tile_node.PhaseX = (float)Phase.X;
@@ -2185,7 +2108,7 @@ namespace RhinoCyclesCore.Converters
 
 			uvw_output.Connect(transform_node.ins.Vector);
 
-			ConnectChildNodes(shader, uvw_output, tile_node.ins.Color1, tile_node.ins.Alpha1, tile_node.ins.Color2, tile_node.ins.Alpha2);
+			ConnectChildNodes(shader, uvw_output, tile_node.ins.Color1, tile_node.ins.Alpha1, tile_node.ins.Color2, tile_node.ins.Alpha2, IsData);
 
 			transform_node.outs.Vector.Connect(tile_node.ins.UVW);
 
@@ -2200,7 +2123,7 @@ namespace RhinoCyclesCore.Converters
 
 	public class DotsTextureProcedural : TwoColorProcedural
 	{
-		public DotsTextureProcedural(RenderTexture render_texture) : base(render_texture)
+		public DotsTextureProcedural(RenderTexture render_texture, bool is_color) : base(render_texture, is_color)
 		{
 			var rtf = render_texture.Fields;
 
@@ -2220,14 +2143,12 @@ namespace RhinoCyclesCore.Converters
 				CompositionType = (DotsTextureProceduralNode.CompositionTypes)composition_type;
 		}
 
-		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input)
+		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, FloatSocket parent_alpha_input, bool IsData)
 		{
 			//var transform_node = new MatrixMathNode(shader);
 			//transform_node.Transform = new ccl.Transform(MappingTransform);
-			//shader.AddNode(transform_node);
 
 			//var dots_node = new DotsTextureProceduralNode();
-			//shader.AddNode(dots_node);
 
 			//dots_node.DataCount = DataCount;
 			//dots_node.TreeNodeCount = TreeNodeCount;
@@ -2239,7 +2160,7 @@ namespace RhinoCyclesCore.Converters
 
 			//uvw_output.Connect(transform_node.ins.Vector);
 
-			//ConnectChildNodes(shader, uvw_output, dots_node.ins.Color1, dots_node.ins.Color2);
+			//ConnectChildNodes(shader, uvw_output, dots_node.ins.Color1, dots_node.ins.Color2, IsData);
 
 			//transform_node.outs.Vector.Connect(dots_node.ins.UVW);
 

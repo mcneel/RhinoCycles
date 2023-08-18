@@ -40,11 +40,6 @@ namespace RhinoCyclesCore.Converters
 		readonly private object floatlocker = new object();
 		private bool disposedValue;
 
-		public void ReloadTextures(CyclesShader shader)
-		{
-			shader.ReloadTextures(ByteImagesNew, FloatImagesNew);
-		}
-
 		public void ClearTextureMemory()
 		{
 			foreach(ByteBitmap byteBitmap in ByteImagesNew.Values)

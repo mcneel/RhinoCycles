@@ -45,8 +45,6 @@ namespace RhinoCyclesCore.Shaders
 		public override Shader GetShader()
 		{
 			DiffuseBsdfNode diffuse_bsdf = new DiffuseBsdfNode(m_shader, "nyi_diffuse");
-			// voronoi scale
-			m_shader.AddNode(diffuse_bsdf);
 			// plug BSDF into material surface
 			diffuse_bsdf.outs.BSDF.Connect(m_shader.Output.ins.Surface);
 

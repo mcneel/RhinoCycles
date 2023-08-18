@@ -10,6 +10,7 @@
     <FileAlignment>512</FileAlignment>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
     <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+    <LangVersion>11.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

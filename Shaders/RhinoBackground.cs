@@ -62,14 +62,6 @@ namespace RhinoCyclesCore.Shaders
 
 				mixbgs.ins.Fac.Value = 0.8f;
 
-				m_shader.AddNode(bgAzimuthAltitudeTransformNode);
-				m_shader.AddNode(mixcol);
-				m_shader.AddNode(lp);
-				m_shader.AddNode(mixbgs);
-				m_shader.AddNode(bg);
-				m_shader.AddNode(bg2);
-				m_shader.AddNode(texco);
-				m_shader.AddNode(bgenv);
 				/*
 
 				texco.outs.Generated.Connect(bgAzimuthAltitudeTransformNode.ins.Vector);
@@ -288,59 +280,9 @@ namespace RhinoCyclesCore.Shaders
 				var final_bg277 = new BackgroundNode(m_shader, "final_bg");
 				final_bg277.ins.Strength.Value = 1f;
 
-				m_shader.AddNode(bgAzimuthAltitudeTransformNode);
-				m_shader.AddNode(reflAzimuthAltitudeTransformNode);
-				m_shader.AddNode(skyAzimuthAltitudeTransformNode);
-				m_shader.AddNode(texcoord210);
-				m_shader.AddNode(bg_env_texture255);
-				m_shader.AddNode(bg_color_or_texture259);
-				m_shader.AddNode(separate_bg_color265);
-				m_shader.AddNode(skylight_strength_factor299);
-				m_shader.AddNode(factor_r262);
-				m_shader.AddNode(factor_g263);
-				m_shader.AddNode(factor_b264);
-				m_shader.AddNode(gradienttexture278);
-				m_shader.AddNode(factored_bg_color266);
-				m_shader.AddNode(gradient_colorramp279);
-				m_shader.AddNode(light_path235);
-				m_shader.AddNode(maximum303);
-				m_shader.AddNode(maximum305);
-				m_shader.AddNode(gradient_or_other280);
-				m_shader.AddNode(maximum306);
-				m_shader.AddNode(bg_no_customs301);
-				m_shader.AddNode(refl_env_texture256);
-				m_shader.AddNode(refl_color_or_texture260);
-				m_shader.AddNode(separate_refl_color270);
-				m_shader.AddNode(skylight_strength_factor300);
-				m_shader.AddNode(factor_refl_r267);
-				m_shader.AddNode(factor_refl_g268);
-				m_shader.AddNode(factor_refl_b269);
-				m_shader.AddNode(use_reflect_refract_when_glossy_and_reflection282);
-				m_shader.AddNode(factored_refl_color271);
-				m_shader.AddNode(refl_env_when_enabled283);
-				m_shader.AddNode(skycolor_or_final_bg281);
-				m_shader.AddNode(sky_env_texture257);
-				m_shader.AddNode(sky_color_or_texture258);
-				m_shader.AddNode(separate_sky_color275);
-				m_shader.AddNode(sky_or_not261);
-				m_shader.AddNode(factor_sky_r272);
-				m_shader.AddNode(factor_sky_g273);
-				m_shader.AddNode(factor_sky_b274);
-				m_shader.AddNode(factored_sky_color276);
-				m_shader.AddNode(non_camera_rays287);
-				m_shader.AddNode(camera_and_transmission291);
-				m_shader.AddNode(invert_refl_switch297);
-				m_shader.AddNode(invert_cam_and_transm289);
-				m_shader.AddNode(refl_bg_or_custom_env288);
-				m_shader.AddNode(light_with_bg_or_sky286);
-				m_shader.AddNode(if_not_cam_nor_transm_nor_glossyrefl298);
-				m_shader.AddNode(mix292);
-				m_shader.AddNode(final_bg277);
-
 				texcoord210.outs.Generated.Connect(bgAzimuthAltitudeTransformNode.ins.Vector);
 				texcoord210.outs.Generated.Connect(reflAzimuthAltitudeTransformNode.ins.Vector);
 				texcoord210.outs.Generated.Connect(skyAzimuthAltitudeTransformNode.ins.Vector);
-
 
 				bgAzimuthAltitudeTransformNode.outs.Vector.Connect(bg_env_texture255.ins.Vector);
 				bg_env_texture255.outs.Color.Connect(bg_color_or_texture259.ins.Color2);

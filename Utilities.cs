@@ -81,86 +81,8 @@ namespace RhinoCyclesCore
 			return (success, rc, onness, amount, rmchild);
 		}
 
-		public static (bool Success, float4 Result, bool IsOn, float Amount) HandleTexturedColor(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter, uint docsrn)
-		{
-			bool success = false;
-			float4 rc = new float4(0.0f);
-			bool onness = false;
-			float amount = 0.0f;
 
-			if(bitmapConverter==null) bitmapConverter = new Converters.BitmapConverter();
-
-			if (rm.Fields.TryGetValue(slotname, out Color4f c))
-			{
-				rc = c.ToFloat4();
-				success = true;
-			}
-			var texAmountConv = rm.GetChildSlotParameter(slotname, "texture-amount") as IConvertible;
-			if (texAmountConv!=null)
-			{
-				float texamount = Convert.ToSingle(texAmountConv);
-				amount = texamount / 100.0f;
-			}
-
-			var texOnnessConv = rm.GetChildSlotParameter(slotname, "texture-on") as IConvertible;
-			if (texOnnessConv != null)
-			{
-				bool texon = Convert.ToBoolean(texOnnessConv);
-				if(texon) {
-					onness = texon;
-					if (onness)
-					{
-						if (rm.FindChild(slotname) is RenderTexture rt)
-						{
-							HandleRenderTexture(rt, tex, true, false, bitmapConverter, docsrn, (rm as ICyclesMaterial)?.Gamma ?? 1.0f);
-							tex.Amount = amount;
-						}
-					}
-				}
-			}
-
-			return (success, rc, onness, amount);
-		}
-
-		public static (bool Success, float Result, bool IsOn, float Amount) HandleTexturedValue(RenderMaterial rm, string slotname, CyclesTextureImage tex, Converters.BitmapConverter bitmapConverter, uint docsrn)
-		{
-			bool success = false;
-			float rc = 0.0f;
-			bool onness = false;
-			float amount = 0.0f;
-			if (rm.Fields.TryGetValue(slotname, out float c))
-			{
-				rc = c;
-				success = true;
-			}
-			var texAmountConv = rm.GetChildSlotParameter("base", "texture-amount") as IConvertible;
-			if (texAmountConv!=null)
-			{
-				float texamount = Convert.ToSingle(texAmountConv);
-				amount = texamount / 100.0f;
-			}
-
-			var texOnnessConv = rm.GetChildSlotParameter("base", "texture-on") as IConvertible;
-			if (texOnnessConv != null)
-			{
-				bool texon = Convert.ToBoolean(texOnnessConv);
-				if(texon) {
-					onness = texon;
-					if (onness)
-					{
-						if (rm.FindChild(slotname) is RenderTexture rt)
-						{
-							HandleRenderTexture(rt, tex, true, false, bitmapConverter, docsrn, (rm as ICyclesMaterial)?.Gamma ?? 1.0f );
-							tex.Amount = amount;
-						}
-					}
-				}
-			}
-
-			return (success, rc, onness, amount);
-		}
-
-		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool is_leaf_bitmap, Converters.BitmapConverter bitmapConverter, uint docsrn, float gamma, bool should_simulate = false)
+		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool is_leaf_bitmap, Converters.BitmapConverter bitmapConverter, uint docsrn, float gamma, bool should_simulate, bool is_color)
 		{
 			if (rt == null) return;
 
@@ -205,13 +127,11 @@ namespace RhinoCyclesCore
 
 			if (!is_leaf_bitmap)
 			{
-				procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter, docsrn, gamma);
-				sdd.WriteLine($"===========>> {is_leaf_bitmap} [{procedural}]");
+				procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter, docsrn, gamma, is_color);
 			}
 
 			if (procedural != null)
 			{
-				sdd.WriteLine($"===========>> procedural set");
 				tex.Procedural = procedural;
 				tex.IsNormalMap = tex.TextureList.Any<CyclesTextureImage>(cti => cti.IsNormalMap == true);
 			}
@@ -231,11 +151,9 @@ namespace RhinoCyclesCore
 					SimulatedTexture simtex = rt.SimulatedTexture(RenderTexture.TextureGeneration.Allow);
 					RhinoDoc doc = rt.DocumentAssoc;
 					fs = simtex.Filename; //Rhino.Render.Utilities.FindFile(doc, simtex.Filename, true);
-					sdd.WriteLine($"===========>> FILENAME SIMTEX: [{fs}]");
 				}
 
 				tex.IsNormalMap = rt.IsNormalMap();
-				sdd.WriteLine($"===========>> IsNormalMap: [{tex.IsNormalMap}]");
 				tex.Filename = string.IsNullOrEmpty(fs) ? null : fs;
 				tex.Name = rid.ToString(CultureInfo.InvariantCulture);
 				tex.EnvProjectionMode = envProjectionMode;
@@ -254,37 +172,19 @@ namespace RhinoCyclesCore
 		/// <param name="sh"></param>
 		/// <param name="slot"></param>
 		/// <param name="teximg"></param>
-		/// <param name="socketToConnectTo"></param>
-		public static void PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, ccl.ShaderNodes.Sockets.ISocket sockeToConnectTo, bool invert)
-		{
-			List<ccl.ShaderNodes.Sockets.ISocket> socks = new List<ccl.ShaderNodes.Sockets.ISocket>();
-			socks.Add(sockeToConnectTo);
-			PbrGraphForSlot(sh, slot, teximg, socks, invert);
-		}
-
-		/// <summary>
-		/// Create the partial graph for a PBR-type slot.
-		/// </summary>
-		/// <since>6.12</since>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="sh"></param>
-		/// <param name="slot"></param>
-		/// <param name="teximg"></param>
 		/// <param name="socks"></param>
-		public static ISocket PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, List<ISocket> socks, bool invert)
+		public static ISocket PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, List<ISocket> socks, bool invert, float gamma, bool IsData)
 		{
 			Type t = typeof(T);
 			ISocket valsock = null;
 			if (t == typeof(float))
 			{
 				ValueNode vn = new ValueNode(sh, $"input_value_for_{slot.Name}_");
-				sh.AddNode(vn);
 				vn.Value = (float)(object)slot.Value;
 				if (invert)
 				{
 					MathSubtract invval = new MathSubtract(sh, $"invert_value_for_{slot.Name}_");
 					invval.ins.Value1.Value = 1.0f;
-					sh.AddNode(invval);
 					vn.outs.Value.Connect(invval.ins.Value2);
 					valsock = invval.outs.Value;
 				}
@@ -296,13 +196,11 @@ namespace RhinoCyclesCore
 			else if (t == typeof(Color4f))
 			{
 				ColorNode cn = new ColorNode(sh, $"input_color_for_{slot.Name}_");
-				sh.AddNode(cn);
 				cn.Value = ((Color4f)(object)slot.Value).ToFloat4();
 				if (invert)
 				{
 					InvertNode invcol = new InvertNode(sh, $"invert_input_color_for_{slot.Name}_");
 					invcol.ins.Fac.Value = 1.0f;
-					sh.AddNode(invcol);
 					cn.outs.Color.Connect(invcol.ins.Color);
 					valsock = invcol.outs.Color;
 				}
@@ -314,81 +212,65 @@ namespace RhinoCyclesCore
 			if(valsock == null) {
 				throw new UnrecognizedTexturedSlotType($"Type tried is {t}");
 			}
-			return GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, socks, false, false, invert);
+			return GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, socks, false, false, invert, IsData, gamma);
 		}
 
-		public static ISocket GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socketsToConnectTo)
-		{
-			return GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socketsToConnectTo, false, false, false);
-		}
-
-		public static ISocket GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socketsToConnectTo, bool toBw)
-		{
-			return GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socketsToConnectTo, toBw, false, false);
-		}
-
-		public static ISocket GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socketsToConnectTo, bool toBw, bool normalMap)
-		{
-			return GraphForSlot(sh, valueSocket, IsOn, amount, teximg, socketsToConnectTo, toBw, normalMap, false);
-		}
-
-		public static ISocket GraphForSlot(Shader sh, ccl.ShaderNodes.Sockets.ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ccl.ShaderNodes.Sockets.ISocket> socketsToConnectTo, bool toBw, bool normalMap, bool invert)
+		public static ISocket GraphForSlot(Shader sh, ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ISocket> socketsToConnectTo, bool toBw, bool normalMap, bool invert, bool IsData, float gamma)
 		{
 			ISocket alphaOut = null;
 			if(IsOn && null != teximg && teximg.HasProcedural)
 			{
 				var texco = new RhinoTextureCoordinateNode(sh, $"texco for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var invcol = new InvertNode(sh, $"invert color for imtexnode for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var normalmapnode = new NormalMapNode(sh, $"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var tobwnode = new RgbToBwNode(sh, $"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-				var alphamult = new MathMultiply(sh, $"alpha multiplier for {valueSocket?.Parent.VariableName ?? "unknown input"}");
-
 				var mixerNode = new MixNode(sh, $"rgb mix node for imtexnode and {valueSocket?.Parent.VariableName ?? "unknown input"}");
-
-				alphamult.ins.Value1.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
-				alphamult.ins.Value2.Value = 1.0f;
 
 				mixerNode.ins.Fac.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
 
-				sh.AddNode(texco);
-				sh.AddNode(mixerNode);
-
-				var gamma_node = new GammaNode(sh);
-				sh.AddNode(gamma_node);
-
-				gamma_node.ins.Gamma.Value = 2.2f;
-
-				var alpha_node = new MathNode(sh);
-				sh.AddNode(alpha_node);
-				alpha_node.Operation = MathNode.Operations.Add;
+				var alpha_node = new MathAdd(sh);
 				alpha_node.ins.Value1.Value = 0.0f;
 				alpha_node.ins.Value2.Value = 1.0f;
 
-				VectorSocket uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(teximg, texco);
+				VectorSocket uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, teximg, texco);
 
 				ColorSocket color_input_node = mixerNode.ins.Color2;
 				FloatSocket alpha_input_node = alpha_node.ins.Value2;
+				GammaNode gammaNode = null;
 
-				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alpha_input_node);
+				if(!IsData)
+				{
+					gammaNode = new GammaNode(sh, "gamma node for color channel");
+					gammaNode.ins.Gamma.Value = 1.0f / gamma;
+
+					mixerNode.outs.Color.Connect(gammaNode.ins.Color);
+				}
+
+
+				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alpha_input_node, IsData);
 
 				alphaOut = alpha_node.outs.Value;
 
 				texco.UvMap = teximg.GetUvMapForChannel();
-				normalmapnode.Attribute = teximg.GetUvMapForChannel();
 
 				valueSocket?.Connect(mixerNode.ins.Color1);
+
+				ISocket use_outsocket;
 
 				if (valueSocket == null) {
 					mixerNode.ins.Fac.Value = 1.0f;
 				} else {
-					sh.AddNode(alphamult);
+					var alphamult = new MathMultiply(sh, $"alpha multiplier for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+					alphamult.ins.Value1.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
+					alphamult.ins.Value2.Value = 1.0f;
 					alphamult.outs.Value.Connect(mixerNode.ins.Fac);
 				}
+
 				if (normalMap)
 				{
-					// ideally we calculate the tangents and switch to Tangent space here.
-					normalmapnode.SpaceType = ccl.ShaderNodes.NormalMapNode.Space.Tangent;
-					sh.AddNode(normalmapnode);
+					var normalmapnode = new NormalMapNode(sh, $"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}")
+					{
+						Attribute = teximg.GetUvMapForChannel(),
+						// ideally we calculate the tangents and switch to Tangent space here.
+						SpaceType = NormalMapNode.Space.Tangent
+					};
 					mixerNode.outs.Color.Connect(normalmapnode.ins.Color);
 					normalmapnode.ins.Strength.Value = amount * RcCore.It.AllSettings.NormalStrengthFactor;
 					foreach(var sock in socketsToConnectTo) {
@@ -399,30 +281,31 @@ namespace RhinoCyclesCore
 				{
 					if (invert)
 					{
-						sh.AddNode(invcol);
+						var invcol = new InvertNode(sh, $"invert color for imtexnode for {valueSocket?.Parent.VariableName ?? "unknown input"}");
 						mixerNode.outs.Color.Connect(invcol.ins.Color);
 
 						invcol.ins.Fac.Value = 1.0f;
-						foreach (var sock in socketsToConnectTo)
-						{
-							invcol.outs.Color.Connect(sock);
-						}
+						use_outsocket = invcol.outs.Color;
 					}
 					else
 					{
-						ccl.ShaderNodes.Sockets.ISocket outsock = mixerNode.outs.Color;
+						use_outsocket = mixerNode.outs.Color;
 						if(toBw) {
-							sh.AddNode(tobwnode);
-							outsock.Connect(tobwnode.ins.Color);
-							outsock = tobwnode.outs.Val;
+							var tobwnode = new RgbToBwNode(sh, $"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+							use_outsocket.Connect(tobwnode.ins.Color);
+							use_outsocket = tobwnode.outs.Val;
 						}
-						outsock.Connect(gamma_node.ins.Color);
+						else {
+							if(!IsData && gammaNode != null) {
+								use_outsocket = gammaNode.outs.Color;
+							}
+						}
 					}
 					if (amount >= 0.0f && amount <= 1.0f)
 					{
 						foreach (var sock in socketsToConnectTo)
 						{
-							gamma_node.outs.Color.Connect(sock);
+							use_outsocket.Connect(sock);
 						}
 					} else { // multiply the output of mixerNode.outs.Color with amount.
 						SeparateRgbNode separateRgbNode = new SeparateRgbNode(sh, $"separating the color for multiplication {valueSocket?.Parent.VariableName ?? "unknown input"}");
@@ -430,12 +313,6 @@ namespace RhinoCyclesCore
 						MathMultiply multiplyG = new MathMultiply(sh, $"multiplier for G {valueSocket?.Parent.VariableName ?? "unknown input"}");
 						MathMultiply multiplyB = new MathMultiply(sh, $"multiplier for B {valueSocket?.Parent.VariableName ?? "unknown input"}");
 						CombineRgbNode combineRgbNode = new CombineRgbNode(sh, $"combining the new color values {valueSocket?.Parent.VariableName ?? "unknown input"}");
-
-						sh.AddNode(separateRgbNode);
-						sh.AddNode(multiplyR);
-						sh.AddNode(multiplyG);
-						sh.AddNode(multiplyB);
-						sh.AddNode(combineRgbNode);
 
 						multiplyR.UseClamp = false;
 						multiplyG.UseClamp = false;
@@ -445,7 +322,7 @@ namespace RhinoCyclesCore
 						multiplyG.ins.Value1.Value = amount;
 						multiplyB.ins.Value1.Value = amount;
 
-						gamma_node.outs.Color.Connect(separateRgbNode.ins.Image);
+						use_outsocket.Connect(separateRgbNode.ins.Image);
 
 						separateRgbNode.outs.R.Connect(multiplyR.ins.Value2);
 						separateRgbNode.outs.G.Connect(multiplyG.ins.Value2);
