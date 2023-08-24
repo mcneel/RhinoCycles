@@ -97,10 +97,10 @@ namespace RhinoCyclesCore.Materials
 			AddAutomaticUserInterfaceSection("Parameters", 0);
 		}
 
-		public override void SimulateMaterial(ref Material simulatedMaterial, bool forDataOnly)
+		public override void SimulateMaterial(ref Material simulatedMaterial, RenderTexture.TextureGeneration tg)
 		{
 			BakeParameters(BitmapConverter, 0);
-			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
+			base.SimulateMaterial(ref simulatedMaterial, tg);
 
 			simulatedMaterial.Reflectivity = 0.0;
 			simulatedMaterial.Transparency = 0.0;

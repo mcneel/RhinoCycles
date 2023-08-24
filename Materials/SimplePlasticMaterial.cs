@@ -78,9 +78,9 @@ namespace RhinoCyclesCore.Materials
 			}
 		}
 
-		public override void SimulateMaterial(ref Material simulatedMaterial, bool forDataOnly)
+		public override void SimulateMaterial(ref Material simulatedMaterial, RenderTexture.TextureGeneration tg)
 		{
-			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
+			base.SimulateMaterial(ref simulatedMaterial, tg);
 
 			simulatedMaterial.FresnelReflections = true;
 			simulatedMaterial.IndexOfRefraction = 1.5;

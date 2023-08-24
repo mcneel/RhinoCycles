@@ -32,9 +32,9 @@ namespace RhinoCyclesCore.Materials
 
 		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn) { }
 
-		public override void SimulateMaterial(ref Rhino.DocObjects.Material simulatedMaterial, bool forDataOnly)
+		public override void SimulateMaterial(ref Rhino.DocObjects.Material simulatedMaterial, RenderTexture.TextureGeneration tg)
 		{
-			base.SimulateMaterial(ref simulatedMaterial, forDataOnly);
+			base.SimulateMaterial(ref simulatedMaterial, tg);
 
 			simulatedMaterial.DiffuseColor = Color.DeepSkyBlue;
 		}
