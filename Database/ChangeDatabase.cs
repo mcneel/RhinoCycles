@@ -523,7 +523,7 @@ namespace RhinoCyclesCore.Database
 				UploadCamera(view);
 			}
 			var fb = _cameraDatabase.GetBlur();
-			// TODO: XXXX UploadFocalBlur(fb);
+			UploadFocalBlur(fb);
 		}
 
 		/// <summary>
@@ -574,10 +574,10 @@ namespace RhinoCyclesCore.Database
 		{
 			var scene = _renderEngine.Session.Scene;
 			scene.Camera.FocalDistance = fb.FocalDistance;
-			var unitscale = (float)Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Millimeters, ModelUnitSystem);
+			var unitscale = (float)RhinoMath.UnitScale(UnitSystem.Millimeters, ModelUnitSystem);
 			scene.Camera.ApertureSize = (fb.FocalAperture < 0.00001f ? 0.0f : (fb.LensLength * unitscale) / fb.FocalAperture);
 			scene.Camera.Blades = Blades;
-			scene.Camera.BladesRotation = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
+			scene.Camera.BladesRotation = (float)RhinoMath.ToRadians(BladesRotation);
 			scene.Camera.ApertureRatio = ApertureRatio;
 			scene.Camera.Update();
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Focal blur handled", -1.0f);
