@@ -469,17 +469,17 @@ namespace RhinoCyclesCore.Shaders
 					principled.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure1);
 
 					float emission_strength = part.PbrEmission.Value.LargestComponent();
+					// When an emission texture is added and active make sure that the emission
+					// base color isn't black.
+					if (part.PbrEmission.On) {
+						if (part.PbrEmission.Value.Equals(Rhino.Display.Color4f.Black))
+						{
+							part.PbrEmission.Value = Rhino.Display.Color4f.White;
+						}
+					}
 
-					if (part.PbrEmission.On && part.PbrEmissionTexture.HasProcedural)
-					{
-						principled.ins.EmissionStrength.Value = emission_strength;
-						Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, principled.ins.Emission.ToList(), false, part.Gamma, false);
-					}
-					else if (!part.PbrEmission.Value.Equals(Rhino.Display.Color4f.Black))
-					{
-						principled.ins.Emission.Value = part.PbrEmission.Value.ToFloat4();
-						principled.ins.EmissionStrength.Value = emission_strength;
-					}
+					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, principled.ins.Emission.ToList(), false, part.Gamma, true);
+					principled.ins.EmissionStrength.Value = emission_strength;
 
 					Utilities.PbrGraphForSlot(m_shader, part.PbrAlpha, part.PbrAlphaTexture, alpha_transp_component.ins.Value2.ToList(), false, part.Gamma, true);
 
