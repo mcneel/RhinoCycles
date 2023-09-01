@@ -72,6 +72,23 @@ namespace RhinoCyclesCore
 			}
 		}
 
+		/* ADJUSTMENT SETTINGS */
+		public bool AdjustNeeded {get; set; } = false;
+		public bool AdjustGrayscale { get; set; } = false;
+		public bool AdjustInvert {get; set; } = false;
+		public bool AdjustClamp { get; set; } = false;
+		public bool AdjustScaleToClamp { get; set; } = false;
+		public float AdjustMultiplier { get; set; } = 1.0f;
+		public float AdjustClampMin { get; set; } = 0.0f;
+		public float AdjustClampMax { get; set; } = 1.0f;
+		public float AdjustGain { get; set; } = 0.5f;
+		public float AdjustGamma { get; set; } = 1.0f;
+		public float AdjustSaturation { get; set; } = 1.0f;
+		public float AdjustHueShift { get; set; } = 0.0f;
+		public bool AdjustIsHdr { get; set; } = false;
+
+		/* END ADJUSTMENT SETTINGS */
+
 		public TextureProjectionMode ProjectionMode { get; set; }
 		public TextureEnvironmentMappingMode EnvProjectionMode { get; set; }
 
