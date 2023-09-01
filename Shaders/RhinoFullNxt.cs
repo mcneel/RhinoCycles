@@ -24,6 +24,7 @@ using System.Linq;
 using System.Collections.Generic;
 using RhinoCyclesCore.Converters;
 using sdd = System.Diagnostics.Debug;
+using System.IO;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -109,7 +110,9 @@ namespace RhinoCyclesCore.Shaders
 				lc.Connect(m_shader.Output.ins.Surface);
 			}
 			m_shader.WriteDataToNodes();
-			//m_shader.DumpGraph($"/Users/nathan/rhinofullnxt_{m_shader.Id}.dot");
+			var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+			var graph_path = Path.Combine(home, $"rhinofullnxt_{m_shader.Id}.dot");
+			//m_shader.DumpGraph(graph_path);
 			return m_shader;
 		}
 

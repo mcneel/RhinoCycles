@@ -238,7 +238,7 @@ namespace RhinoCyclesCore
 				if(!IsData)
 				{
 					gammaNode = new GammaNode(sh, "gamma node for color channel");
-					gammaNode.ins.Gamma.Value = 1.0f / gamma;
+					gammaNode.ins.Gamma.Value = gamma;
 
 					mixerNode.outs.Color.Connect(gammaNode.ins.Color);
 				}
@@ -295,11 +295,11 @@ namespace RhinoCyclesCore
 							use_outsocket.Connect(tobwnode.ins.Color);
 							use_outsocket = tobwnode.outs.Val;
 						}
-						else {
+						/*else {
 							if(!IsData && gammaNode != null) {
 								use_outsocket = gammaNode.outs.Color;
 							}
-						}
+						}*/
 					}
 					if (amount >= 0.0f && amount <= 1.0f)
 					{
