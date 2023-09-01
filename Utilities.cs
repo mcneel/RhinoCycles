@@ -81,6 +81,60 @@ namespace RhinoCyclesCore
 			return (success, rc, onness, amount, rmchild);
 		}
 
+		private static void GatherAdjustments(RenderTexture render_texture, CyclesTextureImage textureImage)
+		{
+				var rtf = render_texture.Fields;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-grayscale", out bool grayscale))
+					textureImage.AdjustGrayscale = grayscale;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-invert", out bool invert))
+					textureImage.AdjustInvert = invert;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-clamp", out bool clamp))
+					textureImage.AdjustClamp = clamp;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-scale-to-clamp", out bool scale_to_clamp))
+					textureImage.AdjustScaleToClamp = scale_to_clamp;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-multiplier", out double multiplier))
+					textureImage.AdjustMultiplier = (float)multiplier;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-clamp-min", out double clamp_min))
+					textureImage.AdjustClampMin = (float)clamp_min;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-clamp-max", out double clamp_max))
+					textureImage.AdjustClampMax = (float)clamp_max;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-gain", out double gain))
+					textureImage.AdjustGain = (float)gain;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-gamma", out double gamma))
+					textureImage.AdjustGamma = (float)gamma;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-saturation", out double saturation))
+					textureImage.AdjustSaturation = (float)saturation;
+
+				if (rtf.TryGetValue("rdk-texture-adjust-hue-shift", out double hue_shift))
+					textureImage.AdjustHueShift = (float)hue_shift;
+
+				textureImage.AdjustIsHdr = render_texture.IsHdrCapable();
+
+				if (textureImage.AdjustClamp || textureImage.AdjustScaleToClamp || textureImage.AdjustInvert || textureImage.AdjustGrayscale)
+				{
+					textureImage.AdjustNeeded = true;
+				}
+				else if (textureImage.AdjustGain != 0.5f ||
+					textureImage.AdjustGamma != 1.0f ||
+					textureImage.AdjustMultiplier != 1.0f ||
+					textureImage.AdjustClampMin != 0.0f ||
+					textureImage.AdjustClampMax != 1.0f ||
+					textureImage.AdjustHueShift != 0.0f ||
+					textureImage.AdjustSaturation != 1.0f)
+				{
+					textureImage.AdjustNeeded = true;
+				}
+		}
 
 		public static void HandleRenderTexture(RenderTexture rt, CyclesTextureImage tex, bool check_for_normal_map, bool is_leaf_bitmap, Converters.BitmapConverter bitmapConverter, uint docsrn, float gamma, bool should_simulate, bool is_color)
 		{
@@ -105,6 +159,8 @@ namespace RhinoCyclesCore
 			var projectionMode = rt.GetProjectionMode();
 			var envProjectionMode = rt.GetInternalEnvironmentMappingMode();
 			var repeat = rt.GetWrapType() == TextureWrapType.Repeating;
+
+			GatherAdjustments(rt, tex);
 
 			var use_color_mask = false;
 			{

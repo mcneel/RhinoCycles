@@ -116,7 +116,7 @@ namespace RhinoCyclesCore.Shaders
 			return m_shader;
 		}
 
-		static private void SetupOneDecalNodes(CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, MathMultiply transp)
+		static private void SetupOneDecalNodes(CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, MathMultiply transp, TextureAdjustmentTextureProceduralNode adjust)
 		{
 			texco.ObjectTransform = decal.Transform;
 			texco.UseTransform = true;
@@ -125,6 +125,19 @@ namespace RhinoCyclesCore.Shaders
 			texco.UvMap = decal.Texture.GetUvMapForChannel();
 			imgtex.Extension = TextureNode.TextureExtension.Clip;
 			imgtex.UseAlpha = true;
+
+			adjust.Grayscale = decal.Texture.AdjustGrayscale;
+			adjust.Invert = decal.Texture.AdjustInvert;
+			adjust.Clamp = decal.Texture.AdjustClamp;
+			adjust.ScaleToClamp = decal.Texture.AdjustScaleToClamp;
+			adjust.Multiplier = decal.Texture.AdjustMultiplier;
+			adjust.ClampMin = decal.Texture.AdjustClampMin;
+			adjust.ClampMax = decal.Texture.AdjustClampMax;
+			adjust.Gain = decal.Texture.AdjustGain;
+			adjust.Gamma = decal.Texture.AdjustGamma;
+			adjust.Saturation = decal.Texture.AdjustSaturation;
+			adjust.HueShift = decal.Texture.AdjustHueShift;
+			adjust.IsHdr = decal.Texture.AdjustIsHdr;
 
 			float4 t = decal.Texture.Transform.x;
 			imgtex.Translation = t;
@@ -205,6 +218,7 @@ namespace RhinoCyclesCore.Shaders
 				List<MixNode> mixrgbs = new List<MixNode>(count);
 				List<MathMultiply> transparencies = new List<MathMultiply>(count);
 				List<MathAdd> alphamaths = new List<MathAdd>(count);
+				List<TextureAdjustmentTextureProceduralNode> adjustments = new List<TextureAdjustmentTextureProceduralNode>(count);
 				int idx = 1;
 
 				// First create all the nodes we need to set up decals
@@ -215,6 +229,7 @@ namespace RhinoCyclesCore.Shaders
 					imgtexs.Add(new ImageTextureNode(m_shader, $"Texture_for_decal_{idx}_"));
 					mixrgbs.Add(new MixNode(m_shader, $"Decal_mixer_{idx}_"));
 					transparencies.Add(new MathMultiply(m_shader, $"Decal_transparency_multiplier_{idx}_"));
+					adjustments.Add(new TextureAdjustmentTextureProceduralNode(m_shader, "Decal_texadjustment_{idx}_"));
 					if(i < count-1) {
 						alphamaths.Add(new MathAdd(m_shader, $"Decal_alpha_adder_{idx}_"));
 					}
@@ -228,8 +243,14 @@ namespace RhinoCyclesCore.Shaders
 					var texco = texcos[0];
 					var imgtex = imgtexs[0];
 					var trans = transparencies[0];
-					SetupOneDecalNodes(m_original.Decals.First(), texco, imgtex, trans);
-					imgtex.outs.Color.Connect(lastMixer.ins.Color2);
+					var adjust = adjustments[0];
+					SetupOneDecalNodes(m_original.Decals.First(), texco, imgtex, trans, adjust);
+					if(m_original.Decals[0].Texture.AdjustNeeded) {
+						imgtex.outs.Color.Connect(adjust.ins.Color);
+						adjust.outs.Color.Connect(lastMixer.ins.Color2);
+					} else {
+						imgtex.outs.Color.Connect(lastMixer.ins.Color2);
+					}
 					trans.outs.Value.Connect(lastMixer.ins.Fac);
 				}
 				else {
@@ -240,7 +261,8 @@ namespace RhinoCyclesCore.Shaders
 						var texco = texcos[idx];
 						var imgtex = imgtexs[idx];
 						var trans = transparencies[idx];
-						SetupOneDecalNodes(decal, texco, imgtex, trans);
+						var adjust = adjustments[idx];
+						SetupOneDecalNodes(decal, texco, imgtex, trans, adjust);
 						idx++;
 					}
 					idx = 0;
@@ -249,21 +271,39 @@ namespace RhinoCyclesCore.Shaders
 					MathAdd previousAlphaMath = null;
 					ImageTextureNode imgA = null;
 					MathMultiply transA = null;
+					TextureAdjustmentTextureProceduralNode adjustA = null;
 					// Use alpa addition nodes to go through all
 					// node lists and connect them as needed.
 					foreach(MathAdd alphaMath in alphamaths) {
 						alphaMath.UseClamp = true;
 						if(idx==0) {
+							CyclesTextureImage teximA = m_original.Decals[idx].Texture;
 							MixNode mixer = mixrgbs[idx];
 							mixer.BlendType = MixNode.BlendTypes.Blend;
 							imgA = imgtexs[idx];
-							ImageTextureNode imgB = imgtexs[idx+1];
+							adjustA = adjustments[idx];
 							transA = transparencies[idx];
+
+							CyclesTextureImage teximB = m_original.Decals[idx+1].Texture;
+							ImageTextureNode imgB = imgtexs[idx+1];
 							MathMultiply transB = transparencies[idx+1];
+							TextureAdjustmentTextureProceduralNode adjustB = adjustments[idx];
 
+							if(teximA.AdjustNeeded) {
+								imgA.outs.Color.Connect(adjustA.ins.Color);
+								adjustA.outs.Color.Connect(mixer.ins.Color1);
 
-							imgA.outs.Color.Connect(mixer.ins.Color1);
-							imgB.outs.Color.Connect(mixer.ins.Color2);
+							} else {
+								imgA.outs.Color.Connect(mixer.ins.Color1);
+							}
+							if(teximB.AdjustNeeded)
+							{
+								imgB.outs.Color.Connect(adjustB.ins.Color);
+								adjustB.outs.Color.Connect(mixer.ins.Color2);
+							}
+							else {
+								imgB.outs.Color.Connect(mixer.ins.Color2);
+							}
 
 							transA.outs.Value.Connect(alphaMath.ins.Value1);
 							transB.outs.Value.Connect(alphaMath.ins.Value2);
@@ -275,11 +315,19 @@ namespace RhinoCyclesCore.Shaders
 						}
 						else {
 							MixNode mixer = mixrgbs[idx];
+							CyclesTextureImage teximA = m_original.Decals[idx+1].Texture;
 							imgA = imgtexs[idx+1];
 							transA = transparencies[idx+1];
+							adjustA = adjustments[idx+1];
 
 							previousMixRgb.outs.Color.Connect(mixer.ins.Color1);
-							imgA.outs.Color.Connect(mixer.ins.Color2);
+							if(teximA.AdjustNeeded) {
+								imgA.outs.Color.Connect(adjustA.ins.Color);
+								adjustA.outs.Color.Connect(mixer.ins.Color2);
+							}
+							else {
+								imgA.outs.Color.Connect(mixer.ins.Color2);
+							}
 
 							previousAlphaMath.outs.Value.Connect(alphaMath.ins.Value1);
 							transA.outs.Value.Connect(alphaMath.ins.Value2);
@@ -297,10 +345,9 @@ namespace RhinoCyclesCore.Shaders
 					}
 				}
 				nodeToBindIntoShader = lastMixer;
+
 				//lastMixer.outs.Color.Connect(m_codeshader.Output.ins.Surface);
-
 				//m_codeshader.WriteDataToNodes();
-
 				//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
 			}
 
@@ -741,6 +788,7 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
 					principledbsdf117.ins.ClearcoatGloss.Value = part.ClearCoatGloss;
 					principledbsdf117.ins.IOR.Value = part.IOR;
+					principledbsdf117.ins.EmissionStrength.Value = 0.0f;
 					principledbsdf117.ins.Transmission.Value = part.Transparency;
 					principledbsdf117.ins.TransmissionRoughness.Value = part.RefractionRoughness;
 					principledbsdf117.ins.Tangent.Value = new float4(0f, 0f, 0f, 1f);

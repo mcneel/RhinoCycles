@@ -1175,6 +1175,8 @@ namespace RhinoCyclesCore.Database
 				if(cyclesDecals!=null) {
 					uint decalsCRC = CyclesDecal.CRCForList(cyclesDecals);
 					matid = a.Transform.TransformCrc(matid);
+					matid = RhinoMath.CRC32(matid, a.MeshId.ToByteArray());
+					matid = RhinoMath.CRC32(matid, a.MeshIndex);
 					matid = RhinoMath.CRC32(matid, decalsCRC);
 				}
 
