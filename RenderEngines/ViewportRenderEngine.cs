@@ -412,6 +412,11 @@ Please click the link below for more information.", 69));
 			{
 				TriggerStartSynchronizing();
 
+				while(!Session.Scene.TryLock())
+				{
+					Thread.Sleep(10);
+				}
+
 				if (UploadData())
 				{
 					State = State.Rendering;
@@ -422,6 +427,7 @@ Please click the link below for more information.", 69));
 				{
 					State = State.Stopped;
 				}
+				Session.Scene.Unlock();
 				TriggerSynchronized();
 			}
 		}
