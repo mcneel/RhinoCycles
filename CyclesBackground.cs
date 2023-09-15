@@ -325,7 +325,7 @@ namespace RhinoCyclesCore
 						g.DrawImage(bm, new Rectangle(p, bmsize), 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, attr);
 					}
 				}
-				var wallpaperName = $"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}";
+				var wallpaperName = $"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}.png";
 				var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(wallpaperName));
 				if (HostUtils.RunningOnOSX)
 				{
@@ -369,13 +369,11 @@ namespace RhinoCyclesCore
 							break;
 					}
 				}
-				var wallpaperbm = _bitmapConverter.ReadByteBitmapFromBitmap(crc, newBitmap.Size.Width, newBitmap.Size.Height, newBitmap, false);
-				wallpaperbm.ApplyGamma(Gamma);
-				Wallpaper.TexByte = wallpaperbm.Data as StdVectorByte;
-				if (RcCore.It.AllSettings.SaveDebugImages) wallpaperbm.SaveBitmaps();
-				Wallpaper.TexWidth = newBitmap.Width;
-				Wallpaper.TexHeight = newBitmap.Height;
-				Wallpaper.Name = wallpaperName;
+				var tmpFolder = System.IO.Path.GetTempPath();
+				var newwallpaperFn = System.IO.Path.Combine(tmpFolder, wallpaperName);
+				newBitmap.Save(newwallpaperFn);
+				Wallpaper.Filename = newwallpaperFn;
+				Wallpaper.ProjectionMode = TextureProjectionMode.Screen;
 			}
 			catch (Exception e)
 			{
