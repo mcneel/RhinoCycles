@@ -386,13 +386,8 @@ namespace RhinoCyclesCore.Shaders
 				materialOne.GetClosureSocket().Connect(blender.ins.Closure1);
 				materialTwo.GetClosureSocket().Connect(blender.ins.Closure2);
 
-				if (part.BlendMixAmountTexture.HasTextureImage) {
-					RhinoTextureCoordinateNode blendTexCo = new RhinoTextureCoordinateNode(m_shader, "texco for blend");
-					ImageTextureNode blendTexture = new ImageTextureNode(m_shader, "blendmaterial texture");
-					blendTexCo.UvMap = part.BlendMixAmountTexture.GetUvMapForChannel();
-					RenderEngine.SetTextureImage(blendTexture, part.BlendMixAmountTexture);
-					RenderEngine.SetProjectionMode(m_shader, part.BlendMixAmountTexture, blendTexture, blendTexCo);
-					blendTexture.outs.Color.Connect(blender.ins.Fac);
+				if (part.BlendMixAmountTexture.HasProcedural) {
+					Utilities.GraphForSlot(m_shader, null, part.BlendMixAmount > 0.0f, part.BlendMixAmountTexture.Amount, part.BlendMixAmountTexture, blender.ins.Fac.ToList(), true, false, false, true, part.Gamma);
 				}
 				return blender;
 			}
