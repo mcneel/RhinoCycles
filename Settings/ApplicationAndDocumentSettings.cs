@@ -120,6 +120,9 @@ namespace RhinoCyclesCore.Settings
 			DebugNoOverrideTileSize = DebugNoOverrideTileSize;
 			FlushAtEndOfCreateWorld = FlushAtEndOfCreateWorld;
 			PreviewSamples = PreviewSamples;
+
+			DumpMaterialShaderGraph = DumpMaterialShaderGraph;
+			DumpEnvironmentShaderGraph = DumpEnvironmentShaderGraph;
 		}
 
 		public bool IgnoreQualityChanges { get; set; }
@@ -256,7 +259,18 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return RcPlugIn.Settings.GetInteger(SettingNames.PreviewSamples, DefaultEngineSettings.PreviewSamples); }
 			set { RcPlugIn.Settings.SetInteger(SettingNames.PreviewSamples, value); }
+		}
 
+		public virtual bool DumpMaterialShaderGraph
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.DumpMaterialShaderGraph, DefaultEngineSettings.DumpMaterialShaderGraph); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.DumpMaterialShaderGraph, value); }
+		}
+
+		public virtual bool DumpEnvironmentShaderGraph
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.DumpEnvironmentShaderGraph, DefaultEngineSettings.DumpEnvironmentShaderGraph); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.DumpEnvironmentShaderGraph, value); }
 		}
 
 		public virtual bool Verbose

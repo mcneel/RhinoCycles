@@ -35,5 +35,8 @@ namespace RhinoCyclesCore.Settings
 		int PreviewSamples { get; set; }
 		bool UseStartResolution { get; set; }
 		int StartResolution { get; set; }
+
+		bool DumpMaterialShaderGraph { get; set; }
+		bool DumpEnvironmentShaderGraph { get; set; }
 	}
 }

@@ -401,5 +401,17 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 #endregion
+
+		public bool DumpMaterialShaderGraph
+		{
+			get => mDict.GetBool(SettingNames.DumpMaterialShaderGraph, DefaultEngineSettings.DumpMaterialShaderGraph);
+			set => throw new InvalidOperationException();
+		}
+
+		public bool DumpEnvironmentShaderGraph
+		{
+			get => mDict.GetBool(SettingNames.DumpEnvironmentShaderGraph, DefaultEngineSettings.DumpEnvironmentShaderGraph);
+			set => throw new InvalidOperationException();
+		}
 	}
 }

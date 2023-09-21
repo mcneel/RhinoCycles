@@ -110,9 +110,12 @@ namespace RhinoCyclesCore.Shaders
 				lc.Connect(m_shader.Output.ins.Surface);
 			}
 			m_shader.WriteDataToNodes();
-			var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-			var graph_path = Path.Combine(home, $"rhinofullnxt_{m_shader.Id}.dot");
-			//m_shader.DumpGraph(graph_path);
+			if (RcCore.It.AllSettings.DumpMaterialShaderGraph)
+			{
+				var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+				var graph_path = Path.Combine(home, $"rhinofullnxt_{m_shader.Id}.dot");
+				m_shader.DumpGraph(graph_path);
+			}
 			return m_shader;
 		}
 
