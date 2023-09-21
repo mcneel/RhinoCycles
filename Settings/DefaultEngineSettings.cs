@@ -107,5 +107,8 @@ namespace RhinoCyclesCore.Settings
 		static public bool DebugNoOverrideTileSize => false;
 		static public bool FlushAtEndOfCreateWorld => false;
 		static public int PreviewSamples => 150;
+
+		static public bool DumpMaterialShaderGraph => false;
+		static public bool DumpEnvironmentShaderGraph => false;
 	}
 }
