@@ -32,6 +32,9 @@ namespace RhinoCyclesCore.Settings
 		public static string DpiScale => "DpiScale";
 		public static string PreviewSamples => "PreviewSamples";
 
+		public static string DumpMaterialShaderGraph => "DumpMaterialShaderGraph";
+		public static string DumpEnvironmentShaderGraph => "DumpEnvironmentShaderGraph";
+
 		/// /////////
 
 		public static string SaveDebugImages => "SaveDebugImages";

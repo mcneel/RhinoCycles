@@ -412,6 +412,12 @@ namespace RhinoCyclesCore.Shaders
 
 			// phew, done.
 			m_shader.WriteDataToNodes();
+			if (RcCore.It.AllSettings.DumpEnvironmentShaderGraph)
+			{
+				var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+				var graph_path = System.IO.Path.Combine(home, $"rhinobg_{m_shader.Id}.dot");
+				m_shader.DumpGraph(graph_path);
+			}
 			m_shader.Tag();
 
 			return m_shader;

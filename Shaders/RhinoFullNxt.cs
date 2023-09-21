@@ -110,9 +110,12 @@ namespace RhinoCyclesCore.Shaders
 				lc.Connect(m_shader.Output.ins.Surface);
 			}
 			m_shader.WriteDataToNodes();
-			var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-			var graph_path = Path.Combine(home, $"rhinofullnxt_{m_shader.Id}.dot");
-			//m_shader.DumpGraph(graph_path);
+			if (RcCore.It.AllSettings.DumpMaterialShaderGraph)
+			{
+				var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+				var graph_path = Path.Combine(home, $"rhinofullnxt_{m_shader.Id}.dot");
+				m_shader.DumpGraph(graph_path);
+			}
 			return m_shader;
 		}
 
@@ -229,7 +232,7 @@ namespace RhinoCyclesCore.Shaders
 					imgtexs.Add(new ImageTextureNode(m_shader, $"Texture_for_decal_{idx}_"));
 					mixrgbs.Add(new MixNode(m_shader, $"Decal_mixer_{idx}_"));
 					transparencies.Add(new MathMultiply(m_shader, $"Decal_transparency_multiplier_{idx}_"));
-					adjustments.Add(new TextureAdjustmentTextureProceduralNode(m_shader, "Decal_texadjustment_{idx}_"));
+					adjustments.Add(new TextureAdjustmentTextureProceduralNode(m_shader, $"Decal_texadjustment_{idx}_"));
 					if(i < count-1) {
 						alphamaths.Add(new MathAdd(m_shader, $"Decal_alpha_adder_{idx}_"));
 					}

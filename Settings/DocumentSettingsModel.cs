@@ -723,5 +723,23 @@ namespace RhinoCyclesCore.Settings
 		}
 		#endregion
 
+		public bool DumpMaterialShaderGraph
+		{
+			get
+			{
+				return RcCore.It.AllSettings.DumpMaterialShaderGraph;
+			}
+			set => throw new InvalidOperationException();
+		}
+
+		public bool DumpEnvironmentShaderGraph
+		{
+			get
+			{
+				return RcCore.It.AllSettings.DumpEnvironmentShaderGraph;
+			}
+			set => throw new InvalidOperationException();
+		}
+
 	}
 }

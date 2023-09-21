@@ -27,6 +27,14 @@ using static RhinoCyclesCore.RenderEngine;
 
 namespace RhinoCyclesCore.Settings
 {
+	public class SelectionChangedEventArgs : EventArgs
+	{
+		public DeviceItem DeviceItem { get; private set; }
+		public SelectionChangedEventArgs(DeviceItem di) 
+		{
+			DeviceItem = di;
+		}
+	}
 	public class GridDevicePage : TabPage
 	{
 		private GridView m_gv;
@@ -37,7 +45,7 @@ namespace RhinoCyclesCore.Settings
 
 		public ObservableCollection<DeviceItem> Collection => m_col;
 
-		public event EventHandler SelectionChanged;
+		public event EventHandler<SelectionChangedEventArgs> SelectionChanged;
 
 		public GridDevicePage()
 		{
@@ -71,11 +79,22 @@ namespace RhinoCyclesCore.Settings
 			}
 		}
 
+		public void SetSelected(DeviceItem seldi)
+		{
+			foreach(var di in m_col)
+			{
+				if(di.Id == seldi.Id) {
+					di.Selected = true;
+				}
+			}
+		}
+
 		public string DeviceSelectionString()
 		{
-			var str = string.Join(",", (from d in m_col where d.Selected select d.Id).ToList());
+			var selid = (from d in m_col where d.Selected select d.Id).DefaultIfEmpty(-1).First();
+			var str = $"{selid}";
 
-			return string.IsNullOrEmpty(str) ? "-1" : str;
+			return str;
 
 		}
 
@@ -128,7 +147,7 @@ namespace RhinoCyclesCore.Settings
 			var di = sender as DeviceItem;
 			if (e.PropertyName.CompareTo("Selected") == 0)
 			{
-				SelectionChanged?.Invoke(this, EventArgs.Empty);
+				SelectionChanged?.Invoke(this, new SelectionChangedEventArgs(di));
 			}
 		}
 	}
@@ -466,7 +485,7 @@ namespace RhinoCyclesCore.Settings
 			}
 		}
 
-		private void DeviceSelectionChanged(object sender, EventArgs e)
+		private void DeviceSelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			UnRegisterControlEvents();
 
@@ -474,7 +493,12 @@ namespace RhinoCyclesCore.Settings
 			{
 				foreach (var page in m_tc.Pages)
 				{
-					if (page is GridDevicePage p && p != sender) p.ClearSelection();
+					if (page is GridDevicePage p) {
+						p.ClearSelection();
+						if(page == sender) {
+							p.SetSelected(e.DeviceItem);
+						}
+					}
 				}
 				var vud = Settings;
 				if (vud != null)
