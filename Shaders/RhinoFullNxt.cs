@@ -232,7 +232,7 @@ namespace RhinoCyclesCore.Shaders
 					imgtexs.Add(new ImageTextureNode(m_shader, $"Texture_for_decal_{idx}_"));
 					mixrgbs.Add(new MixNode(m_shader, $"Decal_mixer_{idx}_"));
 					transparencies.Add(new MathMultiply(m_shader, $"Decal_transparency_multiplier_{idx}_"));
-					adjustments.Add(new TextureAdjustmentTextureProceduralNode(m_shader, "Decal_texadjustment_{idx}_"));
+					adjustments.Add(new TextureAdjustmentTextureProceduralNode(m_shader, $"Decal_texadjustment_{idx}_"));
 					if(i < count-1) {
 						alphamaths.Add(new MathAdd(m_shader, $"Decal_alpha_adder_{idx}_"));
 					}
