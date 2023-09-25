@@ -36,11 +36,6 @@ namespace RhinoCyclesCore.RenderEngines
 			State = State.Rendering;
 
 #region create callbacks for Cycles
-			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = PreviewRendererUpdateRenderTileCallback;
-			m_write_render_tile_callback = PreviewRendererWriteRenderTileCallback;
-			m_test_cancel_callback = TestCancel;
-
 			CSycles.log_to_stdout(false);
 #endregion
 		}
@@ -108,12 +103,14 @@ namespace RhinoCyclesCore.RenderEngines
 
 			cyclesEngine.Session.AddPass(PassType.Combined);
 
-			// register callbacks before starting any rendering
-			cyclesEngine.SetCallbacks();
-
 			// main render loop
 			cyclesEngine.Database.Flush();
+			while(!cyclesEngine.Session.Scene.TryLock())
+			{
+				Thread.Sleep(10);
+			}
 			cyclesEngine.UploadData();
+			cyclesEngine.Session.Scene.Unlock();
 
 			bool renderSuccess = true;
 

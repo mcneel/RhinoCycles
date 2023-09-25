@@ -38,6 +38,7 @@ namespace RhinoCyclesCore
 		Waiting,
 		Uploading,
 		Rendering,
+		Stopping,
 		Stopped
 	}
 
@@ -95,11 +96,6 @@ namespace RhinoCyclesCore
 
 		public string TimeString;
 
-		protected CSycles.UpdateCallback m_update_callback;
-		protected CSycles.RenderTileCallback m_update_render_tile_callback;
-		protected CSycles.RenderTileCallback m_write_render_tile_callback;
-		protected CSycles.TestCancelCallback m_test_cancel_callback;
-		protected CSycles.DisplayUpdateCallback m_display_update_callback;
 		protected CSycles.LoggerCallback m_logger_callback;
 
 		protected bool m_flush;
@@ -228,7 +224,7 @@ namespace RhinoCyclesCore
 				if (PreviewEventArgs.Cancel)
 				{
 					Session?.Cancel("Preview Cancelled");
-					State = State.Stopped;
+					State = State.Stopping;
 					CancelRender = true;
 				}
 			}
@@ -404,13 +400,27 @@ namespace RhinoCyclesCore
 			{
 				Thread.Sleep(10);
 			}
-			State = State.Stopped;
+			State = State.Stopping;
+
+			RcCore.OutputDebugString($"Getting ready to cancel Cycles session\n");
+			if(Session != null) {
+				while(!Session.Scene.TryLock())
+				{
+					Thread.Sleep(10);
+				}
+			}
 
 			// signal our cycles session to stop rendering.
 			Session?.Cancel("Render stop called.\n");
 
+			Session?.Scene.Unlock();
+			RcCore.OutputDebugString($"Cycles session cancelled\n");
+
+			RcCore.OutputDebugString($"Getting ready to join Cycles render thread\n");
 			RenderThread?.Join();
+			RcCore.OutputDebugString($"Cycles render thread joined\n");
 			RenderThread = null;
+			State = State.Stopped;
 		}
 
 		/// <summary>
@@ -423,24 +433,6 @@ namespace RhinoCyclesCore
 		{
 			TriggerStatusTextUpdated(new StatusTextEventArgs(msg, progress, progress < 0 ? -1 : 0, false));
 			rw?.SetProgress(msg, progress);
-		}
-
-		/// <summary>
-		/// Register the callbacks to the render engine session
-		/// </summary>
-		protected void SetCallbacks()
-		{
-#region register callbacks with Cycles session
-
-			/* TODO: XXXX revisit output/display driver approach
-			Session.UpdateCallback = m_update_callback;
-			Session.UpdateTileCallback = m_update_render_tile_callback;
-			Session.WriteTileCallback = m_write_render_tile_callback;
-			Session.TestCancelCallback = m_test_cancel_callback;
-			Session.DisplayUpdateCallback = m_display_update_callback;
-			*/
-
-#endregion
 		}
 
 		// handle material shader updates

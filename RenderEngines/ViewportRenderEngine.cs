@@ -41,12 +41,6 @@ namespace RhinoCyclesCore.RenderEngines
 			BeginChangesNotified += ViewportRenderEngine_BeginChangesNotified;
 
 #region create callbacks for Cycles
-			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = null;
-			m_write_render_tile_callback = null;
-			m_write_render_tile_callback = null;
-			m_test_cancel_callback = null;
-			m_display_update_callback = null;
 			m_logger_callback = ViewportLoggerCallback;
 
 			CSycles.log_to_stdout(false);
@@ -154,7 +148,7 @@ namespace RhinoCyclesCore.RenderEngines
 		private void HandleRenderCrash()
 		{
 			Session?.Cancel("Problem during rendering detected");
-			State = State.Stopped;
+			State = State.Stopping;
 			Action switchToWireframe = () =>
 			{
 				RhinoApp.RunScript("_SetDisplayMode _Rendered", false);
@@ -254,32 +248,19 @@ Please click the link below for more information.", 69));
 				Session.AddPass(reqPass);
 			}
 
-			// register callbacks before starting any rendering
-			SetCallbacks();
-
-			// TODO: XXXX figure out better way for session reset. For now put here right before rendering
 			Session.Reset(FullSize.Width, FullSize.Height, 100, 0, 0, FullSize.Width, FullSize.Height);
 
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
-			/* TODO: XXXX disable data/change queue stuff for now
-			_textureBakeQuality = eds.TextureBakeQuality;
-
-			if (this != null && !CancelRender)
-			{
-				CheckFlushQueue();
-			}
-			if (this != null && !CancelRender)
-			{
-				Synchronize();
-				Flush = false;
-			}
-			*/
-
 			Database.Flush();
+			while(!Session.Scene.TryLock())
+			{
+				Thread.Sleep(10);
+			}
 			
 			UploadData();
+			Session.Scene.Unlock();
 
 			Database.ResetChangeQueue();
 
@@ -425,7 +406,7 @@ Please click the link below for more information.", 69));
 
 				if (CancelRender)
 				{
-					State = State.Stopped;
+					State = State.Stopping;
 				}
 				Session.Scene.Unlock();
 				TriggerSynchronized();

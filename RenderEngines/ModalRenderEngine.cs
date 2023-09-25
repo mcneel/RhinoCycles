@@ -54,12 +54,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#region create callbacks for Cycles
 
-			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = null;
-			m_write_render_tile_callback = null;
-			m_test_cancel_callback = null;
-			m_display_update_callback = null;
-
 			CSycles.log_to_stdout(false);
 
 			#endregion
@@ -73,9 +67,6 @@ namespace RhinoCyclesCore.RenderEngines
 		public void SetCallbackForCapture()
 		{
 			capturing = true;
-			m_update_render_tile_callback = null;
-			m_logger_callback = null;
-			m_write_render_tile_callback = null;
 		}
 
 		/// <summary>
@@ -164,7 +155,6 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
 			#endregion
 
-			// TODO: XXXX fix up scene creation InitializeSceneSettings(client, Session, RenderDevice, cyclesEngine, engineSettings);
 			HandleIntegrator(eds);
 
 			// Set up passes
@@ -173,8 +163,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Session.AddPass(reqPass);
 			}
 
-			// register callbacks before starting any rendering
-			cyclesEngine.SetCallbacks();
+			cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, BufferRectangle.Top, FullSize.Width, FullSize.Height);
 
 			// main render loop, including restarts
 			#region start the rendering loop, wait for it to complete, we're rendering now!
@@ -183,11 +172,15 @@ namespace RhinoCyclesCore.RenderEngines
 				return;
 
 			cyclesEngine.Database?.Flush();
+			while(!cyclesEngine.Session.Scene.TryLock())
+			{
+				Thread.Sleep(10);
+			}
 			var renderSuccess = cyclesEngine.UploadData();
+			cyclesEngine.Session.Scene.Unlock();
 
 			if (renderSuccess)
 			{
-				cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, BufferRectangle.Top, FullSize.Width, FullSize.Height);
 				cyclesEngine.Session.Start();
 
 				var throttle = Math.Max(0, engineSettings.ThrottleMs);
@@ -221,7 +214,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 					Thread.Sleep(throttle);
 
-					if (cyclesEngine.IsStopped)
+					if (cyclesEngine.IsStopped || cyclesEngine.State == State.Stopping)
 						break;
 				}
 
@@ -232,6 +225,10 @@ namespace RhinoCyclesCore.RenderEngines
 				}
 			}
 			#endregion
+
+			while(State == State.Stopping) {
+				Thread.Sleep(10);
+			}
 
 			/*if (engineSettings.SaveDebugImages)
 			{
