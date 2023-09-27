@@ -172,6 +172,8 @@ namespace RhinoCyclesCore.RenderEngines
 				return;
 
 			cyclesEngine.Database?.Flush();
+			if(cyclesEngine.CancelRender)
+				return;
 			while(!cyclesEngine.Session.Scene.TryLock())
 			{
 				Thread.Sleep(10);
@@ -238,7 +240,6 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine?.Database.ResetChangeQueue();
 
 			// we're done now, so lets clean up our session.
-			RcCore.It.ReleaseSession(cyclesEngine.Session);
 			cyclesEngine.Database?.Dispose();
 			cyclesEngine.Database = null;
 			cyclesEngine.State = State.Stopped;
@@ -265,7 +266,6 @@ Please click the link below for more information.", 67));
 				};
 				RhinoApp.InvokeOnUiThread(showErrorDialog);
 			}
-			cyclesEngine.CancelRender = true;
 		}
 
 		public bool SupportsPause()

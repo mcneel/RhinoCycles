@@ -58,7 +58,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				return;
 			}
-			Session?.Cancel("Begin changes notification");
+			Session.Cancel("Begin changes notification");
 		}
 
 		public void ViewportLoggerCallback(string msg) {
@@ -147,7 +147,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 		private void HandleRenderCrash()
 		{
-			Session?.Cancel("Problem during rendering detected");
+			Session.Cancel("Problem during rendering detected");
 			State = State.Stopping;
 			Action switchToWireframe = () =>
 			{
@@ -234,7 +234,7 @@ Please click the link below for more information.", 69));
 			};
 			#endregion
 
-			if (this == null || CancelRender) return;
+			if (this == null || ShouldBreak) return;
 
 			#region create session for scene
 			Session = RcCore.It.CreateSession( sessionParams);
@@ -253,14 +253,15 @@ Please click the link below for more information.", 69));
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
+			if(ShouldBreak) return;
+
 			Database.Flush();
-			while(!Session.Scene.TryLock())
-			{
-				Thread.Sleep(10);
-			}
+
+			if(ShouldBreak) return;
 			
 			UploadData();
-			Session.Scene.Unlock();
+
+			if(ShouldBreak) return;
 
 			Database.ResetChangeQueue();
 
@@ -275,7 +276,7 @@ Please click the link below for more information.", 69));
 			int lastRenderedSample = 0;
 			bool renderingDone = false;
 
-			while (this != null && !IsStopped)
+			while (this != null && !ShouldBreak)
 			{
 				// If state changed
 				if(State != lastState)
@@ -336,12 +337,9 @@ Please click the link below for more information.", 69));
 				Thread.Sleep(_throttle);
 			}
 
-			Session.Cancel("done");
-
 			if (this != null)
 			{
 				Database.ResetChangeQueue();
-				RcCore.It.ReleaseSession(Session);
 			}
 		}
 

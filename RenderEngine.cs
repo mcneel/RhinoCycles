@@ -90,6 +90,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public bool CancelRender { get; set; }
 
+		public bool ShouldBreak => CancelRender || State == State.Stopped || State == State.Stopping;
+
 		public int RenderedSamples { get; set; }
 		public int RenderedTiles { get; set; }
 		public bool Finished { get; set; } = false;
@@ -223,7 +225,7 @@ namespace RhinoCyclesCore
 			{
 				if (PreviewEventArgs.Cancel)
 				{
-					Session?.Cancel("Preview Cancelled");
+					Session.Cancel("Preview Cancelled");
 					State = State.Stopping;
 					CancelRender = true;
 				}
@@ -393,7 +395,6 @@ namespace RhinoCyclesCore
 		private void StopTheRenderer()
 		{
 			// signal that we should stop rendering.
-			CancelRender = true;
 
 			// set state to stopped
 			while (State == State.Uploading)
@@ -401,26 +402,16 @@ namespace RhinoCyclesCore
 				Thread.Sleep(10);
 			}
 			State = State.Stopping;
-
-			RcCore.OutputDebugString($"Getting ready to cancel Cycles session\n");
-			if(Session != null) {
-				while(!Session.Scene.TryLock())
-				{
-					Thread.Sleep(10);
-				}
-			}
-
-			// signal our cycles session to stop rendering.
-			Session?.Cancel("Render stop called.\n");
-
-			Session?.Scene.Unlock();
-			RcCore.OutputDebugString($"Cycles session cancelled\n");
-
-			RcCore.OutputDebugString($"Getting ready to join Cycles render thread\n");
-			RenderThread?.Join();
-			RcCore.OutputDebugString($"Cycles render thread joined\n");
-			RenderThread = null;
+			RcCore.OutputDebugString($"Getting ready to destroy Cycles session\n");
+			Session.Dispose();
+			RcCore.OutputDebugString($"Cycles session destroyed\n");
+			CancelRender = true;
 			State = State.Stopped;
+
+			RcCore.OutputDebugString($"Getting ready to join C# Cycles render thread\n");
+			RenderThread?.Join();
+			RcCore.OutputDebugString($"C# Cycles render thread joined\n");
+			RenderThread = null;
 		}
 
 		/// <summary>

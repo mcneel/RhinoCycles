@@ -152,15 +152,12 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.BlitPixelsToRenderWindowChannel();
 			cyclesEngine.RenderWindow.Invalidate();
 			cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
-			cyclesEngine.Session.Cancel("done");
 
 			cyclesEngine?.Database.ResetChangeQueue();
 
 			cyclesEngine.Success = renderSuccess;
 
 			// we're done now, so lets clean up our session.
-			RcCore.It.ReleaseSession(cyclesEngine.Session);
-
 			cyclesEngine.Dispose();
 		}
 
