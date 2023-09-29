@@ -391,10 +391,7 @@ Please click the link below for more information.", 69));
 			{
 				TriggerStartSynchronizing();
 
-				while(!Session.Scene.TryLock())
-				{
-					Thread.Sleep(10);
-				}
+				Session.WaitUntilLocked();
 
 				if (UploadData())
 				{
@@ -402,7 +399,7 @@ Please click the link below for more information.", 69));
 					_needReset = true;
 				}
 
-				Session.Scene.Unlock();
+				Session.Unlock();
 
 				if (CancelRender)
 				{

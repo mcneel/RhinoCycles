@@ -149,7 +149,7 @@ namespace RhinoCyclesCore.RenderEngines
 			};
 			#endregion
 
-			if (cyclesEngine.CancelRender) return;
+			if (cyclesEngine.ShouldBreak) return;
 
 			#region create session for scene
 			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
@@ -168,18 +168,15 @@ namespace RhinoCyclesCore.RenderEngines
 			// main render loop, including restarts
 			#region start the rendering loop, wait for it to complete, we're rendering now!
 
-			if (cyclesEngine.CancelRender)
+			if (cyclesEngine.ShouldBreak)
 				return;
 
 			cyclesEngine.Database?.Flush();
-			if(cyclesEngine.CancelRender)
+			if(cyclesEngine.ShouldBreak)
 				return;
-			while(!cyclesEngine.Session.Scene.TryLock())
-			{
-				Thread.Sleep(10);
-			}
+			cyclesEngine.Session.WaitUntilLocked();
 			var renderSuccess = cyclesEngine.UploadData();
-			cyclesEngine.Session.Scene.Unlock();
+			cyclesEngine.Session.Unlock();
 
 			if (renderSuccess)
 			{
@@ -220,7 +217,7 @@ namespace RhinoCyclesCore.RenderEngines
 						break;
 				}
 
-				if (!cyclesEngine.CancelRender)
+				if (!cyclesEngine.ShouldBreak)
 				{
 					cyclesEngine.BlitPixelsToRenderWindowChannel();
 					cyclesEngine.RenderWindow.Invalidate();

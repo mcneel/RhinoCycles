@@ -410,11 +410,8 @@ namespace RhinoCyclesCore
 			// the session. Wait for it to react to state being set to Stopping.
 			// Once we can lock we know there is no other actor accessing the session, so
 			// we can just unlock and continue with the teardown.
-			while(Session.Scene.TryLock())
-			{
-				Thread.Sleep(10);
-			}
-			Session.Scene.Unlock();
+			Session.WaitUntilLocked();
+			Session.Unlock();
 			Session.Cancel("Stopping renderer");
 			Thread.Sleep(500);
 			Session.Dispose();

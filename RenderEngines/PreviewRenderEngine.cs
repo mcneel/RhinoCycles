@@ -105,12 +105,9 @@ namespace RhinoCyclesCore.RenderEngines
 
 			// main render loop
 			cyclesEngine.Database.Flush();
-			while(!cyclesEngine.Session.Scene.TryLock())
-			{
-				Thread.Sleep(10);
-			}
+			cyclesEngine.Session.WaitUntilLocked();
 			cyclesEngine.UploadData();
-			cyclesEngine.Session.Scene.Unlock();
+			cyclesEngine.Session.Unlock();
 
 			bool renderSuccess = true;
 
