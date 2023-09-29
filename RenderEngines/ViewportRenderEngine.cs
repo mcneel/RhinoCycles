@@ -402,11 +402,12 @@ Please click the link below for more information.", 69));
 					_needReset = true;
 				}
 
+				Session.Scene.Unlock();
+
 				if (CancelRender)
 				{
 					State = State.Stopping;
 				}
-				Session.Scene.Unlock();
 				TriggerSynchronized();
 			}
 		}

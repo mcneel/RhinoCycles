@@ -357,11 +357,16 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
-		/// Called when user presses the stop render button.
+		/// Call to stop render thread.
 		/// </summary>
 		public void StopRendering()
 		{
 			StopTheRenderer();
+
+			RcCore.OutputDebugString($"Getting ready to join C# Cycles render thread\n");
+			RenderThread?.Join();
+			RcCore.OutputDebugString($"C# Cycles render thread joined\n");
+			RenderThread = null;
 		}
 
 		public void Pause()
@@ -392,26 +397,21 @@ namespace RhinoCyclesCore
 		  return true;
 		}
 
-		private void StopTheRenderer()
+		/// <summary>
+		/// Call to cancel rendering, stop and destroy the session, and change state to Stopped. At the start
+		/// state is changed to Stopping
+		/// </summary>
+		public void StopTheRenderer()
 		{
-			// signal that we should stop rendering.
-
-			// set state to stopped
-			while (State == State.Uploading)
-			{
-				Thread.Sleep(10);
-			}
 			State = State.Stopping;
+
 			RcCore.OutputDebugString($"Getting ready to destroy Cycles session\n");
+			Session.Cancel("Stopping renderer");
+			Thread.Sleep(500);
 			Session.Dispose();
 			RcCore.OutputDebugString($"Cycles session destroyed\n");
 			CancelRender = true;
 			State = State.Stopped;
-
-			RcCore.OutputDebugString($"Getting ready to join C# Cycles render thread\n");
-			RenderThread?.Join();
-			RcCore.OutputDebugString($"C# Cycles render thread joined\n");
-			RenderThread = null;
 		}
 
 		/// <summary>

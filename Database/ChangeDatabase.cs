@@ -1424,8 +1424,6 @@ namespace RhinoCyclesCore.Database
 
 			isGpShadowsOnly = gp.IsShadowOnly;
 
-			CSycles.film_set_use_approximate_shadow_catcher(_renderEngine.Session.Id, isGpShadowsOnly);
-
 			var matrenderhash = materialId;
 			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
 			var cyclesObject = new CyclesObject
@@ -1808,6 +1806,15 @@ namespace RhinoCyclesCore.Database
 			}
 		}
 
+		private void HandleGroundPlaneShadowcatcherState(CyclesObject ob)
+		{
+			if (ob == null) return;
+			if(ob.obid == GroundPlaneMeshInstanceId)
+			{
+				CSycles.film_set_use_approximate_shadow_catcher(_renderEngine.Session.Id, ob.IsShadowCatcher);
+			}
+		}
+
 		/// <summary>
 		/// Upload object changes
 		/// </summary>
@@ -1816,6 +1823,7 @@ namespace RhinoCyclesCore.Database
 			// first delete objects
 			foreach (var ob in _objectDatabase.DeletedObjects)
 			{
+				HandleGroundPlaneShadowcatcherState(ob);
 				if (ob.cob != null)
 				{
 					RcCore.OutputDebugString($"UploadObjectChanges: deleting object {ob.obid} {ob.cob.ObjectPtr}\n");
@@ -1836,6 +1844,7 @@ namespace RhinoCyclesCore.Database
 			// now combine objects and meshes, creating new objects when necessary
 			foreach (var ob in _objectDatabase.NewOrUpdatedObjects)
 			{
+				HandleGroundPlaneShadowcatcherState(ob);
 				curcount++;
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"handling object {curcount}/{totalobcount}", -1.0f);
 				// mesh for this object id

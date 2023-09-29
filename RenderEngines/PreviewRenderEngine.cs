@@ -133,7 +133,6 @@ namespace RhinoCyclesCore.RenderEngines
 						cyclesEngine.Success = false;
 						renderSuccess = false;
 						cyclesEngine.Finished = true;
-						cyclesEngine.StopRendering();
 					}
 
 					cyclesEngine.BlitPixelsToRenderWindowChannel();
@@ -149,9 +148,14 @@ namespace RhinoCyclesCore.RenderEngines
 				if (cyclesEngine.IsStopped) break;
 				if (cyclesEngine.CancelRender) break;
 			}
-			cyclesEngine.BlitPixelsToRenderWindowChannel();
-			cyclesEngine.RenderWindow.Invalidate();
-			cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
+			if (renderSuccess)
+			{
+				cyclesEngine.BlitPixelsToRenderWindowChannel();
+				cyclesEngine.RenderWindow.Invalidate();
+				cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
+			}
+
+			cyclesEngine.StopTheRenderer();
 
 			cyclesEngine?.Database.ResetChangeQueue();
 
