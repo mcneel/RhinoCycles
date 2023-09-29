@@ -293,7 +293,7 @@ namespace RhinoCyclesCore.Database
 				// newme true if we have to upload new mesh data
 				var newme = me == null;
 
-				if (_renderEngine.CancelRender) return;
+				if (_renderEngine.ShouldBreak) return;
 
 				var shader = new ccl.Shader(_renderEngine.Session.Scene);
 
@@ -340,18 +340,18 @@ namespace RhinoCyclesCore.Database
 			// set raw vertex data
 			var verts = cyclesMesh.Verts;
 			me.SetVerts(ref verts);
-			if (_renderEngine.CancelRender) return false;
+			if (_renderEngine.ShouldBreak) return false;
 			// set the triangles
 			var faces = cyclesMesh.Faces;
 			me.SetVertTris(ref faces, cyclesMesh.VertexNormals != null);
-			if (_renderEngine.CancelRender) return false;
+			if (_renderEngine.ShouldBreak) return false;
 			// set vertex normals
 			if (cyclesMesh.VertexNormals != null)
 			{
 				var vertex_normals = cyclesMesh.VertexNormals;
 				me.SetVertNormals(ref vertex_normals);
 			}
-			if (_renderEngine.CancelRender) return false;
+			if (_renderEngine.ShouldBreak) return false;
 			// set uvs
 			if (cyclesMesh.Uvs?.Count > 0)
 			{
@@ -793,11 +793,11 @@ namespace RhinoCyclesCore.Database
 			RcCore.OutputDebugString($"ChangeDatabase ApplyMeshChanges added {added.Count}\n");
 			var totaladds = added.Count;
 			var curadd = 0;
-			if (_renderEngine.CancelRender) return;
+			if (_renderEngine.ShouldBreak) return;
 
 			foreach (var cqm in added)
 			{
-			if (_renderEngine.CancelRender) return;
+			if (_renderEngine.ShouldBreak) return;
 				curadd++;
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Handle mesh {curadd}/{totaladds}", -1.0f);
 				var meshes = cqm.GetMeshes();
@@ -814,13 +814,13 @@ namespace RhinoCyclesCore.Database
 						isClippingObject = ud.IsClippingObject;
 					}
 				}
-				if (_renderEngine.CancelRender) return;
+				if (_renderEngine.ShouldBreak) return;
 
 				var meshIndex = 0;
 
 				foreach(var meshdata in meshes)
 				{
-					if (_renderEngine.CancelRender) return;
+					if (_renderEngine.ShouldBreak) return;
 					HandleMeshData(meshguid, meshIndex, meshdata, mappingCollection, isClippingObject, uint.MaxValue);
 					meshIndex++;
 				}
@@ -988,7 +988,7 @@ namespace RhinoCyclesCore.Database
 				{
 					for (var fi = 0; fi < findices.Length; fi++)
 					{
-						if (_renderEngine.CancelRender) return;
+						if (_renderEngine.ShouldBreak) return;
 						var fioffs = fi * 2;
 						var findex = findices[fi];
 						var findex2 = findex * 2;
@@ -1003,7 +1003,7 @@ namespace RhinoCyclesCore.Database
 
 		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, MappingChannelCollection mappingCollection, bool isClippingObject, uint linearlightMatId)
 		{
-			if (_renderEngine.CancelRender) return;
+			if (_renderEngine.ShouldBreak) return;
 			RcCore.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
 			// Get face indices flattened to an
 			// integer array. The result will be triangulated faces.
@@ -1016,7 +1016,7 @@ namespace RhinoCyclesCore.Database
 			{
 				for (var fi = 0; fi < findices.Length; fi++)
 				{
-					if (_renderEngine.CancelRender) return;
+					if (_renderEngine.ShouldBreak) return;
 					var fioffs = fi * 3;
 					var findex = findices[fi];
 					var findex2 = findex * 3;
@@ -1034,7 +1034,7 @@ namespace RhinoCyclesCore.Database
 
 			var cmuvList = new List<float[]>();
 
-			if (_renderEngine.CancelRender) return;
+			if (_renderEngine.ShouldBreak) return;
 			// now convert UVs: from vertex indexed array to per face per vertex
 			if (mappingCollection == null)
 			{
@@ -1052,7 +1052,7 @@ namespace RhinoCyclesCore.Database
 
 			var crc = linearlightMatId==uint.MaxValue ? _objectShaderDatabase.FindRenderHashForMeshId(meshid) : linearlightMatId;
 			if (crc == uint.MaxValue) crc = 0;
-			if (_renderEngine.CancelRender) return;
+			if (_renderEngine.ShouldBreak) return;
 
 			// now we have everything we need
 			// so we can create a CyclesMesh that the
@@ -1118,7 +1118,7 @@ namespace RhinoCyclesCore.Database
 			{
 				RcCore.OutputDebugString($"\ttold to ADD {aoc.InstanceId}\n");
 			}
-			if (_renderEngine.CancelRender) return;
+			if (_renderEngine.ShouldBreak) return;
 			RcCore.OutputDebugString($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
 			var inDeleted = from inst in addedOrChanged where deleted.Contains(inst.InstanceId) select inst;
 			var skipFromDeleted = (from inst in inDeleted where true select inst.InstanceId).ToList();
@@ -1138,7 +1138,7 @@ namespace RhinoCyclesCore.Database
 			foreach (var d in realDeleted)
 			{
 				curdel++;
-				if (_renderEngine.CancelRender) return;
+				if (_renderEngine.ShouldBreak) return;
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Delete mesh instance {curdel}/{totaldel}", -1.0f);
 					var cob = _objectDatabase.FindObjectRelation(d);
 					if (cob != null)
@@ -1159,7 +1159,7 @@ namespace RhinoCyclesCore.Database
 			{
 				curmesh++;
 
-				if (_renderEngine.CancelRender) return;
+				if (_renderEngine.ShouldBreak) return;
 
 #pragma warning disable CS0618
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
@@ -1342,7 +1342,7 @@ namespace RhinoCyclesCore.Database
 			foreach (var shader in _shaderDatabase.ShaderChanges)
 			{
 				curshader++;
-				if (_renderEngine.CancelRender) return;
+				if (_renderEngine.ShouldBreak) return;
 
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Uploading shader {curshader}/{totalshaders}", -1.0f);
 
@@ -1493,7 +1493,7 @@ namespace RhinoCyclesCore.Database
 			/* new light shaders and lights. */
 			foreach (var l in _lightDatabase.LightsToAdd)
 			{
-				if (_renderEngine.CancelRender) return;
+				if (_renderEngine.ShouldBreak) return;
 
 				l.Gamma = PreProcessGamma;
 
@@ -1504,7 +1504,7 @@ namespace RhinoCyclesCore.Database
 					_shaderDatabase.Add(l, lgsh);
 				}
 
-				if (_renderEngine.CancelRender) return;
+				if (_renderEngine.ShouldBreak) return;
 
 				var light = new CclLight(_renderEngine.Session, _renderEngine.Session.Scene, lgsh)
 				{
