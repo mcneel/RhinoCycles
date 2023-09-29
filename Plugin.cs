@@ -142,6 +142,19 @@ namespace RhinoCycles
 			t.Start();
 		}
 
+		private bool IsSonomaOrGreater
+		{
+			get
+			{
+				var os = Environment.OSVersion;
+				var is_osx = PlatformID.Unix == os.Platform;	//Unix means OSX
+
+				//System.Diagnostics.Debug.WriteLine("Platform = {0}, Version = {1}", (int)os.Platform, os.Version.Major);
+
+				return is_osx && os.Version.Major >= 14;
+			}
+		}
+
 		/// <summary>
 		/// Initialise Cycles if necessary.
 		/// </summary>
@@ -151,7 +164,10 @@ namespace RhinoCycles
 			{
 				if(!RcCore.It.Initialised)
 				{
-					if(File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) || Rhino.RhinoApp.IsSafeModeEnabled)
+					if(File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) || 
+					  Rhino.RhinoApp.IsSafeModeEnabled ||
+						IsSonomaOrGreater
+						)
 					{
 						CSycles.initialise(DeviceTypeMask.CPU);
 					} else
