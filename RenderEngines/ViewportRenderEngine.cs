@@ -41,12 +41,6 @@ namespace RhinoCyclesCore.RenderEngines
 			BeginChangesNotified += ViewportRenderEngine_BeginChangesNotified;
 
 #region create callbacks for Cycles
-			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = null;
-			m_write_render_tile_callback = null;
-			m_write_render_tile_callback = null;
-			m_test_cancel_callback = null;
-			m_display_update_callback = null;
 			m_logger_callback = ViewportLoggerCallback;
 
 			CSycles.log_to_stdout(false);
@@ -64,7 +58,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				return;
 			}
-			Session?.Cancel("Begin changes notification");
+			Session.Cancel("Begin changes notification");
 		}
 
 		public void ViewportLoggerCallback(string msg) {
@@ -153,8 +147,8 @@ namespace RhinoCyclesCore.RenderEngines
 
 		private void HandleRenderCrash()
 		{
-			Session?.Cancel("Problem during rendering detected");
-			State = State.Stopped;
+			Session.Cancel("Problem during rendering detected");
+			State = State.Stopping;
 			Action switchToWireframe = () =>
 			{
 				RhinoApp.RunScript("_SetDisplayMode _Rendered", false);
@@ -240,7 +234,7 @@ Please click the link below for more information.", 69));
 			};
 			#endregion
 
-			if (this == null || CancelRender) return;
+			if (this == null || ShouldBreak) return;
 
 			#region create session for scene
 			Session = RcCore.It.CreateSession( sessionParams);
@@ -254,32 +248,20 @@ Please click the link below for more information.", 69));
 				Session.AddPass(reqPass);
 			}
 
-			// register callbacks before starting any rendering
-			SetCallbacks();
-
-			// TODO: XXXX figure out better way for session reset. For now put here right before rendering
 			Session.Reset(FullSize.Width, FullSize.Height, 100, 0, 0, FullSize.Width, FullSize.Height);
 
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
-			/* TODO: XXXX disable data/change queue stuff for now
-			_textureBakeQuality = eds.TextureBakeQuality;
-
-			if (this != null && !CancelRender)
-			{
-				CheckFlushQueue();
-			}
-			if (this != null && !CancelRender)
-			{
-				Synchronize();
-				Flush = false;
-			}
-			*/
+			if(ShouldBreak) return;
 
 			Database.Flush();
+
+			if(ShouldBreak) return;
 			
 			UploadData();
+
+			if(ShouldBreak) return;
 
 			Database.ResetChangeQueue();
 
@@ -294,7 +276,7 @@ Please click the link below for more information.", 69));
 			int lastRenderedSample = 0;
 			bool renderingDone = false;
 
-			while (this != null && !IsStopped)
+			while (this != null && !ShouldBreak)
 			{
 				// If state changed
 				if(State != lastState)
@@ -355,12 +337,9 @@ Please click the link below for more information.", 69));
 				Thread.Sleep(_throttle);
 			}
 
-			Session.Cancel("done");
-
 			if (this != null)
 			{
 				Database.ResetChangeQueue();
-				RcCore.It.ReleaseSession(Session);
 			}
 		}
 
@@ -412,10 +391,7 @@ Please click the link below for more information.", 69));
 			{
 				TriggerStartSynchronizing();
 
-				while(!Session.Scene.TryLock())
-				{
-					Thread.Sleep(10);
-				}
+				Session.WaitUntilLocked();
 
 				if (UploadData())
 				{
@@ -423,11 +399,12 @@ Please click the link below for more information.", 69));
 					_needReset = true;
 				}
 
+				Session.Unlock();
+
 				if (CancelRender)
 				{
-					State = State.Stopped;
+					State = State.Stopping;
 				}
-				Session.Scene.Unlock();
 				TriggerSynchronized();
 			}
 		}

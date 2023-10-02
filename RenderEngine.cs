@@ -38,6 +38,7 @@ namespace RhinoCyclesCore
 		Waiting,
 		Uploading,
 		Rendering,
+		Stopping,
 		Stopped
 	}
 
@@ -89,17 +90,14 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public bool CancelRender { get; set; }
 
+		public bool ShouldBreak => CancelRender || State == State.Stopped || State == State.Stopping;
+
 		public int RenderedSamples { get; set; }
 		public int RenderedTiles { get; set; }
 		public bool Finished { get; set; } = false;
 
 		public string TimeString;
 
-		protected CSycles.UpdateCallback m_update_callback;
-		protected CSycles.RenderTileCallback m_update_render_tile_callback;
-		protected CSycles.RenderTileCallback m_write_render_tile_callback;
-		protected CSycles.TestCancelCallback m_test_cancel_callback;
-		protected CSycles.DisplayUpdateCallback m_display_update_callback;
 		protected CSycles.LoggerCallback m_logger_callback;
 
 		protected bool m_flush;
@@ -227,8 +225,8 @@ namespace RhinoCyclesCore
 			{
 				if (PreviewEventArgs.Cancel)
 				{
-					Session?.Cancel("Preview Cancelled");
-					State = State.Stopped;
+					Session.Cancel("Preview Cancelled");
+					State = State.Stopping;
 					CancelRender = true;
 				}
 			}
@@ -359,11 +357,16 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
-		/// Called when user presses the stop render button.
+		/// Call to stop render thread.
 		/// </summary>
 		public void StopRendering()
 		{
 			StopTheRenderer();
+
+			RcCore.OutputDebugString($"Getting ready to join C# Cycles render thread\n");
+			RenderThread?.Join();
+			RcCore.OutputDebugString($"C# Cycles render thread joined\n");
+			RenderThread = null;
 		}
 
 		public void Pause()
@@ -394,23 +397,27 @@ namespace RhinoCyclesCore
 		  return true;
 		}
 
-		private void StopTheRenderer()
+		/// <summary>
+		/// Call to cancel rendering, stop and destroy the session, and change state to Stopped. At the start
+		/// state is changed to Stopping
+		/// </summary>
+		public void StopTheRenderer()
 		{
-			// signal that we should stop rendering.
+			State = State.Stopping;
+
+			RcCore.OutputDebugString($"Getting ready to destroy Cycles session\n");
+			// try to get scene lock. Necessary since UploadData might still be writing to
+			// the session. Wait for it to react to state being set to Stopping.
+			// Once we can lock we know there is no other actor accessing the session, so
+			// we can just unlock and continue with the teardown.
+			Session.WaitUntilLocked();
+			Session.Unlock();
+			Session.Cancel("Stopping renderer");
+			Thread.Sleep(500);
+			Session.Dispose();
+			RcCore.OutputDebugString($"Cycles session destroyed\n");
 			CancelRender = true;
-
-			// set state to stopped
-			while (State == State.Uploading)
-			{
-				Thread.Sleep(10);
-			}
 			State = State.Stopped;
-
-			// signal our cycles session to stop rendering.
-			Session?.Cancel("Render stop called.\n");
-
-			RenderThread?.Join();
-			RenderThread = null;
 		}
 
 		/// <summary>
@@ -423,24 +430,6 @@ namespace RhinoCyclesCore
 		{
 			TriggerStatusTextUpdated(new StatusTextEventArgs(msg, progress, progress < 0 ? -1 : 0, false));
 			rw?.SetProgress(msg, progress);
-		}
-
-		/// <summary>
-		/// Register the callbacks to the render engine session
-		/// </summary>
-		protected void SetCallbacks()
-		{
-#region register callbacks with Cycles session
-
-			/* TODO: XXXX revisit output/display driver approach
-			Session.UpdateCallback = m_update_callback;
-			Session.UpdateTileCallback = m_update_render_tile_callback;
-			Session.WriteTileCallback = m_write_render_tile_callback;
-			Session.TestCancelCallback = m_test_cancel_callback;
-			Session.DisplayUpdateCallback = m_display_update_callback;
-			*/
-
-#endregion
 		}
 
 		// handle material shader updates

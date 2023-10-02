@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using ccl;
 
 namespace RhinoCyclesCore
 {
@@ -36,14 +37,14 @@ namespace RhinoCyclesCore
 		/// </summary>
 		protected bool UploadData()
 		{
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			Database.UploadDisplayPipelineAttributesChanges();
 			Database.UploadIntegratorChanges();
 
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.1f, "Start data upload"));
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			Database.UploadClippingPlaneChanges();
 
@@ -51,60 +52,60 @@ namespace RhinoCyclesCore
 			Database.UploadGammaChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.2f, "Linear workflow (gamma changes) uploaded"));
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			// environment changes
 			Database.UploadEnvironmentChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.3f, "Environments uploaded"));
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			// transforms on objects, no geometry changes
 			Database.UploadDynamicObjectTransforms();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.4f, "Dynamic object transforms uploaded"));
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			// viewport changes
 			Database.UploadCameraChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.5f, "Viewport uploaded"));
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			// new shaders we've got
 			Database.UploadShaderChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.6f, "Shaders uploaded"));
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			// mesh changes (new ones, updated ones)
 			Database.UploadMeshChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.8f, "Mesh data uploaded"));
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			// light changes
 			Database.UploadLightChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.7f, "Lights uploaded"));
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			// object changes (new ones, deleted ones)
 			Database.UploadObjectChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(1.0f, "Object changes uploaded"));
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			// shader changes on objects (replacement)
 			Database.UploadObjectShaderChanges();
 			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.9f, "Shader assignments uploaded"));
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 
 			// done, now clear out our change queue stuff so we're ready for the next time around :)
 			Database.ResetChangeQueue();
 
-			if (CancelRender) return false;
+			if (ShouldBreak) return false;
 			return true;
 		}
 	}

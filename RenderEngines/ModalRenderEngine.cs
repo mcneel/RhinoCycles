@@ -54,12 +54,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#region create callbacks for Cycles
 
-			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = null;
-			m_write_render_tile_callback = null;
-			m_test_cancel_callback = null;
-			m_display_update_callback = null;
-
 			CSycles.log_to_stdout(false);
 
 			#endregion
@@ -73,9 +67,6 @@ namespace RhinoCyclesCore.RenderEngines
 		public void SetCallbackForCapture()
 		{
 			capturing = true;
-			m_update_render_tile_callback = null;
-			m_logger_callback = null;
-			m_write_render_tile_callback = null;
 		}
 
 		/// <summary>
@@ -158,13 +149,12 @@ namespace RhinoCyclesCore.RenderEngines
 			};
 			#endregion
 
-			if (cyclesEngine.CancelRender) return;
+			if (cyclesEngine.ShouldBreak) return;
 
 			#region create session for scene
 			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
 			#endregion
 
-			// TODO: XXXX fix up scene creation InitializeSceneSettings(client, Session, RenderDevice, cyclesEngine, engineSettings);
 			HandleIntegrator(eds);
 
 			// Set up passes
@@ -173,21 +163,23 @@ namespace RhinoCyclesCore.RenderEngines
 				Session.AddPass(reqPass);
 			}
 
-			// register callbacks before starting any rendering
-			cyclesEngine.SetCallbacks();
+			cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, BufferRectangle.Top, FullSize.Width, FullSize.Height);
 
 			// main render loop, including restarts
 			#region start the rendering loop, wait for it to complete, we're rendering now!
 
-			if (cyclesEngine.CancelRender)
+			if (cyclesEngine.ShouldBreak)
 				return;
 
 			cyclesEngine.Database?.Flush();
+			if(cyclesEngine.ShouldBreak)
+				return;
+			cyclesEngine.Session.WaitUntilLocked();
 			var renderSuccess = cyclesEngine.UploadData();
+			cyclesEngine.Session.Unlock();
 
 			if (renderSuccess)
 			{
-				cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, BufferRectangle.Top, FullSize.Width, FullSize.Height);
 				cyclesEngine.Session.Start();
 
 				var throttle = Math.Max(0, engineSettings.ThrottleMs);
@@ -221,17 +213,21 @@ namespace RhinoCyclesCore.RenderEngines
 
 					Thread.Sleep(throttle);
 
-					if (cyclesEngine.IsStopped)
+					if (cyclesEngine.IsStopped || cyclesEngine.State == State.Stopping)
 						break;
 				}
 
-				if (!cyclesEngine.CancelRender)
+				if (!cyclesEngine.ShouldBreak)
 				{
 					cyclesEngine.BlitPixelsToRenderWindowChannel();
 					cyclesEngine.RenderWindow.Invalidate();
 				}
 			}
 			#endregion
+
+			while(State == State.Stopping) {
+				Thread.Sleep(10);
+			}
 
 			/*if (engineSettings.SaveDebugImages)
 			{
@@ -241,7 +237,6 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine?.Database.ResetChangeQueue();
 
 			// we're done now, so lets clean up our session.
-			RcCore.It.ReleaseSession(cyclesEngine.Session);
 			cyclesEngine.Database?.Dispose();
 			cyclesEngine.Database = null;
 			cyclesEngine.State = State.Stopped;
@@ -268,7 +263,6 @@ Please click the link below for more information.", 67));
 				};
 				RhinoApp.InvokeOnUiThread(showErrorDialog);
 			}
-			cyclesEngine.CancelRender = true;
 		}
 
 		public bool SupportsPause()
