@@ -190,62 +190,17 @@ namespace RhinoCyclesCore.Core
 			CSycles.shutdown();
 		}
 
-		private readonly object sessionsLock = new object();
 		/// <summary>
-		/// Create a ccl.Session and register with central system so we can later ensure
-		/// we wait on all sessions to fully complete before shutting down CSycles.
-		///
-		/// Sessions created with this function have to be released/destroyed using
-		/// the function ReleaseSession
+		/// Create a ccl.Session
 		/// </summary>
 		/// <param name="sessionParameters"></param>
 		/// <returns></returns>
-		public Session CreateSession(SessionParameters sessionParameters) {
-			lock (sessionsLock)
-			{
-				var session = new Session(sessionParameters);
+		public Session CreateSession(SessionParameters sessionParameters)
+		{
+			var session = new Session(sessionParameters);
+			RhinoApp.OutputDebugString($"Created session {session.Id}.\n");
 
-				if (sessions.ContainsKey(session.Id))
-				{
-					RhinoApp.OutputDebugString($"Session {session.Id} already exists\n");
-				}
-
-				sessions[session.Id] = session;
-				RhinoApp.OutputDebugString($"Created session {session.Id}.\n");
-
-				return session;
-			}
-		}
-
-		/// <summary>
-		/// Release and destroy session created by CreateSession.
-		/// </summary>
-		/// <param name="session"></param>
-		public void ReleaseSession(Session session) {
-			lock (sessionsLock)
-			{
-				if (sessions.ContainsKey(session.Id))
-				{
-					RhinoApp.OutputDebugString($"Releasing session {session.Id}.\n");
-					Session tempSession = sessions[session.Id];
-					if (tempSession != null)
-					{
-						tempSession.Cancel("done");
-						tempSession.EndRun();
-						tempSession.Destroy();
-						while (!sessions.TryRemove(session.Id, out tempSession))
-						{
-							Thread.Sleep(10);
-						}
-						RhinoApp.OutputDebugString($"Session {session.Id} released.\n");
-					}
-					else
-					{
-						RhinoApp.OutputDebugString($"Session {session.Id} was not found.\n");
-					}
-
-				}
-			}
+			return session;
 		}
 
 		/// <summary>

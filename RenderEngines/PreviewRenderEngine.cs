@@ -36,11 +36,6 @@ namespace RhinoCyclesCore.RenderEngines
 			State = State.Rendering;
 
 #region create callbacks for Cycles
-			m_update_callback = UpdateCallback;
-			m_update_render_tile_callback = PreviewRendererUpdateRenderTileCallback;
-			m_write_render_tile_callback = PreviewRendererWriteRenderTileCallback;
-			m_test_cancel_callback = TestCancel;
-
 			CSycles.log_to_stdout(false);
 #endregion
 		}
@@ -108,12 +103,11 @@ namespace RhinoCyclesCore.RenderEngines
 
 			cyclesEngine.Session.AddPass(PassType.Combined);
 
-			// register callbacks before starting any rendering
-			cyclesEngine.SetCallbacks();
-
 			// main render loop
 			cyclesEngine.Database.Flush();
+			cyclesEngine.Session.WaitUntilLocked();
 			cyclesEngine.UploadData();
+			cyclesEngine.Session.Unlock();
 
 			bool renderSuccess = true;
 
@@ -136,7 +130,6 @@ namespace RhinoCyclesCore.RenderEngines
 						cyclesEngine.Success = false;
 						renderSuccess = false;
 						cyclesEngine.Finished = true;
-						cyclesEngine.StopRendering();
 					}
 
 					cyclesEngine.BlitPixelsToRenderWindowChannel();
@@ -152,18 +145,20 @@ namespace RhinoCyclesCore.RenderEngines
 				if (cyclesEngine.IsStopped) break;
 				if (cyclesEngine.CancelRender) break;
 			}
-			cyclesEngine.BlitPixelsToRenderWindowChannel();
-			cyclesEngine.RenderWindow.Invalidate();
-			cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
-			cyclesEngine.Session.Cancel("done");
+			if (renderSuccess)
+			{
+				cyclesEngine.BlitPixelsToRenderWindowChannel();
+				cyclesEngine.RenderWindow.Invalidate();
+				cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
+			}
+
+			cyclesEngine.StopTheRenderer();
 
 			cyclesEngine?.Database.ResetChangeQueue();
 
 			cyclesEngine.Success = renderSuccess;
 
 			// we're done now, so lets clean up our session.
-			RcCore.It.ReleaseSession(cyclesEngine.Session);
-
 			cyclesEngine.Dispose();
 		}
 
