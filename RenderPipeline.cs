@@ -75,7 +75,7 @@ namespace RhinoCycles
 
 		protected override bool ContinueModal()
 		{
-			return !cyclesEngine.CancelRender;
+			return !cyclesEngine.ShouldBreak;
 		}
 
 		protected override bool OnRenderWindowBegin(Rhino.Display.RhinoView view, System.Drawing.Rectangle rect)
