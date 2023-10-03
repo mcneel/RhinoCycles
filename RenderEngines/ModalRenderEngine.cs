@@ -248,6 +248,8 @@ namespace RhinoCyclesCore.RenderEngines
 					String.Format(Localization.LocalizeString("Render ready {0} samples, duration {1}", 39), cyclesEngine.RenderedSamples, cyclesEngine.TimeString), 1.0f);
 			}
 
+			cyclesEngine.CancelRender = true;
+
 			if (!renderSuccess)
 			{
 				rw.SetProgress(Localization.LocalizeString("An error occured while trying to render. The render may be incomplete or not started.", 65), 1.0f);
