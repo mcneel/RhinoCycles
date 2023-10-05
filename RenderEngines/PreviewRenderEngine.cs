@@ -121,7 +121,7 @@ namespace RhinoCyclesCore.RenderEngines
 			// and actually start
 			while (!cyclesEngine.Finished)
 			{
-				if (cyclesEngine.IsRendering)
+				if (!cyclesEngine.ShouldBreak)
 				{
 					cyclesEngine.UpdateCallback(cyclesEngine.Session.Id);
 
@@ -141,6 +141,11 @@ namespace RhinoCyclesCore.RenderEngines
 				else
 				{
 					break;
+				}
+				if (cyclesEngine.PreviewEventArgs.Cancel)
+				{
+					cyclesEngine.State = State.Stopping;
+					cyclesEngine.CancelRender = true;
 				}
 				if (cyclesEngine.IsStopped) break;
 				if (cyclesEngine.CancelRender) break;
