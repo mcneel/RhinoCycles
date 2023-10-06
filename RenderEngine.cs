@@ -225,7 +225,7 @@ namespace RhinoCyclesCore
 			{
 				if (PreviewEventArgs.Cancel)
 				{
-					Session.Cancel("Preview Cancelled");
+					Session.QuickCancel();
 					State = State.Stopping;
 					CancelRender = true;
 				}
@@ -412,7 +412,7 @@ namespace RhinoCyclesCore
 			// we can just unlock and continue with the teardown.
 			Session.WaitUntilLocked();
 			Session.Unlock();
-			Session.Cancel("Stopping renderer");
+			Session.QuickCancel();
 			Thread.Sleep(500);
 			Session.Dispose();
 			RcCore.OutputDebugString($"Cycles session destroyed\n");
