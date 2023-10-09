@@ -111,14 +111,9 @@ namespace RhinoCyclesCore.RenderEngines
 
 			bool renderSuccess = true;
 
-			// then reset scene
-			// Note: Don't reset the scene now, otherwise it will remove our custom background shader.
-			//cyclesEngine.Session.Scene.Reset();
-
 			cyclesEngine.Session.Reset(size.Width, size.Height, cyclesEngine.MaxSamples, 0, 0, size.Width, size.Height);
 			cyclesEngine.Session.Start();
 
-			// and actually start
 			while (!cyclesEngine.Finished)
 			{
 				if (!cyclesEngine.ShouldBreak)
@@ -132,14 +127,13 @@ namespace RhinoCyclesCore.RenderEngines
 						cyclesEngine.Finished = true;
 					}
 
-					cyclesEngine.BlitPixelsToRenderWindowChannel();
-					cyclesEngine.RenderWindow.Invalidate();
-					cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
+					cyclesEngine.UpdatePreview();
 
 					Thread.Sleep(50);
 				}
 				else
 				{
+					cyclesEngine.Session.QuickCancel();
 					break;
 				}
 				if (cyclesEngine.PreviewEventArgs.Cancel)
@@ -147,14 +141,10 @@ namespace RhinoCyclesCore.RenderEngines
 					cyclesEngine.State = State.Stopping;
 					cyclesEngine.CancelRender = true;
 				}
-				if (cyclesEngine.IsStopped) break;
-				if (cyclesEngine.CancelRender) break;
 			}
 			if (renderSuccess)
 			{
-				cyclesEngine.BlitPixelsToRenderWindowChannel();
-				cyclesEngine.RenderWindow.Invalidate();
-				cyclesEngine.PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(cyclesEngine.RenderWindow);
+				cyclesEngine.UpdatePreview();
 			}
 
 			cyclesEngine.StopTheRenderer();
@@ -165,6 +155,13 @@ namespace RhinoCyclesCore.RenderEngines
 
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Dispose();
+		}
+
+		public void UpdatePreview()
+		{
+			BlitPixelsToRenderWindowChannel();
+			RenderWindow.Invalidate();
+			PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
 		}
 
 		private bool _disposed;

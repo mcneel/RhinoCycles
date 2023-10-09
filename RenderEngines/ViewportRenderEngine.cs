@@ -58,7 +58,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				return;
 			}
-			Session.Cancel("Begin changes notification");
+			Session.QuickCancel();
 		}
 
 		public void ViewportLoggerCallback(string msg) {
@@ -147,7 +147,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 		private void HandleRenderCrash()
 		{
-			Session.Cancel("Problem during rendering detected");
+			Session.QuickCancel();
 			State = State.Stopping;
 			Action switchToWireframe = () =>
 			{

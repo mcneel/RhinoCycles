@@ -157,6 +157,7 @@ namespace RhinoCyclesCore.Core
 		/// Shut down Cycles on all levels. Wait for all active session to complete.
 		/// </summary>
 		public void Shutdown() {
+			ReleaseActiveSessions();
 			int count;
 			int timer = 0;
 			if(checkOpenClCompilationCompletedThread!=null) {
@@ -190,6 +191,8 @@ namespace RhinoCyclesCore.Core
 			CSycles.shutdown();
 		}
 
+		ConcurrentDictionary<IntPtr, Session> active_sessions = new ConcurrentDictionary<IntPtr, Session>();
+
 		/// <summary>
 		/// Create a ccl.Session
 		/// </summary>
@@ -200,7 +203,31 @@ namespace RhinoCyclesCore.Core
 			var session = new Session(sessionParameters);
 			RhinoApp.OutputDebugString($"Created session {session.Id}.\n");
 
+			active_sessions[session.Id] = session;
+
 			return session;
+		}
+
+		public void ReleaseSession(Session session)
+		{
+			if(active_sessions.ContainsKey(session.Id))
+			{
+				session.QuickCancel();
+				while(!active_sessions.TryRemove(session.Id, out _))
+				{
+					Thread.Sleep(10);
+				}
+				session.Dispose();
+			}
+		}
+
+		public void ReleaseActiveSessions()
+		{
+			var sessions = active_sessions.Values.ToList();
+			foreach (var session in sessions)
+			{
+				ReleaseSession(session);
+			}
 		}
 
 		/// <summary>
