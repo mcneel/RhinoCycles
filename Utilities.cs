@@ -300,8 +300,6 @@ namespace RhinoCyclesCore
 				}
 
 
-				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alpha_input_node, IsData);
-
 				alphaOut = alpha_node.outs.Value;
 
 				texco.UvMap = teximg.GetUvMapForChannel();
@@ -310,6 +308,8 @@ namespace RhinoCyclesCore
 
 				ISocket use_outsocket;
 
+				List<ISocket> alphaNodes = new List<ISocket>() { alpha_input_node };
+
 				if (valueSocket == null) {
 					mixerNode.ins.Fac.Value = 1.0f;
 				} else {
@@ -317,7 +317,10 @@ namespace RhinoCyclesCore
 					alphamult.ins.Value1.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
 					alphamult.ins.Value2.Value = 1.0f;
 					alphamult.outs.Value.Connect(mixerNode.ins.Fac);
+					alphaNodes.Add(alphamult.ins.Value2);
 				}
+
+				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alphaNodes, IsData);
 
 				if (normalMap)
 				{
