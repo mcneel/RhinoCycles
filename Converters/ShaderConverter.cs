@@ -2317,6 +2317,14 @@ namespace RhinoCyclesCore.Converters
 				spotangle = lg.SpotAngleRadians * 2;
 				smooth = 1.0 / Math.Max(lg.HotSpot, 0.001f) - 1.0;
 				strength = (float)(lg.Intensity * RcCore.It.AllSettings.SpotLightFactor);
+
+				var light_z = lg.Direction; light_z.Unitize();
+				var light_x = lg.PerpendicularDirection;
+				var light_y = Vector3d.CrossProduct(light_z, light_x);
+
+				lg.GetSpotLightRadii(out double _, out double outerRadius);
+				axisu = (float)outerRadius * RenderEngine.CreateFloat4(light_x.X, light_x.Y, light_x.Z);
+				axisv = (float)outerRadius * RenderEngine.CreateFloat4(light_y.X, light_y.Y, light_y.Z);
 			}
 			else if (lg.IsRectangularLight)
 			{
