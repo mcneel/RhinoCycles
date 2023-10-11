@@ -38,7 +38,7 @@ namespace RhinoCyclesCore.Converters
 		{
 			Procedural procedural = null;
 
-			if (render_texture.ChildSlotOn(child_name) && render_texture.ChildSlotAmount(child_name) > 0.1)
+			if (render_texture.ChildSlotOn(child_name) && render_texture.ChildSlotAmount(child_name) > 0.01)
 			{
 				var render_texture_child = (RenderTexture)render_texture.FindChild(child_name);
 
