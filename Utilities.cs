@@ -306,7 +306,7 @@ namespace RhinoCyclesCore
 
 				valueSocket?.Connect(mixerNode.ins.Color1);
 
-				ISocket use_outsocket;
+				ISocket use_outsocket = null;
 
 				List<ISocket> alphaNodes = new List<ISocket>() { alpha_input_node };
 
@@ -354,11 +354,9 @@ namespace RhinoCyclesCore
 							use_outsocket.Connect(tobwnode.ins.Color);
 							use_outsocket = tobwnode.outs.Val;
 						}
-						/*else {
-							if(!IsData && gammaNode != null) {
-								use_outsocket = gammaNode.outs.Color;
-							}
-						}*/
+						if(!IsData && gammaNode != null) {
+							use_outsocket = gammaNode.outs.Color;
+						}
 					}
 					if (amount >= 0.0f && amount <= 1.0f)
 					{
@@ -391,9 +389,16 @@ namespace RhinoCyclesCore
 						multiplyG.outs.Value.Connect(combineRgbNode.ins.G);
 						multiplyB.outs.Value.Connect(combineRgbNode.ins.B);
 
+						use_outsocket = combineRgbNode.outs.Image;
+
+						if(!IsData && gammaNode != null) {
+							combineRgbNode.outs.Image.Connect(gammaNode.ins.Color);
+							use_outsocket = gammaNode.outs.Color;
+						}
+
 						foreach (var sock in socketsToConnectTo)
 						{
-							combineRgbNode.outs.Image.Connect(sock);
+							use_outsocket.Connect(sock);
 						}
 					}
 
