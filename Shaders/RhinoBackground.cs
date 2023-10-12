@@ -111,10 +111,10 @@ namespace RhinoCyclesCore.Shaders
 
 				var separate_bg_color265 = new SeparateRgbNode(m_shader, "separate_bg_color");
 
-				var skylight_strength_factor299 = new MathMultiply(m_shader, "skylight_strength_factor");
+				var skylight_strength_factor299 = new MathMaximum(m_shader, "skylight_strength_factor");
 				skylight_strength_factor299.ins.Value1.Value = m_original_background.BgStrength;
 				skylight_strength_factor299.ins.Value2.Value = m_original_background.NonSkyEnvStrengthFactor;
-				skylight_strength_factor299.Operation = MathNode.Operations.Multiply;
+				skylight_strength_factor299.Operation = MathNode.Operations.Maximum;
 				skylight_strength_factor299.UseClamp = false;
 
 				var factor_r262 = new MathMultiply(m_shader, "factor_r");
