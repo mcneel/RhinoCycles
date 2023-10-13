@@ -413,6 +413,7 @@ namespace RhinoCyclesCore
 			Session.WaitUntilLocked();
 			Session.Unlock();
 			Session.QuickCancel();
+			Session.Cancel("StopTheRenderer");
 			Thread.Sleep(500);
 			Session.Dispose();
 			RcCore.OutputDebugString($"Cycles session destroyed\n");

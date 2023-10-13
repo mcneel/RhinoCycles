@@ -69,6 +69,12 @@ namespace RhinoCyclesCore.RenderEngines
 			capturing = true;
 		}
 
+		public void UpdateRenderWindow()
+		{
+			BlitPixelsToRenderWindowChannel();
+			RenderWindow.Invalidate();
+		}
+
 		/// <summary>
 		/// Entry point for a new render process. This is to be done in a separate thread.
 		/// </summary>
@@ -177,6 +183,7 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.WaitUntilLocked();
 			var renderSuccess = cyclesEngine.UploadData();
 			cyclesEngine.Session.Unlock();
+			cyclesEngine.Database.ResetChangeQueue();
 
 			if (renderSuccess)
 			{
@@ -206,21 +213,19 @@ namespace RhinoCyclesCore.RenderEngines
 						lastRenderedSample = RenderedSamples;
 						lastRenderedTiles = RenderedTiles;
 
-						cyclesEngine.BlitPixelsToRenderWindowChannel();
-						cyclesEngine.RenderWindow.Invalidate();
-						cyclesEngine.Database.ResetChangeQueue();
+						cyclesEngine.UpdateRenderWindow();
 					}
+
 
 					Thread.Sleep(throttle);
 
-					if (cyclesEngine.IsStopped || cyclesEngine.State == State.Stopping)
+					if (cyclesEngine.ShouldBreak)
 						break;
 				}
 
 				if (!cyclesEngine.ShouldBreak)
 				{
-					cyclesEngine.BlitPixelsToRenderWindowChannel();
-					cyclesEngine.RenderWindow.Invalidate();
+					cyclesEngine.UpdateRenderWindow();
 				}
 			}
 			#endregion
@@ -229,12 +234,7 @@ namespace RhinoCyclesCore.RenderEngines
 				Thread.Sleep(10);
 			}
 
-			/*if (engineSettings.SaveDebugImages)
-			{
-				var tmpf = RenderEngine.TempPathForFile($"RC_modal_renderer.png");
-				cyclesEngine.RenderWindow.SaveRenderImageAs(tmpf, true);
-			}*/
-			cyclesEngine?.Database.ResetChangeQueue();
+			cyclesEngine.StopTheRenderer();
 
 			// we're done now, so lets clean up our session.
 			cyclesEngine.Database?.Dispose();
