@@ -291,14 +291,6 @@ namespace RhinoCyclesCore
 				FloatSocket alpha_input_node = alpha_node.ins.Value2;
 				GammaNode gammaNode = null;
 
-				if(!IsData)
-				{
-					gammaNode = new GammaNode(sh, "gamma node for color channel");
-					gammaNode.ins.Gamma.Value = gamma;
-
-					mixerNode.outs.Color.Connect(gammaNode.ins.Color);
-				}
-
 
 				alphaOut = alpha_node.outs.Value;
 
@@ -321,6 +313,19 @@ namespace RhinoCyclesCore
 				}
 
 				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alphaNodes, IsData);
+
+				// 2023-10-17 David E.
+				// Don't apply pre-gamma if the procedural is a bitmap texture, because Cycles will already 
+				// output the expected linearized color values. This code is now the same as the logic for
+				// shader procedurals (see the out-parameter 'out bool apply_gamma' in GL33_Shading.inc.glsl).
+				// Fixes RH-77715.
+				if (!IsData && !(teximg.Procedural is BitmapTextureProcedural))
+				{
+					gammaNode = new GammaNode(sh, "gamma node for color channel");
+					gammaNode.ins.Gamma.Value = gamma;
+
+					mixerNode.outs.Color.Connect(gammaNode.ins.Color);
+				}
 
 				if (normalMap)
 				{
