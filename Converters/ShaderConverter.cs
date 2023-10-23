@@ -2322,9 +2322,10 @@ namespace RhinoCyclesCore.Converters
 				var light_x = lg.PerpendicularDirection;
 				var light_y = Vector3d.CrossProduct(light_z, light_x);
 
-				lg.GetSpotLightRadii(out double _, out double outerRadius);
-				axisu = (float)outerRadius * RenderEngine.CreateFloat4(light_x.X, light_x.Y, light_x.Z);
-				axisv = (float)outerRadius * RenderEngine.CreateFloat4(light_y.X, light_y.Y, light_y.Z);
+				// We overwrite 'dir' because it needs to be of same length as axisu and axisv.
+				axisu = RenderEngine.CreateFloat4(light_x.X, light_x.Y, light_x.Z);
+				axisv = RenderEngine.CreateFloat4(light_y.X, light_y.Y, light_y.Z);
+				dir   = RenderEngine.CreateFloat4(light_z.X, light_z.Y, light_z.Z);
 			}
 			else if (lg.IsRectangularLight)
 			{
