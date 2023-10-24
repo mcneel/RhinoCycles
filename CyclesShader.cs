@@ -428,6 +428,11 @@ namespace RhinoCyclesCore
 			HandlePbrTexturedProperty(StdCS.PbrBaseColor, pbrmat.BaseColor.ApplyGamma(gamma), rm, shb.PbrBase, shb.PbrBaseTexture, gamma);
 			HandlePbrTexturedProperty(StdCS.PbrSubSurfaceScattering, pbrmat.SubsurfaceScatteringColor.ApplyGamma(gamma), rm, shb.PbrSubsurfaceColor, shb.PbrSubsurfaceColorTexture, gamma);
 			HandlePbrTexturedProperty(StdCS.PbrEmission, pbrmat.Emission.ApplyGamma(gamma), rm, shb.PbrEmission, shb.PbrEmissionTexture, gamma);
+			double emission_multiplier = 1.0;
+			if (rm.Fields.TryGetValue("emission-multiplier", out emission_multiplier))
+			{
+				shb.EmissionStrength = (float)emission_multiplier;
+			}
 
 			HandlePbrTexturedProperty(StdCS.PbrMetallic, (float)pbrmat.Metallic, rm, shb.PbrMetallic, shb.PbrMetallicTexture);
 			HandlePbrTexturedProperty(StdCS.PbrSubsurface, (float)pbrmat.Subsurface, rm, shb.PbrSubsurface, shb.PbrSubsurfaceTexture);
@@ -657,6 +662,7 @@ namespace RhinoCyclesCore
 
 		public bool UseBaseColorTextureAlphaAsObjectAlpha { get; set; } = true;
 
+		public float EmissionStrength = 0.0f;
 		public TexturedColor PbrEmission = new TexturedColor(PbrCSN.Emission, Color4f.Black, false, 0.0f);
 		public CyclesTextureImage PbrEmissionTexture = new CyclesTextureImage();
 		public TexturedColor PbrBump = new TexturedColor(PbrCSN.Bump, Color4f.Black, false, 0.0f);
