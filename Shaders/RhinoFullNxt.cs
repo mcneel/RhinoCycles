@@ -516,13 +516,25 @@ namespace RhinoCyclesCore.Shaders
 					coloured_shadow.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure2);
 					principled.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure1);
 
-					float emission_strength = part.PbrEmission.Value.LargestComponent();
+					float emission_strength = part.EmissionStrength;
 					// When an emission texture is added and active make sure that the emission
 					// base color isn't black.
 					if (part.PbrEmission.On) {
 						if (part.PbrEmission.Value.Equals(Rhino.Display.Color4f.Black))
 						{
 							part.PbrEmission.Value = Rhino.Display.Color4f.White;
+						}
+						// TODO: remove workaround for double multiplier application.
+						// Once this is fixed in Rhino remove this workaround.
+						else {
+							float r = part.PbrEmission.Value.R / emission_strength;
+							float g = part.PbrEmission.Value.G / emission_strength;
+							float b = part.PbrEmission.Value.B / emission_strength;
+							part.PbrEmission.Value = new Rhino.Display.Color4f(r, g, b, 1.0f);
+						}
+						if (!part.PbrEmissionTexture.HasProcedural)
+						{
+							emission_strength = 1.0f;
 						}
 					}
 
