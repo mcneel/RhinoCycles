@@ -425,13 +425,34 @@ namespace RhinoCyclesCore
 			shb.Gamma = gamma;
 			shb.UseBaseColorTextureAlphaAsObjectAlpha = pbrmat.UseBaseColorTextureAlphaForObjectAlphaTransparencyTexture;
 
-			HandlePbrTexturedProperty(StdCS.PbrBaseColor, pbrmat.BaseColor.ApplyGamma(gamma), rm, shb.PbrBase, shb.PbrBaseTexture, gamma);
-			HandlePbrTexturedProperty(StdCS.PbrSubSurfaceScattering, pbrmat.SubsurfaceScatteringColor.ApplyGamma(gamma), rm, shb.PbrSubsurfaceColor, shb.PbrSubsurfaceColorTexture, gamma);
-			HandlePbrTexturedProperty(StdCS.PbrEmission, pbrmat.Emission.ApplyGamma(gamma), rm, shb.PbrEmission, shb.PbrEmissionTexture, gamma);
-			double emission_multiplier = 1.0;
-			if (rm.Fields.TryGetValue("emission-multiplier", out emission_multiplier))
+			HandlePbrTexturedProperty(StdCS.PbrBaseColor, pbrmat.BaseColor, rm, shb.PbrBase, shb.PbrBaseTexture, gamma);
+			HandlePbrTexturedProperty(StdCS.PbrSubSurfaceScattering, pbrmat.SubsurfaceScatteringColor, rm, shb.PbrSubsurfaceColor, shb.PbrSubsurfaceColorTexture, gamma);
+			HandlePbrTexturedProperty(StdCS.PbrEmission, pbrmat.Emission, rm, shb.PbrEmission, shb.PbrEmissionTexture, gamma);
+			if (rm.Fields.TryGetValue("emission-multiplier", out double emission_multiplier))
 			{
 				shb.EmissionStrength = (float)emission_multiplier;
+				// try to work around RH-77852 (multiplier applied several times) until that is fixed
+				// TODO: remove workaround for double multiplier application.
+				// Once this is fixed in Rhino remove this workaround.
+				// TODO: replace with division by just emission multiplier to get original values
+				// out, and pass on emission strength and use that directly.
+				if(shb.PbrEmission.Value.LargestComponent() > 1.0f && emission_multiplier > 1.0f)
+				{
+					float es2 = (float)(emission_multiplier * emission_multiplier);
+					float r = shb.PbrEmission.Value.R / es2;
+					float g = shb.PbrEmission.Value.G / es2;
+					float b = shb.PbrEmission.Value.B / es2;
+					shb.PbrEmission.Value = new Color4f(r, g, b, 1.0f);
+				}
+			}
+			if (rm.Fields.TryGetValue("intensity", out double intensity))
+			{
+				shb.EmissionStrength = (float)intensity;
+				float es = (float)(intensity);
+				float r = shb.PbrEmission.Value.R / es;
+				float g = shb.PbrEmission.Value.G / es;
+				float b = shb.PbrEmission.Value.B / es;
+				shb.PbrEmission.Value = new Color4f(r, g, b, 1.0f);
 			}
 
 			HandlePbrTexturedProperty(StdCS.PbrMetallic, (float)pbrmat.Metallic, rm, shb.PbrMetallic, shb.PbrMetallicTexture);
