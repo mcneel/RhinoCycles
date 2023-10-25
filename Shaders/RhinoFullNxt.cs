@@ -524,18 +524,6 @@ namespace RhinoCyclesCore.Shaders
 						{
 							part.PbrEmission.Value = Rhino.Display.Color4f.White;
 						}
-						// TODO: remove workaround for double multiplier application.
-						// Once this is fixed in Rhino remove this workaround.
-						else {
-							float r = part.PbrEmission.Value.R / emission_strength;
-							float g = part.PbrEmission.Value.G / emission_strength;
-							float b = part.PbrEmission.Value.B / emission_strength;
-							part.PbrEmission.Value = new Rhino.Display.Color4f(r, g, b, 1.0f);
-						}
-						if (!part.PbrEmissionTexture.HasProcedural)
-						{
-							emission_strength = 1.0f;
-						}
 					}
 
 					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, principled.ins.Emission.ToList(), false, part.Gamma, true);
