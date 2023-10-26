@@ -428,6 +428,7 @@ namespace RhinoCyclesCore
 			HandlePbrTexturedProperty(StdCS.PbrBaseColor, pbrmat.BaseColor, rm, shb.PbrBase, shb.PbrBaseTexture, gamma);
 			HandlePbrTexturedProperty(StdCS.PbrSubSurfaceScattering, pbrmat.SubsurfaceScatteringColor, rm, shb.PbrSubsurfaceColor, shb.PbrSubsurfaceColorTexture, gamma);
 			HandlePbrTexturedProperty(StdCS.PbrEmission, pbrmat.Emission, rm, shb.PbrEmission, shb.PbrEmissionTexture, gamma);
+			Color4f emissionColor = shb.PbrEmission.Value;
 			if (rm.Fields.TryGetValue("emission-multiplier", out double emission_multiplier))
 			{
 				shb.EmissionStrength = (float)emission_multiplier;
@@ -439,9 +440,9 @@ namespace RhinoCyclesCore
 				if(shb.PbrEmission.Value.LargestComponent() > 1.0f && emission_multiplier > 1.0f)
 				{
 					float es2 = (float)(emission_multiplier * emission_multiplier);
-					float r = shb.PbrEmission.Value.R / es2;
-					float g = shb.PbrEmission.Value.G / es2;
-					float b = shb.PbrEmission.Value.B / es2;
+					float r = emissionColor.R / es2;
+					float g = emissionColor.G / es2;
+					float b = emissionColor.B / es2;
 					shb.PbrEmission.Value = new Color4f(r, g, b, 1.0f);
 				}
 			}
@@ -449,9 +450,9 @@ namespace RhinoCyclesCore
 			{
 				shb.EmissionStrength = (float)intensity;
 				float es = (float)(intensity);
-				float r = shb.PbrEmission.Value.R / es;
-				float g = shb.PbrEmission.Value.G / es;
-				float b = shb.PbrEmission.Value.B / es;
+				float r = emissionColor.R / es;
+				float g = emissionColor.G / es;
+				float b = emissionColor.B / es;
 				shb.PbrEmission.Value = new Color4f(r, g, b, 1.0f);
 			}
 
