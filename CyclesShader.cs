@@ -432,24 +432,15 @@ namespace RhinoCyclesCore
 			if (rm.Fields.TryGetValue("emission-multiplier", out double emission_multiplier))
 			{
 				shb.EmissionStrength = (float)emission_multiplier;
-				// try to work around RH-77852 (multiplier applied several times) until that is fixed
-				// TODO: remove workaround for double multiplier application.
-				// Once this is fixed in Rhino remove this workaround.
-				// TODO: replace with division by just emission multiplier to get original values
-				// out, and pass on emission strength and use that directly.
-				if(shb.PbrEmission.Value.LargestComponent() > 1.0f && emission_multiplier > 1.0f)
-				{
-					float es2 = (float)(emission_multiplier * emission_multiplier);
-					float r = emissionColor.R / es2;
-					float g = emissionColor.G / es2;
-					float b = emissionColor.B / es2;
-					shb.PbrEmission.Value = new Color4f(r, g, b, 1.0f);
-				}
 			}
 			if (rm.Fields.TryGetValue("intensity", out double intensity))
 			{
 				shb.EmissionStrength = (float)intensity;
-				float es = (float)(intensity);
+			}
+			{
+				// Rhino factors intensity (emission-multiplier) into EmissionColor.
+				// undo that so we can use emission strength as input instead.
+				float es = shb.EmissionStrength;
 				float r = emissionColor.R / es;
 				float g = emissionColor.G / es;
 				float b = emissionColor.B / es;
