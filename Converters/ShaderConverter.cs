@@ -21,6 +21,7 @@ using ccl;
 using ccl.ShaderNodes;
 using ccl.ShaderNodes.Sockets;
 using Rhino;
+using Rhino.ApplicationSettings;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Geometry;
@@ -944,6 +945,8 @@ namespace RhinoCyclesCore.Converters
 			Gamma = gamma;
 			Utilities.HandleRenderTexture(render_texture, cycles_texture, false, true, bitmap_converter, docsrn, gamma, should_simulate, is_color);
 
+			Repeat = cycles_texture.Repeat;
+
 			var rtf = render_texture.Fields;
 
 			if (rtf.TryGetValue("filter", out bool filter))
@@ -983,6 +986,7 @@ namespace RhinoCyclesCore.Converters
 			}
 			image_texture_node.AlternateTiles = AlternateTiles;
 			image_texture_node.Interpolation = Filter ? InterpolationType.Cubic : InterpolationType.Closest;
+			image_texture_node.Extension = Repeat ? TextureNode.TextureExtension.Repeat : TextureNode.TextureExtension.Clip;
 
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(image_texture_node.ins.Vector);
@@ -996,6 +1000,7 @@ namespace RhinoCyclesCore.Converters
 		public bool AlternateTiles { get; set; } = false;
 		public bool Filter { get; set; } = true;
 		public float Gamma { get; set; } = 1.0f;
+		public bool Repeat { get; set; } = true;
 	}
 
 	public class AddTextureProcedural : TwoColorProcedural
