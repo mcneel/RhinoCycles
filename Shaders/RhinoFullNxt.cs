@@ -436,10 +436,17 @@ namespace RhinoCyclesCore.Shaders
 
 					if (decalMixin != null)
 					{
-						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, decalMixin.ins.Color1.ToList(), false, part.Gamma, false);
+						// HACK: tell base tex is data, so that we can manually add here
+						// gamma node after decal mixin before connecting _that_ up to colsocks
+						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, decalMixin.ins.Color1.ToList(), false, part.Gamma, true);
+
+						// now add gamma node to ensure decals are corrected properly
+						GammaNode gammaNode = new GammaNode(m_shader, "gamma node for decalled pbr base tex");
+						gammaNode.ins.Gamma.Value = part.Gamma;
+						decalMixin.outs.Color.Connect(gammaNode.ins.Color);
 						foreach(var colsock in colsocks)
 						{
-							decalMixin.outs.Color.Connect(colsock);
+							gammaNode.outs.Color.Connect(colsock);
 						}
 					}
 					else
@@ -813,8 +820,11 @@ namespace RhinoCyclesCore.Shaders
 					if (decalMixin != null)
 					{
 						diffuse_base_color_through_alpha120.outs.Color.Connect(decalMixin.ins.Color1);
-						decalMixin.outs.Color.Connect(final_diffuse89.ins.Color);
-						decalMixin.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+						GammaNode gammaNode = new GammaNode(m_shader, "gamma node for decalled pbr base tex");
+						gammaNode.ins.Gamma.Value = part.Gamma;
+						decalMixin.outs.Color.Connect(gammaNode.ins.Color);
+						gammaNode.outs.Color.Connect(final_diffuse89.ins.Color);
+						gammaNode.outs.Color.Connect(shadeless_bsdf90.ins.Color);
 					}
 					else
 					{

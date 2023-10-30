@@ -253,16 +253,27 @@ namespace RhinoCyclesCore
 			{
 				ColorNode cn = new ColorNode(sh, $"input_color_for_{slot.Name}_");
 				cn.Value = ((Color4f)(object)slot.Value).ToFloat4();
-				if (invert)
+				GammaNode gammaNode = null;
+				if (!IsData)
 				{
-					InvertNode invcol = new InvertNode(sh, $"invert_input_color_for_{slot.Name}_");
-					invcol.ins.Fac.Value = 1.0f;
-					cn.outs.Color.Connect(invcol.ins.Color);
-					valsock = invcol.outs.Color;
+					gammaNode = new GammaNode(sh, "gamma node for color channel");
+					gammaNode.ins.Gamma.Value = gamma;
+					cn.outs.Color.Connect(gammaNode.ins.Color);
+					valsock = gammaNode.outs.Color;
 				}
 				else
 				{
-					valsock = cn.outs.Color;
+					if (invert)
+					{
+						InvertNode invcol = new InvertNode(sh, $"invert_input_color_for_{slot.Name}_");
+						invcol.ins.Fac.Value = 1.0f;
+						cn.outs.Color.Connect(invcol.ins.Color);
+						valsock = invcol.outs.Color;
+					}
+					else
+					{
+						valsock = cn.outs.Color;
+					}
 				}
 			}
 			if(valsock == null) {
@@ -315,7 +326,7 @@ namespace RhinoCyclesCore
 				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alphaNodes, IsData);
 
 				// 2023-10-17 David E.
-				// Don't apply pre-gamma if the procedural is a bitmap texture, because Cycles will already 
+				// Don't apply pre-gamma if the procedural is a bitmap texture, because Cycles will already
 				// output the expected linearized color values. This code is now the same as the logic for
 				// shader procedurals (see the out-parameter 'out bool apply_gamma' in GL33_Shading.inc.glsl).
 				// Fixes RH-77715.
