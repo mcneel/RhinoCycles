@@ -894,7 +894,7 @@ namespace RhinoCyclesCore.Shaders
 				//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
 						if(part.DiffuseTexture.Procedural is BitmapTextureProcedural bmtp)
 						{
-							useAlpha = bmtp.UseAlpha ? 1.0f : 0.0f;
+							useAlpha = part.DiffuseTexture.UseAlphaAsFloat;
 						}
 						toggle_diffuse_texture_alpha_usage81.ins.Value2.Value = useAlpha;
 						use_alpha_weighted_with_modded_amount71.ins.Value1.Value = useAlpha;
