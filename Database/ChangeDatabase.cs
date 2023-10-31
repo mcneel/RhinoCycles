@@ -324,6 +324,8 @@ namespace RhinoCyclesCore.Database
 				if(newme) _objectDatabase.RecordObjectMeshRelation(cyclesMesh.MeshId, me);
 				//RecordShaderRelation(shader, cycles_mesh.MeshId);
 
+				_objectDatabase.RecordMeshOcsFrame(me.GeometryPointer, cyclesMesh.OcsFrame);
+
 				curmesh++;
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Mesh changes done", -1.0f);
@@ -802,6 +804,9 @@ namespace RhinoCyclesCore.Database
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Handle mesh {curadd}/{totaladds}", -1.0f);
 				var meshes = cqm.GetMeshes();
 				var mappingCollection = cqm.Mapping;
+				Rhino.Geometry.Transform ocsInv;
+				cqm.OcsTransform.TryGetInverse(out ocsInv);
+				var t = ocsInv.ToCyclesTransform();
 				var meshguid = cqm.Id();
 
 				var attr = cqm.Attributes;
@@ -821,7 +826,7 @@ namespace RhinoCyclesCore.Database
 				foreach(var meshdata in meshes)
 				{
 					if (_renderEngine.ShouldBreak) return;
-					HandleMeshData(meshguid, meshIndex, meshdata, mappingCollection, isClippingObject, uint.MaxValue);
+					HandleMeshData(meshguid, meshIndex, meshdata, mappingCollection, isClippingObject, uint.MaxValue, t);
 					meshIndex++;
 				}
 			}
@@ -1001,7 +1006,7 @@ namespace RhinoCyclesCore.Database
 				}
 		}
 
-		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, MappingChannelCollection mappingCollection, bool isClippingObject, uint linearlightMatId)
+		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, MappingChannelCollection mappingCollection, bool isClippingObject, uint linearlightMatId, ccl.Transform t)
 		{
 			if (_renderEngine.ShouldBreak) return;
 			RcCore.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
@@ -1066,6 +1071,7 @@ namespace RhinoCyclesCore.Database
 				VertexNormals = rhvn,
 				VertexColors = cmvc,
 				MatId = crc,
+				OcsFrame = t,
 			};
 			_objectDatabase.AddMesh(cyclesMesh);
 			_objectDatabase.SetIsClippingObject(meshid, isClippingObject);
@@ -1418,7 +1424,7 @@ namespace RhinoCyclesCore.Database
 				m.SetCachedTextureCoordinates(texturemapping, ref tfm);
 			}
 
-			HandleMeshData(gpid.Item1, gpid.Item2, m, null, false, uint.MaxValue);
+			HandleMeshData(gpid.Item1, gpid.Item2, m, null, false, uint.MaxValue, ccl.Transform.Identity());
 
 			HandleRenderMaterial(mat, materialId, null, !gp.ShowUnderside);
 
@@ -1736,7 +1742,7 @@ namespace RhinoCyclesCore.Database
 
 			HandleLightMaterial(ld, matid);
 
-			HandleMeshData(ld.Id, 0, mesh, null, false, matid);
+			HandleMeshData(ld.Id, 0, mesh, null, false, matid, t);
 
 			var lightObject = new CyclesObject
 			{
@@ -1853,6 +1859,9 @@ namespace RhinoCyclesCore.Database
 				// hmm, no mesh. Oh well, lets get on with the next
 				if (mesh == null) continue;
 
+
+				ccl.Transform t = _objectDatabase.MeshOcsFrames.ContainsKey(mesh.GeometryPointer) ? _objectDatabase.MeshOcsFrames[mesh.GeometryPointer] : ccl.Transform.Identity();
+
 				// see if we already have an object here.
 				// update it, otherwise create new one
 				var cob = _objectDatabase.FindObjectRelation(ob.obid);
@@ -1873,7 +1882,7 @@ namespace RhinoCyclesCore.Database
 				cob.Mesh = mesh;
 				cob.RandomId = ob.obid;
 				cob.Transform = ob.Transform;
-				cob.OcsFrame = ob.OcsFrame;
+				cob.OcsFrame = t;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				//cob.IsBlockInstance = true;
 				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;

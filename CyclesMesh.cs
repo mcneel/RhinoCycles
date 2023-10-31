@@ -55,6 +55,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public float[] VertexColors { get; set; }
 
+		public ccl.Transform OcsFrame { get; set; } = ccl.Transform.Identity();
+
 		public void Clear()
 		{
 			this.Verts = null;

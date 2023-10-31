@@ -29,6 +29,7 @@ namespace RhinoCyclesCore.Database
 		/// record changes to push to cycles (new meshes, changes to existing ones)
 		/// </summary>
 		private readonly Dictionary<Tuple<Guid, int>, CyclesMesh> _cqMeshChanges = new Dictionary<Tuple<Guid, int>, CyclesMesh>();
+		private readonly Dictionary<IntPtr, ccl.Transform> _cqMeshOcsFrames = new Dictionary<IntPtr, ccl.Transform>();
 		/// <summary>
 		/// record mesh removes from cycles
 		/// </summary>
@@ -52,7 +53,7 @@ namespace RhinoCyclesCore.Database
 		/// record what uint corresponds to what object id in cycles
 		/// Key is InstanceAncestry.Id
 		/// </summary>
-		private readonly Dictionary<uint, CclObject> _rhCclObjects = new Dictionary<uint, CclObject>(); 
+		private readonly Dictionary<uint, CclObject> _rhCclObjects = new Dictionary<uint, CclObject>();
 		/// <summary>
 		/// record objects to push to cycles
 		/// </summary>
@@ -60,7 +61,7 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// record objects to remove/hide in cycles
 		/// </summary>
-		private readonly List<CyclesObject> _cqDeletedObjects = new List<CyclesObject>(); 
+		private readonly List<CyclesObject> _cqDeletedObjects = new List<CyclesObject>();
 		/// <summary>
 		/// record dynamic object transformations
 		/// </summary>
@@ -111,6 +112,8 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public Dictionary<Tuple<Guid, int>, CyclesMesh> MeshChanges => _cqMeshChanges;
 
+		public Dictionary<IntPtr, ccl.Transform> MeshOcsFrames => _cqMeshOcsFrames;
+
 		/// <summary>
 		/// Get list of meshes to delete.
 		/// </summary>
@@ -139,7 +142,7 @@ namespace RhinoCyclesCore.Database
 			if (_rhCclObjects.ContainsKey(obid)) return _rhCclObjects[obid];
 
 			return null;
-		} 
+		}
 		/// <summary>
 		/// Add an object change.
 		/// </summary>
@@ -307,6 +310,11 @@ namespace RhinoCyclesCore.Database
 			}
 
 			return cclobs;
+		}
+
+		public void RecordMeshOcsFrame(IntPtr meshId, ccl.Transform t)
+		{
+			_cqMeshOcsFrames[meshId] = t;
 		}
 	}
 }
