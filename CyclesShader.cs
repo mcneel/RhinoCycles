@@ -318,6 +318,14 @@ namespace RhinoCyclesCore
 			shb.TransparencyColor = transp;
 			shb.EmissionColor = emis;
 
+			// In Rhino 7 plaster (through custom material) (also default material
+			// reflection roughness did nothing. Now it does. Set it to 1.0 always
+			// to have it behave the same way as in Rhino 7. RH-77404. jK
+			if(mattype == ShaderBody.CyclesMaterial.Diffuse)
+			{
+				shb.ReflectionRoughness = 1.0f;
+			}
+
 			var transp_used = onMaterial.Transparency > 0.001;
 
 			shb.FresnelIOR = (float)onMaterial.FresnelIndexOfRefraction;
