@@ -119,7 +119,7 @@ namespace RhinoCyclesCore.Shaders
 			return m_shader;
 		}
 
-		static private void SetupOneDecalNodes(CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, MathMultiply transp, TextureAdjustmentTextureProceduralNode adjust)
+		static private void SetupOneDecalNodes(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, MathMultiply transp, TextureAdjustmentTextureProceduralNode adjust)
 		{
 			texco.ObjectTransform = decal.Transform;
 			texco.UseTransform = true;
@@ -180,7 +180,77 @@ namespace RhinoCyclesCore.Shaders
 			texco.VerticalSweepEnd = decal.VerticalSweepEnd;
 
 			transp.ins.Value2.Value = 1.0f - decal.Transparency;
-			imgtex.outs.Alpha.Connect(transp.ins.Value1);
+
+			// if color mask is set we add here a branch of nodes to adjust the
+			// imgtex alpha output with the color mask.
+			if (decal.Texture.UseColorMask) {
+				var sep_img_col = new SeparateRgbNode(shader, "separate image color");
+				var sep_mask_col = new SeparateRgbNode(shader, "separate mask color");
+
+				var comp_r = new MathNode(shader, "compare r channels")
+				{
+					Operation = MathNode.Operations.Compare
+				};
+				comp_r.ins.Value3.Value = decal.Texture.ColorMaskSensitivity;
+
+				var comp_g = new MathNode(shader, "compare g channels")
+				{
+					Operation = MathNode.Operations.Compare
+				};
+				comp_g.ins.Value3.Value = decal.Texture.ColorMaskSensitivity;
+
+				var comp_b = new MathNode(shader, "compare b channels")
+				{
+					Operation = MathNode.Operations.Compare
+				};
+				comp_b.ins.Value3.Value = decal.Texture.ColorMaskSensitivity;
+
+				var comp_comps = new MathNode(shader, "compare comps sum")
+				{
+					Operation = MathNode.Operations.Compare
+				};
+				comp_comps.ins.Value3.Value = 0.0001f;
+				comp_comps.ins.Value1.Value = 3.0f;
+
+				var add_comp_rg = new MathAdd(shader, "add r and g comps");
+				var add_comp_b = new MathAdd(shader, "add b comp");
+
+				var invert_comp = new MathSubtract(shader, "invert_comp");
+				invert_comp.ins.Value1.Value = 1.0f;
+				var adjust_img_alpha = new MathMultiply(shader, "adjust_img_alpha");
+
+				imgtex.outs.Color.Connect(sep_img_col.ins.Image);
+				sep_mask_col.ins.Image.Value = decal.Texture.ColorMask.ToFloat4();
+
+				sep_img_col.outs.R.Connect(comp_r.ins.Value1);
+				sep_mask_col.outs.R.Connect(comp_r.ins.Value2);
+
+				sep_img_col.outs.G.Connect(comp_g.ins.Value1);
+				sep_mask_col.outs.G.Connect(comp_g.ins.Value2);
+
+				sep_img_col.outs.B.Connect(comp_b.ins.Value1);
+				sep_mask_col.outs.B.Connect(comp_b.ins.Value2);
+
+				comp_r.outs.Value.Connect(add_comp_rg.ins.Value1);
+				comp_g.outs.Value.Connect(add_comp_rg.ins.Value2);
+
+				add_comp_rg.outs.Value.Connect(add_comp_b.ins.Value1);
+				comp_b.outs.Value.Connect(add_comp_b.ins.Value2);
+
+
+				add_comp_b.outs.Value.Connect(comp_comps.ins.Value2);
+
+				comp_comps.outs.Value.Connect(invert_comp.ins.Value2);
+
+				imgtex.outs.Alpha.Connect(adjust_img_alpha.ins.Value1);
+				invert_comp.outs.Value.Connect(adjust_img_alpha.ins.Value2);
+
+				adjust_img_alpha.outs.Value.Connect(transp.ins.Value1);
+			}
+			else {
+				imgtex.outs.Alpha.Connect(transp.ins.Value1);
+			}
+
 
 			switch(decal.Mapping) {
 				case Rhino.Render.DecalMapping.Planar:
@@ -247,7 +317,7 @@ namespace RhinoCyclesCore.Shaders
 					var imgtex = imgtexs[0];
 					var trans = transparencies[0];
 					var adjust = adjustments[0];
-					SetupOneDecalNodes(m_original.Decals.First(), texco, imgtex, trans, adjust);
+					SetupOneDecalNodes(m_shader, m_original.Decals.First(), texco, imgtex, trans, adjust);
 					if(m_original.Decals[0].Texture.AdjustNeeded) {
 						imgtex.outs.Color.Connect(adjust.ins.Color);
 						adjust.outs.Color.Connect(lastMixer.ins.Color2);
@@ -265,7 +335,7 @@ namespace RhinoCyclesCore.Shaders
 						var imgtex = imgtexs[idx];
 						var trans = transparencies[idx];
 						var adjust = adjustments[idx];
-						SetupOneDecalNodes(decal, texco, imgtex, trans, adjust);
+						SetupOneDecalNodes(m_shader, decal, texco, imgtex, trans, adjust);
 						idx++;
 					}
 					idx = 0;

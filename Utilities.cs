@@ -171,6 +171,24 @@ namespace RhinoCyclesCore
 				}
 			}
 
+			var color_mask = Color4f.White;
+			{
+				bool has_mask_color = rt.Fields.TryGetValue("transparent-color", out Color4f mask_color);
+				if(has_mask_color)
+				{
+					color_mask = mask_color;
+				}
+			}
+
+			var color_mask_sensitivity = 0.0f;
+			{
+				bool has_col_mask_sens = rt.Fields.TryGetValue("transparent-color-sensitivity", out double col_mask_sens);
+				if(has_col_mask_sens)
+				{
+					color_mask_sensitivity = (float)col_mask_sens;
+				}
+			}
+
 			bool alternate = false;
 			if (rt.Fields.TryGetValue("mirror-alternate-tiles", out bool mirror_alternate_tiles))
 				alternate = mirror_alternate_tiles;
@@ -217,6 +235,9 @@ namespace RhinoCyclesCore
 				tex.Repeat = repeat;
 				tex.AlternateTiles = alternate;
 				tex.MappingChannel = rt.GetMappingChannel();
+				tex.UseColorMask = use_color_mask;
+				tex.ColorMask = color_mask;
+				tex.ColorMaskSensitivity = color_mask_sensitivity;
 			}
 		}
 
