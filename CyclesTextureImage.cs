@@ -15,6 +15,7 @@ limitations under the License.
 **/
 using System;
 using System.Collections.Generic;
+using Rhino.Display;
 using Rhino.Render;
 using Rhino.Runtime.InteropWrappers;
 using RhinoCyclesCore.Converters;
@@ -36,6 +37,9 @@ namespace RhinoCyclesCore
 		public string Name;
 		public bool UseAlpha;
 		public bool AlternateTiles;
+		public bool UseColorMask;
+		public Color4f ColorMask;
+		public float ColorMaskSensitivity;
 		private bool disposedValue;
 
 		public string Filename { get; set; }
