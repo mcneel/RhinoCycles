@@ -337,27 +337,27 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		public static VectorSocket GetProjectionModeOutputSocket(Shader sh, CyclesTextureImage texture, RhinoTextureCoordinateNode texture_coordinates)
+		public static VectorSocket GetProjectionModeOutputSocket(Shader sh, Rhino.Render.TextureProjectionMode projectionMode, Rhino.Render.TextureEnvironmentMappingMode environmentMappingMode, RhinoTextureCoordinateNode texture_coordinates)
 		{
-			if (texture.ProjectionMode == TextureProjectionMode.WcsBox)
+			if (projectionMode == TextureProjectionMode.WcsBox)
 			{
 				return texture_coordinates.outs.WcsBox;
 			}
-			else if (texture.ProjectionMode == TextureProjectionMode.Wcs)
+			else if (projectionMode == TextureProjectionMode.Wcs)
 			{
 				return texture_coordinates.outs.Object;
 			}
-			else if (texture.ProjectionMode == TextureProjectionMode.Screen)
+			else if (projectionMode == TextureProjectionMode.Screen)
 			{
 				return texture_coordinates.outs.Window;
 			}
-			else if (texture.ProjectionMode == TextureProjectionMode.View)
+			else if (projectionMode == TextureProjectionMode.View)
 			{
 				return texture_coordinates.outs.Camera;
 			}
-			else if (texture.ProjectionMode == TextureProjectionMode.EnvironmentMap)
+			else if (projectionMode == TextureProjectionMode.EnvironmentMap)
 			{
-				switch (texture.EnvProjectionMode)
+				switch (environmentMappingMode)
 				{
 					case TextureEnvironmentMappingMode.Spherical:
 						return texture_coordinates.outs.EnvSpherical;

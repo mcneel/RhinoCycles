@@ -317,7 +317,7 @@ namespace RhinoCyclesCore
 				alpha_node.ins.Value1.Value = 0.0f;
 				alpha_node.ins.Value2.Value = 1.0f;
 
-				VectorSocket uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, teximg, texco);
+				VectorSocket uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, teximg.Procedural.ProjectionMode, teximg.Procedural.EnvironmentMappingMode, texco);
 
 				ColorSocket color_input_node = mixerNode.ins.Color2;
 				FloatSocket alpha_input_node = alpha_node.ins.Value2;
