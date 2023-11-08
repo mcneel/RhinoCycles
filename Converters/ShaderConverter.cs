@@ -295,6 +295,18 @@ namespace RhinoCyclesCore.Converters
 			private set;
 		} = false;
 
+		public TextureProjectionMode ProjectionMode
+		{
+			get;
+			private set;
+		}
+
+		public TextureEnvironmentMappingMode EnvironmentMappingMode
+		{
+			get;
+			private set;
+		}
+
 		public Procedural(RenderTexture render_texture, bool is_color)
 		{
 			if (render_texture != null)
@@ -302,6 +314,8 @@ namespace RhinoCyclesCore.Converters
 				IsColor = is_color;
 				IsBitmapTexture = render_texture.IsBitmapTexture();
 				MappingTransform = ToCyclesTransform(render_texture.LocalMappingTransform);
+				ProjectionMode = render_texture.GetProjectionMode();
+				EnvironmentMappingMode = render_texture.GetInternalEnvironmentMappingMode();
 
 				var rtf = render_texture.Fields;
 
