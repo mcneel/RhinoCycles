@@ -126,6 +126,7 @@ namespace RhinoCyclesCore.Converters
 			if (rm != null)
 				renderTexture = rm.FindChild("texture") as RenderTexture;
 
+
 			if (renderTexture == null)
 			{
 				teximg.TexByte = null;
@@ -146,8 +147,9 @@ namespace RhinoCyclesCore.Converters
 				}
 
 				teximg.Filename = string.IsNullOrEmpty(fs) ? null : fs;
+			} else {
+				Utilities.HandleRenderTexture(renderTexture, teximg, false, false, this, docsrn, gamma, false, true);
 			}
-
 
 			var projection = get_environment_mapping(rm, renderTexture);
 			var rhinotfm = renderTexture.LocalMappingTransform;

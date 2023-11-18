@@ -1862,8 +1862,7 @@ namespace RhinoCyclesCore.Converters
 
 		public override void CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			var transform_node = new MatrixMathNode(shader);
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			var texco = new RhinoTextureCoordinateNode(shader, "texco for physical sky texture");
 
 			var physical_sky_node = new PhysicalSkyTextureProceduralNode(shader);
 
@@ -1884,9 +1883,7 @@ namespace RhinoCyclesCore.Converters
 			physical_sky_node.InverseWavelengthsZ = (float)InverseWavelengths.Z;
 			physical_sky_node.Exposure = Exposure;
 
-			uvw_output.Connect(transform_node.ins.Vector);
-			transform_node.outs.Vector.Connect(physical_sky_node.ins.UVW);
-
+			texco.outs.EnvSpherical.Connect(physical_sky_node.ins.UVW);
 			physical_sky_node.outs.Color.Connect(parent_color_input);
 		}
 

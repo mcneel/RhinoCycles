@@ -98,7 +98,7 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// True if bg env texture is available and background fill is set to Environment.
 		/// </summary>
-		public bool HasBgEnvTexture => BgTexture.HasTextureImage && BackgroundFill == BackgroundStyle.Environment;
+		public bool HasBgEnvTexture => (BgTexture.HasTextureImage || BgTexture.HasProcedural) && BackgroundFill == BackgroundStyle.Environment;
 		public float HasBgEnvTextureAsFloat => HasBgEnvTexture || (Wallpaper.HasTextureImage && BackgroundFill == BackgroundStyle.WallpaperImage) ? 1.0f : 0.0f;
 
 		public float BgStrength => HasBgEnvTexture ? BgTexture.Strength: 1.0f;
@@ -153,7 +153,7 @@ namespace RhinoCyclesCore
 		/// True if skylight is used.
 		/// </summary>
 		public bool HasSky => HasSkyEnvTexture || SkyColor != Color.Empty;
-		public bool HasSkyEnvTexture => SkyTexture.HasTextureImage;
+		public bool HasSkyEnvTexture => SkyTexture.HasTextureImage || SkyTexture.HasProcedural;
 		public float HasSkyEnvTextureAsFloat => HasSkyEnvTexture ? 1.0f : 0.0f;
 		/// <summary>
 		/// True if skylight is enabled
@@ -175,7 +175,7 @@ namespace RhinoCyclesCore
 		/// True if custom reflection env is used
 		/// </summary>
 		public bool HasRefl => HasReflEnvTexture || ReflectionColor != Color.Empty;
-		public bool HasReflEnvTexture => ReflectionTexture.HasTextureImage;
+		public bool HasReflEnvTexture => ReflectionTexture.HasTextureImage || ReflectionTexture.HasProcedural;
 		public float HasReflEnvTextureAsFloat => HasReflEnvTexture ? 1.0f : 0.0f;
 
 		public bool UseCustomReflectionEnvironment => HasRefl;

@@ -17,6 +17,7 @@ limitations under the License.
 using ccl;
 using ccl.ShaderNodes;
 using Rhino.Display;
+using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
 using System;
 
@@ -285,7 +286,6 @@ namespace RhinoCyclesCore.Shaders
 				texcoord210.outs.Generated.Connect(skyAzimuthAltitudeTransformNode.ins.Vector);
 
 				bgAzimuthAltitudeTransformNode.outs.Vector.Connect(bg_env_texture255.ins.Vector);
-				bg_env_texture255.outs.Color.Connect(bg_color_or_texture259.ins.Color2);
 				bg_color_or_texture259.outs.Color.Connect(separate_bg_color265.ins.Image);
 				separate_bg_color265.outs.R.Connect(factor_r262.ins.Value1);
 				skylight_strength_factor299.outs.Value.Connect(factor_r262.ins.Value2);
@@ -309,7 +309,6 @@ namespace RhinoCyclesCore.Shaders
 				gradient_or_other280.outs.Color.Connect(bg_no_customs301.ins.Color);
 				maximum306.outs.Value.Connect(bg_no_customs301.ins.Strength);
 				reflAzimuthAltitudeTransformNode.outs.Vector.Connect(refl_env_texture256.ins.Vector);
-				refl_env_texture256.outs.Color.Connect(refl_color_or_texture260.ins.Color2);
 				refl_color_or_texture260.outs.Color.Connect(separate_refl_color270.ins.Image);
 				separate_refl_color270.outs.R.Connect(factor_refl_r267.ins.Value1);
 				skylight_strength_factor300.outs.Value.Connect(factor_refl_r267.ins.Value2);
@@ -326,7 +325,6 @@ namespace RhinoCyclesCore.Shaders
 				gradient_or_other280.outs.Color.Connect(skycolor_or_final_bg281.ins.Color1);
 				skyAzimuthAltitudeTransformNode.outs.Vector.Connect(sky_env_texture257.ins.Vector);
 				skycolor_or_final_bg281.outs.Color.Connect(sky_color_or_texture258.ins.Color1);
-				sky_env_texture257.outs.Color.Connect(sky_color_or_texture258.ins.Color2);
 				sky_color_or_texture258.outs.Color.Connect(separate_sky_color275.ins.Image);
 				separate_sky_color275.outs.R.Connect(factor_sky_r272.ins.Value1);
 				sky_or_not261.outs.Value.Connect(factor_sky_r272.ins.Value2);
@@ -368,29 +366,51 @@ namespace RhinoCyclesCore.Shaders
 
 				if (m_original_background.BackgroundFill == BackgroundStyle.Environment && m_original_background.HasBgEnvTexture)
 				{
-					RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.BgTexture);
-					_SetEnvironmentProjection(m_original_background.BgTexture, bg_env_texture255);
-					bgAzimuthAltitudeTransformNode.Altitude = m_original_background.BgTexture.Transform.z.x;
-					bgAzimuthAltitudeTransformNode.Azimuth = m_original_background.BgTexture.Transform.z.z;
+					if(m_original_background.BgTexture.HasProcedural) {
+
+						m_original_background.BgTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcoord210.outs.EnvSpherical, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: true);
+					}
+					else {
+						RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.BgTexture);
+						bg_env_texture255.outs.Color.Connect(bg_color_or_texture259.ins.Color2);
+						_SetEnvironmentProjection(m_original_background.BgTexture, bg_env_texture255);
+						bgAzimuthAltitudeTransformNode.Altitude = m_original_background.BgTexture.Transform.z.x;
+						bgAzimuthAltitudeTransformNode.Azimuth = m_original_background.BgTexture.Transform.z.z;
+					}
 				}
-				if (m_original_background.BackgroundFill == BackgroundStyle.WallpaperImage && m_original_background.Wallpaper.HasTextureImage)
+				else if (m_original_background.BackgroundFill == BackgroundStyle.WallpaperImage && m_original_background.Wallpaper.HasTextureImage)
 				{
 					RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.Wallpaper);
+					bg_env_texture255.outs.Color.Connect(bg_color_or_texture259.ins.Color2);
 					bg_env_texture255.Projection = TextureNode.EnvironmentProjection.Wallpaper;
 				}
 				if (m_original_background.HasReflEnvTexture)
 				{
-					RenderEngine.SetTextureImage(refl_env_texture256, m_original_background.ReflectionTexture);
-					_SetEnvironmentProjection(m_original_background.ReflectionTexture, refl_env_texture256);
-					reflAzimuthAltitudeTransformNode.Altitude = m_original_background.ReflectionTexture.Transform.z.x;
-					reflAzimuthAltitudeTransformNode.Azimuth = m_original_background.ReflectionTexture.Transform.z.z;
+					if (m_original_background.ReflectionTexture.HasProcedural) {
+						m_original_background.ReflectionTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcoord210.outs.EnvSpherical, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: true);
+					}
+					else {
+						RenderEngine.SetTextureImage(refl_env_texture256, m_original_background.ReflectionTexture);
+						refl_env_texture256.outs.Color.Connect(refl_color_or_texture260.ins.Color2);
+						_SetEnvironmentProjection(m_original_background.ReflectionTexture, refl_env_texture256);
+						reflAzimuthAltitudeTransformNode.Altitude = m_original_background.ReflectionTexture.Transform.z.x;
+						reflAzimuthAltitudeTransformNode.Azimuth = m_original_background.ReflectionTexture.Transform.z.z;
+					}
 				}
 				if (m_original_background.HasSkyEnvTexture)
 				{
-					RenderEngine.SetTextureImage(sky_env_texture257, m_original_background.SkyTexture);
-					_SetEnvironmentProjection(m_original_background.SkyTexture, sky_env_texture257);
-					skyAzimuthAltitudeTransformNode.Altitude = m_original_background.SkyTexture.Transform.z.x;
-					skyAzimuthAltitudeTransformNode.Azimuth = m_original_background.SkyTexture.Transform.z.z;
+					if (m_original_background.SkyTexture.HasProcedural)
+					{
+						m_original_background.SkyTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcoord210.outs.EnvSpherical, sky_color_or_texture258.ins.Color2, parent_alpha_input: null, IsData: true);
+					}
+					else
+					{
+						RenderEngine.SetTextureImage(sky_env_texture257, m_original_background.SkyTexture);
+						sky_env_texture257.outs.Color.Connect(sky_color_or_texture258.ins.Color2);
+						_SetEnvironmentProjection(m_original_background.SkyTexture, sky_env_texture257);
+						skyAzimuthAltitudeTransformNode.Altitude = m_original_background.SkyTexture.Transform.z.x;
+						skyAzimuthAltitudeTransformNode.Azimuth = m_original_background.SkyTexture.Transform.z.z;
+					}
 				}
 
 				if (m_original_background.NoCustomsWithSkylightEnabled)
