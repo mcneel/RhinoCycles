@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 using Rhino.PlugIns;
 
 // Plug-In title and Guid are extracted from the following two attributes
-[assembly: AssemblyTitle("RhinoCyclesOpenClCompiler")]
+[assembly: AssemblyTitle("RhinoCyclesKernelCompiler")]
 [assembly: Guid("1430ec42-1f93-49dc-8437-586d82171d74")]
 
 // Plug-in Description Attributes - all of these are optional
@@ -36,11 +36,11 @@ using Rhino.PlugIns;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyDescription("RhinoCyclesOpenClCompiler")]
+[assembly: AssemblyDescription("RhinoCyclesKernelCompiler")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("RhinoCyclesOpenClCompiler")]
-[assembly: AssemblyCopyright("Copyright ©  2014-2021")]
+[assembly: AssemblyProduct("RhinoCyclesKernelCompiler")]
+[assembly: AssemblyCopyright("Copyright ©  2014-2023")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
