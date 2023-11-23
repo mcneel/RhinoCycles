@@ -1,5 +1,5 @@
 // Enable next line for debug assistance
-//#define DEBUGCOMPILER
+// #define DEBUGCOMPILER
 using System;
 using ccl;
 using RhinoCyclesCore;
@@ -35,7 +35,9 @@ namespace RhinoCyclesOpenClCompiler
 				return;
 			}
 
-			File.Create(compilingSignal);
+			var fs = File.Create(compilingSignal);
+			fs.Close();
+			fs.Dispose();
 
 			var id = $"{device.Id}: {device.NiceName}";
 
@@ -60,7 +62,7 @@ namespace RhinoCyclesOpenClCompiler
 				};
 				session = new Session(sessionParameters);
 
-				session.AddPass(PassType.Combined);
+				//session.AddPass(PassType.Combined);
 				session.Reset(1, 1, 1, 0, 0, 1, 1);
 				Console.WriteLine($"Started for {id}");
 				session.Start();
@@ -111,7 +113,7 @@ namespace RhinoCyclesOpenClCompiler
 				sw.Stop();
 				Console.WriteLine($"Completed {id}");
 				Console.WriteLine($"   time: {sw.Elapsed}");
-				File.Move(compilingSignal, gpuCompileFile);
+				File.Move(compilingSignal, gpuCompileFile, true);
 			}
 
 		}
