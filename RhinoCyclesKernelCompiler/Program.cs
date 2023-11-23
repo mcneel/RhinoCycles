@@ -1,30 +1,58 @@
 // Enable next line for debug assistance
-// #define DEBUGCOMPILER
+//#define DEBUGCOMPILER
 using System;
 using ccl;
+using RhinoCyclesCore;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
+using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace RhinoCyclesOpenClCompiler {
+namespace RhinoCyclesOpenClCompiler
+{
+	class Program
+	{
 
-	class Program {
-
-		static void HandleDevice(Device device)
+		static void HandleDevice(DeviceAndPath deviceWithHash)
 		{
-			var id = $"{device.Id}: {device.NiceName}";
-			var laststatus = "";
-			Stopwatch sw = Stopwatch.StartNew();
+			Device device = deviceWithHash.Device;
+
 			if (device.IsCpu) return;
+
+			string gpuCompileFile = deviceWithHash.Path;
+			if (File.Exists(gpuCompileFile))
+			{
+				Console.WriteLine($"{device.NiceName} already completed");
+				return;
+			}
+
+			string compilingSignal = $"{gpuCompileFile}.compiling";
+			if (File.Exists(compilingSignal))
+			{
+				Console.WriteLine($"{device.NiceName} already compiling");
+				return;
+			}
+
+			File.Create(compilingSignal);
+
+			var id = $"{device.Id}: {device.NiceName}";
+
+			Console.WriteLine($"Start compiling {id}");
+
+			var sha = device.NiceNameSha;
+			var laststatus = "";
 			Session session = null;
+			Stopwatch sw = Stopwatch.StartNew();
 			try
 			{
 				Client client = new Client();
 				SessionParameters sessionParameters = new SessionParameters(device)
 				{
 					Experimental = false,
-					Samples = 2,
-					TileSize = 32,
+					Samples = 1,
+					TileSize = 1,
 					Threads = 0,
 					ShadingSystem = ShadingSystem.SVM,
 					Background = false,
@@ -33,17 +61,18 @@ namespace RhinoCyclesOpenClCompiler {
 				session = new Session(sessionParameters);
 
 				session.AddPass(PassType.Combined);
-				session.Reset(10, 10, 2, 0, 0, 10, 10);
+				session.Reset(1, 1, 1, 0, 0, 1, 1);
 				Console.WriteLine($"Started for {id}");
 				session.Start();
 				while (true)
 				{
 					string status = CSycles.progress_get_status(session.Id);
 					string substatus = CSycles.progress_get_substatus(session.Id);
-					status = $"{id} | {status}: {substatus}".ToLowerInvariant();
 					int sample = CSycles.progress_get_sample(session.Id);
-					bool finished = status.Contains("finished") || status.Contains("rendering done");
-					if (status.Contains("error"))
+					status = $"{id} [{sha}] ({sample}) | {status}: {substatus}";
+					string lowstatus = status.ToLowerInvariant();
+					bool finished = lowstatus.Contains("finished") || lowstatus.Contains("rendering done");
+					if (lowstatus.Contains("error"))
 					{
 						Console.WriteLine(status);
 						throw new Exception($"Error in session -> {status}.");
@@ -63,7 +92,7 @@ namespace RhinoCyclesOpenClCompiler {
 			}
 			catch (Exception e)
 			{
-				Console.WriteLine($"Failed for {id}\n\t{e.ToString()}");
+				Console.WriteLine($"Failed for {id}\n\t{e}");
 
 				/*if (File.Exists(compilingLock))
 				{
@@ -82,34 +111,75 @@ namespace RhinoCyclesOpenClCompiler {
 				sw.Stop();
 				Console.WriteLine($"Completed {id}");
 				Console.WriteLine($"   time: {sw.Elapsed}");
+				File.Move(compilingSignal, gpuCompileFile);
 			}
+
 		}
 
+		static List<DeviceAndPath> ReadGpuTaskData(string gpuTaskFile, string gpuDataPath)
+		{
+			List<DeviceAndPath> gpuTasks = new List<DeviceAndPath>();
+
+			var gpuTaskData = File.ReadAllLines(gpuTaskFile);
+			foreach (var gpuTask in gpuTaskData)
+			{
+				Console.WriteLine($"### -> {gpuTask}");
+				var parts = gpuTask.Split(" || ");
+				Console.WriteLine($"@@@ -> {parts[0]} -- {parts[1]}");
+				int devid = int.Parse(parts[0]);
+				string path = parts[1];
+				var dev = Device.GetDevice(devid);
+
+				if (gpuTasks.FindIndex(gpt => gpt.Path.Equals(path)) > -1) continue;
+
+				Console.WriteLine($"Adding device {dev.NiceName} with path {path}");
+
+				gpuTasks.Add(new(dev, path));
+			}
+
+			return gpuTasks;
+		}
 		static int Main(string[] args)
 		{
 #if DEBUGCOMPILER
 			System.Diagnostics.Debugger.Launch();
 #endif
-			if(args.Length!=2) {
+			foreach (var arg in args)
+			{
+				Console.WriteLine($"> {arg}");
+			}
+			if (args.Length != 2)
+			{
 				Console.WriteLine("Need kernel and user data paths of RhinoCycles");
 				return -1;
 			}
 
-			var kernelpath = args[0];
-			var datauserpath = args[1];
+			var kernelPath = args[0];
+			var compileTaskFile = args[1];
+			var gpuDataPath = new DirectoryInfo(Path.GetDirectoryName(compileTaskFile)).FullName;
+			var dataUserPath = new DirectoryInfo(Path.GetDirectoryName(compileTaskFile)).Parent.FullName;
 
-			Console.WriteLine(kernelpath);
-			Console.WriteLine(datauserpath);
+			CSycles.path_init(kernelPath, dataUserPath);
+			CSycles.initialise(DeviceTypeMask.All);
+
+			var gpuTasks = ReadGpuTaskData(compileTaskFile, gpuDataPath);
+
+			Console.WriteLine(kernelPath);
+			Console.WriteLine(dataUserPath);
+			Console.WriteLine(compileTaskFile);
+			Console.WriteLine(gpuDataPath);
 			try
 			{
-				CSycles.path_init(kernelpath, datauserpath);
-				CSycles.initialise(DeviceTypeMask.All);
-				Parallel.ForEach(Device.Devices, HandleDevice);
-			} catch (Exception ex) {
+				Parallel.ForEach(gpuTasks, HandleDevice);
+			}
+			catch (Exception ex)
+			{
 				Console.WriteLine(ex.ToString());
 				Console.WriteLine(ex.StackTrace);
+				return -1;
 			}
-			return -1;
+
+			return 0;
 		} /* end of Main */
 	}
 }

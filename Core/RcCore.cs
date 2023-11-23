@@ -19,6 +19,7 @@ using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
+using RhinoCyclesCore;
 using RhinoCyclesCore.Settings;
 using RhinoCyclesCore.RenderEngines;
 using System;
@@ -32,6 +33,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
+using System.Reflection;
+using System.Drawing.Printing;
+using System.Text;
 
 namespace RhinoCyclesCore.Core
 {
@@ -123,6 +127,8 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		public string DataUserPath { get; set; }
 
+		public string GpuCompilePath => Path.Combine(DataUserPath, "gpus");
+
 		/// <summary>
 		/// Get the path used to look up .cubins (relative)
 		/// </summary>
@@ -160,24 +166,24 @@ namespace RhinoCyclesCore.Core
 			ReleaseActiveSessions();
 			int count;
 			int timer = 0;
-			if(checkOpenClCompilationCompletedThread!=null) {
-				stopCheckingForOpenClCompileFinished = true;
+			if(checkGpuKernelCompilationCompletedThread!=null) {
+				stopCheckingForGpuKernelCompileFinished = true;
 				try
 				{
-					checkOpenClCompilationCompletedThread.Join();
+					checkGpuKernelCompilationCompletedThread.Join();
 				}
 				finally {
-					checkOpenClCompilationCompletedThread = null;
+					checkGpuKernelCompilationCompletedThread = null;
 				}
 			}
-			if(openClCompilerThread!=null)
+			if(kernelCompilerThread!=null)
 			{
 				try
 				{
-					openClCompilerThread.Join();
+					kernelCompilerThread.Join(500);
 				}
 				finally {
-					openClCompilerThread = null;
+					kernelCompilerThread = null;
 				}
 			}
 			while((count = sessions.Count) > 0 ) {
@@ -187,7 +193,7 @@ namespace RhinoCyclesCore.Core
 				timer++;
 			}
 			RhinoApp.OutputDebugString($"All sessions cleaned up\n");
-			openClDevicesReadiness.Clear();
+			gpuDevicesReadiness.Clear();
 			CSycles.shutdown();
 		}
 
@@ -245,59 +251,56 @@ namespace RhinoCyclesCore.Core
 		/// Otherwise isDeviceReady will be false and actualDevice Device.Default.
 		/// </returns>
 		public (bool isDeviceReady, Device actualDevice) IsDeviceReady(Device device) {
-			return (true, device);
-			/*
-			lock(accessOpenClDevicesReadiness) {
-				var devReadiness = openClDevicesReadiness.Find(d => d.Device.Equals(device));
+			lock(accessGpuKernelDevicesReadiness) {
+				var devReadiness = gpuDevicesReadiness.Find(
+					d =>
+						d.DeviceAndPath.Device.Equals(device)
+				);
 				if(devReadiness.IsReady) return (true, device);
 			}
 			return (false, Device.Default);
-			*/
-
 		}
 
 		/// <summary>
 		/// The main OpenCL compiler thread.
 		/// </summary>
-		Thread openClCompilerThread = null;
+		Thread kernelCompilerThread = null;
 		/// <summary>
 		/// Thread that will check if compiles have finished.
 		/// </summary>
-		Thread checkOpenClCompilationCompletedThread = null;
+		Thread checkGpuKernelCompilationCompletedThread = null;
 		/// <summary>
 		/// Start the process to initialize OpenCL for Cycles in a separate thread.
 		/// Before starting the process create a list of all OpenCL devices and
 		/// initialize their readiness state to false.
 		/// </summary>
-		public void InitialiseOpenCl()
+		public void InitialiseGpuKernels()
 		{
-#if OPENCLCRUFT
-			lock (accessOpenClDevicesReadiness)
-			{
-				foreach (var device in ccl.Device.Devices)
-				{
-					if (device.IsOpenCl)
-					{
-						openClDevicesReadiness.Add((Device: device, IsReady: false));
-					}
-				}
-			}
-			openClCompilerThread = new Thread(StartCompileOpenCl);
-			openClCompilerThread.Start();
+			InitialiseGpuDeviceReadinessList();
 
-			checkOpenClCompilationCompletedThread = new Thread(CheckOpenClCompileFinished);
-			checkOpenClCompilationCompletedThread.Start();
-#endif
+			kernelCompilerThread = new Thread(StartCompileGpuKernels);
+			kernelCompilerThread.Start();
+
+			checkGpuKernelCompilationCompletedThread = new Thread(CheckGpuKernelCompileFinished);
+			checkGpuKernelCompilationCompletedThread.Start();
+		}
+
+		private void InitialiseGpuDeviceReadinessList()
+		{
+			foreach(Device device in Device.Devices)
+			{
+				gpuDevicesReadiness.Add((new (device, GenerateGpuDeviceInfo(device)), device.IsCpu));
+			}
 		}
 
 		/// <summary>
-		/// lock object for access to openClDevicesReadiness
+		/// lock object for access to gpuDevicesReadiness
 		/// </summary>
-		private readonly object accessOpenClDevicesReadiness = new object();
+		private readonly object accessGpuKernelDevicesReadiness = new object();
 		/// <summary>
 		/// List holding OpenCL devices and their readiness state.
 		/// </summary>
-		List<(ccl.Device Device, bool IsReady)> openClDevicesReadiness = new List<(ccl.Device, bool)>();
+		List<(DeviceAndPath DeviceAndPath, bool IsReady)> gpuDevicesReadiness = new List<(DeviceAndPath, bool)>();
 		/// <summary>
 		/// List of SHA256 hashes created from device.NiceName + driver date + rhino app version.
 		/// The names are used to create a file with that name when the OpenCL compilation
@@ -308,196 +311,141 @@ namespace RhinoCyclesCore.Core
 		/// available devices on the system. needed mostly for driver date
 		/// </summary>
 		List<(string DeviceName, string DriverDate)> availableGpuDevices = (from devinfo in DisplayDeviceInfo.GpuDeviceInfos() select (DeviceName: devinfo.Name, DriverDate: devinfo.DriverDateAsString)).ToList();
-
-		bool stopCheckingForOpenClCompileFinished = false;
-		public void CheckOpenClCompileFinished()
+		bool stopCheckingForGpuKernelCompileFinished = false;
+		public void CheckGpuKernelCompileFinished()
 		{
-			if(openClDevicesReadiness.Count == 0) return;
+			if(gpuDevicesReadiness.Count == 0) return;
 
 			do
 			{
-				Thread.Sleep(1000);
-				for (int idx = 0; idx < deviceFileNames.Count; idx++)
+				Thread.Sleep(100);
+				for (int idx = 0; idx < gpuDevicesReadiness.Count; idx++)
 				{
-					var deviceFileName = deviceFileNames[idx];
-					(Device device, bool isReady) = openClDevicesReadiness[idx];
-					if (File.Exists(deviceFileName) && !isReady)
+					(DeviceAndPath device, bool isReady) = gpuDevicesReadiness[idx];
+					if (File.Exists(device.Path) && !isReady)
 					{
-						lock (accessOpenClDevicesReadiness)
+						lock (accessGpuKernelDevicesReadiness)
 						{
-							openClDevicesReadiness[idx] = (device, true);
+							gpuDevicesReadiness[idx] = (device, true);
 						}
 					}
 				}
 				bool ready = true;
-				lock (accessOpenClDevicesReadiness)
+				lock (accessGpuKernelDevicesReadiness)
 				{
-					ready = openClDevicesReadiness.Aggregate(true, (state, next) => state && next.IsReady);
+					ready = gpuDevicesReadiness.Aggregate(true, (state, next) => state && next.IsReady);
 				}
 				if (ready)
 				{
 					break;
 				}
 			}
-			while (!stopCheckingForOpenClCompileFinished);
+			while (!stopCheckingForGpuKernelCompileFinished);
+		}
+
+		private void EnsureGpuCompilePath()
+		{
+			if(!Directory.Exists(GpuCompilePath))
+			{
+				Directory.CreateDirectory(GpuCompilePath);
+			}
+		}
+
+		private string GenerateGpuDeviceInfo(Device device)
+		{
+			var info = "";
+			foreach (var gpudev in availableGpuDevices)
+			{
+				if (gpudev.DeviceName.Contains(device.NiceName) || device.NiceName.Contains(gpudev.DeviceName))
+				{
+					using (SHA256 sha = SHA256.Create())
+					{
+						var hash = sha.ComputeHash(Encoding.UTF8.GetBytes($"{device.NiceName}{gpudev.DriverDate}{RhinoApp.Version}"));
+
+						info = Path.Combine(GpuCompilePath, string.Concat(hash.Select(b => b.ToString("x2"))));
+						break;
+					}
+				}
+			}
+			if(string.IsNullOrEmpty(info))
+			{
+					using (SHA256 sha = SHA256.Create())
+					{
+						var hash = sha.ComputeHash(Encoding.UTF8.GetBytes($"{device.NiceName}{RhinoApp.Version}"));
+
+						info = Path.Combine(GpuCompilePath, string.Concat(hash.Select(b => b.ToString("x2"))));
+					}
+			}
+
+			return info;
+		}
+
+			/// <summary>
+			/// Write GPU data to file to use in RhinoCyclesKernelCompile
+			/// </summary>
+			/// <returns>Return path to file</returns>
+			private string WriteGpuDevicesFile()
+		{
+			string gpuTaskFileName;
+			using(SHA256 gpuTaskFileSha = SHA256.Create())
+			{
+				var hash = gpuTaskFileSha.ComputeHash(Encoding.UTF8.GetBytes(DateTime.UtcNow.ToString()));
+				gpuTaskFileName = Path.Combine(GpuCompilePath, string.Concat(hash.Select(b => b.ToString("x2"))) + ".task");
+			}
+
+			using (TextWriter tw = new StreamWriter(gpuTaskFileName, false, Encoding.UTF8))
+			{
+				foreach (Device device in Device.Devices)
+				{
+					var info = GenerateGpuDeviceInfo(device);
+					tw.WriteLine($"{device.Id} || {info}");
+				}
+				tw.Close();
+			}
+
+			return gpuTaskFileName;
 		}
 
 		/// <summary>
 		/// Compile OpenCL if necessary
 		/// </summary>
-		public void StartCompileOpenCl()
+		public void StartCompileGpuKernels()
 		{
-			// no opencl devices to compile for
-			if (openClDevicesReadiness.Count == 0) return;
+			EnsureGpuCompilePath();
+			var compileTaskFile = WriteGpuDevicesFile();
 
-			// make a list of just the devices, so we can update the openClDevicesReadiness
-			// list when needed
-			List<Device> devicesToCheck;
-			lock (accessOpenClDevicesReadiness)
+			var assembly = Assembly.GetExecutingAssembly();
+			var compiler = Path.Combine(Path.GetDirectoryName(assembly.Location), "RhinoCyclesKernelCompiler");
+#if ON_RUNTIME_WIN
+			compiler += ".exe";
+#endif
+			var exists = File.Exists(compiler);
+			Console.WriteLine(exists);
+			var args = $"\"{KernelPath}\" \"{compileTaskFile}\"";
+			ProcessStartInfo startInfo = new ProcessStartInfo(compiler, args)
 			{
-				devicesToCheck = (from d in openClDevicesReadiness select d.Device).ToList();
-			}
+				//FileName = compiler,
+				//Arguments = args,
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				StandardErrorEncoding = System.Text.Encoding.UTF8,
+				StandardOutputEncoding = System.Text.Encoding.UTF8,
+			};
+			var dylib_path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "..", "..", ".."));
+			startInfo.EnvironmentVariables.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
+			startInfo.Environment.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
 
-			// Compute the SHA256 hash for each device on the concatenated string
-			// containing device nice name, device driver and Rhino version.
-			deviceFileNames = new List<string>(devicesToCheck.Count);
-			foreach(ccl.Device device in devicesToCheck) {
-				foreach(var gpudev in availableGpuDevices) {
-					if(gpudev.DeviceName.Contains(device.NiceName) || device.NiceName.Contains(gpudev.DeviceName)) {
-						using(SHA256 sha = SHA256Managed.Create()) {
-							var hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes($"{device.NiceName}{gpudev.DriverDate}{RhinoApp.Version}"));
-							deviceFileNames.Add(Path.Combine(DataUserPath, string.Concat(hash.Select(b => b.ToString("x2")))));
-							break;
-						}
-					}
-				}
-			}
+			var process = Process.Start(startInfo);
 
-			// bail if we don't have any device file names
-			if(deviceFileNames.Count == 0) return;
+			var stdout = process.StandardOutput.ReadToEnd();
+			//var stderr = process.StandardError.ReadToEnd();
 
-			// bail if device filenames and devices counts are different
-			if(deviceFileNames.Count != devicesToCheck.Count) return;
+			Console.WriteLine(stdout);
+			//Console.WriteLine(stderr);
 
-			// now check if we have compiled for all available OpenCL devices
-			bool needAnyCompile = (from devFile in deviceFileNames select !File.Exists(devFile)).Aggregate(false, (accum, res) => accum | res);
+			process.WaitForExit();
 
-			// early bail if no compile needed
-			if (!needAnyCompile)
-			{
-				for (int idx = 0; idx < openClDevicesReadiness.Count; idx++)
-				{
-					openClDevicesReadiness[idx] = (openClDevicesReadiness[idx].Device, true);
-				}
-				return;
-			}
-
-			// wait until Rhino has been initialized fully. We can't open documents
-			// before that, or we risk making Rhino go crazy.
-			while (!RcCore.It.AppInitialised)
-			{
-				Thread.Sleep(10);
-			}
-
-			for (int idx = 0; idx < devicesToCheck.Count; idx++)
-			{
-				var renderDevice = devicesToCheck[idx];
-				var compiledFileName = deviceFileNames[idx];
-				var compilingLock = $"{compiledFileName}.compiling";
-
-				// no need to start a compile when we have this file already
-				// just mark device as ready
-				if (File.Exists(compiledFileName))
-				{
-					lock (accessOpenClDevicesReadiness)
-					{
-						openClDevicesReadiness[idx] = (renderDevice, true);
-					}
-					continue;
-				}
-				else if(File.Exists(compilingLock)) {
-					// compile already in progress, check next device instead.
-					continue;
-				}
-				else
-				{
-					// Tell any other rhino process that we've started compiling for this
-					// device.
-					File.WriteAllText(compilingLock, DateTime.Now.ToLongTimeString());
-					// Start a new process to compile the OpenCL kernels for the current
-					// device.
-					// The process will use RhinoCyclesOpenClCompiler to essentially start
-					// the simplest possible Cycles session. This in turn will build the
-					// OpenCL kernels.
-					using(Process currentCompilerProcess = new Process()) {
-						currentCompilerProcess.StartInfo.FileName = Path.Combine(PluginPath, "RhinoCyclesOpenClCompiler");
-						currentCompilerProcess.StartInfo.WorkingDirectory = DataUserPath;
-						if (!AllSettings.Verbose)
-						{
-							currentCompilerProcess.StartInfo.CreateNoWindow = true;
-						}
-						if (AllSettings.Verbose)
-						{
-							currentCompilerProcess.StartInfo.Arguments = "d";
-						}
-						using (NamedPipeServerStream pipeServer =
-									new NamedPipeServerStream("rhino.opencl.compiler", PipeDirection.InOut))
-						{
-							currentCompilerProcess.StartInfo.UseShellExecute = true;
-							if (!AllSettings.Verbose)
-							{
-								currentCompilerProcess.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-							}
-							currentCompilerProcess.Start();
-
-							// wait for client to connect
-							pipeServer.WaitForConnection();
-
-
-							try
-							{
-								using (StreamWriter sw = new StreamWriter(pipeServer))
-								{
-									sw.AutoFlush = true;
-									// Send a 'sync message' and wait for client to receive it.
-									sw.WriteLine("SYNC");
-									pipeServer.WaitForPipeDrain();
-									// write compile lock filename
-									sw.WriteLine(compilingLock);
-									pipeServer.WaitForPipeDrain();
-									// write compiled filename
-									sw.WriteLine(compiledFileName);
-									pipeServer.WaitForPipeDrain();
-									// write kernel path
-									sw.WriteLine(RcCore.It.KernelPath);
-									pipeServer.WaitForPipeDrain();
-									// write data path
-									sw.WriteLine(RcCore.It.DataUserPath);
-									pipeServer.WaitForPipeDrain();
-									// now write device ID
-									sw.WriteLine($"{renderDevice.Id}");
-									pipeServer.WaitForPipeDrain();
-									// and device NiceName
-									sw.WriteLine($"{renderDevice.NiceName}");
-									pipeServer.WaitForPipeDrain();
-								}
-							}
-							catch (IOException)
-							{
-								continue;
-							}
-
-							bool still_compiling = true;
-							do
-							{
-								Thread.Sleep(500);
-								still_compiling = Directory.EnumerateFiles(RcCore.It.DataUserPath, "*.compiling").Any();
-							}
-							while (!stopCheckingForOpenClCompileFinished && still_compiling);
-						} /* end of using named pipe server stream */
-					} /* end of using process */
-				} /* end of else -> we need to compile code block */
-			}
-		} /* end of StartCompileOpenCl() */
+		} /* end of StartCompileGpuKernel() */
 	}
 }
