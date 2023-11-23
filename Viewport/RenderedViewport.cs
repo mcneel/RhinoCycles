@@ -322,7 +322,7 @@ namespace RhinoCycles.Viewport
 						_frameAvailable = true;
 						PutResultsIntoRenderWindowBuffer();
 					}
-					
+
 					SetView(e.View);
 					_samples = e.Sample;
 					_lastTime = DateTime.UtcNow;
@@ -504,7 +504,7 @@ namespace RhinoCycles.Viewport
 			else if (_showRenderDevice && cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}x{_cycles.ThreadCount}";
 
 			if(_cycles.IsFallbackRenderDevice) {
-				pn = $"{pn} - OpenCL still compiling";
+				pn = $"{pn} - fallback to CPU, kernels still compiling";
 			}
 			return pn;
 		}

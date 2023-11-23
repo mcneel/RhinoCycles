@@ -24,6 +24,20 @@ using System.Linq;
 
 namespace RhinoCyclesCore
 {
+	public class DeviceAndPath
+	{
+		Device _device;
+		public Device Device => _device;
+
+		string _path;
+		public string Path => _path;
+		public DeviceAndPath(Device device, string path)
+		{
+			_device = device;
+			_path = path;
+		}
+	}
+
 	/// <summary>
 	/// Exception thrown when TexturedSlot type is unsupported.
 	/// </summary>

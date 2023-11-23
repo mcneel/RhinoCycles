@@ -164,7 +164,7 @@ namespace RhinoCycles
 			{
 				if(!RcCore.It.Initialised)
 				{
-					if(File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) || 
+					if(File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) ||
 					  Rhino.RhinoApp.IsSafeModeEnabled /*|| IsSonomaOrGreater*/
 						)
 					{
@@ -180,7 +180,7 @@ namespace RhinoCycles
 							CSycles.initialise(DeviceTypeMask.CPU);
 							RhinoCyclesCore.Utilities.DisableGpus();
 						}
-						RcCore.It.InitialiseOpenCl();
+						RcCore.It.InitialiseGpuKernels();
 					}
 					RcCore.It.Initialised = true;
 
