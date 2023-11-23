@@ -431,6 +431,7 @@ namespace RhinoCyclesCore.Core
 				RedirectStandardError = true,
 				StandardErrorEncoding = System.Text.Encoding.UTF8,
 				StandardOutputEncoding = System.Text.Encoding.UTF8,
+				CreateNoWindow = true,
 			};
 			var dylib_path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "..", "..", ".."));
 			startInfo.EnvironmentVariables.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
