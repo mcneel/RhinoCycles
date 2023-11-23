@@ -103,12 +103,15 @@ namespace RhinoCyclesCore
 
 		public void HandleDevice(IAllSettings settings)
 		{
+			
 			if(Rhino.RhinoApp.IsSafeModeEnabled)
 			{
 				RenderDevice = ccl.Device.Default;
 			} else
 			{
-				RenderDevice = settings.RenderDevice;
+				var device = RcCore.It.IsDeviceReady(settings.RenderDevice);
+				RenderDevice = device.actualDevice;
+				IsFallbackRenderDevice = !device.isDeviceReady;
 			}
 			_textureBakeQuality = settings.TextureBakeQuality;
 			_throttle = settings.ThrottleMs;

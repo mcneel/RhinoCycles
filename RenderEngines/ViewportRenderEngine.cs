@@ -192,7 +192,6 @@ Please click the link below for more information.", 69));
 			MaxSamples = MaxSamples > 0 ? MaxSamples : eds.Samples;
 
 			#region pick a render device
-
 #if YES
 			var rd0 = Device.GetDevice(0);
 			var rd1 = Device.GetDevice(1);
@@ -212,12 +211,7 @@ Please click the link below for more information.", 69));
 
 #else
 			HandleDevice(eds);
-			var renderDevice = RenderDevice;
 #endif
-			(bool isReady, Device possibleRenderDevice) = RcCore.It.IsDeviceReady(renderDevice);
-			RenderDevice = possibleRenderDevice;
-			IsFallbackRenderDevice = !isReady;
-
 			#endregion
 
 			#region set up session parameters
