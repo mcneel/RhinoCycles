@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props" Condition="Exists('..\..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props')" />
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <EnableDefaultItems>False</EnableDefaultItems>
@@ -42,5 +42,6 @@
 	</ItemGroup>
 	<ItemGroup>
     <ProjectReference Include="..\..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\RhinoCyclesCore.csproj" />
 	</ItemGroup>
 </Project>
