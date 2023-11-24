@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2021 Robert McNeel and Associates
+Copyright 2014-2023 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -406,6 +406,9 @@ namespace RhinoCyclesCore.Core
 			return gpuTaskFileName;
 		}
 
+		public string CompileLogStdOut { get; set; }
+		public string CompileLogStdErr { get; set; }
+
 		/// <summary>
 		/// Compile OpenCL if necessary
 		/// </summary>
@@ -424,26 +427,24 @@ namespace RhinoCyclesCore.Core
 			var args = $"\"{KernelPath}\" \"{compileTaskFile}\"";
 			ProcessStartInfo startInfo = new ProcessStartInfo(compiler, args)
 			{
-				//FileName = compiler,
-				//Arguments = args,
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				StandardErrorEncoding = System.Text.Encoding.UTF8,
+				RedirectStandardError = false,
 				StandardOutputEncoding = System.Text.Encoding.UTF8,
+#if ON_RUNTIME_WIN
 				CreateNoWindow = true,
+#endif
 			};
+#if ON_RUNTIME_WIN
+#else
 			var dylib_path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "..", "..", ".."));
 			startInfo.EnvironmentVariables.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
 			startInfo.Environment.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
+#endif
 
 			var process = Process.Start(startInfo);
 
-			var stdout = process.StandardOutput.ReadToEnd();
-			//var stderr = process.StandardError.ReadToEnd();
-
-			Console.WriteLine(stdout);
-			//Console.WriteLine(stderr);
+			CompileLogStdOut = process.StandardOutput.ReadToEnd();
 
 			process.WaitForExit();
 

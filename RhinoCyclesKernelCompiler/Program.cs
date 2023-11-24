@@ -64,7 +64,6 @@ namespace RhinoCyclesOpenClCompiler
 
 				//session.AddPass(PassType.Combined);
 				session.Reset(1, 1, 1, 0, 0, 1, 1);
-				Console.WriteLine($"Started for {id}");
 				session.Start();
 				while (true)
 				{
@@ -104,7 +103,6 @@ namespace RhinoCyclesOpenClCompiler
 			}
 			finally
 			{
-				Console.WriteLine($"Cleaning up for {id}");
 				if (session != null)
 				{
 					session.Cancel("done");
@@ -125,16 +123,12 @@ namespace RhinoCyclesOpenClCompiler
 			var gpuTaskData = File.ReadAllLines(gpuTaskFile);
 			foreach (var gpuTask in gpuTaskData)
 			{
-				Console.WriteLine($"### -> {gpuTask}");
 				var parts = gpuTask.Split(" || ");
-				Console.WriteLine($"@@@ -> {parts[0]} -- {parts[1]}");
 				int devid = int.Parse(parts[0]);
 				string path = parts[1];
 				var dev = Device.GetDevice(devid);
 
 				if (gpuTasks.FindIndex(gpt => gpt.Path.Equals(path)) > -1) continue;
-
-				Console.WriteLine($"Adding device {dev.NiceName} with path {path}");
 
 				gpuTasks.Add(new(dev, path));
 			}
@@ -146,10 +140,6 @@ namespace RhinoCyclesOpenClCompiler
 #if DEBUGCOMPILER
 			System.Diagnostics.Debugger.Launch();
 #endif
-			foreach (var arg in args)
-			{
-				Console.WriteLine($"> {arg}");
-			}
 			if (args.Length != 2)
 			{
 				Console.WriteLine("Need kernel and user data paths of RhinoCycles");
@@ -166,10 +156,6 @@ namespace RhinoCyclesOpenClCompiler
 
 			var gpuTasks = ReadGpuTaskData(compileTaskFile, gpuDataPath);
 
-			Console.WriteLine(kernelPath);
-			Console.WriteLine(dataUserPath);
-			Console.WriteLine(compileTaskFile);
-			Console.WriteLine(gpuDataPath);
 			try
 			{
 				Parallel.ForEach(gpuTasks, HandleDevice);

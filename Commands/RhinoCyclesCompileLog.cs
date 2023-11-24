@@ -15,38 +15,36 @@ limitations under the License.
 **/
 
 using System;
-using System.IO;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Rhino;
 using Rhino.Commands;
-using Rhino.Input;
-using Rhino.Input.Custom;
-using RhinoCycles.Viewport;
-using RhinoCyclesCore.Core;
-using RhinoCyclesCore;
 using Rhino.UI;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCycles.Commands
 {
-	[Guid("C802AF8A-7FD8-4281-93A4-B434961E2388")]
+	[Guid("B95FEC1B-8863-4DDA-855F-365C34D8FCE7")]
 	[CommandStyle(Style.Hidden)]
-	public class RhinoCyclesDisableGpu : Command
+	public class RhinoCyclesCompileLog : Command
 	{
-		static RhinoCyclesDisableGpu _instance;
-		public RhinoCyclesDisableGpu()
+		static RhinoCyclesCompileLog _instance;
+		public RhinoCyclesCompileLog()
 		{
-			if(_instance==null) _instance = this;
+			if (_instance == null) _instance = this;
 		}
-		public override string LocalName => Localization.LocalizeString("RhinoCyclesDisableGpu", 61);
 
-		public override string EnglishName => "RhinoCyclesDisableGpu";
+		public override string LocalName => LOC.COMMANDNAME("RhinoCyclesCompileLog");
+
+		public override string EnglishName => "RhinoCyclesCompileLog";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			Utilities.DisableGpus();
-			var str = Localization.LocalizeString("GPUs for RhinoCycles have now been disabled. Restart Rhino for the change to take effect.", 62);
-			RhinoApp.WriteLine(str);
+			var lines = RcCore.It.CompileLogStdOut.Split('\n');
+			foreach(var line in lines)
+			{
+				RhinoApp.CommandLineOut.WriteLine(line);
+			}
+			RhinoApp.CommandLineOut.Flush();
 			return Result.Success;
 		}
 	}
