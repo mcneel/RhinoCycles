@@ -47,6 +47,7 @@
     <Compile Include="..\..\..\..\version.cs">
       <Link>Properties\version.cs</Link>
     </Compile>
+    <Compile Include="Commands\RhinoCyclesCompileLog.cs" />
     <Compile Include="Commands\RhinoCyclesEnableGpu.cs" />
     <Compile Include="Commands\TriggerChangeIntegrator.cs" />
     <Compile Include="Commands\ChangeSamples.cs" />
