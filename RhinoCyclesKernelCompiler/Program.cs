@@ -10,7 +10,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace RhinoCyclesOpenClCompiler
+namespace RhinoCyclesKernelCompiler
 {
 	class Program
 	{
@@ -70,13 +70,13 @@ namespace RhinoCyclesOpenClCompiler
 					string status = CSycles.progress_get_status(session.Id);
 					string substatus = CSycles.progress_get_substatus(session.Id);
 					int sample = CSycles.progress_get_sample(session.Id);
-					status = $"{id} [{sha}] ({sample}) | {status}: {substatus}";
+					status = $"{id} ({sample}) | {status}: {substatus}";
 					string lowstatus = status.ToLowerInvariant();
 					bool finished = lowstatus.Contains("finished") || lowstatus.Contains("rendering done");
 					if (lowstatus.Contains("error"))
 					{
 						Console.WriteLine(status);
-						throw new Exception($"Error in session -> {status}.");
+						throw new Exception($"Error in session ({id}) -> {status}.");
 					}
 					if (sample >= 2 || finished)
 					{
@@ -94,6 +94,7 @@ namespace RhinoCyclesOpenClCompiler
 			catch (Exception e)
 			{
 				Console.WriteLine($"Failed for {id}\n\t{e}");
+				throw new Exception($"Exception while compiling for {id}", e);
 
 				/*if (File.Exists(compilingLock))
 				{
@@ -121,9 +122,10 @@ namespace RhinoCyclesOpenClCompiler
 			List<DeviceAndPath> gpuTasks = new List<DeviceAndPath>();
 
 			var gpuTaskData = File.ReadAllLines(gpuTaskFile);
+			var separator = " || ";
 			foreach (var gpuTask in gpuTaskData)
 			{
-				var parts = gpuTask.Split(" || ");
+				var parts = gpuTask.Split(separator);
 				int devid = int.Parse(parts[0]);
 				string path = parts[1];
 				var dev = Device.GetDevice(devid);
@@ -164,6 +166,8 @@ namespace RhinoCyclesOpenClCompiler
 			{
 				Console.WriteLine(ex.ToString());
 				Console.WriteLine(ex.StackTrace);
+				Console.WriteLine(ex.InnerException.ToString());
+				Console.WriteLine(ex.InnerException.StackTrace);
 				return -1;
 			}
 
