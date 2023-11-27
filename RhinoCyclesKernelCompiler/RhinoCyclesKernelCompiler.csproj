@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <FileAlignment>512</FileAlignment>
     <OutputType>Exe</OutputType>
-    <StartupObject>RhinoCyclesOpenClCompiler.Program</StartupObject>
+    <StartupObject>RhinoCyclesKernelCompiler.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

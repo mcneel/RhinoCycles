@@ -410,37 +410,64 @@ namespace RhinoCyclesCore.Core
 		public string CompileLogStdErr { get; set; }
 
 		/// <summary>
-		/// Compile OpenCL if necessary
+		/// Set up the ProcessStartInfo instance used for
+		/// running the kernel compiler in a separate process
+		/// </summary>
+		/// <param name="compileTaskFile"></param>
+		/// <returns></returns>
+		private ProcessStartInfo SetupProcessStartInfo(string compileTaskFile)
+		{
+			var assembly = Assembly.GetExecutingAssembly();
+			var assemblyDirectory = Path.GetDirectoryName(assembly.Location);
+			var programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
+			var exists = File.Exists(programToRun);
+			Console.WriteLine(exists);
+			var argumentsToProgramToRun = $"\"{KernelPath}\" \"{compileTaskFile}\"";
+
+			if(Rhino.Runtime.HostUtils.RunningOnWindows) {
+				programToRun += ".exe";
+			}
+
+			// On MacOS we need to run the DLL instead of the created executable, since
+			// the executable is going to be CPU specific. Running the DLL through
+			// dotnet will work on both Intel and Apple Silicon
+			if(Rhino.Runtime.HostUtils.RunningOnOSX) {
+				string dll = $"{programToRun}.dll";
+				argumentsToProgramToRun = $"{dll} {argumentsToProgramToRun}";
+				programToRun = "dotnet";
+			}
+
+			ProcessStartInfo startInfo = new ProcessStartInfo(programToRun, argumentsToProgramToRun)
+			{
+				UseShellExecute = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError = false,
+				WorkingDirectory = assemblyDirectory,
+				StandardOutputEncoding = System.Text.Encoding.UTF8,
+			};
+
+			if(Rhino.Runtime.HostUtils.RunningOnWindows) {
+				startInfo.CreateNoWindow = true;
+			}
+			if(Rhino.Runtime.HostUtils.RunningOnOSX) {
+				var dylib_path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "..", "..", ".."));
+				startInfo.EnvironmentVariables.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
+				startInfo.Environment.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
+			}
+
+			return startInfo;
+
+		}
+
+		/// <summary>
+		/// Compile GPU kernels if necessary
 		/// </summary>
 		public void StartCompileGpuKernels()
 		{
 			EnsureGpuCompilePath();
 			var compileTaskFile = WriteGpuDevicesFile();
 
-			var assembly = Assembly.GetExecutingAssembly();
-			var compiler = Path.Combine(Path.GetDirectoryName(assembly.Location), "RhinoCyclesKernelCompiler");
-#if ON_RUNTIME_WIN
-			compiler += ".exe";
-#endif
-			var exists = File.Exists(compiler);
-			Console.WriteLine(exists);
-			var args = $"\"{KernelPath}\" \"{compileTaskFile}\"";
-			ProcessStartInfo startInfo = new ProcessStartInfo(compiler, args)
-			{
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = false,
-				StandardOutputEncoding = System.Text.Encoding.UTF8,
-#if ON_RUNTIME_WIN
-				CreateNoWindow = true,
-#endif
-			};
-#if ON_RUNTIME_WIN
-#else
-			var dylib_path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "..", "..", ".."));
-			startInfo.EnvironmentVariables.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
-			startInfo.Environment.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
-#endif
+			ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
 
 			var process = Process.Start(startInfo);
 
