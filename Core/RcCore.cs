@@ -16,16 +16,10 @@ limitations under the License.
 
 using ccl;
 using Rhino;
-using Rhino.Display;
-using Rhino.DocObjects;
-using Rhino.Render;
-using RhinoCyclesCore;
 using RhinoCyclesCore.Settings;
-using RhinoCyclesCore.RenderEngines;
 using System;
-using System.Drawing;
+using System.Runtime.InteropServices;
 using System.IO;
-using System.IO.Pipes;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
@@ -34,8 +28,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using System.Reflection;
-using System.Drawing.Printing;
 using System.Text;
+using Rhino.UI;
 
 namespace RhinoCyclesCore.Core
 {
@@ -406,8 +400,11 @@ namespace RhinoCyclesCore.Core
 			return gpuTaskFileName;
 		}
 
-		public string CompileLogStdOut { get; set; }
-		public string CompileLogStdErr { get; set; }
+		public string CompileLogStdOut { get; set; } = "";
+		public string CompileLogStdErr { get; set; } = "";
+
+		public bool CompileProcessFinished { get; set; } = false;
+		public bool CompileProcessError { get; set; } = false;
 
 		/// <summary>
 		/// Set up the ProcessStartInfo instance used for
@@ -418,10 +415,8 @@ namespace RhinoCyclesCore.Core
 		private ProcessStartInfo SetupProcessStartInfo(string compileTaskFile)
 		{
 			var assembly = Assembly.GetExecutingAssembly();
-			var assemblyDirectory = Path.GetDirectoryName(assembly.Location);
-			var programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
-			var exists = File.Exists(programToRun);
-			Console.WriteLine(exists);
+			string assemblyDirectory = Path.GetDirectoryName(assembly.Location);
+			string programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
 			var argumentsToProgramToRun = $"\"{KernelPath}\" \"{compileTaskFile}\"";
 
 			if(Rhino.Runtime.HostUtils.RunningOnWindows) {
@@ -431,19 +426,28 @@ namespace RhinoCyclesCore.Core
 			// On MacOS we need to run the DLL instead of the created executable, since
 			// the executable is going to be CPU specific. Running the DLL through
 			// dotnet will work on both Intel and Apple Silicon
+			// The dotnet folder we want lives two directories up from this
+			// assembly.
 			if(Rhino.Runtime.HostUtils.RunningOnOSX) {
+				DirectoryInfo di = new DirectoryInfo(assemblyDirectory).Parent.Parent;
+				var arch = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "arm64" : "x86_64";
+				string dotnet_path = Path.Combine(di.FullName, "dotnet", arch, "dotnet");
 				string dll = $"{programToRun}.dll";
+				if(!File.Exists(dll)) {
+					throw new FileNotFoundException($"{dll}");
+				}
 				argumentsToProgramToRun = $"{dll} {argumentsToProgramToRun}";
-				programToRun = "dotnet";
+				programToRun = dotnet_path;
 			}
 
 			ProcessStartInfo startInfo = new ProcessStartInfo(programToRun, argumentsToProgramToRun)
 			{
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
-				RedirectStandardError = false,
+				RedirectStandardError = true,
 				WorkingDirectory = assemblyDirectory,
 				StandardOutputEncoding = System.Text.Encoding.UTF8,
+				StandardErrorEncoding = System.Text.Encoding.UTF8,
 			};
 
 			if(Rhino.Runtime.HostUtils.RunningOnWindows) {
@@ -456,7 +460,6 @@ namespace RhinoCyclesCore.Core
 			}
 
 			return startInfo;
-
 		}
 
 		/// <summary>
@@ -466,14 +469,37 @@ namespace RhinoCyclesCore.Core
 		{
 			EnsureGpuCompilePath();
 			var compileTaskFile = WriteGpuDevicesFile();
+			CompileProcessFinished = false;
+			CompileProcessError = false;
 
-			ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
+			CompileLogStdOut = LOC.STR("Compile started, waiting for results...");
+			CompileLogStdErr = LOC.STR("No errors.");
 
-			var process = Process.Start(startInfo);
+			try {
+				System.Diagnostics.ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
 
-			CompileLogStdOut = process.StandardOutput.ReadToEnd();
+				var process = System.Diagnostics.Process.Start(startInfo);
+				CompileLogStdOut = process.StandardOutput.ReadToEnd();
 
-			process.WaitForExit();
+				process.WaitForExit();
+				CompileProcessError = process.ExitCode != 0;
+				if(CompileProcessError)
+				{
+					string compile_failed = LOC.STR("Compile failed");
+					string compile_error_code = LOC.STR("Error code");
+					CompileLogStdOut = $"{compile_failed} {CompileLogStdOut}";
+					CompileLogStdErr = $"{compile_error_code}: {process.ExitCode}\n\n{process.StandardError.ReadToEnd()}";
+				}
+			} catch (Exception processException)
+			{
+				CompileLogStdErr = $"{processException.ToString()}\n\n{processException.StackTrace}";
+				CompileProcessError = true;
+			}
+			finally {
+				CompileProcessFinished = true;
+			}
+
+			CompileProcessFinished = true;
 
 		} /* end of StartCompileGpuKernel() */
 	}

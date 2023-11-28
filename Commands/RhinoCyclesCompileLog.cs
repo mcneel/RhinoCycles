@@ -39,7 +39,8 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			var lines = RcCore.It.CompileLogStdOut.Split('\n');
+			var log = $"COMPILER OUTPUT:\n\n{RcCore.It.CompileLogStdOut}\n\nERROR LOG:\n\n{RcCore.It.CompileLogStdErr}";
+			var lines = log.Split('\n');
 			foreach(var line in lines)
 			{
 				RhinoApp.CommandLineOut.WriteLine(line);
