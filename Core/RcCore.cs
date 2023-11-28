@@ -30,6 +30,7 @@ using System.Threading;
 using System.Reflection;
 using System.Text;
 using Rhino.UI;
+using Rhino.Runtime;
 
 namespace RhinoCyclesCore.Core
 {
@@ -281,6 +282,8 @@ namespace RhinoCyclesCore.Core
 
 		private void InitialiseGpuDeviceReadinessList()
 		{
+			gpuDevicesReadiness.Clear();
+
 			foreach(Device device in Device.Devices)
 			{
 				gpuDevicesReadiness.Add((new (device, GenerateGpuDeviceInfo(device)), device.IsCpu));
@@ -502,5 +505,93 @@ namespace RhinoCyclesCore.Core
 			CompileProcessFinished = true;
 
 		} /* end of StartCompileGpuKernel() */
+
+		private bool EnsureCompilerIsNotRunning()
+		{
+			if (HostUtils.RunningOnWindows)
+			{
+				Process[] processes = Process.GetProcesses();
+				processes = (
+					from process
+					in processes
+					where process.ProcessName.Contains("RhinoCycles")
+					select process)
+				.ToArray();
+
+				foreach (Process process in processes)
+				{
+					try
+					{
+						process.Kill();
+					}
+					finally { }
+				}
+			}
+			return true;
+		}
+
+		private bool ClearOutGpusFolder()
+		{
+			bool isSuccess = true;
+			DirectoryInfo di = new DirectoryInfo(GpuCompilePath);
+			if (di.Exists)
+			{
+				try
+				{
+					di.Delete(true);
+				}
+				catch (Exception e)
+				{
+					isSuccess = false;
+				}
+				finally
+				{
+				}
+			}
+			return isSuccess;
+		}
+
+		private bool ClearOutCacheFolder()
+		{
+			bool isSuccess = true;
+			string cachepath = "unknown";
+			if(HostUtils.RunningOnWindows) {
+				string appdata = System.Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+				cachepath = Path.Combine(appdata, "NVIDIA", "ComputeCache");
+			}
+			else if(HostUtils.RunningOnOSX)
+			{
+				string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+				cachepath= Path.Combine(home, ".cache", "cycles");
+			}
+			DirectoryInfo di = new DirectoryInfo(cachepath);
+			if (di.Exists)
+			{
+				try
+				{
+					di.Delete(true);
+				}
+				catch (Exception e)
+				{
+					isSuccess = false;
+				}
+				finally
+				{
+				}
+			}
+			return isSuccess;
+		}
+
+		public void RecompileKernels()
+		{
+			if (!EnsureCompilerIsNotRunning()) return;
+
+			if (!ClearOutGpusFolder()) return;
+
+			if (!ClearOutCacheFolder()) return;
+
+			InitialiseGpuKernels();
+
+		}
 	}
 }
