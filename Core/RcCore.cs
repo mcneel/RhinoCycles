@@ -66,7 +66,7 @@ namespace RhinoCyclesCore.Core
 			// we found a hit, now determine the relative jump
 			string remainder = fromPath.Substring(l - 1);
 			string toremainder = toPath.Substring(l - 1);
-			var sp = remainder.Split(System.IO.Path.DirectorySeparatorChar);
+			var sp = remainder.Split(Path.DirectorySeparatorChar);
 			List<string> relp = new List<string>(sp);
 			relp = relp.FindAll(x => x.Length > 0);
 			for(int i = 0; i < relp.Count; i++)
@@ -214,7 +214,7 @@ namespace RhinoCyclesCore.Core
 			if(active_sessions.ContainsKey(session.Id))
 			{
 				session.QuickCancel();
-				while(!active_sessions.TryRemove(session.Id, out _))
+				while(!active_sessions.TryRemove(key: session.Id, value: out _))
 				{
 					Thread.Sleep(10);
 				}
@@ -319,7 +319,7 @@ namespace RhinoCyclesCore.Core
 				for (int idx = 0; idx < gpuDevicesReadiness.Count; idx++)
 				{
 					(DeviceAndPath device, bool isReady) = gpuDevicesReadiness[idx];
-					if (File.Exists(device.Path) && !isReady)
+					if (File.Exists(path: device.Path) && !isReady)
 					{
 						lock (accessGpuKernelDevicesReadiness)
 						{
@@ -342,9 +342,9 @@ namespace RhinoCyclesCore.Core
 
 		private void EnsureGpuCompilePath()
 		{
-			if(!Directory.Exists(GpuCompilePath))
+			if(!Directory.Exists(path: GpuCompilePath))
 			{
-				Directory.CreateDirectory(GpuCompilePath);
+				Directory.CreateDirectory(path: GpuCompilePath);
 			}
 		}
 
@@ -357,9 +357,13 @@ namespace RhinoCyclesCore.Core
 				{
 					using (SHA256 sha = SHA256.Create())
 					{
-						var hash = sha.ComputeHash(Encoding.UTF8.GetBytes($"{device.NiceName}{gpudev.DriverDate}{RhinoApp.Version}"));
+						var hash = sha.ComputeHash(
+							buffer: Encoding.UTF8.GetBytes(s: $"{device.NiceName}{gpudev.DriverDate}{RhinoApp.Version}")
+						);
 
-						info = Path.Combine(GpuCompilePath, string.Concat(hash.Select(b => b.ToString("x2"))));
+						info = Path.Combine(
+							GpuCompilePath,
+							string.Concat(values: hash.Select(b => b.ToString(format: "x2"))));
 						break;
 					}
 				}
@@ -368,9 +372,14 @@ namespace RhinoCyclesCore.Core
 			{
 					using (SHA256 sha = SHA256.Create())
 					{
-						var hash = sha.ComputeHash(Encoding.UTF8.GetBytes($"{device.NiceName}{RhinoApp.Version}"));
+						var hash = sha.ComputeHash(
+							buffer: Encoding.UTF8.GetBytes($"{device.NiceName}{RhinoApp.Version}")
+						);
 
-						info = Path.Combine(GpuCompilePath, string.Concat(hash.Select(b => b.ToString("x2"))));
+						info = Path.Combine(
+							GpuCompilePath,
+							string.Concat(values: hash.Select(b => b.ToString(format: "x2")))
+						);
 					}
 			}
 
@@ -386,15 +395,23 @@ namespace RhinoCyclesCore.Core
 			string gpuTaskFileName;
 			using(SHA256 gpuTaskFileSha = SHA256.Create())
 			{
-				var hash = gpuTaskFileSha.ComputeHash(Encoding.UTF8.GetBytes(DateTime.UtcNow.ToString()));
-				gpuTaskFileName = Path.Combine(GpuCompilePath, string.Concat(hash.Select(b => b.ToString("x2"))) + ".task");
+				var hash = gpuTaskFileSha.ComputeHash(
+					buffer: Encoding.UTF8.GetBytes(DateTime.UtcNow.ToString())
+				);
+				gpuTaskFileName = Path.Combine(
+					GpuCompilePath,
+					string.Concat(values: hash.Select(b => b.ToString(format: "x2"))) + ".task"
+				);
 			}
 
-			using (TextWriter tw = new StreamWriter(gpuTaskFileName, false, Encoding.UTF8))
+			using (TextWriter tw = new StreamWriter(
+						path: gpuTaskFileName,
+						append: false,
+						encoding: Encoding.UTF8))
 			{
 				foreach (Device device in Device.Devices)
 				{
-					var info = GenerateGpuDeviceInfo(device);
+					var info = GenerateGpuDeviceInfo(device: device);
 					tw.WriteLine($"{device.Id} || {info}");
 				}
 				tw.Close();
@@ -409,6 +426,9 @@ namespace RhinoCyclesCore.Core
 		public bool CompileProcessFinished { get; set; } = false;
 		public bool CompileProcessError { get; set; } = false;
 
+		public DateTime CompileStartTime { get; set; } = DateTime.Now;
+		public DateTime CompileEndTime { get; set; } = DateTime.Now;
+
 		/// <summary>
 		/// Set up the ProcessStartInfo instance used for
 		/// running the kernel compiler in a separate process
@@ -418,11 +438,11 @@ namespace RhinoCyclesCore.Core
 		private ProcessStartInfo SetupProcessStartInfo(string compileTaskFile)
 		{
 			var assembly = Assembly.GetExecutingAssembly();
-			string assemblyDirectory = Path.GetDirectoryName(assembly.Location);
+			string assemblyDirectory = Path.GetDirectoryName(path: assembly.Location);
 			string programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
 			var argumentsToProgramToRun = $"\"{KernelPath}\" \"{compileTaskFile}\"";
 
-			if(Rhino.Runtime.HostUtils.RunningOnWindows) {
+			if(HostUtils.RunningOnWindows) {
 				programToRun += ".exe";
 			}
 
@@ -431,32 +451,34 @@ namespace RhinoCyclesCore.Core
 			// dotnet will work on both Intel and Apple Silicon
 			// The dotnet folder we want lives two directories up from this
 			// assembly.
-			if(Rhino.Runtime.HostUtils.RunningOnOSX) {
-				DirectoryInfo di = new DirectoryInfo(assemblyDirectory).Parent.Parent;
+			if(HostUtils.RunningOnOSX) {
+				DirectoryInfo di = new DirectoryInfo(path: assemblyDirectory).Parent.Parent;
 				var arch = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "arm64" : "x86_64";
 				string dotnet_path = Path.Combine(di.FullName, "dotnet", arch, "dotnet");
 				string dll = $"{programToRun}.dll";
-				if(!File.Exists(dll)) {
+				if(!File.Exists(path: dll)) {
 					throw new FileNotFoundException($"{dll}");
 				}
 				argumentsToProgramToRun = $"{dll} {argumentsToProgramToRun}";
 				programToRun = dotnet_path;
 			}
 
-			ProcessStartInfo startInfo = new ProcessStartInfo(programToRun, argumentsToProgramToRun)
+			ProcessStartInfo startInfo = new ProcessStartInfo(
+						fileName: programToRun,
+						arguments: argumentsToProgramToRun)
 			{
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 				WorkingDirectory = assemblyDirectory,
-				StandardOutputEncoding = System.Text.Encoding.UTF8,
-				StandardErrorEncoding = System.Text.Encoding.UTF8,
+				StandardOutputEncoding = Encoding.UTF8,
+				StandardErrorEncoding = Encoding.UTF8,
 			};
 
-			if(Rhino.Runtime.HostUtils.RunningOnWindows) {
+			if(HostUtils.RunningOnWindows) {
 				startInfo.CreateNoWindow = true;
 			}
-			if(Rhino.Runtime.HostUtils.RunningOnOSX) {
+			if(HostUtils.RunningOnOSX) {
 				var dylib_path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "..", "..", ".."));
 				startInfo.EnvironmentVariables.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
 				startInfo.Environment.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
@@ -475,13 +497,14 @@ namespace RhinoCyclesCore.Core
 			CompileProcessFinished = false;
 			CompileProcessError = false;
 
-			CompileLogStdOut = LOC.STR("Compile started, waiting for results...");
+			CompileLogStdOut = LOC.STR("Compile started, waiting for results...") + "\n";
 			CompileLogStdErr = LOC.STR("No errors.");
+			CompileStartTime = DateTime.Now;
 
 			try {
-				System.Diagnostics.ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
+				ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
 
-				var process = System.Diagnostics.Process.Start(startInfo);
+				var process = Process.Start(startInfo);
 				CompileLogStdOut = process.StandardOutput.ReadToEnd();
 
 				process.WaitForExit();
@@ -495,14 +518,12 @@ namespace RhinoCyclesCore.Core
 				}
 			} catch (Exception processException)
 			{
-				CompileLogStdErr = $"{processException.ToString()}\n\n{processException.StackTrace}";
+				CompileLogStdErr = $"{processException}\n\n{processException.StackTrace}";
 				CompileProcessError = true;
-			}
-			finally {
-				CompileProcessFinished = true;
 			}
 
 			CompileProcessFinished = true;
+			CompileEndTime = DateTime.Now;
 
 		} /* end of StartCompileGpuKernel() */
 
@@ -527,25 +548,45 @@ namespace RhinoCyclesCore.Core
 					finally { }
 				}
 			}
+			else if(HostUtils.RunningOnOSX)
+			{
+				ProcessStartInfo startInfo = new ProcessStartInfo("ps", "aux")
+				{
+					RedirectStandardOutput = true
+				};
+				Process psaux = Process.Start(startInfo);
+				string psauxres = psaux.StandardOutput.ReadToEnd();
+				psaux.WaitForExit();
+				string[] reslines = psauxres.Split(separator: '\n');
+				reslines = (
+					from l in reslines
+					where l.Contains("dotnet") && l.Contains("RhinoCyclesKernelCompiler")
+					select l
+				).ToArray();
+
+				string[] separator = new string[] { " " };
+				foreach(var l in reslines) {
+					var prts = l.Split(separator: separator, options: StringSplitOptions.RemoveEmptyEntries);
+					if (prts.Length < 1) continue;
+					Process.Start(fileName: "kill", arguments: $"-9 {prts[1]}");
+				}
+			}
 			return true;
 		}
 
 		private bool ClearOutGpusFolder()
 		{
 			bool isSuccess = true;
-			DirectoryInfo di = new DirectoryInfo(GpuCompilePath);
+			DirectoryInfo di = new DirectoryInfo(path: GpuCompilePath);
 			if (di.Exists)
 			{
 				try
 				{
-					di.Delete(true);
+					di.Delete(recursive: true);
 				}
 				catch (Exception)
 				{
 					isSuccess = false;
-				}
-				finally
-				{
 				}
 			}
 			return isSuccess;
@@ -556,7 +597,7 @@ namespace RhinoCyclesCore.Core
 			bool isSuccess = true;
 			string cachepath = "unknown";
 			if(HostUtils.RunningOnWindows) {
-				string appdata = System.Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+				string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 				cachepath = Path.Combine(appdata, "NVIDIA", "ComputeCache");
 			}
 			else if(HostUtils.RunningOnOSX)
@@ -564,19 +605,16 @@ namespace RhinoCyclesCore.Core
 				string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 				cachepath= Path.Combine(home, ".cache", "cycles");
 			}
-			DirectoryInfo di = new DirectoryInfo(cachepath);
+			DirectoryInfo di = new DirectoryInfo(path: cachepath);
 			if (di.Exists)
 			{
 				try
 				{
-					di.Delete(true);
+					di.Delete(recursive: true);
 				}
 				catch (Exception)
 				{
 					isSuccess = false;
-				}
-				finally
-				{
 				}
 			}
 			return isSuccess;

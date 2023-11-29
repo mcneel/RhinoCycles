@@ -39,7 +39,11 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			var log = $"COMPILER OUTPUT:\n\n{RcCore.It.CompileLogStdOut}\n\nERROR LOG:\n\n{RcCore.It.CompileLogStdErr}";
+			string compout = LOC.STR("COMPILER OUTPUT");
+			string errlog = LOC.STR("ERROR LOG");
+			string compstart = LOC.STR("Compile start time");
+			string compend = LOC.STR("Compile end time");
+			var log = $"{compout}:\n\n{RcCore.It.CompileLogStdOut}\n\n{errlog}:\n\n{RcCore.It.CompileLogStdErr}\n\n{compstart}: {RcCore.It.CompileStartTime}\n{compend}: {RcCore.It.CompileEndTime}\n";
 			var lines = log.Split('\n');
 			foreach(var line in lines)
 			{

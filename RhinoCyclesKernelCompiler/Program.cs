@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.Threading;
 using System.IO;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RhinoCyclesKernelCompiler
 {
@@ -41,7 +40,7 @@ namespace RhinoCyclesKernelCompiler
 
 			var id = $"{device.Id}: {device.NiceName}";
 
-			Console.WriteLine($"Start compiling {id}");
+			Console.WriteLine($"Start compiling {id}\n");
 
 			var sha = device.NiceNameSha;
 			var laststatus = "";
@@ -168,7 +167,7 @@ namespace RhinoCyclesKernelCompiler
 				Console.WriteLine(ex.StackTrace);
 				Console.WriteLine(ex.InnerException.ToString());
 				Console.WriteLine(ex.InnerException.StackTrace);
-				return -1;
+				return -13;
 			}
 
 			return 0;
