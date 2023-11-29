@@ -540,7 +540,7 @@ namespace RhinoCyclesCore.Core
 				{
 					di.Delete(true);
 				}
-				catch (Exception e)
+				catch (Exception)
 				{
 					isSuccess = false;
 				}
@@ -571,7 +571,7 @@ namespace RhinoCyclesCore.Core
 				{
 					di.Delete(true);
 				}
-				catch (Exception e)
+				catch (Exception)
 				{
 					isSuccess = false;
 				}
