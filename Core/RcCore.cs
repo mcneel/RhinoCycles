@@ -459,8 +459,8 @@ namespace RhinoCyclesCore.Core
 				if(!File.Exists(path: dll)) {
 					throw new FileNotFoundException($"{dll}");
 				}
-				argumentsToProgramToRun = $"{dll} {argumentsToProgramToRun}";
-				programToRun = dotnet_path;
+				argumentsToProgramToRun = $"\"{dll}\" {argumentsToProgramToRun}";
+				programToRun = $"{dotnet_path}";
 			}
 
 			ProcessStartInfo startInfo = new ProcessStartInfo(
