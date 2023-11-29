@@ -18,38 +18,29 @@ using System;
 using System.Runtime.InteropServices;
 using Rhino;
 using Rhino.Commands;
+using Rhino.Input.Custom;
 using Rhino.UI;
 using RhinoCyclesCore.Core;
 
 namespace RhinoCycles.Commands
 {
-	[Guid("B95FEC1B-8863-4DDA-855F-365C34D8FCE7")]
+	[Guid("6698E514-4A6E-4E79-BC26-A5C91BA75DCC")]
 	[CommandStyle(Style.Hidden)]
-	public class RhinoCyclesCompileLog : Command
+	public class RhinoCyclesRecompileKernels : Command
 	{
-		static RhinoCyclesCompileLog _instance;
-		public RhinoCyclesCompileLog()
+		static RhinoCyclesRecompileKernels _instance;
+		public RhinoCyclesRecompileKernels()
 		{
 			if (_instance == null) _instance = this;
 		}
 
-		public override string LocalName => LOC.COMMANDNAME("RhinoCyclesCompileLog");
+		public override string LocalName => LOC.COMMANDNAME("RhinoCyclesRecompileKernels");
 
-		public override string EnglishName => "RhinoCyclesCompileLog";
+		public override string EnglishName => "RhinoCyclesRecompileKernels";
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			string compout = LOC.STR("COMPILER OUTPUT");
-			string errlog = LOC.STR("ERROR LOG");
-			string compstart = LOC.STR("Compile start time");
-			string compend = LOC.STR("Compile end time");
-			var log = $"{compout}:\n\n{RcCore.It.CompileLogStdOut}\n\n{errlog}:\n\n{RcCore.It.CompileLogStdErr}\n\n{compstart}: {RcCore.It.CompileStartTime}\n{compend}: {RcCore.It.CompileEndTime}\n";
-			var lines = log.Split('\n');
-			foreach(var line in lines)
-			{
-				RhinoApp.CommandLineOut.WriteLine(line);
-			}
-			RhinoApp.CommandLineOut.Flush();
+			RcCore.It.RecompileKernels();
 			return Result.Success;
 		}
 	}

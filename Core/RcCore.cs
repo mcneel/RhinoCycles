@@ -16,16 +16,10 @@ limitations under the License.
 
 using ccl;
 using Rhino;
-using Rhino.Display;
-using Rhino.DocObjects;
-using Rhino.Render;
-using RhinoCyclesCore;
 using RhinoCyclesCore.Settings;
-using RhinoCyclesCore.RenderEngines;
 using System;
-using System.Drawing;
+using System.Runtime.InteropServices;
 using System.IO;
-using System.IO.Pipes;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
@@ -34,8 +28,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using System.Reflection;
-using System.Drawing.Printing;
 using System.Text;
+using Rhino.UI;
+using Rhino.Runtime;
 
 namespace RhinoCyclesCore.Core
 {
@@ -71,7 +66,7 @@ namespace RhinoCyclesCore.Core
 			// we found a hit, now determine the relative jump
 			string remainder = fromPath.Substring(l - 1);
 			string toremainder = toPath.Substring(l - 1);
-			var sp = remainder.Split(System.IO.Path.DirectorySeparatorChar);
+			var sp = remainder.Split(Path.DirectorySeparatorChar);
 			List<string> relp = new List<string>(sp);
 			relp = relp.FindAll(x => x.Length > 0);
 			for(int i = 0; i < relp.Count; i++)
@@ -219,7 +214,7 @@ namespace RhinoCyclesCore.Core
 			if(active_sessions.ContainsKey(session.Id))
 			{
 				session.QuickCancel();
-				while(!active_sessions.TryRemove(session.Id, out _))
+				while(!active_sessions.TryRemove(key: session.Id, value: out _))
 				{
 					Thread.Sleep(10);
 				}
@@ -287,6 +282,8 @@ namespace RhinoCyclesCore.Core
 
 		private void InitialiseGpuDeviceReadinessList()
 		{
+			gpuDevicesReadiness.Clear();
+
 			foreach(Device device in Device.Devices)
 			{
 				gpuDevicesReadiness.Add((new (device, GenerateGpuDeviceInfo(device)), device.IsCpu));
@@ -322,7 +319,7 @@ namespace RhinoCyclesCore.Core
 				for (int idx = 0; idx < gpuDevicesReadiness.Count; idx++)
 				{
 					(DeviceAndPath device, bool isReady) = gpuDevicesReadiness[idx];
-					if (File.Exists(device.Path) && !isReady)
+					if (File.Exists(path: device.Path) && !isReady)
 					{
 						lock (accessGpuKernelDevicesReadiness)
 						{
@@ -345,9 +342,9 @@ namespace RhinoCyclesCore.Core
 
 		private void EnsureGpuCompilePath()
 		{
-			if(!Directory.Exists(GpuCompilePath))
+			if(!Directory.Exists(path: GpuCompilePath))
 			{
-				Directory.CreateDirectory(GpuCompilePath);
+				Directory.CreateDirectory(path: GpuCompilePath);
 			}
 		}
 
@@ -360,9 +357,13 @@ namespace RhinoCyclesCore.Core
 				{
 					using (SHA256 sha = SHA256.Create())
 					{
-						var hash = sha.ComputeHash(Encoding.UTF8.GetBytes($"{device.NiceName}{gpudev.DriverDate}{RhinoApp.Version}"));
+						var hash = sha.ComputeHash(
+							buffer: Encoding.UTF8.GetBytes(s: $"{device.NiceName}{gpudev.DriverDate}{RhinoApp.Version}")
+						);
 
-						info = Path.Combine(GpuCompilePath, string.Concat(hash.Select(b => b.ToString("x2"))));
+						info = Path.Combine(
+							GpuCompilePath,
+							string.Concat(values: hash.Select(b => b.ToString(format: "x2"))));
 						break;
 					}
 				}
@@ -371,9 +372,14 @@ namespace RhinoCyclesCore.Core
 			{
 					using (SHA256 sha = SHA256.Create())
 					{
-						var hash = sha.ComputeHash(Encoding.UTF8.GetBytes($"{device.NiceName}{RhinoApp.Version}"));
+						var hash = sha.ComputeHash(
+							buffer: Encoding.UTF8.GetBytes($"{device.NiceName}{RhinoApp.Version}")
+						);
 
-						info = Path.Combine(GpuCompilePath, string.Concat(hash.Select(b => b.ToString("x2"))));
+						info = Path.Combine(
+							GpuCompilePath,
+							string.Concat(values: hash.Select(b => b.ToString(format: "x2")))
+						);
 					}
 			}
 
@@ -389,15 +395,23 @@ namespace RhinoCyclesCore.Core
 			string gpuTaskFileName;
 			using(SHA256 gpuTaskFileSha = SHA256.Create())
 			{
-				var hash = gpuTaskFileSha.ComputeHash(Encoding.UTF8.GetBytes(DateTime.UtcNow.ToString()));
-				gpuTaskFileName = Path.Combine(GpuCompilePath, string.Concat(hash.Select(b => b.ToString("x2"))) + ".task");
+				var hash = gpuTaskFileSha.ComputeHash(
+					buffer: Encoding.UTF8.GetBytes(DateTime.UtcNow.ToString())
+				);
+				gpuTaskFileName = Path.Combine(
+					GpuCompilePath,
+					string.Concat(values: hash.Select(b => b.ToString(format: "x2"))) + ".task"
+				);
 			}
 
-			using (TextWriter tw = new StreamWriter(gpuTaskFileName, false, Encoding.UTF8))
+			using (TextWriter tw = new StreamWriter(
+						path: gpuTaskFileName,
+						append: false,
+						encoding: Encoding.UTF8))
 			{
 				foreach (Device device in Device.Devices)
 				{
-					var info = GenerateGpuDeviceInfo(device);
+					var info = GenerateGpuDeviceInfo(device: device);
 					tw.WriteLine($"{device.Id} || {info}");
 				}
 				tw.Close();
@@ -406,8 +420,14 @@ namespace RhinoCyclesCore.Core
 			return gpuTaskFileName;
 		}
 
-		public string CompileLogStdOut { get; set; }
-		public string CompileLogStdErr { get; set; }
+		public string CompileLogStdOut { get; set; } = "";
+		public string CompileLogStdErr { get; set; } = "";
+
+		public bool CompileProcessFinished { get; set; } = false;
+		public bool CompileProcessError { get; set; } = false;
+
+		public DateTime CompileStartTime { get; set; } = DateTime.Now;
+		public DateTime CompileEndTime { get; set; } = DateTime.Now;
 
 		/// <summary>
 		/// Set up the ProcessStartInfo instance used for
@@ -418,45 +438,53 @@ namespace RhinoCyclesCore.Core
 		private ProcessStartInfo SetupProcessStartInfo(string compileTaskFile)
 		{
 			var assembly = Assembly.GetExecutingAssembly();
-			var assemblyDirectory = Path.GetDirectoryName(assembly.Location);
-			var programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
-			var exists = File.Exists(programToRun);
-			Console.WriteLine(exists);
+			string assemblyDirectory = Path.GetDirectoryName(path: assembly.Location);
+			string programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
 			var argumentsToProgramToRun = $"\"{KernelPath}\" \"{compileTaskFile}\"";
 
-			if(Rhino.Runtime.HostUtils.RunningOnWindows) {
+			if(HostUtils.RunningOnWindows) {
 				programToRun += ".exe";
 			}
 
 			// On MacOS we need to run the DLL instead of the created executable, since
 			// the executable is going to be CPU specific. Running the DLL through
 			// dotnet will work on both Intel and Apple Silicon
-			if(Rhino.Runtime.HostUtils.RunningOnOSX) {
+			// The dotnet folder we want lives two directories up from this
+			// assembly.
+			if(HostUtils.RunningOnOSX) {
+				DirectoryInfo di = new DirectoryInfo(path: assemblyDirectory).Parent.Parent;
+				var arch = RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ? "arm64" : "x86_64";
+				string dotnet_path = Path.Combine(di.FullName, "dotnet", arch, "dotnet");
 				string dll = $"{programToRun}.dll";
+				if(!File.Exists(path: dll)) {
+					throw new FileNotFoundException($"{dll}");
+				}
 				argumentsToProgramToRun = $"{dll} {argumentsToProgramToRun}";
-				programToRun = "dotnet";
+				programToRun = dotnet_path;
 			}
 
-			ProcessStartInfo startInfo = new ProcessStartInfo(programToRun, argumentsToProgramToRun)
+			ProcessStartInfo startInfo = new ProcessStartInfo(
+						fileName: programToRun,
+						arguments: argumentsToProgramToRun)
 			{
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
-				RedirectStandardError = false,
+				RedirectStandardError = true,
 				WorkingDirectory = assemblyDirectory,
-				StandardOutputEncoding = System.Text.Encoding.UTF8,
+				StandardOutputEncoding = Encoding.UTF8,
+				StandardErrorEncoding = Encoding.UTF8,
 			};
 
-			if(Rhino.Runtime.HostUtils.RunningOnWindows) {
+			if(HostUtils.RunningOnWindows) {
 				startInfo.CreateNoWindow = true;
 			}
-			if(Rhino.Runtime.HostUtils.RunningOnOSX) {
+			if(HostUtils.RunningOnOSX) {
 				var dylib_path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "..", "..", ".."));
 				startInfo.EnvironmentVariables.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
 				startInfo.Environment.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
 			}
 
 			return startInfo;
-
 		}
 
 		/// <summary>
@@ -466,15 +494,142 @@ namespace RhinoCyclesCore.Core
 		{
 			EnsureGpuCompilePath();
 			var compileTaskFile = WriteGpuDevicesFile();
+			CompileProcessFinished = false;
+			CompileProcessError = false;
 
-			ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
+			CompileLogStdOut = LOC.STR("Compile started, waiting for results...") + "\n";
+			CompileLogStdErr = LOC.STR("No errors.");
+			CompileStartTime = DateTime.Now;
 
-			var process = Process.Start(startInfo);
+			try {
+				ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
 
-			CompileLogStdOut = process.StandardOutput.ReadToEnd();
+				var process = Process.Start(startInfo);
+				CompileLogStdOut = process.StandardOutput.ReadToEnd();
 
-			process.WaitForExit();
+				process.WaitForExit();
+				CompileProcessError = process.ExitCode != 0;
+				if(CompileProcessError)
+				{
+					string compile_failed = LOC.STR("Compile failed");
+					string compile_error_code = LOC.STR("Error code");
+					CompileLogStdOut = $"{compile_failed} {CompileLogStdOut}";
+					CompileLogStdErr = $"{compile_error_code}: {process.ExitCode}\n\n{process.StandardError.ReadToEnd()}";
+				}
+			} catch (Exception processException)
+			{
+				CompileLogStdErr = $"{processException}\n\n{processException.StackTrace}";
+				CompileProcessError = true;
+			}
+
+			CompileProcessFinished = true;
+			CompileEndTime = DateTime.Now;
 
 		} /* end of StartCompileGpuKernel() */
+
+		private bool EnsureCompilerIsNotRunning()
+		{
+			if (HostUtils.RunningOnWindows)
+			{
+				Process[] processes = Process.GetProcesses();
+				processes = (
+					from process
+					in processes
+					where process.ProcessName.Contains("RhinoCycles")
+					select process)
+				.ToArray();
+
+				foreach (Process process in processes)
+				{
+					try
+					{
+						process.Kill();
+					}
+					finally { }
+				}
+			}
+			else if(HostUtils.RunningOnOSX)
+			{
+				ProcessStartInfo startInfo = new ProcessStartInfo("ps", "aux")
+				{
+					RedirectStandardOutput = true
+				};
+				Process psaux = Process.Start(startInfo);
+				string psauxres = psaux.StandardOutput.ReadToEnd();
+				psaux.WaitForExit();
+				string[] reslines = psauxres.Split(separator: '\n');
+				reslines = (
+					from l in reslines
+					where l.Contains("dotnet") && l.Contains("RhinoCyclesKernelCompiler")
+					select l
+				).ToArray();
+
+				string[] separator = new string[] { " " };
+				foreach(var l in reslines) {
+					var prts = l.Split(separator: separator, options: StringSplitOptions.RemoveEmptyEntries);
+					if (prts.Length < 1) continue;
+					Process.Start(fileName: "kill", arguments: $"-9 {prts[1]}");
+				}
+			}
+			return true;
+		}
+
+		private bool ClearOutGpusFolder()
+		{
+			bool isSuccess = true;
+			DirectoryInfo di = new DirectoryInfo(path: GpuCompilePath);
+			if (di.Exists)
+			{
+				try
+				{
+					di.Delete(recursive: true);
+				}
+				catch (Exception)
+				{
+					isSuccess = false;
+				}
+			}
+			return isSuccess;
+		}
+
+		private bool ClearOutCacheFolder()
+		{
+			bool isSuccess = true;
+			string cachepath = "unknown";
+			if(HostUtils.RunningOnWindows) {
+				string appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+				cachepath = Path.Combine(appdata, "NVIDIA", "ComputeCache");
+			}
+			else if(HostUtils.RunningOnOSX)
+			{
+				string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+				cachepath= Path.Combine(home, ".cache", "cycles");
+			}
+			DirectoryInfo di = new DirectoryInfo(path: cachepath);
+			if (di.Exists)
+			{
+				try
+				{
+					di.Delete(recursive: true);
+				}
+				catch (Exception)
+				{
+					isSuccess = false;
+				}
+			}
+			return isSuccess;
+		}
+
+		public void RecompileKernels()
+		{
+			if (!EnsureCompilerIsNotRunning()) return;
+
+			if (!ClearOutGpusFolder()) return;
+
+			if (!ClearOutCacheFolder()) return;
+
+			InitialiseGpuKernels();
+
+		}
 	}
 }

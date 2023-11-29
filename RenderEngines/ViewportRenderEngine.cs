@@ -90,10 +90,11 @@ namespace RhinoCyclesCore.RenderEngines
 		/// </summary>
 		public class PassRenderedEventArgs : EventArgs
 		{
-			public PassRenderedEventArgs(int sample, ViewInfo view)
+			public PassRenderedEventArgs(int sample, ViewInfo view, bool onlyUpdateHud)
 			{
 				Sample = sample;
 				View = view;
+				OnlyUpdateHud = onlyUpdateHud;
 			}
 
 			/// <summary>
@@ -102,6 +103,7 @@ namespace RhinoCyclesCore.RenderEngines
 			public int Sample { get; private set; }
 
 			public ViewInfo View { get; private set; }
+			public bool OnlyUpdateHud { get; private set; }
 		}
 		/// <summary>
 		/// Event that gets fired when the render engine completes handling one
@@ -242,7 +244,13 @@ Please click the link below for more information.", 69));
 				Session.AddPass(reqPass);
 			}
 
-			Session.Reset(FullSize.Width, FullSize.Height, 100, 0, 0, FullSize.Width, FullSize.Height);
+			Session.Reset(
+				width: FullSize.Width,
+				height: FullSize.Height,
+				samples: 100,
+				full_x: 0, full_y: 0,
+				full_width: FullSize.Width,
+				full_height: FullSize.Height);
 
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
@@ -252,7 +260,7 @@ Please click the link below for more information.", 69));
 			Database.Flush();
 
 			if(ShouldBreak) return;
-			
+
 			UploadData();
 
 			if(ShouldBreak) return;
@@ -262,7 +270,7 @@ Please click the link below for more information.", 69));
 			#endregion
 
 			// We've got Cycles rendering now, notify anyone who cares
-			RenderStarted?.Invoke(this, new RenderStartedEventArgs(!CancelRender));
+			RenderStarted?.Invoke(sender: this, e: new RenderStartedEventArgs(success: !CancelRender));
 
 			Session.Start();
 
@@ -317,18 +325,31 @@ Please click the link below for more information.", 69));
 				{
 					if (!Finished && RenderedSamples < MaxSamples)
 					{
-						PassRendered?.Invoke(this, new PassRenderedEventArgs(RenderedSamples, View));
+						PassRendered?.Invoke(
+							sender: this,
+							e: new PassRenderedEventArgs(sample: RenderedSamples, view: View, onlyUpdateHud: false)
+						);
 					}
 					if (!renderingDone && Finished)
 					{
-						PassRendered?.Invoke(this, new PassRenderedEventArgs(RenderedSamples, View));
+						PassRendered?.Invoke(
+							sender: this,
+							e: new PassRenderedEventArgs(sample: RenderedSamples, view: View, onlyUpdateHud: false)
+						);
 						renderingDone = true;
 					}
 
 					lastRenderedSample = RenderedSamples;
 				}
 
-				Thread.Sleep(_throttle);
+				if(renderingDone) {
+					PassRendered?.Invoke(
+						sender: this,
+						e: new PassRenderedEventArgs(sample: MaxSamples, view: View, onlyUpdateHud: true)
+					);
+				}
+
+				Thread.Sleep(millisecondsTimeout: _throttle);
 			}
 
 			if (this != null)

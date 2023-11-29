@@ -312,20 +312,23 @@ namespace RhinoCycles.Viewport
 
 		void CyclesPassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
-			_samples = e.Sample;
 			if (_cycles?.IsRendering ?? false)
 			{
 				if (!IsSynchronizing)
 				{
-					if (e.Sample > 0)
+					if (e.Sample > 0 || !e.OnlyUpdateHud)
 					{
 						_frameAvailable = true;
 						PutResultsIntoRenderWindowBuffer();
+						_lastTime = DateTime.UtcNow;
+						_samples = e.Sample;
+						SetView(e.View);
 					}
 
-					SetView(e.View);
-					_samples = e.Sample;
-					_lastTime = DateTime.UtcNow;
+					if(e.OnlyUpdateHud) {
+						_startTime = _startTime + (DateTime.UtcNow - _lastTime);
+						_samples = e.Sample;
+					}
 
 					if (!_cycles.CancelRender) SignalRedraw();
 				}
@@ -479,17 +482,14 @@ namespace RhinoCycles.Viewport
 		public override bool IsCompleted()
 		{
 			bool rc = false;
-			//lock (timerLock)
+			if (_forCapture)
 			{
-				if (_forCapture)
-				{
-					rc = _frameAvailable;
-				}
-				else
-				{
-					var state = _cycles?.State ?? State.Stopped;
-					rc = state == State.Rendering && _frameAvailable && _samples == _maxSamples;
-				}
+				rc = _frameAvailable;
+			}
+			else
+			{
+				var state = _cycles?.State ?? State.Stopped;
+				rc = state == State.Rendering && _frameAvailable && _samples == _maxSamples;
 			}
 			return rc;
 		}
@@ -504,7 +504,20 @@ namespace RhinoCycles.Viewport
 			else if (_showRenderDevice && cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}x{_cycles.ThreadCount}";
 
 			if(_cycles.IsFallbackRenderDevice) {
-				pn = $"{pn} - fallback to CPU, kernels still compiling";
+				if (!RcCore.It.CompileProcessFinished)
+				{
+					var fallback = LOC.STR("fallback to CPU, kernels still compiling");
+					pn = $"{pn} - {fallback}";
+				} else {
+					if(RcCore.It.CompileProcessError) {
+						var error = LOC.STR("Error compiling kernels, check _RhinoCyclesCompileLog");
+						pn = $"{pn} - {error}";
+					}
+					else {
+						var reset = LOC.STR("Compile finished. Restart Raytraced");
+						pn = $"{pn} - {reset}";
+					}
+				}
 			}
 			return pn;
 		}
