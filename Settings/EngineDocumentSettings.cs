@@ -400,18 +400,24 @@ namespace RhinoCyclesCore.Settings
 			get => mDict.GetInteger(SettingNames.PreviewSamples, DefaultEngineSettings.PreviewSamples);
 			set => throw new InvalidOperationException();
 		}
-#endregion
 
 		public bool DumpMaterialShaderGraph
 		{
-			get => mDict.GetBool(SettingNames.DumpMaterialShaderGraph, DefaultEngineSettings.DumpMaterialShaderGraph);
+			get => RcCore.It.AllSettings.DumpMaterialShaderGraph;
 			set => throw new InvalidOperationException();
 		}
 
 		public bool DumpEnvironmentShaderGraph
 		{
-			get => mDict.GetBool(SettingNames.DumpEnvironmentShaderGraph, DefaultEngineSettings.DumpEnvironmentShaderGraph);
+			get => RcCore.It.AllSettings.DumpEnvironmentShaderGraph;
 			set => throw new InvalidOperationException();
 		}
+		public bool StartGpuKernelCompiler
+		{
+			get => RcCore.It.AllSettings.StartGpuKernelCompiler;
+			set => throw new InvalidOperationException();
+		}
+
+#endregion
 	}
 }

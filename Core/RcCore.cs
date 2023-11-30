@@ -420,14 +420,14 @@ namespace RhinoCyclesCore.Core
 			return gpuTaskFileName;
 		}
 
-		public string CompileLogStdOut { get; set; } = "";
+		public string CompileLogStdOut { get; set; } = LOC.STR("Not started");
 		public string CompileLogStdErr { get; set; } = "";
 
 		public bool CompileProcessFinished { get; set; } = false;
 		public bool CompileProcessError { get; set; } = false;
 
-		public DateTime CompileStartTime { get; set; } = DateTime.Now;
-		public DateTime CompileEndTime { get; set; } = DateTime.Now;
+		public DateTime CompileStartTime { get; set; } = DateTime.MinValue;
+		public DateTime CompileEndTime { get; set; } = DateTime.MinValue;
 
 		/// <summary>
 		/// Set up the ProcessStartInfo instance used for
@@ -500,6 +500,7 @@ namespace RhinoCyclesCore.Core
 			CompileLogStdOut = LOC.STR("Compile started, waiting for results...") + "\n";
 			CompileLogStdErr = LOC.STR("No errors.");
 			CompileStartTime = DateTime.Now;
+			CompileEndTime = DateTime.MinValue;
 
 			try {
 				ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);

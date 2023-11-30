@@ -741,5 +741,14 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public bool StartGpuKernelCompiler
+		{
+			get
+			{
+				return RcCore.It.AllSettings.StartGpuKernelCompiler;
+			}
+			set => throw new InvalidOperationException();
+		}
+
 	}
 }

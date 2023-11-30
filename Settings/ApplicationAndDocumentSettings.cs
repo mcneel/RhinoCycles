@@ -123,6 +123,8 @@ namespace RhinoCyclesCore.Settings
 
 			DumpMaterialShaderGraph = DumpMaterialShaderGraph;
 			DumpEnvironmentShaderGraph = DumpEnvironmentShaderGraph;
+
+			StartGpuKernelCompiler = StartGpuKernelCompiler;
 		}
 
 		public bool IgnoreQualityChanges { get; set; }
@@ -271,6 +273,12 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return RcPlugIn.Settings.GetBool(SettingNames.DumpEnvironmentShaderGraph, DefaultEngineSettings.DumpEnvironmentShaderGraph); }
 			set { RcPlugIn.Settings.SetBool(SettingNames.DumpEnvironmentShaderGraph, value); }
+		}
+
+		public virtual bool StartGpuKernelCompiler
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.StartGpuKernelCompiler, DefaultEngineSettings.StartGpuKernelCompiler); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.StartGpuKernelCompiler, value); }
 		}
 
 		public virtual bool Verbose

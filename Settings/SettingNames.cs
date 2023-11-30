@@ -34,6 +34,7 @@ namespace RhinoCyclesCore.Settings
 
 		public static string DumpMaterialShaderGraph => "DumpMaterialShaderGraph";
 		public static string DumpEnvironmentShaderGraph => "DumpEnvironmentShaderGraph";
+		public static string StartGpuKernelCompiler => "StartGpuKernelCompiler";
 
 		/// /////////
 
