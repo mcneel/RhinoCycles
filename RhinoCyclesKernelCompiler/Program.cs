@@ -66,6 +66,9 @@ namespace RhinoCyclesKernelCompiler
 				session.Start();
 				while (true)
 				{
+					if(sw.ElapsedMilliseconds > (30 * 60 * 1000)) {
+						throw new Exception("30 minute limit reached");
+					}
 					string status = CSycles.progress_get_status(session.Id);
 					string substatus = CSycles.progress_get_substatus(session.Id);
 					int sample = CSycles.progress_get_sample(session.Id);
@@ -147,6 +150,8 @@ namespace RhinoCyclesKernelCompiler
 				return -1;
 			}
 
+			var result = 0;
+
 			var kernelPath = args[0];
 			var compileTaskFile = args[1];
 			var gpuDataPath = new DirectoryInfo(Path.GetDirectoryName(compileTaskFile)).FullName;
@@ -167,10 +172,19 @@ namespace RhinoCyclesKernelCompiler
 				Console.WriteLine(ex.StackTrace);
 				Console.WriteLine(ex.InnerException.ToString());
 				Console.WriteLine(ex.InnerException.StackTrace);
-				return -13;
+				result = -13;
+			}
+			finally {
+				File.Delete(compileTaskFile);
+				foreach(var gpuTask in gpuTasks) {
+					var compilingFile = $"{gpuTask.Path}.compiling";
+					if(File.Exists(compilingFile)) {
+						File.Delete(compilingFile);
+					}
+				}
 			}
 
-			return 0;
+			return result;
 		} /* end of Main */
 	}
 }

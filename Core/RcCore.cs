@@ -108,6 +108,11 @@ namespace RhinoCyclesCore.Core
 		public bool Initialised { get; set; }
 
 		/// <summary>
+		/// Event triggred when a rendering device is ready.
+		/// </summary>
+		public event EventHandler DeviceKernelReady;
+
+		/// <summary>
 		/// Flag to tell us when Rhino has completed its initialisation.
 		/// </summary>
 		public bool AppInitialised { get; set; }
@@ -273,6 +278,8 @@ namespace RhinoCyclesCore.Core
 		{
 			InitialiseGpuDeviceReadinessList();
 
+			DeviceKernelReady?.Invoke(this, EventArgs.Empty);
+
 			kernelCompilerThread = new Thread(StartCompileGpuKernels);
 			kernelCompilerThread.Start();
 
@@ -324,6 +331,7 @@ namespace RhinoCyclesCore.Core
 						lock (accessGpuKernelDevicesReadiness)
 						{
 							gpuDevicesReadiness[idx] = (device, true);
+							DeviceKernelReady?.Invoke(this, EventArgs.Empty);
 						}
 					}
 				}
