@@ -42,9 +42,20 @@ namespace RhinoCycles.Commands
 			string compout = LOC.STR("COMPILER OUTPUT");
 			string errlog = LOC.STR("ERROR LOG");
 			string compstart = LOC.STR("Compile start time");
-			string compend = LOC.STR("Compile end time");
-			var log = $"{compout}:\n\n{RcCore.It.CompileLogStdOut}\n\n{errlog}:\n\n{RcCore.It.CompileLogStdErr}\n\n{compstart}: {RcCore.It.CompileStartTime}\n{compend}: {RcCore.It.CompileEndTime}\n";
+			string compend =   LOC.STR("Compile end time  ");
+			var compendfinal = $"{compend}: {RcCore.It.CompileEndTime}";
+			if(RcCore.It.CompileEndTime.Equals(DateTime.MinValue)) {
+				compendfinal = "";
+			}
+
+			var log = $"{compout}:\n\n{RcCore.It.CompileLogStdOut}\n\n{errlog}:\n\n{RcCore.It.CompileLogStdErr}\n\n{compstart}: {RcCore.It.CompileStartTime}\n{compendfinal}\n";
+
+			if(RcCore.It.CompileStartTime.Equals(DateTime.MinValue)) {
+				log = LOC.STR("Kernel compilation not started");
+			}
+
 			var lines = log.Split('\n');
+
 			foreach(var line in lines)
 			{
 				RhinoApp.CommandLineOut.WriteLine(line);

@@ -110,5 +110,6 @@ namespace RhinoCyclesCore.Settings
 
 		static public bool DumpMaterialShaderGraph => false;
 		static public bool DumpEnvironmentShaderGraph => false;
+		static public bool StartGpuKernelCompiler => true;
 	}
 }

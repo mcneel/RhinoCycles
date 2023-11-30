@@ -38,5 +38,7 @@ namespace RhinoCyclesCore.Settings
 
 		bool DumpMaterialShaderGraph { get; set; }
 		bool DumpEnvironmentShaderGraph { get; set; }
+
+		bool StartGpuKernelCompiler { get; set; }
 	}
 }

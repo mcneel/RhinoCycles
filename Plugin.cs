@@ -180,7 +180,10 @@ namespace RhinoCycles
 							CSycles.initialise(DeviceTypeMask.CPU);
 							RhinoCyclesCore.Utilities.DisableGpus();
 						}
-						RcCore.It.InitialiseGpuKernels();
+						if (RcCore.It.AllSettings.StartGpuKernelCompiler)
+						{
+							RcCore.It.InitialiseGpuKernels();
+						}
 					}
 					RcCore.It.Initialised = true;
 
