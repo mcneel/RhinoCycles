@@ -35,6 +35,70 @@ namespace RhinoCyclesCore.Settings
 			DeviceItem = di;
 		}
 	}
+
+	public class ReadinessCell : CustomCell
+	{
+		protected override Control OnCreateCell(CellEventArgs args)
+		{
+			ReadinessDrawable drawable = new ReadinessDrawable();
+			var green = Eto.Drawing.Colors.Green;
+			var orange = Eto.Drawing.Colors.Orange;
+			drawable.BindDataContext(rd => rd.Color, (DeviceItem di) => di.Ready ? green : orange);
+
+			return drawable;
+		}
+	}
+
+  public class ReadinessDrawable : Drawable
+	{
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private Eto.Drawing.Color m_color;
+
+		public Eto.Drawing.Color Color
+		{
+			get
+			{
+				return m_color;
+			}
+
+			set
+			{
+				if (!Eto.Drawing.Color.Equals(m_color, value))
+				{
+					m_color = value;
+					OnPropertyChanged();
+				}
+			}
+		}
+
+		private void Draw(Eto.Drawing.Graphics g, Eto.Drawing.RectangleF rect)
+		{
+			var side = rect.Height - 2;
+			g.FillEllipse(m_color, 1, 1, side, side);
+			g.DrawEllipse(m_color, 1, 1, side, side);
+		}
+
+		protected override void OnSizeChanged(EventArgs e)
+		{
+			base.OnSizeChanged(e);
+
+			Invalidate();
+		}
+
+		protected override void OnPaint(PaintEventArgs e)
+		{
+			base.OnPaint(e);
+			Draw(e.Graphics, e.ClipRectangle);
+		}
+
+		void OnPropertyChanged([CallerMemberName] string memberName = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(memberName));
+		}
+	}
+
+
 	public class GridDevicePage : TabPage
 	{
 		private GridView m_gv;
@@ -55,18 +119,34 @@ namespace RhinoCyclesCore.Settings
 			m_gv.Columns.Add(new GridColumn {
 				DataCell = new CheckBoxCell { Binding = Binding.Property<DeviceItem, bool?>(r => r.Selected) },
 				HeaderText = "Use",
-				Editable = false
+				Editable = false,
+				Expand = false,
 			});
 			m_gv.Columns.Add(new GridColumn {
 				DataCell = new TextBoxCell { Binding = Binding.Property<DeviceItem, string>(r => r.Text) },
-				HeaderText = "Device"
+				HeaderText = "Device",
+				Expand = false,
+			});
+			m_gv.Columns.Add(new GridColumn {
+				DataCell = new TextBoxCell { Binding = Binding.Property<DeviceItem, string>(r => "\t\t") },
+				HeaderText = "Filler",
+				Width = 100,
+				Expand = true,
+			});
+			m_gv.Columns.Add(new GridColumn
+			{
+				DataCell = new ReadinessCell(),
+				HeaderText = "Ready",
+				Editable = false,
+				Expand = false,
+				Width = HostUtils.RunningOnOSX ? 45 : 40
 			});
 			Content = new StackLayout
 			{
 				Spacing = 5,
 				HorizontalContentAlignment = HorizontalAlignment.Stretch,
 				Items = {
-					new StackLayoutItem(m_gv, true)
+					new StackLayoutItem(control: m_gv, expand: true)
 				}
 			};
 		}
@@ -181,6 +261,8 @@ namespace RhinoCyclesCore.Settings
 			}
 		}
 
+		public bool Ready { get; set; }
+
 		public ccl.Device Device { get; private set; }
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -236,11 +318,17 @@ namespace RhinoCyclesCore.Settings
 		public DeviceSection(uint doc_serial) : base(doc_serial)
 		{
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
+			RcCore.It.DeviceKernelReady += It_DeviceKernelReady;
 			m_caption = new LocalizeStringPair("Device settings", Localization.LocalizeString("Device settings", 14));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
 			EngineSettingsReceived += DeviceSection_EngineSettingsReceivedHandler;
+		}
+
+		private void It_DeviceKernelReady(object sender, EventArgs e)
+		{
+			DeviceSection_EngineSettingsReceivedHandler(this, new EngineSettingsReceivedArgs(Settings));
 		}
 
 		protected override void OnShown(EventArgs e)
@@ -269,7 +357,8 @@ namespace RhinoCyclesCore.Settings
 			{
 				if (d.Type == t)
 				{
-					lb.Add(new DeviceItem { Text = d.NiceName, Selected = rd.HasId(d.Id), Id = (int)d.Id });
+					var deviceCheck = RcCore.It.IsDeviceReady(d);
+					lb.Add(new DeviceItem { Text = d.NiceName, Selected = rd.HasId(d.Id), Id = (int)d.Id, Ready = deviceCheck.isDeviceReady });
 				}
 			}
 		}
@@ -281,14 +370,7 @@ namespace RhinoCyclesCore.Settings
 
 		private void It_InitialisationCompleted(object sender, EventArgs e)
 		{
-			m_currentDevice = Settings.RenderDevice;
 			DeviceSection_EngineSettingsReceivedHandler(this, new EngineSettingsReceivedArgs(Settings));
-
-			Application.Instance.AsyncInvoke(() =>
-			{
-
-			}
-			);
 		}
 
 		private void ActivateDevicePage(IDocumentSettings vud)

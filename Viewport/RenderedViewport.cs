@@ -504,7 +504,8 @@ namespace RhinoCycles.Viewport
 			else if (_showRenderDevice && cpu) pn = $"{pn}@{_cycles.RenderDevice.NiceName}x{_cycles.ThreadCount}";
 
 			if(_cycles.IsFallbackRenderDevice) {
-				if (!RcCore.It.CompileProcessFinished)
+				var originalDevice = RcCore.It.IsDeviceReady(RcCore.It.AllSettings.RenderDevice);
+				if (!originalDevice.isDeviceReady)
 				{
 					var fallback = LOC.STR("fallback to CPU, kernels still compiling");
 					pn = $"{pn} - {fallback}";
