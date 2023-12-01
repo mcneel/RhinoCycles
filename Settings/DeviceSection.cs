@@ -35,6 +35,70 @@ namespace RhinoCyclesCore.Settings
 			DeviceItem = di;
 		}
 	}
+
+	public class ReadinessCell : CustomCell
+	{
+		protected override Control OnCreateCell(CellEventArgs args)
+		{
+			ReadinessDrawable drawable = new ReadinessDrawable();
+			var green = Eto.Drawing.Colors.Green;
+			var orange = Eto.Drawing.Colors.Orange;
+			drawable.BindDataContext(rd => rd.Color, (DeviceItem di) => di.Ready ? green : orange);
+
+			return drawable;
+		}
+	}
+
+  public class ReadinessDrawable : Drawable
+	{
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private Eto.Drawing.Color m_color;
+
+		public Eto.Drawing.Color Color
+		{
+			get
+			{
+				return m_color;
+			}
+
+			set
+			{
+				if (!Eto.Drawing.Color.Equals(m_color, value))
+				{
+					m_color = value;
+					OnPropertyChanged();
+				}
+			}
+		}
+
+		private void Draw(Eto.Drawing.Graphics g, Eto.Drawing.RectangleF rect)
+		{
+			var side = rect.Height - 2;
+			g.FillEllipse(m_color, 1, 1, side, side);
+			g.DrawEllipse(m_color, 1, 1, side, side);
+		}
+
+		protected override void OnSizeChanged(EventArgs e)
+		{
+			base.OnSizeChanged(e);
+
+			Invalidate();
+		}
+
+		protected override void OnPaint(PaintEventArgs e)
+		{
+			base.OnPaint(e);
+			Draw(e.Graphics, e.ClipRectangle);
+		}
+
+		void OnPropertyChanged([CallerMemberName] string memberName = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(memberName));
+		}
+	}
+
+
 	public class GridDevicePage : TabPage
 	{
 		private GridView m_gv;
@@ -69,11 +133,13 @@ namespace RhinoCyclesCore.Settings
 				Width = 100,
 				Expand = true,
 			});
-			m_gv.Columns.Add(new GridColumn {
-				DataCell = new CheckBoxCell { Binding = Binding.Property<DeviceItem, bool?>(r => r.Ready) },
+			m_gv.Columns.Add(new GridColumn
+			{
+				DataCell = new ReadinessCell(),
 				HeaderText = "Ready",
 				Editable = false,
 				Expand = false,
+				Width = HostUtils.RunningOnOSX ? 45 : 40
 			});
 			Content = new StackLayout
 			{
