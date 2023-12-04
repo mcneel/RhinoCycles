@@ -491,6 +491,8 @@ namespace RhinoCyclesCore
 
 		public static bool GpusDisabled => File.Exists(_DisableGpusFile);
 
+		public static bool HasGpus => Device.FirstGpu.Type != DeviceType.Cpu;
+
 		public static void EnableGpus()
 		{
 			if(File.Exists(_DisableGpusFile))
