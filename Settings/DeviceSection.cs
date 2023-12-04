@@ -30,7 +30,7 @@ namespace RhinoCyclesCore.Settings
 	public class SelectionChangedEventArgs : EventArgs
 	{
 		public DeviceItem DeviceItem { get; private set; }
-		public SelectionChangedEventArgs(DeviceItem di) 
+		public SelectionChangedEventArgs(DeviceItem di)
 		{
 			DeviceItem = di;
 		}
@@ -74,9 +74,9 @@ namespace RhinoCyclesCore.Settings
 
 		private void Draw(Eto.Drawing.Graphics g, Eto.Drawing.RectangleF rect)
 		{
-			var side = rect.Height - 2;
-			g.FillEllipse(m_color, 1, 1, side, side);
-			g.DrawEllipse(m_color, 1, 1, side, side);
+			var side = rect.Height - 6;
+			g.FillEllipse(m_color, 3, 3, side, side);
+			g.DrawEllipse(m_color, 3, 3, side, side);
 		}
 
 		protected override void OnSizeChanged(EventArgs e)
@@ -293,6 +293,8 @@ namespace RhinoCyclesCore.Settings
 		private Label m_lb_threadcount_currentval;
 		private Label m_lb_gpusdisabled_message;
 		private Button m_btn_enablegpus;
+		private Button m_btn_recompilekernels;
+		private Button m_btn_showcompilelog;
 
 		public override LocalizeStringPair Caption
 		{
@@ -404,8 +406,10 @@ namespace RhinoCyclesCore.Settings
 					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Value = e.AllSettings.Threads;
-					m_lb_gpusdisabled_message.Visible = Utilities.GpusDisabled;
-					m_btn_enablegpus.Visible = Utilities.GpusDisabled;
+					m_lb_gpusdisabled_message.Visible = Utilities.GpusDisabled && Utilities.HasGpus;
+					m_btn_enablegpus.Visible = Utilities.GpusDisabled && Utilities.HasGpus;
+					m_btn_recompilekernels.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;
+					m_btn_showcompilelog.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;
 					int utilPerc = (int)((float)e.AllSettings.Threads / Utilities.GetSystemProcessorCount() * 100.0f);
 					m_lb_threadcount_currentval.Text = $"(\u2248{utilPerc} %)";
 					RegisterControlEvents();
@@ -467,6 +471,16 @@ namespace RhinoCyclesCore.Settings
 				Text = Localization.LocalizeString("Enable GPU detection", 73),
 				ToolTip = Localization.LocalizeString("Press to enable GPU detection, then restart Rhino", 74)
 			};
+			m_btn_recompilekernels = new Button
+			{
+				Text = LOC.STR("Recompile kernels"),
+				ToolTip = LOC.STR("Press to recompile GPU kernels for those where it is possible.")
+			};
+			m_btn_showcompilelog = new Button
+			{
+				Text = LOC.STR("Show compile log"),
+				ToolTip = LOC.STR("Show log information from the GPU kernel compilation process.")
+			};
 
 		}
 
@@ -481,10 +495,11 @@ namespace RhinoCyclesCore.Settings
 				Orientation = Orientation.Vertical,
 				Items =
 				{
-					TableLayout.HorizontalScaled(15, m_lb_curdev, m_curdev),
-					new StackLayoutItem(m_tc, true),
-					TableLayout.HorizontalScaled(15, m_lb_threadcount, m_threadcount, m_lb_threadcount_currentval),
-					TableLayout.HorizontalScaled(15, m_lb_gpusdisabled_message, m_btn_enablegpus),
+					TableLayout.HorizontalScaled(spacing: 15, m_lb_curdev, m_curdev),
+					new StackLayoutItem(control: m_tc, expand: true),
+					TableLayout.HorizontalScaled(spacing: 15, m_lb_threadcount, m_threadcount, m_lb_threadcount_currentval),
+					TableLayout.HorizontalScaled(spacing: 15, m_lb_gpusdisabled_message, m_btn_enablegpus),
+					TableLayout.Horizontal(spacing: 15, null, m_btn_recompilekernels, m_btn_showcompilelog),
 				}
 			};
 			Content = layout;
@@ -521,6 +536,9 @@ namespace RhinoCyclesCore.Settings
 			}
 			m_threadcount.ValueChanged += M_threadcount_ValueChanged;
 			m_btn_enablegpus.Click += m_btn_enablegpus_Clicked;
+
+			m_btn_recompilekernels.Click += m_btn_recompilekernels_Clicked;
+			m_btn_showcompilelog.Click += m_btn_showcompilelog_Clicked;
 		}
 
 		private void m_btn_enablegpus_Clicked(object sender, EventArgs e)
@@ -528,6 +546,20 @@ namespace RhinoCyclesCore.Settings
 			Utilities.EnableGpus();
 			Eto.Forms.MessageBox.Show(Localization.LocalizeString("GPU detection has been enabled. Please restart Rhino.", 75), Eto.Forms.MessageBoxType.Information);
 		}
+
+		private void m_btn_recompilekernels_Clicked(object sender, EventArgs e)
+		{
+			RcCore.It.RecompileKernels();
+		}
+
+		private void m_btn_showcompilelog_Clicked(object sender, EventArgs e)
+		{
+			Dialogs.ShowTextDialog(
+				message: RcCore.It.GetFormattedCompileLog(),
+				title: LOC.STR("GPU Kernels Compile Log")
+			);
+		}
+
 
 		private void M_threadcount_ValueChanged(object sender, EventArgs e)
 		{
@@ -627,6 +659,9 @@ namespace RhinoCyclesCore.Settings
 			}
 			m_threadcount.ValueChanged -= M_threadcount_ValueChanged;
 			m_btn_enablegpus.Click -= m_btn_enablegpus_Clicked;
+
+			m_btn_recompilekernels.Click -= m_btn_recompilekernels_Clicked;
+			m_btn_showcompilelog.Click -= m_btn_showcompilelog_Clicked;
 		}
 	}
 }

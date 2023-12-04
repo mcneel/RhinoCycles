@@ -437,6 +437,25 @@ namespace RhinoCyclesCore.Core
 		public DateTime CompileStartTime { get; set; } = DateTime.MinValue;
 		public DateTime CompileEndTime { get; set; } = DateTime.MinValue;
 
+		public string GetFormattedCompileLog()
+		{
+			string compout = LOC.STR("COMPILER OUTPUT");
+			string errlog = LOC.STR("ERROR LOG");
+			string compstart = LOC.STR("Compile start time");
+			string compend =   LOC.STR("Compile end time  ");
+			var compendfinal = $"{compend}: {CompileEndTime}";
+			if(CompileEndTime.Equals(DateTime.MinValue)) {
+				compendfinal = "";
+			}
+
+			var log = $"{compout}:\n\n{CompileLogStdOut}\n\n{errlog}:\n\n{CompileLogStdErr}\n\n{compstart}: {CompileStartTime}\n{compendfinal}\n";
+
+			if(CompileStartTime.Equals(DateTime.MinValue)) {
+				log = LOC.STR("Kernel compilation not started");
+			}
+			return log;
+		}
+
 		/// <summary>
 		/// Set up the ProcessStartInfo instance used for
 		/// running the kernel compiler in a separate process
