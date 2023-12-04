@@ -74,9 +74,9 @@ namespace RhinoCyclesCore.Settings
 
 		private void Draw(Eto.Drawing.Graphics g, Eto.Drawing.RectangleF rect)
 		{
-			var side = rect.Height - 2;
-			g.FillEllipse(m_color, 1, 1, side, side);
-			g.DrawEllipse(m_color, 1, 1, side, side);
+			var side = rect.Height - 6;
+			g.FillEllipse(m_color, 3, 3, side, side);
+			g.DrawEllipse(m_color, 3, 3, side, side);
 		}
 
 		protected override void OnSizeChanged(EventArgs e)
