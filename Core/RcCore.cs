@@ -486,7 +486,7 @@ namespace RhinoCyclesCore.Core
 				if(!File.Exists(path: dll)) {
 					throw new FileNotFoundException($"{dll}");
 				}
-				argumentsToProgramToRun = $"\"{dll}\" {argumentsToProgramToRun}";
+				argumentsToProgramToRun = $"\"{dll}\" {argumentsToProgramToRun} delay";
 				programToRun = $"{dotnet_path}";
 			}
 
