@@ -150,10 +150,12 @@ namespace RhinoCyclesKernelCompiler
 				return -1;
 			}
 
+			/*
 			if(args.Length == 3 && args[2].Equals("delay")) {
 				Console.WriteLine("Sleeping 15s");
 				Thread.Sleep(15 * 1000);
 			}
+			*/
 
 			var result = 0;
 
