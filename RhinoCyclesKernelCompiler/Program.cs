@@ -144,10 +144,15 @@ namespace RhinoCyclesKernelCompiler
 #if DEBUGCOMPILER
 			System.Diagnostics.Debugger.Launch();
 #endif
-			if (args.Length != 2)
+			if (args.Length < 2)
 			{
 				Console.WriteLine("Need kernel and user data paths of RhinoCycles");
 				return -1;
+			}
+
+			if(args.Length == 3 && args[2].Equals("delay")) {
+				Console.WriteLine("Sleeping 15s");
+				Thread.Sleep(15 * 1000);
 			}
 
 			var result = 0;
