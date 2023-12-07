@@ -410,12 +410,16 @@ namespace RhinoCyclesCore
 			// the session. Wait for it to react to state being set to Stopping.
 			// Once we can lock we know there is no other actor accessing the session, so
 			// we can just unlock and continue with the teardown.
-			Session.WaitUntilLocked();
-			Session.Unlock();
-			Session.QuickCancel();
-			Session.Cancel("StopTheRenderer");
-			Thread.Sleep(500);
-			Session.Dispose();
+			Debug.Assert(Session != null);
+			if (Session != null)
+			{
+				Session.WaitUntilLocked();
+				Session.Unlock();
+				Session.QuickCancel();
+				Session.Cancel("StopTheRenderer");
+				Thread.Sleep(500);
+				Session.Dispose();
+			}
 			RcCore.OutputDebugString($"Cycles session destroyed\n");
 			CancelRender = true;
 			State = State.Stopped;
