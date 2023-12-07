@@ -66,7 +66,7 @@ namespace RhinoCyclesKernelCompiler
 				session.Start();
 				while (true)
 				{
-					if(sw.ElapsedMilliseconds > (30 * 60 * 1000)) {
+					if(sw.ElapsedMilliseconds > (15 * 60 * 1000)) {
 						throw new Exception("30 minute limit reached");
 					}
 					string status = CSycles.progress_get_status(session.Id);
