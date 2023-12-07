@@ -394,17 +394,19 @@ namespace RhinoCyclesCore.Core
 			return info;
 		}
 
-			/// <summary>
-			/// Write GPU data to file to use in RhinoCyclesKernelCompile
-			/// </summary>
-			/// <returns>Return path to file</returns>
-			private string WriteGpuDevicesFile()
+		Random rng = new Random();
+		/// <summary>
+		/// Write GPU data to file to use in RhinoCyclesKernelCompile
+		/// For given device list.
+		/// </summary>
+		/// <returns>Return path to file</returns>
+		private string WriteGpuDevicesFile(List<Device> devices)
 		{
 			string gpuTaskFileName;
 			using(SHA256 gpuTaskFileSha = SHA256.Create())
 			{
 				var hash = gpuTaskFileSha.ComputeHash(
-					buffer: Encoding.UTF8.GetBytes(DateTime.UtcNow.ToString())
+					buffer: Encoding.UTF8.GetBytes($"{DateTime.UtcNow} {rng.NextDouble()}" )
 				);
 				gpuTaskFileName = Path.Combine(
 					GpuCompilePath,
@@ -417,7 +419,7 @@ namespace RhinoCyclesCore.Core
 						append: false,
 						encoding: Encoding.UTF8))
 			{
-				foreach (Device device in Device.Devices)
+				foreach (Device device in devices)
 				{
 					var info = GenerateGpuDeviceInfo(device: device);
 					tw.WriteLine($"{device.Id} || {info}");
@@ -514,13 +516,32 @@ namespace RhinoCyclesCore.Core
 			return startInfo;
 		}
 
+		private List<List<Device>> GetDeviceListings() {
+			var cd = AllSettings.RenderDevice;
+
+			List<Device> currentDeviceGroup = (from d in Device.Devices where d.IsGpu && d.Type.Equals(cd.Type) select d).ToList();
+			List<Device> otherDeviceGroup = (from d in Device.Devices where d.IsGpu && !d.Type.Equals(cd.Type) select d).ToList();
+			List<Device> cudaGroup = (from d in otherDeviceGroup where d.Type.Equals(DeviceType.Cuda) select d).ToList();
+			List<Device> optixGroup = (from d in otherDeviceGroup where d.Type.Equals(DeviceType.Optix) select d).ToList();
+			otherDeviceGroup = (from d in otherDeviceGroup where !cudaGroup.Contains(d) && !optixGroup.Contains(d) select d).ToList();
+
+			List < List < Device >> deviceListings = new List<List<Device>>
+			{
+				currentDeviceGroup,
+				otherDeviceGroup,
+				cudaGroup,
+				optixGroup,
+			};
+
+			return deviceListings;
+		}
+
 		/// <summary>
 		/// Compile GPU kernels if necessary
 		/// </summary>
 		public void StartCompileGpuKernels()
 		{
 			EnsureGpuCompilePath();
-			var compileTaskFile = WriteGpuDevicesFile();
 			CompileProcessFinished = false;
 			CompileProcessError = false;
 
@@ -529,25 +550,37 @@ namespace RhinoCyclesCore.Core
 			CompileStartTime = DateTime.Now;
 			CompileEndTime = DateTime.MinValue;
 
-			try {
-				ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
-
-				var process = Process.Start(startInfo);
-				CompileLogStdOut = process.StandardOutput.ReadToEnd();
-
-				process.WaitForExit();
-				CompileProcessError = process.ExitCode != 0;
-				if(CompileProcessError)
-				{
-					string compile_failed = LOC.STR("Compile failed");
-					string compile_error_code = LOC.STR("Error code");
-					CompileLogStdOut = $"{compile_failed} {CompileLogStdOut}";
-					CompileLogStdErr = $"{compile_error_code}: {process.ExitCode}\n\n{process.StandardError.ReadToEnd()}";
-				}
-			} catch (Exception processException)
+			List<List<Device>> deviceListings = GetDeviceListings();
+			foreach (List<Device> deviceListing in deviceListings)
 			{
-				CompileLogStdErr = $"{processException}\n\n{processException.StackTrace}";
-				CompileProcessError = true;
+				if (deviceListing.Count == 0) continue;
+
+				var compileTaskFile = WriteGpuDevicesFile(deviceListing);
+				string startProcessString = LOC.STR("Start compile process with device count:");
+				CompileLogStdOut += $"{startProcessString} {deviceListing.Count} ({deviceListing[0].Type})\n";
+
+				try
+				{
+					ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
+
+					var process = Process.Start(startInfo);
+					CompileLogStdOut += $"{process.StandardOutput.ReadToEnd()}";
+
+					process.WaitForExit();
+					CompileProcessError = process.ExitCode != 0;
+					if (CompileProcessError)
+					{
+						string compile_failed = LOC.STR("Compile failed");
+						string compile_error_code = LOC.STR("Error code");
+						CompileLogStdOut = $"{compile_failed} {CompileLogStdOut}";
+						CompileLogStdErr = $"{compile_error_code}: {process.ExitCode}\n\n{process.StandardError.ReadToEnd()}";
+					}
+				}
+				catch (Exception processException)
+				{
+					CompileLogStdErr += $"{processException}\n\n{processException.StackTrace}";
+					CompileProcessError = true;
+				}
 			}
 
 			CompileProcessFinished = true;
