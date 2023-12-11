@@ -17,38 +17,6 @@ namespace RhinoCyclesKernelCompiler
 	class Program
 	{
 
-#if ON_RUNTIME_WIN
-#if DEBUG
-#pragma warning disable CA1416
-		static bool parentProcessIsRhino()
-		{
-			bool isRhinoParentProcess = false;
-			int pid = Process.GetCurrentProcess().Id;
-			string query = $"SELECT ParentProcessId FROM Win32_Process WHERE ProcessId = {pid}";
-			ManagementObjectSearcher searcher = new("root\\CIMV2", query);
-			List<string> processNames = new List<string>();
-			try
-			{
-				foreach (ManagementObject obj in searcher.Get())
-				{
-					uint parentPid = (uint)obj["ParentProcessId"];
-					Process parentProcess = Process.GetProcessById((int)parentPid);
-					if(parentProcess.ProcessName.Equals("Rhino"))
-					{
-						isRhinoParentProcess = true;
-						break;
-					}
-				}
-			}
-			finally
-			{
-			}
-
-			return isRhinoParentProcess;
-		}
-#endif
-#endif
-
 		static bool parentProcessStillRunning()
 		{
 			bool stillRunning = true;
