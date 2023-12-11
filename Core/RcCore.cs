@@ -36,6 +36,7 @@ namespace RhinoCyclesCore.Core
 {
 	public sealed class RcCore
 	{
+
 		#region helper functions to get relative path between two paths
 		public static string GetRelativePath(string fromPath, string toPath)
 		{
@@ -163,6 +164,8 @@ namespace RhinoCyclesCore.Core
 		/// Shut down Cycles on all levels. Wait for all active session to complete.
 		/// </summary>
 		public void Shutdown() {
+			while(logStrings.Count > 0) logStrings.TryDequeue(out string _);
+
 			ReleaseActiveSessions();
 			int count;
 			int timer = 0;
@@ -718,6 +721,18 @@ namespace RhinoCyclesCore.Core
 
 			InitialiseGpuKernels();
 
+		}
+		ConcurrentQueue<string> logStrings = new ConcurrentQueue<string>();
+
+		public void AddLogString(string log) { logStrings.Enqueue($"{DateTime.Now} :: {log}\n"); }
+		public string GetLog() {
+			StringBuilder sb = new StringBuilder();
+			foreach(string logString in logStrings)
+			{
+				sb.Append(logString);
+			}
+
+			return sb.ToString();
 		}
 	}
 }
