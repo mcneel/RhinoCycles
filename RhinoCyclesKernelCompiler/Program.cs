@@ -8,7 +8,11 @@ using System.Diagnostics;
 using System.Threading;
 using System.IO;
 using System.Collections.Generic;
+#if ON_RUNTIME_WIN
+#if DEBUG
 using System.Management;
+#endif
+#endif
 using System.Reflection;
 using System.Text;
 
