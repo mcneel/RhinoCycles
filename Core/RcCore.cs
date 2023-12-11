@@ -356,6 +356,26 @@ namespace RhinoCyclesCore.Core
 			}
 		}
 
+		private void PurgeStaleCompileFiles()
+		{
+			foreach (string ext in new string[] { "*.compiling", "*.task" })
+			{
+				var foundFiles = Directory.EnumerateFiles(path: GpuCompilePath, ext);
+				foreach (string fileName in foundFiles)
+				{
+					TimeSpan span = DateTime.Now - File.GetLastWriteTime(fileName);
+					if (span.TotalMinutes > 30)
+					{
+						try
+						{
+							File.Delete(fileName);
+						}
+						finally { }
+					}
+				}
+			}
+		}
+
 		private string GenerateGpuDeviceInfo(Device device)
 		{
 			var info = "";
@@ -466,10 +486,15 @@ namespace RhinoCyclesCore.Core
 		/// <returns></returns>
 		private ProcessStartInfo SetupProcessStartInfo(string compileTaskFile)
 		{
-			var assembly = Assembly.GetExecutingAssembly();
+			Assembly assembly = Assembly.GetExecutingAssembly();
 			string assemblyDirectory = Path.GetDirectoryName(path: assembly.Location);
 			string programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
-			var argumentsToProgramToRun = $"\"{KernelPath}\" \"{compileTaskFile}\"";
+			string argumentsToProgramToRun = $"\"{KernelPath}\" \"{compileTaskFile}\"";
+#if ON_RUNTIME_WIN
+#if DEBUG
+			argumentsToProgramToRun += " inception";
+#endif
+#endif
 
 			if(HostUtils.RunningOnWindows) {
 				programToRun += ".exe";
@@ -488,7 +513,7 @@ namespace RhinoCyclesCore.Core
 				if(!File.Exists(path: dll)) {
 					throw new FileNotFoundException($"{dll}");
 				}
-				argumentsToProgramToRun = $"\"{dll}\" {argumentsToProgramToRun} delay";
+				argumentsToProgramToRun = $"\"{dll}\" {argumentsToProgramToRun}";
 				programToRun = $"{dotnet_path}";
 			}
 
@@ -543,6 +568,7 @@ namespace RhinoCyclesCore.Core
 		public void StartCompileGpuKernels()
 		{
 			EnsureGpuCompilePath();
+			PurgeStaleCompileFiles();
 			CompileProcessFinished = false;
 			CompileProcessError = false;
 

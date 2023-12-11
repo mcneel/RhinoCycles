@@ -38,10 +38,13 @@
     <Compile Include="..\..\..\..\..\version.cs">
       <Link>Properties\version.cs</Link>
     </Compile>
-		<Compile Include="Program.cs" />
-	</ItemGroup>
-	<ItemGroup>
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(OS)' == 'Windows_NT' ">
+    <PackageReference Condition=" '$(Configuration)' == 'Debug' " Include="System.Management" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
     <ProjectReference Include="..\RhinoCyclesCore.csproj" />
-	</ItemGroup>
+  </ItemGroup>
 </Project>
