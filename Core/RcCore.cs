@@ -334,6 +334,10 @@ namespace RhinoCyclesCore.Core
 						lock (accessGpuKernelDevicesReadiness)
 						{
 							gpuDevicesReadiness[idx] = (device, true);
+							if(It.AllSettings.RenderDevice.Equals(device.Device))
+							{
+								ToggleViewportsRunningRealtime();
+							}
 							DeviceKernelReady?.Invoke(this, EventArgs.Empty);
 						}
 					}
@@ -349,6 +353,29 @@ namespace RhinoCyclesCore.Core
 				}
 			}
 			while (!stopCheckingForGpuKernelCompileFinished);
+		}
+
+		private static void ToggleViewportsRunningRealtime()
+		{
+			var dmwire = Rhino.Display.DisplayModeDescription.FindByName("Wireframe");
+			var dmray = Rhino.Display.DisplayModeDescription.FindByName("Raytraced");
+			foreach (RhinoDoc doc in RhinoDoc.OpenDocuments())
+			{
+				string activeViewName = doc.Views.ActiveView.ActiveViewport.Name;
+				foreach (var view in doc.Views)
+				{
+					if (view.RealtimeDisplayMode != null && view.RealtimeDisplayMode.HudProductName().Contains("Cycles"))
+					{
+						RhinoApp.InvokeOnUiThread(() =>
+						{
+							_ = RhinoApp.RunScript($"_SetActiveViewport \"{view.ActiveViewport.Name}\"", false);
+							_ = RhinoApp.RunScript("_SetDisplayMode _Wireframe", false);
+							_ = RhinoApp.RunScript("_SetDisplayMode _Raytraced", false);
+						});
+					}
+				}
+				_ = RhinoApp.RunScript($"_SetActiveViewport \"{activeViewName}\"", false);
+			}
 		}
 
 		private void EnsureGpuCompilePath()
