@@ -334,6 +334,28 @@ namespace RhinoCyclesCore.Core
 						lock (accessGpuKernelDevicesReadiness)
 						{
 							gpuDevicesReadiness[idx] = (device, true);
+							if(It.AllSettings.RenderDevice.Equals(device.Device))
+							{
+								var dmwire = Rhino.Display.DisplayModeDescription.FindByName("Wireframe");
+								var dmray = Rhino.Display.DisplayModeDescription.FindByName("Wireframe");
+								foreach(RhinoDoc doc in RhinoDoc.OpenDocuments())
+								{
+									foreach(var view in doc.Views)
+									{
+										if(view.RealtimeDisplayMode != null && view.RealtimeDisplayMode.HudProductName().Contains("Cycles"))
+										{
+											RhinoApp.InvokeOnUiThread(() =>
+											{
+												view.ActiveViewport.DisplayMode = dmwire;
+											});
+											RhinoApp.InvokeOnUiThread(() =>
+											{
+												view.ActiveViewport.DisplayMode = dmray;
+											});
+										}
+									}
+								}
+							}
 							DeviceKernelReady?.Invoke(this, EventArgs.Empty);
 						}
 					}
