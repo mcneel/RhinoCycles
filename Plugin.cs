@@ -26,6 +26,7 @@ using Rhino.PlugIns;
 using Rhino.Render;
 using RhinoCyclesCore.Settings;
 using RhinoCyclesCore.Core;
+using System.Diagnostics;
 
 namespace RhinoCycles
 {
@@ -67,6 +68,8 @@ namespace RhinoCycles
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			if(!pluginLoaded) {
+				Stopwatch sw = new Stopwatch();
+				sw.Start();
 				pluginLoaded = true;
 				RhinoApp.Initialized += RhinoApp_Initialized;
 				RcCore.It.InitializeResourceManager();
@@ -125,6 +128,9 @@ namespace RhinoCycles
 				RhinoCyclesCore.RenderEngine._MonitorPixelCount = (int)(Eto.Forms.Screen.PrimaryScreen.Bounds.Width * Eto.Forms.Screen.PrimaryScreen.Bounds.Height);
 #endif
 				AsyncInitialise();
+
+				var timeTaken = sw.Elapsed;
+				RcCore.It.AddLogString($"RhinoCycles loaded in: {timeTaken}");
 			}
 			return LoadReturnCode.Success;
 		}
