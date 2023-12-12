@@ -334,7 +334,7 @@ namespace RhinoCyclesCore.Core
 						lock (accessGpuKernelDevicesReadiness)
 						{
 							gpuDevicesReadiness[idx] = (device, true);
-							if(It.AllSettings.RenderDevice.Equals(device.Device))
+							if(HostUtils.RunningOnWindows && It.AllSettings.RenderDevice.Equals(device.Device))
 							{
 								ToggleViewportsRunningRealtime();
 							}
