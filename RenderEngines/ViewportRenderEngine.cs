@@ -120,7 +120,15 @@ namespace RhinoCyclesCore.RenderEngines
 		{
 			if(RenderWindow != null)
 			{
+#if DEBUG
+				RenderWindow.EnableDebugThreadCheck(false);
+#endif
+
 				RenderWindow.SetSize(new Size(w, h));
+
+#if DEBUG
+				RenderWindow.EnableDebugThreadCheck(true);
+#endif
 
 				var native_render_size = CalculateNativeRenderSize();
 				var rect = new Rectangle(0, 0, native_render_size.Width, native_render_size.Height);
