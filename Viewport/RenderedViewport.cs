@@ -507,15 +507,15 @@ namespace RhinoCycles.Viewport
 				var originalDevice = RcCore.It.IsDeviceReady(RcCore.It.AllSettings.RenderDevice);
 				if (!originalDevice.isDeviceReady)
 				{
-					var fallback = LOC.STR("fallback to CPU, kernels still compiling");
+					var fallback = Localization.LocalizeString("fallback to CPU, kernels still compiling", 97);
 					pn = $"{pn} - {fallback}";
 				} else {
 					if(RcCore.It.CompileProcessError) {
-						var error = LOC.STR("Error compiling kernels, check _RhinoCyclesCompileLog");
+						var error = Localization.LocalizeString("Error compiling kernels, check _RhinoCyclesCompileLog", 98);
 						pn = $"{pn} - {error}";
 					}
 					else {
-						var reset = LOC.STR("Compile finished. Restart Raytraced");
+						var reset = Localization.LocalizeString("Compile finished. Restart Raytraced", 99);
 						pn = $"{pn} - {reset}";
 					}
 				}
