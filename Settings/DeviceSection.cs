@@ -473,13 +473,13 @@ namespace RhinoCyclesCore.Settings
 			};
 			m_btn_recompilekernels = new Button
 			{
-				Text = LOC.STR("Recompile kernels"),
-				ToolTip = LOC.STR("Press to recompile GPU kernels for those where it is possible.")
+				Text = Localization.LocalizeString("Recompile kernels", 92),
+				ToolTip = Localization.LocalizeString("Press to recompile GPU kernels for those where it is possible.", 93)
 			};
 			m_btn_showcompilelog = new Button
 			{
-				Text = LOC.STR("Show compile log"),
-				ToolTip = LOC.STR("Show log information from the GPU kernel compilation process.")
+				Text = Localization.LocalizeString("Show compile log", 94),
+				ToolTip = Localization.LocalizeString("Show log information from the GPU kernel compilation process.", 95)
 			};
 
 		}
@@ -556,7 +556,7 @@ namespace RhinoCyclesCore.Settings
 		{
 			Dialogs.ShowTextDialog(
 				message: RcCore.It.GetFormattedCompileLog(),
-				title: LOC.STR("GPU Kernels Compile Log")
+				title: Localization.LocalizeString("GPU Kernels Compile Log", 96)
 			);
 		}
 

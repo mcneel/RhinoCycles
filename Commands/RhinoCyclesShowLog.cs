@@ -41,7 +41,7 @@ namespace RhinoCycles.Commands
 		{
 			string log = RcCore.It.GetLog();
 
-			string logTitel = LOC.STR("RhinoCycles log");
+			string logTitel = Localization.LocalizeString("RhinoCycles log", 80);
 
 			Rhino.UI.Dialogs.ShowTextDialog(log, "");
 

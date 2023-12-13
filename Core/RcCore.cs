@@ -480,7 +480,7 @@ namespace RhinoCyclesCore.Core
 			return gpuTaskFileName;
 		}
 
-		public string CompileLogStdOut { get; set; } = LOC.STR("Not started");
+		public string CompileLogStdOut { get; set; } = Localization.LocalizeString("Not started", 81);
 		public string CompileLogStdErr { get; set; } = "";
 
 		public bool CompileProcessFinished { get; set; } = false;
@@ -491,10 +491,10 @@ namespace RhinoCyclesCore.Core
 
 		public string GetFormattedCompileLog()
 		{
-			string compout = LOC.STR("COMPILER OUTPUT");
-			string errlog = LOC.STR("ERROR LOG");
-			string compstart = LOC.STR("Compile start time");
-			string compend =   LOC.STR("Compile end time  ");
+			string compout = Localization.LocalizeString("COMPILER OUTPUT", 82);
+			string errlog = Localization.LocalizeString("ERROR LOG", 83);
+			string compstart = Localization.LocalizeString("Compile start time", 84);
+			string compend =   Localization.LocalizeString("Compile end time  ", 85);
 			var compendfinal = $"{compend}: {CompileEndTime}";
 			if(CompileEndTime.Equals(DateTime.MinValue)) {
 				compendfinal = "";
@@ -503,7 +503,7 @@ namespace RhinoCyclesCore.Core
 			var log = $"{compout}:\n\n{CompileLogStdOut}\n\n{errlog}:\n\n{CompileLogStdErr}\n\n{compstart}: {CompileStartTime}\n{compendfinal}\n";
 
 			if(CompileStartTime.Equals(DateTime.MinValue)) {
-				log = LOC.STR("Kernel compilation not started");
+				log = Localization.LocalizeString("Kernel compilation not started", 86);
 			}
 			return log;
 		}
@@ -602,8 +602,8 @@ namespace RhinoCyclesCore.Core
 			CompileProcessFinished = false;
 			CompileProcessError = false;
 
-			CompileLogStdOut = LOC.STR("Compile started, waiting for results...") + "\n";
-			CompileLogStdErr = LOC.STR("No errors.");
+			CompileLogStdOut = Localization.LocalizeString("Compile started, waiting for results...", 87) + "\n";
+			CompileLogStdErr = Localization.LocalizeString("No errors.", 88);
 			CompileStartTime = DateTime.Now;
 			CompileEndTime = DateTime.MinValue;
 
@@ -613,7 +613,7 @@ namespace RhinoCyclesCore.Core
 				if (deviceListing.Count == 0) continue;
 
 				var compileTaskFile = WriteGpuDevicesFile(deviceListing);
-				string startProcessString = LOC.STR("Start compile process with device count:");
+				string startProcessString = Localization.LocalizeString("Start compile process with device count:", 89);
 				CompileLogStdOut += $"{startProcessString} {deviceListing.Count} ({deviceListing[0].Type})\n";
 
 				try
@@ -627,8 +627,8 @@ namespace RhinoCyclesCore.Core
 					CompileProcessError = process.ExitCode != 0;
 					if (CompileProcessError)
 					{
-						string compile_failed = LOC.STR("Compile failed");
-						string compile_error_code = LOC.STR("Error code");
+						string compile_failed = Localization.LocalizeString("Compile failed", 90);
+						string compile_error_code = Localization.LocalizeString("Error code", 91);
 						CompileLogStdOut = $"{compile_failed} {CompileLogStdOut}";
 						CompileLogStdErr = $"{compile_error_code}: {process.ExitCode}\n\n{process.StandardError.ReadToEnd()}";
 					}
