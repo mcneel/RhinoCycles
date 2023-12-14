@@ -164,7 +164,7 @@ namespace RhinoCyclesCore.Core
 		/// Shut down Cycles on all levels. Wait for all active session to complete.
 		/// </summary>
 		public void Shutdown() {
-			while(logStrings.Count > 0) logStrings.TryDequeue(out string _);
+			ClearLogQueues();
 
 			ReleaseActiveSessions();
 			int count;
@@ -334,11 +334,11 @@ namespace RhinoCyclesCore.Core
 						lock (accessGpuKernelDevicesReadiness)
 						{
 							gpuDevicesReadiness[idx] = (device, true);
-							if(HostUtils.RunningOnWindows && It.AllSettings.RenderDevice.Equals(device.Device))
-							{
-								ToggleViewportsRunningRealtime();
-							}
 							DeviceKernelReady?.Invoke(this, EventArgs.Empty);
+						}
+						if(HostUtils.RunningOnWindows && It.AllSettings.RenderDevice.Equals(device.Device))
+						{
+							ToggleViewportsRunningRealtime();
 						}
 					}
 				}
@@ -371,7 +371,7 @@ namespace RhinoCyclesCore.Core
 							_ = RhinoApp.RunScript($"_SetActiveViewport \"{view.ActiveViewport.Name}\"", false);
 							_ = RhinoApp.RunScript("_SetDisplayMode _Wireframe", false);
 							_ = RhinoApp.RunScript("_SetDisplayMode _Raytraced", false);
-						});
+						}, new object[]{ });
 					}
 				}
 				_ = RhinoApp.RunScript($"_SetActiveViewport \"{activeViewName}\"", false);
@@ -491,6 +491,7 @@ namespace RhinoCyclesCore.Core
 
 		public string GetFormattedCompileLog()
 		{
+			SetCompileLog();
 			string compout = Localization.LocalizeString("COMPILER OUTPUT", 82);
 			string errlog = Localization.LocalizeString("ERROR LOG", 83);
 			string compstart = Localization.LocalizeString("Compile start time", 84);
@@ -599,6 +600,7 @@ namespace RhinoCyclesCore.Core
 		{
 			EnsureGpuCompilePath();
 			PurgeStaleCompileFiles();
+			ClearLogQueues(LogQueues.CompileOutputs);
 			CompileProcessFinished = false;
 			CompileProcessError = false;
 
@@ -620,8 +622,26 @@ namespace RhinoCyclesCore.Core
 				{
 					ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
 
-					var process = Process.Start(startInfo);
-					CompileLogStdOut += $"{process.StandardOutput.ReadToEnd()}";
+					var process = new Process();
+					process.StartInfo = startInfo;
+					process.OutputDataReceived += new DataReceivedEventHandler((sender,e) => {
+						if(e.Data != null)
+						{
+							compileStdOut.Enqueue(e.Data);
+						}
+					});
+					process.ErrorDataReceived += new DataReceivedEventHandler((sender,e) => {
+						if(e.Data != null)
+						{
+							compileStdErr.Enqueue(e.Data);
+						}
+					});
+					process.Start();
+					process.BeginOutputReadLine();
+					process.BeginErrorReadLine();
+					//CompileLogStdOut += $"{process.StandardOutput.ReadToEnd()}";
+
+					SetCompileLog();
 
 					process.WaitForExit();
 					CompileProcessError = process.ExitCode != 0;
@@ -632,6 +652,7 @@ namespace RhinoCyclesCore.Core
 						CompileLogStdOut = $"{compile_failed} {CompileLogStdOut}";
 						CompileLogStdErr = $"{compile_error_code}: {process.ExitCode}\n\n{process.StandardError.ReadToEnd()}";
 					}
+					process.Close();
 				}
 				catch (Exception processException)
 				{
@@ -644,6 +665,36 @@ namespace RhinoCyclesCore.Core
 			CompileEndTime = DateTime.Now;
 
 		} /* end of StartCompileGpuKernel() */
+
+		[Flags]
+		enum LogQueues {
+			RhinoCycles = 0b0000_0001,
+			CompileStdOut = 0b0000_0010,
+			CompileStdErr = 0b0000_0100,
+			CompileOutputs = CompileStdOut | CompileStdErr,
+			All = RhinoCycles | CompileStdOut | CompileStdErr,
+		}
+
+		private void ClearLogQueues(LogQueues whichQueues = LogQueues.All)
+		{
+			if((whichQueues & LogQueues.RhinoCycles) == LogQueues.RhinoCycles) while(logStrings.Count > 0) logStrings.TryDequeue(out string _);
+			if((whichQueues & LogQueues.CompileStdOut) == LogQueues.CompileStdOut) while(compileStdOut.Count > 0) compileStdOut.TryDequeue(out string _);
+			if((whichQueues & LogQueues.CompileStdErr) == LogQueues.CompileStdErr) while(compileStdErr.Count > 0) compileStdErr.TryDequeue(out string _);
+		}
+
+		public void SetCompileLog()
+		{
+			StringBuilder sb = new StringBuilder();
+			foreach(string logLine in compileStdOut) {
+				sb.AppendLine(logLine);
+			}
+			CompileLogStdOut = sb.ToString();
+			StringBuilder sberr = new StringBuilder();
+			foreach(string logLine in compileStdErr) {
+				sberr.AppendLine(logLine);
+			}
+			CompileLogStdErr = sberr.ToString();
+		}
 
 		private bool EnsureCompilerIsNotRunning()
 		{
@@ -750,8 +801,23 @@ namespace RhinoCyclesCore.Core
 
 		}
 		ConcurrentQueue<string> logStrings = new ConcurrentQueue<string>();
+		ConcurrentQueue<string> compileStdOut = new ConcurrentQueue<string>();
+		ConcurrentQueue<string> compileStdErr = new ConcurrentQueue<string>();
 
-		public void AddLogString(string log) { logStrings.Enqueue($"{DateTime.Now} :: {log}\n"); }
+		Stopwatch loggingStopwatch = null;
+
+		public void StartLogStopwatch()
+		{
+			if(loggingStopwatch==null) {
+				loggingStopwatch = new Stopwatch();
+			}
+
+			loggingStopwatch.Restart();
+		}
+		public void AddLogString(string log) {
+			logStrings.Enqueue($"{DateTime.Now} :: {loggingStopwatch.Elapsed} |> {log}\n");
+			loggingStopwatch.Restart();
+		}
 		public string GetLog() {
 			StringBuilder sb = new StringBuilder();
 			foreach(string logString in logStrings)
