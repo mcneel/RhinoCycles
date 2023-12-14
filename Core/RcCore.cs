@@ -822,6 +822,17 @@ namespace RhinoCyclesCore.Core
 			logStrings.Enqueue($"{DateTime.Now} :: {loggingStopwatch.Elapsed} |> {log}\n");
 			loggingStopwatch.Restart();
 		}
+
+		/// <summary>
+		/// Like AddLogString, but only if advanced setting RhinoCycles.VerboseLogging is set to true
+		/// </summary>
+		/// <param name="log">String to log</param>
+		public void AddLogStringIfVerbose(string log)
+		{
+			if(It.AllSettings.VerboseLogging) {
+				AddLogString(log);
+			}
+		}
 		/// <summary>
 		/// Get the log as a single string
 		/// </summary>

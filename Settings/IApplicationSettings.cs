@@ -40,5 +40,6 @@ namespace RhinoCyclesCore.Settings
 		bool DumpEnvironmentShaderGraph { get; set; }
 
 		bool StartGpuKernelCompiler { get; set; }
+		bool VerboseLogging { get; set; }
 	}
 }

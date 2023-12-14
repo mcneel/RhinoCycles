@@ -911,9 +911,6 @@ namespace RhinoCyclesCore.Converters
 			waves.ins.Alpha2.Value = Color2.ToFloat4().w;
 			//waves.TextureAmount2 = TextureAmount2; // TODO
 
-			Child1?.CreateAndConnectProceduralNode(shader, uvw_output, waves.ins.Color1, waves.ins.Alpha1.ToList(), IsData);
-			Child2?.CreateAndConnectProceduralNode(shader, uvw_output, waves.ins.Color2, waves.ins.Alpha2.ToList(), IsData);
-
 			var perturbing1_transform_node = new MatrixMathNode(shader)
 			{
 				Transform = new ccl.Transform(MappingTransform)
@@ -939,6 +936,10 @@ namespace RhinoCyclesCore.Converters
 			noise3.outs.Color.Connect(perturbing2.ins.Color3);
 
 			perturbing2.outs.PerturbedUVW.Connect(waves.ins.UVW);
+
+			Child1?.CreateAndConnectProceduralNode(shader, perturbing2.outs.PerturbedUVW, waves.ins.Color1, waves.ins.Alpha1.ToList(), IsData);
+			Child2?.CreateAndConnectProceduralNode(shader, perturbing2.outs.PerturbedUVW, waves.ins.Color2, waves.ins.Alpha2.ToList(), IsData);
+
 			waves.outs.Color.Connect(parent_color_input);
 			ConnectAlphaNode(waves.outs.Alpha, parent_alpha_input);
 		}
