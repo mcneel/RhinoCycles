@@ -80,6 +80,7 @@ namespace RhinoCyclesCore.RenderEngines
 		/// </summary>
 		public void Renderer()
 		{
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer entered");
 			var cyclesEngine = this;
 			EngineDocumentSettings eds = new EngineDocumentSettings(m_doc_serialnumber);
 
@@ -155,7 +156,9 @@ namespace RhinoCyclesCore.RenderEngines
 			if (cyclesEngine.ShouldBreak) return;
 
 			#region create session for scene
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer CreateSession");
 			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer CreateSession done");
 			#endregion
 
 			HandleIntegrator(eds);
@@ -166,7 +169,9 @@ namespace RhinoCyclesCore.RenderEngines
 				Session.AddPass(reqPass);
 			}
 
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer Session.Reset");
 			cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, BufferRectangle.Top, FullSize.Width, FullSize.Height);
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer Session.Reset done");
 
 			// main render loop, including restarts
 			#region start the rendering loop, wait for it to complete, we're rendering now!
@@ -174,17 +179,23 @@ namespace RhinoCyclesCore.RenderEngines
 			if (cyclesEngine.ShouldBreak)
 				return;
 
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer Flush");
 			cyclesEngine.Database?.Flush();
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer Flush done");
 			if(cyclesEngine.ShouldBreak)
 				return;
 			cyclesEngine.Session.WaitUntilLocked();
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer UploadData");
 			var renderSuccess = cyclesEngine.UploadData();
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer UploadData done");
 			cyclesEngine.Session.Unlock();
 			cyclesEngine.Database.ResetChangeQueue();
 
 			if (renderSuccess)
 			{
+				RcCore.It.AddLogString("ModalRenderEngine.Renderer Session.Start");
 				cyclesEngine.Session.Start();
+				RcCore.It.AddLogString("ModalRenderEngine.Renderer Session.Start done");
 
 				var throttle = Math.Max(0, engineSettings.ThrottleMs);
 				int lastRenderedSample = 0;
@@ -226,15 +237,20 @@ namespace RhinoCyclesCore.RenderEngines
 				}
 			}
 			#endregion
+				RcCore.It.AddLogString("ModalRenderEngine.Renderer Stopping");
 
 			while(State == State.Stopping) {
 				Thread.Sleep(10);
 			}
 
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer StopTheRenderer");
 			cyclesEngine.StopTheRenderer();
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer StopTheRenderer done");
 
 			// we're done now, so lets clean up our session.
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer Database.Dispose");
 			cyclesEngine.Database?.Dispose();
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer Database.Dispose done");
 			cyclesEngine.Database = null;
 			cyclesEngine.State = State.Stopped;
 
@@ -262,6 +278,7 @@ Please click the link below for more information.", 67));
 				};
 				RhinoApp.InvokeOnUiThread(showErrorDialog);
 			}
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer exiting");
 		}
 
 		public bool SupportsPause()

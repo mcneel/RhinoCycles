@@ -94,6 +94,7 @@ namespace RhinoCycles.Viewport
 
 		public RenderedViewport()
 		{
+			RcCore.It.AddLogString("Construct RenderedViewport for Raytraced");
 			_runningSerial ++;
 			_serial = _runningSerial;
 			(ApplicationAndDocumentSettings.RcPlugIn as Plugin)?.InitialiseCSycles();
@@ -106,12 +107,14 @@ namespace RhinoCycles.Viewport
 			HudStatusTextLeftClicked += RenderedViewport_HudPlayStatusTextPressed;
 			HudTimeLeftClicked += RenderedViewport_HudPlayTimePressed;
 			MaxPassesChanged += RenderedViewport_MaxPassesChanged;
+			RcCore.It.AddLogString("Construct RenderedViewport for Raytraced completed");
 		}
 
 		public override void PostConstruct()
 		{
 			_okOgl = false;
 			SetUseDrawOpenGl(_okOgl);
+			RcCore.It.AddLogString("Post-Construct RenderedViewport for Raytraced completed");
 		}
 
 		private void RenderedViewport_MaxPassesChanged(object sender, HudMaxPassesChangedEventArgs e)
@@ -176,6 +179,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
+			RcCore.It.AddLogString("Raytraced: RenderedViewport::StartRenderer entered");
 			_docSerialNumber = doc.RuntimeSerialNumber;
 			eds = RhinoCyclesCore.Utilities.GetEngineDocumentSettings(_docSerialNumber);
 			_started = true;
@@ -268,6 +272,8 @@ namespace RhinoCycles.Viewport
 			_startTime = DateTime.UtcNow;
 			_lastTime = _startTime;
 			_cycles.StartRenderThread(_cycles.Renderer, $"A cool Cycles viewport rendering thread {_serial}");
+
+			RcCore.It.AddLogString("Raytraced: RenderedViewport::StartRenderer exited");
 
 			return true;
 		}

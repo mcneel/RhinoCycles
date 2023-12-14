@@ -68,6 +68,8 @@ namespace RhinoCycles
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			if(!pluginLoaded) {
+				RcCore.It.StartLogStopwatch();
+				RcCore.It.AddLogString("RhinoCycles OnLoad Entered");
 				Stopwatch sw = new Stopwatch();
 				sw.Start();
 				pluginLoaded = true;
@@ -131,12 +133,14 @@ namespace RhinoCycles
 
 				var timeTaken = sw.Elapsed;
 				RcCore.It.AddLogString($"RhinoCycles loaded in: {timeTaken}");
+				RcCore.It.AddLogString("RhinoCycles OnLoad Exiting");
 			}
 			return LoadReturnCode.Success;
 		}
 
 		private void RhinoApp_Initialized(object sender, EventArgs e)
 		{
+			RcCore.It.AddLogString("RhinoApp_Initialized");
 			RcCore.It.AppInitialised = true;
 		}
 
@@ -170,6 +174,7 @@ namespace RhinoCycles
 			{
 				if(!RcCore.It.Initialised)
 				{
+					RcCore.It.AddLogString("InitialiseCSycles entered");
 					if(File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) ||
 					  Rhino.RhinoApp.IsSafeModeEnabled /*|| IsSonomaOrGreater*/
 						)
@@ -194,6 +199,7 @@ namespace RhinoCycles
 					RcCore.It.Initialised = true;
 
 					RcCore.It.TriggerInitialisationCompleted(this);
+					RcCore.It.AddLogString("InitialiseCSycles exiting");
 				}
 			}
 		}
