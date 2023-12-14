@@ -418,6 +418,12 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public bool VerboseLogging
+		{
+			get => RcCore.It.AllSettings.VerboseLogging;
+			set => throw new InvalidOperationException();
+		}
+
 #endregion
 	}
 }

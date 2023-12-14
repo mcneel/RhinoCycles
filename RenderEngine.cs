@@ -324,6 +324,7 @@ namespace RhinoCyclesCore
 
 		public void BlitPixelsToRenderWindowChannel()
 		{
+			RcCore.It.AddLogStringIfVerbose("BlitPixelsToRenderWindowChannel entry");
 			var native_render_size = CalculateNativeRenderSize();
 			int width = native_render_size.Width;
 			int height = native_render_size.Height;
@@ -335,13 +336,17 @@ namespace RhinoCyclesCore
 
 				//Stopwatch stopwatch = Stopwatch.StartNew();
 
+				RcCore.It.AddLogStringIfVerbose($"BlitPixelsToRenderWindowChannel RetainPixelBuffer {pass} start");
 				Session.RetainPixelBuffer(pass, width, height, ref pixel_buffer);
+				RcCore.It.AddLogStringIfVerbose($"BlitPixelsToRenderWindowChannel RetainPixelBuffer {pass} end");
 				if (pixel_buffer != IntPtr.Zero)
 				{
 					using (var rgba = RenderWindow.OpenChannel(channel))
 					{
 						PixelBuffer pb = new PixelBuffer(pixel_buffer);
+						RcCore.It.AddLogStringIfVerbose($"BlitPixelsToRenderWindowChannel rgba.SetValues {pass} start");
 						rgba?.SetValues(rect, rect.Size, pb);
+						RcCore.It.AddLogStringIfVerbose($"BlitPixelsToRenderWindowChannel rgba.SetValues {pass} end");
 					}
 
 					Session.ReleasePixelBuffer(pass);
@@ -349,6 +354,7 @@ namespace RhinoCyclesCore
 
 				//RhinoApp.WriteLine("Time to write pixels to Render Window Channel: {0} ms.", stopwatch.ElapsedMilliseconds);
 			}
+			RcCore.It.AddLogStringIfVerbose("BlitPixelsToRenderWindowChannel exit");
 		}
 
 		/// <summary>
@@ -367,9 +373,9 @@ namespace RhinoCyclesCore
 		{
 			StopTheRenderer();
 
-			RcCore.OutputDebugString($"Getting ready to join C# Cycles render thread\n");
+			RcCore.It.AddLogStringIfVerbose($"C# Cycles render thread join start\n");
 			RenderThread?.Join();
-			RcCore.OutputDebugString($"C# Cycles render thread joined\n");
+			RcCore.It.AddLogStringIfVerbose($"C# Cycles render thread join end\n");
 			RenderThread = null;
 		}
 
@@ -407,9 +413,9 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public void StopTheRenderer()
 		{
+			RcCore.It.AddLogStringIfVerbose("StopTheRenderer entry");
 			State = State.Stopping;
 
-			RcCore.OutputDebugString($"Getting ready to destroy Cycles session\n");
 			// try to get scene lock. Necessary since UploadData might still be writing to
 			// the session. Wait for it to react to state being set to Stopping.
 			// Once we can lock we know there is no other actor accessing the session, so
@@ -417,16 +423,22 @@ namespace RhinoCyclesCore
 			Debug.Assert(Session != null);
 			if (Session != null)
 			{
+				RcCore.It.AddLogStringIfVerbose("Session Wait, lock and unlock start");
 				Session.WaitUntilLocked();
 				Session.Unlock();
+				RcCore.It.AddLogStringIfVerbose("Session Wait, lock and unlock end");
+				RcCore.It.AddLogStringIfVerbose("Session QuickCancel start");
 				Session.QuickCancel();
+				RcCore.It.AddLogStringIfVerbose("Session QuickCancel end");
 				Session.Cancel("StopTheRenderer");
 				Thread.Sleep(500);
+				RcCore.It.AddLogStringIfVerbose("Session Dispose start");
 				Session.Dispose();
+				RcCore.It.AddLogStringIfVerbose("Session Dispose end");
 			}
-			RcCore.OutputDebugString($"Cycles session destroyed\n");
 			CancelRender = true;
 			State = State.Stopped;
+			RcCore.It.AddLogStringIfVerbose("StopTheRenderer exit");
 		}
 
 		/// <summary>

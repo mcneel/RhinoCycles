@@ -125,6 +125,8 @@ namespace RhinoCyclesCore.Settings
 			DumpEnvironmentShaderGraph = DumpEnvironmentShaderGraph;
 
 			StartGpuKernelCompiler = StartGpuKernelCompiler;
+
+			VerboseLogging = VerboseLogging;
 		}
 
 		public bool IgnoreQualityChanges { get; set; }
@@ -221,6 +223,12 @@ namespace RhinoCyclesCore.Settings
 			DebugNoOverrideTileSize = DefaultEngineSettings.DebugNoOverrideTileSize;
 			FlushAtEndOfCreateWorld = DefaultEngineSettings.FlushAtEndOfCreateWorld;
 			PreviewSamples = DefaultEngineSettings.PreviewSamples;
+
+			DumpEnvironmentShaderGraph = DefaultEngineSettings.DumpEnvironmentShaderGraph;
+			DumpMaterialShaderGraph = DefaultEngineSettings.DumpMaterialShaderGraph;
+			StartGpuKernelCompiler = DefaultEngineSettings.StartGpuKernelCompiler;
+			VerboseLogging = DefaultEngineSettings.VerboseLogging;
+
 		}
 
 		public bool RenderDeviceIsCuda => RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
@@ -280,6 +288,13 @@ namespace RhinoCyclesCore.Settings
 			get { return RcPlugIn.Settings.GetBool(SettingNames.StartGpuKernelCompiler, DefaultEngineSettings.StartGpuKernelCompiler); }
 			set { RcPlugIn.Settings.SetBool(SettingNames.StartGpuKernelCompiler, value); }
 		}
+
+		public virtual bool VerboseLogging
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.VerboseLogging, DefaultEngineSettings.VerboseLogging); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.VerboseLogging, value); }
+		}
+
 
 		public virtual bool Verbose
 		{
