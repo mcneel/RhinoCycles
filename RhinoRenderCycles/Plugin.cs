@@ -83,8 +83,8 @@ namespace CyclesForRhino.CyclesForRhino
 
 		private Result RenderWithCycles(RhinoDoc doc, RunMode mode, Rectangle rect, bool inWindow, bool fastPreview)
 		{
-			RcCore.It.StartLogStopwatch();
-			RcCore.It.AddLogString("RenderWitCycles entered");
+			RcCore.It.StartLogStopwatch("RenderWithCycles");
+			RcCore.It.AddLogString("RenderWithCycles entry");
 			var rc = RenderPipeline.RenderReturnCode.InternalError;
 			using (var rsv = new RenderSourceView(doc))
 			{
@@ -115,20 +115,24 @@ namespace CyclesForRhino.CyclesForRhino
 
 				var renderSize = new Size(rect.Width, rect.Height);
 				var fullSize = inWindow && !partial ? renderSize : vpSize;
-				RcCore.It.AddLogString("RenderWitCycles: instantiate ModalRenderEngine");
+				RcCore.It.AddLogString("RenderWithCycles: ModalRenderEngine constructor start");
 				ModalRenderEngine engine = new ModalRenderEngine(doc, Id, vi, true)
 				{
 					BufferRectangle = rect,
 					FullSize = fullSize,
 					FastPreview = fastPreview,
 				};
-				RcCore.It.AddLogString("RenderWitCycles: ModalRenderEngine instantiated");
+				RcCore.It.AddLogString("RenderWithCycles: ModalRenderEngine constructor end");
+				RcCore.It.AddLogString("RenderWithCycles: RhinoCycles.RenderPipeline start");
 				var pipe = new RhinoCycles.RenderPipeline(doc, mode, this, renderSize, engine);
+				RcCore.It.AddLogString("RenderWithCycles: RhinoCycles.RenderPipeline end");
 
+				RcCore.It.AddLogString("RenderWithCycles: pipe.GetRenderWindow start");
 				engine.RenderWindow = pipe.GetRenderWindow(vi.Viewport, false, rect);
-				RcCore.It.AddLogString("RenderWitCycles: RenderWindow.SetSize");
+				RcCore.It.AddLogString("RenderWithCycles: pipe.GetRenderWindow end");
+				RcCore.It.AddLogString("RenderWithCycles: RenderWindow.SetSize start");
 				engine.RenderWindow.SetSize(renderSize);
-				RcCore.It.AddLogString("RenderWitCycles: RenderWindow.SetSize completed");
+				RcCore.It.AddLogString("RenderWithCycles: RenderWindow.SetSize end");
 
 				var requestedChannels = engine.RenderWindow.GetRequestedRenderChannelsAsStandardChannels();
 
@@ -154,9 +158,9 @@ namespace CyclesForRhino.CyclesForRhino
 					.Any();
 
 				foreach(var reqChan in reqChanList) {
-					RcCore.It.AddLogString($"RenderWitCycles: RenderWindow.AddChannel {reqChan}");
+					RcCore.It.AddLogString($"RenderWithCycles: RenderWindow.AddChannel {reqChan} start");
 					engine.RenderWindow.AddChannel(reqChan);
-					RcCore.It.AddLogString($"RenderWitCycles: RenderWindow.AddChannel {reqChan} completed");
+					RcCore.It.AddLogString($"RenderWithCycles: RenderWindow.AddChannel {reqChan} end");
 				}
 
 				engine.RenderDimension = renderSize;
@@ -172,9 +176,9 @@ namespace CyclesForRhino.CyclesForRhino
 						engine._textureBakeQuality = eds.TextureBakeQuality;
 				}
 
-				RcCore.It.AddLogString($"RenderWitCycles: CreateWorld");
+				RcCore.It.AddLogString($"RenderWithCycles: CreateWorld start");
 				engine.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
-				RcCore.It.AddLogString($"RenderWitCycles: CreateWorld completed");
+				RcCore.It.AddLogString($"RenderWithCycles: CreateWorld end");
 
 				if (inWindow)
 					rc = pipe.Render();
@@ -186,12 +190,12 @@ namespace CyclesForRhino.CyclesForRhino
 
 			if (Rhino.Render.RenderPipeline.RenderReturnCode.Ok != rc)
 			{
-				RcCore.It.AddLogString("RenderWitCycles exiting(failure)");
+				RcCore.It.AddLogString("RenderWithCycles exiting(failure)");
 				RhinoApp.WriteLine(Localization.LocalizeString("Render setup failed:", 2) + RenderPipeline.LocalizeRenderReturnCode(rc));
 				return Result.Failure;
 			}
 
-			RcCore.It.AddLogString("RenderWitCycles exiting");
+			RcCore.It.AddLogString("RenderWithCycles exit");
 			return Result.Success;
 		}
 
@@ -205,18 +209,22 @@ namespace CyclesForRhino.CyclesForRhino
 		/// <param name="scene">The scene description to render, along with the requested quality setting</param>
 		protected override void CreatePreview(CreatePreviewEventArgs scene)
 		{
-			RcCore.It.AddLogString($"CreatePreview entered {scene.ContentKind}, {scene.Reason} {scene.Id}");
+			RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} entry");
 			scene.SkipInitialisation();
 
 			if (scene.Quality == PreviewSceneQuality.Low)
 			{
 				scene.PreviewImage = null;
+				RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} entry");
 				return;
 			}
 
 			var active_doc = RhinoDoc.ActiveDoc;
 			if (active_doc == null)
+			{
+				RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} NO ACTIVE DOC");
 				return;
+			}
 
 			var engine = new PreviewRenderEngine(scene, Id, active_doc.RuntimeSerialNumber)
 			{
@@ -240,7 +248,7 @@ namespace CyclesForRhino.CyclesForRhino
 			scene.PreviewImage = engine.Success ? engine.RenderWindow.GetBitmap() : null;
 
 			engine.RenderWindow.Dispose();
-			RcCore.It.AddLogString($"CreatePreview exited {scene.Id}");
+			RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} exit");
 		}
 
 		public override void RenderSettingsCustomSections(List<ICollapsibleSection> sections) {

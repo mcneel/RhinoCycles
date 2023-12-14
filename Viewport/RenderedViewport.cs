@@ -179,7 +179,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool StartRenderer(int w, int h, RhinoDoc doc, ViewInfo rhinoView, ViewportInfo viewportInfo, bool forCapture, RenderWindow renderWindow)
 		{
-			RcCore.It.AddLogString("Raytraced: RenderedViewport::StartRenderer entered");
+			RcCore.It.AddLogString("Raytraced: RenderedViewport::StartRenderer entry");
 			_docSerialNumber = doc.RuntimeSerialNumber;
 			eds = RhinoCyclesCore.Utilities.GetEngineDocumentSettings(_docSerialNumber);
 			_started = true;

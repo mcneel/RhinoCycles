@@ -177,17 +177,21 @@ namespace RhinoCyclesCore
 		public DisplayPipelineAttributes Attributes => Database?.DisplayPipelineAttributes ?? null;
 		public RenderEngine(Guid pluginId, uint docRuntimeSerialnumber, ViewInfo view, ViewportInfo vp, DisplayPipelineAttributes attributes, bool interactive)
 		{
+			RcCore.It.AddLogString("RenderEngine constructor entry");
 			m_doc_serialnumber = docRuntimeSerialnumber;
 			View = view;
 			m_interactive = interactive;
 			var doc = RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
+			RcCore.It.AddLogString("RenderEngine create ChangeDatabase");
 			Database = new ChangeDatabase(pluginId, this, m_doc_serialnumber, View, attributes, !m_interactive, _bitmapConverter)
 			{
 				ModelAbsoluteTolerance = doc.ModelAbsoluteTolerance,
 				ModelAngleToleranceRadians = doc.ModelAngleToleranceRadians,
 				ModelUnitSystem = doc.ModelUnitSystem
 			};
+			RcCore.It.AddLogString("RenderEngine ChangeDatabase created");
 			RegisterEventHandler();
+			RcCore.It.AddLogString("RenderEngine constructor exit");
 		}
 
 		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive, uint docsrn)
