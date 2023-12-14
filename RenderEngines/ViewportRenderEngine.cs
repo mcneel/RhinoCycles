@@ -178,6 +178,7 @@ Please click the link below for more information.", 69));
 		/// </summary>
 		public void Renderer()
 		{
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer entry");
 			Locked = false;
 
 			var doc = RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
@@ -252,6 +253,7 @@ Please click the link below for more information.", 69));
 				Session.AddPass(reqPass);
 			}
 
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Reset start");
 			Session.Reset(
 				width: FullSize.Width,
 				height: FullSize.Height,
@@ -259,17 +261,22 @@ Please click the link below for more information.", 69));
 				full_x: 0, full_y: 0,
 				full_width: FullSize.Width,
 				full_height: FullSize.Height);
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Reset end");
 
 			// main render loop, including restarts
 			#region start the rendering thread, wait for it to complete, we're rendering now!
 
 			if(ShouldBreak) return;
 
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer Database.Flush start");
 			Database.Flush();
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer Database.Flush end");
 
 			if(ShouldBreak) return;
 
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer UploadData start");
 			UploadData();
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer UploadData end");
 
 			if(ShouldBreak) return;
 
@@ -280,7 +287,9 @@ Please click the link below for more information.", 69));
 			// We've got Cycles rendering now, notify anyone who cares
 			RenderStarted?.Invoke(sender: this, e: new RenderStartedEventArgs(success: !CancelRender));
 
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Start start");
 			Session.Start();
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Start end");
 
 			State lastState = State.Unset;
 			int lastRenderedSample = 0;
@@ -364,6 +373,7 @@ Please click the link below for more information.", 69));
 			{
 				Database.ResetChangeQueue();
 			}
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer exit");
 		}
 
 		/// <summary>

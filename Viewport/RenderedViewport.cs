@@ -94,7 +94,8 @@ namespace RhinoCycles.Viewport
 
 		public RenderedViewport()
 		{
-			RcCore.It.AddLogString("Construct RenderedViewport for Raytraced");
+			RcCore.It.StartLogStopwatch("RenderedViewport | Raytraced");
+			RcCore.It.AddLogString("RenderedViewport ctor entry");
 			_runningSerial ++;
 			_serial = _runningSerial;
 			(ApplicationAndDocumentSettings.RcPlugIn as Plugin)?.InitialiseCSycles();
@@ -107,7 +108,7 @@ namespace RhinoCycles.Viewport
 			HudStatusTextLeftClicked += RenderedViewport_HudPlayStatusTextPressed;
 			HudTimeLeftClicked += RenderedViewport_HudPlayTimePressed;
 			MaxPassesChanged += RenderedViewport_MaxPassesChanged;
-			RcCore.It.AddLogString("Construct RenderedViewport for Raytraced completed");
+			RcCore.It.AddLogString("RenderedViewport ctor exit");
 		}
 
 		public override void PostConstruct()
@@ -193,7 +194,9 @@ namespace RhinoCycles.Viewport
 					.ToList();
 
 			foreach(var reqChan in reqChanList) {
+				RcCore.It.AddLogString($"Raytraced: RenderedViewport AddChannel {reqChan} start");
 				renderWindow.AddChannel(reqChan);
+				RcCore.It.AddLogString($"Raytraced: RenderedViewport AddChannel {reqChan} end");
 			}
 
 			if (forCapture)
@@ -238,15 +241,21 @@ namespace RhinoCycles.Viewport
 			var renderSize = new Size(w, h);
 			var pixelSize = (int)eds.DpiScale;
 
+			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetSize start");
 			renderWindow.SetSize(renderSize);
+			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetSize end");
+			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetRenderOutputRect start");
 			renderWindow.SetRenderOutputRect(new Rectangle(0, 0, w / pixelSize, h / pixelSize));
+			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetRenderOutputRect end");
 
+			RcCore.It.AddLogString($"Raytraced: RenderedViewport ViewportRenderEngine ctor start");
 			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa)
 			{
 				BufferRectangle = viewportInfo.GetScreenPort(),
 				FullSize = viewportInfo.GetScreenPort().Size,
 				RenderedViewport = this,
 			};
+			RcCore.It.AddLogString($"Raytraced: RenderedViewport ViewportRenderEngine ctor end");
 
 			_cycles.StatusTextUpdated += CyclesStatusTextUpdated; // render engine tells us status texts for the hud
 			_cycles.RenderStarted += CyclesRenderStarted; // render engine tells us when it actually is rendering
@@ -265,7 +274,9 @@ namespace RhinoCycles.Viewport
 			_maxSamples = eds.Samples;
 
 			_startTime = DateTime.UtcNow; // use _startTime to time CreateWorld
+			RcCore.It.AddLogString("Raytraced: RenderedViewport CreateWorld start");
 			_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
+			RcCore.It.AddLogString("Raytraced: RenderedViewport CreateWorld end");
 
 			var createWorldDuration = DateTime.UtcNow - _startTime;
 
@@ -273,7 +284,7 @@ namespace RhinoCycles.Viewport
 			_lastTime = _startTime;
 			_cycles.StartRenderThread(_cycles.Renderer, $"A cool Cycles viewport rendering thread {_serial}");
 
-			RcCore.It.AddLogString("Raytraced: RenderedViewport::StartRenderer exited");
+			RcCore.It.AddLogString("Raytraced: RenderedViewport::StartRenderer exit");
 
 			return true;
 		}
@@ -292,12 +303,18 @@ namespace RhinoCycles.Viewport
 
 		public void RenderOffscreen(object o)
 		{
+			RcCore.It.AddLogString("Raytraced: RenderedViewport.RenderOffScreen entry");
 			if (o is ModalRenderEngine mre)
 			{
+				RcCore.It.AddLogString("Raytraced: RenderedViewport.RenderOffScreen Renderer start");
 				mre.Renderer();
+				RcCore.It.AddLogString("Raytraced: RenderedViewport.RenderOffScreen Renderer end");
+				RcCore.It.AddLogString("Raytraced: RenderedViewport.RenderOffScreen SaveRenderedBuffer start");
 				mre.SaveRenderedBuffer(0);
+				RcCore.It.AddLogString("Raytraced: RenderedViewport.RenderOffScreen SaveRenderedBuffer end");
 				_frameAvailable = true;
 			}
+			RcCore.It.AddLogString("Raytraced: RenderedViewport.RenderOffScreen exit");
 		}
 
 		public override bool IsFrameBufferAvailable(ViewInfo view)
@@ -468,6 +485,7 @@ namespace RhinoCycles.Viewport
 
 		public override void ShutdownRenderer()
 		{
+			RcCore.It.AddLogString("Raytraced: RenderedViewport.ShutdownRenderer entry");
 			if (_forCapture)
 			{
 				_modal?.StopRendering();
@@ -478,6 +496,7 @@ namespace RhinoCycles.Viewport
 				_cycles?.StopRendering();
 				_cycles?.Dispose();
 			}
+			RcCore.It.AddLogString("Raytraced: RenderedViewport.ShutdownRenderer exit");
 		}
 
 		public override bool IsRendererStarted()
