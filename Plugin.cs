@@ -27,6 +27,7 @@ using Rhino.Render;
 using RhinoCyclesCore.Settings;
 using RhinoCyclesCore.Core;
 using System.Diagnostics;
+using Rhino.Runtime;
 
 namespace RhinoCycles
 {
@@ -67,8 +68,10 @@ namespace RhinoCycles
 
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
+			string os = HostUtils.RunningOnWindows ? "Windows" : "MacOS";
 			if(!pluginLoaded) {
-				RcCore.It.StartLogStopwatch();
+				RcCore.It.StartLogStopwatch("OnLoad");
+				RcCore.It.AddLogString($"Running on {os}");
 				RcCore.It.AddLogString("RhinoCycles OnLoad Entered");
 				Stopwatch sw = new Stopwatch();
 				sw.Start();
@@ -174,7 +177,7 @@ namespace RhinoCycles
 			{
 				if(!RcCore.It.Initialised)
 				{
-					RcCore.It.AddLogString("InitialiseCSycles entered");
+					RcCore.It.AddLogString("InitialiseCSycles entry");
 					if(File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) ||
 					  Rhino.RhinoApp.IsSafeModeEnabled /*|| IsSonomaOrGreater*/
 						)

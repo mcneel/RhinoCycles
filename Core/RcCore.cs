@@ -806,18 +806,26 @@ namespace RhinoCyclesCore.Core
 
 		Stopwatch loggingStopwatch = null;
 
-		public void StartLogStopwatch()
+		public void StartLogStopwatch(string marker)
 		{
 			if(loggingStopwatch==null) {
 				loggingStopwatch = new Stopwatch();
 			}
-
+			logStrings.Enqueue($"\n\n==============================> {marker}\n\n");
 			loggingStopwatch.Restart();
 		}
+		/// <summary>
+		/// Add given string to log. Decorates with timestamp, timespan since previous log line and suffix a newline character
+		/// </summary>
+		/// <param name="log">String to log</param>
 		public void AddLogString(string log) {
 			logStrings.Enqueue($"{DateTime.Now} :: {loggingStopwatch.Elapsed} |> {log}\n");
 			loggingStopwatch.Restart();
 		}
+		/// <summary>
+		/// Get the log as a single string
+		/// </summary>
+		/// <returns>The log</returns>
 		public string GetLog() {
 			StringBuilder sb = new StringBuilder();
 			foreach(string logString in logStrings)

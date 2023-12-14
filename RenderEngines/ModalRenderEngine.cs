@@ -36,9 +36,11 @@ namespace RhinoCyclesCore.RenderEngines
 		public ModalRenderEngine(RhinoDoc doc, Guid pluginId, ViewInfo view, ViewportInfo viewport, Rhino.Display.DisplayPipelineAttributes attributes, bool isProductRender)
 			: base(pluginId, doc.RuntimeSerialNumber, view, viewport, attributes, false)
 		{
+			RcCore.It.AddLogString("ModalRenderEngine constructor entry");
 			IsProductRender = isProductRender;
 			Quality = doc.RenderSettings.AntialiasLevel;
 			ModalRenderEngineCommonConstruct();
+			RcCore.It.AddLogString("ModalRenderEngine constructor exit");
 		}
 
 		AntialiasLevel Quality { get; set; }
@@ -80,7 +82,7 @@ namespace RhinoCyclesCore.RenderEngines
 		/// </summary>
 		public void Renderer()
 		{
-			RcCore.It.AddLogString("ModalRenderEngine.Renderer entered");
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer entry");
 			var cyclesEngine = this;
 			EngineDocumentSettings eds = new EngineDocumentSettings(m_doc_serialnumber);
 
