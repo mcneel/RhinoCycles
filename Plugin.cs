@@ -41,38 +41,24 @@ namespace RhinoCycles
 
 		private bool pluginLoaded = false;
 
-		private bool IsIntelOpenClSdkInstalled() {
-			List<string> proglocs = new List<string>
-			{
-				Environment.GetEnvironmentVariable("PROGRAMFILES(x86)"),
-				Environment.GetEnvironmentVariable("PROGRAMFILES")
-			};
-
-			List<string> intelbits = new List<string>
-			{
-				"Intel\\OpenCL SDK",
-				"Common Files\\Intel\\OpenCL"
-			};
-			foreach (var progloc in proglocs) {
-				foreach(var intelbit in intelbits) {
-					var directory = $"{progloc}\\{intelbit}";
-					if (Directory.Exists(directory))
-					{
-						return true;
-					}
-
-				}
-			}
-			return false;
-		}
-
 		protected override LoadReturnCode OnLoad(ref string errorMessage)
 		{
 			string os = HostUtils.RunningOnWindows ? "Windows" : "MacOS";
 			if(!pluginLoaded) {
+				var dataPath = SettingsDirectory;
+				var userPath = Path.Combine(dataPath, "..", "data");
+				userPath = Path.GetFullPath(userPath);
+				if(!Directory.Exists(userPath)) {
+					Directory.CreateDirectory(userPath);
+				}
+
+				RcCore.It.DataUserPath = userPath;
+
+				RcCore.It.InitializeLog();
+				RcCore.It.PurgeOldLogs();
 				RcCore.It.StartLogStopwatch("OnLoad");
 				RcCore.It.AddLogString($"Running on {os}");
-				RcCore.It.AddLogString("RhinoCycles OnLoad Entered");
+				RcCore.It.AddLogString("RhinoCycles OnLoad entry");
 				Stopwatch sw = new Stopwatch();
 				sw.Start();
 				pluginLoaded = true;
@@ -93,16 +79,6 @@ namespace RhinoCycles
 				RcCore.It.AppPath = appPath;
 				kernelPath = RcCore.GetRelativePath(appPath, kernelPath);
 				RcCore.It.KernelPathRelative = kernelPath;
-
-				var dataPath = SettingsDirectory;
-				var userPath = Path.Combine(dataPath, "..", "data");
-				userPath = Path.GetFullPath(userPath);
-
-				if(!Directory.Exists(userPath)) {
-					Directory.CreateDirectory(userPath);
-				}
-
-				RcCore.It.DataUserPath = userPath;
 
 				CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
 
@@ -136,7 +112,7 @@ namespace RhinoCycles
 
 				var timeTaken = sw.Elapsed;
 				RcCore.It.AddLogString($"RhinoCycles loaded in: {timeTaken}");
-				RcCore.It.AddLogString("RhinoCycles OnLoad Exiting");
+				RcCore.It.AddLogString("RhinoCycles OnLoad exit");
 			}
 			return LoadReturnCode.Success;
 		}
@@ -202,7 +178,7 @@ namespace RhinoCycles
 					RcCore.It.Initialised = true;
 
 					RcCore.It.TriggerInitialisationCompleted(this);
-					RcCore.It.AddLogString("InitialiseCSycles exiting");
+					RcCore.It.AddLogString("InitialiseCSycles exit");
 				}
 			}
 		}
@@ -210,10 +186,16 @@ namespace RhinoCycles
 
 		protected override void OnShutdown()
 		{
+			RcCore.It.AddLogString("OnShutdown start");
 			RhinoApp.Initialized -= RhinoApp_Initialized;
 			/* Clean up everything from C[CS]?ycles. */
+			RcCore.It.AddLogString("RcCore.It.Shutdown start");
 			RcCore.It.Shutdown();
+			RcCore.It.AddLogString("RcCore.It.Shutdown end");
+			RcCore.It.AddLogString("base.OnShutdown start");
 			base.OnShutdown();
+			RcCore.It.AddLogString("base.OnShutdown end");
+			RcCore.It.AddLogString("OnShutdown exit");
 		}
 
 		protected override void OptionsDialogPages(List<Rhino.UI.OptionsDialogPage> pages)

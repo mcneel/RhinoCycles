@@ -191,13 +191,15 @@ namespace RhinoCyclesCore.Core
 			}
 			while((count = sessions.Count) > 0 ) {
 				if(timer%50==0)
-					RhinoApp.OutputDebugString($"Number of sessions we wait for {count}\n");
+					AddLogString($"Number of sessions we wait for {count}\n");
 				Thread.Sleep(10);
 				timer++;
 			}
-			RhinoApp.OutputDebugString($"All sessions cleaned up\n");
+			AddLogString($"All sessions cleaned up\n");
 			gpuDevicesReadiness.Clear();
 			CSycles.shutdown();
+			logTw.Close();
+			logTw.Dispose();
 		}
 
 		ConcurrentDictionary<IntPtr, Session> active_sessions = new ConcurrentDictionary<IntPtr, Session>();
@@ -806,20 +808,51 @@ namespace RhinoCyclesCore.Core
 
 		Stopwatch loggingStopwatch = null;
 
+		TextWriter logTw = null;
+
+		public void InitializeLog()
+		{
+			DateTime now = DateTime.Now;
+			string logPath = Path.Combine(DataUserPath, $"RhinoCycles{now:yyyyMMddmmHHss}.log");
+			logTw = File.CreateText(logPath);
+		}
+
 		public void StartLogStopwatch(string marker)
 		{
 			if(loggingStopwatch==null) {
 				loggingStopwatch = new Stopwatch();
 			}
-			logStrings.Enqueue($"\n\n==============================> {marker}\n\n");
+
+			string logstr = $"\n\n==============================> {marker}\n\n";
+
+			logTw.Write(logstr);
+
+			logStrings.Enqueue(logstr);
 			loggingStopwatch.Restart();
+		}
+
+		public void PurgeOldLogs()
+		{
+			IEnumerable<string> entries = Directory.EnumerateFiles(DataUserPath, "RhinoCycles*.log");
+			foreach(string entry in entries)
+			{
+				if (File.Exists(entry)) {
+					TimeSpan age = DateTime.Now - File.GetLastWriteTime(entry);
+					if(age.TotalDays > 3) {
+						File.Delete(entry);
+					}
+				}
+			}
 		}
 		/// <summary>
 		/// Add given string to log. Decorates with timestamp, timespan since previous log line and suffix a newline character
 		/// </summary>
 		/// <param name="log">String to log</param>
 		public void AddLogString(string log) {
-			logStrings.Enqueue($"{DateTime.Now} :: {loggingStopwatch.Elapsed} |> {log}\n");
+			string logstr = $"{DateTime.Now} :: {loggingStopwatch.Elapsed} |> {log}\n";
+			logTw.Write(logstr);
+			logTw.Flush();
+			logStrings.Enqueue(logstr);
 			loggingStopwatch.Restart();
 		}
 

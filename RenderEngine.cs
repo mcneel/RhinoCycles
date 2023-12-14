@@ -267,6 +267,7 @@ namespace RhinoCyclesCore
 		/// Handle status updates
 		/// </summary>
 		/// <param name="sid"></param>
+		string _previouStatusMessage = "";
 		public void UpdateCallback(IntPtr sid)
 		{
 			if (IsStopped) return;
@@ -291,11 +292,15 @@ namespace RhinoCyclesCore
 
 			bool finished = status.Contains("Finished") || status.Contains("Rendering Done");
 			if (finished) RenderedSamples = MaxSamples;
-			Finished = finished;
+
+			if(!Finished && !status.Equals(_previouStatusMessage)) RcCore.It.AddLogStringIfVerbose($"RenderEngine.UpdateCallback {status}");
+			_previouStatusMessage = status;
 
 			TimeString = $"{hr}h {min}m {sec}.{hun}s";
-
 			status = $"{status} {TimeString}";
+
+
+			Finished = finished;
 
 			// don't set full 100% progress here yet, because that signals the renderwindow the end of async render
 			if (progress >= 0.9999f) progress = 1.0f;
