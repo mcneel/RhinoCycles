@@ -359,13 +359,6 @@ Please click the link below for more information.", 69));
 					lastRenderedSample = RenderedSamples;
 				}
 
-				if(renderingDone) {
-					PassRendered?.Invoke(
-						sender: this,
-						e: new PassRenderedEventArgs(sample: MaxSamples, view: View, onlyUpdateHud: true)
-					);
-				}
-
 				Thread.Sleep(millisecondsTimeout: _throttle);
 			}
 
