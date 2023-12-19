@@ -129,10 +129,6 @@ namespace RhinoCyclesCore.RenderEngines
 #if DEBUG
 				RenderWindow.EnableDebugThreadCheck(true);
 #endif
-
-				var native_render_size = CalculateNativeRenderSize();
-				var rect = new Rectangle(0, 0, native_render_size.Width, native_render_size.Height);
-				RenderWindow.SetRenderOutputRect(rect);
 			}
 		}
 
@@ -227,6 +223,7 @@ Please click the link below for more information.", 69));
 
 			#region set up session parameters
 			ThreadCount = (RenderDevice.IsCpu ? eds.Threads : 0);
+			int pixelSize = Math.Max(1, (int)RcCore.It.AllSettings.DpiScale);
 			var sessionParams = new SessionParameters(RenderDevice)
 			{
 				Experimental = false,
@@ -235,7 +232,7 @@ Please click the link below for more information.", 69));
 				Threads = (uint)ThreadCount,
 				ShadingSystem = ShadingSystem.SVM,
 				Background = false,
-				PixelSize = 1,
+				PixelSize = pixelSize,
 			};
 			#endregion
 
@@ -257,10 +254,11 @@ Please click the link below for more information.", 69));
 			Session.Reset(
 				width: FullSize.Width,
 				height: FullSize.Height,
-				samples: 100,
+				samples: MaxSamples,
 				full_x: 0, full_y: 0,
 				full_width: FullSize.Width,
-				full_height: FullSize.Height);
+				full_height: FullSize.Height,
+				pixel_size: pixelSize);
 			RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Reset end");
 
 			// main render loop, including restarts
@@ -325,8 +323,18 @@ Please click the link below for more information.", 69));
 
 				if (_needReset)
 				{
-					var size = CalculateNativeRenderSize();
-					Session.Reset(size.Width, size.Height, MaxSamples, 0, 0, size.Width, size.Height);
+					var size = FullSize;  //CalculateNativeRenderSize();
+					RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Reset start");
+					Session.Reset(
+						width: size.Width,
+						height: size.Height,
+						samples: MaxSamples,
+						full_x: 0,
+						full_y: 0,
+						full_width: size.Width,
+						full_height: size.Height,
+						pixel_size: pixelSize);
+					RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Reset end");
 					lastRenderedSample = -1;
 					renderingDone = false;
 					_needReset = false;

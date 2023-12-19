@@ -321,25 +321,17 @@ namespace RhinoCyclesCore
 			return ch > 255 ? 255 : ch;
 		}
 
-		protected Size CalculateNativeRenderSize()
-		{
-			var render_window_size = RenderWindow.Size();
-			return new Size(render_window_size.Width / PixelSize, render_window_size.Height / PixelSize);
-		}
-
 		public void BlitPixelsToRenderWindowChannel()
 		{
 			RcCore.It.AddLogStringIfVerbose("BlitPixelsToRenderWindowChannel entry");
-			var native_render_size = CalculateNativeRenderSize();
-			int width = native_render_size.Width;
-			int height = native_render_size.Height;
+			var renderWindowSize = RenderWindow.Size();
+			int width = renderWindowSize.Width;
+			int height = renderWindowSize.Height;
 			var rect = new Rectangle(0, 0, width, height);
 			foreach (var pass in Session.Passes)
 			{
 				IntPtr pixel_buffer = IntPtr.Zero;
 				var channel = StandardChannelForPassType(pass);
-
-				//Stopwatch stopwatch = Stopwatch.StartNew();
 
 				RcCore.It.AddLogStringIfVerbose($"BlitPixelsToRenderWindowChannel RetainPixelBuffer {pass} start");
 				Session.RetainPixelBuffer(pass, width, height, ref pixel_buffer);
@@ -357,7 +349,6 @@ namespace RhinoCyclesCore
 					Session.ReleasePixelBuffer(pass);
 				}
 
-				//RhinoApp.WriteLine("Time to write pixels to Render Window Channel: {0} ms.", stopwatch.ElapsedMilliseconds);
 			}
 			RcCore.It.AddLogStringIfVerbose("BlitPixelsToRenderWindowChannel exit");
 		}
