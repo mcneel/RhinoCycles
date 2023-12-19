@@ -519,8 +519,10 @@ namespace RhinoCyclesCore.Core
 		/// <returns></returns>
 		private ProcessStartInfo SetupProcessStartInfo(string compileTaskFile)
 		{
+			AddLogString("RcCore SetupProcessStartInfo entry");
 			Assembly assembly = Assembly.GetExecutingAssembly();
 			string assemblyDirectory = Path.GetDirectoryName(path: assembly.Location);
+			AddLogString($"RcCore SetupProcessStartInfo {assembly.Location}");
 			string programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
 			string argumentsToProgramToRun = $"\"{KernelPath}\" \"{compileTaskFile}\"";
 #if ON_RUNTIME_WIN
@@ -567,11 +569,13 @@ namespace RhinoCyclesCore.Core
 			}
 			if(HostUtils.RunningOnOSX) {
 				var dylib_path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "..", "..", ".."));
+				AddLogString($"RcCore SetupProcessStartInfo: dylib_path = {dylib_path}");
 				startInfo.EnvironmentVariables.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
 				startInfo.Environment.Add("DYLD_FALLBACK_LIBRARY_PATH", $"{dylib_path}");
 				startInfo.Environment.Add("USE_MONOLITHIC_COMPILER", "1");
 			}
 
+			AddLogString("RcCore SetupProcessStartInfo exit");
 			return startInfo;
 		}
 
