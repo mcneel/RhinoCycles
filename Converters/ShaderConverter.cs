@@ -1691,10 +1691,6 @@ namespace RhinoCyclesCore.Converters
 			perturbing_transform.outs.Vector.Connect(perturbing1.ins.UVW);
 			perturbing_transform.outs.Vector.Connect(perturbing2.ins.UVW);
 
-			uvw_output.Connect(noise_transform1.ins.Vector);
-			uvw_output.Connect(noise_transform2.ins.Vector);
-			uvw_output.Connect(noise_transform3.ins.Vector);
-
 			perturbing1.outs.UVW1.Connect(noise_transform1.ins.Vector);
 			noise_transform1.outs.Vector.Connect(noise1.ins.UVW);
 
