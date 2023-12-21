@@ -363,6 +363,8 @@ namespace RhinoCyclesCore.Core
 			var dmray = Rhino.Display.DisplayModeDescription.FindByName("Raytraced");
 			foreach (RhinoDoc doc in RhinoDoc.OpenDocuments())
 			{
+				if (doc.Views.ActiveView == null) continue;
+
 				string activeViewName = doc.Views.ActiveView.ActiveViewport.Name;
 				foreach (var view in doc.Views)
 				{
