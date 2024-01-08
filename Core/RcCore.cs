@@ -856,10 +856,12 @@ namespace RhinoCyclesCore.Core
 		/// <param name="log">String to log</param>
 		public void AddLogString(string log) {
 			string logstr = $"{DateTime.Now} :: {loggingStopwatch.Elapsed} |> {log}\n";
-			try {
+			try
+			{
 				logTw.Write(logstr);
 				logTw.Flush();
-			} finally {}
+			}
+			catch (Exception) { } finally { }
 			logStrings.Enqueue(logstr);
 			loggingStopwatch.Restart();
 		}

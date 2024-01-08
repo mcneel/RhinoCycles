@@ -252,7 +252,9 @@ namespace CyclesForRhino.CyclesForRhino
 		}
 
 		public override void RenderSettingsCustomSections(List<ICollapsibleSection> sections) {
+			RcCore.It.AddLogString("RenderSettingsCustomSeections entry");
 			sections.Add(new AdvancedSettingsSection(Id));
+			RcCore.It.AddLogString("RenderSettingsCustomSeections exit");
 		}
 	}
 }
