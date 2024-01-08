@@ -69,7 +69,9 @@ namespace RhinoCycles
 
 				// code got moved to separate DLL so use that to register from.
 				var rccoreass = typeof(RcCore).Assembly;
+				RcCore.It.AddLogString("RhinoCycles OnLoad: RegisterContent start");
 				RenderContent.RegisterContent(rccoreass, Id);
+				RcCore.It.AddLogString("RhinoCycles OnLoad: RegisterContent end");
 
 				var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
 				RcCore.It.PluginPath = path;
@@ -122,7 +124,6 @@ namespace RhinoCycles
 			RcCore.It.AddLogString("RhinoApp_Initialized");
 			RcCore.It.AppInitialised = true;
 		}
-
 
 		private static readonly object InitialiseLock = new object();
 		private void AsyncInitialise()
