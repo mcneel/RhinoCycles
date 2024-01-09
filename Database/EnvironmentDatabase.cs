@@ -131,8 +131,8 @@ namespace RhinoCyclesCore.Database
 				case RenderSettings.EnvironmentUsage.Background:
 					//https://mcneel.myjetbrains.com/youtrack/issue/RH-57888
 
-					uint newEnvHash = environment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "") ?? 0;
-					uint oldEnvHash = _cqBackground.BackgroundEnvironment?.RenderHashExclude(CrcRenderHashFlags.ExcludeLinearWorkflow, "") ?? 0;
+					uint newEnvHash = environment?.RenderHashExclude(CrcRenderHashFlags.ExcludeDocumentEffects, "") ?? 0;
+					uint oldEnvHash = _cqBackground.BackgroundEnvironment?.RenderHashExclude(CrcRenderHashFlags.ExcludeDocumentEffects, "") ?? 0;
 					if (newEnvHash == oldEnvHash)
 					{
 						return;
