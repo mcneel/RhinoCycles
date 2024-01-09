@@ -162,7 +162,7 @@ namespace RhinoCyclesCore.Converters
 			// JohnC: I had to change this to also exclude linear workflow because when I changed from using
 			// the incorrect TextureRenderHashFlags to the correct CrcRenderHashFlags, an assert started firing
 			// because we are not on the main thread.
-			var flags = CrcRenderHashFlags.ExcludeLocalMapping | CrcRenderHashFlags.ExcludeLinearWorkflow;
+			var flags = CrcRenderHashFlags.ExcludeLocalMapping | CrcRenderHashFlags.ExcludeDocumentEffects;
 			var rId = renderTexture.RenderHashExclude(flags, "azimuth;altitude;multiplier;rdk-texture-repeat;rdk-texture-offset;rdk-texture-rotation;rdk-texture-adjust-multiplier;intensity");
 
 			var azimob = renderTexture.GetParameter("azimuth");
