@@ -172,7 +172,15 @@ namespace RhinoCyclesCore.RenderEngines
 			}
 
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer Session.Reset");
-			cyclesEngine.Session.Reset(size.Width, size.Height, MaxSamples, BufferRectangle.X, BufferRectangle.Top, FullSize.Width, FullSize.Height);
+			cyclesEngine.Session.Reset(
+				width: size.Width,
+				height: size.Height,
+				samples: MaxSamples,
+				full_x: BufferRectangle.X,
+				full_y: BufferRectangle.Top,
+				full_width: FullSize.Width,
+				full_height: FullSize.Height,
+				pixel_size: 1);
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer Session.Reset done");
 
 			// main render loop, including restarts

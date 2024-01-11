@@ -10,6 +10,7 @@
     <FileAlignment>512</FileAlignment>
     <OutputType>Exe</OutputType>
     <StartupObject>RhinoCyclesKernelCompiler.Program</StartupObject>
+    <NoWarn>NU1702</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

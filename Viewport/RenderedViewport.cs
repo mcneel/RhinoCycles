@@ -244,9 +244,6 @@ namespace RhinoCycles.Viewport
 			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetSize start");
 			renderWindow.SetSize(renderSize);
 			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetSize end");
-			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetRenderOutputRect start");
-			renderWindow.SetRenderOutputRect(new Rectangle(0, 0, w / pixelSize, h / pixelSize));
-			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetRenderOutputRect end");
 
 			RcCore.It.AddLogString($"Raytraced: RenderedViewport ViewportRenderEngine ctor start");
 			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa)
@@ -267,18 +264,14 @@ namespace RhinoCycles.Viewport
 
 			_cycles.RenderWindow = renderWindow;
 			_cycles.RenderDimension = renderSize;
-			_cycles.PixelSize = pixelSize;
 
 			_cycles.HandleDevice(eds);
 
 			_maxSamples = eds.Samples;
 
-			_startTime = DateTime.UtcNow; // use _startTime to time CreateWorld
 			RcCore.It.AddLogString("Raytraced: RenderedViewport CreateWorld start");
 			_cycles.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
 			RcCore.It.AddLogString("Raytraced: RenderedViewport CreateWorld end");
-
-			var createWorldDuration = DateTime.UtcNow - _startTime;
 
 			_startTime = DateTime.UtcNow;
 			_lastTime = _startTime;

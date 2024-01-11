@@ -78,7 +78,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var gpusize = TileSize(renderDevice);
 			uint threads = renderDevice.IsGpu ? 0u : (uint)RcCore.It.AllSettings.Threads;
 
-			var pixelSize = (int)(RcCore.It.AllSettings.DpiScale);
+			var pixelSize = Math.Max(1, (int)(RcCore.It.AllSettings.DpiScale));
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(renderDevice)
@@ -111,7 +111,15 @@ namespace RhinoCyclesCore.RenderEngines
 
 			bool renderSuccess = true;
 
-			cyclesEngine.Session.Reset(size.Width, size.Height, cyclesEngine.MaxSamples, 0, 0, size.Width, size.Height);
+			cyclesEngine.Session.Reset(
+				width: size.Width,
+				height: size.Height,
+				samples: cyclesEngine.MaxSamples,
+				full_x: 0,
+				full_y: 0,
+				full_width: size.Width,
+				full_height: size.Height,
+				pixel_size: pixelSize);
 			cyclesEngine.Session.Start();
 
 			while (!cyclesEngine.Finished)

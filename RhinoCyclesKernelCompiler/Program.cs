@@ -103,7 +103,7 @@ namespace RhinoCyclesKernelCompiler
 				session = new Session(sessionParameters);
 
 				//session.AddPass(PassType.Combined);
-				session.Reset(1, 1, 1, 0, 0, 1, 1);
+				session.Reset(1, 1, 1, 0, 0, 1, 1, 1);
 				session.Start();
 				while (true)
 				{
