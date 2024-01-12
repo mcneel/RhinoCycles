@@ -78,7 +78,7 @@ namespace RhinoCyclesCore.RenderEngines
 			var gpusize = TileSize(renderDevice);
 			uint threads = renderDevice.IsGpu ? 0u : (uint)RcCore.It.AllSettings.Threads;
 
-			var pixelSize = Math.Max(1, (int)(RcCore.It.AllSettings.DpiScale));
+			var pixelSize = Math.Max(1, (int)RcCore.It.AllSettings.DpiScale);
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(renderDevice)
@@ -89,7 +89,8 @@ namespace RhinoCyclesCore.RenderEngines
 				Threads = threads,
 				ShadingSystem = ShadingSystem.SVM,
 				Background = false,
-				PixelSize = pixelSize, //renderDevice.IsCpu ? pixelSize : 1,
+				PixelSize = pixelSize,
+				UseResolutionDivider = true,
 			};
 #endregion
 
@@ -98,8 +99,6 @@ namespace RhinoCyclesCore.RenderEngines
 #region create session for scene
 			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
 #endregion
-
-			// TODO: XXXX fix up scene creation InitializeSceneSettings(cyclesEngine.Session, renderDevice, cyclesEngine, RcCore.It.AllSettings);
 
 			cyclesEngine.Session.AddPass(PassType.Combined);
 

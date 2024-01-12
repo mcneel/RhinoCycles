@@ -138,8 +138,6 @@ namespace RhinoCyclesCore.RenderEngines
 			MaxSamples = Attributes?.RealtimeRenderPasses ?? engineSettings.Samples;
 			MaxSamples = (MaxSamples < 1) ? engineSettings.Samples : MaxSamples;
 
-			/*if (engineSettings.Verbose) sdd.WriteLine(
-				$"Using device {RenderDevice.UiName + " " + RenderDevice.Description}");*/
 			#endregion
 
 			#region set up session parameters
@@ -152,6 +150,7 @@ namespace RhinoCyclesCore.RenderEngines
 				ShadingSystem = ShadingSystem.SVM,
 				Background = false,
 				PixelSize = 1,
+				UseResolutionDivider = false,
 			};
 			#endregion
 

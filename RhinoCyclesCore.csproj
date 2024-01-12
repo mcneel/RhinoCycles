@@ -128,7 +128,6 @@
     <Compile Include="Settings\OptionsDialogCollapsibleSectionUIPanel.cs" />
     <Compile Include="Settings\ResetAllSection.cs" />
     <Compile Include="Settings\DeviceSection.cs" />
-    <Compile Include="Settings\ViewportResponsivenessSection.cs" />
     <Compile Include="Settings\ViewportSharpnessSection.cs" />
     <Compile Include="Settings\ApplicationSection.cs" />
     <Compile Include="Settings\SessionSection.cs" />
