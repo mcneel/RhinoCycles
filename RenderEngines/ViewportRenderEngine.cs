@@ -233,6 +233,7 @@ Please click the link below for more information.", 69));
 				ShadingSystem = ShadingSystem.SVM,
 				Background = false,
 				PixelSize = pixelSize,
+				UseResolutionDivider = true,
 			};
 			#endregion
 
