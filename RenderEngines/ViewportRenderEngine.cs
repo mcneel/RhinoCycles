@@ -123,8 +123,10 @@ namespace RhinoCyclesCore.RenderEngines
 #if DEBUG
 				RenderWindow.EnableDebugThreadCheck(false);
 #endif
-
-				RenderWindow.SetSize(new Size(w, h));
+				Size size = new Size(w, h);
+				RenderWindow.SetSize(size);
+				RenderDimension = size;
+				FullSize = size;
 
 #if DEBUG
 				RenderWindow.EnableDebugThreadCheck(true);
