@@ -15,6 +15,7 @@ using System.Management;
 #endif
 using System.Reflection;
 using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace RhinoCyclesKernelCompiler
 {
@@ -258,6 +259,21 @@ namespace RhinoCyclesKernelCompiler
 
 		} /* end of Main */
 
+		static float[] DummyTable = { 1.0f };
+
+		private static void SetupTables()
+		{
+			unsafe {
+				fixed (float* ptr = DummyTable) {
+					CSycles.set_rhino_aaltonen_noise_table((IntPtr)ptr, (uint)DummyTable.Length);
+					CSycles.set_rhino_impulse_noise_table((IntPtr)ptr, (uint)DummyTable.Length);
+					CSycles.set_rhino_perlin_noise_table((IntPtr)ptr, (uint)DummyTable.Length);
+					CSycles.set_rhino_vc_noise_table((IntPtr)ptr, (uint)DummyTable.Length);
+				}
+
+			}
+		}
+
 		private static int RunCompile(string[] args)
 		{
 			int result = 0;
@@ -269,6 +285,7 @@ namespace RhinoCyclesKernelCompiler
 
 			CSycles.path_init(kernelPath, dataUserPath);
 			CSycles.initialise(DeviceTypeMask.All);
+			SetupTables();
 
 			var gpuTasks = ReadGpuTaskData(compileTaskFile, gpuDataPath);
 

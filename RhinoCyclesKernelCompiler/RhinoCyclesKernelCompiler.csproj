@@ -1,4 +1,4 @@
-
+﻿
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props" Condition="Exists('..\..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props')" />
   <PropertyGroup>
@@ -11,6 +11,7 @@
     <OutputType>Exe</OutputType>
     <StartupObject>RhinoCyclesKernelCompiler.Program</StartupObject>
     <NoWarn>NU1702</NoWarn>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,7 +34,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\..\..\..\..\version.cs">
