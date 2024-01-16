@@ -164,6 +164,7 @@ namespace RhinoCyclesCore
 		public Rectangle BufferRectangle { get; set; }
 		public Size FullSize { get; set; }
 
+
 #region CONSTRUCTORS
 
 		private void RegisterEventHandler()
@@ -321,6 +322,19 @@ namespace RhinoCyclesCore
 			return ch > 255 ? 255 : ch;
 		}
 
+		/// <summary>
+		/// Return resolution size divided by PixelSize
+		/// </summary>
+		/// <returns>width / pixelsize, height / pixelsize</returns>
+		protected Size CalculateNativeRenderSize()
+		{
+			Size size = RenderWindow.Size();
+			return new Size(
+				width: size.Width / PixelSize,
+				height: size.Height / PixelSize
+			);
+		}
+
 		public void BlitPixelsToRenderWindowChannel()
 		{
 			RcCore.It.AddLogStringIfVerbose("BlitPixelsToRenderWindowChannel entry");
@@ -331,13 +345,22 @@ namespace RhinoCyclesCore
 			foreach (var pass in Session.Passes)
 			{
 				IntPtr pixel_buffer = IntPtr.Zero;
+				int pixelSizeFromCycles = 1;
 				var channel = StandardChannelForPassType(pass);
 
 				RcCore.It.AddLogStringIfVerbose($"BlitPixelsToRenderWindowChannel RetainPixelBuffer {pass} start");
-				Session.RetainPixelBuffer(pass, width, height, ref pixel_buffer);
+				Session.RetainPixelBuffer(pass, width, height, ref pixel_buffer, ref pixelSizeFromCycles);
 				RcCore.It.AddLogStringIfVerbose($"BlitPixelsToRenderWindowChannel RetainPixelBuffer {pass} end");
-				if (pixel_buffer != IntPtr.Zero)
+				if (pixel_buffer != IntPtr.Zero && pixelSizeFromCycles > 0)
 				{
+					RenderWindow.SetRenderOutputRect(
+						new Rectangle(
+							x: 0,
+							y: 0,
+							width: width / pixelSizeFromCycles,
+							height: height / pixelSizeFromCycles
+						)
+					);
 					using (var rgba = RenderWindow.OpenChannel(channel))
 					{
 						PixelBuffer pb = new PixelBuffer(pixel_buffer);

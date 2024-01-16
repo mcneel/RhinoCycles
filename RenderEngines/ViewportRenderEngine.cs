@@ -121,15 +121,28 @@ namespace RhinoCyclesCore.RenderEngines
 			if(RenderWindow != null)
 			{
 #if DEBUG
-				RenderWindow.EnableDebugThreadCheck(false);
+				RenderWindow.EnableDebugThreadCheck(enabled: false);
 #endif
-				Size size = new Size(w, h);
+				Size size = new (w, h);
 				RenderWindow.SetSize(size);
 				RenderDimension = size;
 				FullSize = size;
 
+				// For rendering with pixel size > 2 we need to tell the render
+				// window that the result is in a specific area - the render window
+				// and Post Effects system will handle upscaling and everything
+				// automatically.
+				Size scaledSize = CalculateNativeRenderSize();
+				Rectangle outputRectangle = new (
+					x: 0,
+					y: 0,
+					width: scaledSize.Width,
+					height: scaledSize.Height
+				);
+				RenderWindow.SetRenderOutputRect(outputRectangle);
+
 #if DEBUG
-				RenderWindow.EnableDebugThreadCheck(true);
+				RenderWindow.EnableDebugThreadCheck(enabled: true);
 #endif
 			}
 		}
@@ -326,7 +339,7 @@ Please click the link below for more information.", 69));
 
 				if (_needReset)
 				{
-					var size = FullSize;  //CalculateNativeRenderSize();
+					var size = FullSize;
 					RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Reset start");
 					Session.Reset(
 						width: size.Width,
