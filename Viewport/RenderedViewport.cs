@@ -239,7 +239,7 @@ namespace RhinoCycles.Viewport
 			_frameAvailable = false;
 
 			var renderSize = new Size(w, h);
-			var pixelSize = (int)eds.DpiScale;
+			var pixelSize = eds.PixelSize;
 
 			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetSize start");
 			renderWindow.SetSize(renderSize);

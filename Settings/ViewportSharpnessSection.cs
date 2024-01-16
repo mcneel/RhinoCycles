@@ -101,7 +101,7 @@ namespace RhinoCyclesCore.Settings
 		{
 			UnRegisterControlEvents();
 
-			m_sliderSharpness.Value = 11 - (int)Settings.DpiScale;
+			m_sliderSharpness.Value = 11 - Settings.PixelSize;
 
 			RegisterControlEvents();
 		}
@@ -112,7 +112,7 @@ namespace RhinoCyclesCore.Settings
 			/* values [1,10]. Lowest means least, highest most sharp.
 			 * Since this sets PixelSize lets flip the values.
 			 */
-			Settings.DpiScale = (float)(11-(int)m_sliderSharpness.Value);
+			Settings.PixelSize = 11-m_sliderSharpness.Value;
 		}
 
 		private void RegisterControlEvents()

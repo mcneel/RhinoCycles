@@ -53,7 +53,8 @@ namespace RhinoCyclesCore.Settings
 			UseStartResolution = UseStartResolution;
 			StartResolution = StartResolution;
 
-			DpiScale = DpiScale;
+			PixelSize = PixelSize;
+			OldDpiScale = OldDpiScale;
 
 			TileX = TileX;
 			TileY = TileY;
@@ -159,7 +160,7 @@ namespace RhinoCyclesCore.Settings
 			UseStartResolution = DefaultEngineSettings.UseStartResolution;
 			StartResolution = DefaultEngineSettings.StartResolution;
 
-			DpiScale = DefaultEngineSettings.DpiScale;
+			PixelSize = DefaultEngineSettings.PixelSize;
 
 			TileX = DefaultEngineSettings.TileX;
 			TileY = DefaultEngineSettings.TileY;
@@ -437,10 +438,16 @@ namespace RhinoCyclesCore.Settings
 			set { if (value < 1) value = 1;  RcPlugIn.Settings.SetInteger(SettingNames.StartResolution, value); }
 		}
 
-		public virtual float DpiScale
+		public virtual int PixelSize
 		{
-			get { return Math.Max(1.0f, (float)RcPlugIn.Settings.GetDouble(SettingNames.DpiScale, DefaultEngineSettings.DpiScale)); }
-			set { RcPlugIn.Settings.SetDouble(SettingNames.DpiScale, value); }
+			get { return Math.Max(1, RcPlugIn.Settings.GetInteger(SettingNames.PixelSize, DefaultEngineSettings.PixelSize)); }
+			set { RcPlugIn.Settings.SetInteger(SettingNames.PixelSize, value); }
+		}
+
+		public virtual float OldDpiScale
+		{
+			get { return Math.Max(1.0f, (float)RcPlugIn.Settings.GetDouble(SettingNames.OldDpiScale, DefaultEngineSettings.OldDpiScale)); }
+			set { RcPlugIn.Settings.SetDouble(SettingNames.OldDpiScale, value); }
 		}
 
 		public virtual IntegratorMethod IntegratorMethod { get; set; }
