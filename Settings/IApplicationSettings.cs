@@ -30,7 +30,8 @@ namespace RhinoCyclesCore.Settings
 
 		bool CPUSplitKernel { get; set; }
 
-		float DpiScale { get; set; }
+		int PixelSize { get; set; }
+		float OldDpiScale { get; set; }
 
 		int PreviewSamples { get; set; }
 		bool UseStartResolution { get; set; }

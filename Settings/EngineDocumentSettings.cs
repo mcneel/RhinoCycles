@@ -389,9 +389,15 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
-		public float DpiScale
+		public int PixelSize
 		{
-			get => Math.Max(1.0f, RcCore.It.AllSettings.DpiScale);
+			get => Math.Max(1, RcCore.It.AllSettings.PixelSize);
+			set => throw new InvalidOperationException();
+		}
+
+		public float OldDpiScale
+		{
+			get => Math.Max(1.0f, RcCore.It.AllSettings.OldDpiScale);
 			set => throw new InvalidOperationException();
 		}
 

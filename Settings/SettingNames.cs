@@ -29,7 +29,8 @@ namespace RhinoCyclesCore.Settings
 		public static string OpenClKernelType => "OpenClKernelType";
 		public static string CPUSplitKernel => "CPUSplitKernel";
 		public static string NoShadows => "NoShadows";
-		public static string DpiScale => "DpiScale";
+		public static string OldDpiScale => "DpiScale";
+		public static string PixelSize => "PixelSize";
 		public static string PreviewSamples => "PreviewSamples";
 
 		public static string DumpMaterialShaderGraph => "DumpMaterialShaderGraph";

@@ -225,7 +225,7 @@ Please click the link below for more information.", 69));
 
 			#region set up session parameters
 			ThreadCount = (RenderDevice.IsCpu ? eds.Threads : 0);
-			int pixelSize = Math.Max(1, (int)RcCore.It.AllSettings.DpiScale);
+			int pixelSize = Math.Max(1, RcCore.It.AllSettings.PixelSize);
 			var sessionParams = new SessionParameters(RenderDevice)
 			{
 				Experimental = false,
