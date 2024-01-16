@@ -236,6 +236,7 @@ namespace RhinoCycles.Viewport
 				return true;
 			}
 
+
 			_frameAvailable = false;
 
 			var renderSize = new Size(w, h);
@@ -244,6 +245,9 @@ namespace RhinoCycles.Viewport
 			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetSize start");
 			renderWindow.SetSize(renderSize);
 			RcCore.It.AddLogString($"Raytraced: RenderedViewport SetSize end");
+			renderWindow.SetRenderOutputRect(
+				new Rectangle(0, 0, w / pixelSize, h / pixelSize)
+			);
 
 			RcCore.It.AddLogString($"Raytraced: RenderedViewport ViewportRenderEngine ctor start");
 			_cycles = new ViewportRenderEngine(doc.RuntimeSerialNumber, PlugIn.IdFromName("RhinoCycles"), rhinoView, Dpa)
@@ -263,7 +267,10 @@ namespace RhinoCycles.Viewport
 			_cycles.UploadProgress += _cycles_UploadProgress;
 
 			_cycles.RenderWindow = renderWindow;
-			_cycles.RenderDimension = renderSize;
+			// pixel size needs to be set before calling SetRenderSize, since that uses CalculateNativeRenderSize
+			// which in turn relies on PixelSize
+			_cycles.PixelSize = pixelSize;
+			_cycles.SetRenderSize(w, h);
 
 			_cycles.HandleDevice(eds);
 
