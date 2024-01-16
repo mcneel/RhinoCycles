@@ -704,7 +704,7 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
-		public float PixelSize
+		public int PixelSize
 		{
 			get
 			{
