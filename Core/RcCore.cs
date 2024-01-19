@@ -819,7 +819,8 @@ namespace RhinoCyclesCore.Core
 		public void InitializeLog()
 		{
 			DateTime now = DateTime.Now;
-			string logPath = Path.Combine(DataUserPath, $"RhinoCycles{now:yyyyMMddmmHHss}.log");
+			int pid = Process.GetCurrentProcess().Id;
+			string logPath = Path.Combine(DataUserPath, $"RhinoCycles{now:yyyyMMddmmHHss}-{pid}.log");
 			logTw = File.CreateText(logPath);
 		}
 
