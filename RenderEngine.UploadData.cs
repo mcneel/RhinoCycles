@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using ccl;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore
 {
@@ -37,6 +38,7 @@ namespace RhinoCyclesCore
 		/// </summary>
 		protected bool UploadData()
 		{
+			RcCore.It.AddLogStringIfVerbose("UploadData entry");
 			if (ShouldBreak) return false;
 
 			Database.UploadDisplayPipelineAttributesChanges();
@@ -106,6 +108,8 @@ namespace RhinoCyclesCore
 			Database.ResetChangeQueue();
 
 			if (ShouldBreak) return false;
+
+			RcCore.It.AddLogStringIfVerbose("UploadData exit");
 			return true;
 		}
 	}

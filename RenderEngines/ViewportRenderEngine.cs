@@ -333,7 +333,6 @@ Please click the link below for more information.", 69));
 					Synchronize();
 					Flush = false;
 					Finished = false;
-					_needReset = true;
 
 				}
 
@@ -415,10 +414,16 @@ Please click the link below for more information.", 69));
 			// change state to signal need for uploading
 			if (!CancelRender && HasSceneChanges())
 			{
+				RcCore.It.AddLogString("ChekFlushQueue HasSceneChanges() returned TRUE\n\tState set to State.Uploading");
 				if (!CancelRender && Database.HasBvhChanges()) {
 					_bvhUploaded = false;
 				}
+				_needReset = true;
 				State = State.Uploading;
+			}
+			else if(!CancelRender && ! HasSceneChanges()) {
+				_needReset = false;
+				RcCore.It.AddLogString("ChekFlushQueue HasSceneChanges() returned FALSE\n\tSKIPPNG DATA UPLOAD"); 
 			}
 		}
 

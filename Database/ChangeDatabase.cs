@@ -159,6 +159,9 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadObjectShaderChanges()
 		{
+			if (_shaderDatabase.ObjectShaderChanges.Count == 0) return;
+
+			RcCore.It.AddLogStringIfVerbose("\tUploadObjectShaderChanges entry");
 			RcCore.OutputDebugString($"Uploading object shader changes {_shaderDatabase.ObjectShaderChanges.Count}\n");
 			foreach (var obshad in _shaderDatabase.ObjectShaderChanges)
 			{
@@ -180,6 +183,7 @@ namespace RhinoCyclesCore.Database
 				}
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Object shaders handled", -1.0f);
+			RcCore.It.AddLogStringIfVerbose("\tUploadObjectShaderChanges exit");
 		}
 
 		public event EventHandler<LinearWorkflowChangedEventArgs> LinearWorkflowChanged;
@@ -191,6 +195,7 @@ namespace RhinoCyclesCore.Database
 		{
 			if (LinearWorkflowHasChanged)
 			{
+				RcCore.It.AddLogStringIfVerbose("\tUploadGammaChanges entry");
 				//_environmentDatabase.CurrentBackgroundShader?.Reset();
 
 				foreach (var tup in _shaderDatabase.AllShaders)
@@ -218,6 +223,7 @@ namespace RhinoCyclesCore.Database
 				TriggerFilmUpdateTagged();
 
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Gamma handled", -1.0f);
+				RcCore.It.AddLogStringIfVerbose("\tUploadGammaChanges exit");
 			}
 		}
 
@@ -246,14 +252,19 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadDynamicObjectTransforms()
 		{
-			foreach (var cot in _objectDatabase.ObjectTransforms)
-			{
-				var cob = _objectDatabase.FindObjectRelation(cot.Id);
-				if (cob == null) continue;
+			if(_objectDatabase.ObjectTransforms.Count > 0) {
+				RcCore.It.AddLogStringIfVerbose("\tUploadDynamicObjectTransforms entry");
+				foreach (var cot in _objectDatabase.ObjectTransforms)
+				{
+					var cob = _objectDatabase.FindObjectRelation(cot.Id);
+					if (cob == null) continue;
 
-				cob.Transform = cot.Transform;
-				cob.Mesh?.TagRebuild();
-				cob.TagUpdate();
+					cob.Transform = cot.Transform;
+					cob.Mesh?.TagRebuild();
+					cob.TagUpdate();
+				}
+
+				RcCore.It.AddLogStringIfVerbose("\tUploadDynamicObjectTransforms exit");
 			}
 		}
 
@@ -262,73 +273,78 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadMeshChanges()
 		{
-			RcCore.OutputDebugString("UploadMeshChanges\n");
-			// handle mesh deletes first
-			foreach (var meshDelete in _objectDatabase.MeshesToDelete)
+			if(_objectDatabase.MeshesToDelete.Count > 0 || _objectDatabase.MeshChanges.Count > 0)
 			{
-				var cobs = _objectDatabase.GetCyclesObjectsForGuid(meshDelete);
-
-				foreach (var cob in cobs)
+				RcCore.It.AddLogStringIfVerbose("\tUploadMeshChanges entry");
+				RcCore.OutputDebugString("UploadMeshChanges\n");
+				// handle mesh deletes first
+				foreach (var meshDelete in _objectDatabase.MeshesToDelete)
 				{
-					RcCore.OutputDebugString($"\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete}\n");
-					// remove mesh data
-					cob.Mesh?.ClearData();
-					cob.Mesh?.TagRebuild();
-					// hide object containing the mesh
-					cob.Visibility = PathRay.Hidden;
-					cob.TagUpdate();
-				}
-			}
+					var cobs = _objectDatabase.GetCyclesObjectsForGuid(meshDelete);
 
-			var curmesh = 0;
-			var totalmeshes = _objectDatabase.MeshChanges.Count;
-			RcCore.OutputDebugString($"\tUploading {totalmeshes} mesh changes\n");
-			foreach (var meshChange in _objectDatabase.MeshChanges)
-			{
-				var cyclesMesh = meshChange.Value;
-				var mid = meshChange.Key;
-
-				var me = _objectDatabase.FindMeshRelation(mid);
-
-				// newme true if we have to upload new mesh data
-				var newme = me == null;
-
-				if (_renderEngine.ShouldBreak) return;
-
-				var shader = new ccl.Shader(_renderEngine.Session.Scene);
-
-				// creat a new mesh to upload mesh data to
-				if (newme)
-				{
-					me = new CclMesh(_renderEngine.Session, shader);
+					foreach (var cob in cobs)
+					{
+						RcCore.OutputDebugString($"\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete}\n");
+						// remove mesh data
+						cob.Mesh?.ClearData();
+						cob.Mesh?.TagRebuild();
+						// hide object containing the mesh
+						cob.Visibility = PathRay.Hidden;
+						cob.TagUpdate();
+					}
 				}
 
-				me.Resize((uint)cyclesMesh.Verts.Length/3, (uint)cyclesMesh.Faces.Length/3);
+				var curmesh = 0;
+				var totalmeshes = _objectDatabase.MeshChanges.Count;
+				RcCore.OutputDebugString($"\tUploading {totalmeshes} mesh changes\n");
+				foreach (var meshChange in _objectDatabase.MeshChanges)
+				{
+					var cyclesMesh = meshChange.Value;
+					var mid = meshChange.Key;
 
-				// update status bar of render window.
-				var stat =
-					$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.Verts.Length/3}, t: {cyclesMesh.Faces.Length/3}]";
-				RcCore.OutputDebugString($"\t\t{stat}\n");
+					var me = _objectDatabase.FindMeshRelation(mid);
 
-				// set progress, but without rendering percentage (hence the -1.0f)
-				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
+					// newme true if we have to upload new mesh data
+					var newme = me == null;
 
-				// upload, if we get false back we were signalled to stop rendering by user
-				if (!UploadMeshData(me, cyclesMesh)) return;
+					if (_renderEngine.ShouldBreak) return;
 
-				// if we re-uploaded mesh data, we need to make sure the shader
-				// information doesn't get lost.
-				//if (!newme) me.ReplaceShader(shader);
+					var shader = new ccl.Shader(_renderEngine.Session.Scene);
 
-				// don't forget to record this new mesh
-				if(newme) _objectDatabase.RecordObjectMeshRelation(cyclesMesh.MeshId, me);
-				//RecordShaderRelation(shader, cycles_mesh.MeshId);
+					// creat a new mesh to upload mesh data to
+					if (newme)
+					{
+						me = new CclMesh(_renderEngine.Session, shader);
+					}
 
-				_objectDatabase.RecordMeshOcsFrame(me.GeometryPointer, cyclesMesh.OcsFrame);
+					me.Resize((uint)cyclesMesh.Verts.Length / 3, (uint)cyclesMesh.Faces.Length / 3);
 
-				curmesh++;
+					// update status bar of render window.
+					var stat =
+						$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.Verts.Length / 3}, t: {cyclesMesh.Faces.Length / 3}]";
+					RcCore.OutputDebugString($"\t\t{stat}\n");
+
+					// set progress, but without rendering percentage (hence the -1.0f)
+					_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
+
+					// upload, if we get false back we were signalled to stop rendering by user
+					if (!UploadMeshData(me, cyclesMesh)) return;
+
+					// if we re-uploaded mesh data, we need to make sure the shader
+					// information doesn't get lost.
+					//if (!newme) me.ReplaceShader(shader);
+
+					// don't forget to record this new mesh
+					if (newme) _objectDatabase.RecordObjectMeshRelation(cyclesMesh.MeshId, me);
+					//RecordShaderRelation(shader, cycles_mesh.MeshId);
+
+					_objectDatabase.RecordMeshOcsFrame(me.GeometryPointer, cyclesMesh.OcsFrame);
+
+					curmesh++;
+				}
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Mesh changes done", -1.0f);
+				RcCore.It.AddLogStringIfVerbose("\tUploadMeshChanges exit");
 			}
-			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Mesh changes done", -1.0f);
 		}
 
 		/// <summary>
@@ -502,6 +518,7 @@ namespace RhinoCyclesCore.Database
 		{
 			if (HasClippingPlaneChanges)
 			{
+				RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneChanges entry");
 				_renderEngine.Session.Scene.ClearClippingPlanes();
 				foreach (var cp in ClippingPlanes)
 				{
@@ -509,6 +526,7 @@ namespace RhinoCyclesCore.Database
 					var cclcp = new CclClippingPlane(_renderEngine.Session, equation);
 				}
 				HasClippingPlaneChanges = false;
+				RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneChanges exit");
 			}
 		}
 
@@ -519,6 +537,8 @@ namespace RhinoCyclesCore.Database
 		{
 			if (!_cameraDatabase.HasChanges()) return;
 
+			RcCore.It.AddLogStringIfVerbose("\tUploadCameraChanges entry");
+
 			var view = _cameraDatabase.LatestView();
 			if(view!=null)
 			{
@@ -526,6 +546,7 @@ namespace RhinoCyclesCore.Database
 			}
 			var fb = _cameraDatabase.GetBlur();
 			UploadFocalBlur(fb);
+			RcCore.It.AddLogStringIfVerbose("\tUploadCameraChanges exit");
 		}
 
 		/// <summary>
@@ -1341,32 +1362,38 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadShaderChanges()
 		{
-			RcCore.OutputDebugString($"Uploading shader changes {_shaderDatabase.ShaderChanges.Count}\n");
-			var totalshaders = _shaderDatabase.ShaderChanges.Count;
-			var curshader = 0;
-			// map shaders. key is RenderHash
-			foreach (var shader in _shaderDatabase.ShaderChanges)
+			if (_shaderDatabase.ShaderChanges.Count > 0)
 			{
-				curshader++;
-				if (_renderEngine.ShouldBreak) return;
+				RcCore.It.AddLogStringIfVerbose("\tUploadShaderChanges entry");
+				RcCore.OutputDebugString($"Uploading shader changes {_shaderDatabase.ShaderChanges.Count}\n");
+				var totalshaders = _shaderDatabase.ShaderChanges.Count;
+				var curshader = 0;
+				// map shaders. key is RenderHash
+				foreach (var shader in _shaderDatabase.ShaderChanges)
+				{
+					curshader++;
+					if (_renderEngine.ShouldBreak) return;
 
-				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Uploading shader {curshader}/{totalshaders}", -1.0f);
+					_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Uploading shader {curshader}/{totalshaders}", -1.0f);
 
-				shader.Gamma = PreProcessGamma;
+					shader.Gamma = PreProcessGamma;
 
-				// create a cycles shader
-				var sh = _renderEngine.CreateMaterialShader(shader);
-				_shaderDatabase.RecordRhCclShaderRelation(shader.Id, sh);
-				_shaderDatabase.Add(shader, sh);
+					// create a cycles shader
+					var sh = _renderEngine.CreateMaterialShader(shader);
+					_shaderDatabase.RecordRhCclShaderRelation(shader.Id, sh);
+					_shaderDatabase.Add(shader, sh);
 
-				sh.Tag();
+					sh.Tag();
+				}
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Shaders handled", -1.0f);
+
+				RcCore.It.AddLogStringIfVerbose("\tUploadShaderChanges entry");
 			}
-			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Shaders handled", -1.0f);
 		}
 
-#endregion SHADERS
+		#endregion SHADERS
 
-#region GROUNDPLANE
+		#region GROUNDPLANE
 
 		/// <summary>
 		/// Guid of our groundplane object.
@@ -1495,6 +1522,9 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadLightChanges()
 		{
+			if(_lightDatabase.LightsToAdd.Count == 0 && _lightDatabase.LightsToUpdate.Count == 0) return;
+
+			RcCore.It.AddLogStringIfVerbose("\tUploadLightChanges entry");
 
 			/* new light shaders and lights. */
 			foreach (var l in _lightDatabase.LightsToAdd)
@@ -1582,6 +1612,7 @@ namespace RhinoCyclesCore.Database
 				existingL.TagUpdate();
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Lights handled", -1.0f);
+			RcCore.It.AddLogStringIfVerbose("\tUploadLightChanges exit");
 		}
 
 		private uint LinearLightMaterialCRC(Rhino.Geometry.Light ll)
@@ -1805,10 +1836,12 @@ namespace RhinoCyclesCore.Database
 		{
 			if (_environmentDatabase.BackgroundHasChanged)
 			{
+				RcCore.It.AddLogStringIfVerbose("\tUploadEnvironmentChanges entry");
 				_environmentDatabase.CyclesShader.EnabledLights = AnyActiveLights();
 				RcCore.OutputDebugString($"Uploading background changes, active lights: {_environmentDatabase.CyclesShader.EnabledLights}, sky {_environmentDatabase.CyclesShader.SkylightEnabled} skystrength {_environmentDatabase.CyclesShader.SkyStrength}\n");
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Handling Environment changes", -1.0f);
 				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader);
+				RcCore.It.AddLogStringIfVerbose("\tUploadEnvironmentChanges exit");
 			}
 		}
 
@@ -1826,6 +1859,10 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadObjectChanges()
 		{
+			if(_objectDatabase.DeletedObjects.Count == 0 && _objectDatabase.NewOrUpdatedObjects.Count == 0) return;
+
+			RcCore.It.AddLogStringIfVerbose("\tUploadObjectChanges entry");
+
 			// first delete objects
 			foreach (var ob in _objectDatabase.DeletedObjects)
 			{
@@ -1900,6 +1937,7 @@ namespace RhinoCyclesCore.Database
 				cob.TagUpdate();
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Objects handled", -1.0f);
+			RcCore.It.AddLogStringIfVerbose("\tUploadObjectChanges exit");
 		}
 
 		/// <summary>
@@ -1956,11 +1994,13 @@ namespace RhinoCyclesCore.Database
 			{
 				if(_renderEngine is RenderEngines.ViewportRenderEngine vpe)
 				{
+					RcCore.It.AddLogStringIfVerbose("\tUploadIntegratorChanges entry");
 					vpe.ChangeIntegrator(integratorSettings);
 					vpe.RenderedViewport?.UpdateMaxSamples(integratorSettings.Samples);
 					vpe.ChangeSamples(integratorSettings.Samples);
 					integratorSettings = null;
 					_integratorChanged = false;
+					RcCore.It.AddLogStringIfVerbose("\tUploadIntegratorChanges exit");
 				}
 			}
 			return true;
@@ -1986,11 +2026,13 @@ namespace RhinoCyclesCore.Database
 		{
 			if(DisplayPipelineAttributesChanged)
 			{
+				RcCore.It.AddLogStringIfVerbose("\tUploadDataDisplayPipelineAttributesChanges entry");
 				if (RealtimePreviewPasses>-1 && _renderEngine is RenderEngines.ModalRenderEngine mre)
 				{
 					mre.MaxSamples = RealtimePreviewPasses;
 				}
 				_renderEngine.Session.Scene.Background.Transparent = TransparentBackground;
+				RcCore.It.AddLogStringIfVerbose("\tUploadDataDisplayPipelineAttributesChanges exit");
 			}
 			return true;
 		}
