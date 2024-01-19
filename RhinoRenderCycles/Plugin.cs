@@ -51,6 +51,12 @@ namespace CyclesForRhino.CyclesForRhino
 			return true;
 		}
 
+		readonly Guid[] _supportedChannels = new Guid[]{
+			ChannelId(StandardChannels.MaterialIds),
+			ChannelId(StandardChannels.ObjectIds),
+		};
+		protected override Guid[] SupportedChannels => _supportedChannels;
+
 		protected override Result RenderWindow(RhinoDoc doc, RunMode modes, bool fastPreview, RhinoView view, Rectangle rect, bool inWindow)
 		{
 			return Result.Failure;
