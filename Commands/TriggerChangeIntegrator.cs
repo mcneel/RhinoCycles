@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2021 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,15 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using Rhino;
+using Rhino.Commands;
+using RhinoCycles.Viewport;
+using RhinoCyclesCore.Settings;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Rhino;
-using Rhino.Commands;
-using Rhino.Input;
-using Rhino.Input.Custom;
-using RhinoCycles.Viewport;
-using RhinoCyclesCore.Settings;
 
 namespace RhinoCycles.Commands
 {

@@ -14,15 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using System;
-using System.Diagnostics;
-using Eto.Forms;
 using Eto.Drawing;
-using Rhino;
+using Eto.Forms;
 using Rhino.ApplicationSettings;
 using Rhino.Runtime;
 using Rhino.UI;
+using System;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace RhinoCyclesCore.Settings
 {

@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2021 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,11 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Threading;
 using ccl;
 using Rhino;
 using Rhino.DocObjects;
@@ -26,7 +21,10 @@ using Rhino.Render;
 using Rhino.UI;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Settings;
-using sdd = System.Diagnostics.Debug;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 namespace RhinoCyclesCore.RenderEngines
 {

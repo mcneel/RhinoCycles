@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2023 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ using Rhino.PlugIns;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("RhinoCyclesKernelCompiler")]
-[assembly: AssemblyCopyright("Copyright ©  2014-2023")]
+[assembly: AssemblyCopyright("Copyright ©  2014-2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

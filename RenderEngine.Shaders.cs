@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2021 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,13 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
-using System;
 using ccl;
-using CclShader = ccl.Shader;
 using ccl.ShaderNodes;
 using RhinoCyclesCore.Shaders;
-using Rhino.Runtime.InteropWrappers;
-using System.Net;
+using CclShader = ccl.Shader;
 
 namespace RhinoCyclesCore
 {

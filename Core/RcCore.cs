@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2023 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,21 +16,21 @@ limitations under the License.
 
 using ccl;
 using Rhino;
+using Rhino.Runtime;
+using Rhino.UI;
 using RhinoCyclesCore.Settings;
 using System;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Diagnostics;
-using System.Linq;
-using System.Security.Cryptography;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
-using System.Threading;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
-using Rhino.UI;
-using Rhino.Runtime;
+using System.Threading;
 
 namespace RhinoCyclesCore.Core
 {
@@ -212,7 +212,7 @@ namespace RhinoCyclesCore.Core
 		public Session CreateSession(SessionParameters sessionParameters)
 		{
 			var session = new Session(sessionParameters);
-			RhinoApp.OutputDebugString($"Created session {session.Id}.\n");
+			AddLogStringIfVerbose($"Created session {session.Id}.\n");
 
 			active_sessions[session.Id] = session;
 
