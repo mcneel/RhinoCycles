@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2021 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using Eto.Forms;
-using Rhino.Render;
 using Rhino.Runtime;
 using Rhino.UI;
 using RhinoCyclesCore.Core;
@@ -23,7 +22,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using static RhinoCyclesCore.RenderEngine;
 
 namespace RhinoCyclesCore.Settings
 {

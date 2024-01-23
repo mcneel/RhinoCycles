@@ -1,25 +1,35 @@
+/**
+Copyright 2014-2024 Robert McNeel and Associates
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+**/
+
 using ccl;
-using sdd = System.Diagnostics.Debug;
-using Rhino;
-using Rhino.Display;
-using Rhino.DocObjects;
-using Rhino.Render;
-using RhinoCyclesCore.Settings;
-using RhinoCyclesCore.Core;
-using RhinoCyclesCore.Converters;
-using RhinoCyclesCore.ExtensionMethods;
-using RhinoCyclesCore.Materials;
-using System;
-using System.IO;
-using System.Globalization;
-using static Rhino.Render.RenderContent;
-using Pbr = Rhino.Render.PhysicallyBasedMaterial.ParametersNames;
-using Rhino.Runtime.InteropWrappers;
-using Rhino.Runtime;
-using System.Collections.Generic;
 using ccl.ShaderNodes;
 using ccl.ShaderNodes.Sockets;
+using Rhino;
+using Rhino.Display;
+using Rhino.Render;
 using Rhino.Render.Fields;
+using Rhino.Runtime;
+using RhinoCyclesCore.Converters;
+using RhinoCyclesCore.Core;
+using RhinoCyclesCore.ExtensionMethods;
+using RhinoCyclesCore.Settings;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 
 namespace RhinoCyclesCore

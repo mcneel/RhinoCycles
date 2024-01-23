@@ -106,7 +106,6 @@
     <Compile Include="Database\ObjectShaderDatabase.cs" />
     <Compile Include="Database\ShaderDatabase.cs" />
     <Compile Include="Environments\SimpleNoiseEnvironment.cs" />
-    <Compile Include="LinearWorkflow.cs" />
     <Compile Include="Materials\DiffuseMaterial.cs" />
     <Compile Include="Materials\SimpleMetalMaterial.cs" />
     <Compile Include="Materials\GlassMaterial.cs" />

@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2021 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,22 +14,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using Rhino;
+using Rhino.Display;
+using Rhino.DocObjects;
+using Rhino.Render;
+using Rhino.Runtime;
+using RhinoCyclesCore.Converters;
+using RhinoCyclesCore.Core;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
-using System.Collections.Generic;
-using Rhino;
-using Rhino.Display;
-using Rhino.DocObjects;
-using Rhino.Render;
-using RhinoCyclesCore.Converters;
-using RhinoCyclesCore.Core;
-using Rhino.Runtime;
-using Rhino.Runtime.InteropWrappers;
-using Rhino.Render.Fields;
 
 namespace RhinoCyclesCore
 {

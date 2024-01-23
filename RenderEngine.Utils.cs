@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2021 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,19 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using System;
-using System.Drawing;
 using ccl;
 using ccl.ShaderNodes;
+using ccl.ShaderNodes.Sockets;
 using Rhino.Render;
 using RhinoCyclesCore.Core;
-using RhinoCyclesCore.ExtensionMethods;
 using RhinoCyclesCore.Settings;
+using System;
+using System.Drawing;
 using static Rhino.Render.RenderWindow;
-using Rhino.UI;
-using Eto.Forms;
-using Rhino.Runtime;
-using ccl.ShaderNodes.Sockets;
 
 namespace RhinoCyclesCore
 {

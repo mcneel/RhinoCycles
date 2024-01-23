@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2016 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,10 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Rhino.PlugIns;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 // Plug-In title and Guid are extracted from the following two attributes
 [assembly: AssemblyTitle("RhinoCycles")]
@@ -40,7 +39,7 @@ using Rhino.PlugIns;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("RhinoCycles")]
-[assembly: AssemblyCopyright("Copyright ©  2014-2016")]
+[assembly: AssemblyCopyright("Copyright ©  2014-2024")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

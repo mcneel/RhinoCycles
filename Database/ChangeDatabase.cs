@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2021 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,39 +14,33 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using ccl;
+using Rhino;
+using Rhino.Display;
+using Rhino.DocObjects;
+using Rhino.Geometry;
+using Rhino.Render;
+using Rhino.Render.ChangeQueue;
+using RhinoCyclesCore.Converters;
+using RhinoCyclesCore.Core;
+using RhinoCyclesCore.ExtensionMethods;
+using RhinoCyclesCore.Settings;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using ccl;
-using Rhino.Display;
-using Rhino.DocObjects;
-using Rhino.Render;
-using Rhino.Render.ChangeQueue;
-using sdd = System.Diagnostics.Debug;
-using CqMaterial = Rhino.Render.ChangeQueue.Material;
-using CqMesh = Rhino.Render.ChangeQueue.Mesh;
-using CqGroundPlane = Rhino.Render.ChangeQueue.GroundPlane;
-using CqLight = Rhino.Render.ChangeQueue.Light;
-using CqSkylight = Rhino.Render.ChangeQueue.Skylight;
+using System.Text;
+using CclClippingPlane = ccl.ClippingPlane;
 using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;
 using CclObject = ccl.Object;
-using CclClippingPlane = ccl.ClippingPlane;
 using CqClippingPlane = Rhino.Render.ChangeQueue.ClippingPlane;
+using CqGroundPlane = Rhino.Render.ChangeQueue.GroundPlane;
+using CqLight = Rhino.Render.ChangeQueue.Light;
+using CqMaterial = Rhino.Render.ChangeQueue.Material;
+using CqMesh = Rhino.Render.ChangeQueue.Mesh;
+using CqSkylight = Rhino.Render.ChangeQueue.Skylight;
 using RGLight = Rhino.Geometry.Light;
-using Rhino.Geometry;
-using RhinoCyclesCore.Converters;
-using RhinoCyclesCore.Core;
-using RhinoCyclesCore.Shaders;
-using RhinoCyclesCore.Materials;
-using RhinoCyclesCore.ExtensionMethods;
-using Rhino.Collections;
-using System.Text;
-using RhinoCyclesCore.RenderEngines;
-using Rhino;
-using RhinoCyclesCore.Settings;
-using System.Diagnostics;
 
 namespace RhinoCyclesCore.Database
 {
@@ -162,7 +156,7 @@ namespace RhinoCyclesCore.Database
 			if (_shaderDatabase.ObjectShaderChanges.Count == 0) return;
 
 			RcCore.It.AddLogStringIfVerbose("\tUploadObjectShaderChanges entry");
-			RcCore.OutputDebugString($"Uploading object shader changes {_shaderDatabase.ObjectShaderChanges.Count}\n");
+			RcCore.It.AddLogStringIfVerbose($"Uploading object shader changes {_shaderDatabase.ObjectShaderChanges.Count}\n");
 			foreach (var obshad in _shaderDatabase.ObjectShaderChanges)
 			{
 
@@ -203,17 +197,17 @@ namespace RhinoCyclesCore.Database
 					var cclsh = tup.Item2;
 					if (tup.Item1 is CyclesShader matsh)
 					{
-						RcCore.OutputDebugString($"Updating material {cclsh.Id}, old gamma {matsh.Gamma} new gamma ");
+						RcCore.It.AddLogStringIfVerbose($"Updating material {cclsh.Id}, old gamma {matsh.Gamma} new gamma ");
 						matsh.Gamma = PreProcessGamma;
-						RcCore.OutputDebugString($"{matsh.Gamma}\n");
+						RcCore.It.AddLogStringIfVerbose($"{matsh.Gamma}\n");
 						TriggerMaterialShaderChanged(matsh, cclsh);
 					}
 
 					if (tup.Item1 is CyclesLight lgsh)
 					{
-						RcCore.OutputDebugString($"Updating light {cclsh.Id}, old gamma {lgsh.Gamma} new gamma ");
+						RcCore.It.AddLogStringIfVerbose($"Updating light {cclsh.Id}, old gamma {lgsh.Gamma} new gamma ");
 						lgsh.Gamma = PreProcessGamma;
-						RcCore.OutputDebugString($"{lgsh.Gamma}\n");
+						RcCore.It.AddLogStringIfVerbose($"{lgsh.Gamma}\n");
 						TriggerLightShaderChanged(lgsh, cclsh);
 					}
 
@@ -276,7 +270,7 @@ namespace RhinoCyclesCore.Database
 			if(_objectDatabase.MeshesToDelete.Count > 0 || _objectDatabase.MeshChanges.Count > 0)
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadMeshChanges entry");
-				RcCore.OutputDebugString("UploadMeshChanges\n");
+				RcCore.It.AddLogStringIfVerbose("UploadMeshChanges\n");
 				// handle mesh deletes first
 				foreach (var meshDelete in _objectDatabase.MeshesToDelete)
 				{
@@ -284,7 +278,7 @@ namespace RhinoCyclesCore.Database
 
 					foreach (var cob in cobs)
 					{
-						RcCore.OutputDebugString($"\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete}\n");
+						RcCore.It.AddLogStringIfVerbose($"\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete}\n");
 						// remove mesh data
 						cob.Mesh?.ClearData();
 						cob.Mesh?.TagRebuild();
@@ -296,7 +290,7 @@ namespace RhinoCyclesCore.Database
 
 				var curmesh = 0;
 				var totalmeshes = _objectDatabase.MeshChanges.Count;
-				RcCore.OutputDebugString($"\tUploading {totalmeshes} mesh changes\n");
+				RcCore.It.AddLogStringIfVerbose($"\tUploading {totalmeshes} mesh changes\n");
 				foreach (var meshChange in _objectDatabase.MeshChanges)
 				{
 					var cyclesMesh = meshChange.Value;
@@ -322,7 +316,7 @@ namespace RhinoCyclesCore.Database
 					// update status bar of render window.
 					var stat =
 						$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.Verts.Length / 3}, t: {cyclesMesh.Faces.Length / 3}]";
-					RcCore.OutputDebugString($"\t\t{stat}\n");
+					RcCore.It.AddLogStringIfVerbose($"\t\t{stat}\n");
 
 					// set progress, but without rendering percentage (hence the -1.0f)
 					_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
@@ -466,7 +460,6 @@ namespace RhinoCyclesCore.Database
 
 		protected override void ApplyLinearWorkflowChanges(Rhino.Render.LinearWorkflow lw)
 		{
-			sdd.WriteLine($"LinearWorkflow {lw.PreProcessColors} {lw.PreProcessTextures} {lw.PostProcessFrameBuffer} {lw.PreProcessGamma} {lw.PostProcessGammaReciprocal}");
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Apply linear workflow", -1.0f);
 			LinearWorkflow = lw;
 			_environmentDatabase.SetGamma(PreProcessGamma);
@@ -623,8 +616,6 @@ namespace RhinoCyclesCore.Database
 			// Pick smaller of the angles
 			var angle = newSize.Width > newSize.Height ? (float)view.Vertical * 2.0f : (float)view.Horizontal * 2.0f;
 
-			//System.Diagnostics.Debug.WriteLine("size: {0}, matrix: {1}, angle: {2}, Sensorsize: {3}x{4}", size, view.Transform, angle, Settings.SensorHeight, Settings.SensorWidth);
-
 			scene.Camera.Size = _modalRenderer ? _renderEngine.FullSize : newSize;
 			scene.Camera.Matrix = view.Transform;
 			scene.Camera.Type = view.Projection;
@@ -682,8 +673,6 @@ namespace RhinoCyclesCore.Database
 			// frustum values, used for two point
 			vp.GetFrustum(out double frl, out double frr, out double frb, out double frt, out double frn, out double frf);
 
-			//sdd.WriteLine(String.Format(
-			//	"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
 
 			// For 2 point perspective frustum needs to be scaled
 			if (twopoint)
@@ -710,30 +699,17 @@ namespace RhinoCyclesCore.Database
 				frt = frustum_scale_factor * frt;
 				frl = frustum_scale_factor * frl;
 				frr = frustum_scale_factor * frr;
-				//System.Diagnostics.Debug.WriteLine(String.Format(
-				//	"ADJUSTED Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
 			}
 
 			var parallel = vp.IsParallelProjection;
-			var viewscale = vp.ViewScale;
 
-			/*sdd.WriteLine(String.Format(
-				"Camera projection type {0}, lens length {1}, scale {2}x{3}, two-point {4}, dist {5}, disthalf {6}", parallel ? "ORTHOGRAPHIC" : "PERSPECTIVE",
-				lenslength, viewscale.Width, viewscale.Height, twopoint, dist, disthalf));
-
-			sdd.WriteLine(String.Format(
-				"Frustum l {0} r {1} t {2} b {3} n {4} f{5}", frl, frr, frt, frb, frn, frf));
-				*/
-
-				var screenport = vp.GetScreenPort(out int near, out int far);
+			var screenport = vp.GetScreenPort(out int near, out int far);
 			var bottom = screenport.Bottom;
 			var top = screenport.Top;
 			var left = screenport.Left;
 			var right = screenport.Right;
-
-			int w = 0;
-			int h = 0;
-
+			int w;
+			int h;
 			// We shouldn't be taking render dimensions from the viewport when
 			// rendering into render window, since this can be completely
 			// different (for instance Rendering panel, custom render size)
@@ -797,7 +773,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="added"></param>
 		protected override void ApplyMeshChanges(Guid[] deleted, List<CqMesh> added)
 		{
-			RcCore.OutputDebugString($"ChangeDatabase ApplyMeshChanges, deleted {deleted.Length}\n");
+			RcCore.It.AddLogStringIfVerbose($"ChangeDatabase ApplyMeshChanges, deleted {deleted.Length}\n");
 
 			var totaldeletes = deleted.Length;
 			var curdelete = 0;
@@ -807,13 +783,13 @@ namespace RhinoCyclesCore.Database
 				// only delete those that aren't listed in the added list
 				if (!(from mesh in added where mesh.Id() == guid select mesh).Any())
 				{
-					RcCore.OutputDebugString($" record mesh deletion {guid}\n");
+					RcCore.It.AddLogStringIfVerbose($" record mesh deletion {guid}\n");
 					_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Delete mesh {curdelete}/{totaldeletes}", -1.0f);
 					_objectDatabase.DeleteMesh(guid);
 				}
 			}
 
-			RcCore.OutputDebugString($"ChangeDatabase ApplyMeshChanges added {added.Count}\n");
+			RcCore.It.AddLogStringIfVerbose($"ChangeDatabase ApplyMeshChanges added {added.Count}\n");
 			var totaladds = added.Count;
 			var curadd = 0;
 			if (_renderEngine.ShouldBreak) return;
@@ -1030,11 +1006,11 @@ namespace RhinoCyclesCore.Database
 		public void HandleMeshData(Guid meshguid, int meshIndex, Rhino.Geometry.Mesh meshdata, MappingChannelCollection mappingCollection, bool isClippingObject, uint linearlightMatId, ccl.Transform t)
 		{
 			if (_renderEngine.ShouldBreak) return;
-			RcCore.OutputDebugString($"\tHandleMeshData: {meshdata.Faces.Count}");
+			RcCore.It.AddLogStringIfVerbose($"\tHandleMeshData: {meshdata.Faces.Count}");
 			// Get face indices flattened to an
 			// integer array. The result will be triangulated faces.
 			var findices = meshdata.Faces.ToIntArray(true);
-			RcCore.OutputDebugString($" .. {findices.Length/3}\n");
+			RcCore.It.AddLogStringIfVerbose($" .. {findices.Length/3}\n");
 
 			float[] rhvc = meshdata.VertexColors.ToFloatArray(meshdata.Vertices.Count);
 			float[] cmvc = rhvc != null ? new float[findices.Length * 3] : null;
@@ -1136,30 +1112,30 @@ namespace RhinoCyclesCore.Database
 			// helper list to ensure we don't add same material multiple times.
 			var addedmats = new List<uint>();
 
-			RcCore.OutputDebugString($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
+			RcCore.It.AddLogStringIfVerbose($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
 			foreach (var dm in deleted)
 			{
-				RcCore.OutputDebugString($"\ttold to DELETE {dm}\n");
+				RcCore.It.AddLogStringIfVerbose($"\ttold to DELETE {dm}\n");
 			}
 			foreach (var aoc in addedOrChanged)
 			{
-				RcCore.OutputDebugString($"\ttold to ADD {aoc.InstanceId}\n");
+				RcCore.It.AddLogStringIfVerbose($"\ttold to ADD {aoc.InstanceId}\n");
 			}
 			if (_renderEngine.ShouldBreak) return;
-			RcCore.OutputDebugString($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
+			RcCore.It.AddLogStringIfVerbose($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes\n");
 			var inDeleted = from inst in addedOrChanged where deleted.Contains(inst.InstanceId) select inst;
 			var skipFromDeleted = (from inst in inDeleted where true select inst.InstanceId).ToList();
 
 			if (skipFromDeleted.Count > 0)
 			{
-				RcCore.OutputDebugString($"\t{skipFromDeleted.Count} in both deleted and addedOrChanged!\n");
+				RcCore.It.AddLogStringIfVerbose($"\t{skipFromDeleted.Count} in both deleted and addedOrChanged!\n");
 				foreach (var skip in skipFromDeleted)
 				{
-					RcCore.OutputDebugString($"\t\t{skip} should not be deleted!\n");
+					RcCore.It.AddLogStringIfVerbose($"\t\t{skip} should not be deleted!\n");
 				}
 			}
 			var realDeleted = (from dlt in deleted where !skipFromDeleted.Contains(dlt) select dlt).ToList();
-			RcCore.OutputDebugString($"\tActually deleting {realDeleted.Count} mesh instances!\n");
+			RcCore.It.AddLogStringIfVerbose($"\tActually deleting {realDeleted.Count} mesh instances!\n");
 			var totaldel = realDeleted.Count;
 			var curdel = 0;
 			foreach (var d in realDeleted)
@@ -1172,16 +1148,16 @@ namespace RhinoCyclesCore.Database
 					{
 						var delob = new CyclesObject {cob = cob};
 						_objectDatabase.DeleteObject(delob);
-						RcCore.OutputDebugString($"\tDeleting mesh instance {d} {cob.ObjectPtr}\n");
+						RcCore.It.AddLogStringIfVerbose($"\tDeleting mesh instance {d} {cob.ObjectPtr}\n");
 					}
 					else
 					{
-						RcCore.OutputDebugString($"\tMesh instance {d} has no object relation..\n");
+						RcCore.It.AddLogStringIfVerbose($"\tMesh instance {d} has no object relation..\n");
 					}
 			}
 			var totalmeshes = addedOrChanged.Count;
 			var curmesh = 0;
-			RcCore.OutputDebugString($"ApplyMeshInstanceChanges: Received {totalmeshes} mesh instance changes\n");
+			RcCore.It.AddLogStringIfVerbose($"ApplyMeshInstanceChanges: Received {totalmeshes} mesh instance changes\n");
 			foreach (var a in addedOrChanged)
 			{
 				curmesh++;
@@ -1196,7 +1172,7 @@ namespace RhinoCyclesCore.Database
 				var mat = a.RenderMaterial;
 
 				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes}. material {mat.Name}\n";
-				RcCore.OutputDebugString(stat);
+				RcCore.It.AddLogStringIfVerbose(stat);
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
 
 				if(cyclesDecals!=null) {
@@ -1258,7 +1234,7 @@ namespace RhinoCyclesCore.Database
 
 			if (shaderchange.Changed)
 			{
-				RcCore.OutputDebugString(
+				RcCore.It.AddLogStringIfVerbose(
 					$"\t\tsetting material, from old {shaderchange.OldShaderHash} to new {shaderchange.NewShaderHash}\n");
 
 				_shaderDatabase.AddObjectMaterialChange(shaderchange);
@@ -1286,7 +1262,6 @@ namespace RhinoCyclesCore.Database
 				return;
 			}
 
-			//System.Diagnostics.Debug.WriteLine("Add new material with RenderHash {0}", mat.RenderHash);
 			var sh = _shaderConverter.RecordDataToSetupCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals, _doc_serialnr);
 			sh.InvisibleUnderside = invisibleUnderside;
 			_shaderDatabase.AddShader(sh);
@@ -1301,7 +1276,7 @@ namespace RhinoCyclesCore.Database
 		private void HandleMaterialChangeOnObject(uint matid, uint obid, Tuple<Guid, int> meshid)
 		{
 			var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(obid);
-			RcCore.OutputDebugString($"handle material change on object {oldhash} {matid}\n");
+			RcCore.It.AddLogStringIfVerbose($"handle material change on object {oldhash} {matid}\n");
 
 			HandleShaderChange(obid, oldhash, matid, meshid);
 		}
@@ -1316,7 +1291,7 @@ namespace RhinoCyclesCore.Database
 			// list of material hashes
 			var distinctMats = new List<uint>();
 
-			RcCore.OutputDebugString($"ApplyMaterialChanges: {mats.Count}\n");
+			RcCore.It.AddLogStringIfVerbose($"ApplyMaterialChanges: {mats.Count}\n");
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Apply materials", -1.0f);
 
 			var totalmats = mats.Count;
@@ -1327,7 +1302,7 @@ namespace RhinoCyclesCore.Database
 				curmat++;
 
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Apply material {curmat}/{totalmats}", -1.0f);
-				RcCore.OutputDebugString($"\t[material {mat.Id}, {mat.MeshInstanceId}, {mat.MeshIndex}]\n");
+				RcCore.It.AddLogStringIfVerbose($"\t[material {mat.Id}, {mat.MeshInstanceId}, {mat.MeshIndex}]\n");
 				var rm = MaterialFromId(mat.Id);
 
 				if (!distinctMats.Contains(mat.Id))
@@ -1365,7 +1340,7 @@ namespace RhinoCyclesCore.Database
 			if (_shaderDatabase.ShaderChanges.Count > 0)
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadShaderChanges entry");
-				RcCore.OutputDebugString($"Uploading shader changes {_shaderDatabase.ShaderChanges.Count}\n");
+				RcCore.It.AddLogStringIfVerbose($"Uploading shader changes {_shaderDatabase.ShaderChanges.Count}\n");
 				var totalshaders = _shaderDatabase.ShaderChanges.Count;
 				var curshader = 0;
 				// map shaders. key is RenderHash
@@ -1489,7 +1464,7 @@ namespace RhinoCyclesCore.Database
 			if (old_gp_crc == 0 && !gp.Enabled) return;
 			if (gpcrc == old_gp_crc && old_gp_enabled == gp.Enabled) return;
 
-			RcCore.OutputDebugString("ApplyGroundPlaneChanges.\n");
+			RcCore.It.AddLogStringIfVerbose("ApplyGroundPlaneChanges.\n");
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Apply groundplane", -1.0f);
 
 			old_gp_crc = gpcrc;
@@ -1508,7 +1483,6 @@ namespace RhinoCyclesCore.Database
 		{
 			foreach (var dot in dynamicObjectTransforms)
 			{
-				//System.Diagnostics.Debug.WriteLine("DynObXform {0}", dot.MeshInstanceId);
 				var cot = new CyclesObjectTransform(dot.MeshInstanceId, dot.Transform.ToCyclesTransform());
 				_objectDatabase.AddDynamicObjectTransform(cot);
 			}
@@ -1804,7 +1778,6 @@ namespace RhinoCyclesCore.Database
 				else
 				{
 					var cl = _shaderConverter.ConvertLight(light, PreProcessGamma);
-					//System.Diagnostics.Debug.WriteLine("dynlight {0} @ {1}", light.Id, light.Location);
 					_lightDatabase.AddLight(cl);
 				}
 			}
@@ -1827,7 +1800,6 @@ namespace RhinoCyclesCore.Database
 			if (sun.IsEnabled) PushEnabledLight();
 			else PopEnabledLight();
 			_environmentDatabase.TagUpdate();
-			//System.Diagnostics.Debug.WriteLine("Sun {0} {1} {2}", sun.Id, sun.Intensity, sun.Diffuse);
 		}
 
 #endregion
@@ -1838,7 +1810,7 @@ namespace RhinoCyclesCore.Database
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadEnvironmentChanges entry");
 				_environmentDatabase.CyclesShader.EnabledLights = AnyActiveLights();
-				RcCore.OutputDebugString($"Uploading background changes, active lights: {_environmentDatabase.CyclesShader.EnabledLights}, sky {_environmentDatabase.CyclesShader.SkylightEnabled} skystrength {_environmentDatabase.CyclesShader.SkyStrength}\n");
+				RcCore.It.AddLogStringIfVerbose($"Uploading background changes, active lights: {_environmentDatabase.CyclesShader.EnabledLights}, sky {_environmentDatabase.CyclesShader.SkylightEnabled} skystrength {_environmentDatabase.CyclesShader.SkyStrength}\n");
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Handling Environment changes", -1.0f);
 				_renderEngine.RecreateBackgroundShader(_environmentDatabase.CyclesShader);
 				RcCore.It.AddLogStringIfVerbose("\tUploadEnvironmentChanges exit");
@@ -1869,7 +1841,7 @@ namespace RhinoCyclesCore.Database
 				HandleGroundPlaneShadowcatcherState(ob);
 				if (ob.cob != null)
 				{
-					RcCore.OutputDebugString($"UploadObjectChanges: deleting object {ob.obid} {ob.cob.ObjectPtr}\n");
+					RcCore.It.AddLogStringIfVerbose($"UploadObjectChanges: deleting object {ob.obid} {ob.cob.ObjectPtr}\n");
 					var cob = ob.cob;
 					// deleting we do (for now?) by marking object as hidden.
 					// we *don't* clear mesh data here, since that very mesh
@@ -1879,7 +1851,7 @@ namespace RhinoCyclesCore.Database
 				}
 			}
 
-			RcCore.OutputDebugString($"UploadObjectChanges: adding/modifying objects {_objectDatabase.NewOrUpdatedObjects.Count}\n");
+			RcCore.It.AddLogStringIfVerbose($"UploadObjectChanges: adding/modifying objects {_objectDatabase.NewOrUpdatedObjects.Count}\n");
 
 			var totalobcount = _objectDatabase.NewOrUpdatedObjects.Count;
 			var curcount = 0;
@@ -1913,7 +1885,7 @@ namespace RhinoCyclesCore.Database
 					_objectDatabase.RecordObjectIdMeshIdRelation(ob.obid, ob.meshid);
 				}
 
-				RcCore.OutputDebugString($"\tadding/modifying object {ob.obid} {ob.meshid} {cob.ObjectPtr}\n");
+				RcCore.It.AddLogStringIfVerbose($"\tadding/modifying object {ob.obid} {ob.meshid} {cob.ObjectPtr}\n");
 
 				// set mesh reference and other stuff
 				cob.Mesh = mesh;
@@ -1946,7 +1918,6 @@ namespace RhinoCyclesCore.Database
 		/// <param name="skylight">New skylight information</param>
 		protected override void ApplySkylightChanges(CqSkylight skylight)
 		{
-			//System.Diagnostics.Debug.WriteLine("{0}", skylight);
 			_environmentDatabase.SetSkylightEnabled(skylight.Enabled);
 			_environmentDatabase.SetGamma(PreProcessGamma);
 			_lightDatabase.UpdateBackgroundLight();
@@ -1978,7 +1949,7 @@ namespace RhinoCyclesCore.Database
 				{
 					var view = GetQueueView();
 					var y = string.IsNullOrEmpty(view.WallpaperFilename);
-					RcCore.OutputDebugString(
+					RcCore.It.AddLogStringIfVerbose(
 						$"view has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}\n");
 					_environmentDatabase.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
 					_wallpaperInitialized = true;
@@ -2048,7 +2019,7 @@ namespace RhinoCyclesCore.Database
 			 * The earlier assumption that non-changing EnvironmentIdForUsage meant non-changing
 			 * environment instance is wrong. See http://mcneel.myjetbrains.com/youtrack/issue/RH-32418
 			 */
-			RcCore.OutputDebugString($"ApplyEnvironmentChanges {usage}\n");
+			RcCore.It.AddLogStringIfVerbose($"ApplyEnvironmentChanges {usage}\n");
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Apply environment {usage}", -1.0f);
 			_environmentDatabase.SetGamma(PreProcessGamma);
 			UpdateAllEnvironments(usage);
@@ -2088,7 +2059,7 @@ namespace RhinoCyclesCore.Database
 		protected override void NotifyBeginUpdates()
 		{
 			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
-			RcCore.OutputDebugString($"NotifyBeginUpdates {++_updateCounter}\n");
+			RcCore.It.AddLogStringIfVerbose($"NotifyBeginUpdates {++_updateCounter}\n");
 			_renderEngine.TriggerBeginChangesNotified();
 		}
 
@@ -2098,18 +2069,15 @@ namespace RhinoCyclesCore.Database
 		protected override void NotifyEndUpdates()
 		{
 			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
-			RcCore.OutputDebugString($"NotifyEndUpdates {_updateCounter}\n");
+			RcCore.It.AddLogStringIfVerbose($"NotifyEndUpdates {_updateCounter}\n");
 			_renderEngine.Flush = true;
 		}
 
 		protected override void NotifyDynamicUpdatesAreAvailable()
 		{
 			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
-			RcCore.OutputDebugString("NotifyDynamicUpdatesAreAvailable\n");
+			RcCore.It.AddLogStringIfVerbose("NotifyDynamicUpdatesAreAvailable\n");
 			_renderEngine.TriggerBeginChangesNotified();
-			//_renderEngine.Flush = true;
-			// nothing
-			//System.Diagnostics.Debug.WriteLine("dyn changes...");
 		}
 
 		/// <summary>

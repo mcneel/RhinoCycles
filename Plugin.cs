@@ -1,5 +1,5 @@
 /**
-Copyright 2014-2017 Robert McNeel and Associates
+Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0(the "License");
 you may not use this file except in compliance with the License.
@@ -14,20 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using ccl;
+using Rhino;
+using Rhino.PlugIns;
+using Rhino.Render;
+using Rhino.Runtime;
+using Rhino.UI;
+using RhinoCyclesCore.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using ccl;
-using Rhino;
-using Rhino.UI;
-using Rhino.PlugIns;
-using Rhino.Render;
-using RhinoCyclesCore.Settings;
-using RhinoCyclesCore.Core;
-using System.Diagnostics;
-using Rhino.Runtime;
 
 namespace RhinoCycles
 {
@@ -65,7 +64,7 @@ namespace RhinoCycles
 				RhinoApp.Initialized += RhinoApp_Initialized;
 				RcCore.It.InitializeResourceManager();
 
-				ccl.Utilities.RegisterConsoleWriter(Rhino.RhinoApp.OutputDebugString);
+				ccl.Utilities.RegisterConsoleWriter(RcCore.It.AddLogStringIfVerbose);
 
 				// code got moved to separate DLL so use that to register from.
 				var rccoreass = typeof(RcCore).Assembly;
@@ -132,19 +131,6 @@ namespace RhinoCycles
 			t.Start();
 		}
 
-		private bool IsSonomaOrGreater
-		{
-			get
-			{
-				var os = Environment.OSVersion;
-				var is_osx = PlatformID.Unix == os.Platform;	//Unix means OSX
-
-				//System.Diagnostics.Debug.WriteLine("Platform = {0}, Version = {1}", (int)os.Platform, os.Version.Major);
-
-				return is_osx && os.Version.Major >= 14;
-			}
-		}
-
 		/// <summary>
 		/// Initialise Cycles if necessary.
 		/// </summary>
@@ -156,7 +142,7 @@ namespace RhinoCycles
 				{
 					RcCore.It.AddLogString("InitialiseCSycles entry");
 					if(File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) ||
-					  Rhino.RhinoApp.IsSafeModeEnabled /*|| IsSonomaOrGreater*/
+					  Rhino.RhinoApp.IsSafeModeEnabled
 						)
 					{
 						CSycles.initialise(DeviceTypeMask.CPU);
