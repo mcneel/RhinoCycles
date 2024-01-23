@@ -27,7 +27,6 @@ using RhinoCyclesCore.ExtensionMethods;
 using System.Collections.Concurrent;
 using Rhino.Runtime.InteropWrappers;
 using System.Linq;
-using sdd = System.Diagnostics.Debug;
 
 namespace RhinoCyclesCore
 {
@@ -371,7 +370,6 @@ namespace RhinoCyclesCore
 			tv.Value = v;
 
 			if(childSlot == StdCS.Bump) {
-				sdd.WriteLine("Handling texture for PBR Bump");
 			}
 
 			//If we manage to get a texture from the usage, that means that either the material supports handing
@@ -411,19 +409,15 @@ namespace RhinoCyclesCore
 					//so that when the new bitmap texture is created below, the WCS transforms are not applied.
 					var simtex = new SimulatedTexture(rm.DocumentAssoc, tex);
 
-					sdd.WriteLine("____ HAD TO SIMULATE TEXTURE _____");
-
 					tv.Texture = RenderTexture.NewBitmapTexture(simtex, rm.DocumentAssoc);
 				}
 			}
 
 			bool checkForNormal = childSlot == StdCS.Bump || childSlot == StdCS.PbrClearcoatBump || childSlot == StdCS.PbrDisplacement;
 			bool isColor = childSlot == StdCS.Diffuse || childSlot == StdCS.PbrBaseColor || childSlot == StdCS.PbrEmission || childSlot == StdCS.PbrSubSurfaceScattering || childSlot == StdCS.Environment;
-			sdd.WriteLine($"Checking for normal: {checkForNormal}");
 
 			Utilities.HandleRenderTexture(tv.Texture, cti, checkForNormal, false, _bitmapConverter, _docsrn, gamma, false, isColor);
 			if(checkForNormal) {
-				sdd.WriteLine($"The handled render texture has at the end IsNormalMap: {cti.IsNormalMap}");
 			}
 		}
 
@@ -476,7 +470,6 @@ namespace RhinoCyclesCore
 			HandlePbrTexturedProperty(StdCS.PbrOpacityIor, (float)pbrmat.OpacityIOR, rm, shb.PbrIor, shb.PbrIorTexture);
 			HandlePbrTexturedProperty(StdCS.PbrOpacityRoughness, (float)pbrmat.OpacityRoughness, rm, shb.PbrTransmissionRoughness, shb.PbrTransmissionRoughnessTexture);
 			HandlePbrTexturedProperty(StdCS.Bump, Color4f.Black, rm, shb.PbrBump, shb.PbrBumpTexture);
-			sdd.WriteLine($"PbrBumpTexture.IsNormalMap: {shb.PbrBumpTexture.IsNormalMap}");
 			HandlePbrTexturedProperty(StdCS.PbrDisplacement, Color4f.Black, rm, shb.PbrDisplacement, shb.PbrDisplacementTexture);
 			HandlePbrTexturedProperty(StdCS.PbrAmbientOcclusion, 0.0f, rm, shb.PbrAmbientOcclusion, shb.PbrAmbientOcclusionTexture);
 			HandlePbrTexturedProperty(StdCS.PbrAlpha, (float)pbrmat.Alpha, rm, shb.PbrAlpha, shb.PbrAlphaTexture);

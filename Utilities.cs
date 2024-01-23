@@ -467,6 +467,78 @@ namespace RhinoCyclesCore
 			return null;
 		}
 
+		/// <summary>
+		/// Add a graph branch that implements a color mask as Rhino does.
+		/// </summary>
+		/// <param name="image_texture_node"></param>
+		/// <param name="cyclesTexture"></param>
+		/// <returns>MathMultiply node that combines image_texture_node alpha with the color mask alpha</returns>
+		public static MathMultiply ApplyColorMaskGraph(ImageTextureNode image_texture_node, CyclesTextureImage cyclesTexture)
+		{
+			Shader shader = image_texture_node.Shader;
+			var sep_img_col = new SeparateRgbNode(shader, "separate image color");
+			var sep_mask_col = new SeparateRgbNode(shader, "separate mask color");
+
+			MathSubtract sub_r = new(shader, "subtract r channels");
+			MathSubtract sub_g = new(shader, "subtract g channels");
+			MathSubtract sub_b = new(shader, "subtract b channels");
+			sub_r.UseClamp = false;
+			sub_g.UseClamp = false;
+			sub_b.UseClamp = false;
+
+			MathAbsolute abs_r = new(shader, "abs(r)");
+			MathAbsolute abs_g = new(shader, "abs(g)");
+			MathAbsolute abs_b = new(shader, "abs(b)");
+
+			MathDivide div_sum_three = new(shader, "sum_abs_rgb__div_three");
+			div_sum_three.ins.Value2.Value = 3.0f;
+
+			MathLess_Than sensitivity_lt_absdiv3 = new(shader, "sensitivity lt absdiv3");
+			sensitivity_lt_absdiv3.ins.Value1.Value = cyclesTexture.ColorMaskSensitivity;
+
+			MathAdd add_abs_rg = new (shader, "add r and g abs");
+			MathAdd add_abs_rg_b = new (shader, "add rg b abs");
+			add_abs_rg.UseClamp = false;
+			add_abs_rg_b.UseClamp = false;
+
+			MathMultiply adjust_img_alpha = new (shader, "adjust_img_alpha");
+			adjust_img_alpha.UseClamp = false;
+
+
+			image_texture_node.outs.Color.Connect(sep_img_col.ins.Image);
+			// Since images are most likely undergoing sRGB to Linear conversion
+			// inside Cycles do the same for the color mask value.
+			sep_mask_col.ins.Image.Value = float4.SrgbToLinear(cyclesTexture.ColorMask.ToFloat4());
+
+			sep_img_col.outs.R.Connect(sub_r.ins.Value1);
+			sep_mask_col.outs.R.Connect(sub_r.ins.Value2);
+
+			sep_img_col.outs.G.Connect(sub_g.ins.Value1);
+			sep_mask_col.outs.G.Connect(sub_g.ins.Value2);
+
+			sep_img_col.outs.B.Connect(sub_b.ins.Value1);
+			sep_mask_col.outs.B.Connect(sub_b.ins.Value2);
+
+			sub_r.outs.Value.Connect(abs_r.ins.Value1);
+			sub_g.outs.Value.Connect(abs_g.ins.Value1);
+			sub_b.outs.Value.Connect(abs_b.ins.Value1);
+
+			abs_r.outs.Value.Connect(add_abs_rg.ins.Value1);
+			abs_g.outs.Value.Connect(add_abs_rg.ins.Value2);
+
+			add_abs_rg.outs.Value.Connect(add_abs_rg_b.ins.Value1);
+			abs_b.outs.Value.Connect(add_abs_rg_b.ins.Value2);
+
+
+			add_abs_rg_b.outs.Value.Connect(div_sum_three.ins.Value1);
+
+			div_sum_three.outs.Value.Connect(sensitivity_lt_absdiv3.ins.Value2);
+
+			image_texture_node.outs.Alpha.Connect(adjust_img_alpha.ins.Value1);
+			sensitivity_lt_absdiv3.outs.Value.Connect(adjust_img_alpha.ins.Value2);
+			return adjust_img_alpha;
+		}
+
 		public static int GetSystemProcessorCount()
 		{
 			return HostUtils.GetSystemProcessorCount();
