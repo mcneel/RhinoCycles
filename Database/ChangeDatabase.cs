@@ -822,7 +822,12 @@ namespace RhinoCyclesCore.Database
 
 				foreach(var meshdata in meshes)
 				{
+					// Do not add meshes that have no vertices. Adding them will only
+					// prime Cycles for crashes when shaders are changed later.
+					if (meshdata.Vertices.Count == 0) continue;
+
 					if (_renderEngine.ShouldBreak) return;
+
 					HandleMeshData(meshguid, meshIndex, meshdata, mappingCollection, isClippingObject, uint.MaxValue, t);
 					meshIndex++;
 				}
