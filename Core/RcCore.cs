@@ -612,8 +612,8 @@ namespace RhinoCyclesCore.Core
 			CompileProcessFinished = false;
 			CompileProcessError = false;
 
-			CompileLogStdOut = Localization.LocalizeString("Compile started, waiting for results...", 87) + "\n";
-			CompileLogStdErr = Localization.LocalizeString("No errors.", 88);
+			compileStdOut.Enqueue(Localization.LocalizeString("Compile started, waiting for results...", 87) + "\n");
+			compileStdErr.Enqueue(Localization.LocalizeString("No errors.", 88));
 			CompileStartTime = DateTime.Now;
 			CompileEndTime = DateTime.MinValue;
 
@@ -624,7 +624,7 @@ namespace RhinoCyclesCore.Core
 
 				var compileTaskFile = WriteGpuDevicesFile(deviceListing);
 				string startProcessString = Localization.LocalizeString("Start compile process with device count:", 89);
-				CompileLogStdOut += $"{startProcessString} {deviceListing.Count} ({deviceListing[0].Type})\n";
+				compileStdOut.Enqueue($"{startProcessString} {deviceListing.Count} ({deviceListing[0].Type})\n");
 
 				try
 				{
@@ -636,12 +636,14 @@ namespace RhinoCyclesCore.Core
 						if(e.Data != null)
 						{
 							compileStdOut.Enqueue(e.Data);
+							SetCompileLog();
 						}
 					});
 					process.ErrorDataReceived += new DataReceivedEventHandler((sender,e) => {
 						if(e.Data != null)
 						{
 							compileStdErr.Enqueue(e.Data);
+							SetCompileLog();
 						}
 					});
 					process.Start();
@@ -657,17 +659,18 @@ namespace RhinoCyclesCore.Core
 					{
 						string compile_failed = Localization.LocalizeString("Compile failed", 90);
 						string compile_error_code = Localization.LocalizeString("Error code", 91);
-						CompileLogStdOut = $"{compile_failed} {CompileLogStdOut}";
-						CompileLogStdErr = $"{compile_error_code}: {process.ExitCode}\n\n{process.StandardError.ReadToEnd()}";
+						compileStdOut.Enqueue($"{compile_failed} {CompileLogStdOut}");
+						compileStdErr.Enqueue($"{compile_error_code}: {process.ExitCode}\n\n{process.StandardError.ReadToEnd()}");
 					}
 					process.Close();
 				}
 				catch (Exception processException)
 				{
-					CompileLogStdErr += $"{processException}\n\n{processException.StackTrace}";
+					compileStdErr.Enqueue($"{processException}\n\n{processException.StackTrace}");
 					CompileProcessError = true;
 				}
 			}
+			SetCompileLog();
 
 			CompileProcessFinished = true;
 			CompileEndTime = DateTime.Now;
