@@ -160,7 +160,8 @@ namespace RhinoCyclesCore.RenderEngines
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer CreateSession done");
 			#endregion
 
-			HandleIntegrator(eds);
+			InitializeSceneSettings(cyclesEngine.Session, RenderDevice, cyclesEngine, engineSettings);
+			HandleIntegrator(engineSettings);
 
 			// Set up passes
 			foreach (var reqPass in reqPassTypes)
