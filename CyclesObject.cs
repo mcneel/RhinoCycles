@@ -40,6 +40,8 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public uint obid { get; set; }
 
+		public int passobid { get; set; } = 0;
+
 		/// <summary>
 		/// Guid of the mesh this object references
 		/// </summary>
