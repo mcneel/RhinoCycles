@@ -47,6 +47,8 @@ namespace RhinoCyclesCore
 				}
 			}
 
+			sh.PassId = (int)shader.Id;
+
 			return sh;
 		}
 
@@ -74,6 +76,8 @@ namespace RhinoCyclesCore
 						break;
 				}
 			}
+
+			sh.PassId = (int)shader.Id;
 
 			return sh;
 		}
