@@ -291,7 +291,12 @@ namespace RhinoCycles.Viewport
 		private void _cycles_UploadProgress(object sender, UploadProgressEventArgs e)
 		{
 			_status = e.Message;
-			if(!_cycles.CancelRender && _cycles.IsUploading) SignalRedraw();
+			if (!_cycles.CancelRender && _cycles.IsUploading)
+			{
+				RcCore.It.AddLogStringIfVerbose("_cycles_UploadProgress: SignalRedraw start");
+				SignalRedraw();
+				RcCore.It.AddLogStringIfVerbose("_cycles_UploadProgress: SignalRedraw end");
+			}
 		}
 
 		private double _progress;
@@ -352,7 +357,12 @@ namespace RhinoCycles.Viewport
 						_samples = e.Sample;
 					}
 
-					if (!_cycles.CancelRender) SignalRedraw();
+					if (!_cycles.CancelRender)
+					{
+						RcCore.It.AddLogStringIfVerbose("CyclesPassRendered: SignalRedraw start");
+						SignalRedraw();
+						RcCore.It.AddLogStringIfVerbose("CyclesPassRendered: SignalRedraw end");
+					}
 				}
 			}
 		}
@@ -440,7 +450,12 @@ namespace RhinoCycles.Viewport
 			else
 			{
 				_status = e.Samples <= 0 ? e.StatusText : "";
-				if(!_cycles.CancelRender && _cycles.IsUploading) SignalRedraw();
+				if (!_cycles.CancelRender && _cycles.IsUploading)
+				{
+					RcCore.It.AddLogStringIfVerbose("CyclesStatusTextUpdated: SignalRedraw start");
+					SignalRedraw();
+					RcCore.It.AddLogStringIfVerbose("CyclesStatusTextUpdated: SignalRedraw end");
+				}
 			}
 		}
 

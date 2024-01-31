@@ -270,6 +270,8 @@ namespace RhinoCyclesCore
 		{
 			if (IsStopped) return;
 
+			RcCore.It.AddLogStringIfVerbose($"RenderEngine.UpdateCallback (ptr {sid}) entry");
+
 			var status = CSycles.progress_get_status(sid);
 			var substatus = CSycles.progress_get_substatus(sid);
 			RenderedSamples = CSycles.progress_get_sample(sid);
@@ -306,6 +308,7 @@ namespace RhinoCyclesCore
 			if (MaxSamples == int.MaxValue) progress = -1.0f;
 			RenderWindow?.SetProgress(status, progress);
 			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples, finished));
+			RcCore.It.AddLogStringIfVerbose($"RenderEngine.UpdateCallback (ptr {sid}) exit");
 		}
 
 		/// <summary>
