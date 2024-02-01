@@ -31,6 +31,9 @@ namespace RhinoCyclesCore.Settings
 
 		static public int ThrottleMs => 100;
 		static public int Threads => Math.Max(1, Utilities.GetSystemProcessorCount() - 2);
+
+		static public bool ExperimentalCpuInMulti => false;
+
 		static public float BumpDistance => 1.0f;
 		static public float NormalStrengthFactor => 1.0f;
 		static public float BumpStrengthFactor => 1.0f;

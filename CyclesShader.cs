@@ -56,6 +56,12 @@ namespace RhinoCyclesCore
 		/// RenderHash of the RenderMaterial for which this intermediary is created.
 		/// </summary>
 		public uint Id { get; }
+		public int PassId {
+			get {
+				int passid = (int)(Id & 0xffff0000);
+				return passid >> 16;
+			}
+		}
 
 		public override int GetHashCode()
 		{

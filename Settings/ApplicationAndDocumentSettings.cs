@@ -147,6 +147,8 @@ namespace RhinoCyclesCore.Settings
 			AreaLightFactor = DefaultEngineSettings.AreaLightFactor;
 			PolishFactor = DefaultEngineSettings.PolishFactor;
 
+			ExperimentalCpuInMulti = DefaultEngineSettings.ExperimentalCpuInMulti;
+
 			ThrottleMs = DefaultEngineSettings.ThrottleMs;
 			Threads = DefaultEngineSettings.Threads;
 			BumpDistance = DefaultEngineSettings.BumpDistance;
@@ -370,6 +372,17 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return RcPlugIn.Settings.GetInteger(SettingNames.Threads, DefaultEngineSettings.Threads); }
 			set { RcPlugIn.Settings.SetInteger(SettingNames.Threads, value); }
+		}
+
+		/// <summary>
+		/// If true use experimental CPU usage in multi scenario.
+		/// In some cases currently gives bad rendering.
+		/// </summary>
+		public virtual bool ExperimentalCpuInMulti
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.ExperimentalCpuInMulti, DefaultEngineSettings.ExperimentalCpuInMulti); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.ExperimentalCpuInMulti, value); }
+
 		}
 
 		/// <summary>

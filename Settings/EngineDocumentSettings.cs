@@ -351,12 +351,17 @@ namespace RhinoCyclesCore.Settings
 		}
 		public int ThrottleMs
 		{
-			get => RcCore.It.AllSettings.ThrottleMs; //mDict.GetInteger(SettingNames.ThrottleMs, DefaultEngineSettings.ThrottleMs);
+			get => RcCore.It.AllSettings.ThrottleMs;
 			set => throw new InvalidOperationException();
 		}
 		public virtual int Threads
 		{
 			get => mDict.GetInteger(SettingNames.Threads, RcCore.It.AllSettings.Threads);
+			set => throw new InvalidOperationException();
+		}
+		public virtual bool ExperimentalCpuInMulti
+		{
+			get => mDict.GetBool(SettingNames.ExperimentalCpuInMulti, RcCore.It.AllSettings.ExperimentalCpuInMulti);
 			set => throw new InvalidOperationException();
 		}
 

@@ -256,12 +256,27 @@ namespace RhinoCyclesCore.Core
 		/// Otherwise isDeviceReady will be false and actualDevice Device.Default.
 		/// </returns>
 		public (bool isDeviceReady, Device actualDevice) IsDeviceReady(Device device) {
-			lock(accessGpuKernelDevicesReadiness) {
-				var devReadiness = gpuDevicesReadiness.Find(
-					d =>
-						d.DeviceAndPath.Device.Equals(device)
-				);
-				if(devReadiness.IsReady) return (true, device);
+			if (device.Type != DeviceType.Multi)
+			{
+				lock (accessGpuKernelDevicesReadiness)
+				{
+					var devReadiness = gpuDevicesReadiness.Find(
+						d =>
+							d.DeviceAndPath.Device.Equals(device)
+					);
+					if (devReadiness.IsReady) return (true, device);
+				}
+			}
+			else
+			{
+				lock (accessGpuKernelDevicesReadiness)
+				{
+					bool allSubdevicesReady =
+						!(from devreadiness in gpuDevicesReadiness
+						where device.Subdevices.Contains(devreadiness.DeviceAndPath.Device)
+						select devreadiness.IsReady).Any(b => b == false);
+					if (allSubdevicesReady) return (true, device);
+				}
 			}
 			return (false, Device.Default);
 		}
@@ -331,7 +346,9 @@ namespace RhinoCyclesCore.Core
 				for (int idx = 0; idx < gpuDevicesReadiness.Count; idx++)
 				{
 					(DeviceAndPath device, bool isReady) = gpuDevicesReadiness[idx];
-					if (File.Exists(path: device.Path) && !isReady)
+
+					// first handle non-multi devices
+					if (!device.Device.IsMulti && File.Exists(path: device.Path) && !isReady)
 					{
 						lock (accessGpuKernelDevicesReadiness)
 						{
@@ -341,6 +358,22 @@ namespace RhinoCyclesCore.Core
 						if(HostUtils.RunningOnWindows && It.AllSettings.RenderDevice.Equals(device.Device))
 						{
 							ToggleViewportsRunningRealtime();
+						}
+					}
+					// then handle multi device
+					if(device.Device.IsMulti && !isReady) {
+						bool allSubdevicesReady =
+							!(from devreadiness in gpuDevicesReadiness
+							where device.Device.Subdevices.Contains(devreadiness.DeviceAndPath.Device)
+							select devreadiness.IsReady).Any(b => b == false);
+
+						if(allSubdevicesReady)
+						{
+							lock (accessGpuKernelDevicesReadiness)
+							{
+								gpuDevicesReadiness[idx] = (device, true);
+								DeviceKernelReady?.Invoke(this, EventArgs.Empty);
+							}
 						}
 					}
 				}
@@ -583,12 +616,16 @@ namespace RhinoCyclesCore.Core
 
 		private List<List<Device>> GetDeviceListings() {
 			var cd = AllSettings.RenderDevice;
+			if(cd.IsMulti)
+			{
+				cd = cd.FirstFromMulti;
+			}
 
 			List<Device> currentDeviceGroup = (from d in Device.Devices where d.IsGpu && d.Type.Equals(cd.Type) select d).ToList();
 			List<Device> otherDeviceGroup = (from d in Device.Devices where d.IsGpu && !d.Type.Equals(cd.Type) select d).ToList();
 			List<Device> cudaGroup = (from d in otherDeviceGroup where d.Type.Equals(DeviceType.Cuda) select d).ToList();
 			List<Device> optixGroup = (from d in otherDeviceGroup where d.Type.Equals(DeviceType.Optix) select d).ToList();
-			otherDeviceGroup = (from d in otherDeviceGroup where !cudaGroup.Contains(d) && !optixGroup.Contains(d) select d).ToList();
+			otherDeviceGroup = (from d in otherDeviceGroup where !cudaGroup.Contains(d) && !optixGroup.Contains(d) && d.Type != DeviceType.Multi select d).ToList();
 
 			List < List < Device >> deviceListings = new List<List<Device>>
 			{

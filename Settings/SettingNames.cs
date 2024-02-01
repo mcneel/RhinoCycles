@@ -54,6 +54,7 @@ namespace RhinoCyclesCore.Settings
 		public static string PolishFactor => "PolishFactor";
 		public static string FadeInMs => "FadeInMs";
 		public static string Threads => "Threads";
+		public static string ExperimentalCpuInMulti = "ExperimentalCpuInMulti";
 		public static string NormalStrengthFactor => "NormalStrengthFactor";
 		public static string BumpStrengthFactor => "BumpStrengthFactor";
 		public static string BumpDistance => "BumpDistance";

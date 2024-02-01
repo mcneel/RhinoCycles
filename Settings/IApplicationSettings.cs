@@ -23,6 +23,8 @@ namespace RhinoCyclesCore.Settings
 		int ThrottleMs { get; set; }
 		int Threads { get; set; }
 
+		bool ExperimentalCpuInMulti { get; set; }
+
 
 		int OpenClDeviceType { get; set; }
 		bool OpenClSingleProgram { get; set; }

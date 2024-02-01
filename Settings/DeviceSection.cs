@@ -13,11 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+using ccl;
 using Eto.Forms;
 using Rhino.Runtime;
 using Rhino.UI;
 using RhinoCyclesCore.Core;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -149,11 +151,21 @@ namespace RhinoCyclesCore.Settings
 			};
 		}
 
+		public ccl.DeviceType DeviceType { get; set; }
+
 		public void ClearSelection()
 		{
 			foreach(var di in m_col)
 			{
 				di.Selected = false;
+			}
+		}
+
+		public void SelectAll()
+		{
+			foreach(var di in m_col)
+			{
+				di.Selected = true;
 			}
 		}
 
@@ -169,8 +181,7 @@ namespace RhinoCyclesCore.Settings
 
 		public string DeviceSelectionString()
 		{
-			var selid = (from d in m_col where d.Selected select d.Id).DefaultIfEmpty(-1).First();
-			var str = $"{selid}";
+			var str = string.Join(",", (from d in m_col where d.Selected select d.Id).ToList());
 
 			return str;
 
@@ -290,6 +301,8 @@ namespace RhinoCyclesCore.Settings
 		private Slider m_threadcount;
 		private Label m_lb_threadcount_currentval;
 		private Label m_lb_gpusdisabled_message;
+		private Label m_lb_use_cpu_in_multi;
+		private CheckBox m_cb_enablecpu_in_multi;
 		private Button m_btn_enablegpus;
 		private Button m_btn_recompilekernels;
 		private Button m_btn_showcompilelog;
@@ -355,7 +368,7 @@ namespace RhinoCyclesCore.Settings
 			lb.Clear();
 			foreach (var d in ccl.Device.Devices)
 			{
-				if (d.Type == t)
+				if (d.Type == t && d.Type!=ccl.DeviceType.Multi)
 				{
 					var deviceCheck = RcCore.It.IsDeviceReady(d);
 					lb.Add(new DeviceItem { Text = d.NiceName, Selected = rd.HasId(d.Id), Id = (int)d.Id, Ready = deviceCheck.isDeviceReady });
@@ -404,6 +417,17 @@ namespace RhinoCyclesCore.Settings
 					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Value = e.AllSettings.Threads;
+					if (e.AllSettings.ExperimentalCpuInMulti)
+					{
+						m_lb_use_cpu_in_multi.Visible = m_currentDevice.IsGpu || m_currentDevice.IsMulti;
+						m_cb_enablecpu_in_multi.Visible = m_currentDevice.IsGpu || m_currentDevice.IsMulti;
+						m_cb_enablecpu_in_multi.Checked = m_currentDevice.MultiWithCpu;
+					} else {
+						m_lb_use_cpu_in_multi.Visible = false;
+						m_cb_enablecpu_in_multi.Visible = false;
+						m_cb_enablecpu_in_multi.Checked = false;
+
+					}
 					m_lb_gpusdisabled_message.Visible = Utilities.GpusDisabled && Utilities.HasGpus;
 					m_btn_enablegpus.Visible = Utilities.GpusDisabled && Utilities.HasGpus;
 					m_btn_recompilekernels.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;
@@ -420,27 +444,27 @@ namespace RhinoCyclesCore.Settings
 		{
 			m_tc = new TabControl();
 
-			m_tabpage_cpu = new GridDevicePage { Text = "CPU", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CPUSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Cpu category.", 24)};
-			m_tabpage_cuda = new GridDevicePage { Text = "CUDA", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CUDASvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Cuda category.\nThese are the NVidia graphics and compute cards.", 25) };
-			m_tabpage_optix = new GridDevicePage { Text = "Optix", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_OPTIXSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Optix category.\nThese are the NVidia graphics and compute cards from Maxwell architecture and newer.", 41) };
-			m_tabpage_metal = new GridDevicePage { Text = "Metal", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_AppleMetalLogoSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Metal category.\nThese include GPU devices on MacOS systems.", 26) };
-			m_tabpage_hip = new GridDevicePage { Text = "HIP", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_HIPSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the HIP category.\nThese include AMD GPU and supported devices.", 78) };
-			m_tabpage_oneapi = new GridDevicePage { Text = "OneAPI", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_OneAPISvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the OneAPI category.\nThese include Intel GPU and supported devices.", 79) };
+			m_tabpage_cpu = new GridDevicePage { DeviceType = ccl.DeviceType.Cpu, Text = "CPU", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CPUSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Cpu category.", 24) };
+			m_tabpage_cuda = new GridDevicePage { DeviceType = ccl.DeviceType.Cuda, Text = "CUDA", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CUDASvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Cuda category.\nThese are the NVidia graphics and compute cards.", 25) };
+			m_tabpage_optix = new GridDevicePage { DeviceType = ccl.DeviceType.Optix, Text = "Optix", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_OPTIXSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Optix category.\nThese are the NVidia graphics and compute cards from Maxwell architecture and newer.", 41) };
+			m_tabpage_metal = new GridDevicePage { DeviceType = ccl.DeviceType.Metal, Text = "Metal", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_AppleMetalLogoSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Metal category.\nThese include GPU devices on MacOS systems.", 26) };
+			m_tabpage_hip = new GridDevicePage { DeviceType = ccl.DeviceType.Hip, Text = "HIP", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_HIPSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the HIP category.\nThese include AMD GPU and supported devices.", 78) };
+			m_tabpage_oneapi = new GridDevicePage { DeviceType = ccl.DeviceType.OneApi, Text = "OneAPI", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_OneAPISvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the OneAPI category.\nThese include Intel GPU and supported devices.", 79) };
 
 			m_tc.Pages.Add(m_tabpage_cpu);
-			if(ccl.Device.CudaAvailable()) {
+			if (ccl.Device.CudaAvailable()) {
 				m_tc.Pages.Add(m_tabpage_cuda);
 			}
-			if(ccl.Device.OptixAvailable()) {
+			if (ccl.Device.OptixAvailable()) {
 				m_tc.Pages.Add(m_tabpage_optix);
 			}
-			if(ccl.Device.MetalAvailable()) {
+			if (ccl.Device.MetalAvailable()) {
 				m_tc.Pages.Add(m_tabpage_metal);
 			}
-			if(ccl.Device.HipAvailable()) {
+			if (ccl.Device.HipAvailable()) {
 				m_tc.Pages.Add(m_tabpage_hip);
 			}
-			if(ccl.Device.OneApiAvailable()) {
+			if (ccl.Device.OneApiAvailable()) {
 				m_tc.Pages.Add(m_tabpage_oneapi);
 			}
 
@@ -459,6 +483,16 @@ namespace RhinoCyclesCore.Settings
 			};
 			m_lb_threadcount = new Label { Text = Localization.LocalizeString("Cpu Utilization", 13), ToolTip = Localization.LocalizeString("Utilization percentage of Cpu to use when set as render device", 42) };
 			m_lb_threadcount_currentval = new Label { Text = "-" };
+
+			m_lb_use_cpu_in_multi = new Label
+			{
+				Text = LOC.STR("Enable CPU in Multi Device")
+			};
+			m_cb_enablecpu_in_multi = new CheckBox
+			{
+				ToolTip = LOC.STR("When one or more GPU is selected allow also usage of CPU")
+			};
+
 
 			m_lb_gpusdisabled_message = new Label
 			{
@@ -495,6 +529,7 @@ namespace RhinoCyclesCore.Settings
 				{
 					TableLayout.HorizontalScaled(spacing: 15, m_lb_curdev, m_curdev),
 					new StackLayoutItem(control: m_tc, expand: true),
+					TableLayout.HorizontalScaled(spacing: 15, null, m_lb_use_cpu_in_multi, m_cb_enablecpu_in_multi),
 					TableLayout.HorizontalScaled(spacing: 15, m_lb_threadcount, m_threadcount, m_lb_threadcount_currentval),
 					TableLayout.HorizontalScaled(spacing: 15, m_lb_gpusdisabled_message, m_btn_enablegpus),
 					TableLayout.Horizontal(spacing: 15, null, m_btn_recompilekernels, m_btn_showcompilelog),
@@ -537,6 +572,8 @@ namespace RhinoCyclesCore.Settings
 
 			m_btn_recompilekernels.Click += m_btn_recompilekernels_Clicked;
 			m_btn_showcompilelog.Click += m_btn_showcompilelog_Clicked;
+
+			m_cb_enablecpu_in_multi.CheckedChanged += M_cb_enablecpu_in_multi_CheckedChanged;
 		}
 
 		private void m_btn_enablegpus_Clicked(object sender, EventArgs e)
@@ -575,10 +612,10 @@ namespace RhinoCyclesCore.Settings
 			var nodev = "-";
 			if(m_currentDevice!=null)
 			{
-				if(m_currentDevice.Type != ccl.DeviceType.Optix)
-					m_curdev.Text = $"{m_currentDevice.NiceName} ({m_currentDevice.Type})";
-				else
-					m_curdev.Text = $"{m_currentDevice.NiceName}";
+					if (m_currentDevice.Type != ccl.DeviceType.Optix && m_currentDevice.Type != ccl.DeviceType.Multi)
+						m_curdev.Text = $"{m_currentDevice.NiceName} ({m_currentDevice.Type})";
+					else
+						m_curdev.Text = $"{m_currentDevice.NiceName}";
 			}
 			else
 			{
@@ -597,33 +634,80 @@ namespace RhinoCyclesCore.Settings
 			}
 		}
 
+		private GridDevicePage GetGridDevicePage(ccl.DeviceType type)
+		{
+			foreach (TabPage p in m_tc.Pages)
+			{
+				if (p is GridDevicePage page && page.DeviceType == type) { return page; }
+			}
+			return null;
+		}
+
+		private void M_cb_enablecpu_in_multi_CheckedChanged(object sender, EventArgs e)
+		{
+			UnRegisterControlEvents();
+			GridDevicePage cpuPage = GetGridDevicePage(ccl.DeviceType.Cpu);
+			if(cpuPage != null) {
+				if(m_cb_enablecpu_in_multi.Checked.Value) {
+					cpuPage.SelectAll();
+				} else {
+					cpuPage.ClearSelection();
+				}
+				SetCurrentDevice();
+			}
+			RegisterControlEvents();
+			It_InitialisationCompleted(this, EventArgs.Empty);
+		}
+
 		private void DeviceSelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			UnRegisterControlEvents();
+
+			bool stillUseCpu = m_currentDevice.MultiWithCpu && m_cb_enablecpu_in_multi.Checked.Value;
 
 			if (sender is GridDevicePage senderpage)
 			{
 				foreach (var page in m_tc.Pages)
 				{
-					if (page is GridDevicePage p) {
-						p.ClearSelection();
-						if(page == sender) {
-							p.SetSelected(e.DeviceItem);
+					if (page is GridDevicePage p)
+					{
+						if (p != senderpage && !(p.DeviceType == ccl.DeviceType.Cpu && stillUseCpu))
+						{
+							p.ClearSelection();
 						}
 					}
 				}
-				var vud = Settings;
-				if (vud != null)
-				{
-					var dev = ccl.Device.DeviceFromString(senderpage.DeviceSelectionString());
-					vud.IntermediateSelectedDeviceStr = dev.DeviceString;
-					vud.SelectedDeviceStr = vud.IntermediateSelectedDeviceStr;
-				}
+
+				SetCurrentDevice();
 			}
 
 			RegisterControlEvents();
 
 			It_InitialisationCompleted(this, EventArgs.Empty);
+		}
+
+		private void SetCurrentDevice()
+		{
+			var vud = Settings;
+			if (vud != null)
+			{
+				List<string> deviceSelectionStrings = new();
+				foreach (TabPage page in m_tc.Pages)
+				{
+					if (page is GridDevicePage p)
+					{
+						deviceSelectionStrings.Add(p.DeviceSelectionString());
+					}
+				}
+
+				deviceSelectionStrings = (from dss in deviceSelectionStrings where dss != "" select dss).ToList();
+
+				string deviceSelectionString = string.Join(",", deviceSelectionStrings);
+
+				var dev = ccl.Device.DeviceFromString(deviceSelectionString);
+				vud.IntermediateSelectedDeviceStr = dev.DeviceString;
+				vud.SelectedDeviceStr = vud.IntermediateSelectedDeviceStr;
+			}
 		}
 
 		private void UnRegisterControlEvents()
@@ -660,6 +744,8 @@ namespace RhinoCyclesCore.Settings
 
 			m_btn_recompilekernels.Click -= m_btn_recompilekernels_Clicked;
 			m_btn_showcompilelog.Click -= m_btn_showcompilelog_Clicked;
+
+			m_cb_enablecpu_in_multi.CheckedChanged -= M_cb_enablecpu_in_multi_CheckedChanged;
 		}
 	}
 }
