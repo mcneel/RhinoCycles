@@ -413,9 +413,9 @@ namespace RhinoCyclesCore.Settings
 					if(ccl.Device.HipAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_hip.Collection, ccl.DeviceType.Hip);
 					if(ccl.Device.OneApiAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_oneapi.Collection, ccl.DeviceType.OneApi);
 					ActivateDevicePage(e.AllSettings);
-					m_lb_threadcount.Visible = m_currentDevice.IsCpu || m_currentDevice.MultiWithCpu;
-					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu || m_currentDevice.MultiWithCpu;
-					m_threadcount.Visible = m_currentDevice.IsCpu || m_currentDevice.MultiWithCpu;
+					m_lb_threadcount.Visible = m_currentDevice.IsCpu;
+					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
+					m_threadcount.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Value = e.AllSettings.Threads;
 					m_lb_use_cpu_in_multi.Visible = m_currentDevice.IsGpu || m_currentDevice.IsMulti;
 					m_cb_enablecpu_in_multi.Visible = m_currentDevice.IsGpu || m_currentDevice.IsMulti;
