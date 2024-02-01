@@ -169,8 +169,7 @@ namespace RhinoCyclesCore.Settings
 
 		public string DeviceSelectionString()
 		{
-			var selid = (from d in m_col where d.Selected select d.Id).DefaultIfEmpty(-1).First();
-			var str = $"{selid}";
+			var str = string.Join(",", (from d in m_col where d.Selected select d.Id).ToList());
 
 			return str;
 
@@ -355,7 +354,7 @@ namespace RhinoCyclesCore.Settings
 			lb.Clear();
 			foreach (var d in ccl.Device.Devices)
 			{
-				if (d.Type == t)
+				if (d.Type == t && d.Type!=ccl.DeviceType.Multi)
 				{
 					var deviceCheck = RcCore.It.IsDeviceReady(d);
 					lb.Add(new DeviceItem { Text = d.NiceName, Selected = rd.HasId(d.Id), Id = (int)d.Id, Ready = deviceCheck.isDeviceReady });
@@ -575,10 +574,10 @@ namespace RhinoCyclesCore.Settings
 			var nodev = "-";
 			if(m_currentDevice!=null)
 			{
-				if(m_currentDevice.Type != ccl.DeviceType.Optix)
-					m_curdev.Text = $"{m_currentDevice.NiceName} ({m_currentDevice.Type})";
-				else
-					m_curdev.Text = $"{m_currentDevice.NiceName}";
+					if (m_currentDevice.Type != ccl.DeviceType.Optix && m_currentDevice.Type != ccl.DeviceType.Multi)
+						m_curdev.Text = $"{m_currentDevice.NiceName} ({m_currentDevice.Type})";
+					else
+						m_curdev.Text = $"{m_currentDevice.NiceName}";
 			}
 			else
 			{
@@ -606,10 +605,10 @@ namespace RhinoCyclesCore.Settings
 				foreach (var page in m_tc.Pages)
 				{
 					if (page is GridDevicePage p) {
-						p.ClearSelection();
-						if(page == sender) {
-							p.SetSelected(e.DeviceItem);
-						}
+						//p.ClearSelection();
+						//if(page == sender) {
+						//	p.SetSelected(e.DeviceItem);
+						//}
 					}
 				}
 				var vud = Settings;
