@@ -417,9 +417,17 @@ namespace RhinoCyclesCore.Settings
 					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Visible = m_currentDevice.IsCpu;
 					m_threadcount.Value = e.AllSettings.Threads;
-					m_lb_use_cpu_in_multi.Visible = m_currentDevice.IsGpu || m_currentDevice.IsMulti;
-					m_cb_enablecpu_in_multi.Visible = m_currentDevice.IsGpu || m_currentDevice.IsMulti;
-					m_cb_enablecpu_in_multi.Checked = m_currentDevice.MultiWithCpu;
+					if (e.AllSettings.ExperimentalCpuInMulti)
+					{
+						m_lb_use_cpu_in_multi.Visible = m_currentDevice.IsGpu || m_currentDevice.IsMulti;
+						m_cb_enablecpu_in_multi.Visible = m_currentDevice.IsGpu || m_currentDevice.IsMulti;
+						m_cb_enablecpu_in_multi.Checked = m_currentDevice.MultiWithCpu;
+					} else {
+						m_lb_use_cpu_in_multi.Visible = false;
+						m_cb_enablecpu_in_multi.Visible = false;
+						m_cb_enablecpu_in_multi.Checked = false;
+
+					}
 					m_lb_gpusdisabled_message.Visible = Utilities.GpusDisabled && Utilities.HasGpus;
 					m_btn_enablegpus.Visible = Utilities.GpusDisabled && Utilities.HasGpus;
 					m_btn_recompilekernels.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;

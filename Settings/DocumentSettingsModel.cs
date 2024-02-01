@@ -660,6 +660,12 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public bool ExperimentalCpuInMulti
+		{
+			get { return RcCore.It.AllSettings.ExperimentalCpuInMulti; }
+			set => throw new InvalidOperationException();
+		}
+
 
 		public int OpenClDeviceType
 		{
