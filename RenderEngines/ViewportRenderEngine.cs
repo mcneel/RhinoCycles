@@ -184,6 +184,18 @@ Please click the link below for more information.", 69));
 		}
 
 		/// <summary>
+		/// Get pixel size from settings. However when a multi device
+		/// is selected for rendering return 1.
+		/// </summary>
+		/// <returns></returns>
+		private int DeterminePixelSize()
+		{
+			int pixelSize = Math.Max(1, RcCore.It.AllSettings.PixelSize);
+
+			return RenderDevice.IsMulti ? 1 : pixelSize;
+		}
+
+		/// <summary>
 		/// Entry point for viewport interactive rendering
 		/// </summary>
 		public void Renderer()
@@ -237,7 +249,7 @@ Please click the link below for more information.", 69));
 
 			#region set up session parameters
 			ThreadCount = (RenderDevice.IsCpu ? eds.Threads : 0);
-			int pixelSize = Math.Max(1, RcCore.It.AllSettings.PixelSize);
+			int pixelSize = DeterminePixelSize();
 			var sessionParams = new SessionParameters(RenderDevice)
 			{
 				Experimental = false,
@@ -247,7 +259,7 @@ Please click the link below for more information.", 69));
 				ShadingSystem = ShadingSystem.SVM,
 				Background = false,
 				PixelSize = pixelSize,
-				UseResolutionDivider = true,
+				UseResolutionDivider = !RenderDevice.IsMulti,
 			};
 			#endregion
 
