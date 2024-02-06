@@ -151,7 +151,6 @@ namespace CyclesForRhino.CyclesForRhino
 				List<RenderWindow.StandardChannels> reqChanList = requestedChannels
 						.Distinct()
 						.Where(chan =>
-								chan != StandardChannels.AlbedoRGB &&
 								chan != StandardChannels.WireframeAnnotationsRGBA &&
 								chan != StandardChannels.WireframeCurvesRGBA &&
 								chan != StandardChannels.WireframeIsocurvesRGBA &&

@@ -189,7 +189,6 @@ namespace RhinoCycles.Viewport
 
 			List<RenderWindow.StandardChannels> reqChanList = requestedChannels
 					.Distinct()
-					.Where(chan => chan != RenderWindow.StandardChannels.AlbedoRGB)
 					.ToList();
 
 			foreach(var reqChan in reqChanList) {
