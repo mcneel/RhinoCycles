@@ -92,7 +92,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 			List<RenderWindow.StandardChannels> reqChanList = requestedChannels
 					.Distinct()
-					.Where(chan => chan != RenderWindow.StandardChannels.AlbedoRGB)
 					.ToList();
 			List<ccl.PassType> reqPassTypes = reqChanList
 					.Select(chan => PassTypeForStandardChannel(chan))

@@ -215,7 +215,6 @@ Please click the link below for more information.", 69));
 			var requestedChannels = rw.GetRequestedRenderChannelsAsStandardChannels();
 
 			List<ccl.PassType> reqPassTypes = requestedChannels
-					.Where(chan => chan != Rhino.Render.RenderWindow.StandardChannels.AlbedoRGB)
 					.Select(chan => PassTypeForStandardChannel(chan))
 					.Distinct()
 					.ToList();
