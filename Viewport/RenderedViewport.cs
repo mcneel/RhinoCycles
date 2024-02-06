@@ -527,7 +527,7 @@ namespace RhinoCycles.Viewport
 			else
 			{
 				var state = _cycles?.State ?? State.Stopped;
-				rc = state == State.Rendering && _frameAvailable && _samples == _maxSamples;
+				rc = state == State.Rendering && _frameAvailable && _samples >= _maxSamples;
 			}
 			return rc;
 		}
