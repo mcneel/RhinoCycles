@@ -1191,11 +1191,9 @@ namespace RhinoCyclesCore.Database
 				// important to ever so slightly move around the objects - to jiggle
 				// them.
 				var obxform = Jiggle(a);
-				int passobid = (int)RhinoMath.CRC32(0x0ff0beeb, a.ObjectAttributes.ObjectId.ToByteArray());
 				var ob = new CyclesObject
 				{
 					obid = a.InstanceId,
-					passobid = passobid,
 					meshid = meshid,
 					Transform = obxform.ToCyclesTransform(),
 					OcsFrame = t,
@@ -1432,7 +1430,6 @@ namespace RhinoCyclesCore.Database
 			var cyclesObject = new CyclesObject
 			{
 				matid = matrenderhash,
-				passobid = 0x0ff0beeb,
 				obid = GroundPlaneMeshInstanceId,
 				meshid = gpid,
 				Transform = t,
@@ -1745,12 +1742,10 @@ namespace RhinoCyclesCore.Database
 
 			HandleMeshData(ld.Id, 0, mesh, null, false, matid, t);
 
-			int passobid = (int)RhinoMath.CRC32(0x0ff0beeb, ld.Id.ToByteArray());
 
 			var lightObject = new CyclesObject
 			{
 				matid = matid,
-				passobid = passobid,
 				obid = lightmeshinstanceid,
 				meshid = ldid,
 				Transform = t,

@@ -58,7 +58,7 @@ namespace RhinoCyclesCore
 		public uint Id { get; }
 		public int PassId {
 			get {
-				int passid = (int)(Id & 0x00ff);
+				int passid = (int)(Id & 0x07fff);
 				return passid;
 			}
 		}
