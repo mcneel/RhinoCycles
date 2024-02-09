@@ -826,7 +826,11 @@ namespace RhinoCyclesCore.Database
 				{
 					// Do not add meshes that have no vertices. Adding them will only
 					// prime Cycles for crashes when shaders are changed later.
-					if (meshdata.Vertices.Count == 0) continue;
+					if (meshdata.Vertices.Count < 3)
+					{
+						RcCore.It.AddLogStringIfVerbose($"ApplyMeshChanges. skipping mesh with fewer than 3 vertices {meshguid}+{meshIndex}");
+						continue;
+					}
 
 					if (_renderEngine.ShouldBreak) return;
 
