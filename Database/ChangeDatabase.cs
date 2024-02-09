@@ -411,13 +411,18 @@ namespace RhinoCyclesCore.Database
 		/// <returns>True if changes where recorded, false otherwise.</returns>
 		public bool HasChanges()
 		{
+			bool cameraChanges = _cameraDatabase.HasChanges();
+			bool lightChanges = _lightDatabase.HasChanges();
+			bool shaderChanges = _shaderDatabase.HasChanges();
+			bool objectChanges = _objectDatabase.HasChanges();
+			RcCore.It.AddLogString($"ChangeDatabase.HasChanges\n\tview: {cameraChanges}\n\tlight: {lightChanges}\n\tshader: {shaderChanges}\n\tobject: {objectChanges}\n\tclipping planes: {HasClippingPlaneChanges}\n\tbackground: {_environmentDatabase.BackgroundHasChanged}\n\tlwf: {LinearWorkflowHasChanged}\n\tdisplay attr: {DisplayPipelineAttributesChanged}");
 			return
 				HasClippingPlaneChanges ||
-				_cameraDatabase.HasChanges() ||
+				cameraChanges ||
 				_environmentDatabase.BackgroundHasChanged ||
-				_lightDatabase.HasChanges() ||
-				_shaderDatabase.HasChanges() ||
-				_objectDatabase.HasChanges() ||
+				lightChanges ||
+				shaderChanges ||
+				objectChanges ||
 				LinearWorkflowHasChanged ||
 				DisplayPipelineAttributesChanged;
 		}

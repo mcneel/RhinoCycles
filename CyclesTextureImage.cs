@@ -121,6 +121,7 @@ namespace RhinoCyclesCore
 			TexWidth = 0;
 			TexHeight = 0;
 			Name = "";
+			Filename = "";
 			UseAlpha = false;
 			Amount = 0.0f;
 		}
