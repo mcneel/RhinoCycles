@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using Rhino.DocObjects;
+using RhinoCyclesCore.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,7 +87,9 @@ namespace RhinoCyclesCore.Database
 		/// <returns></returns>
 		public bool HasChanges()
 		{
-			return _cqViewChanges.Any() || _focalBlurModified;
+			bool anyVpChanges = _cqViewChanges.Any();
+			RcCore.It.AddLogString($"CameraDatabase.HasChanges\n\tview changes: {anyVpChanges}\n\tfocal blur modified: {_focalBlurModified} ");
+			return anyVpChanges || _focalBlurModified;
 		}
 
 		/// <summary>

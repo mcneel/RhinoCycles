@@ -413,53 +413,61 @@ namespace RhinoCyclesCore
 			switch (usage)
 			{
 				case RenderSettings.EnvironmentUsage.Background:
-
-					if (BackgroundEnvironment != null)
 					{
-						simenv = BackgroundEnvironment.SimulateEnvironment(true);
-						if (simenv != null)
-						{
-							BgColor = simenv.BackgroundColor;
-						}
-
-						_bitmapConverter.EnvironmentBitmapFromEvaluator(BackgroundEnvironment, BgTexture, Gamma, _docsrn);
-					}
-					else
-					{
-						BgColor = Color.Empty;
 						BgTexture.Clear();
+						if (BackgroundEnvironment != null)
+						{
+							simenv = BackgroundEnvironment.SimulateEnvironment(true);
+							if (simenv != null)
+							{
+								BgColor = simenv.BackgroundColor;
+							}
+
+							_bitmapConverter.EnvironmentBitmapFromEvaluator(BackgroundEnvironment, BgTexture, Gamma, _docsrn);
+						}
+						else
+						{
+							BgColor = Color.Empty;
+							BgTexture.Clear();
+						}
 					}
 					break;
 				case RenderSettings.EnvironmentUsage.Skylighting:
-					if (SkylightEnvironment != null)
 					{
-						simenv = SkylightEnvironment.SimulateEnvironment(true);
-						if (simenv != null)
-						{
-							SkyColor = simenv.BackgroundColor;
-						}
-						_bitmapConverter.EnvironmentBitmapFromEvaluator(SkylightEnvironment, SkyTexture, Gamma, _docsrn);
-					}
-					else
-					{
-						SkyColor = Color.Empty;
 						SkyTexture.Clear();
+						if (SkylightEnvironment != null)
+						{
+							simenv = SkylightEnvironment.SimulateEnvironment(true);
+							if (simenv != null)
+							{
+								SkyColor = simenv.BackgroundColor;
+							}
+							_bitmapConverter.EnvironmentBitmapFromEvaluator(SkylightEnvironment, SkyTexture, Gamma, _docsrn);
+						}
+						else
+						{
+							SkyColor = Color.Empty;
+							SkyTexture.Clear();
+						}
 					}
 					break;
 				case RenderSettings.EnvironmentUsage.Reflection:
-					if (ReflectionEnvironment != null)
 					{
-						simenv = ReflectionEnvironment.SimulateEnvironment(true);
-						if (simenv != null)
-						{
-							ReflectionColor = simenv.BackgroundColor;
-						}
-						_bitmapConverter.EnvironmentBitmapFromEvaluator(ReflectionEnvironment, ReflectionTexture, Gamma, _docsrn);
-					}
-					else
-					{
-						ReflectionColor = Color.Empty;
 						ReflectionTexture.Clear();
+						if (ReflectionEnvironment != null)
+						{
+							simenv = ReflectionEnvironment.SimulateEnvironment(true);
+							if (simenv != null)
+							{
+								ReflectionColor = simenv.BackgroundColor;
+							}
+							_bitmapConverter.EnvironmentBitmapFromEvaluator(ReflectionEnvironment, ReflectionTexture, Gamma, _docsrn);
+						}
+						else
+						{
+							ReflectionColor = Color.Empty;
+							ReflectionTexture.Clear();
+						}
 					}
 					break;
 			}
