@@ -296,11 +296,13 @@ Please click the link below for more information.", 67));
 		public void ResumeRendering()
 		{
 			State = State.Rendering;
+			Session.SetPause(false);
 		}
 
 		public void PauseRendering()
 		{
 			State = State.Waiting;
+			Session.SetPause(true);
 		}
 
 
