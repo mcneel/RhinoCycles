@@ -486,11 +486,11 @@ namespace RhinoCyclesCore.Settings
 
 			m_lb_use_cpu_in_multi = new Label
 			{
-				Text = LOC.STR("Enable CPU in Multi Device")
+				Text = Localization.LocalizeString("Enable CPU in Multi Device", 47)
 			};
 			m_cb_enablecpu_in_multi = new CheckBox
 			{
-				ToolTip = LOC.STR("When one or more GPU is selected allow also usage of CPU")
+				ToolTip = Localization.LocalizeString("When one or more GPU is selected allow also usage of CPU", 48)
 			};
 
 
