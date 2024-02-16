@@ -1893,7 +1893,7 @@ namespace RhinoCyclesCore.Database
 				// set mesh reference and other stuff
 				cob.Mesh = mesh;
 				cob.RandomId = ob.obid;
-				cob.PassId = (int)ob.obid;
+				cob.PassId = ob.passobid;
 				cob.Transform = ob.Transform;
 				cob.OcsFrame = t;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
