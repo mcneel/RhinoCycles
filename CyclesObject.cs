@@ -106,16 +106,9 @@ namespace RhinoCyclesCore
 		{
 			if (!disposedValue)
 			{
-				if (disposing)
-				{
-					if(Decals!=null)
-					{
-						foreach(CyclesDecal cyclesDecal in Decals)
-						{
-							cyclesDecal.Dispose();
-						}
-					}
-				}
+				// Don't dispose decals here, since they
+				// are also referenced by CyclesShader instances
+				// See RH-80480. /Nathan 2024.02.19
 
 				disposedValue = true;
 			}
