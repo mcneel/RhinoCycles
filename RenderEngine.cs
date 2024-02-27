@@ -426,6 +426,12 @@ namespace RhinoCyclesCore
 		  return true;
 		}
 
+		// Object to lock while uploading data to the session
+		// This is needed to ensure we don't pull out the session
+		// while still uploading the data. So this is used in data upload
+		// and is tried to be acquired in StopTheRenderer.
+		protected object UploadDataLock = new();
+
 		/// <summary>
 		/// Call to cancel rendering, stop and destroy the session, and change state to Stopped. At the start
 		/// state is changed to Stopping
@@ -434,6 +440,15 @@ namespace RhinoCyclesCore
 		{
 			RcCore.It.AddLogStringIfVerbose("StopTheRenderer entry");
 			State = State.Stopping;
+
+			RcCore.It.AddLogStringIfVerbose("StopTheRenderer, acquire UploadData lock...");
+			// Try to get the lock. If we can't get it, we're still uploading data, so wait
+			// for the upload to finish. Once we can get the lock, we know that no other actor
+			// is uploading data, so we can just unlock and continue with the teardown.
+			lock(UploadDataLock)
+			{
+				RcCore.It.AddLogStringIfVerbose("StopTheRenderer, UploadData lock acquired");
+			}
 
 			// try to get scene lock. Necessary since UploadData might still be writing to
 			// the session. Wait for it to react to state being set to Stopping.
