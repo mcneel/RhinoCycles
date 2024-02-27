@@ -38,78 +38,86 @@ namespace RhinoCyclesCore
 		protected bool UploadData()
 		{
 			RcCore.It.AddLogStringIfVerbose("UploadData entry");
-			if (ShouldBreak) return false;
+			RcCore.It.AddLogStringIfVerbose("UploadData locking UploadDataLock");
+			// lock the upload data lock so we can upload data, and ensure we
+			// don't terminate the underlying Cycles session while data is still
+			// being uploaded.
+			lock (UploadDataLock)
+			{
+				RcCore.It.AddLogStringIfVerbose("UploadData lock acquired, uploading...");
+				if (ShouldBreak) return false;
 
-			Database.UploadDisplayPipelineAttributesChanges();
-			Database.UploadIntegratorChanges();
+				Database.UploadDisplayPipelineAttributesChanges();
+				Database.UploadIntegratorChanges();
 
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.1f, "Start data upload"));
+				UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.1f, "Start data upload"));
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			Database.UploadClippingPlaneChanges();
+				Database.UploadClippingPlaneChanges();
 
-			// linear workflow & gamma changes
-			Database.UploadGammaChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.2f, "Linear workflow (gamma changes) uploaded"));
+				// linear workflow & gamma changes
+				Database.UploadGammaChanges();
+				UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.2f, "Linear workflow (gamma changes) uploaded"));
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			// environment changes
-			Database.UploadEnvironmentChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.3f, "Environments uploaded"));
+				// environment changes
+				Database.UploadEnvironmentChanges();
+				UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.3f, "Environments uploaded"));
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			// transforms on objects, no geometry changes
-			Database.UploadDynamicObjectTransforms();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.4f, "Dynamic object transforms uploaded"));
+				// transforms on objects, no geometry changes
+				Database.UploadDynamicObjectTransforms();
+				UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.4f, "Dynamic object transforms uploaded"));
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			// viewport changes
-			Database.UploadCameraChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.5f, "Viewport uploaded"));
+				// viewport changes
+				Database.UploadCameraChanges();
+				UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.5f, "Viewport uploaded"));
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			// new shaders we've got
-			Database.UploadShaderChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.6f, "Shaders uploaded"));
+				// new shaders we've got
+				Database.UploadShaderChanges();
+				UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.6f, "Shaders uploaded"));
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			// mesh changes (new ones, updated ones)
-			Database.UploadMeshChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.8f, "Mesh data uploaded"));
+				// mesh changes (new ones, updated ones)
+				Database.UploadMeshChanges();
+				UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.8f, "Mesh data uploaded"));
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			// light changes
-			Database.UploadLightChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.7f, "Lights uploaded"));
+				// light changes
+				Database.UploadLightChanges();
+				UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.7f, "Lights uploaded"));
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			// object changes (new ones, deleted ones)
-			Database.UploadObjectChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(1.0f, "Object changes uploaded"));
+				// object changes (new ones, deleted ones)
+				Database.UploadObjectChanges();
+				UploadProgress?.Invoke(this, new UploadProgressEventArgs(1.0f, "Object changes uploaded"));
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			// shader changes on objects (replacement)
-			Database.UploadObjectShaderChanges();
-			UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.9f, "Shader assignments uploaded"));
+				// shader changes on objects (replacement)
+				Database.UploadObjectShaderChanges();
+				UploadProgress?.Invoke(this, new UploadProgressEventArgs(0.9f, "Shader assignments uploaded"));
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			// done, now clear out our change queue stuff so we're ready for the next time around :)
-			Database.ResetChangeQueue();
+				// done, now clear out our change queue stuff so we're ready for the next time around :)
+				Database.ResetChangeQueue();
 
-			if (ShouldBreak) return false;
+				if (ShouldBreak) return false;
 
-			RcCore.It.AddLogStringIfVerbose("UploadData exit");
-			return true;
+				RcCore.It.AddLogStringIfVerbose("UploadData exit");
+				return true;
+			}
 		}
 	}
 }
