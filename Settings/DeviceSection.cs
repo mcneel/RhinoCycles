@@ -89,7 +89,8 @@ namespace RhinoCyclesCore.Settings
 		protected override void OnPaint(PaintEventArgs e)
 		{
 			base.OnPaint(e);
-			Draw(e.Graphics, e.ClipRectangle);
+			// RH-80737: eirannejad (2024-03-01)
+			Draw(e.Graphics, new Eto.Drawing.RectangleF(this.Size));
 		}
 
 		void OnPropertyChanged([CallerMemberName] string memberName = null)
