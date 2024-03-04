@@ -118,8 +118,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="rm"></param>
 		/// <param name="teximg"></param>
 		/// <param name="gamma"></param>
-		/// <param name="floatAsByte"></param>
-		public void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma, uint docsrn = 0)
+		public void EnvironmentBitmapFromEvaluator(RenderEnvironment rm, CyclesTextureImage teximg, float gamma, uint docsrn = 0, string simfilename = "")
 		{
 			RenderTexture renderTexture = null;
 
@@ -136,7 +135,7 @@ namespace RhinoCyclesCore.Converters
 				return;
 			}
 
-			if (renderTexture.IsImageBased())
+			if (renderTexture.IsImageBased() || simfilename.Length > 0)
 			{
 				Field tf = renderTexture.Fields.GetField("filename");
 				var fs = "";
@@ -145,6 +144,7 @@ namespace RhinoCyclesCore.Converters
 					RhinoDoc doc = rm.DocumentAssoc;
 					fs = Rhino.Render.Utilities.FindFile(doc, ofs, true);
 				}
+				fs = string.IsNullOrEmpty(fs) ? simfilename : fs;
 
 				teximg.Filename = string.IsNullOrEmpty(fs) ? null : fs;
 			} else {
