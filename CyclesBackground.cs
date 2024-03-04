@@ -408,7 +408,6 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public void HandleEnvironments(RenderSettings.EnvironmentUsage usage)
 		{
-			RhinoDoc rhinoDoc = RhinoDoc.FromRuntimeSerialNumber(_docsrn);
 			SimulatedEnvironment simenv;
 			switch (usage)
 			{
@@ -418,12 +417,17 @@ namespace RhinoCyclesCore
 						if (BackgroundEnvironment != null)
 						{
 							simenv = BackgroundEnvironment.SimulateEnvironment(true);
+							string envfn = "";
 							if (simenv != null)
 							{
 								BgColor = simenv.BackgroundColor;
+								if(simenv.BackgroundImage != null)
+								{
+									envfn = simenv.BackgroundImage.Filename;
+								}
 							}
 
-							_bitmapConverter.EnvironmentBitmapFromEvaluator(BackgroundEnvironment, BgTexture, Gamma, _docsrn);
+							_bitmapConverter.EnvironmentBitmapFromEvaluator(BackgroundEnvironment, BgTexture, Gamma, _docsrn, envfn);
 						}
 						else
 						{
@@ -438,11 +442,16 @@ namespace RhinoCyclesCore
 						if (SkylightEnvironment != null)
 						{
 							simenv = SkylightEnvironment.SimulateEnvironment(true);
+							string envfn = "";
 							if (simenv != null)
 							{
 								SkyColor = simenv.BackgroundColor;
+								if(simenv.BackgroundImage != null)
+								{
+									envfn = simenv.BackgroundImage.Filename;
+								}
 							}
-							_bitmapConverter.EnvironmentBitmapFromEvaluator(SkylightEnvironment, SkyTexture, Gamma, _docsrn);
+							_bitmapConverter.EnvironmentBitmapFromEvaluator(SkylightEnvironment, SkyTexture, Gamma, _docsrn, envfn);
 						}
 						else
 						{
@@ -457,11 +466,16 @@ namespace RhinoCyclesCore
 						if (ReflectionEnvironment != null)
 						{
 							simenv = ReflectionEnvironment.SimulateEnvironment(true);
+							string envfn = "";
 							if (simenv != null)
 							{
 								ReflectionColor = simenv.BackgroundColor;
+								if(simenv.BackgroundImage != null)
+								{
+									envfn = simenv.BackgroundImage.Filename;
+								}
 							}
-							_bitmapConverter.EnvironmentBitmapFromEvaluator(ReflectionEnvironment, ReflectionTexture, Gamma, _docsrn);
+							_bitmapConverter.EnvironmentBitmapFromEvaluator(ReflectionEnvironment, ReflectionTexture, Gamma, _docsrn, envfn);
 						}
 						else
 						{
