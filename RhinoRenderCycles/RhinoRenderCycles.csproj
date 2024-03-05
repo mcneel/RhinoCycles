@@ -34,17 +34,17 @@
       <Name>RhinoCyclesCore</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj">
+    <ProjectReference Include="..\..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj" ExcludeAssets="all">
       <Project>{35EF0A4E-2A1A-492C-8BED-106774EA09F2}</Project>
       <Name>Eto</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj">
+    <ProjectReference Include="..\..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj" ExcludeAssets="all">
       <Project>{3D7C4CFA-38E3-46ED-A689-862A34F6656C}</Project>
       <Name>Rhino.UI</Name>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj">
+    <ProjectReference Include="..\..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj" ExcludeAssets="all">
       <Project>{ED38373E-290C-4BDE-ACBA-1601484E582A}</Project>
       <Name>RhinoCommon</Name>
       <Private>False</Private>
