@@ -56,116 +56,127 @@ namespace RhinoCyclesCore.RenderEngines
 		/// <param name="oPipe"></param>
 		public static void Renderer(object oPipe)
 		{
-			var cyclesEngine = (PreviewRenderEngine)oPipe;
-			cyclesEngine.Success = false;
-
-			var size = cyclesEngine.RenderDimension;
-			cyclesEngine.PreviewSamples = Math.Max(1, RcCore.It.AllSettings.PreviewSamples);
-			cyclesEngine.MaxSamples = cyclesEngine.PreviewSamples;
-
-#region pick a render device
-			(bool isReady, Device renderDevice) = RcCore.It.IsDeviceReady(RcCore.It.AllSettings.RenderDevice);
-			cyclesEngine.IsFallbackRenderDevice = !isReady;
-#endregion
-
-			if (cyclesEngine.CancelRender) return;
-
-			var gpusize = TileSize(renderDevice);
-			uint threads = renderDevice.IsGpu ? 0u : (uint)RcCore.It.AllSettings.Threads;
-
-			int pixelSize = 1; // Don't use pixel size for now, see  below on SetRenderOutputRect. Math.Max(1, RcCore.It.AllSettings.PixelSize);
-			
-			/* HUOM disable SetRenderOutputRect usage for now since this doesn't seem to be
-			 * working properly in previews
-			 * 
-			cyclesEngine.PixelSize = pixelSize;
-			cyclesEngine.RenderWindow.SetRenderOutputRect(
-				new Rectangle(0, 0, size.Width / pixelSize, size.Height / pixelSize)
-			);
-			*/
-
-			#region set up session parameters
-			var sessionParams = new SessionParameters(renderDevice)
+			lock (RcCore.It.PreviewRendererLock)
 			{
-				Experimental = false,
-				Samples = cyclesEngine.MaxSamples,
-				TileSize = gpusize,
-				Threads = threads,
-				ShadingSystem = ShadingSystem.SVM,
-				Background = false,
-				PixelSize =pixelSize, 
-				UseResolutionDivider = false,
-			};
-#endregion
+				var cyclesEngine = (PreviewRenderEngine)oPipe;
+				cyclesEngine.Success = false;
 
-			if (cyclesEngine.CancelRender) return;
+				var size = cyclesEngine.RenderDimension;
+				cyclesEngine.PreviewSamples = Math.Max(1, RcCore.It.AllSettings.PreviewSamples);
+				cyclesEngine.MaxSamples = cyclesEngine.PreviewSamples;
 
-#region create session for scene
-			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
-#endregion
+				#region pick a render device
+				(bool isReady, Device renderDevice) = RcCore.It.IsDeviceReady(RcCore.It.AllSettings.RenderDevice);
+				cyclesEngine.IsFallbackRenderDevice = !isReady;
+				#endregion
 
-			cyclesEngine.Session.AddPass(PassType.Combined);
-
-			// main render loop
-			cyclesEngine.Database.Flush();
-			cyclesEngine.Session.WaitUntilLocked();
-			cyclesEngine.UploadData();
-			cyclesEngine.Session.Unlock();
-
-			bool renderSuccess = true;
-
-			cyclesEngine.Session.Reset(
-				width: size.Width,
-				height: size.Height,
-				samples: cyclesEngine.MaxSamples,
-				full_x: 0,
-				full_y: 0,
-				full_width: size.Width,
-				full_height: size.Height,
-				pixel_size: pixelSize);
-			cyclesEngine.Session.Start();
-
-			while (!cyclesEngine.Finished)
-			{
-				if (!cyclesEngine.ShouldBreak)
+				if (cyclesEngine.CancelRender)
 				{
-					cyclesEngine.UpdateCallback(cyclesEngine.Session.Id);
+					RcCore.It.AddLogStringIfVerbose("Preview render cancelled. Exit before rendering, 1");
+					return;
+				}
 
-					if (cyclesEngine.RenderedSamples == -13)
+				var gpusize = TileSize(renderDevice);
+				uint threads = renderDevice.IsGpu ? 0u : (uint)RcCore.It.AllSettings.Threads;
+
+				int pixelSize = 1; // Don't use pixel size for now, see  below on SetRenderOutputRect. Math.Max(1, RcCore.It.AllSettings.PixelSize);
+
+				/* HUOM disable SetRenderOutputRect usage for now since this doesn't seem to be
+				 * working properly in previews
+				 *
+				cyclesEngine.PixelSize = pixelSize;
+				cyclesEngine.RenderWindow.SetRenderOutputRect(
+					new Rectangle(0, 0, size.Width / pixelSize, size.Height / pixelSize)
+				);
+				*/
+
+				#region set up session parameters
+				var sessionParams = new SessionParameters(renderDevice)
+				{
+					Experimental = false,
+					Samples = cyclesEngine.MaxSamples,
+					TileSize = gpusize,
+					Threads = threads,
+					ShadingSystem = ShadingSystem.SVM,
+					Background = false,
+					PixelSize = pixelSize,
+					UseResolutionDivider = false,
+				};
+				#endregion
+
+				if (cyclesEngine.CancelRender)
+				{
+					RcCore.It.AddLogStringIfVerbose("Preview render cancelled. Exit before rendering, 2");
+					return;
+				}
+
+				#region create session for scene
+				cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
+				#endregion
+
+				cyclesEngine.Session.AddPass(PassType.Combined);
+
+				// main render loop
+				cyclesEngine.Database.Flush();
+				cyclesEngine.Session.WaitUntilLocked();
+				cyclesEngine.UploadData();
+				cyclesEngine.Session.Unlock();
+
+				bool renderSuccess = true;
+
+				cyclesEngine.Session.Reset(
+					width: size.Width,
+					height: size.Height,
+					samples: cyclesEngine.MaxSamples,
+					full_x: 0,
+					full_y: 0,
+					full_width: size.Width,
+					full_height: size.Height,
+					pixel_size: pixelSize);
+				cyclesEngine.Session.Start();
+
+				while (!cyclesEngine.Finished)
+				{
+					if (!cyclesEngine.ShouldBreak)
 					{
-						cyclesEngine.Success = false;
-						renderSuccess = false;
-						cyclesEngine.Finished = true;
+						cyclesEngine.UpdateCallback(cyclesEngine.Session.Id);
+
+						if (cyclesEngine.RenderedSamples == -13)
+						{
+							cyclesEngine.Success = false;
+							renderSuccess = false;
+							cyclesEngine.Finished = true;
+						}
+
+						cyclesEngine.UpdatePreview();
+
+						Thread.Sleep(50);
 					}
-
+					else
+					{
+						cyclesEngine.Session.QuickCancel();
+						break;
+					}
+					if (cyclesEngine.PreviewEventArgs.Cancel)
+					{
+						cyclesEngine.State = State.Stopping;
+						cyclesEngine.CancelRender = true;
+					}
+				}
+				if (renderSuccess)
+				{
 					cyclesEngine.UpdatePreview();
+				}
 
-					Thread.Sleep(50);
-				}
-				else
-				{
-					cyclesEngine.Session.QuickCancel();
-					break;
-				}
-				if (cyclesEngine.PreviewEventArgs.Cancel)
-				{
-					cyclesEngine.State = State.Stopping;
-					cyclesEngine.CancelRender = true;
-				}
+				cyclesEngine.StopTheRenderer();
+
+				cyclesEngine?.Database.ResetChangeQueue();
+
+				cyclesEngine.Success = renderSuccess;
+
+				// we're done now, so lets clean up our session.
+				cyclesEngine.Dispose();
 			}
-			if (renderSuccess)
-			{
-				cyclesEngine.UpdatePreview();
-			}
-
-			cyclesEngine.StopTheRenderer();
-
-			cyclesEngine?.Database.ResetChangeQueue();
-
-			cyclesEngine.Success = renderSuccess;
-
-			// we're done now, so lets clean up our session.
-			cyclesEngine.Dispose();
 		}
 
 		public void UpdatePreview()

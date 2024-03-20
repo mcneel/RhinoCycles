@@ -201,6 +201,7 @@ Please click the link below for more information.", 69));
 		public void Renderer()
 		{
 			RcCore.It.AddLogString("ViewportRenderEngine.Renderer entry");
+			RcCore.It.StartLogStopwatch("ViewportRenderEngine.Renderer entry", RcCore.StopwatchType.Viewport);
 			Locked = false;
 
 			var doc = RhinoDoc.FromRuntimeSerialNumber(m_doc_serialnumber);
@@ -400,6 +401,7 @@ Please click the link below for more information.", 69));
 				Database.ResetChangeQueue();
 			}
 			RcCore.It.AddLogString("ViewportRenderEngine.Renderer exit");
+			RcCore.It.AddLogString("ViewportRenderEngine.Renderer exit", RcCore.StopwatchType.Viewport);
 		}
 
 		/// <summary>
@@ -433,7 +435,7 @@ Please click the link below for more information.", 69));
 			}
 			else if(!CancelRender && ! HasSceneChanges()) {
 				_needReset = false;
-				RcCore.It.AddLogString("ChekFlushQueue HasSceneChanges() returned FALSE\n\tSKIPPNG DATA UPLOAD"); 
+				RcCore.It.AddLogString("ChekFlushQueue HasSceneChanges() returned FALSE\n\tSKIPPNG DATA UPLOAD");
 			}
 		}
 

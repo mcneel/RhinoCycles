@@ -89,6 +89,7 @@ namespace CyclesForRhino.CyclesForRhino
 
 		private Result RenderWithCycles(RhinoDoc doc, RunMode mode, Rectangle rect, bool inWindow, bool fastPreview)
 		{
+			RcCore.It.StartLogStopwatch("RenderWithCycles", RcCore.StopwatchType.Render);
 			RcCore.It.StartLogStopwatch("RenderWithCycles");
 			RcCore.It.AddLogString("RenderWithCycles entry");
 			var rc = RenderPipeline.RenderReturnCode.InternalError;
@@ -214,6 +215,7 @@ namespace CyclesForRhino.CyclesForRhino
 		/// <param name="scene">The scene description to render, along with the requested quality setting</param>
 		protected override void CreatePreview(CreatePreviewEventArgs scene)
 		{
+			RcCore.It.StartLogStopwatch($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id}", RcCore.StopwatchType.Preview);
 			RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} entry");
 			scene.SkipInitialisation();
 
@@ -254,6 +256,7 @@ namespace CyclesForRhino.CyclesForRhino
 
 			engine.RenderWindow.Dispose();
 			RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} exit");
+			RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} exit", RcCore.StopwatchType.Preview);
 		}
 
 		public override void RenderSettingsCustomSections(List<ICollapsibleSection> sections) {
