@@ -234,6 +234,7 @@ namespace RhinoCyclesCore.Core
 
 		public void ReleaseActiveSessions()
 		{
+			WaitUntilLockedThenUnlockPreviewRendererLock();
 			var sessions = active_sessions.Values.ToList();
 			foreach (var session in sessions)
 			{
@@ -314,6 +315,18 @@ namespace RhinoCyclesCore.Core
 			foreach(Device device in Device.Devices)
 			{
 				gpuDevicesReadiness.Add((new (device, GenerateGpuDeviceInfo(device)), device.IsCpu));
+			}
+		}
+
+		/// <summary>
+		/// Lock to be used for protecting preview render engine usage
+		/// </summary>
+		public readonly object PreviewRendererLock = new object();
+		public void WaitUntilLockedThenUnlockPreviewRendererLock()
+		{
+			lock(PreviewRendererLock)
+			{
+				RcCore.It.AddLogStringIfVerbose("WaitUntilLockedThenUnlockPreviewRenderer: locked");
 			}
 		}
 
@@ -852,7 +865,7 @@ namespace RhinoCyclesCore.Core
 		ConcurrentQueue<string> compileStdOut = new ConcurrentQueue<string>();
 		ConcurrentQueue<string> compileStdErr = new ConcurrentQueue<string>();
 
-		Stopwatch loggingStopwatch = null;
+		Dictionary<StopwatchType, Stopwatch> stopwatches = new Dictionary<StopwatchType, Stopwatch>();
 
 		TextWriter logTw = null;
 
@@ -864,18 +877,28 @@ namespace RhinoCyclesCore.Core
 			logTw = File.CreateText(logPath);
 		}
 
-		public void StartLogStopwatch(string marker)
+		private void InitializeStopwatches()
 		{
-			if(loggingStopwatch==null) {
-				loggingStopwatch = new Stopwatch();
+			stopwatches[StopwatchType.Core] = new Stopwatch();
+			stopwatches[StopwatchType.Render] = new Stopwatch();
+			stopwatches[StopwatchType.Viewport] = new Stopwatch();
+			stopwatches[StopwatchType.Preview] = new Stopwatch();
+		}
+
+		public void StartLogStopwatch(string marker, StopwatchType swtype = StopwatchType.Core)
+		{
+			if(stopwatches.Count == 0) {
+				InitializeStopwatches();
 			}
 
-			string logstr = $"\n\n==============================> {marker}\n\n";
+			Stopwatch stopWatch = stopwatches[swtype];
+
+			string logstr = $"\n\n==============================> {marker} ({swtype})\n\n";
 
 			logTw.Write(logstr);
 
 			logStrings.Enqueue(logstr);
-			loggingStopwatch.Restart();
+			stopWatch.Restart();
 		}
 
 		public void PurgeOldLogs()
@@ -891,12 +914,34 @@ namespace RhinoCyclesCore.Core
 				}
 			}
 		}
+		public enum StopwatchType
+		{
+			Core,
+			Render,
+			Viewport,
+			Preview,
+		}
+
+		private TimeSpan GetStopwatchElapsed(StopwatchType type)
+		{
+			if(stopwatches.TryGetValue(type, out Stopwatch sw)) {
+				return sw.Elapsed;
+			}
+			return TimeSpan.MaxValue;
+		}
+
+		private void StopwatchRestart(StopwatchType type)
+		{
+			if(stopwatches.TryGetValue(type, out Stopwatch sw)) {
+				sw.Restart();
+			}
+		}
 		/// <summary>
 		/// Add given string to log. Decorates with timestamp, timespan since previous log line and suffix a newline character
 		/// </summary>
 		/// <param name="log">String to log</param>
-		public void AddLogString(string log) {
-			string logstr = $"{DateTime.Now} :: {loggingStopwatch.Elapsed} |> {log}\n";
+		public void AddLogString(string log, StopwatchType swtype = StopwatchType.Core) {
+			string logstr = $"{DateTime.Now} :: {GetStopwatchElapsed(swtype)} |> {log}\n";
 			try
 			{
 				logTw.Write(logstr);
@@ -904,7 +949,7 @@ namespace RhinoCyclesCore.Core
 			}
 			catch (Exception) { } finally { }
 			logStrings.Enqueue(logstr);
-			loggingStopwatch.Restart();
+			StopwatchRestart(swtype);
 		}
 
 		/// <summary>

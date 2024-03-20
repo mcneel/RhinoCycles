@@ -81,6 +81,7 @@ namespace RhinoCyclesCore.RenderEngines
 		public void Renderer()
 		{
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer entry");
+			RcCore.It.StartLogStopwatch("ModalRenderEngine.Renderer entry", RcCore.StopwatchType.Render);
 			var cyclesEngine = this;
 			EngineDocumentSettings eds = new EngineDocumentSettings(m_doc_serialnumber);
 
@@ -286,6 +287,7 @@ Please click the link below for more information.", 67));
 				RhinoApp.InvokeOnUiThread(showErrorDialog);
 			}
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer exiting");
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer exiting", RcCore.StopwatchType.Render);
 		}
 
 		public bool SupportsPause()
