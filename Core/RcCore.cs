@@ -873,7 +873,8 @@ namespace RhinoCyclesCore.Core
 		{
 			DateTime now = DateTime.Now;
 			int pid = Process.GetCurrentProcess().Id;
-			string logPath = Path.Combine(DataUserPath, $"RhinoCycles{now:yyyyMMddmmHHss}-{pid}.log");
+			int salt = rng.Next();
+			string logPath = Path.Combine(DataUserPath, $"RhinoCycles{now:yyyyMMddmmHHss}-{pid}-{salt}.log");
 			logTw = File.CreateText(logPath);
 		}
 
