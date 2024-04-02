@@ -423,7 +423,10 @@ namespace RhinoCyclesCore
 								BgColor = simenv.BackgroundColor;
 								if(simenv.BackgroundImage != null)
 								{
-									envfn = simenv.BackgroundImage.Filename;
+									if(File.Exists(simenv.BackgroundImage.Filename))
+									{
+										envfn = simenv.BackgroundImage.Filename;
+									}
 								}
 							}
 
@@ -448,7 +451,10 @@ namespace RhinoCyclesCore
 								SkyColor = simenv.BackgroundColor;
 								if(simenv.BackgroundImage != null)
 								{
-									envfn = simenv.BackgroundImage.Filename;
+									if (File.Exists(simenv.BackgroundImage.Filename))
+									{
+										envfn = simenv.BackgroundImage.Filename;
+									}
 								}
 							}
 							_bitmapConverter.EnvironmentBitmapFromEvaluator(SkylightEnvironment, SkyTexture, Gamma, _docsrn, envfn);
@@ -472,7 +478,10 @@ namespace RhinoCyclesCore
 								ReflectionColor = simenv.BackgroundColor;
 								if(simenv.BackgroundImage != null)
 								{
-									envfn = simenv.BackgroundImage.Filename;
+									if (File.Exists(simenv.BackgroundImage.Filename))
+									{
+										envfn = simenv.BackgroundImage.Filename;
+									}
 								}
 							}
 							_bitmapConverter.EnvironmentBitmapFromEvaluator(ReflectionEnvironment, ReflectionTexture, Gamma, _docsrn, envfn);
