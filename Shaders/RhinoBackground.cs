@@ -16,7 +16,9 @@ limitations under the License.
 
 using ccl;
 using ccl.ShaderNodes;
+using ccl.ShaderNodes.Sockets;
 using Rhino.Display;
+using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
 using System;
 
@@ -31,6 +33,38 @@ namespace RhinoCyclesCore.Shaders
 
 		public RhinoBackground(Session client, CyclesBackground intermediate, Shader existing, string name, bool recreate) : base(client, intermediate, name, existing, recreate)
 		{
+		}
+
+		private bool _IsBitmapTextureProcedural(CyclesTextureImage img)
+		{
+			return img != null && img.HasProcedural && img.Procedural is BitmapTextureProcedural;
+		}
+
+		private VectorSocket _GetTexcoordSocket(CyclesTextureImage img, RhinoTextureCoordinateNode texco)
+		{
+			switch(img.EnvProjectionMode)
+			{
+				case Rhino.Render.TextureEnvironmentMappingMode.Hemispherical:
+					return texco.outs.EnvHemispherical;
+				case Rhino.Render.TextureEnvironmentMappingMode.Box:
+					return texco.outs.EnvBox;
+				case Rhino.Render.TextureEnvironmentMappingMode.Cube:
+					return texco.outs.EnvCubemap;
+				case Rhino.Render.TextureEnvironmentMappingMode.HorizontalCrossCube:
+					return texco.outs.EnvCubemapHorizontalCross;
+				case Rhino.Render.TextureEnvironmentMappingMode.VerticalCrossCube:
+					return texco.outs.EnvCubemapVerticalCross;
+				case Rhino.Render.TextureEnvironmentMappingMode.LightProbe:
+					return texco.outs.EnvLightProbe;
+				case Rhino.Render.TextureEnvironmentMappingMode.EnvironmentMap:
+					return texco.outs.EnvEmap;
+				case Rhino.Render.TextureEnvironmentMappingMode.Spherical:
+				case Rhino.Render.TextureEnvironmentMappingMode.Automatic:
+					return texco.outs.EnvSpherical;
+				default: // non-existing planar environment projection, value 4
+					return texco.outs.Window;
+
+			}
 		}
 
 
@@ -284,7 +318,6 @@ namespace RhinoCyclesCore.Shaders
 				texcoord210.outs.Generated.Connect(reflAzimuthAltitudeTransformNode.ins.Vector);
 				texcoord210.outs.Generated.Connect(skyAzimuthAltitudeTransformNode.ins.Vector);
 
-				bgAzimuthAltitudeTransformNode.outs.Vector.Connect(bg_env_texture255.ins.Vector);
 				bg_color_or_texture259.outs.Color.Connect(separate_bg_color265.ins.Image);
 				separate_bg_color265.outs.R.Connect(factor_r262.ins.Value1);
 				skylight_strength_factor299.outs.Value.Connect(factor_r262.ins.Value2);
@@ -307,7 +340,6 @@ namespace RhinoCyclesCore.Shaders
 				light_path235.outs.IsSingularRay.Connect(maximum306.ins.Value2);
 				gradient_or_other280.outs.Color.Connect(bg_no_customs301.ins.Color);
 				maximum306.outs.Value.Connect(bg_no_customs301.ins.Strength);
-				reflAzimuthAltitudeTransformNode.outs.Vector.Connect(refl_env_texture256.ins.Vector);
 				refl_color_or_texture260.outs.Color.Connect(separate_refl_color270.ins.Image);
 				separate_refl_color270.outs.R.Connect(factor_refl_r267.ins.Value1);
 				skylight_strength_factor300.outs.Value.Connect(factor_refl_r267.ins.Value2);
@@ -322,7 +354,6 @@ namespace RhinoCyclesCore.Shaders
 				factor_refl_b269.outs.Value.Connect(factored_refl_color271.ins.B);
 				use_reflect_refract_when_glossy_and_reflection282.outs.Value.Connect(refl_env_when_enabled283.ins.Value2);
 				gradient_or_other280.outs.Color.Connect(skycolor_or_final_bg281.ins.Color1);
-				skyAzimuthAltitudeTransformNode.outs.Vector.Connect(sky_env_texture257.ins.Vector);
 				skycolor_or_final_bg281.outs.Color.Connect(sky_color_or_texture258.ins.Color1);
 				sky_color_or_texture258.outs.Color.Connect(separate_sky_color275.ins.Image);
 				separate_sky_color275.outs.R.Connect(factor_sky_r272.ins.Value1);
@@ -366,10 +397,20 @@ namespace RhinoCyclesCore.Shaders
 				if (m_original_background.BackgroundFill == BackgroundStyle.Environment && m_original_background.HasBgEnvTexture)
 				{
 					if(m_original_background.BgTexture.HasProcedural) {
-
-						m_original_background.BgTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcoord210.outs.EnvSpherical, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: true);
+						if (_IsBitmapTextureProcedural(m_original_background.BgTexture))
+						{
+							var envnode = m_original_background.BgTexture.Procedural.CreateAndConnectProceduralNode(m_shader, bgAzimuthAltitudeTransformNode.outs.Vector, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
+							_SetEnvironmentProjection(m_original_background.BgTexture, envnode);
+							//bgAzimuthAltitudeTransformNode.outs.Vector.Connect(envnode.ins.Vector);
+							bgAzimuthAltitudeTransformNode.Altitude = m_original_background.BgTexture.Transform.z.x;
+							bgAzimuthAltitudeTransformNode.Azimuth = m_original_background.BgTexture.Transform.z.z;
+						} else {
+							var texcosocket = _GetTexcoordSocket(m_original_background.BgTexture, texcoord210);
+							m_original_background.BgTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcosocket, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: false);
+						}
 					}
 					else {
+						bgAzimuthAltitudeTransformNode.outs.Vector.Connect(bg_env_texture255.ins.Vector);
 						RenderEngine.SetTextureImage(bg_env_texture255, m_original_background.BgTexture);
 						bg_env_texture255.outs.Color.Connect(bg_color_or_texture259.ins.Color2);
 						_SetEnvironmentProjection(m_original_background.BgTexture, bg_env_texture255);
@@ -386,12 +427,23 @@ namespace RhinoCyclesCore.Shaders
 				if (m_original_background.HasReflEnvTexture)
 				{
 					if (m_original_background.ReflectionTexture.HasProcedural) {
-						m_original_background.ReflectionTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcoord210.outs.EnvSpherical, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: true);
+						if (_IsBitmapTextureProcedural(m_original_background.ReflectionTexture))
+						{
+							var envnode = m_original_background.ReflectionTexture.Procedural.CreateAndConnectProceduralNode(m_shader, reflAzimuthAltitudeTransformNode.outs.Vector, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
+							_SetEnvironmentProjection(m_original_background.ReflectionTexture, envnode);
+							//reflAzimuthAltitudeTransformNode.outs.Vector.Connect(envnode.ins.Vector);
+							reflAzimuthAltitudeTransformNode.Altitude = m_original_background.ReflectionTexture.Transform.z.x;
+							reflAzimuthAltitudeTransformNode.Azimuth = m_original_background.ReflectionTexture.Transform.z.z;
+						} else {
+							var texcosocket = _GetTexcoordSocket(m_original_background.ReflectionTexture, texcoord210);
+							m_original_background.ReflectionTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcosocket, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: false);
+						}
 					}
 					else {
 						RenderEngine.SetTextureImage(refl_env_texture256, m_original_background.ReflectionTexture);
 						refl_env_texture256.outs.Color.Connect(refl_color_or_texture260.ins.Color2);
 						_SetEnvironmentProjection(m_original_background.ReflectionTexture, refl_env_texture256);
+						reflAzimuthAltitudeTransformNode.outs.Vector.Connect(refl_env_texture256.ins.Vector);
 						reflAzimuthAltitudeTransformNode.Altitude = m_original_background.ReflectionTexture.Transform.z.x;
 						reflAzimuthAltitudeTransformNode.Azimuth = m_original_background.ReflectionTexture.Transform.z.z;
 					}
@@ -400,13 +452,25 @@ namespace RhinoCyclesCore.Shaders
 				{
 					if (m_original_background.SkyTexture.HasProcedural)
 					{
-						m_original_background.SkyTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcoord210.outs.EnvSpherical, sky_color_or_texture258.ins.Color2, parent_alpha_input: null, IsData: true);
+						if (_IsBitmapTextureProcedural(m_original_background.SkyTexture))
+						{
+							var envnode = m_original_background.SkyTexture.Procedural.CreateAndConnectProceduralNode(m_shader, skyAzimuthAltitudeTransformNode.outs.Vector, sky_color_or_texture258.ins.Color2, parent_alpha_input: null, IsData: true);
+							_SetEnvironmentProjection(m_original_background.SkyTexture, envnode as EnvironmentTextureNode);
+							skyAzimuthAltitudeTransformNode.Altitude = m_original_background.SkyTexture.Transform.z.x;
+							skyAzimuthAltitudeTransformNode.Azimuth = m_original_background.SkyTexture.Transform.z.z;
+						}
+						else
+						{
+							var texcosocket = _GetTexcoordSocket(m_original_background.SkyTexture, texcoord210);
+							m_original_background.SkyTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcosocket, sky_color_or_texture258.ins.Color2, parent_alpha_input: null, IsData: false);
+						}
 					}
 					else
 					{
 						RenderEngine.SetTextureImage(sky_env_texture257, m_original_background.SkyTexture);
 						sky_env_texture257.outs.Color.Connect(sky_color_or_texture258.ins.Color2);
 						_SetEnvironmentProjection(m_original_background.SkyTexture, sky_env_texture257);
+						skyAzimuthAltitudeTransformNode.outs.Vector.Connect(sky_env_texture257.ins.Vector);
 						skyAzimuthAltitudeTransformNode.Altitude = m_original_background.SkyTexture.Transform.z.x;
 						skyAzimuthAltitudeTransformNode.Azimuth = m_original_background.SkyTexture.Transform.z.z;
 					}

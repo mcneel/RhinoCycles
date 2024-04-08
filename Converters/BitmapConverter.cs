@@ -112,6 +112,11 @@ namespace RhinoCyclesCore.Converters
 			}
 		}
 
+		List<Guid> _specialIds = new List<Guid> {
+			new Guid("6A4D9BEE-5B02-4BB6-9764-5B407240731A"), // HDRLS Environment
+			new Guid("ABC95D68-BD66-4EB5-A72A-E3FA6C58CCC3"), // HDRLS Texture
+		};
+
 		/// <summary>
 		/// Get environment bitmap from texture evaluator
 		/// </summary>
@@ -125,6 +130,10 @@ namespace RhinoCyclesCore.Converters
 			if (rm != null)
 				renderTexture = rm.FindChild("texture") as RenderTexture;
 
+			if(!(_specialIds.Contains(renderTexture.TypeId) || _specialIds.Contains(rm.TypeId)))
+			{
+				simfilename = "";
+			}
 
 			if (renderTexture == null)
 			{
@@ -135,20 +144,27 @@ namespace RhinoCyclesCore.Converters
 				return;
 			}
 
-			if (renderTexture.IsImageBased() || simfilename.Length > 0)
+			if (/*renderTexture.IsImageBased() ||*/ simfilename.Length > 0)
 			{
-				Field tf = renderTexture.Fields.GetField("filename");
+				/*Field tf = renderTexture.Fields.GetField("filename");
 				var fs = "";
 				if(tf != null) {
 					var ofs = tf.GetValue<string>();
 					RhinoDoc doc = rm.DocumentAssoc;
 					fs = Rhino.Render.Utilities.FindFile(doc, ofs, true);
 				}
-				fs = string.IsNullOrEmpty(fs) ? simfilename : fs;
+				*/
+				//fs = string.IsNullOrEmpty(fs) ? simfilename : fs;
 
-				teximg.Filename = string.IsNullOrEmpty(fs) ? null : fs;
+				teximg.Filename = string.IsNullOrEmpty(simfilename) ? null : simfilename;
 			} else {
 				Utilities.HandleRenderTexture(renderTexture, teximg, false, false, this, docsrn, gamma, false, true);
+			}
+
+			teximg.ForImageTextureNode = false;
+			if(teximg.HasProcedural && teximg.Procedural is BitmapTextureProcedural bmp)
+			{
+				bmp.IsForEnvironment = true;
 			}
 
 			var projection = get_environment_mapping(rm, renderTexture);

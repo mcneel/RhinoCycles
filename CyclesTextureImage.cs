@@ -41,6 +41,7 @@ namespace RhinoCyclesCore
 		public Color4f ColorMask;
 		public float ColorMaskSensitivity;
 		private bool disposedValue;
+		public bool ForImageTextureNode { get; set; } = true;
 
 		public string Filename { get; set; }
 
