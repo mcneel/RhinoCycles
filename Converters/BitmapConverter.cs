@@ -130,11 +130,6 @@ namespace RhinoCyclesCore.Converters
 			if (rm != null)
 				renderTexture = rm.FindChild("texture") as RenderTexture;
 
-			if(!(_specialIds.Contains(renderTexture.TypeId) || _specialIds.Contains(rm.TypeId)))
-			{
-				simfilename = "";
-			}
-
 			if (renderTexture == null)
 			{
 				teximg.TexByte = null;
@@ -142,6 +137,11 @@ namespace RhinoCyclesCore.Converters
 				teximg.TexWidth = teximg.TexHeight = 0;
 				teximg.Name = "";
 				return;
+			}
+
+			if(!(_specialIds.Contains(renderTexture.TypeId) || _specialIds.Contains(rm.TypeId)))
+			{
+				simfilename = "";
 			}
 
 			if (/*renderTexture.IsImageBased() ||*/ simfilename.Length > 0)
