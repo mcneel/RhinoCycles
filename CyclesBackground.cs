@@ -108,7 +108,9 @@ namespace RhinoCyclesCore
 		public float EnabledLightsAsFloat => EnabledLights ? 1.0f : 0.0f;
 		public float InvertEnabledLightsAsFloat => EnabledLights ? 0.0f: 1.0f;
 
-		public float NonSkyEnvStrengthFactor => !EnabledLights && SkylightEnabled ? SkyStrength : 1.0f;
+		// For RH-81548 it is important we do not pass on 1.0f in the old !EnabledLights && SkylightEnabled case.
+		// It turns out we can always just return SkyStrength here.
+		public float NonSkyEnvStrengthFactor => SkyStrength; //!EnabledLights && SkylightEnabled ? SkyStrength : 1.0f;
 
 		/// <summary>
 		/// Hold texture data for skylight
