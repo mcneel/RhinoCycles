@@ -774,5 +774,14 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public int RetentionDays
+		{
+			get
+			{
+				return RcCore.It.AllSettings.RetentionDays;
+			}
+			set => throw new InvalidOperationException();
+		}
+
 	}
 }

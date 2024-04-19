@@ -37,6 +37,7 @@ namespace RhinoCyclesCore.Settings
 		public static string DumpEnvironmentShaderGraph => "DumpEnvironmentShaderGraph";
 		public static string StartGpuKernelCompiler => "StartGpuKernelCompiler";
 		public static string VerboseLogging => "VerboseLogging";
+		public static string RetentionDays => "RetentionDays";
 
 		/// /////////
 
