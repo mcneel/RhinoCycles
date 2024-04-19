@@ -909,11 +909,13 @@ namespace RhinoCyclesCore.Core
 			{
 				if (File.Exists(entry)) {
 					TimeSpan age = DateTime.Now - File.GetLastWriteTime(entry);
-					if(age.TotalDays > 3) {
+					if(age.TotalDays > It.AllSettings.RetentionDays) {
 						try {
 							File.Delete(entry);
 						}
-						catch (Exception) { }
+						catch (Exception) {
+							AddLogString($"Skipping deletion of {entry}", StopwatchType.Core);
+						}
 					}
 				}
 			}
