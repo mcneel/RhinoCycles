@@ -910,7 +910,10 @@ namespace RhinoCyclesCore.Core
 				if (File.Exists(entry)) {
 					TimeSpan age = DateTime.Now - File.GetLastWriteTime(entry);
 					if(age.TotalDays > 3) {
-						File.Delete(entry);
+						try {
+							File.Delete(entry);
+						}
+						catch (Exception) { }
 					}
 				}
 			}
