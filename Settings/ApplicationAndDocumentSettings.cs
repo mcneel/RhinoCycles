@@ -128,6 +128,7 @@ namespace RhinoCyclesCore.Settings
 			StartGpuKernelCompiler = StartGpuKernelCompiler;
 
 			VerboseLogging = VerboseLogging;
+			RetentionDays = RetentionDays;
 		}
 
 		public bool IgnoreQualityChanges { get; set; }
@@ -296,6 +297,12 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return RcPlugIn.Settings.GetBool(SettingNames.VerboseLogging, DefaultEngineSettings.VerboseLogging); }
 			set { RcPlugIn.Settings.SetBool(SettingNames.VerboseLogging, value); }
+		}
+
+		public virtual int RetentionDays
+				{
+			get { return RcPlugIn.Settings.GetInteger(SettingNames.RetentionDays, DefaultEngineSettings.RetentionDays); }
+			set { RcPlugIn.Settings.SetInteger(SettingNames.RetentionDays, value); }
 		}
 
 

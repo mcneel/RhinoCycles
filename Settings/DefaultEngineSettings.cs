@@ -128,5 +128,6 @@ namespace RhinoCyclesCore.Settings
 		static public bool DumpEnvironmentShaderGraph => false;
 		static public bool StartGpuKernelCompiler => true;
 		static public bool VerboseLogging => false;
+		static public int RetentionDays => 3;
 	}
 }
