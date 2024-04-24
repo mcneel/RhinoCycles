@@ -100,6 +100,7 @@ namespace RhinoCyclesCore
 		}
 
 		public bool InvisibleUnderside { get; set; } = false;
+		public bool ShadowCatcher { get; set; } = false;
 
 		public bool RecordDataForBackShader(RenderMaterial rm, float gamma)
 		{

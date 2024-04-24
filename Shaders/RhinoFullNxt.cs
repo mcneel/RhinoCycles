@@ -70,6 +70,21 @@ namespace RhinoCyclesCore.Shaders
 				var last = GetShaderPart(m_original.Front);
 				var lastclosure = last.GetClosureSocket();
 
+				if(m_original.ShadowCatcher)
+				{
+					var lightpath = new LightPathNode(m_shader, "light_path_for_shadow_catcher");
+					var pathadder = new MathAdd(m_shader, "path_adder_for_shadow_catcher");
+					var noshow = new TransparentBsdfNode(m_shader, "shadow_catcher_transp_bsdf");
+					var refl_flipper = new MixClosureNode(m_shader, "shadow_catcher_reflection_flipper");
+					pathadder.UseClamp = true;
+					lightpath.outs.IsGlossyRay.Connect(pathadder.ins.Value1);
+					lightpath.outs.IsDiffuseRay.Connect(pathadder.ins.Value2);
+					pathadder.outs.Value.Connect(refl_flipper.ins.Fac);
+					lastclosure.Connect(refl_flipper.ins.Closure1);
+					noshow.outs.BSDF.Connect(refl_flipper.ins.Closure2);
+					lastclosure = refl_flipper.outs.Closure;
+				}
+
 				// InvisibleUnderside may be true if it is set for a material
 				// on a Ground Plane. Handle this case by adding a transparent BSDF
 				// for when the backface is hit. Otherwise just 'regular' shader
