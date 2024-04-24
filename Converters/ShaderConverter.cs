@@ -20,6 +20,7 @@ using ccl.ShaderNodes.Sockets;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Geometry;
+using Rhino.Input.Custom;
 using Rhino.Render;
 using Rhino.Render.ChangeQueue;
 using RhinoCyclesCore.Core;
@@ -987,13 +988,13 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			var transform_node = new MatrixMathNode(shader, "matrix math node");
+			var transform_node = new MatrixMathNode(shader, "matrix_math for bitmaptextureprocedural");
 
 			transform_node.Transform = new ccl.Transform(MappingTransform);
 
-			if (IsForEnvironment)
+			if (IsForEnvironment && !IsForWallpaper)
 			{
-				var environment_texture_node = new EnvironmentTextureNode(shader, "environment texture node");
+				var environment_texture_node = new EnvironmentTextureNode(shader, "environment texture in bitmaptextureprocedural");
 				if(CyclesTexture.HasTextureImage)
 				{
 					environment_texture_node.ins.Filename.Value = CyclesTexture.Filename;
@@ -1006,7 +1007,12 @@ namespace RhinoCyclesCore.Converters
 			}
 			else
 			{
-				var image_texture_node = new ImageTextureNode(shader, "image texture node");
+				var image_texture_node = new ImageTextureNode(shader, "image texture in bitmaptextureprocedural");
+				VectorRotate vector_rotate = null;
+				if(IsForWallpaper)
+				{
+					vector_rotate = new VectorRotate(shader, "vector_rotate for bitmaptextureprocedural");
+				}
 
 				if (CyclesTexture.HasTextureImage)
 				{
@@ -1027,7 +1033,16 @@ namespace RhinoCyclesCore.Converters
 				image_texture_node.Extension = Repeat ? TextureNode.TextureExtension.Repeat : TextureNode.TextureExtension.Clip;
 
 				uvw_output.Connect(transform_node.ins.Vector);
-				transform_node.outs.Vector.Connect(image_texture_node.ins.Vector);
+				if(IsForWallpaper) {
+					transform_node.outs.Vector.Connect(vector_rotate.ins.Vector);
+					vector_rotate.outs.Vector.Connect(image_texture_node.ins.Vector);
+					vector_rotate.RotateType = VectorRotate.VectorRotateType.AxisX;
+					vector_rotate.ins.Angle.Value = (float)Rhino.RhinoMath.ToRadians(180);
+					vector_rotate.ins.Axis.Value = new float4(1, 0, 0);
+				}
+				else {
+					transform_node.outs.Vector.Connect(image_texture_node.ins.Vector);
+				}
 				CreateAndConnectAdjustmentNode(shader, image_texture_node.outs.Color, parent_color_input);
 				if (CyclesTexture.UseColorMask)
 				{
@@ -1055,6 +1070,10 @@ namespace RhinoCyclesCore.Converters
 		/// Set to true if procedural is for environment texture
 		/// </summary>
 		public bool IsForEnvironment { get; set; } = false;
+		/// <summary>
+		/// Set to true if procedural is for wallpaper
+		/// </summary>
+		public bool IsForWallpaper { get; set; } = false;
 	}
 
 	public class AddTextureProcedural : TwoColorProcedural

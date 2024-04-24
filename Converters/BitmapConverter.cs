@@ -161,11 +161,6 @@ namespace RhinoCyclesCore.Converters
 				Utilities.HandleRenderTexture(renderTexture, teximg, false, false, this, docsrn, gamma, false, true);
 			}
 
-			teximg.ForImageTextureNode = false;
-			if(teximg.HasProcedural && teximg.Procedural is BitmapTextureProcedural bmp)
-			{
-				bmp.IsForEnvironment = true;
-			}
 
 			var projection = get_environment_mapping(rm, renderTexture);
 			var rhinotfm = renderTexture.LocalMappingTransform;
@@ -174,6 +169,15 @@ namespace RhinoCyclesCore.Converters
 			var rot = renderTexture.GetRotation();
 			var rep = renderTexture.GetRepeat();
 			var tra = renderTexture.GetOffset();
+
+			teximg.ForImageTextureNode = false;
+			if(teximg.HasProcedural && teximg.Procedural is BitmapTextureProcedural bmp)
+			{
+				// if wallpaper then don't use as environment texture node texture, but
+				// regular image texture node with texco.window as mapping
+				bmp.IsForEnvironment = (int)projection != 4;
+				bmp.IsForWallpaper = (int)projection == 4;
+			}
 
 			// JohnC: I had to change this to also exclude linear workflow because when I changed from using
 			// the incorrect TextureRenderHashFlags to the correct CrcRenderHashFlags, an assert started firing

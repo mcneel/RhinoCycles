@@ -17,9 +17,11 @@ limitations under the License.
 using ccl;
 using ccl.ShaderNodes;
 using ccl.ShaderNodes.Sockets;
+using Rhino;
 using Rhino.Display;
 using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
+using RhinoCyclesCore.ExtensionMethods;
 using System;
 
 namespace RhinoCyclesCore.Shaders
@@ -65,6 +67,11 @@ namespace RhinoCyclesCore.Shaders
 					return texco.outs.Window;
 
 			}
+		}
+
+		private bool _IsPlanarProjection(CyclesTextureImage img)
+		{
+			return (int)img.EnvProjectionMode == 4;
 		}
 
 
@@ -381,7 +388,15 @@ namespace RhinoCyclesCore.Shaders
 				refl_bg_or_custom_env288.outs.Color.Connect(mix292.ins.Color1);
 				light_with_bg_or_sky286.outs.Color.Connect(mix292.ins.Color2);
 				if_not_cam_nor_transm_nor_glossyrefl298.outs.Value.Connect(mix292.ins.Fac);
-				mix292.outs.Color.Connect(final_bg277.ins.Color);
+				if(!m_original_background.BgTexture.IsLinear)
+				{
+					GammaNode gamma = new GammaNode(m_shader, "gamma");
+					gamma.ins.Gamma.Value = m_original_background.Gamma;
+					mix292.outs.Color.Connect(gamma.ins.Color);
+					gamma.outs.Color.Connect(final_bg277.ins.Color);
+				} else {
+					mix292.outs.Color.Connect(final_bg277.ins.Color);
+				}
 
 				// extra code
 
@@ -399,7 +414,8 @@ namespace RhinoCyclesCore.Shaders
 					if(m_original_background.BgTexture.HasProcedural) {
 						if (_IsBitmapTextureProcedural(m_original_background.BgTexture))
 						{
-							var envnode = m_original_background.BgTexture.Procedural.CreateAndConnectProceduralNode(m_shader, bgAzimuthAltitudeTransformNode.outs.Vector, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
+							VectorSocket texco_out = _IsPlanarProjection(m_original_background.BgTexture) ? _GetTexcoordSocket(m_original_background.BgTexture, texcoord210) : bgAzimuthAltitudeTransformNode.ins.Vector;
+							var envnode = m_original_background.BgTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texco_out, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
 							_SetEnvironmentProjection(m_original_background.BgTexture, envnode);
 							//bgAzimuthAltitudeTransformNode.outs.Vector.Connect(envnode.ins.Vector);
 							bgAzimuthAltitudeTransformNode.Altitude = m_original_background.BgTexture.Transform.z.x;
@@ -429,7 +445,8 @@ namespace RhinoCyclesCore.Shaders
 					if (m_original_background.ReflectionTexture.HasProcedural) {
 						if (_IsBitmapTextureProcedural(m_original_background.ReflectionTexture))
 						{
-							var envnode = m_original_background.ReflectionTexture.Procedural.CreateAndConnectProceduralNode(m_shader, reflAzimuthAltitudeTransformNode.outs.Vector, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
+							VectorSocket texco_out = _IsPlanarProjection(m_original_background.ReflectionTexture) ? _GetTexcoordSocket(m_original_background.BgTexture, texcoord210) : reflAzimuthAltitudeTransformNode.ins.Vector;
+							var envnode = m_original_background.ReflectionTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texco_out, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
 							_SetEnvironmentProjection(m_original_background.ReflectionTexture, envnode);
 							//reflAzimuthAltitudeTransformNode.outs.Vector.Connect(envnode.ins.Vector);
 							reflAzimuthAltitudeTransformNode.Altitude = m_original_background.ReflectionTexture.Transform.z.x;
@@ -454,7 +471,8 @@ namespace RhinoCyclesCore.Shaders
 					{
 						if (_IsBitmapTextureProcedural(m_original_background.SkyTexture))
 						{
-							var envnode = m_original_background.SkyTexture.Procedural.CreateAndConnectProceduralNode(m_shader, skyAzimuthAltitudeTransformNode.outs.Vector, sky_color_or_texture258.ins.Color2, parent_alpha_input: null, IsData: true);
+							VectorSocket texco_out = _IsPlanarProjection(m_original_background.SkyTexture) ? _GetTexcoordSocket(m_original_background.BgTexture, texcoord210) : reflAzimuthAltitudeTransformNode.ins.Vector;
+							var envnode = m_original_background.SkyTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texco_out, sky_color_or_texture258.ins.Color2, parent_alpha_input: null, IsData: true);
 							_SetEnvironmentProjection(m_original_background.SkyTexture, envnode as EnvironmentTextureNode);
 							skyAzimuthAltitudeTransformNode.Altitude = m_original_background.SkyTexture.Transform.z.x;
 							skyAzimuthAltitudeTransformNode.Azimuth = m_original_background.SkyTexture.Transform.z.z;
@@ -508,37 +526,20 @@ namespace RhinoCyclesCore.Shaders
 
 		private void _SetEnvironmentProjection(CyclesTextureImage img, EnvironmentTextureNode envtexture)
 		{
-			switch (img.EnvProjectionMode)
+			if (img == null || envtexture == null) return;
+			envtexture.Projection = img.EnvProjectionMode switch
 			{
-				case Rhino.Render.TextureEnvironmentMappingMode.Automatic:
-				case Rhino.Render.TextureEnvironmentMappingMode.EnvironmentMap:
-					envtexture.Projection = TextureNode.EnvironmentProjection.EnvironmentMap;
-					break;
-				case Rhino.Render.TextureEnvironmentMappingMode.Box:
-					envtexture.Projection = TextureNode.EnvironmentProjection.Box;
-					break;
-				case Rhino.Render.TextureEnvironmentMappingMode.LightProbe:
-					envtexture.Projection = TextureNode.EnvironmentProjection.LightProbe;
-					break;
-				case Rhino.Render.TextureEnvironmentMappingMode.Cube:
-					envtexture.Projection = TextureNode.EnvironmentProjection.CubeMap;
-					break;
-				case Rhino.Render.TextureEnvironmentMappingMode.HorizontalCrossCube:
-					envtexture.Projection = TextureNode.EnvironmentProjection.CubeMapHorizontal;
-					break;
-				case Rhino.Render.TextureEnvironmentMappingMode.VerticalCrossCube:
-					envtexture.Projection = TextureNode.EnvironmentProjection.CubeMapVertical;
-					break;
-				case Rhino.Render.TextureEnvironmentMappingMode.Hemispherical:
-					envtexture.Projection = TextureNode.EnvironmentProjection.Hemispherical;
-					break;
-				case Rhino.Render.TextureEnvironmentMappingMode.Spherical:
-					envtexture.Projection = TextureNode.EnvironmentProjection.Spherical;
-					break;
-				default: // non-existing planar environment projection, value 4
-					envtexture.Projection = TextureNode.EnvironmentProjection.Wallpaper;
-					break;
-			}
+				Rhino.Render.TextureEnvironmentMappingMode.Automatic or Rhino.Render.TextureEnvironmentMappingMode.EnvironmentMap => TextureNode.EnvironmentProjection.EnvironmentMap,
+				Rhino.Render.TextureEnvironmentMappingMode.Box => TextureNode.EnvironmentProjection.Box,
+				Rhino.Render.TextureEnvironmentMappingMode.LightProbe => TextureNode.EnvironmentProjection.LightProbe,
+				Rhino.Render.TextureEnvironmentMappingMode.Cube => TextureNode.EnvironmentProjection.CubeMap,
+				Rhino.Render.TextureEnvironmentMappingMode.HorizontalCrossCube => TextureNode.EnvironmentProjection.CubeMapHorizontal,
+				Rhino.Render.TextureEnvironmentMappingMode.VerticalCrossCube => TextureNode.EnvironmentProjection.CubeMapVertical,
+				Rhino.Render.TextureEnvironmentMappingMode.Hemispherical => TextureNode.EnvironmentProjection.Hemispherical,
+				Rhino.Render.TextureEnvironmentMappingMode.Spherical => TextureNode.EnvironmentProjection.Spherical,
+				// non-existing planar environment projection, value 4
+				_ => TextureNode.EnvironmentProjection.Wallpaper,
+			};
 		}
 	}
 }
