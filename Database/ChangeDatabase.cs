@@ -1257,7 +1257,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="mat">RenderMaterial instance to handle</param>
 		/// <param name="decals">List of CyclesDecal that need to be integrated into the shader</param>
 		/// <param name="invisibleUnderside">True if geometry should be see-through from the backface. Used for the groundplane.</param>
-		private void HandleRenderMaterial(RenderMaterial mat, uint matId, List<CyclesDecal> decals, bool invisibleUnderside)
+		private void HandleRenderMaterial(RenderMaterial mat, uint matId, List<CyclesDecal> decals, bool invisibleUnderside, bool shadowCatcher = false)
 		{
 			if (_shaderDatabase.HasShader(matId))
 			{
@@ -1266,6 +1266,7 @@ namespace RhinoCyclesCore.Database
 
 			var sh = _shaderConverter.RecordDataToSetupCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals, _doc_serialnr);
 			sh.InvisibleUnderside = invisibleUnderside;
+			sh.ShadowCatcher = shadowCatcher;
 			_shaderDatabase.AddShader(sh);
 		}
 
@@ -1387,11 +1388,13 @@ namespace RhinoCyclesCore.Database
 		private bool isGpShadowsOnly = false;
 
 		//private ShadowCatcherMaterial shadowCatcherMaterial = (ShadowCatcherMaterial)RenderContentType.NewContentFromTypeId(System.Guid.Parse("9a28c95d-ae43-4ea2-b220-02c70d69f9e8"));
-		//private const int shadowCatcherMaterialId = 42;
+		private RenderMaterial shadowCatcherMaterial = (RenderMaterial)RenderContentType.NewContentFromTypeId(new Guid("5a8d7b9b-cdc9-49de-8c16-2ef64fb097ab"));
+
+		private const int shadowCatcherMaterialId = 42;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
 		{
-			var materialId = /*gp.IsShadowOnly ? shadowCatcherMaterialId : */gp.MaterialId;
-			var mat = /*gp.IsShadowOnly ? shadowCatcherMaterial : */MaterialFromId(materialId);
+			var materialId = gp.IsShadowOnly ? shadowCatcherMaterialId : gp.MaterialId;
+			var mat = gp.IsShadowOnly ? shadowCatcherMaterial : MaterialFromId(materialId);
 
 			/* now adjust mat id with set values since we want this to be a special
 			 * ground plane instance
@@ -1428,11 +1431,11 @@ namespace RhinoCyclesCore.Database
 				m.SetCachedTextureCoordinates(texturemapping, ref tfm);
 			}
 
+			isGpShadowsOnly = gp.IsShadowOnly;
+
 			HandleMeshData(gpid.Item1, gpid.Item2, m, null, false, uint.MaxValue, ccl.Transform.Identity());
 
-			HandleRenderMaterial(mat, materialId, null, !gp.ShowUnderside);
-
-			isGpShadowsOnly = gp.IsShadowOnly;
+			HandleRenderMaterial(mat, materialId, null, !gp.ShowUnderside, isGpShadowsOnly);
 
 			var matrenderhash = materialId;
 			var t = ccl.Transform.Translate(0.0f, 0.0f, 0.0f);
