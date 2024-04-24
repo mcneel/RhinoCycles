@@ -325,7 +325,6 @@ namespace RhinoCyclesCore.Shaders
 				texcoord210.outs.Generated.Connect(reflAzimuthAltitudeTransformNode.ins.Vector);
 				texcoord210.outs.Generated.Connect(skyAzimuthAltitudeTransformNode.ins.Vector);
 
-				bg_color_or_texture259.outs.Color.Connect(separate_bg_color265.ins.Image);
 				separate_bg_color265.outs.R.Connect(factor_r262.ins.Value1);
 				skylight_strength_factor299.outs.Value.Connect(factor_r262.ins.Value2);
 				separate_bg_color265.outs.G.Connect(factor_g263.ins.Value1);
@@ -346,7 +345,6 @@ namespace RhinoCyclesCore.Shaders
 				maximum305.outs.Value.Connect(maximum306.ins.Value1);
 				light_path235.outs.IsSingularRay.Connect(maximum306.ins.Value2);
 				maximum306.outs.Value.Connect(bg_no_customs301.ins.Strength);
-				refl_color_or_texture260.outs.Color.Connect(separate_refl_color270.ins.Image);
 				separate_refl_color270.outs.R.Connect(factor_refl_r267.ins.Value1);
 				skylight_strength_factor300.outs.Value.Connect(factor_refl_r267.ins.Value2);
 				separate_refl_color270.outs.G.Connect(factor_refl_g268.ins.Value1);
@@ -361,7 +359,6 @@ namespace RhinoCyclesCore.Shaders
 				use_reflect_refract_when_glossy_and_reflection282.outs.Value.Connect(refl_env_when_enabled283.ins.Value2);
 				gradient_or_other280.outs.Color.Connect(skycolor_or_final_bg281.ins.Color1);
 				skycolor_or_final_bg281.outs.Color.Connect(sky_color_or_texture258.ins.Color1);
-				sky_color_or_texture258.outs.Color.Connect(separate_sky_color275.ins.Image);
 				separate_sky_color275.outs.R.Connect(factor_sky_r272.ins.Value1);
 				sky_or_not261.outs.Value.Connect(factor_sky_r272.ins.Value2);
 				separate_sky_color275.outs.G.Connect(factor_sky_g273.ins.Value1);
@@ -389,18 +386,33 @@ namespace RhinoCyclesCore.Shaders
 				if_not_cam_nor_transm_nor_glossyrefl298.outs.Value.Connect(mix292.ins.Fac);
 				if(!m_original_background.BgTexture.IsLinear)
 				{
-					GammaNode gamma = new GammaNode(m_shader, "gamma");
+					GammaNode gamma = new GammaNode(m_shader, "bggamma");
 					gamma.ins.Gamma.Value = m_original_background.Gamma;
-					GammaNode gamma2 = new GammaNode(m_shader, "gamma2");
-					gamma2.ins.Gamma.Value = m_original_background.Gamma;
-					gradient_or_other280.outs.Color.Connect(gamma2.ins.Color);
-					mix292.outs.Color.Connect(gamma.ins.Color);
-					gamma.outs.Color.Connect(final_bg277.ins.Color);
-					gamma2.outs.Color.Connect(bg_no_customs301.ins.Color);
+					bg_color_or_texture259.outs.Color.Connect(gamma.ins.Color);
+					gamma.outs.Color.Connect(separate_bg_color265.ins.Image);
 				} else {
-					gradient_or_other280.outs.Color.Connect(bg_no_customs301.ins.Color);
-					mix292.outs.Color.Connect(final_bg277.ins.Color);
+					bg_color_or_texture259.outs.Color.Connect(separate_bg_color265.ins.Image);
 				}
+				if(!m_original_background.SkyTexture.IsLinear)
+				{
+					GammaNode gamma = new GammaNode(m_shader, "skygamma");
+					gamma.ins.Gamma.Value = m_original_background.Gamma;
+					sky_color_or_texture258.outs.Color.Connect(gamma.ins.Color);
+					gamma.outs.Color.Connect(separate_sky_color275.ins.Image);
+				} else {
+					sky_color_or_texture258.outs.Color.Connect(separate_sky_color275.ins.Image);
+				}
+				if(!m_original_background.ReflectionTexture.IsLinear)
+				{
+					GammaNode gamma = new GammaNode(m_shader, "reflgamma");
+					gamma.ins.Gamma.Value = m_original_background.Gamma;
+					refl_color_or_texture260.outs.Color.Connect(gamma.ins.Color);
+					gamma.outs.Color.Connect(separate_refl_color270.ins.Image);
+				} else {
+					refl_color_or_texture260.outs.Color.Connect(separate_refl_color270.ins.Image);
+				}
+				gradient_or_other280.outs.Color.Connect(bg_no_customs301.ins.Color);
+				mix292.outs.Color.Connect(final_bg277.ins.Color);
 
 				// extra code
 
