@@ -115,6 +115,7 @@ namespace RhinoCyclesCore.Converters
 		List<Guid> _specialIds = new List<Guid> {
 			new Guid("6A4D9BEE-5B02-4BB6-9764-5B407240731A"), // HDRLS Environment
 			new Guid("ABC95D68-BD66-4EB5-A72A-E3FA6C58CCC3"), // HDRLS Texture
+			new Guid("f28c2d86-0466-40d4-89ee-a54b6c5e9288"), // High Dynamic Range bitmap
 		};
 
 		/// <summary>
@@ -143,6 +144,10 @@ namespace RhinoCyclesCore.Converters
 			{
 				simfilename = "";
 			}
+			else {
+				teximg.IsLinear = true;
+			}
+
 
 			if (/*renderTexture.IsImageBased() ||*/ simfilename.Length > 0)
 			{

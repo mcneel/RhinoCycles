@@ -437,7 +437,7 @@ namespace RhinoCyclesCore
 									if(File.Exists(simenv.BackgroundImage.Filename))
 									{
 										envfn = simenv.BackgroundImage.Filename;
-										if(_IsHdrLsEnvironment(BackgroundEnvironment))
+										if(_IsHdrLsEnvironment(BackgroundEnvironment) || envfn.EndsWith(".hdr", StringComparison.OrdinalIgnoreCase) || envfn.EndsWith(".exr", StringComparison.OrdinalIgnoreCase))
 										{
 											BgTexture.IsLinear = true;
 										}
@@ -469,7 +469,7 @@ namespace RhinoCyclesCore
 									if (File.Exists(simenv.BackgroundImage.Filename))
 									{
 										envfn = simenv.BackgroundImage.Filename;
-										if(_IsHdrLsEnvironment(SkylightEnvironment))
+										if(_IsHdrLsEnvironment(SkylightEnvironment) || envfn.EndsWith(".hdr", StringComparison.OrdinalIgnoreCase) || envfn.EndsWith(".exr", StringComparison.OrdinalIgnoreCase))
 										{
 											SkyTexture.IsLinear = true;
 										}
@@ -500,7 +500,7 @@ namespace RhinoCyclesCore
 									if (File.Exists(simenv.BackgroundImage.Filename))
 									{
 										envfn = simenv.BackgroundImage.Filename;
-										if(_IsHdrLsEnvironment(ReflectionEnvironment))
+										if(_IsHdrLsEnvironment(ReflectionEnvironment) || envfn.EndsWith(".hdr", StringComparison.OrdinalIgnoreCase) || envfn.EndsWith(".exr", StringComparison.OrdinalIgnoreCase))
 										{
 											ReflectionTexture.IsLinear = true;
 										}
