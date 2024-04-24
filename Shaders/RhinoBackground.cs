@@ -345,7 +345,6 @@ namespace RhinoCyclesCore.Shaders
 				gradient_colorramp279.outs.Color.Connect(gradient_or_other280.ins.Color2);
 				maximum305.outs.Value.Connect(maximum306.ins.Value1);
 				light_path235.outs.IsSingularRay.Connect(maximum306.ins.Value2);
-				gradient_or_other280.outs.Color.Connect(bg_no_customs301.ins.Color);
 				maximum306.outs.Value.Connect(bg_no_customs301.ins.Strength);
 				refl_color_or_texture260.outs.Color.Connect(separate_refl_color270.ins.Image);
 				separate_refl_color270.outs.R.Connect(factor_refl_r267.ins.Value1);
@@ -392,9 +391,14 @@ namespace RhinoCyclesCore.Shaders
 				{
 					GammaNode gamma = new GammaNode(m_shader, "gamma");
 					gamma.ins.Gamma.Value = m_original_background.Gamma;
+					GammaNode gamma2 = new GammaNode(m_shader, "gamma2");
+					gamma2.ins.Gamma.Value = m_original_background.Gamma;
+					gradient_or_other280.outs.Color.Connect(gamma2.ins.Color);
 					mix292.outs.Color.Connect(gamma.ins.Color);
 					gamma.outs.Color.Connect(final_bg277.ins.Color);
+					gamma2.outs.Color.Connect(bg_no_customs301.ins.Color);
 				} else {
+					gradient_or_other280.outs.Color.Connect(bg_no_customs301.ins.Color);
 					mix292.outs.Color.Connect(final_bg277.ins.Color);
 				}
 
