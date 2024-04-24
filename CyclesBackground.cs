@@ -405,6 +405,15 @@ namespace RhinoCyclesCore
 			HandleEnvironments(EnvUsageToUsage(usage));
 		}
 
+		List<Guid> _specialIds = new List<Guid> {
+			new Guid("6A4D9BEE-5B02-4BB6-9764-5B407240731A"), // HDRLS Environment
+			new Guid("ABC95D68-BD66-4EB5-A72A-E3FA6C58CCC3"), // HDRLS Texture
+		};
+		private bool _IsHdrLsEnvironment(RenderEnvironment env)
+		{
+			return _specialIds.Contains(env.TypeId);
+		}
+
 		/// <summary>
 		/// Read texture data and bg color from environments
 		/// </summary>
@@ -428,6 +437,10 @@ namespace RhinoCyclesCore
 									if(File.Exists(simenv.BackgroundImage.Filename))
 									{
 										envfn = simenv.BackgroundImage.Filename;
+										if(_IsHdrLsEnvironment(BackgroundEnvironment))
+										{
+											BgTexture.IsLinear = true;
+										}
 									}
 								}
 							}
@@ -456,6 +469,10 @@ namespace RhinoCyclesCore
 									if (File.Exists(simenv.BackgroundImage.Filename))
 									{
 										envfn = simenv.BackgroundImage.Filename;
+										if(_IsHdrLsEnvironment(SkylightEnvironment))
+										{
+											SkyTexture.IsLinear = true;
+										}
 									}
 								}
 							}
@@ -483,6 +500,10 @@ namespace RhinoCyclesCore
 									if (File.Exists(simenv.BackgroundImage.Filename))
 									{
 										envfn = simenv.BackgroundImage.Filename;
+										if(_IsHdrLsEnvironment(ReflectionEnvironment))
+										{
+											ReflectionTexture.IsLinear = true;
+										}
 									}
 								}
 							}
