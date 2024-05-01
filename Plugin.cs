@@ -81,28 +81,6 @@ namespace RhinoCycles
 				kernelPath = RcCore.GetRelativePath(appPath, kernelPath);
 				RcCore.It.KernelPathRelative = kernelPath;
 
-				CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
-
-				// TODO: Is this the right spot?
-				IntPtr perlin_noise_array = RenderTexture.GetProceduralPerlinNoiseArrayPointer();
-				uint perlin_noise_array_size = RenderTexture.GetProceduralPerlinNoiseArraySize();
-				CSycles.set_rhino_perlin_noise_table(perlin_noise_array, perlin_noise_array_size);
-
-				// TODO: Is this the right spot?
-				IntPtr impulse_noise_array = RenderTexture.GetProceduralImpulseNoiseArrayPointer();
-				uint impulse_noise_array_size = RenderTexture.GetProceduralImpulseNoiseArraySize();
-				CSycles.set_rhino_impulse_noise_table(impulse_noise_array, impulse_noise_array_size);
-
-				// TODO: Is this the right spot?
-				IntPtr vc_noise_array = RenderTexture.GetProceduralVcNoiseArrayPointer();
-				uint vc_noise_array_size = RenderTexture.GetProceduralVcNoiseArraySize();
-				CSycles.set_rhino_vc_noise_table(vc_noise_array, vc_noise_array_size);
-
-				// TODO: Is this the right spot?
-				IntPtr aaltonen_noise_array = RenderTexture.GetProceduralAaltonenNoiseArrayPointer();
-				uint aaltonen_noise_array_size = RenderTexture.GetProceduralAaltonenNoiseArraySize();
-				CSycles.set_rhino_aaltonen_noise_table(aaltonen_noise_array, aaltonen_noise_array_size);
-
 				RcCore.It.Initialised = false;
 #if ON_RUNTIME_WIN
 				RhinoCyclesCore.RenderEngine._MonitorPixelCount = (int)(RhinoEtoApp.MainWindow.Screen.Bounds.Width * RhinoEtoApp.MainWindow.Screen.Bounds.Height);
@@ -141,7 +119,33 @@ namespace RhinoCycles
 				if(!RcCore.It.Initialised)
 				{
 					RcCore.It.AddLogString("InitialiseCSycles entry");
-					if(File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) ||
+
+					// Curtis RH-79171: Ensure that we don't load ccycles.dll during OnLoad, it
+					// can add a 15-40 second delay on initial/first startup due to Windows Defender
+
+					CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
+
+					// TODO: Is this the right spot?
+					IntPtr perlin_noise_array = RenderTexture.GetProceduralPerlinNoiseArrayPointer();
+					uint perlin_noise_array_size = RenderTexture.GetProceduralPerlinNoiseArraySize();
+					CSycles.set_rhino_perlin_noise_table(perlin_noise_array, perlin_noise_array_size);
+
+					// TODO: Is this the right spot?
+					IntPtr impulse_noise_array = RenderTexture.GetProceduralImpulseNoiseArrayPointer();
+					uint impulse_noise_array_size = RenderTexture.GetProceduralImpulseNoiseArraySize();
+					CSycles.set_rhino_impulse_noise_table(impulse_noise_array, impulse_noise_array_size);
+
+					// TODO: Is this the right spot?
+					IntPtr vc_noise_array = RenderTexture.GetProceduralVcNoiseArrayPointer();
+					uint vc_noise_array_size = RenderTexture.GetProceduralVcNoiseArraySize();
+					CSycles.set_rhino_vc_noise_table(vc_noise_array, vc_noise_array_size);
+
+					// TODO: Is this the right spot?
+					IntPtr aaltonen_noise_array = RenderTexture.GetProceduralAaltonenNoiseArrayPointer();
+					uint aaltonen_noise_array_size = RenderTexture.GetProceduralAaltonenNoiseArraySize();
+					CSycles.set_rhino_aaltonen_noise_table(aaltonen_noise_array, aaltonen_noise_array_size);
+
+					if (File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) ||
 					  Rhino.RhinoApp.IsSafeModeEnabled
 						)
 					{
