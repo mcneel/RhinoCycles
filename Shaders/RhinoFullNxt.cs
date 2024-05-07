@@ -642,8 +642,8 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump88 = new BumpNode(m_shader, "bump_");
 					bump88.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					bump88.ins.Strength.Value = 1.0f;  //RcCore.It.AllSettings.BumpStrengthFactor; // * 100.0f;
-					bump88.ins.Distance.Value = 1.0f;  //RcCore.It.AllSettings.BumpDistance;
+					bump88.ins.Strength.Value = 1.0f;  //part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor; // * 100.0f;
+					bump88.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 					bump88.ins.UseObjectSpace.Value = true;
 
 					var light_path109 = new LightPathNode(m_shader, "light_path_");
@@ -982,7 +982,8 @@ namespace RhinoCyclesCore.Shaders
 
 					if (part.CyclesMaterialType == ShaderBody.CyclesMaterial.Glass
 						|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.SimplePlastic
-						|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.SimpleMetal) return coloured_shadow_mix_glass_principled118;
+						|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.SimpleMetal
+						|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.Paint) return coloured_shadow_mix_glass_principled118;
 					return custom_alpha_cutter116;
 				}
 			}
