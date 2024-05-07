@@ -232,7 +232,7 @@ namespace RhinoCyclesCore.Shaders
 		/// <returns>ShaderNode, the final node in the shader graph branch. This will be a MixNode.
 		/// The base color (color or texture) will have to be connected to the Color1 input.</returns>
 		/// <since>7.0</since>
-		private MixNode HandleDecals() {
+		private MixNode HandleDecals(bool gamma_correct_decals = false) {
 			//ccl.CodeShader m_codeshader = new ccl.CodeShader(ccl.Shader.ShaderType.Material);
 			MixNode nodeToBindIntoShader = null;
 
@@ -265,6 +265,13 @@ namespace RhinoCyclesCore.Shaders
 				}
 
 				MixNode lastMixer = mixrgbs.Last();
+				GammaNode decalGammaNode = null;
+				if(gamma_correct_decals) {
+					decalGammaNode = new GammaNode(m_shader, "gamma node for decal");
+					decalGammaNode.ins.Gamma.Value = m_original.Gamma;
+					decalGammaNode.outs.Color.Connect(lastMixer.ins.Color2);
+				}
+				ISocket sock_to_connect_to = gamma_correct_decals ? decalGammaNode.ins.Color : lastMixer.ins.Color2;
 
 				if(count == 1) {
 					var texco = texcos[0];
@@ -274,9 +281,9 @@ namespace RhinoCyclesCore.Shaders
 					SetupOneDecalNodes(m_shader, m_original.Decals.First(), texco, imgtex, trans, adjust);
 					if(m_original.Decals[0].Texture.AdjustNeeded) {
 						imgtex.outs.Color.Connect(adjust.ins.Color);
-						adjust.outs.Color.Connect(lastMixer.ins.Color2);
+						adjust.outs.Color.Connect(sock_to_connect_to);
 					} else {
-						imgtex.outs.Color.Connect(lastMixer.ins.Color2);
+						imgtex.outs.Color.Connect(sock_to_connect_to);
 					}
 					trans.outs.Value.Connect(lastMixer.ins.Fac);
 				}
@@ -366,7 +373,7 @@ namespace RhinoCyclesCore.Shaders
 
 						idx++;
 						if(idx==alphamaths.Count) {
-							previousMixRgb.outs.Color.Connect(lastMixer.ins.Color2);
+							previousMixRgb.outs.Color.Connect(sock_to_connect_to);
 							previousAlphaMath.outs.Value.Connect(lastMixer.ins.Fac);
 						}
 					}
@@ -420,7 +427,7 @@ namespace RhinoCyclesCore.Shaders
 			}
 			else
 			{
-				MixNode decalMixin = HandleDecals();
+				MixNode decalMixin = HandleDecals(!part.IsPbr);
 
 				if (part.IsPbr)
 				{
@@ -850,16 +857,17 @@ namespace RhinoCyclesCore.Shaders
 					if (decalMixin != null)
 					{
 						diffuse_base_color_through_alpha120.outs.Color.Connect(decalMixin.ins.Color1);
-						GammaNode gammaNode = new GammaNode(m_shader, "gamma node for decalled pbr base tex");
-						gammaNode.ins.Gamma.Value = part.Gamma;
-						decalMixin.outs.Color.Connect(gammaNode.ins.Color);
-						gammaNode.outs.Color.Connect(final_diffuse89.ins.Color);
-						gammaNode.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+						decalMixin.outs.Color.Connect(final_diffuse89.ins.Color);
+						decalMixin.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+						decalMixin.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
+						decalMixin.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
 					}
 					else
 					{
 						diffuse_base_color_through_alpha120.outs.Color.Connect(final_diffuse89.ins.Color);
 						diffuse_base_color_through_alpha120.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+						diffuse_base_color_through_alpha120.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
+						diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
 					}
 
 					light_path109.outs.IsCameraRay.Connect(shadeless_on_cameraray122.ins.Value1);
@@ -889,7 +897,6 @@ namespace RhinoCyclesCore.Shaders
 					light_path109.outs.IsShadowRay.Connect(multiply_with_shadowray77.ins.Value2);
 					diffuse_glossy_and_refraction107.outs.Closure.Connect(custom_environment_blend110.ins.Closure1);
 					environment_map_diffuse108.outs.BSDF.Connect(custom_environment_blend110.ins.Closure2);
-					diffuse_base_color_through_alpha120.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
 					multiply_with_shadowray77.outs.Value.Connect(weight_for_shadowray_coloured_shadow78.ins.Value1);
 					custom_environment_blend110.outs.Closure.Connect(coloured_shadow_mix_custom114.ins.Closure1);
 					coloured_shadow_trans_color111.outs.BSDF.Connect(coloured_shadow_mix_custom114.ins.Closure2);
@@ -911,7 +918,6 @@ namespace RhinoCyclesCore.Shaders
 					add_emission_to_final124.outs.Closure.Connect(custom_alpha_cutter116.ins.Closure1);
 					transparent115.outs.BSDF.Connect(custom_alpha_cutter116.ins.Closure2);
 					add_diffuse_texture_alpha83.outs.Value.Connect(custom_alpha_cutter116.ins.Fac);
-					diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
 					attennuated_refraction_color99.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color2);
 					mix_diffuse_and_transparency_color187.outs.Color.Connect(principledbsdf117.ins.BaseColor);
 					principledbsdf117.outs.BSDF.Connect(custom_environment_blend195.ins.Closure1);
