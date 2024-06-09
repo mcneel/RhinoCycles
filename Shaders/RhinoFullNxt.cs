@@ -139,6 +139,7 @@ namespace RhinoCyclesCore.Shaders
 			texco.UseTransform = true;
 
 			RenderEngine.SetTextureImage(imgtex, decal.Texture);
+			imgtex.AlternateTiles = decal.Texture.AlternateTiles;
 			texco.UvMap = decal.Texture.GetUvMapForChannel();
 			imgtex.Extension = TextureNode.TextureExtension.Clip;
 			imgtex.UseAlpha = true;
