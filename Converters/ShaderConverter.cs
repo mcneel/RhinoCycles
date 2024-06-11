@@ -2062,10 +2062,10 @@ namespace RhinoCyclesCore.Converters
 			Child1?.CreateAndConnectProceduralNode(shader, blend_transform.outs.Vector, blend.ins.Color1, blend.ins.Alpha1.ToList(), IsData);
 			Child2?.CreateAndConnectProceduralNode(shader, blend_transform.outs.Vector, blend.ins.Color2, blend.ins.Alpha2.ToList(), IsData);
 
-			uvw_output.Connect(noise_transform.ins.Vector);
-			uvw_output.Connect(blend_transform.ins.Vector);
-
+			blend_transform.outs.Vector.Connect(noise_transform.ins.Vector);
 			noise_transform.outs.Vector.Connect(noise.ins.UVW);
+
+			uvw_output.Connect(blend_transform.ins.Vector);
 			blend_transform.outs.Vector.Connect(blend.ins.UVW);
 
 			noise.outs.Color.Connect(blend.ins.BlendColor);
