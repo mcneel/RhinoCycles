@@ -18,6 +18,7 @@ using ccl;
 using Rhino;
 using Rhino.PlugIns;
 using System;
+using RhinoCyclesCore.Core;
 
 namespace RhinoCyclesCore.Settings
 {
@@ -241,7 +242,16 @@ namespace RhinoCyclesCore.Settings
 		{
 			get
 			{
-				return Device.DeviceFromString(Device.ValidDeviceString(SelectedDeviceStr));
+				RcCore.It.AddLogString($"Finding render device with {SelectedDeviceStr}");
+				Device dev = Device.DeviceFromString(Device.ValidDeviceString(SelectedDeviceStr));
+				RcCore.It.AddLogString($"Got render device {dev}");
+				if(dev == null)
+				{
+					RcCore.It.AddLogString("Device was null");
+					dev = Device.FirstCpu;
+					RcCore.It.AddLogString($"Fall back to device {dev}");
+				}
+				return dev;
 			}
 		}
 
