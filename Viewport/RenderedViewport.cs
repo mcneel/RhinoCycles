@@ -601,7 +601,7 @@ namespace RhinoCycles.Viewport
 
 		public override bool HudShowMaxPasses()
 		{
-			return eds.ShowMaxPasses;
+			return eds?.ShowMaxPasses ?? false;
 		}
 
 		public override bool HudShowPasses()
