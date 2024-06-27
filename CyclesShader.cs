@@ -38,7 +38,7 @@ namespace RhinoCyclesCore
 		private ShaderBody _front;
 		private ShaderBody _back;
 		private BitmapConverter _bitmapConverter;
-		private readonly uint _docsrn;
+		public readonly uint _docsrn;
 		private bool disposedValue;
 
 		public CyclesShader(uint id, BitmapConverter bitmapConverter, uint docsrn)

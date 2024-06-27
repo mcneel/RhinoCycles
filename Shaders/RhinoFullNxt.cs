@@ -111,11 +111,107 @@ namespace RhinoCyclesCore.Shaders
 		{
 			if (RcCore.It.AllSettings.DebugSimpleShaders)
 			{
-				RhinoTextureCoordinateNode texco = new RhinoTextureCoordinateNode(m_shader, "debug_texco");
-				texco.UvMap = "uvmap1";
+				int _debugpath = 0;
+				Rhino.RhinoDoc _doc = Rhino.RhinoDoc.FromRuntimeSerialNumber(m_original._docsrn);
+				if(_doc != null) {
+					var val = _doc.Strings.GetValue("ccl_debug");
+					if(!int.TryParse(val, out _debugpath)) {
+						_debugpath = 0;
+					}
+
+				}
 				ccl.ShaderNodes.DiffuseBsdfNode diff = new DiffuseBsdfNode(m_shader, "debug_diff_");
 				diff.ins.Color.Value = new float4(0.8f, 0.6f, 0.5f, 1.0f);
-				texco.outs.UV.Connect(diff.ins.Color);
+
+				if(_debugpath==0) {
+					RhinoTextureCoordinateNode texco = new RhinoTextureCoordinateNode(m_shader, "debug_texco");
+					texco.UvMap = "uvmap1";
+					texco.outs.UV.Connect(diff.ins.Color);
+
+				}
+				else if(_debugpath==1)
+				{
+					GeometryInfoNode geom = new GeometryInfoNode(m_shader, "geom-debug");
+					geom.outs.Backfacing.Connect(diff.ins.Color);
+				}
+				else if(_debugpath==2)
+				{
+					GeometryInfoNode geom = new GeometryInfoNode(m_shader, "geom-debug");
+					geom.outs.Incoming.Connect(diff.ins.Color);
+				}
+				else if(_debugpath==3)
+				{
+					GeometryInfoNode geom = new GeometryInfoNode(m_shader, "geom-debug");
+					geom.outs.Normal.Connect(diff.ins.Color);
+				}
+				else if(_debugpath==4)
+				{
+					GeometryInfoNode geom = new GeometryInfoNode(m_shader, "geom-debug");
+					geom.outs.Parametric.Connect(diff.ins.Color);
+				}
+				else if(_debugpath==5)
+				{
+					GeometryInfoNode geom = new GeometryInfoNode(m_shader, "geom-debug");
+					geom.outs.Pointiness.Connect(diff.ins.Color);
+				}
+				else if(_debugpath==6)
+				{
+					GeometryInfoNode geom = new GeometryInfoNode(m_shader, "geom-debug");
+					geom.outs.Position.Connect(diff.ins.Color);
+				}
+				else if(_debugpath==7)
+				{
+					GeometryInfoNode geom = new GeometryInfoNode(m_shader, "geom-debug");
+					geom.outs.RandomPerIsland.Connect(diff.ins.Color);
+				}
+				else if(_debugpath==8)
+				{
+					GeometryInfoNode geom = new GeometryInfoNode(m_shader, "geom-debug");
+					geom.outs.Tangent.Connect(diff.ins.Color);
+				}
+				else if(_debugpath==9)
+				{
+					GeometryInfoNode geom = new GeometryInfoNode(m_shader, "geom-debug");
+					geom.outs.TrueNormal.Connect(diff.ins.Color);
+				}
+				else if(_debugpath>=100 && _debugpath<200)
+				{
+					var noise = new ccl.ShaderNodes.NoiseTextureProceduralNode(m_shader, "noise-debug");
+					switch(_debugpath)
+					{
+						case 101:
+							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN_PLUS_VALUE;
+							break;
+						case 102:
+							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.SIMPLEX;
+							break;
+						case 103:
+							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.VALUE_NOISE;
+							break;
+						case 104:
+							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.SPARSE_CONVOLUTION;
+							break;
+						case 105:
+							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.LATTICE_CONVOLUTION;
+							break;
+						case 106:
+							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.WARDS_HERMITE;
+							break;
+						case 107:
+							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.AALTONEN;
+							break;
+						default:
+							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+							break;
+
+					}
+					noise.ins.Color1.Value = new float4(1.0f, 0.0f, 0.0f, 1.0f);
+					noise.ins.Color2.Value = new float4(0.0f, 1.0f, 0.0f, 1.0f);
+					noise.outs.Color.Connect(diff.ins.Color);
+				}
+
+
+				//texco.outs.UV.Connect(diff.ins.Color);
 				diff.outs.BSDF.Connect(m_shader.Output.ins.Surface);
 			}
 			else
