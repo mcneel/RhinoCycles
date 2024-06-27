@@ -112,14 +112,21 @@ namespace RhinoCyclesCore.Shaders
 			if (RcCore.It.AllSettings.DebugSimpleShaders)
 			{
 				int _debugpath = 0;
+				float _debug_freqmult = 2.0f;
 				Rhino.RhinoDoc _doc = Rhino.RhinoDoc.FromRuntimeSerialNumber(m_original._docsrn);
 				if(_doc != null) {
 					var val = _doc.Strings.GetValue("ccl_debug");
 					if(!int.TryParse(val, out _debugpath)) {
 						_debugpath = 0;
 					}
+					val = _doc.Strings.GetValue("ccl_freqmult");
+					if(!float.TryParse(val, out _debug_freqmult)) {
+						_debug_freqmult = 20.0f;
+					}
 
 				}
+
+				RcCore.It.AddLogString($"@@@@@@@@@@@@@@@@@@@@@@@@\n\nDebugging shader using debug value: {_debugpath}\n\n");
 				ccl.ShaderNodes.DiffuseBsdfNode diff = new DiffuseBsdfNode(m_shader, "debug_diff_");
 				diff.ins.Color.Value = new float4(0.8f, 0.6f, 0.5f, 1.0f);
 
@@ -177,36 +184,48 @@ namespace RhinoCyclesCore.Shaders
 				else if(_debugpath>=100 && _debugpath<200)
 				{
 					var noise = new ccl.ShaderNodes.NoiseTextureProceduralNode(m_shader, "noise-debug");
+					RhinoTextureCoordinateNode texco = new RhinoTextureCoordinateNode(m_shader, "debug_texco");
+					texco.UvMap = "uvmap1";
+					texco.outs.UV.Connect(noise.ins.UVW);
 					switch(_debugpath)
 					{
 						case 101:
 							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN_PLUS_VALUE;
+							RcCore.It.AddLogString($"set noise to perlin+value noise");
 							break;
 						case 102:
 							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.SIMPLEX;
+							RcCore.It.AddLogString($"set noise to simplex noise");
 							break;
 						case 103:
 							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.VALUE_NOISE;
+							RcCore.It.AddLogString($"set noise to value noise");
 							break;
 						case 104:
 							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.SPARSE_CONVOLUTION;
+							RcCore.It.AddLogString($"set noise to Lattice sparse");
 							break;
 						case 105:
 							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.LATTICE_CONVOLUTION;
+							RcCore.It.AddLogString($"set noise to Lattice convolution");
 							break;
 						case 106:
 							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.WARDS_HERMITE;
+							RcCore.It.AddLogString($"set noise to Ward's hermite");
 							break;
 						case 107:
 							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.AALTONEN;
+							RcCore.It.AddLogString($"set noise to Aaltonen");
 							break;
 						default:
 							noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+							RcCore.It.AddLogString($"set noise to Perlin");
 							break;
 
 					}
-					noise.ins.Color1.Value = new float4(1.0f, 0.0f, 0.0f, 1.0f);
-					noise.ins.Color2.Value = new float4(0.0f, 1.0f, 0.0f, 1.0f);
+					noise.FrequencyMultiplier = _debug_freqmult;
+					noise.ins.Color1.Value = new float4(1.0f, 1.0f, 1.0f, 1.0f);
+					noise.ins.Color2.Value = new float4(0.0f, 0.0f, 0.0f, 1.0f);
 					noise.outs.Color.Connect(diff.ins.Color);
 				}
 
