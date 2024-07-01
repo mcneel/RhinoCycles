@@ -195,5 +195,17 @@ namespace RhinoCycles
 			pages.Add(optionsPage);
 			base.OptionsDialogPages(pages);
 		}
+
+		public override bool IsTextureSupported(RenderTexture texture)
+		{
+			if (texture == null ||
+				texture.TypeId == ContentUuids.AdvancedDotTextureType ||
+				texture.TypeId == ContentUuids.ResampleTextureType)
+			{
+				return false;
+			}
+
+			return true;
+		}
 	}
 }

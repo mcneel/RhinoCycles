@@ -2098,7 +2098,7 @@ namespace RhinoCyclesCore.Database
 			if(_renderEngine._textureBakeQuality == 4) { // Disable
 				return BakingFunctions.None;
 			}
-			return BakingFunctions.None;
+			return BakingFunctions.ProceduralTextures;
 		}
 
 		protected override int BakingSize(RhinoObject ro, RenderMaterial material, TextureType type)
