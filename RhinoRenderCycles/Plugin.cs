@@ -264,5 +264,17 @@ namespace CyclesForRhino.CyclesForRhino
 			sections.Add(new AdvancedSettingsSection(Id));
 			RcCore.It.AddLogString("RenderSettingsCustomSeections exit");
 		}
+
+		public override bool IsTextureSupported(RenderTexture texture)
+		{
+			if (texture == null ||
+				texture.TypeId == ContentUuids.AdvancedDotTextureType ||
+				texture.TypeId == ContentUuids.ResampleTextureType)
+			{
+				return false;
+			}
+
+			return true;
+		}
 	}
 }
