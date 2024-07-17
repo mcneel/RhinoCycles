@@ -160,7 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj" Private="False" ExcludeAssets="all" />
-    <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj" Private="False" ExcludeAssets="all" />
+    <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj" Private="False" ExcludeAssets="runtime" />
     <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj" Private="False" ExcludeAssets="all" />
     <ProjectReference Include="..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
   </ItemGroup>
