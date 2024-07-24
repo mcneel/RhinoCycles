@@ -275,6 +275,8 @@ namespace RhinoCyclesCore.Database
 
 					foreach (var cob in cobs)
 					{
+						if (cob == null) continue;
+
 						RcCore.It.AddLogStringIfVerbose($"\t\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete}");
 						// remove mesh data
 						cob.Mesh?.ClearData();
