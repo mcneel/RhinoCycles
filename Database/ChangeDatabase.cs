@@ -277,7 +277,7 @@ namespace RhinoCyclesCore.Database
 					{
 						if (cob == null) continue;
 
-						RcCore.It.AddLogStringIfVerbose($"\t\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete}");
+						RcCore.It.AddLogStringIfVerbose($"\t\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete})");
 						// remove mesh data
 						cob.Mesh?.ClearData();
 						cob.Mesh?.TagRebuild();
@@ -1175,7 +1175,7 @@ namespace RhinoCyclesCore.Database
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
 
-				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes}. material {mat.Name}";
+				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes} ({a.InstanceId}). material {mat.Name}. Mesh id {meshid}.";
 				RcCore.It.AddLogStringIfVerbose(stat);
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
 
