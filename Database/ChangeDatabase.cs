@@ -153,7 +153,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadObjectShaderChanges()
 		{
-			if (_shaderDatabase.ObjectShaderChanges.Count == 0) return;
+			if (_shaderDatabase?.ObjectShaderChanges.Count == 0) return;
 
 			RcCore.It.AddLogStringIfVerbose("\tUploadObjectShaderChanges entry");
 			RcCore.It.AddLogStringIfVerbose($"Uploading object shader changes {_shaderDatabase.ObjectShaderChanges.Count}\n");
@@ -244,7 +244,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadDynamicObjectTransforms()
 		{
-			if(_objectDatabase.ObjectTransforms.Count > 0) {
+			if(_objectDatabase?.ObjectTransforms.Count > 0) {
 				RcCore.It.AddLogStringIfVerbose("\tUploadDynamicObjectTransforms entry");
 				foreach (var cot in _objectDatabase.ObjectTransforms)
 				{
@@ -265,7 +265,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadMeshChanges()
 		{
-			if(_objectDatabase.MeshesToDelete.Count > 0 || _objectDatabase.MeshChanges.Count > 0)
+			if(_objectDatabase?.MeshesToDelete.Count > 0 || _objectDatabase?.MeshChanges.Count > 0)
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadMeshChanges entry");
 				// handle mesh deletes first
@@ -277,7 +277,7 @@ namespace RhinoCyclesCore.Database
 					{
 						if (cob == null) continue;
 
-						RcCore.It.AddLogStringIfVerbose($"\t\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete}");
+						RcCore.It.AddLogStringIfVerbose($"\t\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete})");
 						// remove mesh data
 						cob.Mesh?.ClearData();
 						cob.Mesh?.TagRebuild();
@@ -432,8 +432,8 @@ namespace RhinoCyclesCore.Database
 		public bool HasBvhChanges()
 		{
 			return
-				_objectDatabase.MeshChanges.Count > 0 ||
-				_objectDatabase.NewOrUpdatedObjects.Count > 0;
+				_objectDatabase?.MeshChanges.Count > 0 ||
+				_objectDatabase?.NewOrUpdatedObjects.Count > 0;
 		}
 
 		private LinearWorkflow _linearWorkflow = new LinearWorkflow();
@@ -532,7 +532,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadCameraChanges()
 		{
-			if (!_cameraDatabase.HasChanges()) return;
+			if (!_cameraDatabase?.HasChanges() ?? false) return;
 
 			RcCore.It.AddLogStringIfVerbose("\tUploadCameraChanges entry");
 
@@ -1175,7 +1175,7 @@ namespace RhinoCyclesCore.Database
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
 
-				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes}. material {mat.Name}";
+				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes} ({a.InstanceId}). material {mat.Name}. Mesh id {meshid}.";
 				RcCore.It.AddLogStringIfVerbose(stat);
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
 
@@ -1342,7 +1342,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadShaderChanges()
 		{
-			if (_shaderDatabase.ShaderChanges.Count > 0)
+			if (_shaderDatabase?.ShaderChanges.Count > 0)
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadShaderChanges entry");
 				RcCore.It.AddLogStringIfVerbose($"\t\tUploading shader changes {_shaderDatabase.ShaderChanges.Count}");
@@ -1503,7 +1503,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadLightChanges()
 		{
-			if(_lightDatabase.LightsToAdd.Count == 0 && _lightDatabase.LightsToUpdate.Count == 0) return;
+			if(_lightDatabase?.LightsToAdd.Count == 0 && _lightDatabase?.LightsToUpdate.Count == 0) return;
 
 			RcCore.It.AddLogStringIfVerbose("\tUploadLightChanges entry");
 
@@ -1814,7 +1814,7 @@ namespace RhinoCyclesCore.Database
 
 		public void UploadEnvironmentChanges()
 		{
-			if (_environmentDatabase.BackgroundHasChanged)
+			if (_environmentDatabase?.BackgroundHasChanged ?? false)
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadEnvironmentChanges entry");
 				_environmentDatabase.CyclesShader.EnabledLights = AnyActiveLights();
@@ -1839,7 +1839,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadObjectChanges()
 		{
-			if(_objectDatabase.DeletedObjects.Count == 0 && _objectDatabase.NewOrUpdatedObjects.Count == 0) return;
+			if(_objectDatabase?.DeletedObjects.Count == 0 && _objectDatabase?.NewOrUpdatedObjects.Count == 0) return;
 
 			RcCore.It.AddLogStringIfVerbose("\tUploadObjectChanges entry");
 
