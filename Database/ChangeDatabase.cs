@@ -267,6 +267,9 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void UploadMeshChanges()
 		{
+			ccl.Transform xform = Rhino.Geometry.Transform.Identity.ToCyclesTransform();
+			RhinoMapping rm = new (_renderEngine.Session);
+			rm.SetPxyz(xform);
 			if(_objectDatabase?.MeshesToDelete.Count > 0 || _objectDatabase?.MeshChanges.Count > 0)
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadMeshChanges entry");
@@ -984,7 +987,7 @@ namespace RhinoCyclesCore.Database
 				idx++;
 			}
 			string sbstr = sb.ToString();
-			RhinoApp.OutputDebugString($"{sbstr}\n\n");
+			RcCore.It.AddLogStringIfVerbose($"{sbstr}\n\n");
 			return decalList;
 		}
 
