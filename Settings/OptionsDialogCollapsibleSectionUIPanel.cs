@@ -72,7 +72,7 @@ namespace RhinoCyclesCore.Settings
 		SessionSection m_sessionSection;
 		DeviceSection m_deviceSection;
 		ViewportSharpnessSection m_viewportSharpnessSection;
-		StackLayout MainLayout;
+		TableLayout MainLayout;
 		private void InitializeLayout()
 		{
 			m_sessionSection = new SessionSection(0);
@@ -83,15 +83,13 @@ namespace RhinoCyclesCore.Settings
 			m_holder.Add(m_viewportSharpnessSection);
 			UpdateSections();
 
-			MainLayout = new StackLayout()
+			MainLayout = new TableLayout()
 			{
 				// Padding around the table
 				Padding = new Eto.Drawing.Padding(3, 5, 3, 0),
-				// Spacing between table cells
-				HorizontalContentAlignment = HorizontalAlignment.Stretch,
-				Items =
+				Rows =
 				{
-					TableLayout.HorizontalScaled(0,
+					new TableRow(
 						new Panel() {
 							Padding = 10,
 							Content = new TableLayout() {
@@ -103,7 +101,7 @@ namespace RhinoCyclesCore.Settings
 							}
 						}
 					),
-					m_holder,
+					new TableRow(m_holder),
 				}
 			};
 
