@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using CclClippingPlane = ccl.ClippingPlane;
 using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;
@@ -287,9 +288,12 @@ namespace RhinoCyclesCore.Database
 					}
 				}
 
-				var curmesh = 0;
 				var totalmeshes = _objectDatabase.MeshChanges.Count;
 				RcCore.It.AddLogStringIfVerbose($"\t\tUploading {totalmeshes} mesh changes");
+				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Uploading mesh changes ({totalmeshes})", -1.0f);
+				// First collect list of changes, so we can parallelize actual data
+				// upload.
+				List<Tuple<CyclesMesh, ccl.Mesh>> meshChangesList = new();
 				foreach (var meshChange in _objectDatabase.MeshChanges)
 				{
 					var cyclesMesh = meshChange.Value;
@@ -302,39 +306,36 @@ namespace RhinoCyclesCore.Database
 
 					if (_renderEngine.ShouldBreak) return;
 
-					var shader = new ccl.Shader(_renderEngine.Session.Scene);
-
 					// creat a new mesh to upload mesh data to
 					if (newme)
 					{
-						me = new CclMesh(_renderEngine.Session, shader);
+						me = new CclMesh(_renderEngine.Session, _renderEngine._Shader);
 					}
+
+					if (newme) _objectDatabase.RecordObjectMeshRelation(cyclesMesh.MeshId, me);
+					_objectDatabase.RecordMeshOcsFrame(me.GeometryPointer, cyclesMesh.OcsFrame);
+
+					meshChangesList.Add(new Tuple<CyclesMesh, ccl.Mesh>(cyclesMesh, me));
+				}
+
+				bool _uploadMeshData = true;
+				// now upload mesh data in parallel
+				Parallel.ForEach(meshChangesList, meshChange =>
+				{
+					if (!_uploadMeshData) return;
+					var cyclesMesh = meshChange.Item1;
+					var me = meshChange.Item2;
 
 					me.Resize((uint)cyclesMesh.Verts.Length / 3, (uint)cyclesMesh.Faces.Length / 3);
 
 					// update status bar of render window.
 					var stat =
-						$"Upload mesh {curmesh}/{totalmeshes} [v: {cyclesMesh.Verts.Length / 3}, t: {cyclesMesh.Faces.Length / 3}]";
+						$"Upload mesh {cyclesMesh.MeshId.Item1} [v: {cyclesMesh.Verts.Length / 3}, t: {cyclesMesh.Faces.Length / 3}]";
 					RcCore.It.AddLogStringIfVerbose($"\t\t{stat}");
 
-					// set progress, but without rendering percentage (hence the -1.0f)
-					_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
-
 					// upload, if we get false back we were signalled to stop rendering by user
-					if (!UploadMeshData(me, cyclesMesh)) return;
-
-					// if we re-uploaded mesh data, we need to make sure the shader
-					// information doesn't get lost.
-					//if (!newme) me.ReplaceShader(shader);
-
-					// don't forget to record this new mesh
-					if (newme) _objectDatabase.RecordObjectMeshRelation(cyclesMesh.MeshId, me);
-					//RecordShaderRelation(shader, cycles_mesh.MeshId);
-
-					_objectDatabase.RecordMeshOcsFrame(me.GeometryPointer, cyclesMesh.OcsFrame);
-
-					curmesh++;
-				}
+					if (!UploadMeshData(me, cyclesMesh)) _uploadMeshData = false;
+				});
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Mesh changes done", -1.0f);
 				RcCore.It.AddLogStringIfVerbose("\tUploadMeshChanges exit");
 			}

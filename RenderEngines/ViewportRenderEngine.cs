@@ -267,6 +267,7 @@ Please click the link below for more information.", 69));
 
 			#region create session for scene
 			Session = RcCore.It.CreateSession( sessionParams);
+			CreateSimpShader();
 			#endregion
 
 			InitializeSceneSettings(Session, RenderDevice, this, eds);

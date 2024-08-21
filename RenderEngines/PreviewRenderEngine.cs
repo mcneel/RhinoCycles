@@ -112,6 +112,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 				#region create session for scene
 				cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
+				cyclesEngine.CreateSimpShader();
 				#endregion
 
 				cyclesEngine.Session.AddPass(PassType.Combined);

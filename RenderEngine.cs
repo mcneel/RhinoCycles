@@ -200,6 +200,18 @@ namespace RhinoCyclesCore
 			RegisterEventHandler();
 		}
 
+		public ccl.Shader _Shader { get; set; } = null;
+		// Create a placeholder shader for new meshes to use before they get assigned
+		// their actual shaders
+		protected void CreateSimpShader()
+		{
+			var _sh = _Shader;
+			if(_sh == null)
+			{
+				_Shader = new ccl.Shader(Session.Scene);
+			}
+		}
+
 #endregion
 
 		/// <summary>
