@@ -15,6 +15,7 @@ limitations under the License.
 **/
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using CclShader = ccl.Shader;
@@ -50,20 +51,20 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// RhinoCycles shaders and Cycles shaders relations
 		/// </summary>
-		private readonly List<Tuple<object, CclShader>> _allShaders = new List<Tuple<object, CclShader>>();
+		private readonly ConcurrentDictionary<Tuple<object, CclShader>, bool> _allShaders = new ();
 
 		/// <summary>
 		/// record material changes for objects
 		/// </summary>
-		private readonly List<CyclesObjectShader> _cqObjectsShaderChanges = new List<CyclesObjectShader>();
+		private readonly ConcurrentDictionary<CyclesObjectShader, bool> _cqObjectsShaderChanges = new ();
 		/// <summary>
 		/// record shader changes to push to cycles
 		/// </summary>
-		private readonly List<CyclesShader> _cqShaders = new List<CyclesShader>();
+		private readonly ConcurrentQueue<CyclesShader> _cqShaders = new ();
 		/// <summary>
 		/// record RenderMaterial CRC and Shader relationship. Key is RenderHash, Value is Shader.
 		/// </summary>
-		private readonly Dictionary<uint, CclShader> _rhCclShaders = new Dictionary<uint, CclShader>();
+		private readonly ConcurrentDictionary<uint, CclShader> _rhCclShaders = new ();
 		private bool disposedValue;
 
 		/// <summary>
@@ -78,17 +79,17 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// Get a list of object shader changes.
 		/// </summary>
-		public List<CyclesObjectShader> ObjectShaderChanges => _cqObjectsShaderChanges;
+		public List<CyclesObjectShader> ObjectShaderChanges => _cqObjectsShaderChanges.Keys.ToList();
 
 		/// <summary>
 		/// Get a list of shader changes.
 		/// </summary>
-		public List<CyclesShader> ShaderChanges => _cqShaders;
+		public ConcurrentQueue<CyclesShader> ShaderChanges => _cqShaders;
 
 		/// <summary>
 		/// Get a list of all shaders.
 		/// </summary>
-		public List<Tuple<object, CclShader>> AllShaders => _allShaders;
+		public List<Tuple<object, CclShader>> AllShaders => _allShaders.Keys.ToList();
 
 		/// <summary>
 		/// Record the CclShader for given id.
@@ -97,7 +98,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="shader">ccl.Shader</param>
 		public void RecordRhCclShaderRelation(uint id, CclShader shader)
 		{
-				_rhCclShaders.Add(id, shader);
+			_rhCclShaders.TryAdd(id, shader);
 		}
 
 		/// <summary>
@@ -107,7 +108,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="shader"></param>
 		public void Add(CyclesLight l, CclShader shader)
 		{
-			_allShaders.Add(new Tuple<object, CclShader>(l, shader));
+			_allShaders.TryAdd(new Tuple<object, CclShader>(l, shader), true);
 		}
 
 		/// <summary>
@@ -117,12 +118,12 @@ namespace RhinoCyclesCore.Database
 		/// <param name="shader"></param>
 		public void Add(CyclesShader s, CclShader shader)
 		{
-			_allShaders.Add(new Tuple<object, CclShader>(s, shader));
+			_allShaders.TryAdd(new Tuple<object, CclShader>(s, shader), true);
 		}
 
 		public void AddObjectMaterialChange(CyclesObjectShader o)
 		{
-			if(!_cqObjectsShaderChanges.Contains(o)) _cqObjectsShaderChanges.Add(o);
+			if(!_cqObjectsShaderChanges.ContainsKey(o)) _cqObjectsShaderChanges.TryAdd(o, true);
 		}
 
 		/// <summary>
@@ -138,7 +139,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ClearShaders()
 		{
-			_cqShaders.Clear();
+			while(_cqShaders.TryDequeue(out CyclesShader sh)) { sh.Dispose(); }
 		}
 
 		/// <summary>
@@ -185,7 +186,7 @@ namespace RhinoCyclesCore.Database
 		{
 			if (!_rhCclShaders.ContainsKey(shader.Id) && !_cqShaders.Contains(shader))
 			{
-				_cqShaders.Add(shader);
+				_cqShaders.Enqueue(shader);
 				//_allShaders.Add(shader);
 			}
 		}
@@ -208,7 +209,7 @@ namespace RhinoCyclesCore.Database
 					{
 						shader.Dispose();
 					}
-					_cqShaders.Clear(); // CyclesShader
+					ClearShaders();
 					foreach (var cclshader in _rhCclShaders)
 					{
 						cclshader.Value?.Dispose();

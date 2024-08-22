@@ -26,6 +26,7 @@ using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
 using RhinoCyclesCore.Settings;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -247,15 +248,15 @@ namespace RhinoCyclesCore.Database
 		{
 			if(_objectDatabase?.ObjectTransforms.Count > 0) {
 				RcCore.It.AddLogStringIfVerbose("\tUploadDynamicObjectTransforms entry");
-				foreach (var cot in _objectDatabase.ObjectTransforms)
+				Parallel.ForEach(_objectDatabase.ObjectTransforms, cot =>
 				{
 					var cob = _objectDatabase.FindObjectRelation(cot.Id);
-					if (cob == null) continue;
+					if (cob == null) return;
 
 					cob.Transform = cot.Transform;
 					cob.Mesh?.TagRebuild();
 					cob.TagUpdate();
-				}
+				});
 
 				RcCore.It.AddLogStringIfVerbose("\tUploadDynamicObjectTransforms exit");
 			}
@@ -1114,9 +1115,6 @@ namespace RhinoCyclesCore.Database
 
 		protected override void ApplyMeshInstanceChanges(List<uint> deleted, List<MeshInstance> addedOrChanged)
 		{
-			// helper list to ensure we don't add same material multiple times.
-			var addedmats = new List<uint>();
-
 			RcCore.It.AddLogStringIfVerbose($"ApplyMeshInstanceChanges: Received {deleted.Count} mesh instance deletes");
 			foreach (var dm in deleted)
 			{
@@ -1142,28 +1140,29 @@ namespace RhinoCyclesCore.Database
 			var realDeleted = (from dlt in deleted where !skipFromDeleted.Contains(dlt) select dlt).ToList();
 			RcCore.It.AddLogStringIfVerbose($"\tActually deleting {realDeleted.Count} mesh instances!");
 			var totaldel = realDeleted.Count;
-			var curdel = 0;
-			foreach (var d in realDeleted)
+
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Deleting mesh instances: {totaldel}", -1.0f);
+			Parallel.ForEach(realDeleted, d =>
 			{
-				curdel++;
 				if (_renderEngine.ShouldBreak) return;
-				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Delete mesh instance {curdel}/{totaldel}", -1.0f);
-					var cob = _objectDatabase.FindObjectRelation(d);
-					if (cob != null)
-					{
-						var delob = new CyclesObject {cob = cob};
-						_objectDatabase.DeleteObject(delob);
-						RcCore.It.AddLogStringIfVerbose($"\tDeleting mesh instance {d} (ptr {cob.ObjectPtr})");
-					}
-					else
-					{
-						RcCore.It.AddLogStringIfVerbose($"\tMesh instance {d} has no object relation..");
-					}
-			}
+				var cob = _objectDatabase.FindObjectRelation(d);
+				if (cob != null)
+				{
+					var delob = new CyclesObject { cob = cob };
+					_objectDatabase.DeleteObject(delob);
+					RcCore.It.AddLogStringIfVerbose($"\tDeleting mesh instance {d} (ptr {cob.ObjectPtr})");
+				}
+				else
+				{
+					RcCore.It.AddLogStringIfVerbose($"\tMesh instance {d} has no object relation..");
+				}
+			});
 			var totalmeshes = addedOrChanged.Count;
 			var curmesh = 0;
 			RcCore.It.AddLogStringIfVerbose($"ApplyMeshInstanceChanges: Received {totalmeshes} mesh instance changes");
-			foreach (var a in addedOrChanged)
+			_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Handling adds/edits mesh instances: {totalmeshes}", -1.0f);
+			//foreach (var a in addedOrChanged)
+			Parallel.ForEach(addedOrChanged, a =>
 			{
 				curmesh++;
 
@@ -1176,11 +1175,11 @@ namespace RhinoCyclesCore.Database
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
 
-				var stat = $"\tHandling mesh instance {curmesh}/{totalmeshes} ({a.InstanceId}). material {mat.Name}. Mesh id {meshid}.";
+				var stat = $"\tHandling mesh instance ({a.InstanceId}). material {mat.Name}. Mesh id {meshid}.";
 				RcCore.It.AddLogStringIfVerbose(stat);
-				_renderEngine.SetProgress(_renderEngine.RenderWindow, stat, -1.0f);
 
-				if(cyclesDecals!=null) {
+				if (cyclesDecals != null)
+				{
 					uint decalsCRC = CyclesDecal.CRCForList(cyclesDecals);
 					matid = a.Transform.TransformCrc(matid);
 					matid = RhinoMath.CRC32(matid, a.MeshId.ToByteArray());
@@ -1188,13 +1187,9 @@ namespace RhinoCyclesCore.Database
 					matid = RhinoMath.CRC32(matid, decalsCRC);
 				}
 
-				if (!addedmats.Contains(matid))
-				{
-					HandleRenderMaterial(mat, matid, cyclesDecals, false);
-					addedmats.Add(matid);
-				}
+				HandleRenderMaterial(mat, matid, cyclesDecals, false);
 
-				var cutout = _objectDatabase.MeshIsClippingObject(meshid);
+				//var cutout = _objectDatabase.MeshIsClippingObject(meshid);
 #pragma warning disable CS0618
 				Rhino.Geometry.Transform ocsInv;
 				a.OcsTransform.TryGetInverse(out ocsInv);
@@ -1211,7 +1206,7 @@ namespace RhinoCyclesCore.Database
 					OcsFrame = t,
 					matid = matid,
 					CastShadow = a.CastShadows,
-					Cutout = cutout,
+					Cutout = false, //cutout,
 					Decals = cyclesDecals
 				};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
@@ -1219,7 +1214,7 @@ namespace RhinoCyclesCore.Database
 				HandleShaderChange(a.InstanceId, oldhash, matid, meshid);
 
 				_objectDatabase.AddOrUpdateObject(ob);
-			}
+			});
 		}
 
 		/// <summary>
@@ -1489,11 +1484,12 @@ namespace RhinoCyclesCore.Database
 		/// <param name="dynamicObjectTransforms">List of DynamicObject transforms</param>
 		protected override void ApplyDynamicObjectTransforms(List<DynamicObjectTransform> dynamicObjectTransforms)
 		{
-			foreach (var dot in dynamicObjectTransforms)
+			Parallel.ForEach(dynamicObjectTransforms, dot =>
 			{
 				var cot = new CyclesObjectTransform(dot.MeshInstanceId, dot.Transform.ToCyclesTransform());
 				_objectDatabase.AddDynamicObjectTransform(cot);
-			}
+
+			});
 			_renderEngine.Flush = true;
 		}
 
