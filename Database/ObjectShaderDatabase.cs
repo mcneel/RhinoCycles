@@ -15,6 +15,8 @@ limitations under the License.
 **/
 
 using System;
+using System.Linq;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace RhinoCyclesCore.Database
@@ -25,19 +27,19 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// Record meshids that use a renderhash
 		/// </summary>
-		private readonly Dictionary<uint, List<Tuple<Guid, int>>> _rhRenderhashMeshids = new Dictionary<uint, List<Tuple<Guid, int>>>();
+		private readonly ConcurrentDictionary<uint, ConcurrentDictionary<Tuple<Guid, int>, bool>> _rhRenderhashMeshids = new ();
 		/// <summary>
 		/// Record renderhash for meshid
 		/// </summary>
-		private readonly Dictionary<Tuple<Guid, int>, uint> _rhMeshidRenderhash = new Dictionary<Tuple<Guid, int>, uint>();
+		private readonly ConcurrentDictionary<Tuple<Guid, int>, uint> _rhMeshidRenderhash = new ();
 		/// <summary>
 		/// Record renderhash used object id (meshinstanceid)
 		/// </summary>
-		private readonly Dictionary<uint, uint> _rhMeshinstanceRenderhashes = new Dictionary<uint, uint>(); 
+		private readonly ConcurrentDictionary<uint, uint> _rhMeshinstanceRenderhashes = new ();
 		/// <summary>
 		/// Record object ids (meshinstanceid) on renderhash
 		/// </summary>
-		private readonly Dictionary<uint, List<uint>> _rhRenderhashObjects = new Dictionary<uint, List<uint>>();
+		private readonly ConcurrentDictionary<uint, ConcurrentDictionary<uint, bool>> _rhRenderhashObjects = new ();
 		#endregion
 
 		/// <summary>
@@ -82,8 +84,8 @@ namespace RhinoCyclesCore.Database
 		private void RecordRenderHashMeshInstanceId(uint hash, uint meshInstanceId)
 		{
 			// save meshinstanceid (object id) for render hash
-			if (!_rhRenderhashObjects.ContainsKey(hash)) _rhRenderhashObjects.Add(hash, new List<uint>());
-			if (!_rhRenderhashObjects[hash].Contains(meshInstanceId)) _rhRenderhashObjects[hash].Add(meshInstanceId);
+			if (!_rhRenderhashObjects.ContainsKey(hash)) _rhRenderhashObjects.TryAdd(hash, new ConcurrentDictionary<uint, bool>());
+			_rhRenderhashObjects[hash].GetOrAdd(meshInstanceId, true);
 
 			// save render hash for meshinstanceId (object id)
 			_rhMeshinstanceRenderhashes[meshInstanceId] = hash;
@@ -97,8 +99,8 @@ namespace RhinoCyclesCore.Database
 		private void RecordRenderHashMeshId(uint hash, Tuple<Guid, int> meshId)
 		{
 			// save meshid into list for render hash
-			if (!_rhRenderhashMeshids.ContainsKey(hash)) _rhRenderhashMeshids.Add(hash, new List<Tuple<Guid, int>>());
-			if (!_rhRenderhashMeshids[hash].Contains(meshId)) _rhRenderhashMeshids[hash].Add(meshId);
+			if (!_rhRenderhashMeshids.ContainsKey(hash)) _rhRenderhashMeshids.GetOrAdd(hash, new ConcurrentDictionary<Tuple<Guid, int>, bool>());
+			_rhRenderhashMeshids[hash].GetOrAdd(meshId, true);
 			// save render hash for meshid
 			_rhMeshidRenderhash[meshId] = hash;
 		}
@@ -110,14 +112,33 @@ namespace RhinoCyclesCore.Database
 		/// <param name="meshInstanceId"></param>
 		private void RemoveRenderHashMeshInstanceId(uint hash, uint meshInstanceId)
 		{
-			//if(m_objects_on_shader.ContainsKey(oldShader)) m_objects_on_shader[oldShader].RemoveAll(x => x.Equals(oid));
-			if (_rhRenderhashObjects.ContainsKey(hash)) _rhRenderhashObjects[hash].RemoveAll(x => x.Equals(meshInstanceId));
-			if (_rhMeshinstanceRenderhashes.ContainsKey(meshInstanceId)) _rhMeshinstanceRenderhashes.Remove(meshInstanceId);
+			//if (_rhRenderhashObjects.ContainsKey(hash)) _rhRenderhashObjects[hash].RemoveAll(x => x.Equals(meshInstanceId));
+			if (_rhRenderhashObjects.ContainsKey(hash))
+			{
+				while (_rhRenderhashObjects[hash].ContainsKey(meshInstanceId))
+				{
+					_rhRenderhashObjects[hash].TryRemove(meshInstanceId, out _);
+				}
+			}
+			while (_rhMeshinstanceRenderhashes.ContainsKey(meshInstanceId)) {
+
+				_rhMeshinstanceRenderhashes.TryRemove(meshInstanceId, out _);
+			}
+
 
 			var meshid = _objectDatabase.FindMeshIdOnObjectId(meshInstanceId);
 
-			if (_rhRenderhashMeshids.ContainsKey(hash)) _rhRenderhashMeshids[hash].RemoveAll(x => x.Equals(meshid));
-			if (_rhMeshidRenderhash.ContainsKey(meshid)) _rhMeshidRenderhash.Remove(meshid);
+			if (_rhRenderhashMeshids.ContainsKey(hash))
+			{
+				while(_rhRenderhashMeshids[hash].ContainsKey(meshid))
+				{
+					_rhRenderhashMeshids[hash].TryRemove(meshid, out _);
+				}
+			}
+			while(_rhMeshidRenderhash.ContainsKey(meshid))
+			{
+				_rhMeshidRenderhash.TryRemove(meshid, out _);
+			}
 		}
 
 		/// <summary>
