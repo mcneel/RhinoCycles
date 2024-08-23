@@ -232,6 +232,7 @@ namespace RhinoCyclesCore
 			{
 				tex.Procedural = procedural;
 				tex.IsNormalMap = tex.TextureList.Any<CyclesTextureImage>(cti => cti.IsNormalMap == true);
+				tex.MappingChannel = rt.GetMappingChannel();
 			}
 			else
 			{
