@@ -370,8 +370,8 @@ namespace RhinoCyclesCore.Database
 			{
 				for (int idx = 0; idx < cyclesMesh.Uvs.Count; idx++)
 				{
-					var uvs = cyclesMesh.Uvs[idx];
-					string uvmap_name = $"uvmap{idx+1}";
+					var (chanidx, uvs) = cyclesMesh.Uvs[idx];
+					string uvmap_name = $"uvmap{chanidx}";
 					me.SetUvs(ref uvs, uvmap_name);
 					// compute tangent space
 					me.AttrTangentSpace(uvmap_name);
@@ -988,7 +988,7 @@ namespace RhinoCyclesCore.Database
 			return decalList;
 		}
 
-		public void HandleMeshTextureCoordinates(Rhino.Geometry.Mesh meshdata, int[] findices, List<float[]> cmuvList)
+		public void HandleMeshTextureCoordinates(Rhino.Geometry.Mesh meshdata, int[] findices, List<Tuple<int, float[]>> cmuvList, int channelIndex)
 		{
 				var tc = meshdata.TextureCoordinates;
 				var rhuv = tc.ToFloatArray();
@@ -1006,7 +1006,7 @@ namespace RhinoCyclesCore.Database
 						cmuv[fioffs] = rhuvit;
 						cmuv[fioffs + 1] = rhuvit1;
 					}
-					cmuvList.Add(cmuv);
+					cmuvList.Add(new Tuple<int, float[]>(channelIndex, cmuv));
 				}
 		}
 
@@ -1040,7 +1040,7 @@ namespace RhinoCyclesCore.Database
 			var vn = meshdata.Normals;
 			var rhvn = vn.ToFloatArray();
 
-			var cmuvList = new List<float[]>();
+			var cmuvList = new List<Tuple<int, float[]>>();
 
 			if (_renderEngine.ShouldBreak) return;
 			// now convert UVs: from vertex indexed array to per face per vertex
@@ -1048,11 +1048,12 @@ namespace RhinoCyclesCore.Database
 			{
 				// Get texture coordinates and
 				// flattens to a float array.
-				HandleMeshTextureCoordinates(meshdata, findices, cmuvList);
+				HandleMeshTextureCoordinates(meshdata, findices, cmuvList, 0);
 			} else {
 				foreach(var mapping in mappingCollection.Channels) {
+					RcCore.It.AddLogStringIfVerbose($"\t\tHandleMeshData: mapping {mapping.Channel} {mapping.Mapping} {mapping.Local}");
 					meshdata.SetTextureCoordinates(mapping.Mapping, mapping.Local, false);
-					HandleMeshTextureCoordinates(meshdata, findices, cmuvList);
+					HandleMeshTextureCoordinates(meshdata, findices, cmuvList, mapping.Channel);
 				}
 			}
 
