@@ -40,11 +40,9 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public int[] Faces { get; set; }
 		/// <summary>
-		/// List of float arrays with UV coordinates. Stride 2.
-		/// The first entry will be available in Cycles as "uvmap", the next
-		/// "uvmap2" and so on.
+		/// List of tuples of channel indices and float arrays with UV coordinates. Stride 2.
 		/// </summary>
-		public List<float[]> Uvs { get; set; }
+		public List<Tuple<int, float[]>> Uvs { get; set; }
 		/// <summary>
 		/// Float array with vertex normal data. Stride 3.
 		/// </summary>
