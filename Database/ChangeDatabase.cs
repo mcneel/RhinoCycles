@@ -1048,7 +1048,7 @@ namespace RhinoCyclesCore.Database
 			{
 				// Get texture coordinates and
 				// flattens to a float array.
-				HandleMeshTextureCoordinates(meshdata, findices, cmuvList, 0);
+				HandleMeshTextureCoordinates(meshdata, findices, cmuvList, 1);
 			} else {
 				foreach(var mapping in mappingCollection.Channels) {
 					RcCore.It.AddLogStringIfVerbose($"\t\tHandleMeshData: mapping {mapping.Channel} {mapping.Mapping} {mapping.Local}");
