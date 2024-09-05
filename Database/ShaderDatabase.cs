@@ -139,7 +139,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		public void ClearShaders()
 		{
-			while(_cqShaders.TryDequeue(out CyclesShader sh)) { sh.Dispose(); }
+			while(_cqShaders.TryDequeue(out _)) {  }
 		}
 
 		/// <summary>
