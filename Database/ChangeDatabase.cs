@@ -1163,15 +1163,19 @@ namespace RhinoCyclesCore.Database
 			RcCore.It.AddLogStringIfVerbose($"ApplyMeshInstanceChanges: Received {totalmeshes} mesh instance changes");
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Handling adds/edits mesh instances: {totalmeshes}", -1.0f);
 			//foreach (var a in addedOrChanged)
-			ConcurrentDictionary<Tuple<Guid, int>, uint> materialIdDictionary = new();
-			foreach(var a in addedOrChanged)
+			Parallel.ForEach(addedOrChanged, a =>
 			{
+				curmesh++;
+
+				if (_renderEngine.ShouldBreak) return;
+
 #pragma warning disable CS0618
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				var cyclesDecals = HandleMeshDecals(a.MeshId, a.Decals, a.Transform);
 
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
+
 				var stat = $"\tHandling mesh instance ({a.InstanceId}). material {mat.Name}. Mesh id {meshid}.";
 				RcCore.It.AddLogStringIfVerbose(stat);
 
@@ -1185,21 +1189,6 @@ namespace RhinoCyclesCore.Database
 				}
 
 				HandleRenderMaterial(mat, matid, cyclesDecals, false);
-
-				materialIdDictionary[meshid] = matid;
-
-			}
-			Parallel.ForEach(addedOrChanged, a =>
-			{
-				curmesh++;
-
-				if (_renderEngine.ShouldBreak) return;
-
-#pragma warning disable CS0618
-				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
-				var cyclesDecals = HandleMeshDecals(a.MeshId, a.Decals, a.Transform);
-				var matid = materialIdDictionary[meshid];
-
 
 				//var cutout = _objectDatabase.MeshIsClippingObject(meshid);
 #pragma warning disable CS0618
