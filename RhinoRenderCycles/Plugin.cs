@@ -193,6 +193,20 @@ namespace CyclesForRhino.CyclesForRhino
 
 				pipe.Dispose();
 			}
+			foreach (var vw in doc.Views)
+			{
+				try
+				{
+					if (vw != null && vw.RealtimeDisplayMode != null)
+					{
+						vw.RealtimeDisplayMode.Paused = false;
+					}
+				}
+				catch (Exception)
+				{
+					// pass
+				}
+			}
 
 			if (Rhino.Render.RenderPipeline.RenderReturnCode.Ok != rc)
 			{
