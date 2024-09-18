@@ -339,7 +339,7 @@ Please click the link below for more information.", 69));
 					lastState = State;
 				}
 
-				if (Flush)
+				if (!Locked && Flush)
 				{
 					CheckFlushQueue();
 					Synchronize();
@@ -455,6 +455,7 @@ Please click the link below for more information.", 69));
 		}
 		public void Synchronize()
 		{
+			if (Locked) return;
 			if (Session != null && State == State.Uploading)
 			{
 				TriggerStartSynchronizing();

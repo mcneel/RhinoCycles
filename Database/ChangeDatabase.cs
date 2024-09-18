@@ -2065,7 +2065,6 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		protected override void NotifyBeginUpdates()
 		{
-			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
 			RcCore.It.AddLogStringIfVerbose($"NotifyBeginUpdates {++_updateCounter}");
 			_renderEngine.TriggerBeginChangesNotified();
 		}
@@ -2075,14 +2074,12 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		protected override void NotifyEndUpdates()
 		{
-			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
 			RcCore.It.AddLogStringIfVerbose($"NotifyEndUpdates {_updateCounter}");
 			_renderEngine.Flush = true;
 		}
 
 		protected override void NotifyDynamicUpdatesAreAvailable()
 		{
-			if (_renderEngine is RenderEngines.ViewportRenderEngine vpre && vpre.Locked) return;
 			RcCore.It.AddLogStringIfVerbose("NotifyDynamicUpdatesAreAvailable");
 			_renderEngine.TriggerBeginChangesNotified();
 		}
