@@ -19,6 +19,7 @@ using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
+using Rhino.Render.PostEffects;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
 using System;
@@ -28,6 +29,17 @@ using System.Threading;
 
 namespace RhinoCyclesCore
 {
+
+	public class CyclesPostEffectExecutionControl : PostEffectExecutionControl
+	{
+		public int CurrentSample { get; set; } = 0;
+		public int TriggerSample { get; set; } = int.MaxValue;
+
+		public override bool ReadyToExecutePostEffect(Guid pep_id)
+		{
+			return CurrentSample >= TriggerSample;
+		}
+	}
 
 	public enum State
 	{
@@ -161,6 +173,8 @@ namespace RhinoCyclesCore
 		public Rectangle BufferRectangle { get; set; }
 		public Size FullSize { get; set; }
 
+		public CyclesPostEffectExecutionControl PEEController { get; set; }
+
 
 #region CONSTRUCTORS
 
@@ -189,11 +203,21 @@ namespace RhinoCyclesCore
 			};
 			RcCore.It.AddLogString("RenderEngine ChangeDatabase created");
 			RegisterEventHandler();
+			PEEController = new CyclesPostEffectExecutionControl()
+			{
+				CurrentSample = 0,
+				TriggerSample = int.MaxValue
+			};
 			RcCore.It.AddLogString("RenderEngine constructor exit");
 		}
 
 		public RenderEngine(Guid pluginId, CreatePreviewEventArgs previewEventArgs, bool interactive, uint docsrn)
 		{
+			PEEController = new CyclesPostEffectExecutionControl()
+			{
+				CurrentSample = 0,
+				TriggerSample = int.MaxValue
+			};
 			PreviewEventArgs = previewEventArgs;
 			m_doc_serialnumber = docsrn;
 			Database = new ChangeDatabase(pluginId, this, PreviewEventArgs, _bitmapConverter, docsrn);

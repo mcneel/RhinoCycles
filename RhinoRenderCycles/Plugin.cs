@@ -141,6 +141,8 @@ namespace CyclesForRhino.CyclesForRhino
 				engine.RenderWindow.SetSize(renderSize);
 				RcCore.It.AddLogString("RenderWithCycles: RenderWindow.SetSize end");
 
+				engine.RenderWindow.RegisterPostEffectExecutionControl(engine.PEEController);
+
 				var requestedChannels = engine.RenderWindow.GetRequestedRenderChannelsAsStandardChannels();
 
 				List<StandardChannels> wireframes = new List<StandardChannels>();
@@ -256,6 +258,7 @@ namespace CyclesForRhino.CyclesForRhino
 			engine.RenderDimension = scene.PreviewImageSize;
 			/* create a window-less, non-document controlled render window */
 			engine.RenderWindow = Rhino.Render.RenderWindow.Create(scene.PreviewImageSize);
+			engine.RenderWindow.RegisterPostEffectExecutionControl(engine.PEEController);
 			engine.RenderWindow.SetSize(scene.PreviewImageSize);
 			engine.Database.RenderDimension = engine.RenderDimension;
 			engine.RenderWindow.AddChannel(Rhino.Render.RenderWindow.StandardChannels.RGBA);

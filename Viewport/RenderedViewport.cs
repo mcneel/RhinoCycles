@@ -214,6 +214,7 @@ namespace RhinoCycles.Viewport
 				renderWindow.SetSize(rs);
 
 				mre.RenderWindow = renderWindow;
+				mre.RenderWindow.RegisterPostEffectExecutionControl(mre.PEEController);
 
 				mre.RenderDimension = rs;
 				mre.Database.RenderDimension = rs;
@@ -265,6 +266,7 @@ namespace RhinoCycles.Viewport
 			_cycles.UploadProgress += _cycles_UploadProgress;
 
 			_cycles.RenderWindow = renderWindow;
+			_cycles.RenderWindow.RegisterPostEffectExecutionControl(_cycles.PEEController);
 			// pixel size needs to be set before calling SetRenderSize, since that uses CalculateNativeRenderSize
 			// which in turn relies on PixelSize
 			_cycles.PixelSize = pixelSize;
