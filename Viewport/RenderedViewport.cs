@@ -322,6 +322,8 @@ namespace RhinoCycles.Viewport
 
 		public override bool IsFrameBufferAvailable(ViewInfo view)
 		{
+			if (IsLocked) return true;
+
 			if (_cycles != null)
 			{
 				if (IsSynchronizing) return false;
@@ -338,6 +340,8 @@ namespace RhinoCycles.Viewport
 
 		void CyclesPassRendered(object sender, ViewportRenderEngine.PassRenderedEventArgs e)
 		{
+			if (IsLocked) return;
+
 			if (_cycles?.IsRendering ?? false)
 			{
 				if (!IsSynchronizing)
@@ -368,6 +372,7 @@ namespace RhinoCycles.Viewport
 
 		void CyclesStartSynchronizing(object sender, EventArgs e)
 		{
+			if (IsLocked) return;
 			//ALB 2022/09/14
 			//https://mcneel.myjetbrains.com/youtrack/issue/RH-70028/Raytraced-crash-when-switching-to-other-display-mode
 			//write operation for bool is atomic in C#
@@ -379,6 +384,8 @@ namespace RhinoCycles.Viewport
 
 		void CyclesSynchronized(object sender, EventArgs e)
 		{
+			if(IsLocked) return;
+
 			_startTime = DateTime.UtcNow;
 			//lock (timerLock)
 			{
@@ -519,6 +526,8 @@ namespace RhinoCycles.Viewport
 
 		public override bool IsCompleted()
 		{
+			if(IsLocked) return false;
+
 			bool rc = false;
 			if (_forCapture)
 			{
