@@ -45,5 +45,7 @@ namespace RhinoCyclesCore.Settings
 		bool StartGpuKernelCompiler { get; set; }
 		bool VerboseLogging { get; set; }
 		int RetentionDays { get; set; }
+
+		int TriggerPostEffectsSample { get; set; }
 	}
 }

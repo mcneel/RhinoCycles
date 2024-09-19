@@ -130,6 +130,7 @@ namespace RhinoCyclesCore.Settings
 
 			VerboseLogging = VerboseLogging;
 			RetentionDays = RetentionDays;
+			TriggerPostEffectsSample = TriggerPostEffectsSample;
 		}
 
 		public bool IgnoreQualityChanges { get; set; }
@@ -768,6 +769,12 @@ namespace RhinoCyclesCore.Settings
 					RcPlugIn.Settings.SetBool(SettingNames.CPUSplitKernel, value);
 				}
 			}
+		}
+
+		public virtual int TriggerPostEffectsSample
+				{
+			get { return RcPlugIn.Settings.GetInteger(SettingNames.TriggerPostEffectsSample, DefaultEngineSettings.TriggerPostEffectsSample); }
+			set { RcPlugIn.Settings.SetInteger(SettingNames.TriggerPostEffectsSample, value); }
 		}
 	}
 }

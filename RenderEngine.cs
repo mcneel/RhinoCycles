@@ -206,7 +206,7 @@ namespace RhinoCyclesCore
 			PEEController = new CyclesPostEffectExecutionControl()
 			{
 				CurrentSample = 0,
-				TriggerSample = int.MaxValue
+				TriggerSample = RcCore.It.AllSettings.TriggerPostEffectsSample
 			};
 			RcCore.It.AddLogString("RenderEngine constructor exit");
 		}

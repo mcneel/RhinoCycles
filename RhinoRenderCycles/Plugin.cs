@@ -141,6 +141,7 @@ namespace CyclesForRhino.CyclesForRhino
 				engine.RenderWindow.SetSize(renderSize);
 				RcCore.It.AddLogString("RenderWithCycles: RenderWindow.SetSize end");
 
+				engine.PEEController.TriggerSample = RcCore.It.AllSettings.TriggerPostEffectsSample;
 				engine.RenderWindow.RegisterPostEffectExecutionControl(engine.PEEController);
 
 				var requestedChannels = engine.RenderWindow.GetRequestedRenderChannelsAsStandardChannels();
