@@ -509,11 +509,17 @@ namespace RhinoCycles.Viewport
 			if (_forCapture)
 			{
 				_modal?.StopRendering();
+				RcCore.It.AddLogString("RenderedViewport.ShutdownRenderer (modal) releasing session start");
+				RcCore.It.ReleaseSession(_modal?.Session);
+				RcCore.It.AddLogString("RenderedViewport.ShutdownRenderer (modal) releasing session end");
 				_modal?.Dispose();
 			}
 			else
 			{
 				_cycles?.StopRendering();
+				RcCore.It.AddLogString("RenderedViewport.ShutdownRenderer (cycles) releasing session start");
+				RcCore.It.ReleaseSession(_cycles?.Session);
+				RcCore.It.AddLogString("RenderedViewport.ShutdownRenderer (cycles) releasing session end");
 				_cycles?.Dispose();
 			}
 			RcCore.It.AddLogString("Raytraced: RenderedViewport.ShutdownRenderer exit");

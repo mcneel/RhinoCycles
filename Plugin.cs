@@ -54,7 +54,7 @@ namespace RhinoCycles
 				RcCore.It.DataUserPath = userPath;
 
 				RcCore.It.InitializeLog();
-				RcCore.It.PurgeOldLogs();
+				RcCore.It.PurgeOldLogs(false);
 				RcCore.It.StartLogStopwatch("OnLoad");
 				RcCore.It.AddLogString($"Running on {os}");
 				RcCore.It.AddLogString("RhinoCycles OnLoad entry");

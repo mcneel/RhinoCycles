@@ -175,6 +175,10 @@ namespace RhinoCyclesCore.RenderEngines
 
 				cyclesEngine.Success = renderSuccess;
 
+			RcCore.It.AddLogString("PreviewRenderEngine.Renderer releasing session start");
+			RcCore.It.ReleaseSession(cyclesEngine.Session);
+			RcCore.It.AddLogString("PreviewRenderEngine.Renderer releasing session done");
+
 				// we're done now, so lets clean up our session.
 				cyclesEngine.Dispose();
 			}

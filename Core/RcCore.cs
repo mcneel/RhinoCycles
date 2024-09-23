@@ -164,9 +164,11 @@ namespace RhinoCyclesCore.Core
 		/// Shut down Cycles on all levels. Wait for all active session to complete.
 		/// </summary>
 		public void Shutdown() {
-			ClearLogQueues();
+			AddLogStringIfVerbose("Shutdown entry");
 
+			AddLogStringIfVerbose("Shutdown: release active sessions start");
 			ReleaseActiveSessions();
+			AddLogStringIfVerbose("Shutdown: release active sessions done");
 			int count;
 			int timer = 0;
 			if(checkGpuKernelCompilationCompletedThread!=null) {
@@ -197,9 +199,16 @@ namespace RhinoCyclesCore.Core
 			}
 			AddLogString($"All sessions cleaned up\n");
 			gpuDevicesReadiness.Clear();
+			RcCore.It.AddLogStringIfVerbose("Shutting Cycles down\n");
 			CSycles.shutdown();
+			RcCore.It.AddLogStringIfVerbose("Cycles shutdown complete\n");
+			AddLogStringIfVerbose("Shutdown: clearing log queues start");
+			ClearLogQueues();
+			AddLogStringIfVerbose("Shutdown: clear log queues done");
+			StopLogFlusher();
 			logTw.Close();
 			logTw.Dispose();
+			RcCore.It.AddLogStringIfVerbose("Shutdown exit\n");
 		}
 
 		ConcurrentDictionary<IntPtr, Session> active_sessions = new ConcurrentDictionary<IntPtr, Session>();
@@ -221,25 +230,34 @@ namespace RhinoCyclesCore.Core
 
 		public void ReleaseSession(Session session)
 		{
+			AddLogStringIfVerbose("ReleaseSession: entry");
 			if(active_sessions.ContainsKey(session.Id))
 			{
+				AddLogStringIfVerbose($"ReleaseSession: cancel session {session.Id} start");
 				session.QuickCancel();
 				while(!active_sessions.TryRemove(key: session.Id, value: out _))
 				{
 					Thread.Sleep(10);
 				}
+				AddLogStringIfVerbose($"ReleaseSession: cancel session {session.Id} done");
+				AddLogStringIfVerbose($"ReleaseSession: dispose session {session.Id} start");
 				session.Dispose();
+				AddLogStringIfVerbose($"ReleaseSession: dispose session {session.Id} done");
 			}
+			AddLogStringIfVerbose("ReleaseSession: exit");
 		}
 
 		public void ReleaseActiveSessions()
 		{
+			AddLogStringIfVerbose("ReleaseActiveSessions: entry");
+			AddLogStringIfVerbose($"ReleaseActiveSessions: number of sessions active before releasing: {active_sessions.Values.Count}");
 			WaitUntilLockedThenUnlockPreviewRendererLock();
 			var sessions = active_sessions.Values.ToList();
 			foreach (var session in sessions)
 			{
 				ReleaseSession(session);
 			}
+			AddLogStringIfVerbose("ReleaseActiveSessions: exit");
 		}
 
 		/// <summary>
@@ -326,7 +344,7 @@ namespace RhinoCyclesCore.Core
 		{
 			lock(PreviewRendererLock)
 			{
-				RcCore.It.AddLogStringIfVerbose("WaitUntilLockedThenUnlockPreviewRenderer: locked");
+				It.AddLogStringIfVerbose("WaitUntilLockedThenUnlockPreviewRenderer: locked");
 			}
 		}
 
@@ -728,7 +746,7 @@ namespace RhinoCyclesCore.Core
 		} /* end of StartCompileGpuKernel() */
 
 		[Flags]
-		enum LogQueues {
+		public enum LogQueues {
 			RhinoCycles = 0b0000_0001,
 			CompileStdOut = 0b0000_0010,
 			CompileStdErr = 0b0000_0100,
@@ -736,7 +754,7 @@ namespace RhinoCyclesCore.Core
 			All = RhinoCycles | CompileStdOut | CompileStdErr,
 		}
 
-		private void ClearLogQueues(LogQueues whichQueues = LogQueues.All)
+		public void ClearLogQueues(LogQueues whichQueues = LogQueues.All)
 		{
 			if((whichQueues & LogQueues.RhinoCycles) == LogQueues.RhinoCycles) while(logStrings.Count > 0) logStrings.TryDequeue(out string _);
 			if((whichQueues & LogQueues.CompileStdOut) == LogQueues.CompileStdOut) while(compileStdOut.Count > 0) compileStdOut.TryDequeue(out string _);
@@ -861,13 +879,15 @@ namespace RhinoCyclesCore.Core
 			InitialiseGpuKernels();
 
 		}
-		ConcurrentQueue<string> logStrings = new ConcurrentQueue<string>();
-		ConcurrentQueue<string> compileStdOut = new ConcurrentQueue<string>();
-		ConcurrentQueue<string> compileStdErr = new ConcurrentQueue<string>();
+		ConcurrentQueue<string> logStrings = new ();
+		ConcurrentQueue<string> logFlushStrings = new ();
+		ConcurrentQueue<string> compileStdOut = new ();
+		ConcurrentQueue<string> compileStdErr = new ();
 
 		Dictionary<StopwatchType, Stopwatch> stopwatches = new Dictionary<StopwatchType, Stopwatch>();
 
 		TextWriter logTw = null;
+		Thread logFlusherThread = null;
 
 		public void InitializeLog()
 		{
@@ -876,6 +896,7 @@ namespace RhinoCyclesCore.Core
 			int salt = rng.Next();
 			string logPath = Path.Combine(DataUserPath, $"RhinoCycles{now:yyyyMMddmmHHss}-{pid}-{salt}.log");
 			logTw = File.CreateText(logPath);
+			StartLogFlusher();
 		}
 
 		private void InitializeStopwatches()
@@ -896,24 +917,27 @@ namespace RhinoCyclesCore.Core
 
 			string logstr = $"\n\n==============================> {marker} ({swtype})\n\n";
 
-			logTw.Write(logstr);
+			logFlushStrings.Enqueue(logstr);
 
 			logStrings.Enqueue(logstr);
 			stopWatch.Restart();
 		}
 
-		public void PurgeOldLogs()
+		public void PurgeOldLogs(bool overrideRetentionSetting)
 		{
 			IEnumerable<string> entries = Directory.EnumerateFiles(DataUserPath, "RhinoCycles*.log");
 			foreach(string entry in entries)
 			{
 				if (File.Exists(entry)) {
 					TimeSpan age = DateTime.Now - File.GetLastWriteTime(entry);
-					if(age.TotalDays > It.AllSettings.RetentionDays) {
-						try {
+					if (age.TotalDays > It.AllSettings.RetentionDays || overrideRetentionSetting)
+					{
+						try
+						{
 							File.Delete(entry);
 						}
-						catch (Exception) {
+						catch (Exception)
+						{
 							AddLogString($"Skipping deletion of {entry}", StopwatchType.Core);
 						}
 					}
@@ -942,18 +966,53 @@ namespace RhinoCyclesCore.Core
 				sw.Restart();
 			}
 		}
+
+		bool _flushLogs = true;
+		void FlushLog()
+		{
+			while (_flushLogs)
+			{
+				while (logFlushStrings.Count > 0 && logTw != null)
+				{
+					if (logFlushStrings.TryDequeue(out string logstr))
+					{
+						logTw.Write(logstr);
+						logTw.Flush();
+					}
+				}
+				Thread.Sleep(10);
+			}
+		}
+
+		public void StartLogFlusher()
+		{
+			logFlusherThread = new Thread(FlushLog);
+			logFlusherThread.Start();
+		}
+
+		public void StopLogFlusher()
+		{
+			_flushLogs = false;
+			if (logFlusherThread != null)
+			{
+				logFlusherThread.Join();
+				logFlusherThread = null;
+			}
+		}
+
 		/// <summary>
 		/// Add given string to log. Decorates with timestamp, timespan since previous log line and suffix a newline character
 		/// </summary>
 		/// <param name="log">String to log</param>
 		public void AddLogString(string log, StopwatchType swtype = StopwatchType.Core) {
-			string logstr = $"{DateTime.Now} :: {GetStopwatchElapsed(swtype)} |> {log}\n";
+			string logstr = $"{DateTime.Now} :: {GetStopwatchElapsed(swtype)} ({swtype}) |> {log}\n";
 			try
 			{
-				logTw.Write(logstr);
-				logTw.Flush();
+				logFlushStrings.Enqueue(logstr);
+				//logTw.Write(logstr);
+				//logTw.Flush();
 			}
-			catch (Exception) { } finally { }
+			catch (Exception) { }
 			logStrings.Enqueue(logstr);
 			StopwatchRestart(swtype);
 		}

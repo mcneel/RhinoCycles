@@ -287,6 +287,11 @@ Please click the link below for more information.", 67));
 				};
 				RhinoApp.InvokeOnUiThread(showErrorDialog);
 			}
+
+
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer releasing session start");
+			RcCore.It.ReleaseSession(cyclesEngine.Session);
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer releasing session done");
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer exiting");
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer exiting", RcCore.StopwatchType.Render);
 		}

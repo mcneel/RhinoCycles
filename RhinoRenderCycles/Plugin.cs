@@ -236,7 +236,9 @@ namespace CyclesForRhino.CyclesForRhino
 			if (scene.Quality == PreviewSceneQuality.Low)
 			{
 				scene.PreviewImage = null;
-				RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} entry");
+				RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id}. Low requested, skipping");
+				RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} exit");
+				RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} exit", RcCore.StopwatchType.Preview);
 				return;
 			}
 
@@ -244,9 +246,12 @@ namespace CyclesForRhino.CyclesForRhino
 			if (active_doc == null)
 			{
 				RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} NO ACTIVE DOC");
+				RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} exit");
+				RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} exit", RcCore.StopwatchType.Preview);
 				return;
 			}
 
+			RcCore.It.AddLogStringIfVerbose("CreatePreview: create preview engine start");
 			var engine = new PreviewRenderEngine(scene, Id, active_doc.RuntimeSerialNumber)
 			{
 				BufferRectangle = new Rectangle(new Point(0, 0), scene.PreviewImageSize),
@@ -260,15 +265,25 @@ namespace CyclesForRhino.CyclesForRhino
 			engine.Database.RenderDimension = engine.RenderDimension;
 			engine.RenderWindow.AddChannel(Rhino.Render.RenderWindow.StandardChannels.RGBA);
 
+			RcCore.It.AddLogStringIfVerbose("CreatePreview: create preview engine done");
+
+			RcCore.It.AddLogStringIfVerbose("CreatePreview: create world start");
 			engine.CreateWorld();
+			RcCore.It.AddLogStringIfVerbose("CreatePreview: create world done");
 
 			/* render the preview scene */
+			RcCore.It.AddLogStringIfVerbose("CreatePreview: render preview start");
 			PreviewRenderEngine.Renderer(engine);
+			RcCore.It.AddLogStringIfVerbose("CreatePreview: create world done");
 
 			/* set final preview bitmap, or null if cancelled */
+			RcCore.It.AddLogStringIfVerbose("CreatePreview: set preview result start");
 			scene.PreviewImage = engine.Success ? engine.RenderWindow.GetBitmap() : null;
+			RcCore.It.AddLogStringIfVerbose("CreatePreview: set preview result done");
 
+			RcCore.It.AddLogStringIfVerbose("CreatePreview: dispose render window start");
 			engine.RenderWindow.Dispose();
+			RcCore.It.AddLogStringIfVerbose("CreatePreview: dispose render window done");
 			RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} exit");
 			RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} exit", RcCore.StopwatchType.Preview);
 		}
