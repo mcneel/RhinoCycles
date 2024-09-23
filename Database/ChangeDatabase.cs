@@ -643,6 +643,8 @@ namespace RhinoCyclesCore.Database
 
 		public Size RenderDimension { get; set; }
 
+		Rhino.Geometry.Transform _gObTransform = Rhino.Geometry.Transform.Identity;
+
 		/// <summary>
 		/// Handle view changes.
 		/// </summary>
@@ -660,7 +662,23 @@ namespace RhinoCyclesCore.Database
 
 			_currentViewInfo = viewInfo;
 
-			var vp = viewInfo.Viewport;
+			var vp = new ViewportInfo(viewInfo.Viewport);
+
+			_gObTransform = Rhino.Geometry.Transform.Identity;
+			var viewscale = vp.GetViewScale();
+			bool is_reflected = Math.Abs(viewscale[2] + 1.0) < 0.01 ; // && viewscale[0] == 333;
+			if(vp.IsParallelProjection && is_reflected) {
+				// create a scale transform against the view plane on world origin.
+				// this needs to be applied to all Cycles objects.
+				var fp = vp.FrustumFarPlane;
+				fp.Origin = Rhino.Geometry.Point3d.Origin;
+				var scfp = Rhino.Geometry.Transform.Scale(fp, 1, 1, -1);
+				_gObTransform = scfp;
+
+
+				RcCore.It.AddLogStringIfVerbose($"ApplyViewChange\n\t{viewscale[0]}, {viewscale[1]}, {viewscale[2]}\n\tParallel projection reflected");
+				RcCore.It.AddLogStringIfVerbose($"\n\n\t{scfp.ToString()}\n\n");
+			}
 
 			if(_modalRenderer) {
 				var targetw = (float)_renderEngine.FullSize.Width;
@@ -678,7 +696,6 @@ namespace RhinoCyclesCore.Database
 
 			// frustum values, used for two point
 			vp.GetFrustum(out double frl, out double frr, out double frb, out double frt, out double frn, out double frf);
-
 
 			// For 2 point perspective frustum needs to be scaled
 			if (twopoint)
@@ -747,7 +764,8 @@ namespace RhinoCyclesCore.Database
 			// convert rhino transform to ccsycles transform
 			var rt = rhinocam.ToCyclesTransform();
 			// then convert to Cycles orientation
-			var t = rt * (vp.IsTwoPointPerspectiveProjection ? ccl.Transform.RhinoToCyclesCamNoFlip : ccl.Transform.RhinoToCyclesCam);
+			var conversion_matrix = vp.IsTwoPointPerspectiveProjection ? ccl.Transform.RhinoToCyclesCamNoFlip : (is_reflected ? ccl.Transform.RhinoToCyclesCamReflected : ccl.Transform.RhinoToCyclesCam);
+			var t = rt * conversion_matrix;
 
 			// ready, lets push our data
 			var cyclesview = new CyclesView
@@ -1096,6 +1114,7 @@ namespace RhinoCyclesCore.Database
 		private Rhino.Geometry.Transform Jiggle(MeshInstance a)
 		{
 			var objectXform = a.Transform;
+			RcCore.It.AddLogStringIfVerbose($"\tJiggle: {objectXform}");
 			var p = a.MeshId.ToByteArray();
 			long l0 = BitConverter.ToInt64(p, 0);
 			long l1 = BitConverter.ToInt64(p, 4);
@@ -1107,10 +1126,11 @@ namespace RhinoCyclesCore.Database
 
 			Vector3f jiggleVector = new Vector3f(f0, f1, f2);
 			jiggleVector.Unitize();
-			jiggleVector *= 0.0001f;
+			jiggleVector *= 0.001f;
 
 			var jiggleTranslationXform = Rhino.Geometry.Transform.Translation(jiggleVector);
 
+			RcCore.It.AddLogStringIfVerbose($"\tJiggle: {jiggleTranslationXform}");
 			return objectXform * jiggleTranslationXform;
 		}
 
@@ -1192,19 +1212,16 @@ namespace RhinoCyclesCore.Database
 
 				//var cutout = _objectDatabase.MeshIsClippingObject(meshid);
 #pragma warning disable CS0618
-				Rhino.Geometry.Transform ocsInv;
-				a.OcsTransform.TryGetInverse(out ocsInv);
-				var t = ocsInv.ToCyclesTransform();
 				// Cycles does not cope well with coincident surfaces. Therefor it is
 				// important to ever so slightly move around the objects - to jiggle
 				// them.
-				var obxform = Jiggle(a);
+				var obxform = _gObTransform * Jiggle(a) ;
 				var ob = new CyclesObject
 				{
 					obid = a.InstanceId,
 					meshid = meshid,
 					Transform = obxform.ToCyclesTransform(),
-					OcsFrame = t,
+					OcsFrame = Rhino.Geometry.Transform.Identity.ToCyclesTransform(),
 					matid = matid,
 					CastShadow = a.CastShadows,
 					Cutout = false, //cutout,
@@ -1443,7 +1460,7 @@ namespace RhinoCyclesCore.Database
 				matid = matrenderhash,
 				obid = GroundPlaneMeshInstanceId,
 				meshid = gpid,
-				Transform = t,
+				Transform = _gObTransform.ToCyclesTransform(),
 				Visible = gp.Enabled,
 				CastShadow = true,
 				IsShadowCatcher = isGpShadowsOnly,
@@ -1703,7 +1720,7 @@ namespace RhinoCyclesCore.Database
 				}
 				else
 				{
-					var cl = _shaderConverter.ConvertLight(this, light, v, PreProcessGamma);
+					var cl = _shaderConverter.ConvertLight(this, light, v, PreProcessGamma, _gObTransform);
 
 					_lightDatabase.AddLight(cl);
 				}
@@ -1783,7 +1800,7 @@ namespace RhinoCyclesCore.Database
 				}
 				else
 				{
-					var cl = _shaderConverter.ConvertLight(light, PreProcessGamma);
+					var cl = _shaderConverter.ConvertLight(light, PreProcessGamma, _gObTransform);
 					_lightDatabase.AddLight(cl);
 				}
 			}
@@ -1800,7 +1817,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="sun"></param>
 		protected override void ApplySunChanges(RGLight sun)
 		{
-			var cl = _shaderConverter.ConvertLight(sun, PreProcessGamma);
+			var cl = _shaderConverter.ConvertLight(sun, PreProcessGamma, _gObTransform);
 			cl.Id = _sunGuid;
 			_lightDatabase.AddLight(cl);
 			if (sun.IsEnabled) PushEnabledLight();
@@ -1876,6 +1893,17 @@ namespace RhinoCyclesCore.Database
 
 
 				ccl.Transform t = _objectDatabase.MeshOcsFrames.ContainsKey(mesh.GeometryPointer) ? _objectDatabase.MeshOcsFrames[mesh.GeometryPointer] : ccl.Transform.Identity();
+
+				if(false && _gObTransform != Rhino.Geometry.Transform.Identity) {
+					var rt = t.ToRhinoTransform();
+					if(rt.TryGetInverse(out Rhino.Geometry.Transform rtinv))
+					{
+						rt = _gObTransform * rtinv;
+					}
+
+					rt = _gObTransform * rt;
+					t = rt.ToCyclesTransform();
+				}
 
 				// see if we already have an object here.
 				// update it, otherwise create new one
