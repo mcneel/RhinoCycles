@@ -48,7 +48,12 @@ namespace RhinoCyclesCore
 			_back = null;
 			_bitmapConverter = bitmapConverter;
 			_docsrn = docsrn;
+			var doc = Rhino.RhinoDoc.FromRuntimeSerialNumber(docsrn);
+
+			ModelUnitSystem = doc.ModelUnitSystem;
 		}
+
+		Rhino.UnitSystem ModelUnitSystem { get; }
 
 		public List<CyclesDecal> Decals { get; set; } = null;
 
@@ -77,7 +82,10 @@ namespace RhinoCyclesCore
 
 		public bool RecordDataForFrontShader(RenderMaterial rm, float gamma)
 		{
-			_front = new ShaderBody(Id);
+			_front = new ShaderBody(Id)
+			{
+				UnitScale = (float)Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Meters, ModelUnitSystem)
+			};
 			return RecordDataForShaderPart(_front, rm, gamma);
 		}
 
@@ -104,7 +112,10 @@ namespace RhinoCyclesCore
 
 		public bool RecordDataForBackShader(RenderMaterial rm, float gamma)
 		{
-			_back = new ShaderBody(Id);
+			_back = new ShaderBody(Id)
+			{
+				UnitScale = (float)Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Meters, ModelUnitSystem)
+			};
 			return RecordDataForShaderPart(_back, rm, gamma);
 		}
 
@@ -265,7 +276,7 @@ namespace RhinoCyclesCore
 			var dcl = onMaterial.DiffuseColor;
 			var scl = onMaterial.SpecularColor;
 			var rcl = onMaterial.ReflectionColor;
-			var rfcl = onMaterial.TransparentColor;
+			var trcl = onMaterial.TransparentColor;
 			var emcl = onMaterial.EmissionColor;
 			var reflectivity = (float)onMaterial.Reflectivity;
 			var metalic = 0f;
@@ -294,6 +305,12 @@ namespace RhinoCyclesCore
 					break;
 				case ProbableMaterial.Custom:
 					mattype = ShaderBody.CyclesMaterial.No;
+					if (reflectivity > 0.9)
+					{
+						mattype = ShaderBody.CyclesMaterial.SimpleMetal;
+						metalic = 1.0f;
+						dcl = rcl;
+					}
 					break;
 			}
 
@@ -302,8 +319,8 @@ namespace RhinoCyclesCore
 			var col = RenderEngine.CreateFloat4(dcl.R, dcl.G, dcl.B, 255);
 			var spec = RenderEngine.CreateFloat4(scl.R, scl.G, scl.B, 255);
 			var refl = RenderEngine.CreateFloat4(rcl.R, rcl.G, rcl.B, 255);
-			var transp = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
-			var refr = RenderEngine.CreateFloat4(rfcl.R, rfcl.G, rfcl.B, 255);
+			var transp = RenderEngine.CreateFloat4(trcl.R, trcl.G, trcl.B, 255);
+			var refr = RenderEngine.CreateFloat4(trcl.R, trcl.G, trcl.B, 255);
 			var emis = RenderEngine.CreateFloat4(emcl.R, emcl.G, emcl.B, 255);
 
 			//shb.Type = CyclesShader.Shader.Diffuse,
@@ -576,6 +593,7 @@ namespace RhinoCyclesCore
 		/**** Blend Material ****/
 		public ShaderBody MaterialOne { get; set; } = null;
 		public ShaderBody MaterialTwo { get; set; } = null;
+		public float UnitScale { get; set; } = 1.0f;
 		public float BlendMixAmount = 0.5f;
 		public CyclesTextureImage BlendMixAmountTexture = new CyclesTextureImage();
 		public bool BlendMaterial => MaterialOne != null || MaterialTwo != null;
