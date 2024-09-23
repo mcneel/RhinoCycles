@@ -2356,7 +2356,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="view"></param>
 		/// <param name="gamma"></param>
 		/// <returns></returns>
-		internal CyclesLight ConvertLight(ChangeQueue changequeue, Light light, ViewInfo view, float gamma)
+		internal CyclesLight ConvertLight(ChangeQueue changequeue, Light light, ViewInfo view, float gamma, Rhino.Geometry.Transform viewTransform)
 		{
 			if (changequeue != null && view != null)
 			{
@@ -2365,7 +2365,7 @@ namespace RhinoCyclesCore.Converters
 					ChangeQueue.ConvertCameraBasedLightToWorld(changequeue, light, view);
 				}
 			}
-			var cl = ConvertLight(light.Data, gamma);
+			var cl = ConvertLight(light.Data, gamma, viewTransform);
 			cl.Id = light.Id;
 
 			if (light.ChangeType == Light.Event.Deleted)
@@ -2382,7 +2382,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="lg">The Rhino light to convert</param>
 		/// <param name="gamma"></param>
 		/// <returns><c>CyclesLight</c></returns>
-		internal CyclesLight ConvertLight(Rhino.Geometry.Light lg, float gamma)
+		internal CyclesLight ConvertLight(Rhino.Geometry.Light lg, float gamma, Rhino.Geometry.Transform viewTransform)
 		{
 			var enabled = lg.IsEnabled ? 1.0f : 0.0f;
 
@@ -2410,8 +2410,12 @@ namespace RhinoCyclesCore.Converters
 					break;
 			}
 
-			var co = RenderEngine.CreateFloat4(lg.Location.X, lg.Location.Y, lg.Location.Z);
-			var dir = RenderEngine.CreateFloat4(lg.Direction.X, lg.Direction.Y, lg.Direction.Z);
+			var lightdir = lg.Direction;
+			var lightloc = lg.Location;
+			lightdir.Transform(viewTransform);
+			lightloc.Transform(viewTransform);
+			var co = RenderEngine.CreateFloat4(lightloc.X, lightloc.Y, lightloc.Z);
+			var dir = RenderEngine.CreateFloat4(lightdir.X, lightdir.Y, lightdir.Z);
 			var color = RenderEngine.CreateFloat4(lg.Diffuse.R, lg.Diffuse.G, lg.Diffuse.B, lg.Diffuse.A);
 
 			var sizeterm= 1.0f - (float)lg.ShadowIntensity;
@@ -2432,9 +2436,11 @@ namespace RhinoCyclesCore.Converters
 				smooth = 1.0 / Math.Max(lg.HotSpot, 0.001f) - 1.0;
 				strength = (float)(lg.Intensity * RcCore.It.AllSettings.SpotLightFactor);
 
-				var light_z = lg.Direction; light_z.Unitize();
+				var light_z = lg.Direction;
 				var light_x = lg.PerpendicularDirection;
 				var light_y = Vector3d.CrossProduct(light_z, light_x);
+				light_z.Unitize();
+				light_z.Transform(viewTransform);
 
 				// We overwrite 'dir' because it needs to be of same length as axisu and axisv.
 				axisu = RenderEngine.CreateFloat4(light_x.X, light_x.Y, light_x.Z);
@@ -2456,6 +2462,7 @@ namespace RhinoCyclesCore.Converters
 				size = 1.0f + size/10.0f;// - (float)lg.ShadowIntensity / 100.f;
 
 				var rectLoc = lg.Location + (lg.Width * 0.5) + (lg.Length * 0.5);
+				rectLoc.Transform(viewTransform);
 
 				co = RenderEngine.CreateFloat4(rectLoc.X, rectLoc.Y, rectLoc.Z);
 
