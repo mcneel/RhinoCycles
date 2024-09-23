@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Rhino;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -70,14 +71,14 @@ namespace RhinoCyclesCore.Shaders
 				var last = GetShaderPart(m_original.Front);
 				var lastclosure = last.GetClosureSocket();
 
-				if(m_original.ShadowCatcher)
+				if (m_original.ShadowCatcher)
 				{
 					var lightpath = new LightPathNode(m_shader, "light_path_for_shadow_catcher");
 					var pathadder = new MathAdd(m_shader, "path_adder_for_shadow_catcher");
 					var noshow = new TransparentBsdfNode(m_shader, "shadow_catcher_transp_bsdf");
 					var refl_flipper = new MixClosureNode(m_shader, "shadow_catcher_reflection_flipper");
 					pathadder.UseClamp = true;
-					lightpath.outs.IsGlossyRay.Connect(pathadder.ins.Value1);
+					lightpath.outs.IsReflectionRay.Connect(pathadder.ins.Value1);
 					lightpath.outs.IsDiffuseRay.Connect(pathadder.ins.Value2);
 					pathadder.outs.Value.Connect(refl_flipper.ins.Fac);
 					lastclosure.Connect(refl_flipper.ins.Closure1);
@@ -524,7 +525,7 @@ namespace RhinoCyclesCore.Shaders
 						if (!part.PbrBumpTexture.IsNormalMap)
 						{
 							var bump = new BumpNode(m_shader, "bump");
-							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
+							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * part.UnitScale;
 							bump.Invert = part.PbrBump.Amount < 0.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 							part.PbrBump.Amount = 1.0f;
@@ -637,7 +638,7 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump_amount72 = new MathMultiply(m_shader, "bump_amount_");
 					bump_amount72.ins.Value1.Value = 1.0f;
-					bump_amount72.ins.Value2.Value = part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor * 4.66f;
+					bump_amount72.ins.Value2.Value = part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor; // * part.UnitScale;
 					bump_amount72.Operation = MathNode.Operations.Multiply;
 					bump_amount72.UseClamp = false;
 
@@ -647,7 +648,7 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump88 = new BumpNode(m_shader, "bump_");
 					bump88.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					bump88.ins.Strength.Value = 1.0f;  //part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor; // * 100.0f;
+					bump88.ins.Strength.Value = part.UnitScale;  //part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor; // * 100.0f;
 					bump88.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 					bump88.ins.UseObjectSpace.Value = true;
 
@@ -825,7 +826,7 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.Subsurface.Value = 0f;
 					principledbsdf117.ins.SubsurfaceRadius.Value = new float4(0f, 0f, 0f, 1f);
 					principledbsdf117.ins.SubsurfaceColor.Value = new float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
-					principledbsdf117.ins.Metallic.Value = part.Metallic;
+					principledbsdf117.ins.Metallic.Value = Math.Max(part.Metallic, part.Reflectivity);
 					principledbsdf117.ins.Specular.Value = part.Specular;
 					principledbsdf117.ins.SpecularTint.Value = part.SpecularTint;
 					principledbsdf117.ins.Roughness.Value = part.ReflectionRoughness;
@@ -841,7 +842,7 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.TransmissionRoughness.Value = part.RefractionRoughness;
 					principledbsdf117.ins.Tangent.Value = new float4(0f, 0f, 0f, 1f);
 
-					var custom_environment_blend195 = new MixClosureNode(m_shader, "custom_environment_blend_");
+					var custom_environment_blend195 = new MixClosureNode(m_shader, "custom_environment_blend_principled_");
 					custom_environment_blend195.ins.Fac.Value = part.EnvironmentTexture.Amount;
 
 					var coloured_shadow_trans_color_for_principled188 = new TransparentBsdfNode(m_shader, "coloured_shadow_trans_color_for_principled_");
@@ -916,7 +917,8 @@ namespace RhinoCyclesCore.Shaders
 					invert_luminence79.outs.Value.Connect(transparency_texture_amount80.ins.Value1);
 					invert_alpha70.outs.Value.Connect(toggle_diffuse_texture_alpha_usage81.ins.Value1);
 					transparency_texture_amount80.outs.Value.Connect(toggle_transparency_texture82.ins.Value2);
-					coloured_shadow_mix_custom114.outs.Closure.Connect(add_emission_to_final124.ins.Closure1);
+					// either this or pbr into here, check which is better... coloured_shadow_mix_custom114.outs.Closure.Connect(add_emission_to_final124.ins.Closure1);
+					coloured_shadow_mix_glass_principled118.outs.Closure.Connect(add_emission_to_final124.ins.Closure1);
 					diffuse_or_shadeless_emission126.outs.Closure.Connect(add_emission_to_final124.ins.Closure2);
 					toggle_diffuse_texture_alpha_usage81.outs.Value.Connect(add_diffuse_texture_alpha83.ins.Value1);
 					toggle_transparency_texture82.outs.Value.Connect(add_diffuse_texture_alpha83.ins.Value2);
