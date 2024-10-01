@@ -826,7 +826,7 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.Subsurface.Value = 0f;
 					principledbsdf117.ins.SubsurfaceRadius.Value = new float4(0f, 0f, 0f, 1f);
 					principledbsdf117.ins.SubsurfaceColor.Value = new float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
-					principledbsdf117.ins.Metallic.Value = Math.Max(part.Metallic, part.Reflectivity);
+					principledbsdf117.ins.Metallic.Value = part.Metallic;
 					principledbsdf117.ins.Specular.Value = part.Specular;
 					principledbsdf117.ins.SpecularTint.Value = part.SpecularTint;
 					principledbsdf117.ins.Roughness.Value = part.ReflectionRoughness;
@@ -835,7 +835,7 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.Sheen.Value = part.Sheen;
 					principledbsdf117.ins.SheenTint.Value = part.SheenTint;
 					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
-					principledbsdf117.ins.ClearcoatGloss.Value = part.ClearCoatGloss;
+					principledbsdf117.ins.ClearcoatGloss.Value = part.Gloss;
 					principledbsdf117.ins.IOR.Value = part.IOR;
 					principledbsdf117.ins.EmissionStrength.Value = 0.0f;
 					principledbsdf117.ins.Transmission.Value = part.Transparency;
@@ -987,11 +987,14 @@ namespace RhinoCyclesCore.Shaders
 						Utilities.GraphForSlot(m_shader, null, true, part.EnvironmentTexture.Amount, part.EnvironmentTexture, attenuated_environment_color106.ins.Color2.ToList(), false, false, false, false, part.Gamma);
 					}
 
+					return coloured_shadow_mix_glass_principled118;
+					/*
 					if (part.CyclesMaterialType == ShaderBody.CyclesMaterial.Glass
 						|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.SimplePlastic
 						|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.SimpleMetal
 						|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.Paint) return coloured_shadow_mix_glass_principled118;
 					return custom_alpha_cutter116;
+					*/
 				}
 			}
 		}
