@@ -371,12 +371,9 @@ namespace RhinoCyclesCore
 
 				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alphaNodes, IsData);
 
-				// 2023-10-17 David E.
-				// Don't apply pre-gamma if the procedural is a bitmap texture, because Cycles will already
-				// output the expected linearized color values. This code is now the same as the logic for
-				// shader procedurals (see the out-parameter 'out bool apply_gamma' in GL33_Shading.inc.glsl).
-				// Fixes RH-77715.
-				if (!IsData && !(teximg.Procedural is BitmapTextureProcedural))
+				// apply gamma now also to bitmaps since the change to no longer do
+				// czolor conversion in the kernel. RH-83550
+				if (!IsData)
 				{
 					gammaNode = new GammaNode(sh, "gamma node for color channel");
 					gammaNode.ins.Gamma.Value = gamma;

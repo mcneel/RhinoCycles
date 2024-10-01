@@ -305,12 +305,13 @@ namespace RhinoCyclesCore
 					break;
 				case ProbableMaterial.Custom:
 					mattype = ShaderBody.CyclesMaterial.No;
-					if (reflectivity > 0.9)
+					if (reflectivity > 0.9 && dcl == System.Drawing.Color.Black)
 					{
 						mattype = ShaderBody.CyclesMaterial.SimpleMetal;
 						metalic = 1.0f;
 						dcl = rcl;
 					}
+
 					break;
 			}
 
@@ -348,6 +349,10 @@ namespace RhinoCyclesCore
 				shb.ReflectionRoughness = 1.0f;
 			}
 			*/
+			if(mattype == ShaderBody.CyclesMaterial.Diffuse)
+			{
+				reflectivity = 0.0f;
+			}
 
 			var transp_used = onMaterial.Transparency > 0.001;
 
