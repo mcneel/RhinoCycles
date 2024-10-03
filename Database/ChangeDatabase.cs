@@ -115,6 +115,8 @@ namespace RhinoCyclesCore.Database
 
 		internal ChangeDatabase(Guid pluginId, RenderEngine engine, uint doc, ViewInfo view, DisplayPipelineAttributes attributes, bool modal, BitmapConverter bitmapConverter) : base(pluginId, doc, view, attributes, true, !modal)
 		{
+			var _doc = RhinoDoc.FromRuntimeSerialNumber(doc);
+			shadowCatcherMaterial = (RenderMaterial)RenderContent.FromId(_doc, ContentUuids.DefaultMaterialInstance);
 			BitmapConverter = bitmapConverter;
 			_environmentDatabase = new EnvironmentDatabase(BitmapConverter, doc);
 			_renderEngine = engine;
@@ -1403,8 +1405,7 @@ namespace RhinoCyclesCore.Database
 		private uint currentGpRenderMaterial = 0;
 		private bool isGpShadowsOnly = false;
 
-		//private ShadowCatcherMaterial shadowCatcherMaterial = (ShadowCatcherMaterial)RenderContentType.NewContentFromTypeId(System.Guid.Parse("9a28c95d-ae43-4ea2-b220-02c70d69f9e8"));
-		private RenderMaterial shadowCatcherMaterial = (RenderMaterial)RenderContentType.NewContentFromTypeId(new Guid("5a8d7b9b-cdc9-49de-8c16-2ef64fb097ab"));
+		private RenderMaterial shadowCatcherMaterial {get; set; } = null;
 
 		private const int shadowCatcherMaterialId = 42;
 		private void InitialiseGroundPlane(CqGroundPlane gp)
