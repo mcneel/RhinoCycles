@@ -123,88 +123,91 @@ namespace CyclesForRhino.CyclesForRhino
 				var renderSize = new Size(rect.Width, rect.Height);
 				var fullSize = inWindow && !partial ? renderSize : vpSize;
 				RcCore.It.AddLogString("RenderWithCycles: ModalRenderEngine constructor start");
-				ModalRenderEngine engine = new ModalRenderEngine(doc, Id, vi, true)
-				{
-					BufferRectangle = rect,
-					FullSize = fullSize,
-					FastPreview = fastPreview,
-				};
-				RcCore.It.AddLogString("RenderWithCycles: ModalRenderEngine constructor end");
-				RcCore.It.AddLogString("RenderWithCycles: RhinoCycles.RenderPipeline start");
-				var pipe = new RhinoCycles.RenderPipeline(doc, mode, this, renderSize, engine);
-				RcCore.It.AddLogString("RenderWithCycles: RhinoCycles.RenderPipeline end");
-
-				RcCore.It.AddLogString("RenderWithCycles: pipe.GetRenderWindow start");
-				engine.RenderWindow = pipe.GetRenderWindow(vi.Viewport, false, rect);
-				RcCore.It.AddLogString("RenderWithCycles: pipe.GetRenderWindow end");
-				RcCore.It.AddLogString("RenderWithCycles: RenderWindow.SetSize start");
-				engine.RenderWindow.SetSize(renderSize);
-				RcCore.It.AddLogString("RenderWithCycles: RenderWindow.SetSize end");
-
-				var requestedChannels = engine.RenderWindow.GetRequestedRenderChannelsAsStandardChannels();
-
-				List<StandardChannels> wireframes = new List<StandardChannels>();
-				wireframes.Add(StandardChannels.WireframeAnnotationsRGBA);
-				wireframes.Add(StandardChannels.WireframeCurvesRGBA);
-				wireframes.Add(StandardChannels.WireframeIsocurvesRGBA);
-				wireframes.Add(StandardChannels.WireframePointsRGBA);
-
-				List<RenderWindow.StandardChannels> reqChanList = requestedChannels
-						.Distinct()
-						.Where(chan =>
-								chan != StandardChannels.WireframeAnnotationsRGBA &&
-								chan != StandardChannels.WireframeCurvesRGBA &&
-								chan != StandardChannels.WireframeIsocurvesRGBA &&
-								chan != StandardChannels.WireframePointsRGBA
-						)
-						.ToList();
-
-				var needWireframeChannels = requestedChannels
-					.Intersect(wireframes)
-					.Any();
-
-				foreach(var reqChan in reqChanList) {
-					RcCore.It.AddLogString($"RenderWithCycles: RenderWindow.AddChannel {reqChan} start");
-					engine.RenderWindow.AddChannel(reqChan);
-					RcCore.It.AddLogString($"RenderWithCycles: RenderWindow.AddChannel {reqChan} end");
-				}
-
-				engine.RenderDimension = renderSize;
-				engine.Database.RenderDimension = renderSize;
-
-				EngineDocumentSettings eds = new EngineDocumentSettings(doc.RuntimeSerialNumber);
-				if (fastPreview)
-				{
-						engine._textureBakeQuality = 0;
-				}
-				else
-				{
-						engine._textureBakeQuality = eds.TextureBakeQuality;
-				}
-
-				RcCore.It.AddLogString($"RenderWithCycles: CreateWorld start");
-				engine.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
-				RcCore.It.AddLogString($"RenderWithCycles: CreateWorld end");
-
-				if (inWindow)
-					rc = pipe.Render();
-				else
-					rc = pipe.RenderWindow(doc.Views.ActiveView, rect, inWindow);
-
-				pipe.Dispose();
-			}
-			foreach (var vw in doc.Views)
-			{
-				try
-				{
-					if (vw != null && vw.RealtimeDisplayMode != null)
+				using (ModalRenderEngine engine = new ModalRenderEngine(doc, Id, vi, true)
 					{
-						vw.RealtimeDisplayMode.Paused = false;
+						BufferRectangle = rect,
+						FullSize = fullSize,
+						FastPreview = fastPreview,
 					}
-				}
-				catch (Exception)
+				)
 				{
-					// pass
+					RcCore.It.AddLogString("RenderWithCycles: ModalRenderEngine constructor end");
+					RcCore.It.AddLogString("RenderWithCycles: RhinoCycles.RenderPipeline start");
+					var pipe = new RhinoCycles.RenderPipeline(doc, mode, this, renderSize, engine);
+					RcCore.It.AddLogString("RenderWithCycles: RhinoCycles.RenderPipeline end");
+
+					RcCore.It.AddLogString("RenderWithCycles: pipe.GetRenderWindow start");
+					engine.RenderWindow = pipe.GetRenderWindow(vi.Viewport, false, rect);
+					RcCore.It.AddLogString("RenderWithCycles: pipe.GetRenderWindow end");
+					RcCore.It.AddLogString("RenderWithCycles: RenderWindow.SetSize start");
+					engine.RenderWindow.SetSize(renderSize);
+					RcCore.It.AddLogString("RenderWithCycles: RenderWindow.SetSize end");
+
+					var requestedChannels = engine.RenderWindow.GetRequestedRenderChannelsAsStandardChannels();
+
+					List<StandardChannels> wireframes = new List<StandardChannels>();
+					wireframes.Add(StandardChannels.WireframeAnnotationsRGBA);
+					wireframes.Add(StandardChannels.WireframeCurvesRGBA);
+					wireframes.Add(StandardChannels.WireframeIsocurvesRGBA);
+					wireframes.Add(StandardChannels.WireframePointsRGBA);
+
+					List<RenderWindow.StandardChannels> reqChanList = requestedChannels
+							.Distinct()
+							.Where(chan =>
+									chan != StandardChannels.WireframeAnnotationsRGBA &&
+									chan != StandardChannels.WireframeCurvesRGBA &&
+									chan != StandardChannels.WireframeIsocurvesRGBA &&
+									chan != StandardChannels.WireframePointsRGBA
+							)
+							.ToList();
+
+					var needWireframeChannels = requestedChannels
+						.Intersect(wireframes)
+						.Any();
+
+					foreach(var reqChan in reqChanList) {
+						RcCore.It.AddLogString($"RenderWithCycles: RenderWindow.AddChannel {reqChan} start");
+						engine.RenderWindow.AddChannel(reqChan);
+						RcCore.It.AddLogString($"RenderWithCycles: RenderWindow.AddChannel {reqChan} end");
+					}
+
+					engine.RenderDimension = renderSize;
+					engine.Database.RenderDimension = renderSize;
+
+					EngineDocumentSettings eds = new EngineDocumentSettings(doc.RuntimeSerialNumber);
+					if (fastPreview)
+					{
+							engine._textureBakeQuality = 0;
+					}
+					else
+					{
+							engine._textureBakeQuality = eds.TextureBakeQuality;
+					}
+
+					RcCore.It.AddLogString($"RenderWithCycles: CreateWorld start");
+					engine.CreateWorld(); // has to be done on main thread, so lets do this just before starting render session
+					RcCore.It.AddLogString($"RenderWithCycles: CreateWorld end");
+
+					if (inWindow)
+						rc = pipe.Render();
+					else
+						rc = pipe.RenderWindow(doc.Views.ActiveView, rect, inWindow);
+
+					pipe.Dispose();
+				}
+				foreach (var vw in doc.Views)
+				{
+					try
+					{
+						if (vw != null && vw.RealtimeDisplayMode != null)
+						{
+							vw.RealtimeDisplayMode.Paused = false;
+						}
+					}
+					catch (Exception)
+					{
+						// pass
+					}
 				}
 			}
 

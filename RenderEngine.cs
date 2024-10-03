@@ -534,6 +534,7 @@ namespace RhinoCyclesCore
 				if(isDisposing)
 				{
 					_bitmapConverter?.Dispose();
+					Database?.Dispose();
 				}
 			}
 		}
