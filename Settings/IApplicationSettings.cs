@@ -45,5 +45,10 @@ namespace RhinoCyclesCore.Settings
 		bool StartGpuKernelCompiler { get; set; }
 		bool VerboseLogging { get; set; }
 		int RetentionDays { get; set; }
+
+		bool UseLightTree { get; set; }
+		bool UseAdaptiveSampling { get; set; }
+		int AdaptiveMinSamples { get; set; }
+		float AdaptiveThreshold { get; set; }
 	}
 }

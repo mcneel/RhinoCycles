@@ -79,5 +79,23 @@ namespace RhinoCyclesCore.Settings
 			get { return m_eds.TransparentMaxBounce; }
 			set { m_eds.TransparentMaxBounce = value; }
 		}
+
+		public bool UseAdaptiveSampling
+		{
+			get { return m_eds.UseAdaptiveSampling; }
+			set { }
+		}
+
+		public int AdaptiveMinSamples
+		{
+			get { return m_eds.AdaptiveMinSamples; }
+			set { }
+		}
+
+		public float AdaptiveThreshold
+		{
+			get { return m_eds.AdaptiveThreshold; }
+			set { }
+		}
 	}
 }

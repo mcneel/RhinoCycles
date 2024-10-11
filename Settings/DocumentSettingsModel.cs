@@ -783,5 +783,41 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public bool UseLightTree
+		{
+			get
+			{
+				return RcCore.It.AllSettings.UseLightTree;
+			}
+			set => throw new InvalidOperationException();
+		}
+
+		public bool UseAdaptiveSampling
+		{
+			get
+			{
+				return RcCore.It.AllSettings.UseAdaptiveSampling;
+			}
+			set => throw new InvalidOperationException();
+		}
+
+		public int AdaptiveMinSamples
+		{
+			get
+			{
+				return RcCore.It.AllSettings.AdaptiveMinSamples;
+			}
+			set => throw new InvalidOperationException();
+		}
+
+		public float AdaptiveThreshold
+		{
+			get
+			{
+				return RcCore.It.AllSettings.AdaptiveThreshold;
+			}
+			set => throw new InvalidOperationException();
+		}
+
 	}
 }

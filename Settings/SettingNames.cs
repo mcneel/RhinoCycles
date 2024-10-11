@@ -87,5 +87,10 @@ namespace RhinoCyclesCore.Settings
 		public static string OpenCLDeviceType => "OpenCLDeviceType";
 		public static string OpenCLSingleProgram => "OpenCLSingleProgram";
 		public static string OpenCLKernelType => "OpenCLKernelType";
+
+		public static string UseLightTree => "UseLightTree";
+		public static string UseAdaptiveSampling => "UseAdaptiveSampling";
+		public static string AdaptiveMinSamples => "AdaptiveMinSamples";
+		public static string AdaptiveThreshold => "AdaptiveThreshold";
 	}
 }

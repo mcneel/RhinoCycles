@@ -130,6 +130,11 @@ namespace RhinoCyclesCore.Settings
 
 			VerboseLogging = VerboseLogging;
 			RetentionDays = RetentionDays;
+
+			UseLightTree = UseLightTree;
+			UseAdaptiveSampling = UseAdaptiveSampling;
+			AdaptiveMinSamples = AdaptiveMinSamples;
+			AdaptiveThreshold = AdaptiveThreshold;
 		}
 
 		public bool IgnoreQualityChanges { get; set; }
@@ -234,6 +239,11 @@ namespace RhinoCyclesCore.Settings
 			StartGpuKernelCompiler = DefaultEngineSettings.StartGpuKernelCompiler;
 			VerboseLogging = DefaultEngineSettings.VerboseLogging;
 
+			UseLightTree = DefaultEngineSettings.UseLightTree;
+			UseAdaptiveSampling = DefaultEngineSettings.UseAdaptiveSampling;
+			AdaptiveMinSamples = DefaultEngineSettings.AdaptiveMinSamples;
+			AdaptiveThreshold = DefaultEngineSettings.AdaptiveThreshold;
+
 		}
 
 		public bool RenderDeviceIsCuda => RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
@@ -320,6 +330,30 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return RcPlugIn.Settings.GetBool(SettingNames.Verbose, DefaultEngineSettings.Verbose); }
 			set { RcPlugIn.Settings.SetBool(SettingNames.Verbose, value); }
+		}
+
+		public virtual bool UseLightTree
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.UseLightTree, DefaultEngineSettings.UseLightTree);  }
+			set { RcPlugIn.Settings.SetBool(SettingNames.UseLightTree, value); }
+		}
+
+		public virtual bool UseAdaptiveSampling
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.UseAdaptiveSampling, DefaultEngineSettings.UseAdaptiveSampling); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.UseAdaptiveSampling, value); }
+		}
+
+		public virtual int AdaptiveMinSamples
+		{
+			get { return RcPlugIn.Settings.GetInteger(SettingNames.AdaptiveMinSamples, DefaultEngineSettings.AdaptiveMinSamples); }
+			set { RcPlugIn.Settings.SetInteger(SettingNames.AdaptiveMinSamples, value); }
+		}
+
+		public virtual float AdaptiveThreshold
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.AdaptiveThreshold, DefaultEngineSettings.AdaptiveThreshold); }
+			set { RcPlugIn.Settings.SetDouble(SettingNames.AdaptiveThreshold, value); }
 		}
 
 		/// <summary>
