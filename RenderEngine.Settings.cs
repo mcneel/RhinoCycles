@@ -92,6 +92,9 @@ namespace RhinoCyclesCore
 					integrator.MaxGlossyBounce = settings.MaxGlossyBounce;
 					integrator.MaxTransmissionBounce = settings.MaxTransmissionBounce;
 					integrator.MaxVolumeBounce = settings.MaxVolumeBounce;
+					integrator.UseAdaptiveSampling = settings.UseAdaptiveSampling;
+					integrator.AdaptiveMinSamples = settings.AdaptiveMinSamples;
+					integrator.AdaptiveThreshold = settings.AdaptiveThreshold;
 					integrator.TagForUpdate();
 					_needReset = true;
 					_oldIntegratorHash = hash;
@@ -102,7 +105,7 @@ namespace RhinoCyclesCore
 
 		public void HandleDevice(IAllSettings settings)
 		{
-			
+
 			if(Rhino.RhinoApp.IsSafeModeEnabled)
 			{
 				RenderDevice = ccl.Device.Default;
@@ -117,20 +120,8 @@ namespace RhinoCyclesCore
 			MaxSamples = settings.Samples;
 			if (Session != null && Session.Scene != null)
 			{
-				var hash = settings.IntegratorHash;
-				if (hash != _oldIntegratorHash)
-				{
-					var integrator = Session.Scene.Integrator;
-					integrator.Seed = settings.Seed;
-					integrator.MaxBounce = settings.MaxBounce;
-					integrator.MaxDiffuseBounce = settings.MaxDiffuseBounce;
-					integrator.MaxGlossyBounce = settings.MaxGlossyBounce;
-					integrator.MaxTransmissionBounce = settings.MaxTransmissionBounce;
-					integrator.MaxVolumeBounce = settings.MaxVolumeBounce;
-					integrator.TagForUpdate();
-					_needReset = true;
-					_oldIntegratorHash = hash;
-				}
+				HandleIntegrator(settings);
+				_needReset = true;
 				Session.SetSamples(settings.Samples);
 			}
 		}

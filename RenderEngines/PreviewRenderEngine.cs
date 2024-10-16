@@ -123,6 +123,10 @@ namespace RhinoCyclesCore.RenderEngines
 				cyclesEngine.UploadData();
 				cyclesEngine.Session.Unlock();
 
+				cyclesEngine.Session.Scene.Integrator.UseAdaptiveSampling = true;
+				cyclesEngine.Session.Scene.Integrator.AdaptiveMinSamples = 3;
+				cyclesEngine.Session.Scene.Integrator.AdaptiveThreshold = 0.3f;
+
 				bool renderSuccess = true;
 
 				cyclesEngine.Session.Reset(

@@ -531,6 +531,11 @@ namespace RhinoCyclesCore.Settings
 				rem = RhinoMath.CRC32(rem, MaxVolumeBounce);
 				rem = RhinoMath.CRC32(rem, MaxTransmissionBounce);
 				rem = RhinoMath.CRC32(rem, TransparentMaxBounce);
+				rem = RhinoMath.CRC32(rem, UseAdaptiveSampling ? 1 : 0);
+				rem = RhinoMath.CRC32(rem, AdaptiveMinSamples);
+				rem = RhinoMath.CRC32(rem, AdaptiveThreshold);
+
+				RcCore.It.AddLogStringIfVerbose($"\t\t-- ApplicationAndDocumentSetting.IntegratorHash: {rem}. UseAdaptiveSampling {UseAdaptiveSampling}. Seed {Seed}");
 
 				return rem;
 			}
