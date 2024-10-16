@@ -191,7 +191,7 @@ namespace RhinoCyclesCore.RenderEngines
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer Flush");
 			cyclesEngine.Database?.Flush();
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer Flush done");
-			if(cyclesEngine.ShouldBreak)
+			if (cyclesEngine.ShouldBreak)
 				return;
 			cyclesEngine.Session.WaitUntilLocked();
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer UploadData");
@@ -222,7 +222,7 @@ namespace RhinoCyclesCore.RenderEngines
 					}
 					else if (!capturing && !Finished && (RenderedSamples > lastRenderedSample || RenderedTiles > lastRenderedTiles))
 					{
-						if(RenderedTiles > lastRenderedTiles && lastRenderedTiles >= 0)
+						if (RenderedTiles > lastRenderedTiles && lastRenderedTiles >= 0)
 						{
 							RenderedSamples = 0;
 						}
@@ -246,9 +246,9 @@ namespace RhinoCyclesCore.RenderEngines
 				}
 			}
 			#endregion
-				RcCore.It.AddLogString("ModalRenderEngine.Renderer Stopping");
+			RcCore.It.AddLogString("ModalRenderEngine.Renderer Stopping");
 
-			while(State == State.Stopping) {
+			while (State == State.Stopping) {
 				Thread.Sleep(10);
 			}
 
@@ -256,11 +256,10 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.StopTheRenderer();
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer StopTheRenderer done");
 
-			// we're done now, so lets clean up our session.
-			RcCore.It.AddLogString("ModalRenderEngine.Renderer Database.Dispose");
-			cyclesEngine.Database?.Dispose();
-			RcCore.It.AddLogString("ModalRenderEngine.Renderer Database.Dispose done");
-			cyclesEngine.Database = null;
+			// note: no cleaning up of database here. There will be otherwise potential
+			// for double frees.
+
+			// signal stop
 			cyclesEngine.State = State.Stopped;
 
 			if (!capturing && renderSuccess)
@@ -277,8 +276,8 @@ namespace RhinoCyclesCore.RenderEngines
 				rw.SetProgress(Localization.LocalizeString("An error occured while trying to render. The render may be incomplete or not started.", 65), 1.0f);
 				Action showErrorDialog = () =>
 				{
-				CrashReporterDialog dlg = new CrashReporterDialog(Localization.LocalizeString("Error while rendering", 66), Localization.LocalizeString(
-@"An error was detected while rendering with Rhino Render.
+					CrashReporterDialog dlg = new CrashReporterDialog(Localization.LocalizeString("Error while rendering", 66), Localization.LocalizeString(
+	@"An error was detected while rendering with Rhino Render.
 
 If there is a result visible you can save it still.
 
