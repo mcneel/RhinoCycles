@@ -224,6 +224,8 @@ Please click the link below for more information.", 69));
 			MaxSamples = Attributes?.RealtimeRenderPasses ?? eds.Samples;
 			MaxSamples = MaxSamples > 0 ? MaxSamples : eds.Samples;
 
+			PEEController.TriggerSample = Math.Min(MaxSamples, eds.TriggerPostEffectsSample);
+
 			#region pick a render device
 #if YES
 			var rd0 = Device.GetDevice(0);
@@ -323,6 +325,7 @@ Please click the link below for more information.", 69));
 
 			while (this != null && !ShouldBreak)
 			{
+				PEEController.TriggerSample = Math.Min(MaxSamples, eds.TriggerPostEffectsSample);
 				// If state changed
 				if(State != lastState)
 				{
@@ -375,6 +378,7 @@ Please click the link below for more information.", 69));
 				// If we have rendered a new sample
 				if(RenderedSamples > lastRenderedSample)
 				{
+					PEEController.CurrentSample = RenderedSamples;
 					if (!Finished && RenderedSamples < MaxSamples)
 					{
 						PassRendered?.Invoke(

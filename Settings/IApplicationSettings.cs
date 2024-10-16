@@ -46,6 +46,8 @@ namespace RhinoCyclesCore.Settings
 		bool VerboseLogging { get; set; }
 		int RetentionDays { get; set; }
 
+		int TriggerPostEffectsSample { get; set; }
+
 		bool UseLightTree { get; set; }
 		bool UseAdaptiveSampling { get; set; }
 		int AdaptiveMinSamples { get; set; }

@@ -150,6 +150,13 @@ namespace RhinoCyclesCore.Settings
 				rem = RhinoMath.CRC32(rem, MaxVolumeBounce);
 				rem = RhinoMath.CRC32(rem, MaxTransmissionBounce);
 				rem = RhinoMath.CRC32(rem, TransparentMaxBounce);
+				rem = RhinoMath.CRC32(rem, UseAdaptiveSampling ? 1 : 0);
+				rem = RhinoMath.CRC32(rem, AdaptiveMinSamples);
+				rem = RhinoMath.CRC32(rem, AdaptiveThreshold);
+
+				RcCore.It.AddLogStringIfVerbose($"\t\t-- DocumentSettingsModel.IntegratorHash: {rem}. UseAdaptiveSampling {UseAdaptiveSampling}. Seed {Seed}");
+
+
 
 				return rem;
 			}
@@ -779,6 +786,15 @@ namespace RhinoCyclesCore.Settings
 			get
 			{
 				return RcCore.It.AllSettings.RetentionDays;
+			}
+			set => throw new InvalidOperationException();
+		}
+
+		public int TriggerPostEffectsSample
+		{
+			get
+			{
+				return RcCore.It.AllSettings.TriggerPostEffectsSample;
 			}
 			set => throw new InvalidOperationException();
 		}
