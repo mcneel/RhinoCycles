@@ -129,6 +129,7 @@ namespace RhinoCyclesCore.Settings
 		static public bool StartGpuKernelCompiler => true;
 		static public bool VerboseLogging => false;
 		static public int RetentionDays => 3;
+		static public int TriggerPostEffectsSample => 5;
 
 		static public bool UseLightTree => true;
 		static public bool UseAdaptiveSampling	=> true;

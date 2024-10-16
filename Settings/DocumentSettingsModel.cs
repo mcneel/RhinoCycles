@@ -790,6 +790,15 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public int TriggerPostEffectsSample
+		{
+			get
+			{
+				return RcCore.It.AllSettings.TriggerPostEffectsSample;
+			}
+			set => throw new InvalidOperationException();
+		}
+
 		public bool UseLightTree
 		{
 			get

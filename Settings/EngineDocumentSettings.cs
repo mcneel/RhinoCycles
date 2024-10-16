@@ -444,6 +444,12 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public int TriggerPostEffectsSample
+		{
+			get => RcCore.It.AllSettings.TriggerPostEffectsSample;
+			set => throw new InvalidOperationException();
+		}
+
 		public bool UseAdaptiveSampling
 		{
 			get => RcCore.It.AllSettings.UseAdaptiveSampling;

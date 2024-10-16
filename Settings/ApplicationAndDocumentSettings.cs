@@ -130,6 +130,7 @@ namespace RhinoCyclesCore.Settings
 
 			VerboseLogging = VerboseLogging;
 			RetentionDays = RetentionDays;
+			TriggerPostEffectsSample = TriggerPostEffectsSample;
 
 			UseLightTree = UseLightTree;
 			UseAdaptiveSampling = UseAdaptiveSampling;
@@ -238,6 +239,8 @@ namespace RhinoCyclesCore.Settings
 			DumpMaterialShaderGraph = DefaultEngineSettings.DumpMaterialShaderGraph;
 			StartGpuKernelCompiler = DefaultEngineSettings.StartGpuKernelCompiler;
 			VerboseLogging = DefaultEngineSettings.VerboseLogging;
+
+			TriggerPostEffectsSample = DefaultEngineSettings.TriggerPostEffectsSample;
 
 			UseLightTree = DefaultEngineSettings.UseLightTree;
 			UseAdaptiveSampling = DefaultEngineSettings.UseAdaptiveSampling;
@@ -807,6 +810,12 @@ namespace RhinoCyclesCore.Settings
 					RcPlugIn.Settings.SetBool(SettingNames.CPUSplitKernel, value);
 				}
 			}
+		}
+
+		public virtual int TriggerPostEffectsSample
+				{
+			get { return RcPlugIn.Settings.GetInteger(SettingNames.TriggerPostEffectsSample, DefaultEngineSettings.TriggerPostEffectsSample); }
+			set { RcPlugIn.Settings.SetInteger(SettingNames.TriggerPostEffectsSample, value); }
 		}
 	}
 }
