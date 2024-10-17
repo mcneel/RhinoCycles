@@ -229,6 +229,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 						lastRenderedSample = RenderedSamples;
 						lastRenderedTiles = RenderedTiles;
+						PEEController.CurrentSample = RenderedSamples;
 
 						cyclesEngine.UpdateRenderWindow();
 					}
