@@ -507,7 +507,7 @@ namespace RhinoCycles.Viewport
 
 		public override void ShutdownRenderer()
 		{
-			RcCore.It.AddLogString("Raytraced: RenderedViewport.ShutdownRenderer entry");
+			RcCore.It.AddLogString($"Raytraced: RenderedViewport.ShutdownRenderer entry | {_forCapture}");
 			if (_forCapture)
 			{
 				_modal?.StopRendering();
@@ -520,11 +520,14 @@ namespace RhinoCycles.Viewport
 			{
 				_cycles?.StopRendering();
 				RcCore.It.AddLogString("RenderedViewport.ShutdownRenderer (cycles) releasing session start");
-				RcCore.It.ReleaseSession(_cycles?.Session);
+				if (_cycles?.Session != null)
+				{
+					RcCore.It.ReleaseSession(_cycles?.Session);
+				}
 				RcCore.It.AddLogString("RenderedViewport.ShutdownRenderer (cycles) releasing session end");
 				_cycles?.Dispose();
 			}
-			RcCore.It.AddLogString("Raytraced: RenderedViewport.ShutdownRenderer exit");
+			RcCore.It.AddLogString($"Raytraced: RenderedViewport.ShutdownRenderer exit | {_forCapture}");
 		}
 
 		public override bool IsRendererStarted()
