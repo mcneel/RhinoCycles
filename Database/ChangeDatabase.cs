@@ -668,7 +668,7 @@ namespace RhinoCyclesCore.Database
 
 			_gObTransform = Rhino.Geometry.Transform.Identity;
 			var viewscale = vp.GetViewScale();
-			bool is_reflected = Math.Abs(viewscale[2] + 1.0) < 0.01 ; // && viewscale[0] == 333;
+			bool is_reflected = Math.Abs(viewscale[2] + 1.0) < 0.01 ;
 			if(vp.IsParallelProjection && is_reflected) {
 				// create a scale transform against the view plane on world origin.
 				// this needs to be applied to all Cycles objects.
@@ -726,6 +726,11 @@ namespace RhinoCyclesCore.Database
 				frr = frustum_scale_factor * frr;
 			}
 
+			frb /= viewscale[1];
+			frt /= viewscale[1];
+			frl /= viewscale[0];
+			frr /= viewscale[0];
+
 			var parallel = vp.IsParallelProjection;
 
 			var screenport = vp.GetScreenPort(out int near, out int far);
@@ -762,6 +767,8 @@ namespace RhinoCyclesCore.Database
 					(frt, frb) = (frb, frt);
 				}
 			}
+
+
 
 			// convert rhino transform to ccsycles transform
 			var rt = rhinocam.ToCyclesTransform();
