@@ -337,10 +337,12 @@ namespace RhinoCyclesCore
 		{
 			if (projectionMode == TextureProjectionMode.WcsBox)
 			{
+				texture_coordinates.UseTransform = true;
 				return texture_coordinates.outs.WcsBox;
 			}
 			else if (projectionMode == TextureProjectionMode.Wcs)
 			{
+				texture_coordinates.UseTransform = true;
 				return texture_coordinates.outs.Object;
 			}
 			else if (projectionMode == TextureProjectionMode.Screen)
