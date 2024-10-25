@@ -275,7 +275,7 @@ namespace RhinoCyclesCore
 		/// <param name="slot"></param>
 		/// <param name="teximg"></param>
 		/// <param name="socks"></param>
-		public static ISocket PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, List<ISocket> socks, bool invert, float gamma, bool IsData)
+		public static ISocket PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, List<ISocket> socks, bool invert, float gamma, bool IsData, bool hasDecals)
 		{
 			Type t = typeof(T);
 			ISocket valsock = null;
@@ -299,36 +299,25 @@ namespace RhinoCyclesCore
 			{
 				ColorNode cn = new ColorNode(sh, $"input_color_for_{slot.Name}_");
 				cn.Value = ((Color4f)(object)slot.Value).ToFloat4();
-				GammaNode gammaNode = null;
-				if (!IsData)
+				if (invert)
 				{
-					gammaNode = new GammaNode(sh, "gamma node for color channel");
-					gammaNode.ins.Gamma.Value = gamma;
-					cn.outs.Color.Connect(gammaNode.ins.Color);
-					valsock = gammaNode.outs.Color;
+					InvertNode invcol = new InvertNode(sh, $"invert_input_color_for_{slot.Name}_");
+					invcol.ins.Fac.Value = 1.0f;
+					cn.outs.Color.Connect(invcol.ins.Color);
+					valsock = invcol.outs.Color;
 				}
 				else
 				{
-					if (invert)
-					{
-						InvertNode invcol = new InvertNode(sh, $"invert_input_color_for_{slot.Name}_");
-						invcol.ins.Fac.Value = 1.0f;
-						cn.outs.Color.Connect(invcol.ins.Color);
-						valsock = invcol.outs.Color;
-					}
-					else
-					{
-						valsock = cn.outs.Color;
-					}
+					valsock = cn.outs.Color;
 				}
 			}
 			if(valsock == null) {
 				throw new UnrecognizedTexturedSlotType($"Type tried is {t}");
 			}
-			return GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, socks, false, false, invert, IsData, gamma);
+			return GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, socks, false, false, invert, IsData, gamma, hasDecals);
 		}
 
-		public static ISocket GraphForSlot(Shader sh, ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ISocket> socketsToConnectTo, bool toBw, bool normalMap, bool invert, bool IsData, float gamma)
+		public static ISocket GraphForSlot(Shader sh, ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ISocket> socketsToConnectTo, bool toBw, bool normalMap, bool invert, bool IsData, float gamma, bool hasDecals)
 		{
 			ISocket alphaOut = null;
 			if(IsOn && null != teximg && teximg.HasProcedural)
@@ -467,6 +456,14 @@ namespace RhinoCyclesCore
 			}
 			else
 			{
+				if(!hasDecals && valueSocket.XmlName.Equals("color"))
+				{
+					GammaNode gammaNode = new GammaNode(sh, "gamma node for color inpunputt");
+					gammaNode.ins.Gamma.Value = gamma;
+					valueSocket.Connect(gammaNode.ins.Color);
+					valueSocket = gammaNode.outs.Color;
+
+				}
 				foreach (var sock in socketsToConnectTo)
 				{
 					valueSocket?.Connect(sock);

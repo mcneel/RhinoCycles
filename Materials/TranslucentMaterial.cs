@@ -74,7 +74,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			ccl.ShaderNodes.TranslucentBsdfNode translucent = new ccl.ShaderNodes.TranslucentBsdfNode(sh, "translucent");
 
-			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, translucent.ins.Color.ToList(), false, Gamma, false);
+			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, translucent.ins.Color.ToList(), false, Gamma, false, false);
 
 			translucent.outs.BSDF.Connect(sh.Output.ins.Surface);
 			outsocket = translucent.outs.BSDF;
