@@ -525,9 +525,9 @@ namespace RhinoCyclesCore.Shaders
 						if (!part.PbrBumpTexture.IsNormalMap)
 						{
 							var bump = new BumpNode(m_shader, "bump");
-							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * part.UnitScale;
+							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor; // * part.UnitScale;
 							bump.Invert = part.PbrBump.Amount < 0.0f;
-							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
+							bump.ins.Distance.Value = (1.0f / part.UnitScale) * RcCore.It.AllSettings.BumpDistance;
 							part.PbrBump.Amount = 1.0f;
 							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false);
 							bump.outs.Normal.Connect(principled.ins.Normal);
@@ -648,8 +648,8 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump88 = new BumpNode(m_shader, "bump_");
 					bump88.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					bump88.ins.Strength.Value = part.UnitScale;  //part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor; // * 100.0f;
-					bump88.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
+					bump88.ins.Strength.Value = 1;  //part.UnitScale;  //part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor; // * 100.0f;
+					bump88.ins.Distance.Value = (1.0f / part.UnitScale) * RcCore.It.AllSettings.BumpDistance;
 					bump88.ins.UseObjectSpace.Value = true;
 
 					var light_path109 = new LightPathNode(m_shader, "light_path_");
