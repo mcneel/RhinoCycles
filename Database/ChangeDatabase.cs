@@ -621,6 +621,24 @@ namespace RhinoCyclesCore.Database
 
 			TriggerViewChanged(view.View, oldSize!=newSize, newSize);
 
+			// If ViewScale*Original doesn't match ViewScale* recalculate the new
+			// viewplane. This is a bit of a hack, but is needed because the display
+			// pipeline attributes are applied after the view. Not ideal, but work-
+			// aroundable.
+
+			if(!RhinoMath.EpsilonEquals(ViewScaleHorizontal, view.ViewScaleHorizontalOriginal, 0.0001) ||
+				!RhinoMath.EpsilonEquals(ViewScaleVertical, view.ViewScaleVerticalOriginal, 0.0001))
+			{
+				var frt = view.Viewplane.Top * view.ViewScaleVerticalOriginal / ViewScaleVertical;
+				var frb = view.Viewplane.Bottom * view.ViewScaleVerticalOriginal / ViewScaleVertical;
+				var frl = view.Viewplane.Left * view.ViewScaleHorizontalOriginal / ViewScaleHorizontal;
+				var frr = view.Viewplane.Right * view.ViewScaleHorizontalOriginal / ViewScaleHorizontal;
+				view.Viewplane.Top = frt;
+				view.Viewplane.Bottom = frb;
+				view.Viewplane.Left = frl;
+				view.Viewplane.Right = frr;
+			}
+
 			// Pick smaller of the angles
 			var angle = newSize.Width > newSize.Height ? (float)view.Vertical * 2.0f : (float)view.Horizontal * 2.0f;
 
@@ -793,7 +811,9 @@ namespace RhinoCyclesCore.Database
 				Height = h,
 				Near = frn,
 				Far = frf > 1.0E+10f ? frf : 1.0E+10f,
-				View = GetQueueView() // use GetQueueView to ensure we have a valid ViewInfo even after Flush
+				View = GetQueueView(), // use GetQueueView to ensure we have a valid ViewInfo even after Flush
+				ViewScaleHorizontalOriginal = (float)viewscale[0],
+				ViewScaleVerticalOriginal = (float)viewscale[1],
 			};
 			_renderEngine.View = null;
 			_cameraDatabase.AddViewChange(cyclesview);
@@ -2025,6 +2045,8 @@ namespace RhinoCyclesCore.Database
 		public bool DisplayPipelineAttributesChanged { get; private set; } = false;
 		public int RealtimePreviewPasses { get; private set; } = -1;
 		public bool TransparentBackground { get; private set; } = false;
+		public float ViewScaleHorizontal { get; private set; } = 1.0f;
+		public float ViewScaleVertical { get; private set; } = 1.0f;
 		protected override void ApplyDisplayPipelineAttributesChanges(DisplayPipelineAttributes displayPipelineAttributes)
 		{
 			if (displayPipelineAttributes.ShowRealtimeRenderProgressBar)
@@ -2033,6 +2055,12 @@ namespace RhinoCyclesCore.Database
 				RealtimePreviewPasses = displayPipelineAttributes.RealtimeRenderPasses;
 				Rhino.RhinoApp.OutputDebugString($"{displayPipelineAttributes.ShowRealtimeRenderProgressBar} {displayPipelineAttributes.RealtimeRenderPasses}\n");
 			}
+
+			CyclesView curviewChange = _cameraDatabase.LatestView();
+			bool parallel = curviewChange.Projection == CameraType.Orthographic;
+
+			ViewScaleHorizontal = parallel ? (float)displayPipelineAttributes.ViewSpecificAttributes.HorizontalViewportScale : 1.0f;
+			ViewScaleVertical = parallel ? (float)displayPipelineAttributes.ViewSpecificAttributes.VerticalViewportScale : 1.0f;
 			bool trbg = TransparentBackground;
 			TransparentBackground = displayPipelineAttributes.FillMode == DisplayPipelineAttributes.FrameBufferFillMode.Transparent;
 			DisplayPipelineAttributesChanged |= trbg != TransparentBackground;
