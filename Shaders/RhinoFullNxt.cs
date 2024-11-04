@@ -441,6 +441,11 @@ namespace RhinoCyclesCore.Shaders
 
 					var tangent = new TangentNode(m_shader, "tangents");
 
+					var basewithao = new MixNode(m_shader, "pbr_base_with_ao");
+					basewithao.BlendType = MixNode.BlendTypes.Multiply;
+					basewithao.ins.Fac.Value = 1.0f;
+					basewithao.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
+
 					var coloured_shadow_mix_custom = new MixClosureNode(m_shader, "coloured_shadow_mix_custom");
 					var lightpath = new LightPathNode(m_shader, "light_path_for_coloured_shadow");
 					var coloured_shadow_switch = new MathMultiply(m_shader, "coloured_shadow_switch");
@@ -463,11 +468,30 @@ namespace RhinoCyclesCore.Shaders
 					var alpha_cutter_mixer = new MixClosureNode(m_shader, "alpha_cutter_on_coloured_shadow_mixer");
 					alpha_cutter_bsdf.outs.BSDF.Connect(alpha_cutter_mixer.ins.Closure1);
 
+					MixNode aoamount = null;
+
+					if(part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasProcedural) {
+						aoamount = new(m_shader, "pbr_aoamount")
+						{
+							BlendType = MixNode.BlendTypes.Blend
+						};
+						aoamount.ins.Color1.Value = Rhino.Display.Color4f.Black.ToFloat4();
+						aoamount.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
+						aoamount.ins.Fac.Value = 1.0f;
+
+						m_shader.AddNode(aoamount);
+
+						Utilities.PbrGraphForSlot(m_shader, part.PbrAmbientOcclusion, part.PbrAmbientOcclusionTexture, aoamount.ins.Color2.ToList(), false, part.Gamma, true, false);
+
+						aoamount.ins.Fac.Value = part.PbrAmbientOcclusion.Amount;
+						aoamount.outs.Color.Connect(basewithao.ins.Color2);
+					}
+
 					ISocket basecoltexAlphaOut;
 
 					List<ISocket> colsocks = new()
 					{
-						principled.ins.BaseColor,
+						basewithao.ins.Color1, //principled.ins.BaseColor,
 						coloured_shadow.ins.Color
 					};
 
@@ -490,6 +514,8 @@ namespace RhinoCyclesCore.Shaders
 					{
 						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, colsocks, false, part.Gamma, false, false);
 					}
+
+					basewithao.outs.Color.Connect(principled.ins.BaseColor);
 
 					if (basecoltexAlphaOut != null && part.UseBaseColorTextureAlphaAsObjectAlpha)
 					{
