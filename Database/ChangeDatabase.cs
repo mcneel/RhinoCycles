@@ -1098,7 +1098,7 @@ namespace RhinoCyclesCore.Database
 				HandleMeshTextureCoordinates(meshdata, findices, cmuvList, 1);
 			} else {
 				foreach(var mapping in mappingCollection.Channels) {
-					RcCore.It.AddLogStringIfVerbose($"\t\tHandleMeshData: mapping {mapping.Channel} {mapping.Mapping} {mapping.Local}");
+					RcCore.It.AddLogStringIfVerbose($"\t\tHandleMeshData: mapping {mapping.Mapping.MappingType} {mapping.Channel} {mapping.Mapping} {mapping.Local}");
 					meshdata.SetTextureCoordinates(mapping.Mapping, mapping.Local, false);
 					HandleMeshTextureCoordinates(meshdata, findices, cmuvList, mapping.Channel == 0 ? 1 : mapping.Channel);
 				}
