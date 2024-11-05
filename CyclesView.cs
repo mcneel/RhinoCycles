@@ -38,9 +38,5 @@ namespace RhinoCyclesCore
 		public ViewInfo View { get; set; }
 		public ViewPlane Viewplane { get; set; }
 		public bool TwoPoint { get; set; }
-
-		// Variables used to calculate before display attribute changes were given:
-		public float ViewScaleHorizontalOriginal { get; set; }
-		public float ViewScaleVerticalOriginal { get; set; }
 	}
 }
