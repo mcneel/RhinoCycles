@@ -225,6 +225,7 @@ namespace RhinoCyclesCore
 		public void HandleWallpaper(ViewInfo view, bool scaleToFit)
 		{
 			var file = Rhino.Render.Utilities.FindFile(RhinoDoc.ActiveDoc, view.WallpaperFilename);
+			var filename = System.IO.Path.GetFileName(file).Replace(".", "_");
 
 			bool modifiedWallpaper = false;
 			modifiedWallpaper |= m_old_hidden != view.WallpaperHidden | m_old_grayscale != view.ShowWallpaperInGrayScale;
@@ -325,7 +326,7 @@ namespace RhinoCyclesCore
 						g.DrawImage(bm, new Rectangle(p, bmsize), 0, 0, bm.Width, bm.Height, GraphicsUnit.Pixel, attr);
 					}
 				}
-				var wallpaperName = $"{file}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}.png";
+				var wallpaperName = $"{filename}_{newBitmap.Width}x{newBitmap.Height}_{view.WallpaperHidden}_{view.ShowWallpaperInGrayScale}_{scaleToFit}_{id}.png";
 				var crc = Rhino.RhinoMath.CRC32(27, System.Text.Encoding.UTF8.GetBytes(wallpaperName));
 				if (HostUtils.RunningOnOSX)
 				{
