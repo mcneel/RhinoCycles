@@ -1009,6 +1009,9 @@ namespace RhinoCyclesCore.Shaders
 
 					if (part.EnvironmentTexture.HasProcedural)
 					{
+						// https://mcneel.myjetbrains.com/youtrack/issue/RH-84799
+						// Need to manually set here the correct projection mode as this
+						// information isn't available while the texture is being evaluated
 						part.EnvironmentTexture.Procedural.ProjectionMode = Rhino.Render.TextureProjectionMode.EnvironmentMap;
 						if(part.EnvironmentTexture.Procedural.EnvironmentMappingMode == Rhino.Render.TextureEnvironmentMappingMode.Automatic) {
 							part.EnvironmentTexture.Procedural.EnvironmentMappingMode = Rhino.Render.TextureEnvironmentMappingMode.EnvironmentMap;
