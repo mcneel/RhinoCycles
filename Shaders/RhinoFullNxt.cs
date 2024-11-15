@@ -1009,7 +1009,13 @@ namespace RhinoCyclesCore.Shaders
 
 					if (part.EnvironmentTexture.HasProcedural)
 					{
-						part.EnvironmentTexture.ProjectionMode = Rhino.Render.TextureProjectionMode.EnvironmentMap;
+						// https://mcneel.myjetbrains.com/youtrack/issue/RH-84799
+						// Need to manually set here the correct projection mode as this
+						// information isn't available while the texture is being evaluated
+						part.EnvironmentTexture.Procedural.ProjectionMode = Rhino.Render.TextureProjectionMode.EnvironmentMap;
+						if(part.EnvironmentTexture.Procedural.EnvironmentMappingMode == Rhino.Render.TextureEnvironmentMappingMode.Automatic) {
+							part.EnvironmentTexture.Procedural.EnvironmentMappingMode = Rhino.Render.TextureEnvironmentMappingMode.EnvironmentMap;
+						}
 						Utilities.GraphForSlot(m_shader, null, true, part.EnvironmentTexture.Amount, part.EnvironmentTexture, attenuated_environment_color106.ins.Color2.ToList(), false, false, false, false, part.Gamma, false);
 					}
 

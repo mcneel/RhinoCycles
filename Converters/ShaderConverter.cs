@@ -297,13 +297,16 @@ namespace RhinoCyclesCore.Converters
 		public TextureProjectionMode ProjectionMode
 		{
 			get;
-			private set;
+			set; // public - need to be able to set the projection mode outside
+			     // of procedural handling, since not all information is available at
+			     // that point.
+			     // See https://mcneel.myjetbrains.com/youtrack/issue/RH-84799
 		}
 
 		public TextureEnvironmentMappingMode EnvironmentMappingMode
 		{
 			get;
-			private set;
+			set; // public, see comment for ProjectionMode
 		}
 
 		public Procedural(RenderTexture render_texture, bool is_color)
