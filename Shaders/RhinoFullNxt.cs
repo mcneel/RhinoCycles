@@ -470,7 +470,7 @@ namespace RhinoCyclesCore.Shaders
 
 					MixNode aoamount = null;
 
-					if(part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasProcedural) {
+					if (part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasProcedural) {
 						aoamount = new(m_shader, "pbr_aoamount")
 						{
 							BlendType = MixNode.BlendTypes.Blend
@@ -505,7 +505,7 @@ namespace RhinoCyclesCore.Shaders
 						GammaNode gammaNode = new GammaNode(m_shader, "gamma node for decalled pbr base tex");
 						gammaNode.ins.Gamma.Value = part.Gamma;
 						decalMixin.outs.Color.Connect(gammaNode.ins.Color);
-						foreach(var colsock in colsocks)
+						foreach (var colsock in colsocks)
 						{
 							gammaNode.outs.Color.Connect(colsock);
 						}
@@ -961,6 +961,7 @@ namespace RhinoCyclesCore.Shaders
 					custom_environment_blend195.outs.Closure.Connect(coloured_shadow_mix_glass_principled118.ins.Closure1);
 
 					/* extra code */
+					float useAlpha = 0.0f;
 
 					if (part.TransparencyTexture.HasProcedural)
 					{
@@ -973,9 +974,8 @@ namespace RhinoCyclesCore.Shaders
 
 					if (part.DiffuseTexture.HasProcedural)
 					{
-						float useAlpha = 0.0f;
-				//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
-						if(part.DiffuseTexture.Procedural is BitmapTextureProcedural bmtp)
+						//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
+						if (part.DiffuseTexture.Procedural is BitmapTextureProcedural bmtp)
 						{
 							useAlpha = part.DiffuseTexture.UseAlphaAsFloat;
 						}
@@ -1013,20 +1013,16 @@ namespace RhinoCyclesCore.Shaders
 						// Need to manually set here the correct projection mode as this
 						// information isn't available while the texture is being evaluated
 						part.EnvironmentTexture.Procedural.ProjectionMode = Rhino.Render.TextureProjectionMode.EnvironmentMap;
-						if(part.EnvironmentTexture.Procedural.EnvironmentMappingMode == Rhino.Render.TextureEnvironmentMappingMode.Automatic) {
+						if (part.EnvironmentTexture.Procedural.EnvironmentMappingMode == Rhino.Render.TextureEnvironmentMappingMode.Automatic) {
 							part.EnvironmentTexture.Procedural.EnvironmentMappingMode = Rhino.Render.TextureEnvironmentMappingMode.EnvironmentMap;
 						}
 						Utilities.GraphForSlot(m_shader, null, true, part.EnvironmentTexture.Amount, part.EnvironmentTexture, attenuated_environment_color106.ins.Color2.ToList(), false, false, false, false, part.Gamma, false);
 					}
 
-					return coloured_shadow_mix_glass_principled118;
-					/*
-					if (part.CyclesMaterialType == ShaderBody.CyclesMaterial.Glass
-						|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.SimplePlastic
-						|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.SimpleMetal
-						|| part.CyclesMaterialType == ShaderBody.CyclesMaterial.Paint) return coloured_shadow_mix_glass_principled118;
-					return custom_alpha_cutter116;
-					*/
+					// When useAlpha is set we need to ensure we actually pass on custom_alpha_cutter116, otherwise custom
+					// materials with alpha transparency of any sort will fail.
+					// See https://mcneel.myjetbrains.com/youtrack/issue/RH-84849
+					return useAlpha > 0.0 ? custom_alpha_cutter116 : coloured_shadow_mix_glass_principled118;
 				}
 			}
 		}
