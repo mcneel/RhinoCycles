@@ -2441,9 +2441,10 @@ namespace RhinoCyclesCore.Converters
 
 				var light_z = lg.Direction;
 				var light_x = lg.PerpendicularDirection;
-				var light_y = Vector3d.CrossProduct(light_z, light_x);
 				light_z.Unitize();
 				light_z.Transform(viewTransform);
+				light_x.Transform(viewTransform);
+				var light_y = Vector3d.CrossProduct(light_z, light_x);
 
 				// We overwrite 'dir' because it needs to be of same length as axisu and axisv.
 				axisu = RenderEngine.CreateFloat4(light_x.X, light_x.Y, light_x.Z);
