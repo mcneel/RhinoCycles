@@ -474,6 +474,18 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public float JiggleFactor
+		{
+			get => RcCore.It.AllSettings.JiggleFactor;
+			set => throw new InvalidOperationException();
+		}
+
+		public float GpJiggleDistance
+		{
+			get => RcCore.It.AllSettings.GpJiggleDistance;
+			set => throw new InvalidOperationException();
+		}
+
 #endregion
 	}
 }
