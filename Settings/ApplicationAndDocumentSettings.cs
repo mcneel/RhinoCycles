@@ -136,6 +136,8 @@ namespace RhinoCyclesCore.Settings
 			UseAdaptiveSampling = UseAdaptiveSampling;
 			AdaptiveMinSamples = AdaptiveMinSamples;
 			AdaptiveThreshold = AdaptiveThreshold;
+			JiggleFactor = JiggleFactor;
+			GpJiggleDistance = GpJiggleDistance;
 		}
 
 		public bool IgnoreQualityChanges { get; set; }
@@ -246,6 +248,8 @@ namespace RhinoCyclesCore.Settings
 			UseAdaptiveSampling = DefaultEngineSettings.UseAdaptiveSampling;
 			AdaptiveMinSamples = DefaultEngineSettings.AdaptiveMinSamples;
 			AdaptiveThreshold = DefaultEngineSettings.AdaptiveThreshold;
+			JiggleFactor = DefaultEngineSettings.JiggleFactor;
+			GpJiggleDistance = DefaultEngineSettings.GpJiggleDistance;
 
 		}
 
@@ -357,6 +361,18 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.AdaptiveThreshold, DefaultEngineSettings.AdaptiveThreshold); }
 			set { RcPlugIn.Settings.SetDouble(SettingNames.AdaptiveThreshold, value); }
+		}
+
+		public virtual float JiggleFactor
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.JiggleFactor, DefaultEngineSettings.JiggleFactor); }
+			set { RcPlugIn.Settings.SetDouble(SettingNames.JiggleFactor, value); }
+		}
+
+		public virtual float GpJiggleDistance
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.GpJiggleDistance, DefaultEngineSettings.GpJiggleDistance); }
+			set { RcPlugIn.Settings.SetDouble(SettingNames.GpJiggleDistance, value); }
 		}
 
 		/// <summary>

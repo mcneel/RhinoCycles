@@ -93,5 +93,7 @@ namespace RhinoCyclesCore.Settings
 		public static string UseAdaptiveSampling => "UseAdaptiveSampling";
 		public static string AdaptiveMinSamples => "AdaptiveMinSamples";
 		public static string AdaptiveThreshold => "AdaptiveThreshold";
+		public static string JiggleFactor => "JiggleFactor";
+		public static string GpJiggleDistance => "GpJiggleDistance";
 	}
 }
