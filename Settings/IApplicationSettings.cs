@@ -52,5 +52,7 @@ namespace RhinoCyclesCore.Settings
 		bool UseAdaptiveSampling { get; set; }
 		int AdaptiveMinSamples { get; set; }
 		float AdaptiveThreshold { get; set; }
+		float JiggleFactor { get; set; }
+		float GpJiggleDistance { get; set; }
 	}
 }

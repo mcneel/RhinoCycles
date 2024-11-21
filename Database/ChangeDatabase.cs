@@ -1112,8 +1112,8 @@ namespace RhinoCyclesCore.Database
 		public double ModelAngleToleranceRadians { get; set; }
 		public Rhino.UnitSystem ModelUnitSystem { get; set; }
 
-		private float jiggleFactor => 0.001f;
-		private float gpJiggleFactor => 0.0011f;
+		private float jiggleFactor => RcCore.It.AllSettings.JiggleFactor;
+		private float gpJiggleFactor => RcCore.It.AllSettings.GpJiggleDistance;
 
 		/// <summary>
 		/// Create a jiggled transform of the MeshInstance transform.
