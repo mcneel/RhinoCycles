@@ -64,12 +64,12 @@ namespace RhinoCyclesCore
 		public ccl.float4 Color1AsFloat4 =>
 			BackgroundFill == BackgroundStyle.Environment ?
 				BgColorAs4float : (Color1.Equals(Color.Empty) ?
-									_tst : RenderEngine.CreateFloat4(Color1) ^ Gamma);
+									_tst : RenderEngine.CreateFloat4(Color1));
 		/// <summary>
 		/// Bottom color for gradient
 		/// </summary>
 		public Color Color2 { get; set; } = Color.Empty;
-		public ccl.float4 Color2AsFloat4 => Color2.Equals(Color.Empty) ? _tst : RenderEngine.CreateFloat4(Color2) ^ Gamma;
+		public ccl.float4 Color2AsFloat4 => Color2.Equals(Color.Empty) ? _tst : RenderEngine.CreateFloat4(Color2);
 		/// <summary>
 		/// Environment used for background (360deg environment)
 		/// </summary>
@@ -92,7 +92,7 @@ namespace RhinoCyclesCore
 		/// Background color, used if bg is no image
 		/// </summary>
 		public Color BgColor { get; set; } = Color.Empty;
-		public ccl.float4 BgColorAs4float => BgColor.Equals(Color.Empty) ? _tst : RenderEngine.CreateFloat4(BgColor) ^ Gamma;
+		public ccl.float4 BgColorAs4float => BgColor.Equals(Color.Empty) ? _tst : RenderEngine.CreateFloat4(BgColor);
 		/// <summary>
 		/// True if bg env texture is available and background fill is set to Environment.
 		/// </summary>
