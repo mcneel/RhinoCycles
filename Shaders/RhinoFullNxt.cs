@@ -963,15 +963,6 @@ namespace RhinoCyclesCore.Shaders
 					/* extra code */
 					float useAlpha = 0.0f;
 
-					if (part.TransparencyTexture.HasProcedural)
-					{
-						List<ISocket> sockets = new List<ISocket>
-						{
-							transpluminance113.ins.Color
-						};
-						Utilities.GraphForSlot(m_shader, null, true, part.TransparencyTexture.Amount, part.TransparencyTexture, sockets, false, false, false, true, part.Gamma, false);
-					}
-
 					if (part.DiffuseTexture.HasProcedural)
 					{
 						//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
@@ -999,6 +990,16 @@ namespace RhinoCyclesCore.Shaders
 							diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2.Value = 1.0f;
 							max_of_texalpha_or_usealpha179.ins.Value1.Value = 1.0f;
 						}
+					}
+
+					if (part.TransparencyTexture.HasProcedural)
+					{
+						List<ISocket> sockets = new List<ISocket>
+						{
+							transpluminance113.ins.Color
+						};
+						useAlpha = 1.0f;
+						Utilities.GraphForSlot(m_shader, null, true, part.TransparencyTexture.Amount, part.TransparencyTexture, sockets, false, false, false, true, part.Gamma, false);
 					}
 
 					if (part.BumpTexture.HasProcedural)
