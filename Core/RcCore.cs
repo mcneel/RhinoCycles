@@ -690,12 +690,12 @@ namespace RhinoCyclesCore.Core
 			{
 				if (deviceListing.Count == 0) continue;
 
-				var compileTaskFile = WriteGpuDevicesFile(deviceListing);
-				string startProcessString = Localization.LocalizeString("Start compile process with device count:", 89);
-				compileStdOut.Enqueue($"{startProcessString} {deviceListing.Count} ({deviceListing[0].Type})\n");
-
 				try
 				{
+					var compileTaskFile = WriteGpuDevicesFile(deviceListing);
+					string startProcessString = Localization.LocalizeString("Start compile process with device count:", 89);
+					compileStdOut.Enqueue($"{startProcessString} {deviceListing.Count} ({deviceListing[0].Type})\n");
+
 					ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
 
 					var process = new Process();
