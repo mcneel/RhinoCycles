@@ -1076,8 +1076,25 @@ namespace RhinoCyclesCore.Database
 				// Get texture coordinates and
 				// flattens to a float array.
 				HandleMeshTextureCoordinates(meshdata, findices, cmuvList, 1);
-			} else {
-				foreach(var mapping in mappingCollection.Channels) {
+			}
+			else if (mappingCollection.Count == 1 && mappingCollection[0].Mapping.MappingType == Rhino.Render.TextureMappingType.OcsMapping)
+			{
+				// Add a surface parameter mapping when only an OCS mapping has been found.
+				// This is necessary to ensure the mesh has at least some UV data, because
+				// otherwise materials with anisotropy defined will turn up black.
+				// See https://mcneel.myjetbrains.com/youtrack/issue/RH-85008
+				RcCore.It.AddLogStringIfVerbose($"\t\tHandleMeshData: only OCS found, add a surface parameter mapping");
+				var surfaceMapping = Rhino.Render.TextureMapping.CreateSurfaceParameterMapping();
+				meshdata.SetTextureCoordinates(surfaceMapping, Rhino.Geometry.Transform.Identity, false);
+				HandleMeshTextureCoordinates(meshdata, findices, cmuvList, 1);
+			}
+			else
+			{
+				foreach (var mapping in mappingCollection.Channels)
+				{
+					if(mapping.Mapping.MappingType == Rhino.Render.TextureMappingType.OcsMapping)
+						continue;
+
 					RcCore.It.AddLogStringIfVerbose($"\t\tHandleMeshData: mapping {mapping.Mapping.MappingType} {mapping.Channel} {mapping.Mapping} {mapping.Local}");
 					meshdata.SetTextureCoordinates(mapping.Mapping, mapping.Local, false);
 					HandleMeshTextureCoordinates(meshdata, findices, cmuvList, mapping.Channel == 0 ? 1 : mapping.Channel);
