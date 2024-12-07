@@ -231,7 +231,7 @@ namespace RhinoCyclesCore.Core
 		public void ReleaseSession(Session session)
 		{
 			AddLogStringIfVerbose("ReleaseSession: entry");
-			if(active_sessions.ContainsKey(session.Id))
+			if(session != null && active_sessions.ContainsKey(session.Id))
 			{
 				AddLogStringIfVerbose($"ReleaseSession: cancel session {session.Id} start");
 				session.QuickCancel();
