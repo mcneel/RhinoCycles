@@ -486,6 +486,12 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public bool SkipPreview
+		{
+			get => RcCore.It.AllSettings.SkipPreview;
+			set => throw new InvalidOperationException();
+		}
+
 #endregion
 	}
 }

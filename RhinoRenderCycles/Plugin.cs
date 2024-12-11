@@ -239,6 +239,14 @@ namespace CyclesForRhino.CyclesForRhino
 			RcCore.It.AddLogString($"CreatePreview {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} entry");
 			scene.SkipInitialisation();
 
+			if (RcCore.It.AllSettings.SkipPreview)
+			{
+				RcCore.It.StartLogStopwatch($"CreatePreview skipping thumbnail generation. {scene.Reason} {scene.Quality} {scene.Id}", RcCore.StopwatchType.Preview);
+				scene.PreviewImage = null;
+				RcCore.It.StartLogStopwatch($"CreatePreview skipping thumbnail generation. {scene.ContentKind}, {scene.Reason} {scene.Quality} {scene.Id} exit", RcCore.StopwatchType.Preview);
+				return;
+			}
+
 			if (scene.Quality == PreviewSceneQuality.Low)
 			{
 				scene.PreviewImage = null;

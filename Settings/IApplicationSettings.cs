@@ -54,5 +54,6 @@ namespace RhinoCyclesCore.Settings
 		float AdaptiveThreshold { get; set; }
 		float JiggleFactor { get; set; }
 		float GpJiggleDistance { get; set; }
+		bool SkipPreview { get; set; }
 	}
 }
