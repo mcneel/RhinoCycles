@@ -157,20 +157,19 @@ namespace RhinoCyclesCore.RenderEngines
 
 						Thread.Sleep(50);
 					}
-					else
-					{
-						cyclesEngine.Session.QuickCancel();
-						break;
-					}
 					if (cyclesEngine.PreviewEventArgs.Cancel)
 					{
+						RcCore.It.AddLogStringIfVerbose("PreviewRenderEngine.Renderer: cancel signalled during rendering");
 						cyclesEngine.State = State.Stopping;
 						cyclesEngine.CancelRender = true;
+						cyclesEngine.Finished = true;
 					}
 				}
 				if (renderSuccess)
 				{
+					RcCore.It.AddLogStringIfVerbose("PreviewRenderEngine.Renderer: rendering done, UpdatePreview start");
 					cyclesEngine.UpdatePreview();
+					RcCore.It.AddLogStringIfVerbose("PreviewRenderEngine.Renderer: rendering done, UpdatePreview start");
 				}
 
 				cyclesEngine.StopTheRenderer();
@@ -179,9 +178,9 @@ namespace RhinoCyclesCore.RenderEngines
 
 				cyclesEngine.Success = renderSuccess;
 
-			RcCore.It.AddLogString("PreviewRenderEngine.Renderer releasing session start");
-			RcCore.It.ReleaseSession(cyclesEngine.Session);
-			RcCore.It.AddLogString("PreviewRenderEngine.Renderer releasing session done");
+				RcCore.It.AddLogString("PreviewRenderEngine.Renderer releasing session start");
+				RcCore.It.ReleaseSession(cyclesEngine.Session);
+				RcCore.It.AddLogString("PreviewRenderEngine.Renderer releasing session done");
 
 				// we're done now, so lets clean up our session.
 				cyclesEngine.Dispose();
@@ -190,9 +189,11 @@ namespace RhinoCyclesCore.RenderEngines
 
 		public void UpdatePreview()
 		{
+			RcCore.It.AddLogStringIfVerbose("UpdatePreview: entry");
 			BlitPixelsToRenderWindowChannel();
 			RenderWindow.Invalidate();
 			PreviewEventArgs.PreviewNotifier.NotifyIntermediateUpdate(RenderWindow);
+			RcCore.It.AddLogStringIfVerbose("UpdatePreview: exit");
 		}
 
 		private bool _disposed;
