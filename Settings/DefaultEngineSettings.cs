@@ -137,5 +137,6 @@ namespace RhinoCyclesCore.Settings
 		static public float AdaptiveThreshold => 0.01f;
 		static public float JiggleFactor => 0.0001f;
 		static public float GpJiggleDistance => 0.0001f;
+		static public bool SkipPreview => false;
 	}
 }

@@ -95,5 +95,6 @@ namespace RhinoCyclesCore.Settings
 		public static string AdaptiveThreshold => "AdaptiveThreshold";
 		public static string JiggleFactor => "JiggleFactor";
 		public static string GpJiggleDistance => "GpJiggleDistance";
+		public static string SkipPreview => "SkipPreview";
 	}
 }

@@ -853,5 +853,14 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public bool SkipPreview
+		{
+			get
+			{
+				return RcCore.It.AllSettings.SkipPreview;
+			}
+			set => throw new InvalidOperationException();
+		}
+
 	}
 }

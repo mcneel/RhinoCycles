@@ -138,6 +138,7 @@ namespace RhinoCyclesCore.Settings
 			AdaptiveThreshold = AdaptiveThreshold;
 			JiggleFactor = JiggleFactor;
 			GpJiggleDistance = GpJiggleDistance;
+			SkipPreview = SkipPreview;
 		}
 
 		public bool IgnoreQualityChanges { get; set; }
@@ -250,6 +251,7 @@ namespace RhinoCyclesCore.Settings
 			AdaptiveThreshold = DefaultEngineSettings.AdaptiveThreshold;
 			JiggleFactor = DefaultEngineSettings.JiggleFactor;
 			GpJiggleDistance = DefaultEngineSettings.GpJiggleDistance;
+			SkipPreview = DefaultEngineSettings.SkipPreview;
 
 		}
 
@@ -373,6 +375,12 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.GpJiggleDistance, DefaultEngineSettings.GpJiggleDistance); }
 			set { RcPlugIn.Settings.SetDouble(SettingNames.GpJiggleDistance, value); }
+		}
+
+		public virtual bool SkipPreview
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.SkipPreview, DefaultEngineSettings.SkipPreview); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.SkipPreview, value); }
 		}
 
 		/// <summary>
