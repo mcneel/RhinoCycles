@@ -225,7 +225,6 @@ namespace RhinoCyclesCore
 		public void HandleWallpaper(ViewInfo view, bool scaleToFit)
 		{
 			var file = Rhino.Render.Utilities.FindFile(RhinoDoc.ActiveDoc, view.WallpaperFilename);
-			var filename = System.IO.Path.GetFileName(file).Replace(".", "_");
 
 			bool modifiedWallpaper = false;
 			modifiedWallpaper |= m_old_hidden != view.WallpaperHidden | m_old_grayscale != view.ShowWallpaperInGrayScale;
@@ -240,6 +239,8 @@ namespace RhinoCyclesCore
 				WallpaperSolid = Color1;
 				return;
 			}
+
+			var filename = System.IO.Path.GetFileName(file).Replace(".", "_");
 
 			if(!modifiedWallpaper) { return; }
 
