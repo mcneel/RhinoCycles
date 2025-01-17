@@ -980,7 +980,7 @@ namespace RhinoCyclesCore.Core
 						logTw.Flush();
 					}
 				}
-				Thread.Sleep(10);
+				Thread.Sleep(200);
 			}
 		}
 
