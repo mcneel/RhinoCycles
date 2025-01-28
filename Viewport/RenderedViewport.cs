@@ -97,7 +97,7 @@ namespace RhinoCycles.Viewport
 			RcCore.It.AddLogString("RenderedViewport ctor entry");
 			_runningSerial ++;
 			_serial = _runningSerial;
-			(ApplicationAndDocumentSettings.RcPlugIn as Plugin)?.InitialiseCSycles();
+			(ApplicationAndDocumentSettings.RcPlugIn as CyclesPlugIn)?.InitialiseCSycles();
 
 			HudPlayButtonLeftClicked += RenderedViewport_HudPlayButtonPressed;
 			HudPauseButtonLeftClicked += RenderedViewport_HudPauseButtonPressed;

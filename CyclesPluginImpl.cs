@@ -16,13 +16,10 @@ limitations under the License.
 
 using ccl;
 using Rhino;
-using Rhino.PlugIns;
 using Rhino.Render;
 using Rhino.Runtime;
-using Rhino.UI;
 using RhinoCyclesCore.Core;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -30,21 +27,21 @@ using System.Threading;
 
 namespace RhinoCycles
 {
-	public class Plugin : PlugIn
+	internal class CyclesPlugInImpl : ICyclesPlugin
 	{
-		/// <summary>
-		/// Make sure we load AtStartup so that our view mode is
-		/// available even when RhinoCycles isn't the current renderer
-		/// </summary>
-		public override PlugInLoadTime LoadTime => PlugInLoadTime.AtStartup;
-
+		CyclesPlugIn parentPlugin = null;
+		public CyclesPlugInImpl(CyclesPlugIn plugin)
+		{
+			parentPlugin = plugin;
+		}
 		private bool pluginLoaded = false;
 
-		protected override LoadReturnCode OnLoad(ref string errorMessage)
+		public CyclesPluginLoadReturnCode OnLoad(ref string errorMessage)
 		{
+#if NET7_0_OR_GREATER
 			string os = HostUtils.RunningOnWindows ? "Windows" : "MacOS";
 			if(!pluginLoaded) {
-				var dataPath = SettingsDirectory;
+				var dataPath = parentPlugin.SettingsDirectory;
 				var userPath = Path.Combine(dataPath, "..", "data");
 				userPath = Path.GetFullPath(userPath);
 				if(!Directory.Exists(userPath)) {
@@ -69,7 +66,7 @@ namespace RhinoCycles
 				// code got moved to separate DLL so use that to register from.
 				var rccoreass = typeof(RcCore).Assembly;
 				RcCore.It.AddLogString("RhinoCycles OnLoad: RegisterContent start");
-				RenderContent.RegisterContent(rccoreass, Id);
+				RenderContent.RegisterContent(rccoreass, parentPlugin.Id);
 				RcCore.It.AddLogString("RhinoCycles OnLoad: RegisterContent end");
 
 				var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
@@ -93,7 +90,16 @@ namespace RhinoCycles
 				RcCore.It.AddLogString($"RhinoCycles loaded in: {timeTaken}");
 				RcCore.It.AddLogString("RhinoCycles OnLoad exit");
 			}
-			return LoadReturnCode.Success;
+			return CyclesPluginLoadReturnCode.Success;
+#else
+			// TODO: localize
+			errorMessage = "RhinoCycles is not supported on .NET Framework.";
+			if (!pluginLoaded)
+			{
+				pluginLoaded = true;
+			}
+			return CyclesPluginLoadReturnCode.ErrorShowDialog;
+#endif
 		}
 
 		private void RhinoApp_Initialized(object sender, EventArgs e)
@@ -145,7 +151,7 @@ namespace RhinoCycles
 					uint aaltonen_noise_array_size = RenderTexture.GetProceduralAaltonenNoiseArraySize();
 					CSycles.set_rhino_aaltonen_noise_table(aaltonen_noise_array, aaltonen_noise_array_size);
 
-					if (File.Exists(Path.Combine(SettingsDirectory, "disable_gpus")) ||
+					if (File.Exists(Path.Combine(parentPlugin.SettingsDirectory, "disable_gpus")) ||
 					  Rhino.RhinoApp.IsSafeModeEnabled
 						)
 					{
@@ -175,29 +181,29 @@ namespace RhinoCycles
 		}
 
 
-		protected override void OnShutdown()
+		public void OnShutdown()
 		{
+#if NET7_0_OR_GREATER
 			RcCore.It.AddLogString("OnShutdown start");
 			RhinoApp.Initialized -= RhinoApp_Initialized;
 			/* Clean up everything from C[CS]?ycles. */
 			RcCore.It.AddLogString("RcCore.It.Shutdown start");
 			RcCore.It.Shutdown();
 			RcCore.It.AddLogString("RcCore.It.Shutdown end");
-			RcCore.It.AddLogString("base.OnShutdown start");
-			base.OnShutdown();
-			RcCore.It.AddLogString("base.OnShutdown end");
 			RcCore.It.AddLogString("OnShutdown exit");
+#endif
 		}
 
-		protected override void OptionsDialogPages(List<Rhino.UI.OptionsDialogPage> pages)
+		public object OptionsDialogPage()
 		{
 			var optionsPage = new RhinoCyclesCore.Settings.OptionsDialogPage();
-			pages.Add(optionsPage);
-			base.OptionsDialogPages(pages);
+			return optionsPage;
 		}
 
-		public override bool IsTextureSupported(RenderTexture texture)
+		public bool IsTextureSupported(object _texture)
 		{
+#if NET7_0_OR_GREATER
+			RenderTexture texture = (RenderTexture)_texture;
 			if (texture == null ||
 				texture.TypeId == ContentUuids.AdvancedDotTextureType ||
 				texture.TypeId == ContentUuids.ResampleTextureType)
@@ -206,6 +212,9 @@ namespace RhinoCycles
 			}
 
 			return true;
+#else
+			return false;
+#endif
 		}
 	}
 }

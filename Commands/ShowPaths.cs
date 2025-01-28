@@ -38,7 +38,7 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			(PlugIn as Plugin)?.InitialiseCSycles();
+			(PlugIn as CyclesPlugIn)?.InitialiseCSycles();
 
 			RhinoApp.WriteLine("----------");
 			RhinoApp.WriteLine($"Absolute path {RcCore.It.KernelPath}");

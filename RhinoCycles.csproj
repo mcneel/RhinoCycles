@@ -1,21 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props" Condition="Exists('..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props')" />
   <Import Project="..\..\..\..\RhinoProjectPropertySheets\Rhino.CS.PlugIn.props" Condition="Exists('..\..\..\..\RhinoProjectPropertySheets\Rhino.CS.PlugIn.props')" />
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFrameworks>net7.0;net48</TargetFrameworks>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <EnableDefaultItems>False</EnableDefaultItems>
-
     <FileAlignment>512</FileAlignment>
     <WarningLevel>4</WarningLevel>
-    <TargetFrameworkProfile />
+    <NoWarn>$(NoWarn);CA1416;CS0414;CS8981;NU1701;SYSLIB0014</NoWarn>
+    <LangVersion>latest</LangVersion>
+    <OutputPath Condition="$(TargetFramework) == 'net48'">$(RhinoBinDir)\$(Configuration)\Plug-ins\net48</OutputPath>
+    <OutputPath Condition="$(TargetFramework) != 'net48'">$(RhinoBinDir)\$(Configuration)\Plug-ins\</OutputPath>
+    <IntermediateOutputPath>obj\$(OS)\$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>$(RhinoBinDir)\$(Configuration)\Plug-ins\</OutputPath>
     <DefineConstants Condition="'$(OS)' == 'Windows_NT'">ON_RUNTIME_WIN;TRACE;DEBUG</DefineConstants>
     <DefineConstants Condition="'$(OS)' != 'Windows_NT'">TRACE;DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -26,7 +27,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>$(RhinoBinDir)\$(Configuration)\Plug-ins\</OutputPath>
     <DefineConstants Condition="'$(OS)' == 'Windows_NT'">ON_RUNTIME_WIN;TRACE</DefineConstants>
     <DefineConstants Condition="'$(OS)' != 'Windows_NT'">TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -76,7 +76,10 @@
     <Compile Include="Commands\SetThreads.cs" />
     <Compile Include="Commands\SetRenderOptions.cs" />
     <Compile Include="Commands\ListDevices.cs" />
-    <Compile Include="Plugin.cs" />
+    <Compile Include="RhinoCyclesAssemblyLoadContext.cs" />
+    <Compile Include="CyclesPlugin.cs" />
+    <Compile Include="CyclesPluginImpl.cs" />
+    <Compile Include="ICyclesPlugin.cs" />
     <Compile Include="Viewport\RenderedViewport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

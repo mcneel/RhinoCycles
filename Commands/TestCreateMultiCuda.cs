@@ -40,7 +40,7 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			(PlugIn as Plugin)?.InitialiseCSycles();
+			(PlugIn as CyclesPlugIn)?.InitialiseCSycles();
 			var numDevices = Device.Count;
 			var endS = numDevices != 1 ? "s" : "";
 			RhinoApp.WriteLine("Possible devices to select from:");

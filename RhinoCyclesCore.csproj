@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props" Condition="Exists('..\..\..\..\RhinoProjectPropertySheets\Rhino.Common.props')" />
+  <Import Project="..\..\..\..\RhinoProjectPropertySheets\Rhino.CS.Common.props" Condition="Exists('..\..\..\..\RhinoProjectPropertySheets\Rhino.CS.Common.props')" />
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFrameworks>net7.0;net48</TargetFrameworks>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <EnableDefaultItems>False</EnableDefaultItems>
@@ -10,30 +10,28 @@
     <FileAlignment>512</FileAlignment>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
     <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
-    <LangVersion>11.0</LangVersion>
+    <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);CA1416;CS8981;NU1701;SYSLIB0014</NoWarn>
+    <OutputPath Condition="$(TargetFramework) == 'net48'">$(RhinoBinDir)\$(Configuration)\Plug-ins\net48\RhinoCycles</OutputPath>
+    <OutputPath Condition="$(TargetFramework) != 'net48'">$(RhinoBinDir)\$(Configuration)\Plug-ins\</OutputPath>
+    <IntermediateOutputPath>obj\$(OS)\$(Configuration)\$(TargetFramework)\</IntermediateOutputPath>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>$(RhinoBinDir)\$(Configuration)\Plug-ins\</OutputPath>
     <DefineConstants Condition="'$(OS)' == 'Windows_NT'">ON_RUNTIME_WIN;DEBUG;TRACE</DefineConstants>
     <DefineConstants Condition="'$(OS)' == 'Unix'">DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>$(RhinoBinDir)\$(Configuration)\Plug-ins\</OutputPath>
     <DefineConstants Condition="'$(OS)' == 'Windows_NT'">ON_RUNTIME_WIN;TRACE</DefineConstants>
     <DefineConstants Condition="'$(OS)' == 'Unix'">TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -165,6 +163,7 @@
     <ProjectReference Include="..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" ExcludeAssets="runtime" />
     <PackageReference Include="System.Resources.Extensions" Version="7.0.0" ExcludeAssets="runtime" PrivateAssets="all" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" PrivateAssets="all" />
   </ItemGroup>

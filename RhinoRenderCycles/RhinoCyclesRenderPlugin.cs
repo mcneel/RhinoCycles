@@ -33,7 +33,7 @@ using static Rhino.Render.RenderWindow;
 
 namespace CyclesForRhino.CyclesForRhino
 {
-	public class Plugin : RenderPlugIn
+	public class RhinoCyclesRenderPlugin : RenderPlugIn
 	{
 		public override PlugInLoadTime LoadTime => PlugInLoadTime.AtStartup;
 

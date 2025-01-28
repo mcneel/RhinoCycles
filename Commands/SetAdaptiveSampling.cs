@@ -40,7 +40,7 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			(PlugIn as Plugin)?.InitialiseCSycles();
+			(PlugIn as CyclesPlugIn)?.InitialiseCSycles();
 			var getNumber = new GetNumber();
 			getNumber.SetLowerLimit(1, true);
 			getNumber.SetDefaultInteger(RcCore.It.AllSettings.AdaptiveMinSamples);
