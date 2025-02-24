@@ -77,6 +77,7 @@ namespace RhinoCyclesKernelCompiler
 			if (device.IsCpu) return;
 
 			string gpuCompileFile = deviceWithHash.Path;
+			Console.WriteLine($"About to start with {device.NiceName}");
 			if (File.Exists(gpuCompileFile))
 			{
 				Console.WriteLine($"{device.NiceName} already completed");
@@ -298,9 +299,14 @@ namespace RhinoCyclesKernelCompiler
 			string gpuDataPath = new DirectoryInfo(Path.GetDirectoryName(compileTaskFile)).FullName;
 			string dataUserPath = new DirectoryInfo(Path.GetDirectoryName(compileTaskFile)).Parent.FullName;
 
+			Console.WriteLine("Initializing Cycles");
+			Console.WriteLine($"\tKernel path: {kernelPath}");
+			Console.WriteLine($"\tData path: {dataUserPath}");
 			CSycles.path_init(kernelPath, dataUserPath);
 			CSycles.initialise(DeviceTypeMask.All);
+			Console.WriteLine("Setup tables for Cycles");
 			SetupTables();
+			Console.WriteLine("Cycles initialized");
 
 			var gpuTasks = ReadGpuTaskData(compileTaskFile, gpuDataPath);
 
