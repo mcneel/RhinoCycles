@@ -618,6 +618,9 @@ namespace RhinoCyclesCore.Core
 				programToRun = $"{dotnet_path}";
 			}
 
+			AddLogString($"RcCore SetupProcessStartInfo: program to run   = {programToRun}");
+			AddLogString($"RcCore SetupProcessStartInfo: arguments to run = {argumentsToProgramToRun}");
+
 			ProcessStartInfo startInfo = new ProcessStartInfo(
 						fileName: programToRun,
 						arguments: argumentsToProgramToRun)
@@ -717,18 +720,17 @@ namespace RhinoCyclesCore.Core
 					process.Start();
 					process.BeginOutputReadLine();
 					process.BeginErrorReadLine();
-					//CompileLogStdOut += $"{process.StandardOutput.ReadToEnd()}";
-
-					SetCompileLog();
 
 					process.WaitForExit();
+
+					SetCompileLog();
 					CompileProcessError = process.ExitCode != 0;
 					if (CompileProcessError)
 					{
 						string compile_failed = Localization.LocalizeString("Compile failed", 90);
 						string compile_error_code = Localization.LocalizeString("Error code", 91);
 						compileStdOut.Enqueue($"{compile_failed} {CompileLogStdOut}");
-						compileStdErr.Enqueue($"{compile_error_code}: {process.ExitCode}\n\n{process.StandardError.ReadToEnd()}");
+						compileStdErr.Enqueue($"{compile_error_code}: {process.ExitCode}. {CompileLogStdErr}");
 					}
 					process.Close();
 				}
