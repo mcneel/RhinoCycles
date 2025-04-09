@@ -9,8 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <FileAlignment>512</FileAlignment>
     <OutputType>Exe</OutputType>
+    <RuntimeFrameworkVersion>8.0.0</RuntimeFrameworkVersion>
+    <RollForward>LatestPatch</RollForward>
     <StartupObject>RhinoCyclesKernelCompiler.Program</StartupObject>
-    <NoWarn>NU1702</NoWarn>
+    <NoWarn>NU1702;NETSDK1138</NoWarn>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
