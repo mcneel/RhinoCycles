@@ -9,8 +9,8 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <FileAlignment>512</FileAlignment>
     <OutputType>Exe</OutputType>
-    <RuntimeFrameworkVersion>8.0.0</RuntimeFrameworkVersion>
-    <RollForward>LatestPatch</RollForward>
+    <RuntimeFrameworkVersion>9.0.0</RuntimeFrameworkVersion>
+    <RollForward>Major</RollForward>
     <StartupObject>RhinoCyclesKernelCompiler.Program</StartupObject>
     <NoWarn>NU1702;NETSDK1138</NoWarn>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
