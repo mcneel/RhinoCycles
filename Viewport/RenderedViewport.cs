@@ -306,6 +306,8 @@ namespace RhinoCycles.Viewport
 			_progress = e.Progress;
 		}
 
+		bool _offscreenRenderDone = false;
+
 		public void RenderOffscreen(object o)
 		{
 			RcCore.It.AddLogString("Raytraced: RenderedViewport.RenderOffScreen entry");
@@ -318,6 +320,7 @@ namespace RhinoCycles.Viewport
 				mre.SaveRenderedBuffer(0);
 				RcCore.It.AddLogString("Raytraced: RenderedViewport.RenderOffScreen SaveRenderedBuffer end");
 				_frameAvailable = true;
+				_offscreenRenderDone = true;
 			}
 			RcCore.It.AddLogString("Raytraced: RenderedViewport.RenderOffScreen exit");
 		}
@@ -334,7 +337,7 @@ namespace RhinoCycles.Viewport
 			}
 			if (_modal != null)
 			{
-				return _frameAvailable;
+				return _offscreenRenderDone;
 			}
 
 			return false;
