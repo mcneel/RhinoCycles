@@ -953,7 +953,14 @@ namespace RhinoCyclesCore.Shaders
 					add_diffuse_texture_alpha83.outs.Value.Connect(custom_alpha_cutter116.ins.Fac);
 					attennuated_refraction_color99.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color2);
 					mix_diffuse_and_transparency_color187.outs.Color.Connect(principledbsdf117.ins.BaseColor);
-					principledbsdf117.outs.BSDF.Connect(custom_environment_blend195.ins.Closure1);
+					if (part.Shadeless)
+					{
+						shadeless96.outs.Closure.Connect(custom_environment_blend195.ins.Closure1);
+					}
+					else
+					{
+						principledbsdf117.outs.BSDF.Connect(custom_environment_blend195.ins.Closure1);
+					}
 					environment_map_diffuse108.outs.BSDF.Connect(custom_environment_blend195.ins.Closure2);
 					mix_diffuse_and_transparency_color187.outs.Color.Connect(coloured_shadow_trans_color_for_principled188.ins.Color);
 					coloured_shadow_trans_color_for_principled188.outs.BSDF.Connect(coloured_shadow_mix_glass_principled118.ins.Closure2);
