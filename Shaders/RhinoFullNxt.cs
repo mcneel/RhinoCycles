@@ -609,7 +609,7 @@ namespace RhinoCyclesCore.Shaders
 
 					tangent.outs.Tangent.Connect(principled.ins.Tangent);
 
-					if (part.PbrDisplacement.On && part.PbrDisplacementTexture.HasProcedural)
+					if (false && part.PbrDisplacement.On && part.PbrDisplacementTexture.HasProcedural)
 					{
 						var displacement = new DisplacementNode(m_shader);
 						var strength = new MathMultiply(m_shader);
