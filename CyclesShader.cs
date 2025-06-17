@@ -50,10 +50,10 @@ namespace RhinoCyclesCore
 			_docsrn = docsrn;
 			var doc = Rhino.RhinoDoc.FromRuntimeSerialNumber(docsrn);
 
-			ModelUnitSystem = doc.ModelUnitSystem;
+			ModelUnits = doc.ModelUnits;
 		}
 
-		Rhino.UnitSystem ModelUnitSystem { get; }
+		Rhino.LengthUnit ModelUnits { get; }
 
 		public List<CyclesDecal> Decals { get; set; } = null;
 
@@ -84,7 +84,7 @@ namespace RhinoCyclesCore
 		{
 			_front = new ShaderBody(Id)
 			{
-				UnitScale = (float)Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Meters, ModelUnitSystem)
+				UnitScale = (float)Rhino.LengthUnit.Scale(Rhino.LengthUnit.Meters, ModelUnits)
 			};
 			return RecordDataForShaderPart(_front, rm, gamma);
 		}
@@ -114,7 +114,7 @@ namespace RhinoCyclesCore
 		{
 			_back = new ShaderBody(Id)
 			{
-				UnitScale = (float)Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Meters, ModelUnitSystem)
+				UnitScale = (float)Rhino.LengthUnit.Scale(Rhino.LengthUnit.Meters, ModelUnits)
 			};
 			return RecordDataForShaderPart(_back, rm, gamma);
 		}
