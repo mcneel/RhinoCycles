@@ -198,7 +198,7 @@ namespace RhinoCyclesCore
 			{
 				ModelAbsoluteTolerance = doc.ModelAbsoluteTolerance,
 				ModelAngleToleranceRadians = doc.ModelAngleToleranceRadians,
-				ModelUnitSystem = doc.ModelUnitSystem
+				ModelUnits = doc.ModelUnits
 			};
 			RcCore.It.AddLogString("RenderEngine ChangeDatabase created");
 			RegisterEventHandler();

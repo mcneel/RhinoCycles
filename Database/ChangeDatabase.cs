@@ -598,7 +598,7 @@ namespace RhinoCyclesCore.Database
 		{
 			var scene = _renderEngine.Session.Scene;
 			scene.Camera.FocalDistance = fb.FocalDistance;
-			var unitscale = (float)RhinoMath.UnitScale(UnitSystem.Millimeters, ModelUnitSystem);
+			var unitscale = (float)LengthUnit.Scale(LengthUnit.Millimeters, ModelUnits);
 			scene.Camera.ApertureSize = fb.FocalAperture < 0.00001f ? 0.0f : (fb.LensLength * unitscale) / fb.FocalAperture;
 			scene.Camera.Blades = Blades;
 			scene.Camera.BladesRotation = (float)RhinoMath.ToRadians(BladesRotation);
@@ -1127,7 +1127,7 @@ namespace RhinoCyclesCore.Database
 
 		public double ModelAbsoluteTolerance { get; set; }
 		public double ModelAngleToleranceRadians { get; set; }
-		public Rhino.UnitSystem ModelUnitSystem { get; set; }
+		public Rhino.LengthUnit ModelUnits { get; set; }
 
 		private float jiggleFactor => RcCore.It.AllSettings.JiggleFactor;
 		private float gpJiggleFactor => RcCore.It.AllSettings.GpJiggleDistance;
