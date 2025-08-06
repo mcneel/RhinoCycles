@@ -2322,6 +2322,14 @@ namespace RhinoCyclesCore.Converters
 				Decals = decals,
 			};
 
+			if (shader.Decals != null)
+			{
+				foreach (var decal in shader.Decals)
+				{
+					shader.RecordDataForDecalShader(decal, lw.PreProcessGamma);
+				}
+			}
+
 			if (rm.TypeId.Equals(realtimDisplaMaterialId))
 			{
 				if (rm.FindChild("front") is RenderMaterial front)

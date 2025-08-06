@@ -77,7 +77,7 @@ namespace RhinoCyclesCore.Materials
 		{
 			ccl.ShaderNodes.DiffuseBsdfNode diffuse = new ccl.ShaderNodes.DiffuseBsdfNode(sh, "diffuse");
 
-			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, diffuse.ins.Color.ToList(), false, Gamma, false, false);
+			Utilities.PbrGraphForSlot(sh, Diffuse, DiffuseTexture, diffuse.ins.Color.ToList(), false, Gamma, false, false, null);
 
 			diffuse.outs.BSDF.Connect(sh.Output.ins.Surface);
 			outsocket = diffuse.outs.BSDF;

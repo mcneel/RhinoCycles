@@ -230,6 +230,144 @@ namespace RhinoCyclesCore.Shaders
 			texco.outs.DecalUsage.Connect(imgtex.ins.DecalUsage);
 		}
 
+		static public VectorSocket GetDecalUVNode(CyclesDecal decal, RhinoTextureCoordinateNode texco)
+		{
+			texco.ObjectTransform = decal.Transform;
+			texco.UseTransform = true;
+
+			texco.UvMap = decal.Texture.GetUvMapForChannel();
+
+			switch (decal.Projection)
+			{
+				case Rhino.Render.DecalProjection.Forward:
+					texco.Direction = DecalDirection.Forward;
+					break;
+				case Rhino.Render.DecalProjection.Backward:
+					texco.Direction = DecalDirection.Backward;
+					break;
+				default:
+					texco.Direction = DecalDirection.Both;
+					break;
+			}
+
+			texco.DecalOrigin = decal.Origin;
+			texco.Across = decal.Across;
+			texco.Up = decal.Up;
+			texco.DecalPxyz = decal.TextureMapping.PrimitiveTransform.ToCyclesTransform();
+			texco.DecalNxyz = decal.TextureMapping.NormalTransform.ToCyclesTransform();
+			texco.DecalUvw = decal.TextureMapping.UvwTransform.ToCyclesTransform();
+
+			texco.DecalHeight = decal.Height;
+			texco.DecalRadius = decal.Radius;
+			texco.HorizontalSweepStart = decal.HorizontalSweepStart;
+			texco.HorizontalSweepEnd = decal.HorizontalSweepEnd;
+			texco.VerticalSweepStart = decal.VerticalSweepStart;
+			texco.VerticalSweepEnd = decal.VerticalSweepEnd;
+
+			VectorSocket output_socket = null;
+
+			switch (decal.Mapping)
+			{
+				case Rhino.Render.DecalMapping.Planar:
+					output_socket = texco.outs.DecalPlanar;
+					break;
+				case Rhino.Render.DecalMapping.Cylindrical:
+					output_socket = texco.outs.DecalCylindrical;
+					break;
+				case Rhino.Render.DecalMapping.Spherical:
+					output_socket = texco.outs.DecalSpherical;
+					break;
+				case Rhino.Render.DecalMapping.UV:
+				default:
+					output_socket = texco.outs.DecalUv;
+					break;
+			}
+
+			return output_socket;
+		}
+
+		static private FloatSocket GetDecalUVMapNode(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco)
+		{
+			texco.ObjectTransform = decal.Transform;
+			texco.UseTransform = true;
+
+			texco.UvMap = decal.Texture.GetUvMapForChannel();
+
+			switch (decal.Projection)
+			{
+				case Rhino.Render.DecalProjection.Forward:
+					texco.Direction = DecalDirection.Forward;
+					break;
+				case Rhino.Render.DecalProjection.Backward:
+					texco.Direction = DecalDirection.Backward;
+					break;
+				default:
+					texco.Direction = DecalDirection.Both;
+					break;
+			}
+
+			texco.DecalOrigin = decal.Origin;
+			texco.Across = decal.Across;
+			texco.Up = decal.Up;
+			texco.DecalPxyz = decal.TextureMapping.PrimitiveTransform.ToCyclesTransform();
+			texco.DecalNxyz = decal.TextureMapping.NormalTransform.ToCyclesTransform();
+			texco.DecalUvw = decal.TextureMapping.UvwTransform.ToCyclesTransform();
+
+			texco.DecalHeight = decal.Height;
+			texco.DecalRadius = decal.Radius;
+			texco.HorizontalSweepStart = decal.HorizontalSweepStart;
+			texco.HorizontalSweepEnd = decal.HorizontalSweepEnd;
+			texco.VerticalSweepStart = decal.VerticalSweepStart;
+			texco.VerticalSweepEnd = decal.VerticalSweepEnd;
+
+			var subtract = new VectorMathNode(shader, "UV map subtract");
+			subtract.Operation = VectorMathNode.Operations.Subtract;
+			subtract.ins.Vector2.Value = new float4(0.5f, 0.5f, 0.0f, 0.0f);
+
+			var separate_uv = new SeparateXyzNode(shader, "UV map separate");
+
+			var abs1 = new MathNode(shader, "UV map absolute 1");
+			abs1.Operation = MathNode.Operations.Absolute;
+
+			var abs2 = new MathNode(shader, "UV map absolute 2");
+			abs2.Operation = MathNode.Operations.Absolute;
+
+			var max = new MathNode(shader, "UV map max");
+			max.Operation = MathNode.Operations.Maximum;
+
+			var lessthan = new MathNode(shader, "UV map less than");
+			lessthan.Operation = MathNode.Operations.Less_Than;
+			lessthan.ins.Value2.Value = 0.5f;
+
+			subtract.outs.Vector.Connect(separate_uv.ins.Vector);
+			separate_uv.outs.X.Connect(abs1.ins.Value1);
+			separate_uv.outs.Y.Connect(abs2.ins.Value1);
+
+			abs1.outs.Value.Connect(max.ins.Value1);
+			abs2.outs.Value.Connect(max.ins.Value2);
+
+			max.outs.Value.Connect(lessthan.ins.Value1);
+
+			switch (decal.Mapping)
+			{
+				case Rhino.Render.DecalMapping.Planar:
+					texco.outs.DecalPlanar.Connect(subtract.ins.Vector1);
+					break;
+				case Rhino.Render.DecalMapping.Cylindrical:
+					texco.outs.DecalCylindrical.Connect(subtract.ins.Vector1);
+					break;
+				case Rhino.Render.DecalMapping.Spherical:
+					texco.outs.DecalSpherical.Connect(subtract.ins.Vector1);
+					break;
+				case Rhino.Render.DecalMapping.UV:
+				default:
+					texco.outs.DecalUv.Connect(subtract.ins.Vector1);
+					break;
+			}
+
+			return lessthan.outs.Value;
+		}
+
 		/// <summary>
 		/// Handle decals for this shader. Set up a partial shader graph
 		/// and return the ShaderNodes that can be bound into the basecolor
@@ -395,7 +533,7 @@ namespace RhinoCyclesCore.Shaders
 			return nodeToBindIntoShader;
 		}
 
-		private ShaderNode GetShaderPart(ShaderBody part)
+		private ShaderNode GetShaderPart(ShaderBody part, CyclesDecal decalBeingProcessed = null)
 		{
 			if (part.BlendMaterial)
 			{
@@ -405,7 +543,7 @@ namespace RhinoCyclesCore.Shaders
 				blender.ins.Fac.Value = part.BlendMixAmount;
 				if (part.MaterialOne != null)
 				{
-					materialOne = GetShaderPart(part.MaterialOne);
+					materialOne = GetShaderPart(part.MaterialOne, decalBeingProcessed);
 				}
 				else
 				{
@@ -415,7 +553,7 @@ namespace RhinoCyclesCore.Shaders
 				}
 				if (part.MaterialTwo != null)
 				{
-					materialTwo = GetShaderPart(part.MaterialTwo);
+					materialTwo = GetShaderPart(part.MaterialTwo, decalBeingProcessed);
 				}
 				else
 				{
@@ -427,13 +565,30 @@ namespace RhinoCyclesCore.Shaders
 				materialTwo.GetClosureSocket().Connect(blender.ins.Closure2);
 
 				if (part.BlendMixAmountTexture.HasProcedural) {
-					Utilities.GraphForSlot(m_shader, null, part.BlendMixAmount > 0.0f, part.BlendMixAmountTexture.Amount, part.BlendMixAmountTexture, blender.ins.Fac.ToList(), true, false, false, true, part.Gamma, false);
+					Utilities.GraphForSlot(m_shader, null, part.BlendMixAmount > 0.0f, part.BlendMixAmountTexture.Amount, part.BlendMixAmountTexture, blender.ins.Fac.ToList(), true, false, false, true, part.Gamma, false, null);
 				}
 				return blender;
 			}
 			else
 			{
-				MixNode decalMixin = HandleDecals(!part.IsPbr);
+				MixNode decalMixin = null;
+				//MixNode decalMixin = HandleDecals(!part.IsPbr);
+
+				ShaderNode decalMaterial = null;
+				FloatSocket decalMaskSocket = null;
+				if (decalBeingProcessed == null && m_original.Decals != null)
+				{
+					foreach(var decal in m_original.Decals)
+					{
+						if (decal.Material != null)
+						{
+							decalMaterial = GetShaderPart(decal.MaterialShader, decal);
+							decalMaskSocket = GetDecalUVMapNode(m_shader, decal, new RhinoTextureCoordinateNode(m_shader, "decal_texco_"));
+						}
+
+						break;
+					}
+				}
 
 				if (part.IsPbr)
 				{
@@ -481,7 +636,7 @@ namespace RhinoCyclesCore.Shaders
 
 						m_shader.AddNode(aoamount);
 
-						Utilities.PbrGraphForSlot(m_shader, part.PbrAmbientOcclusion, part.PbrAmbientOcclusionTexture, aoamount.ins.Color2.ToList(), false, part.Gamma, true, false);
+						Utilities.PbrGraphForSlot(m_shader, part.PbrAmbientOcclusion, part.PbrAmbientOcclusionTexture, aoamount.ins.Color2.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
 
 						aoamount.ins.Fac.Value = part.PbrAmbientOcclusion.Amount;
 						aoamount.outs.Color.Connect(basewithao.ins.Color2);
@@ -499,7 +654,7 @@ namespace RhinoCyclesCore.Shaders
 					{
 						// HACK: tell base tex is data, so that we can manually add here
 						// gamma node after decal mixin before connecting _that_ up to colsocks
-						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, decalMixin.ins.Color1.ToList(), false, part.Gamma, true, true);
+						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, decalMixin.ins.Color1.ToList(), false, part.Gamma, true, true, decalBeingProcessed);
 
 						// now add gamma node to ensure decals are corrected properly
 						GammaNode gammaNode = new GammaNode(m_shader, "gamma node for decalled pbr base tex");
@@ -512,7 +667,7 @@ namespace RhinoCyclesCore.Shaders
 					}
 					else
 					{
-						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, colsocks, false, part.Gamma, false, false);
+						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, colsocks, false, part.Gamma, false, false, decalBeingProcessed);
 					}
 
 					basewithao.outs.Color.Connect(principled.ins.BaseColor);
@@ -523,28 +678,28 @@ namespace RhinoCyclesCore.Shaders
 						alpha_invert_basecolalpha_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value1);
 					}
 
-					Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, principled.ins.SpecularTint.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture, principled.ins.Roughness.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, principled.ins.SheenTint.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.Clearcoat.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.ClearcoatGloss.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor.ToList(), false, part.Gamma, false, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true, false);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, principled.ins.SpecularTint.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture, principled.ins.Roughness.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, principled.ins.SheenTint.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.Clearcoat.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.ClearcoatGloss.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor.ToList(), false, part.Gamma, false, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
 
 					List<ISocket> transmissionSockets = new() {
 						principled.ins.Transmission,
 						coloured_shadow_switch.ins.Value2
 					};
-					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, transmissionSockets, true, part.Gamma, true, false);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, transmissionSockets, true, part.Gamma, true, false, decalBeingProcessed);
 
-					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic.ToList(), false, part.Gamma, true, false);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation.ToList(), false, part.Gamma, true, false);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic.ToList(), false, part.Gamma, true, false	, decalBeingProcessed);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
 
 					if (part.PbrBump.On && part.PbrBumpTexture.HasProcedural)
 					{
@@ -555,12 +710,12 @@ namespace RhinoCyclesCore.Shaders
 							bump.Invert = part.PbrBump.Amount < 0.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 							part.PbrBump.Amount = 1.0f;
-							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false);
+							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalBeingProcessed);
 							bump.outs.Normal.Connect(principled.ins.Normal);
 						}
 						else
 						{
-							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal.ToList(), false, true, false, true, part.Gamma, false);
+							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, principled.ins.Normal.ToList(), false, true, false, true, part.Gamma, false, decalBeingProcessed);
 						}
 					}
 					if (part.PbrClearcoatBump.On && part.PbrClearcoatBumpTexture.HasProcedural)
@@ -572,12 +727,12 @@ namespace RhinoCyclesCore.Shaders
 							bump.Invert = part.PbrClearcoatBump.Amount < 0.0f;
 							part.PbrClearcoatBump.Amount = 1.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
-							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false);
+							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalBeingProcessed);
 							bump.outs.Normal.Connect(principled.ins.ClearcoatNormal);
 						}
 						else
 						{
-							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal.ToList(), false, true, false, true, part.Gamma, false);
+							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal.ToList(), false, true, false, true, part.Gamma, false, decalBeingProcessed);
 						}
 					}
 
@@ -596,10 +751,10 @@ namespace RhinoCyclesCore.Shaders
 						}
 					}
 
-					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, principled.ins.Emission.ToList(), false, part.Gamma, false, false);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrEmission, part.PbrEmissionTexture, principled.ins.Emission.ToList(), false, part.Gamma, false, false, decalBeingProcessed);
 					principled.ins.EmissionStrength.Value = emission_strength;
 
-					Utilities.PbrGraphForSlot(m_shader, part.PbrAlpha, part.PbrAlphaTexture, alpha_transp_component.ins.Value2.ToList(), false, part.Gamma, true, false);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrAlpha, part.PbrAlphaTexture, alpha_transp_component.ins.Value2.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
 
 					alpha_transp_component.outs.Value.Connect(alpha_basecolalpha_plus_alphatransp.ins.Value2);
 
@@ -618,13 +773,37 @@ namespace RhinoCyclesCore.Shaders
 						adjust.ins.Value2.Value = 0.5f;
 						strength.ins.Value1.Value = part.PbrDisplacement.Amount * 2.0f;
 						part.PbrDisplacement.Amount = 1.0f;
-						Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, adjust.ins.Value1.ToList(), false, part.Gamma, true, false);
+						Utilities.PbrGraphForSlot(m_shader, part.PbrDisplacement, part.PbrDisplacementTexture, adjust.ins.Value1.ToList(), false, part.Gamma, true, false, decalBeingProcessed);
 						adjust.outs.Value.Connect(strength.ins.Value2);
 						strength.outs.Value.Connect(displacement.ins.Height);
 						displacement.outs.Displacement.Connect(m_shader.Output.ins.Displacement);
 					}
 
-					coloured_shadow_mix_custom.outs.Closure.Connect(alpha_cutter_mixer.ins.Closure2);
+					if(decalMaterial != null)
+					{
+						MixClosureNode material_and_decal_blender = new MixClosureNode(m_shader, "material and decal blender");
+						coloured_shadow_mix_custom.GetClosureSocket().Connect(material_and_decal_blender.ins.Closure1);
+
+						if(true)
+						{
+							decalMaterial.GetClosureSocket().Connect(material_and_decal_blender.ins.Closure2);
+							decalMaskSocket.Connect(material_and_decal_blender.ins.Fac);
+						}
+						else
+						{
+							var emission = new EmissionNode(m_shader, "decal emission");
+							decalMaskSocket.Connect(emission.ins.Color);
+							emission.outs.Emission.Connect(material_and_decal_blender.ins.Closure2);
+							material_and_decal_blender.ins.Fac.Value = 1.0f;
+						}
+
+						material_and_decal_blender.outs.Closure.Connect(alpha_cutter_mixer.ins.Closure2);
+					}
+					else
+					{
+						coloured_shadow_mix_custom.outs.Closure.Connect(alpha_cutter_mixer.ins.Closure2);
+					}
+
 					return alpha_cutter_mixer;
 				}
 				else
@@ -986,7 +1165,7 @@ namespace RhinoCyclesCore.Shaders
 							diffuse_base_color_through_alpha120.ins.Color2,
 							diffuse_base_color_through_alpha180.ins.Color2
 						};
-						var alpha = Utilities.GraphForSlot(m_shader, null, true, part.DiffuseTexture.Amount, part.DiffuseTexture, sockets, false, false, false, false, part.Gamma, decalMixin != null);
+						var alpha = Utilities.GraphForSlot(m_shader, null, true, part.DiffuseTexture.Amount, part.DiffuseTexture, sockets, false, false, false, false, part.Gamma, decalMixin != null, decalBeingProcessed);
 						if (alpha != null)
 						{
 							alpha.Connect(diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2);
@@ -1006,12 +1185,12 @@ namespace RhinoCyclesCore.Shaders
 							transpluminance113.ins.Color
 						};
 						useAlpha = 1.0f;
-						Utilities.GraphForSlot(m_shader, null, true, part.TransparencyTexture.Amount, part.TransparencyTexture, sockets, false, false, false, true, part.Gamma, false);
+						Utilities.GraphForSlot(m_shader, null, true, part.TransparencyTexture.Amount, part.TransparencyTexture, sockets, false, false, false, true, part.Gamma, false, decalBeingProcessed);
 					}
 
 					if (part.BumpTexture.HasProcedural)
 					{
-						Utilities.GraphForSlot(m_shader, null, true, part.BumpTexture.Amount, part.BumpTexture, bump_amount72.ins.Value1.ToList(), true, false, false, true, part.Gamma, false);
+						Utilities.GraphForSlot(m_shader, null, true, part.BumpTexture.Amount, part.BumpTexture, bump_amount72.ins.Value1.ToList(), true, false, false, true, part.Gamma, false, decalBeingProcessed);
 						bump88.outs.Normal.Connect(principledbsdf117.ins.Normal);
 					}
 
@@ -1024,7 +1203,7 @@ namespace RhinoCyclesCore.Shaders
 						if (part.EnvironmentTexture.Procedural.EnvironmentMappingMode == Rhino.Render.TextureEnvironmentMappingMode.Automatic) {
 							part.EnvironmentTexture.Procedural.EnvironmentMappingMode = Rhino.Render.TextureEnvironmentMappingMode.EnvironmentMap;
 						}
-						Utilities.GraphForSlot(m_shader, null, true, part.EnvironmentTexture.Amount, part.EnvironmentTexture, attenuated_environment_color106.ins.Color2.ToList(), false, false, false, false, part.Gamma, false);
+						Utilities.GraphForSlot(m_shader, null, true, part.EnvironmentTexture.Amount, part.EnvironmentTexture, attenuated_environment_color106.ins.Color2.ToList(), false, false, false, false, part.Gamma, false, decalBeingProcessed);
 					}
 
 					// When useAlpha is set we need to ensure we actually pass on custom_alpha_cutter116, otherwise custom
