@@ -979,6 +979,7 @@ namespace RhinoCyclesCore.Database
 				}
 
 				var rt = TextureFromOriginalInstanceId(decal.TextureInstanceId);
+				var rm = (rt == null) ? MaterialFromOriginalInstanceId(decal.TextureInstanceId) : null;
 
 				CyclesTextureImage tex = new CyclesTextureImage();
 				Utilities.HandleRenderTexture(rt, tex, false, true, BitmapConverter, _doc_serialnr, LinearWorkflow.PreProcessGamma, false, true);
@@ -995,6 +996,7 @@ namespace RhinoCyclesCore.Database
 					Texture = tex,
 					Height = (float)height,
 					Radius = (float)radius,
+					Material = rm,
 					HorizontalSweepStart = (float)horsweepstart,
 					HorizontalSweepEnd = (float)horsweepend,
 					VerticalSweepStart = (float)versweepstart,

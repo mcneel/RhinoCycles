@@ -29,6 +29,8 @@ namespace RhinoCyclesCore
 		private bool disposedValue;
 
 		public CyclesTextureImage Texture { get; set; } = null;
+		public RenderMaterial Material { get; set; } = null;
+		public ShaderBody MaterialShader { get; set; } = null;
 		public DecalMapping Mapping { get; set; } = DecalMapping.Planar;
 		public DecalProjection Projection { get; set; } = DecalProjection.Both;
 		public TextureMapping TextureMapping { get; set; } = null;

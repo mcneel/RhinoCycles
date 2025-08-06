@@ -89,6 +89,15 @@ namespace RhinoCyclesCore
 			return RecordDataForShaderPart(_front, rm, gamma);
 		}
 
+		public bool RecordDataForDecalShader(CyclesDecal decal, float gamma)
+		{
+			decal.MaterialShader = new ShaderBody(Id)
+			{
+				UnitScale = (float)Rhino.LengthUnit.Scale(Rhino.LengthUnit.Meters, ModelUnits)
+			};
+			return RecordDataForShaderPart(decal.MaterialShader, decal.Material, gamma);
+		}
+
 		/// <summary>
 		/// Sets up a shader with Front set to a default ShaderBody. Used for CodeShader
 		/// </summary>

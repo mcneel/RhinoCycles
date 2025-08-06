@@ -129,7 +129,7 @@ namespace RhinoCyclesCore.Materials
 
 			transp.ins.Color.Value = new ccl.float4(1.0f);
 
-			Utilities.PbrGraphForSlot(sh, Emission, EmissionTexture, emission.ins.Color.ToList(), false, Gamma, false, false);
+			Utilities.PbrGraphForSlot(sh, Emission, EmissionTexture, emission.ins.Color.ToList(), false, Gamma, false, false, null);
 
 			lfo.ins.Strength.Value = Strength;
 			lfo.ins.Smooth.Value = Smooth;
