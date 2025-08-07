@@ -286,60 +286,36 @@ namespace RhinoCyclesCore.Shaders
 			return output_socket;
 		}
 
-		static private FloatSocket GetDecalUVMapNode(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco)
+		static private FloatSocket GetDecalMaskNode(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco)
 		{
-			texco.ObjectTransform = decal.Transform;
-			texco.UseTransform = true;
+			var decalUvNode = GetDecalUVNode(decal, texco);
 
-			texco.UvMap = decal.Texture.GetUvMapForChannel();
-
-			switch (decal.Projection)
-			{
-				case Rhino.Render.DecalProjection.Forward:
-					texco.Direction = DecalDirection.Forward;
-					break;
-				case Rhino.Render.DecalProjection.Backward:
-					texco.Direction = DecalDirection.Backward;
-					break;
-				default:
-					texco.Direction = DecalDirection.Both;
-					break;
-			}
-
-			texco.DecalOrigin = decal.Origin;
-			texco.Across = decal.Across;
-			texco.Up = decal.Up;
-			texco.DecalPxyz = decal.TextureMapping.PrimitiveTransform.ToCyclesTransform();
-			texco.DecalNxyz = decal.TextureMapping.NormalTransform.ToCyclesTransform();
-			texco.DecalUvw = decal.TextureMapping.UvwTransform.ToCyclesTransform();
-
-			texco.DecalHeight = decal.Height;
-			texco.DecalRadius = decal.Radius;
-			texco.HorizontalSweepStart = decal.HorizontalSweepStart;
-			texco.HorizontalSweepEnd = decal.HorizontalSweepEnd;
-			texco.VerticalSweepStart = decal.VerticalSweepStart;
-			texco.VerticalSweepEnd = decal.VerticalSweepEnd;
-
-			var subtract = new VectorMathNode(shader, "UV map subtract");
+			var subtract = new VectorMathNode(shader, "Decal mask subtract");
 			subtract.Operation = VectorMathNode.Operations.Subtract;
 			subtract.ins.Vector2.Value = new float4(0.5f, 0.5f, 0.0f, 0.0f);
 
-			var separate_uv = new SeparateXyzNode(shader, "UV map separate");
+			var separate_uv = new SeparateXyzNode(shader, "Decal mask separate");
 
-			var abs1 = new MathNode(shader, "UV map absolute 1");
+			var abs1 = new MathNode(shader, "Decal mask absolute 1");
 			abs1.Operation = MathNode.Operations.Absolute;
 
-			var abs2 = new MathNode(shader, "UV map absolute 2");
+			var abs2 = new MathNode(shader, "Decal mask absolute 2");
 			abs2.Operation = MathNode.Operations.Absolute;
 
-			var max = new MathNode(shader, "UV map max");
+			var max = new MathNode(shader, "Decal mask max");
 			max.Operation = MathNode.Operations.Maximum;
 
-			var lessthan = new MathNode(shader, "UV map less than");
+			var lessthan = new MathNode(shader, "Decal mask less than");
 			lessthan.Operation = MathNode.Operations.Less_Than;
 			lessthan.ins.Value2.Value = 0.5f;
 
+			var min = new MathNode(shader, "Decal mask min");
+			min.Operation = MathNode.Operations.Minimum;
+			min.ins.Value2.Value = 1.0f - decal.Transparency;
+
+			decalUvNode.Connect(subtract.ins.Vector1);
 			subtract.outs.Vector.Connect(separate_uv.ins.Vector);
+
 			separate_uv.outs.X.Connect(abs1.ins.Value1);
 			separate_uv.outs.Y.Connect(abs2.ins.Value1);
 
@@ -348,24 +324,9 @@ namespace RhinoCyclesCore.Shaders
 
 			max.outs.Value.Connect(lessthan.ins.Value1);
 
-			switch (decal.Mapping)
-			{
-				case Rhino.Render.DecalMapping.Planar:
-					texco.outs.DecalPlanar.Connect(subtract.ins.Vector1);
-					break;
-				case Rhino.Render.DecalMapping.Cylindrical:
-					texco.outs.DecalCylindrical.Connect(subtract.ins.Vector1);
-					break;
-				case Rhino.Render.DecalMapping.Spherical:
-					texco.outs.DecalSpherical.Connect(subtract.ins.Vector1);
-					break;
-				case Rhino.Render.DecalMapping.UV:
-				default:
-					texco.outs.DecalUv.Connect(subtract.ins.Vector1);
-					break;
-			}
+			lessthan.outs.Value.Connect(min.ins.Value1);
 
-			return lessthan.outs.Value;
+			return min.outs.Value;
 		}
 
 		/// <summary>
@@ -574,19 +535,17 @@ namespace RhinoCyclesCore.Shaders
 				MixNode decalMixin = null;
 				//MixNode decalMixin = HandleDecals(!part.IsPbr);
 
-				ShaderNode decalMaterial = null;
-				FloatSocket decalMaskSocket = null;
+				List<ShaderNode> decalMaterials = new List<ShaderNode>();
+				List<FloatSocket> decalMaskSockets = new List<FloatSocket>();
 				if (decalBeingProcessed == null && m_original.Decals != null)
 				{
 					foreach(var decal in m_original.Decals)
 					{
 						if (decal.Material != null)
 						{
-							decalMaterial = GetShaderPart(decal.MaterialShader, decal);
-							decalMaskSocket = GetDecalUVMapNode(m_shader, decal, new RhinoTextureCoordinateNode(m_shader, "decal_texco_"));
+							decalMaterials.Add(GetShaderPart(decal.MaterialShader, decal));
+							decalMaskSockets.Add(GetDecalMaskNode(m_shader, decal, new RhinoTextureCoordinateNode(m_shader, "decal_texco_")));
 						}
-
-						break;
 					}
 				}
 
@@ -779,25 +738,41 @@ namespace RhinoCyclesCore.Shaders
 						displacement.outs.Displacement.Connect(m_shader.Output.ins.Displacement);
 					}
 
-					if(decalMaterial != null)
+					if(decalMaterials.Count > 0)
 					{
-						MixClosureNode material_and_decal_blender = new MixClosureNode(m_shader, "material and decal blender");
-						coloured_shadow_mix_custom.GetClosureSocket().Connect(material_and_decal_blender.ins.Closure1);
+						ClosureSocket decalMixClosureSocket = null;
 
-						if(true)
+						var prevClosureSocket = coloured_shadow_mix_custom.GetClosureSocket();
+
+						for (int idx = 0; idx < decalMaterials.Count; idx++)
 						{
-							decalMaterial.GetClosureSocket().Connect(material_and_decal_blender.ins.Closure2);
-							decalMaskSocket.Connect(material_and_decal_blender.ins.Fac);
-						}
-						else
-						{
-							var emission = new EmissionNode(m_shader, "decal emission");
-							decalMaskSocket.Connect(emission.ins.Color);
-							emission.outs.Emission.Connect(material_and_decal_blender.ins.Closure2);
-							material_and_decal_blender.ins.Fac.Value = 1.0f;
+							var closureSocket = decalMaterials[idx].GetClosureSocket();
+							var maskSocket = decalMaskSockets[idx];
+
+							MixClosureNode decalMixer = new MixClosureNode(m_shader, "decals blender");
+							prevClosureSocket.Connect(decalMixer.ins.Closure1);
+							closureSocket.Connect(decalMixer.ins.Closure2);
+							maskSocket.Connect(decalMixer.ins.Fac);
+
+							prevClosureSocket = decalMixer.outs.Closure;
 						}
 
-						material_and_decal_blender.outs.Closure.Connect(alpha_cutter_mixer.ins.Closure2);
+						decalMixClosureSocket = prevClosureSocket;
+
+						//if(true)
+						//{
+						//	decalMaterial.GetClosureSocket().Connect(material_and_decal_blender.ins.Closure2);
+						//	decalMaskSocket.Connect(material_and_decal_blender.ins.Fac);
+						//}
+						//else
+						//{
+						//	var emission = new EmissionNode(m_shader, "decal emission");
+						//	decalMaskSocket.Connect(emission.ins.Color);
+						//	emission.outs.Emission.Connect(material_and_decal_blender.ins.Closure2);
+						//	material_and_decal_blender.ins.Fac.Value = 1.0f;
+						//}
+
+						decalMixClosureSocket.Connect(alpha_cutter_mixer.ins.Closure2);
 					}
 					else
 					{
