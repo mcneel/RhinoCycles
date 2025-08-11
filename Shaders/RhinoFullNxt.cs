@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Rhino;
+using System.Diagnostics;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -622,7 +623,6 @@ namespace RhinoCyclesCore.Shaders
 			}
 			else
 			{
-				MixNode decalMixin = null;
 				List<ClosureSocket> decalMaterials = null;
 				List<FloatSocket> decalMaskSockets = null;
 
@@ -1100,21 +1100,10 @@ namespace RhinoCyclesCore.Shaders
 					use_alpha_weighted_with_modded_amount71.outs.Value.Connect(diffuse_base_color_through_alpha120.ins.Fac);
 					bump_amount72.outs.Value.Connect(bump88.ins.Height);
 
-					if (decalMixin != null)
-					{
-						diffuse_base_color_through_alpha120.outs.Color.Connect(decalMixin.ins.Color1);
-						decalMixin.outs.Color.Connect(final_diffuse89.ins.Color);
-						decalMixin.outs.Color.Connect(shadeless_bsdf90.ins.Color);
-						decalMixin.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
-						decalMixin.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
-					}
-					else
-					{
-						diffuse_base_color_through_alpha120.outs.Color.Connect(final_diffuse89.ins.Color);
-						diffuse_base_color_through_alpha120.outs.Color.Connect(shadeless_bsdf90.ins.Color);
-						diffuse_base_color_through_alpha120.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
-						diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
-					}
+					diffuse_base_color_through_alpha120.outs.Color.Connect(final_diffuse89.ins.Color);
+					diffuse_base_color_through_alpha120.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+					diffuse_base_color_through_alpha120.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
+					diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
 
 					light_path109.outs.IsCameraRay.Connect(shadeless_on_cameraray122.ins.Value1);
 					fresnel_based_on_constant92.outs.Fac.Connect(fresnel_reflection94.ins.R);
@@ -1200,7 +1189,7 @@ namespace RhinoCyclesCore.Shaders
 							diffuse_base_color_through_alpha120.ins.Color2,
 							diffuse_base_color_through_alpha180.ins.Color2
 						};
-						var alpha = Utilities.GraphForSlot(m_shader, null, true, part.DiffuseTexture.Amount, part.DiffuseTexture, sockets, false, false, false, false, part.Gamma, decalMixin != null, decalBeingProcessed);
+						var alpha = Utilities.GraphForSlot(m_shader, null, true, part.DiffuseTexture.Amount, part.DiffuseTexture, sockets, false, false, false, false, part.Gamma, false, decalBeingProcessed);
 						if (alpha != null)
 						{
 							alpha.Connect(diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2);
@@ -1244,7 +1233,31 @@ namespace RhinoCyclesCore.Shaders
 					// When useAlpha is set we need to ensure we actually pass on custom_alpha_cutter116, otherwise custom
 					// materials with alpha transparency of any sort will fail.
 					// See https://mcneel.myjetbrains.com/youtrack/issue/RH-84849
-					return useAlpha > 0.0 ? custom_alpha_cutter116 : coloured_shadow_mix_glass_principled118;
+					MixClosureNode outputNode = useAlpha > 0.0 ? custom_alpha_cutter116 : coloured_shadow_mix_glass_principled118;
+
+					if (decalMaterials?.Count > 0)
+					{
+						var prevOutputNode = outputNode;
+						var prevClosureSocket = outputNode.GetClosureSocket();
+
+						for (int idx = 0; idx < decalMaterials.Count; idx++)
+						{
+							var closureSocket = decalMaterials[idx];
+							var maskSocket = decalMaskSockets[idx];
+
+							MixClosureNode decalMixer = new MixClosureNode(m_shader, "decals blender");
+							prevClosureSocket.Connect(decalMixer.ins.Closure1);
+							closureSocket.Connect(decalMixer.ins.Closure2);
+							maskSocket.Connect(decalMixer.ins.Fac);
+
+							prevOutputNode = decalMixer;
+							prevClosureSocket = decalMixer.outs.Closure;
+						}
+
+						outputNode = prevOutputNode;
+					}
+
+					return outputNode;
 				}
 			}
 		}
