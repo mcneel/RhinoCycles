@@ -289,7 +289,7 @@ namespace RhinoCyclesCore.Shaders
 
 		static private FloatSocket GetDecalMaskNode(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco)
 		{
-			var decalUvNode = GetDecalUVNode(decal, texco);
+			var decalUvwSocket = GetDecalUVNode(decal, texco);
 
 			var subtract = new VectorMathNode(shader, "Decal mask subtract");
 			subtract.Operation = VectorMathNode.Operations.Subtract;
@@ -314,7 +314,7 @@ namespace RhinoCyclesCore.Shaders
 			min.Operation = MathNode.Operations.Minimum;
 			min.ins.Value2.Value = 1.0f - decal.Transparency;
 
-			decalUvNode.Connect(subtract.ins.Vector1);
+			decalUvwSocket.Connect(subtract.ins.Vector1);
 			subtract.outs.Vector.Connect(separate_uv.ins.Vector);
 
 			separate_uv.outs.X.Connect(abs1.ins.Value1);
@@ -327,7 +327,16 @@ namespace RhinoCyclesCore.Shaders
 
 			lessthan.outs.Value.Connect(min.ins.Value1);
 
-			return min.outs.Value;
+			var greaterthan = new MathNode(shader, "Decal mask greater than");
+			greaterthan.Operation = MathNode.Operations.Greater_Than;
+			separate_uv.outs.Z.Connect(greaterthan.ins.Value1);
+			greaterthan.ins.Value2.Value = -0.5f;
+
+			var multiply = new MathMultiply(shader, "Decal mask multiply");
+			greaterthan.outs.Value.Connect(multiply.ins.Value1);
+			min.outs.Value.Connect(multiply.ins.Value2);
+
+			return multiply.outs.Value;
 		}
 
 		private (ClosureSocket, FloatSocket) HandleTextureDecal(List<CyclesDecal> decals, bool gamma_correct_decals, float shaderGamma)
