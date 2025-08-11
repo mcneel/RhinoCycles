@@ -2326,7 +2326,10 @@ namespace RhinoCyclesCore.Converters
 			{
 				foreach (var decal in shader.Decals)
 				{
-					shader.RecordDataForDecalShader(decal, lw.PreProcessGamma);
+					if(decal.Material != null)
+					{
+						shader.RecordDataForDecalShader(decal, lw.PreProcessGamma);
+					}
 				}
 			}
 
