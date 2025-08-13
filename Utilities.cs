@@ -276,7 +276,7 @@ namespace RhinoCyclesCore
 		/// <param name="slot"></param>
 		/// <param name="teximg"></param>
 		/// <param name="socks"></param>
-		public static ISocket PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, List<ISocket> socks, bool invert, float gamma, bool IsData, bool hasDecals, CyclesDecal decalBeingProcessed)
+		public static ISocket PbrGraphForSlot<T>(Shader sh, TexturedValue<T> slot, CyclesTextureImage teximg, List<ISocket> socks, bool invert, float gamma, bool IsData, bool hasDecals, RhinoFullNxt.DecalProcessingInfo DecalProcessingInfo)
 		{
 			Type t = typeof(T);
 			ISocket valsock = null;
@@ -315,10 +315,10 @@ namespace RhinoCyclesCore
 			if(valsock == null) {
 				throw new UnrecognizedTexturedSlotType($"Type tried is {t}");
 			}
-			return GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, socks, false, false, invert, IsData, gamma, hasDecals, decalBeingProcessed);
+			return GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, socks, false, false, invert, IsData, gamma, hasDecals, DecalProcessingInfo);
 		}
 
-		public static ISocket GraphForSlot(Shader sh, ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ISocket> socketsToConnectTo, bool toBw, bool normalMap, bool invert, bool IsData, float gamma, bool hasDecals, CyclesDecal decalBeingProcessed)
+		public static ISocket GraphForSlot(Shader sh, ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ISocket> socketsToConnectTo, bool toBw, bool normalMap, bool invert, bool IsData, float gamma, bool hasDecals, RhinoFullNxt.DecalProcessingInfo DecalProcessingInfo)
 		{
 			ISocket alphaOut = null;
 			if(IsOn && null != teximg && teximg.HasProcedural)
@@ -333,8 +333,8 @@ namespace RhinoCyclesCore
 				alpha_node.ins.Value2.Value = 1.0f;
 
 				VectorSocket uv_output_socket = null;
-				if (decalBeingProcessed != null)
-					uv_output_socket = RhinoFullNxt.GetDecalUVNode(decalBeingProcessed, texco);
+				if (DecalProcessingInfo != null)
+					uv_output_socket = RhinoFullNxt.GetDecalUVNode(DecalProcessingInfo.Decal, texco);
 				else
 					uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, teximg.Procedural.ProjectionMode, teximg.Procedural.EnvironmentMappingMode, texco);
 
