@@ -978,6 +978,7 @@ namespace RhinoCyclesCore.Database
 					decalXform = decalXform * scaleXform;
 				}
 
+				// Currently, TextureInstanceId can refer to either a texture or a material.
 				var rt = TextureFromOriginalInstanceId(decal.TextureInstanceId);
 				var rm = (rt == null) ? MaterialFromOriginalInstanceId(decal.TextureInstanceId) : null;
 

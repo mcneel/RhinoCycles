@@ -2322,6 +2322,7 @@ namespace RhinoCyclesCore.Converters
 				Decals = decals,
 			};
 
+			// Decals can now be full materials, so we need to process them too.
 			if (shader.Decals != null)
 			{
 				foreach (var decal in shader.Decals)
