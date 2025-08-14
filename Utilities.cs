@@ -332,6 +332,8 @@ namespace RhinoCyclesCore
 				alpha_node.ins.Value1.Value = 0.0f;
 				alpha_node.ins.Value2.Value = 1.0f;
 
+				// If we're processing a decal material, then use decal mappings,
+				// otherwise, use object/texture mappings.
 				VectorSocket uv_output_socket = null;
 				if (DecalProcessingInfo != null)
 					uv_output_socket = RhinoFullNxt.GetDecalUVNode(DecalProcessingInfo.Decal, texco);

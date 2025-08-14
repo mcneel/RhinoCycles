@@ -139,7 +139,7 @@ namespace RhinoCyclesCore.Shaders
 			return m_shader;
 		}
 
-		static private void SetupOneDecalNodes(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, MathMultiply transp, TextureAdjustmentTextureProceduralNode adjust)
+		static private void SetupOneDecalNodes(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, MathMultiply alpha, TextureAdjustmentTextureProceduralNode adjust)
 		{
 			texco.ObjectTransform = decal.Transform;
 			texco.UseTransform = true;
@@ -200,16 +200,16 @@ namespace RhinoCyclesCore.Shaders
 			texco.VerticalSweepStart = decal.VerticalSweepStart;
 			texco.VerticalSweepEnd = decal.VerticalSweepEnd;
 
-			transp.ins.Value2.Value = 1.0f - decal.Transparency;
+			alpha.ins.Value2.Value = 1.0f - decal.Transparency;
 
 			// if color mask is set we add here a branch of nodes to adjust the
 			// imgtex alpha output with the color mask.
 			if (decal.Texture.UseColorMask) {
 				MathMultiply adjust_img_alpha = Utilities.ApplyColorMaskGraph(imgtex, decal.Texture);
-				adjust_img_alpha.outs.Value.Connect(transp.ins.Value1);
+				adjust_img_alpha.outs.Value.Connect(alpha.ins.Value1);
 			}
 			else {
-				imgtex.outs.Alpha.Connect(transp.ins.Value1);
+				imgtex.outs.Alpha.Connect(alpha.ins.Value1);
 			}
 
 
@@ -287,55 +287,64 @@ namespace RhinoCyclesCore.Shaders
 			return output_socket;
 		}
 
+		// Creates a mask for the decal based on the UV coordinates.
+		// The mask is 0.0f where there is no decal, otherwise it takes on the value of the decal alpha.
+		// The decal alpha is a combination of the decal transparency and the alpha of the decal material.
+		// This mask makes it easy to properly mix decals together.
 		static private FloatSocket GetDecalMaskNode(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco, ISocket color_mask_transp_socket)
 		{
 			var decalUvwSocket = GetDecalUVNode(decal, texco);
 
+			// Subtract 0.5 from the UV coordinates to center them around (0.0, 0.0).
 			var subtract = new VectorMathNode(shader, "Decal mask subtract");
 			subtract.Operation = VectorMathNode.Operations.Subtract;
+			decalUvwSocket.Connect(subtract.ins.Vector1);
 			subtract.ins.Vector2.Value = new float4(0.5f, 0.5f, 0.0f, 0.0f);
 
+			// Separate the UV coordinates into X, Y, and Z components.
 			var separate_uv = new SeparateXyzNode(shader, "Decal mask separate");
+			subtract.outs.Vector.Connect(separate_uv.ins.Vector);
 
+			// Take the absolute value of the X component.
 			var abs1 = new MathNode(shader, "Decal mask absolute 1");
 			abs1.Operation = MathNode.Operations.Absolute;
+			separate_uv.outs.X.Connect(abs1.ins.Value1);
 
+			// Take the absolute value of the Y component.
 			var abs2 = new MathNode(shader, "Decal mask absolute 2");
 			abs2.Operation = MathNode.Operations.Absolute;
+			separate_uv.outs.Y.Connect(abs2.ins.Value1);
 
+			// Find the maximum of the absolute X and Y components.
 			var max = new MathNode(shader, "Decal mask max");
 			max.Operation = MathNode.Operations.Maximum;
+			abs1.outs.Value.Connect(max.ins.Value1);
+			abs2.outs.Value.Connect(max.ins.Value2);
 
+			// Check if the maximum is less than 0.5.
 			var lessthan = new MathNode(shader, "Decal mask less than");
 			lessthan.Operation = MathNode.Operations.Less_Than;
+			max.outs.Value.Connect(lessthan.ins.Value1);
 			lessthan.ins.Value2.Value = 0.5f;
 
+			// Multiply the alpha of the decal with the alpha of the decal material
 			var multiply = new MathMultiply(shader, "Decal mask multiply");
 			multiply.ins.Value1.Value = 1.0f - decal.Transparency;
 			color_mask_transp_socket.Connect(multiply.ins.Value2);
 
+			// Transform (0.0f...1.0f) mask into a (0.0f...DecalAlpha) mask.
 			var min = new MathNode(shader, "Decal mask min");
 			min.Operation = MathNode.Operations.Minimum;
+			lessthan.outs.Value.Connect(min.ins.Value1);
 			multiply.outs.Value.Connect(min.ins.Value2);
 
-			decalUvwSocket.Connect(subtract.ins.Vector1);
-			subtract.outs.Vector.Connect(separate_uv.ins.Vector);
-
-			separate_uv.outs.X.Connect(abs1.ins.Value1);
-			separate_uv.outs.Y.Connect(abs2.ins.Value1);
-
-			abs1.outs.Value.Connect(max.ins.Value1);
-			abs2.outs.Value.Connect(max.ins.Value2);
-
-			max.outs.Value.Connect(lessthan.ins.Value1);
-
-			lessthan.outs.Value.Connect(min.ins.Value1);
-
+			// Check if the Z component (w-coordinate) is greater than -0.5 (if not, decal is on the wrong side).
 			var greaterthan = new MathNode(shader, "Decal mask greater than");
 			greaterthan.Operation = MathNode.Operations.Greater_Than;
 			separate_uv.outs.Z.Connect(greaterthan.ins.Value1);
 			greaterthan.ins.Value2.Value = -0.5f;
 
+			// Multiply the result of the above with the mask to zero out the mask where the decal is on the wrong side.
 			var multiply2 = new MathMultiply(shader, "Decal mask multiply");
 			greaterthan.outs.Value.Connect(multiply2.ins.Value1);
 			min.outs.Value.Connect(multiply2.ins.Value2);
@@ -343,14 +352,14 @@ namespace RhinoCyclesCore.Shaders
 			return multiply2.outs.Value;
 		}
 
-		private (ClosureSocket, FloatSocket) HandleTextureDecal(List<CyclesDecal> decals, bool gamma_correct_decals, float shaderGamma)
+		private (ClosureSocket decal_closure, FloatSocket mask_socket) HandleTextureDecal(List<CyclesDecal> decals, bool gamma_correct_decals, float shaderGamma)
 		{
 			int count = decals.Count;
 
 			var texcos = new List<RhinoTextureCoordinateNode>(count);
 			var imgtexs = new List<ImageTextureNode>(count);
 			var mixrgbs = new List<MixNode>(count);
-			var transparencies = new List<MathMultiply>(count);
+			var alphas = new List<MathMultiply>(count);
 			var alphamaths = new List<MathAdd>(count);
 			var adjustments = new List<TextureAdjustmentTextureProceduralNode>(count);
 			int idx = 1;
@@ -362,7 +371,7 @@ namespace RhinoCyclesCore.Shaders
 				texcos.Add(new RhinoTextureCoordinateNode(m_shader, $"Decal_{idx}_texco_"));
 				imgtexs.Add(new ImageTextureNode(m_shader, $"Texture_for_decal_{idx}_"));
 				mixrgbs.Add(new MixNode(m_shader, $"Decal_mixer_{idx}_"));
-				transparencies.Add(new MathMultiply(m_shader, $"Decal_transparency_multiplier_{idx}_"));
+				alphas.Add(new MathMultiply(m_shader, $"Decal_alpha_multiplier_{idx}_"));
 				adjustments.Add(new TextureAdjustmentTextureProceduralNode(m_shader, $"Decal_texadjustment_{idx}_"));
 				if (i < count - 1)
 				{
@@ -385,15 +394,15 @@ namespace RhinoCyclesCore.Shaders
 			}
 			ISocket sock_to_connect_to = gamma_correct_decals ? decalGammaNode.ins.Color : lastMixer.ins.Color2;
 
-			FloatSocket transp_socket = null;
+			FloatSocket alpha_socket = null;
 
 			if (count == 1)
 			{
 				var texco = texcos[0];
 				var imgtex = imgtexs[0];
-				var trans = transparencies[0];
+				var alpha = alphas[0];
 				var adjust = adjustments[0];
-				SetupOneDecalNodes(m_shader, decals.First(), texco, imgtex, trans, adjust);
+				SetupOneDecalNodes(m_shader, decals.First(), texco, imgtex, alpha, adjust);
 				if (decals[0].Texture.AdjustNeeded)
 				{
 					imgtex.outs.Color.Connect(adjust.ins.Color);
@@ -403,7 +412,7 @@ namespace RhinoCyclesCore.Shaders
 				{
 					imgtex.outs.Color.Connect(sock_to_connect_to);
 				}
-				transp_socket = trans.outs.Value;
+				alpha_socket = alpha.outs.Value;
 			}
 			else
 			{
@@ -414,9 +423,9 @@ namespace RhinoCyclesCore.Shaders
 				{
 					var texco = texcos[idx];
 					var imgtex = imgtexs[idx];
-					var trans = transparencies[idx];
+					var alpha = alphas[idx];
 					var adjust = adjustments[idx];
-					SetupOneDecalNodes(m_shader, decal, texco, imgtex, trans, adjust);
+					SetupOneDecalNodes(m_shader, decal, texco, imgtex, alpha, adjust);
 					idx++;
 				}
 				idx = 0;
@@ -424,7 +433,7 @@ namespace RhinoCyclesCore.Shaders
 				MixNode previousMixRgb = null;
 				MathAdd previousAlphaMath = null;
 				ImageTextureNode imgA = null;
-				MathMultiply transA = null;
+				MathMultiply alphaA = null;
 				TextureAdjustmentTextureProceduralNode adjustA = null;
 				// Use alpa addition nodes to go through all
 				// node lists and connect them as needed.
@@ -438,11 +447,11 @@ namespace RhinoCyclesCore.Shaders
 						mixer.BlendType = MixNode.BlendTypes.Blend;
 						imgA = imgtexs[idx];
 						adjustA = adjustments[idx];
-						transA = transparencies[idx];
+						alphaA = alphas[idx];
 
 						CyclesTextureImage teximB = decals[idx + 1].Texture;
 						ImageTextureNode imgB = imgtexs[idx + 1];
-						MathMultiply transB = transparencies[idx + 1];
+						MathMultiply alphaB = alphas[idx + 1];
 						TextureAdjustmentTextureProceduralNode adjustB = adjustments[idx];
 
 						if (teximA.AdjustNeeded)
@@ -465,10 +474,10 @@ namespace RhinoCyclesCore.Shaders
 							imgB.outs.Color.Connect(mixer.ins.Color2);
 						}
 
-						transA.outs.Value.Connect(alphaMath.ins.Value1);
-						transB.outs.Value.Connect(alphaMath.ins.Value2);
+						alphaA.outs.Value.Connect(alphaMath.ins.Value1);
+						alphaB.outs.Value.Connect(alphaMath.ins.Value2);
 
-						transB.outs.Value.Connect(mixer.ins.Fac);
+						alphaB.outs.Value.Connect(mixer.ins.Fac);
 
 						previousAlphaMath = alphaMath;
 						previousMixRgb = mixer;
@@ -478,7 +487,7 @@ namespace RhinoCyclesCore.Shaders
 						MixNode mixer = mixrgbs[idx];
 						CyclesTextureImage teximA = decals[idx + 1].Texture;
 						imgA = imgtexs[idx + 1];
-						transA = transparencies[idx + 1];
+						alphaA = alphas[idx + 1];
 						adjustA = adjustments[idx + 1];
 
 						previousMixRgb.outs.Color.Connect(mixer.ins.Color1);
@@ -493,8 +502,8 @@ namespace RhinoCyclesCore.Shaders
 						}
 
 						previousAlphaMath.outs.Value.Connect(alphaMath.ins.Value1);
-						transA.outs.Value.Connect(alphaMath.ins.Value2);
-						transA.outs.Value.Connect(mixer.ins.Fac);
+						alphaA.outs.Value.Connect(alphaMath.ins.Value2);
+						alphaA.outs.Value.Connect(mixer.ins.Fac);
 
 						previousAlphaMath = alphaMath;
 						previousMixRgb = mixer;
@@ -504,7 +513,7 @@ namespace RhinoCyclesCore.Shaders
 					if (idx == alphamaths.Count)
 					{
 						previousMixRgb.outs.Color.Connect(sock_to_connect_to);
-						transp_socket = previousAlphaMath.outs.Value;
+						alpha_socket = previousAlphaMath.outs.Value;
 					}
 				}
 			}
@@ -513,13 +522,13 @@ namespace RhinoCyclesCore.Shaders
 			gammaNode.ins.Gamma.Value = shaderGamma;
 			lastMixer.outs.Color.Connect(gammaNode.ins.Color);
 
-			FloatSocket prevFloatSocket = GetDecalMaskNode(m_shader, decals[0], new RhinoTextureCoordinateNode(m_shader, "decal_texco_"), transp_socket);
+			FloatSocket prevFloatSocket = GetDecalMaskNode(m_shader, decals[0], new RhinoTextureCoordinateNode(m_shader, "decal_texco_"), alpha_socket);
 			for (int i = 1; i < decals.Count; i++)
 			{
 				MathAdd add = new MathAdd(m_shader, $"Decal_mask_add_{i}_");
 				add.UseClamp = true;
 
-				FloatSocket floatSocket = GetDecalMaskNode(m_shader, decals[i], new RhinoTextureCoordinateNode(m_shader, "decal_texco_"), transp_socket);
+				FloatSocket floatSocket = GetDecalMaskNode(m_shader, decals[i], new RhinoTextureCoordinateNode(m_shader, "decal_texco_"), alpha_socket);
 				prevFloatSocket.Connect(add.ins.Value1);
 				floatSocket.Connect(add.ins.Value2);
 
@@ -537,17 +546,17 @@ namespace RhinoCyclesCore.Shaders
 		{
 			var decalProcessingInfo = new DecalProcessingInfo { Decal = decal };
 			ShaderNode shader = GetShaderPart(decal.MaterialShader, decalProcessingInfo);
-			FloatSocket floatSocket = GetDecalMaskNode(m_shader, decal, new RhinoTextureCoordinateNode(m_shader, "decal_texco_"), decalProcessingInfo.TransparencyOut);
-			return (shader.GetClosureSocket(), floatSocket);
+			FloatSocket maskSocket = GetDecalMaskNode(m_shader, decal, new RhinoTextureCoordinateNode(m_shader, "decal_texco_"), decalProcessingInfo.AlphaOut);
+			return (shader.GetClosureSocket(), maskSocket);
 		}
 
 		/// <summary>
 		/// Handle decals for this shader. Set up a partial shader graph
-		/// and return the ShaderNodes that can be bound into the basecolor
-		/// of the actual shader.
+		/// and return a tuple of decal material closures and decal mask sockets.
+		/// These can be used to properly mix decals together in the shader graph.
 		/// </summary>
-		/// <returns>ShaderNode, the final node in the shader graph branch. This will be a MixNode.
-		/// The base color (color or texture) will have to be connected to the Color1 input.</returns>
+		/// <returns>A tuple of decal material closures and decal mask sockets.
+		/// These can be mixed together with MixClosureNodes</returns>
 		/// <since>7.0</since>
 		private (List<ClosureSocket> decalMaterials, List<FloatSocket> decalMaskSockets) HandleDecals(float shaderGamma, bool gamma_correct_decals = false) {
 
@@ -558,6 +567,7 @@ namespace RhinoCyclesCore.Shaders
 
 			if (count > 0)
 			{
+				// Organize decals into groups based on whether they are textures or materials.
 				var decalGroups = new List<List<CyclesDecal>>();
 
 				bool? lastDecalWasTexture = null;
@@ -584,6 +594,7 @@ namespace RhinoCyclesCore.Shaders
 
 					if (decalIsTexture)
 					{
+						// HandleTextureDecal function takes the whole decal group and combines them into one closure and mask.
 						var (textureDecalClosure, decalMaskSocket) = HandleTextureDecal(decals, gamma_correct_decals, shaderGamma);
 						decalClosures.Add(textureDecalClosure);
 						decalMaskSockets.Add(decalMaskSocket);
@@ -592,6 +603,7 @@ namespace RhinoCyclesCore.Shaders
 					{
 						foreach(var decal in decals)
 						{
+							// HandleMaterialDecal function takes a single decal and returns its closure and mask.
 							var (materialDecalClosure, decalMaskSocket) = HandleMaterialDecal(decal, gamma_correct_decals);
 
 							decalClosures.Add(materialDecalClosure);
@@ -607,7 +619,7 @@ namespace RhinoCyclesCore.Shaders
 		public class DecalProcessingInfo
 		{
 			public CyclesDecal Decal;
-			public ISocket TransparencyOut;
+			public ISocket AlphaOut;
 		}
 
 		private ShaderNode GetShaderPart(ShaderBody part, DecalProcessingInfo decalProcessingInfo = null)
@@ -820,7 +832,7 @@ namespace RhinoCyclesCore.Shaders
 						principled.ins.Alpha.Value = 1.0f;
 						alpha_cutter_mixer.ins.Fac.Value = 1.0f;
 
-						decalProcessingInfo.TransparencyOut = alpha_transparency_final.outs.Value;
+						decalProcessingInfo.AlphaOut = alpha_transparency_final.outs.Value;
 					}
 
 					tangent.outs.Tangent.Connect(principled.ins.Tangent);
@@ -844,6 +856,7 @@ namespace RhinoCyclesCore.Shaders
 					{
 						var prevClosureSocket = coloured_shadow_mix_custom.GetClosureSocket();
 
+						// Blend all decals together using MixClosureNodes.
 						for (int idx = 0; idx < decalMaterials.Count; idx++)
 						{
 							var closureSocket = decalMaterials[idx];
@@ -1230,7 +1243,7 @@ namespace RhinoCyclesCore.Shaders
 								diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2.Value = 1.0f;
 								max_of_texalpha_or_usealpha179.ins.Value1.Value = 1.0f;
 
-								decalProcessingInfo.TransparencyOut = alpha;
+								decalProcessingInfo.AlphaOut = alpha;
 							}
 						}
 						else
@@ -1278,6 +1291,7 @@ namespace RhinoCyclesCore.Shaders
 						var prevOutputNode = outputNode;
 						var prevClosureSocket = outputNode.GetClosureSocket();
 
+						// Blend all decals together using MixClosureNodes
 						for (int idx = 0; idx < decalMaterials.Count; idx++)
 						{
 							var closureSocket = decalMaterials[idx];
