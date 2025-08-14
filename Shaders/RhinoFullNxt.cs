@@ -139,7 +139,7 @@ namespace RhinoCyclesCore.Shaders
 			return m_shader;
 		}
 
-		static private void SetupOneDecalNodes(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, MathMultiply alpha, TextureAdjustmentTextureProceduralNode adjust)
+		static private void SetupOneDecalNodes(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, ref ISocket alpha, TextureAdjustmentTextureProceduralNode adjust)
 		{
 			texco.ObjectTransform = decal.Transform;
 			texco.UseTransform = true;
@@ -200,16 +200,14 @@ namespace RhinoCyclesCore.Shaders
 			texco.VerticalSweepStart = decal.VerticalSweepStart;
 			texco.VerticalSweepEnd = decal.VerticalSweepEnd;
 
-			alpha.ins.Value2.Value = 1.0f - decal.Transparency;
-
 			// if color mask is set we add here a branch of nodes to adjust the
 			// imgtex alpha output with the color mask.
 			if (decal.Texture.UseColorMask) {
 				MathMultiply adjust_img_alpha = Utilities.ApplyColorMaskGraph(imgtex, decal.Texture);
-				adjust_img_alpha.outs.Value.Connect(alpha.ins.Value1);
+				alpha = adjust_img_alpha.outs.Value;
 			}
 			else {
-				imgtex.outs.Alpha.Connect(alpha.ins.Value1);
+				alpha = imgtex.outs.Alpha;
 			}
 
 
@@ -359,7 +357,7 @@ namespace RhinoCyclesCore.Shaders
 			var texcos = new List<RhinoTextureCoordinateNode>(count);
 			var imgtexs = new List<ImageTextureNode>(count);
 			var mixrgbs = new List<MixNode>(count);
-			var alphas = new List<MathMultiply>(count);
+			var alphas = new List<ISocket>(count);
 			var alphamaths = new List<MathAdd>(count);
 			var adjustments = new List<TextureAdjustmentTextureProceduralNode>(count);
 			int idx = 1;
@@ -371,7 +369,6 @@ namespace RhinoCyclesCore.Shaders
 				texcos.Add(new RhinoTextureCoordinateNode(m_shader, $"Decal_{idx}_texco_"));
 				imgtexs.Add(new ImageTextureNode(m_shader, $"Texture_for_decal_{idx}_"));
 				mixrgbs.Add(new MixNode(m_shader, $"Decal_mixer_{idx}_"));
-				alphas.Add(new MathMultiply(m_shader, $"Decal_alpha_multiplier_{idx}_"));
 				adjustments.Add(new TextureAdjustmentTextureProceduralNode(m_shader, $"Decal_texadjustment_{idx}_"));
 				if (i < count - 1)
 				{
@@ -392,17 +389,18 @@ namespace RhinoCyclesCore.Shaders
 				decalGammaNode.ins.Gamma.Value = m_original.Gamma;
 				decalGammaNode.outs.Color.Connect(lastMixer.ins.Color2);
 			}
-			ISocket sock_to_connect_to = gamma_correct_decals ? decalGammaNode.ins.Color : lastMixer.ins.Color2;
 
-			FloatSocket alpha_socket = null;
+			ISocket sock_to_connect_to = gamma_correct_decals ? decalGammaNode.ins.Color : lastMixer.ins.Color2;
+			ISocket alpha_socket = null;
 
 			if (count == 1)
 			{
 				var texco = texcos[0];
 				var imgtex = imgtexs[0];
-				var alpha = alphas[0];
 				var adjust = adjustments[0];
-				SetupOneDecalNodes(m_shader, decals.First(), texco, imgtex, alpha, adjust);
+
+				SetupOneDecalNodes(m_shader, decals.First(), texco, imgtex, ref alpha_socket, adjust);
+
 				if (decals[0].Texture.AdjustNeeded)
 				{
 					imgtex.outs.Color.Connect(adjust.ins.Color);
@@ -412,7 +410,6 @@ namespace RhinoCyclesCore.Shaders
 				{
 					imgtex.outs.Color.Connect(sock_to_connect_to);
 				}
-				alpha_socket = alpha.outs.Value;
 			}
 			else
 			{
@@ -423,9 +420,12 @@ namespace RhinoCyclesCore.Shaders
 				{
 					var texco = texcos[idx];
 					var imgtex = imgtexs[idx];
-					var alpha = alphas[idx];
 					var adjust = adjustments[idx];
-					SetupOneDecalNodes(m_shader, decal, texco, imgtex, alpha, adjust);
+
+					ISocket alpha = null;
+					SetupOneDecalNodes(m_shader, decal, texco, imgtex, ref alpha, adjust);
+					alphas.Add(alpha);
+
 					idx++;
 				}
 				idx = 0;
@@ -433,13 +433,13 @@ namespace RhinoCyclesCore.Shaders
 				MixNode previousMixRgb = null;
 				MathAdd previousAlphaMath = null;
 				ImageTextureNode imgA = null;
-				MathMultiply alphaA = null;
 				TextureAdjustmentTextureProceduralNode adjustA = null;
 				// Use alpa addition nodes to go through all
 				// node lists and connect them as needed.
 				foreach (MathAdd alphaMath in alphamaths)
 				{
 					alphaMath.UseClamp = true;
+					ISocket alphaA;
 					if (idx == 0)
 					{
 						CyclesTextureImage teximA = decals[idx].Texture;
@@ -451,7 +451,7 @@ namespace RhinoCyclesCore.Shaders
 
 						CyclesTextureImage teximB = decals[idx + 1].Texture;
 						ImageTextureNode imgB = imgtexs[idx + 1];
-						MathMultiply alphaB = alphas[idx + 1];
+						ISocket alphaB = alphas[idx + 1];
 						TextureAdjustmentTextureProceduralNode adjustB = adjustments[idx];
 
 						if (teximA.AdjustNeeded)
@@ -474,10 +474,10 @@ namespace RhinoCyclesCore.Shaders
 							imgB.outs.Color.Connect(mixer.ins.Color2);
 						}
 
-						alphaA.outs.Value.Connect(alphaMath.ins.Value1);
-						alphaB.outs.Value.Connect(alphaMath.ins.Value2);
+						alphaA.Connect(alphaMath.ins.Value1);
+						alphaB.Connect(alphaMath.ins.Value2);
 
-						alphaB.outs.Value.Connect(mixer.ins.Fac);
+						alphaB.Connect(mixer.ins.Fac);
 
 						previousAlphaMath = alphaMath;
 						previousMixRgb = mixer;
@@ -502,8 +502,8 @@ namespace RhinoCyclesCore.Shaders
 						}
 
 						previousAlphaMath.outs.Value.Connect(alphaMath.ins.Value1);
-						alphaA.outs.Value.Connect(alphaMath.ins.Value2);
-						alphaA.outs.Value.Connect(mixer.ins.Fac);
+						alphaA.Connect(alphaMath.ins.Value2);
+						alphaA.Connect(mixer.ins.Fac);
 
 						previousAlphaMath = alphaMath;
 						previousMixRgb = mixer;
