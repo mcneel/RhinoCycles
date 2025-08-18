@@ -27,6 +27,8 @@ namespace RhinoCyclesCore.Shaders
 
 		protected Session m_session;
 
+		public bool? IsCpuRender = null;
+
 		private void InitShader(string name, Shader existing, bool recreate)
 		{
 			if (existing != null)
