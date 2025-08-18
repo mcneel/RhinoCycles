@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using Rhino;
 using System.Diagnostics;
+using Rhino.Runtime;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -560,20 +561,34 @@ namespace RhinoCyclesCore.Shaders
 		/// <since>7.0</since>
 		private (List<ClosureSocket> decalMaterials, List<FloatSocket> decalMaskSockets) HandleDecals(float shaderGamma, bool gamma_correct_decals = false) {
 
-			List<ClosureSocket> decalClosures = new List<ClosureSocket>();
-			List<FloatSocket> decalMaskSockets = new List<FloatSocket>();
+			var decalClosures = new List<ClosureSocket>();
+			var decalMaskSockets = new List<FloatSocket>();
 
-			int count = m_original.Decals?.Count ?? 0;
+			var validDecals = new List<CyclesDecal>();
 
-			if (count > 0)
+			if (m_original.Decals != null)
+			{
+				foreach (CyclesDecal decal in m_original.Decals)
+				{
+					// If on Mac and rendering on CPU then we disable full material decal support for now.
+					// This is because I get a crash due to stack buffer overflow in the rendering code.
+					bool unsupportedCase = (decal.MaterialShader != null) && HostUtils.RunningOnOSX && (IsCpuRender ?? true);
+					if (!unsupportedCase)
+					{
+						validDecals.Add(decal);
+					}
+				}
+			}
+
+			if (validDecals.Count > 0)
 			{
 				// Organize decals into groups based on whether they are textures or materials.
 				var decalGroups = new List<List<CyclesDecal>>();
 
 				bool? lastDecalWasTexture = null;
-				foreach (CyclesDecal decal in m_original.Decals)
+				foreach (CyclesDecal decal in validDecals)
 				{
-					bool currentDecalIsTexture = (decal.MaterialShader == null);
+					bool currentDecalIsTexture = decal.MaterialShader == null;
 
 					if (currentDecalIsTexture != lastDecalWasTexture)
 					{
@@ -590,7 +605,7 @@ namespace RhinoCyclesCore.Shaders
 					if (decals.Count == 0)
 						continue;
 
-					bool decalIsTexture = (decals.First().MaterialShader == null);
+					bool decalIsTexture = decals.First().MaterialShader == null;
 
 					if (decalIsTexture)
 					{
