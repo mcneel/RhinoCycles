@@ -159,8 +159,6 @@ namespace RhinoCyclesCore.Materials
 				outsocket = emission.outs.Emission;
 			}
 
-			if (finalize) sh.WriteDataToNodes();
-
 			return true;
 		}
 		public ClosureSocket GetClosureSocket(ccl.Shader sh)

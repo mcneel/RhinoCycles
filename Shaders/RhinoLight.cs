@@ -33,9 +33,9 @@ namespace RhinoCyclesCore.Shaders
 		public override Shader GetShader()
 		{
 			var use_falloff =
-				m_original_light.Type == LightType.Spot ||
-				m_original_light.Type == LightType.Point ||
-				m_original_light.Type == LightType.Area;
+				m_original_light.Type == LightType.LIGHT_SPOT ||
+				m_original_light.Type == LightType.LIGHT_POINT ||
+				m_original_light.Type == LightType.LIGHT_AREA;
 
 			var emnode = new EmissionNode(m_shader);
 			emnode.ins.Color.Value = m_original_light.DiffuseColor ^ m_original_light.Gamma;
@@ -62,8 +62,8 @@ namespace RhinoCyclesCore.Shaders
 			}
 
 			emnode.outs.Emission.Connect(m_shader.Output.ins.Surface);
-			m_shader.WriteDataToNodes();
-			m_shader.Tag();
+			m_shader.TagUpdate(m_session.Scene);
+			m_shader.TagUsed(m_session.Scene);
 
 			return m_shader;
 		}

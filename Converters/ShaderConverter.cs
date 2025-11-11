@@ -392,7 +392,7 @@ namespace RhinoCyclesCore.Converters
 				color_output.Connect(parent_color_input);
 			} else
 			{
-				var texture_adjustment_node = new TextureAdjustmentTextureProceduralNode(shader);
+				var texture_adjustment_node = new RhinoTextureAdjustmentTextureNode(shader);
 
 				texture_adjustment_node.Grayscale = AdjustGrayscale;
 				texture_adjustment_node.Invert = AdjustInvert;
@@ -581,15 +581,17 @@ namespace RhinoCyclesCore.Converters
 		public CheckerTextureProcedural(RenderTexture render_texture, bool is_2d, bool is_color)
 			: base(render_texture, is_color)
 		{
-			MappingTransform *= ccl.Transform.Scale(2.0f, 2.0f, 2.0f);
-			MappingTransform.x.w *= 2.0f;
-			MappingTransform.y.w *= 2.0f;
-			MappingTransform.z.w *= 2.0f;
+			ccl.Transform t = MappingTransform * ccl.Transform.Scale(2.0f, 2.0f, 2.0f);
+			t.x.w *= 2.0f;
+			t.y.w *= 2.0f;
+			t.z.w *= 2.0f;
 
 			if(is_2d)
 			{
-				MappingTransform.z.z = 0.0f;
+				t.z.z = 0.0f;
 			}
+
+			MappingTransform = t;
 
 			if (render_texture.Fields.TryGetValue("remap-textures", out bool remap_textures))
 				RemapTextures = remap_textures;
@@ -597,12 +599,10 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			var node = new CheckerTextureProceduralNode(shader);
+			var node = new RhinoCheckerTextureNode(shader);
 
-			var transform_node = new MatrixMathNode(shader)
-			{
-				Transform = new ccl.Transform(MappingTransform)
-			};
+			var transform_node = new MatrixMathNode(shader);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
 			uvw_output.Connect(transform_node.ins.Vector);
 
@@ -659,23 +659,20 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			var transform_node = new MatrixMathNode(shader)
-			{
-				Transform = new ccl.Transform(MappingTransform)
-			};
+			var transform_node = new MatrixMathNode(shader);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var node = new NoiseTextureProceduralNode(shader);
-
-			node.NoiseType = NoiseType;
-			node.SpecSynthType = SpecSynthType;
-			node.OctaveCount = OctaveCount;
-			node.FrequencyMultiplier = FrequencyMultiplier;
-			node.AmplitudeMultiplier = AmplitudeMultiplier;
-			node.ClampMin = ClampMin;
-			node.ClampMax = ClampMax;
-			node.ScaleToClamp = ScaleToClamp;
-			node.Inverse = Inverse;
-			node.Gain = Gain;
+			var node = new RhinoNoiseTextureNode(shader);
+			node.ins.NoiseType.Value = NoiseType;
+			node.ins.SpecSynthType.Value = SpecSynthType;
+			node.ins.OctaveCount.Value = OctaveCount;
+			node.ins.FrequencyMultiplier.Value = FrequencyMultiplier;
+			node.ins.AmplitudeMultiplier.Value = AmplitudeMultiplier;
+			node.ins.ClampMin.Value = ClampMin;
+			node.ins.ClampMax.Value = ClampMax;
+			node.ins.ScaleToClamp.Value = ScaleToClamp;
+			node.ins.Inverse.Value = Inverse;
+			node.ins.Gain.Value = Gain;
 
 			// Recursive call
 			ConnectChildNodes(shader, uvw_output, node.ins.Color1, node.ins.Alpha1, node.ins.Color2, node.ins.Alpha2, IsData);
@@ -689,8 +686,8 @@ namespace RhinoCyclesCore.Converters
 			return null;
 		}
 
-		public NoiseTextureProceduralNode.NoiseTypes NoiseType { get; set; } = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-		public NoiseTextureProceduralNode.SpecSynthTypes SpecSynthType { get; set; } = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
+		public RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType NoiseType { get; set; } = RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
+		public RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType SpecSynthType { get; set; } = RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.FractalSum;
 		public int OctaveCount { get; set; } = 3;
 		public float FrequencyMultiplier { get; set; } = 2.0f;
 		public float AmplitudeMultiplier { get; set; } = 0.5f;
@@ -700,29 +697,29 @@ namespace RhinoCyclesCore.Converters
 		public bool Inverse { get; set; } = false;
 		public float Gain { get; set; } = 0.5f;
 
-		private static NoiseTextureProceduralNode.NoiseTypes StringToNoiseType(string enum_string)
+		private static RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType StringToNoiseType(string enum_string)
 		{
 			switch (enum_string)
 			{
-				case "perlin": return NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-				case "valuenoise": return NoiseTextureProceduralNode.NoiseTypes.VALUE_NOISE;
-				case "perlin_plus_value": return NoiseTextureProceduralNode.NoiseTypes.PERLIN_PLUS_VALUE;
-				case "simplex": return NoiseTextureProceduralNode.NoiseTypes.SIMPLEX;
-				case "sparseconvolution": return NoiseTextureProceduralNode.NoiseTypes.SPARSE_CONVOLUTION;
-				case "latticeconvolution": return NoiseTextureProceduralNode.NoiseTypes.LATTICE_CONVOLUTION;
-				case "wardshermite": return NoiseTextureProceduralNode.NoiseTypes.WARDS_HERMITE;
-				case "aaltonen": return NoiseTextureProceduralNode.NoiseTypes.AALTONEN;
-				default: return NoiseTextureProceduralNode.NoiseTypes.PERLIN;
+				case "perlin": return RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
+				case "valuenoise": return RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.ValueNoise;
+				case "perlin_plus_value": return RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.PerlinPlusValue;
+				case "simplex": return RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Simplex;
+				case "sparseconvolution": return RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.SparseConvolution;
+				case "latticeconvolution": return RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.LatticeConvolution;
+				case "wardshermite": return RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.WardsHermite;
+				case "aaltonen": return RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Aaltonen;
+				default: return RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
 			}
 		}
 
-		private static NoiseTextureProceduralNode.SpecSynthTypes StringToSpecSynthType(string enum_string)
+		private static RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType StringToSpecSynthType(string enum_string)
 		{
 			switch (enum_string)
 			{
-				case "fractalsum": return NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
-				case "turbulence": return NoiseTextureProceduralNode.SpecSynthTypes.TURBULENCE;
-				default: return NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
+				case "fractalsum": return RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.FractalSum;
+				case "turbulence": return RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.Turbulence;
+				default: return RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.FractalSum;
 			}
 		}
 	}
@@ -734,7 +731,7 @@ namespace RhinoCyclesCore.Converters
 			var rtf = render_texture.Fields;
 
 			if (rtf.TryGetValue("wave-type", out int wave_type))
-				WaveType = (WavesTextureProceduralNode.WaveTypes)wave_type;
+				WaveType = (RhinoWavesTextureNode.RhinoWavesTextureNodeWaveType)wave_type;
 
 			if (rtf.TryGetValue("wave-width", out double wave_width))
 				WaveWidth = (float)wave_width;
@@ -751,22 +748,20 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			var transform_node = new MatrixMathNode(shader)
-			{
-				Transform = new ccl.Transform(MappingTransform)
-			};
+			var transform_node = new MatrixMathNode(shader);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var waves_node = new WavesTextureProceduralNode(shader);
+			var waves_node = new RhinoWavesTextureNode(shader);
 
-			waves_node.WaveType = WaveType;
-			waves_node.WaveWidth = WaveWidth;
-			waves_node.WaveWidthTextureOn = WaveWidthTextureOn;
-			waves_node.Contrast1 = Contrast1;
-			waves_node.Contrast2 = Contrast2;
+			waves_node.ins.WaveType.Value = WaveType;
+			waves_node.ins.WaveWidth.Value = WaveWidth;
+			waves_node.ins.WaveWidthTextureOn.Value = WaveWidthTextureOn;
+			waves_node.ins.Contrast1.Value = Contrast1;
+			waves_node.ins.Contrast2.Value = Contrast2;
 
-			var waves_width_node = new WavesWidthTextureProceduralNode(shader);
+			var waves_width_node = new RhinoWavesWidthTextureNode(shader);
 
-			waves_width_node.WaveType = WaveType;
+			waves_width_node.ins.WaveType.Value = WaveType;
 
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(waves_width_node.ins.UVW);
@@ -787,7 +782,7 @@ namespace RhinoCyclesCore.Converters
 			return null;
 		}
 
-		public WavesTextureProceduralNode.WaveTypes WaveType { get; set; } = WavesTextureProceduralNode.WaveTypes.LINEAR;
+		public RhinoWavesTextureNode.RhinoWavesTextureNodeWaveType WaveType { get; set; } = RhinoWavesTextureNode.RhinoWavesTextureNodeWaveType.Linear;
 		public float WaveWidth { get; set; } = 0.5f;
 		public bool WaveWidthTextureOn { get; set; } = false;
 		public float Contrast1 { get; set; } = 1.0f;
@@ -807,17 +802,15 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			var transform_node = new MatrixMathNode(shader)
-			{
-				Transform = new ccl.Transform(MappingTransform)
-			};
+			var transform_node = new MatrixMathNode(shader);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var perturbing_part1_node = new PerturbingPart1TextureProceduralNode(shader);
+			var perturbing_part1_node = new RhinoPerturbingPart1TextureNode(shader);
 
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(perturbing_part1_node.ins.UVW);
 
-			var perturbing_part2_node = new PerturbingPart2TextureProceduralNode(shader);
+			var perturbing_part2_node = new RhinoPerturbingPart2TextureNode(shader);
 
 			perturbing_part2_node.Amount = Amount;
 
@@ -857,63 +850,57 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			NoiseTextureProceduralNode noise1 = new NoiseTextureProceduralNode(shader);
-			noise1.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-			noise1.OctaveCount = 2;
-			noise1.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
-			noise1.FrequencyMultiplier = 2.17f;
-			noise1.AmplitudeMultiplier = 0.5f;
-			noise1.ClampMin = -1.0f;
-			noise1.ClampMax = 1.0f;
-			noise1.ScaleToClamp = false;
-			noise1.Inverse = false;
-			noise1.Gain = 0.5f;
+			RhinoNoiseTextureNode noise1 = new (shader);
+			noise1.ins.NoiseType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
+			noise1.ins.SpecSynthType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.FractalSum;
+			noise1.ins.OctaveCount.Value = 2;
+			noise1.ins.FrequencyMultiplier.Value = 2.17f;
+			noise1.ins.AmplitudeMultiplier.Value = 0.5f;
+			noise1.ins.ClampMin.Value = -1.0f;
+			noise1.ins.ClampMax.Value = 1.0f;
+			noise1.ins.ScaleToClamp.Value = false;
+			noise1.ins.Inverse.Value = false;
+			noise1.ins.Gain.Value = 0.5f;
 
-			var noise1_transform_node = new MatrixMathNode(shader)
-			{
-				Transform = ccl.Transform.Scale(1.0f, 1.0f, AxialNoise)
-			};
+			var noise1_transform_node = new MatrixMathNode(shader);
+			noise1_transform_node.ins.Transform.Value = ccl.Transform.Scale(1.0f, 1.0f, AxialNoise);
 
-			NoiseTextureProceduralNode noise2 = new NoiseTextureProceduralNode(shader);
-			noise2.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-			noise2.OctaveCount = 2;
-			noise2.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
-			noise2.FrequencyMultiplier = 2.17f;
-			noise2.AmplitudeMultiplier = 0.5f;
-			noise2.ClampMin = -1.0f;
-			noise2.ClampMax = 1.0f;
-			noise2.ScaleToClamp = false;
-			noise2.Inverse = false;
-			noise2.Gain = 0.5f;
+			RhinoNoiseTextureNode noise2 = new (shader);
+			noise2.ins.NoiseType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
+			noise2.ins.SpecSynthType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.FractalSum;
+			noise2.ins.OctaveCount.Value = 2;
+			noise2.ins.FrequencyMultiplier.Value = 2.17f;
+			noise2.ins.AmplitudeMultiplier.Value = 0.5f;
+			noise2.ins.ClampMin.Value = -1.0f;
+			noise2.ins.ClampMax.Value = 1.0f;
+			noise2.ins.ScaleToClamp.Value = false;
+			noise2.ins.Inverse.Value = false;
+			noise2.ins.Gain.Value = 0.5f;
 
-			var noise2_transform_node = new MatrixMathNode(shader)
-			{
-				Transform = ccl.Transform.Scale(1.0f, 1.0f, AxialNoise)
-			};
+			var noise2_transform_node = new MatrixMathNode(shader);
+			noise2_transform_node.ins.Transform.Value = ccl.Transform.Scale(1.0f, 1.0f, AxialNoise);
 
-			NoiseTextureProceduralNode noise3 = new NoiseTextureProceduralNode(shader);
-			noise3.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-			noise3.OctaveCount = 2;
-			noise3.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
-			noise3.FrequencyMultiplier = 2.17f;
-			noise3.AmplitudeMultiplier = 0.5f;
-			noise3.ClampMin = -1.0f;
-			noise3.ClampMax = 1.0f;
-			noise3.ScaleToClamp = false;
-			noise3.Inverse = false;
-			noise3.Gain = 0.5f;
+			RhinoNoiseTextureNode noise3 = new(shader);
+			noise3.ins.NoiseType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
+			noise3.ins.SpecSynthType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.FractalSum;
+			noise3.ins.OctaveCount.Value = 2;
+			noise3.ins.FrequencyMultiplier.Value = 2.17f;
+			noise3.ins.AmplitudeMultiplier.Value = 0.5f;
+			noise3.ins.ClampMin.Value = -1.0f;
+			noise3.ins.ClampMax.Value = 1.0f;
+			noise3.ins.ScaleToClamp.Value = false;
+			noise3.ins.Inverse.Value = false;
+			noise3.ins.Gain.Value = 0.5f;
 
-			var noise3_transform_node = new MatrixMathNode(shader)
-			{
-				Transform = ccl.Transform.Scale(1.0f, 1.0f, AxialNoise)
-			};
+			var noise3_transform_node = new MatrixMathNode(shader);
+			noise3_transform_node.ins.Transform.Value = ccl.Transform.Scale(1.0f, 1.0f, AxialNoise);
 
-			WavesTextureProceduralNode waves = new WavesTextureProceduralNode(shader);
-			waves.WaveType = WavesTextureProceduralNode.WaveTypes.RADIAL;
-			waves.WaveWidth = GrainThickness;
-			waves.Contrast1 = 1.0f - Blur1;
-			waves.Contrast2 = 1.0f - Blur2;
-			waves.WaveWidthTextureOn = false;
+			RhinoWavesTextureNode waves = new (shader);
+			waves.ins.WaveType.Value = RhinoWavesTextureNode.RhinoWavesTextureNodeWaveType.Radial;
+			waves.ins.WaveWidth.Value = GrainThickness;
+			waves.ins.Contrast1.Value = 1.0f - Blur1;
+			waves.ins.Contrast2.Value = 1.0f - Blur2;
+			waves.ins.WaveWidthTextureOn.Value = false;
 			waves.ins.Color1.Value = Color1.ToFloat4();
 			waves.ins.Alpha1.Value = Color1.ToFloat4().w;
 			//waves.TextureAmount1 = TextureAmount1; // TODO
@@ -921,13 +908,11 @@ namespace RhinoCyclesCore.Converters
 			waves.ins.Alpha2.Value = Color2.ToFloat4().w;
 			//waves.TextureAmount2 = TextureAmount2; // TODO
 
-			var perturbing1_transform_node = new MatrixMathNode(shader)
-			{
-				Transform = new ccl.Transform(MappingTransform)
-			};
+			var perturbing1_transform_node = new MatrixMathNode(shader);
+			perturbing1_transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			PerturbingPart1TextureProceduralNode perturbing1 = new PerturbingPart1TextureProceduralNode(shader);
-			PerturbingPart2TextureProceduralNode perturbing2 = new PerturbingPart2TextureProceduralNode(shader);
+			RhinoPerturbingPart1TextureNode perturbing1 = new (shader);
+			RhinoPerturbingPart2TextureNode perturbing2 = new (shader);
 			perturbing2.Amount = RadialNoise;
 
 			uvw_output.Connect(perturbing1_transform_node.ins.Vector);
@@ -993,7 +978,8 @@ namespace RhinoCyclesCore.Converters
 		{
 			var transform_node = new MatrixMathNode(shader, "matrix_math for bitmaptextureprocedural");
 
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
+			transform_node.ins.Type.Value = MatrixMathNode.MatrixMathNodeType.Point;
 
 			if (IsForEnvironment && !IsForWallpaper)
 			{
@@ -1011,10 +997,12 @@ namespace RhinoCyclesCore.Converters
 			else
 			{
 				var image_texture_node = new ImageTextureNode(shader, "image texture in bitmaptextureprocedural");
-				VectorRotate vector_rotate = null;
+				image_texture_node.ins.DecalForward.Value = 0.0f;
+				image_texture_node.ins.DecalUsage.Value = 0.0f;
+				VectorRotateNode vector_rotate = null;
 				if(IsForWallpaper)
 				{
-					vector_rotate = new VectorRotate(shader, "vector_rotate for bitmaptextureprocedural");
+					vector_rotate = new VectorRotateNode(shader, "vector_rotate for bitmaptextureprocedural");
 				}
 
 				if (CyclesTexture.HasTextureImage)
@@ -1022,24 +1010,25 @@ namespace RhinoCyclesCore.Converters
 					image_texture_node.ins.Filename.Value = CyclesTexture.Filename;
 				}
 
-				image_texture_node.UseAlpha = UseAlpha;
+				// NOTYET TODO check if this is the correct way
+				image_texture_node.ins.AlphaType.Value = ImageTextureNode.ImageTextureNodeAlphaType.Ignore; // UseAlpha ? ImageTextureNode.ImageTextureNodeAlphaType.Auto : ImageTextureNode.ImageTextureNodeAlphaType.Ignore;
 				if (IsData)
 				{
-					image_texture_node.ColorSpace = TextureNode.TextureColorSpace.None;
+					image_texture_node.ins.Colorspace.Value = "none";
 				}
 				else
 				{
-					image_texture_node.ColorSpace = TextureNode.TextureColorSpace.Color;
+					image_texture_node.ins.Colorspace.Value = "u_colorspace_auto";
 				}
-				image_texture_node.AlternateTiles = AlternateTiles;
-				image_texture_node.Interpolation = Filter ? InterpolationType.Cubic : InterpolationType.Closest;
-				image_texture_node.Extension = Repeat ? TextureNode.TextureExtension.Repeat : TextureNode.TextureExtension.Clip;
+				image_texture_node.ins.AlternateTiles.Value = AlternateTiles;
+				image_texture_node.ins.Interpolation.Value = Filter ? ImageTextureNode.ImageTextureNodeInterpolation.Cubic : ImageTextureNode.ImageTextureNodeInterpolation.Closest;
+				image_texture_node.ins.Extension.Value = Repeat ? ImageTextureNode.ImageTextureNodeExtension.Periodic : ImageTextureNode.ImageTextureNodeExtension.Clamp;
 
 				uvw_output.Connect(transform_node.ins.Vector);
 				if(IsForWallpaper) {
 					transform_node.outs.Vector.Connect(vector_rotate.ins.Vector);
 					vector_rotate.outs.Vector.Connect(image_texture_node.ins.Vector);
-					vector_rotate.RotateType = VectorRotate.VectorRotateType.AxisX;
+					vector_rotate.ins.Type.Value = VectorRotateNode.VectorRotateNodeType.XAxis;
 					vector_rotate.ins.Angle.Value = (float)Rhino.RhinoMath.ToRadians(180);
 					vector_rotate.ins.Axis.Value = new float4(1, 0, 0);
 				}
@@ -1089,7 +1078,7 @@ namespace RhinoCyclesCore.Converters
 		{
 			var mix_node = new MixNode(shader);
 
-			mix_node.BlendType = MixNode.BlendTypes.Add;
+			mix_node.ins.Type.Value = MixNode.MixNodeType.Add;
 			mix_node.ins.Fac.Value = 1.0f;
 
 			// Recursive call
@@ -1111,7 +1100,7 @@ namespace RhinoCyclesCore.Converters
 		{
 			var mix_node = new MixNode(shader);
 
-			mix_node.BlendType = MixNode.BlendTypes.Multiply;
+			mix_node.ins.Type.Value = MixNode.MixNodeType.Multiply;
 			mix_node.ins.Fac.Value = 1.0f;
 
 			// Recursive call
@@ -1130,7 +1119,7 @@ namespace RhinoCyclesCore.Converters
 			var rtf = render_texture.Fields;
 
 			if (rtf.TryGetValue("gradient-type", out int gradient_type))
-				GradientType = (GradientTextureProceduralNode.GradientTypes)gradient_type;
+				GradientType = (RhinoGradientTextureNode.RhinoGradientTextureNodeGradientType)gradient_type;
 
 			if (rtf.TryGetValue("flip-alternate", out bool flip_alternate))
 				FlipAlternate = flip_alternate;
@@ -1149,11 +1138,11 @@ namespace RhinoCyclesCore.Converters
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var gradient_node = new GradientTextureProceduralNode(shader);
+			var gradient_node = new RhinoGradientTextureNode(shader);
 
-			gradient_node.GradientType = GradientType;
+			gradient_node.ins.GradientType.Value = GradientType;
 			gradient_node.FlipAlternate = FlipAlternate;
 			gradient_node.UseCustomCurve = UseCustomCurve;
 			gradient_node.PointWidth = PointWidth;
@@ -1171,7 +1160,7 @@ namespace RhinoCyclesCore.Converters
 			return null;
 		}
 
-		public GradientTextureProceduralNode.GradientTypes GradientType { get; set; }
+		public RhinoGradientTextureNode.RhinoGradientTextureNodeGradientType GradientType { get; set; }
 		public bool FlipAlternate { get; set; }
 		public bool UseCustomCurve { get; set; }
 		public int PointWidth { get; set; }
@@ -1193,11 +1182,11 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			var transform_node = new MatrixMathNode(shader);
+			MatrixMathNode transform_node = new (shader);
 
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var blend_node = new BlendTextureProceduralNode(shader);
+			RhinoBlendTextureNode blend_node = new (shader);
 
 			blend_node.UseBlendColor = UseBlendColor;
 			blend_node.BlendFactor = BlendFactor;
@@ -1244,9 +1233,9 @@ namespace RhinoCyclesCore.Converters
 		{
 			var transform_node = new MatrixMathNode(shader);
 
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var exposure_node = new ExposureTextureProceduralNode(shader);
+			RhinoExposureTextureNode exposure_node = new (shader);
 
 			exposure_node.Exposure = Exposure;
 			exposure_node.Multiplier = Multiplier;
@@ -1292,9 +1281,9 @@ namespace RhinoCyclesCore.Converters
 		{
 			var transform_node = new MatrixMathNode(shader);
 
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var fbm_node = new FbmTextureProceduralNode(shader);
+			RhinoFbmTextureNode fbm_node = new (shader);
 
 			fbm_node.IsTurbulent = IsTurbulent;
 			fbm_node.MaxOctaves = MaxOctaves;
@@ -1338,13 +1327,13 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			var noise_node = new NoiseTextureProceduralNode(shader);
+			RhinoNoiseTextureNode noise_node = new (shader);
 
-			noise_node.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-			noise_node.OctaveCount = 2;
-			noise_node.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
-			noise_node.FrequencyMultiplier = 2.17f;
-			noise_node.AmplitudeMultiplier = 0.4f;
+			noise_node.ins.NoiseType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
+			noise_node.ins.OctaveCount.Value = 2;
+			noise_node.ins.SpecSynthType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.FractalSum;
+			noise_node.ins.FrequencyMultiplier.Value = 2.17f;
+			noise_node.ins.AmplitudeMultiplier.Value = 0.4f;
 
 			double spot = (2.0 * SpotSize - 1.0);
 			spot *= spot;
@@ -1359,26 +1348,24 @@ namespace RhinoCyclesCore.Converters
 				clampMax = (clampMin + clampMax) / 2.0 + 0.01;
 			}
 
-			noise_node.ClampMin = (float)clampMin;
-			noise_node.ClampMax = (float)clampMax;
-			noise_node.ScaleToClamp = true;
-			noise_node.Inverse = true;
+			noise_node.ins.ClampMin.Value = (float)clampMin;
+			noise_node.ins.ClampMax.Value = (float)clampMax;
+			noise_node.ins.ScaleToClamp.Value = true;
+			noise_node.ins.Inverse.Value = true;
 
 			float scale_size = (float)(8.0 / Size);
 
-			var noise_transform_node = new MatrixMathNode(shader)
-			{
-				Transform = ccl.Transform.Scale(scale_size, scale_size, scale_size)
-			};
+			var noise_transform_node = new MatrixMathNode(shader);
+			noise_transform_node.ins.Transform.Value = ccl.Transform.Scale(scale_size, scale_size, scale_size);
 
 			var blend_transform_node = new MatrixMathNode(shader);
 
-			blend_transform_node.Transform = new ccl.Transform(MappingTransform);
+			blend_transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var blend_node = new BlendTextureProceduralNode(shader);
+			var blend_node = new RhinoBlendTextureNode(shader);
 
-			blend_node.BlendFactor = 0.5f;
-			blend_node.UseBlendColor = true;
+			blend_node.ins.BlendFactor.Value = 0.5f;
+			blend_node.ins.UseBlendColor.Value = true;
 
 			uvw_output.Connect(blend_transform_node.ins.Vector);
 			blend_transform_node.outs.Vector.Connect(blend_node.ins.UVW);
@@ -1416,12 +1403,12 @@ namespace RhinoCyclesCore.Converters
 		{
 			var transform_node = new MatrixMathNode(shader);
 
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var grid_node = new GridTextureProceduralNode(shader);
+			var grid_node = new RhinoGridTextureNode(shader);
 
-			grid_node.Cells = Cells;
-			grid_node.FontThickness = FontThickness;
+			grid_node.ins.Cells.Value = Cells;
+			grid_node.ins.FontThickness.Value = FontThickness;
 
 			uvw_output.Connect(transform_node.ins.Vector);
 
@@ -1459,23 +1446,23 @@ namespace RhinoCyclesCore.Converters
 				Altitude = (float)altitude;
 		}
 
-		private static ProjectionChangerTextureProceduralNode.ProjectionTypes StringToProjectionType(string enum_string)
+		private static RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType StringToProjectionType(string enum_string)
 		{
 			switch (enum_string)
 			{
-				case "planar": return ProjectionChangerTextureProceduralNode.ProjectionTypes.PLANAR;
-				case "light-probe": return ProjectionChangerTextureProceduralNode.ProjectionTypes.LIGHTPROBE;
-				case "equirect": return ProjectionChangerTextureProceduralNode.ProjectionTypes.EQUIRECT;
-				case "cube-map": return ProjectionChangerTextureProceduralNode.ProjectionTypes.CUBEMAP;
-				case "vertical-cross-cube-map": return ProjectionChangerTextureProceduralNode.ProjectionTypes.VERTICAL_CROSS_CUBEMAP;
-				case "horizontal-cross-cube-map": return ProjectionChangerTextureProceduralNode.ProjectionTypes.HORIZONTAL_CROSS_CUBEMAP;
-				case "emap": return ProjectionChangerTextureProceduralNode.ProjectionTypes.EMAP;
-				case "same-as-input": return ProjectionChangerTextureProceduralNode.ProjectionTypes.SAME_AS_INPUT;
-				case "hemispherical": return ProjectionChangerTextureProceduralNode.ProjectionTypes.HEMISPHERICAL;
+				case "planar": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Planar;
+				case "light-probe": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Lightprobe;
+				case "equirect": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Equirect;
+				case "cube-map": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Cubemap;
+				case "vertical-cross-cube-map": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.VerticalCrossCubemap;
+				case "horizontal-cross-cube-map": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.HorizontalCrossCubemap;
+				case "emap": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Emap;
+				case "same-as-input": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.SameAsInput;
+				case "hemispherical": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Hemispherical;
 				default:
 					{
 						System.Diagnostics.Debug.Assert(false);
-						return ProjectionChangerTextureProceduralNode.ProjectionTypes.EQUIRECT;
+						return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Equirect;
 					}
 			}
 		}
@@ -1484,14 +1471,14 @@ namespace RhinoCyclesCore.Converters
 		{
 			var transform_node = new MatrixMathNode(shader);
 
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var projection_changer_node = new ProjectionChangerTextureProceduralNode(shader);
+			var projection_changer_node = new RhinoProjectionChangerTextureNode(shader);
 
-			projection_changer_node.InputProjectionType = InputProjectionType;
-			projection_changer_node.OutputProjectionType = OutputProjectionType;
-			projection_changer_node.Altitude = Altitude;
-			projection_changer_node.Azimuth = Azimuth;
+			projection_changer_node.ins.InputProjectionType.Value = InputProjectionType;
+			projection_changer_node.ins.OutputProjectionType.Value = OutputProjectionType;
+			projection_changer_node.ins.Altitude.Value = Altitude;
+			projection_changer_node.ins.Azimuth.Value = Azimuth;
 
 			uvw_output.Connect(transform_node.ins.Vector);
 
@@ -1503,8 +1490,8 @@ namespace RhinoCyclesCore.Converters
 			return null;
 		}
 
-		public ProjectionChangerTextureProceduralNode.ProjectionTypes InputProjectionType;
-		public ProjectionChangerTextureProceduralNode.ProjectionTypes OutputProjectionType;
+		public RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType InputProjectionType;
+		public RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType OutputProjectionType;
 		public float Azimuth { get; set; }
 		public float Altitude { get; set; }
 		public Procedural ProjectionChangerChild { get; set; } = null;
@@ -1539,23 +1526,23 @@ namespace RhinoCyclesCore.Converters
 				Multiplier = (float)multiplier;
 		}
 
-		private static ProjectionChangerTextureProceduralNode.ProjectionTypes StringToProjectionType(string enum_string)
+		private static RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType StringToProjectionType(string enum_string)
 		{
 			switch (enum_string)
 			{
-				case "planar": return ProjectionChangerTextureProceduralNode.ProjectionTypes.PLANAR;
-				case "light-probe": return ProjectionChangerTextureProceduralNode.ProjectionTypes.LIGHTPROBE;
-				case "equirect": return ProjectionChangerTextureProceduralNode.ProjectionTypes.EQUIRECT;
-				case "cube-map": return ProjectionChangerTextureProceduralNode.ProjectionTypes.CUBEMAP;
-				case "vertical-cross-cube-map": return ProjectionChangerTextureProceduralNode.ProjectionTypes.VERTICAL_CROSS_CUBEMAP;
-				case "horizontal-cross-cube-map": return ProjectionChangerTextureProceduralNode.ProjectionTypes.HORIZONTAL_CROSS_CUBEMAP;
-				case "emap": return ProjectionChangerTextureProceduralNode.ProjectionTypes.EMAP;
-				case "same-as-input": return ProjectionChangerTextureProceduralNode.ProjectionTypes.SAME_AS_INPUT;
-				case "hemispherical": return ProjectionChangerTextureProceduralNode.ProjectionTypes.HEMISPHERICAL;
+				case "planar": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Planar;
+				case "light-probe": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Lightprobe;
+				case "equirect": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Equirect;
+				case "cube-map": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Cubemap;
+				case "vertical-cross-cube-map": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.VerticalCrossCubemap;
+				case "horizontal-cross-cube-map": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.HorizontalCrossCubemap;
+				case "emap": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Emap;
+				case "same-as-input": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.SameAsInput;
+				case "hemispherical": return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Hemispherical;
 				default:
 					{
 						System.Diagnostics.Debug.Assert(false);
-						return ProjectionChangerTextureProceduralNode.ProjectionTypes.EQUIRECT;
+						return RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType.Equirect;
 					}
 			}
 		}
@@ -1564,14 +1551,14 @@ namespace RhinoCyclesCore.Converters
 		{
 			var transform_node = new MatrixMathNode(shader);
 
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var projection_changer_node = new ProjectionChangerTextureProceduralNode(shader);
+			var projection_changer_node = new RhinoProjectionChangerTextureNode(shader);
 
-			projection_changer_node.InputProjectionType = InputProjectionType;
-			projection_changer_node.OutputProjectionType = OutputProjectionType;
-			projection_changer_node.Altitude = Altitude;
-			projection_changer_node.Azimuth = Azimuth;
+			projection_changer_node.ins.InputProjectionType.Value = InputProjectionType;
+			projection_changer_node.ins.OutputProjectionType.Value = OutputProjectionType;
+			projection_changer_node.ins.Altitude.Value = Altitude;
+			projection_changer_node.ins.Azimuth.Value = Azimuth;
 
 			var image_texture_node = new EnvironmentTextureNode(shader);
 
@@ -1581,19 +1568,18 @@ namespace RhinoCyclesCore.Converters
 			}
 			if (IsData)
 			{
-				image_texture_node.ColorSpace = TextureNode.TextureColorSpace.None;
+				image_texture_node.ins.Colorspace.Value = "none";
 			}
 			else
 			{
-				image_texture_node.ColorSpace = TextureNode.TextureColorSpace.Color;
+				image_texture_node.ins.Colorspace.Value = "u_colorspace_auto";
 			}
 
 			//image_texture_node.UseAlpha = false;
 			//image_texture_node.AlternateTiles = false;
-			image_texture_node.Interpolation = Filter ? InterpolationType.Cubic : InterpolationType.Closest;
+			image_texture_node.ins.Interpolation.Value = Filter ? InterpolationType.INTERPOLATION_CUBIC : InterpolationType.INTERPOLATION_CLOSEST;
 
 			var multiplier_node = new MathNode(shader);
-			multiplier_node.Operation = MathNode.Operations.Multiply;
 			multiplier_node.ins.Value2.Value = Multiplier;
 
 			uvw_output.Connect(transform_node.ins.Vector);
@@ -1610,8 +1596,8 @@ namespace RhinoCyclesCore.Converters
 
 		public CyclesTextureImage CyclesTexture { get; set; } = null;
 		public BitmapConverter BitmapConverter { get; set; } = null;
-		public ProjectionChangerTextureProceduralNode.ProjectionTypes InputProjectionType;
-		public ProjectionChangerTextureProceduralNode.ProjectionTypes OutputProjectionType;
+		public RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType InputProjectionType;
+		public RhinoProjectionChangerTextureNode.RhinoProjectionChangerTextureNodeProjectionChangerType OutputProjectionType;
 		public float Azimuth { get; set; }
 		public float Altitude { get; set; }
 		public bool Filter { get; set; }
@@ -1638,56 +1624,56 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			NoiseTextureProceduralNode noise1 = new NoiseTextureProceduralNode(shader);
-			noise1.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-			noise1.OctaveCount = 5;
-			noise1.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
-			noise1.FrequencyMultiplier = 2.17f;
-			noise1.AmplitudeMultiplier = 0.5f;
-			noise1.ClampMin = -1.0f;
-			noise1.ClampMax = 1.0f;
-			noise1.ScaleToClamp = false;
-			noise1.Inverse = false;
-			noise1.Gain = 0.5f;
+			RhinoNoiseTextureNode noise1 = new (shader);
+			noise1.ins.NoiseType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
+			noise1.ins.OctaveCount.Value = 5;
+			noise1.ins.SpecSynthType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.FractalSum;
+			noise1.ins.FrequencyMultiplier.Value = 2.17f;
+			noise1.ins.AmplitudeMultiplier.Value = 0.5f;
+			noise1.ins.ClampMin.Value = -1.0f;
+			noise1.ins.ClampMax.Value = 1.0f;
+			noise1.ins.ScaleToClamp.Value = false;
+			noise1.ins.Inverse.Value = false;
+			noise1.ins.Gain.Value = 0.5f;
 
-			NoiseTextureProceduralNode noise2 = new NoiseTextureProceduralNode(shader);
-			noise2.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-			noise2.OctaveCount = 5;
-			noise2.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
-			noise2.FrequencyMultiplier = 2.17f;
-			noise2.AmplitudeMultiplier = 0.5f;
-			noise2.ClampMin = -1.0f;
-			noise2.ClampMax = 1.0f;
-			noise2.ScaleToClamp = false;
-			noise2.Inverse = false;
-			noise2.Gain = 0.5f;
+			RhinoNoiseTextureNode noise2 = new (shader);
+			noise2.ins.NoiseType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
+			noise2.ins.OctaveCount.Value = 5;
+			noise2.ins.SpecSynthType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.FractalSum;
+			noise2.ins.FrequencyMultiplier.Value = 2.17f;
+			noise2.ins.AmplitudeMultiplier.Value = 0.5f;
+			noise2.ins.ClampMin.Value = -1.0f;
+			noise2.ins.ClampMax.Value = 1.0f;
+			noise2.ins.ScaleToClamp.Value = false;
+			noise2.ins.Inverse.Value = false;
+			noise2.ins.Gain.Value = 0.5f;
 
-			NoiseTextureProceduralNode noise3 = new NoiseTextureProceduralNode(shader);
-			noise3.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-			noise3.OctaveCount = 5;
-			noise3.SpecSynthType = NoiseTextureProceduralNode.SpecSynthTypes.FRACTAL_SUM;
-			noise3.FrequencyMultiplier = 2.17f;
-			noise3.AmplitudeMultiplier = 0.5f;
-			noise3.ClampMin = -1.0f;
-			noise3.ClampMax = 1.0f;
-			noise3.ScaleToClamp = false;
-			noise3.Inverse = false;
-			noise3.Gain = 0.5f;
+			RhinoNoiseTextureNode noise3 = new (shader);
+			noise3.ins.NoiseType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
+			noise3.ins.OctaveCount.Value = 5;
+			noise3.ins.SpecSynthType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeSpecSynthType.FractalSum;
+			noise3.ins.FrequencyMultiplier.Value = 2.17f;
+			noise3.ins.AmplitudeMultiplier.Value = 0.5f;
+			noise3.ins.ClampMin.Value = -1.0f;
+			noise3.ins.ClampMax.Value = 1.0f;
+			noise3.ins.ScaleToClamp.Value = false;
+			noise3.ins.Inverse.Value = false;
+			noise3.ins.Gain.Value = 0.5f;
 
 			var noise_transform1 = new MatrixMathNode(shader);
 			var noise_transform2 = new MatrixMathNode(shader);
 			var noise_transform3 = new MatrixMathNode(shader);
 
-			noise_transform1.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
-			noise_transform2.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
-			noise_transform3.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
+			noise_transform1.ins.Transform.Value = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
+			noise_transform2.ins.Transform.Value = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
+			noise_transform3.ins.Transform.Value = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
 
-			WavesTextureProceduralNode waves = new WavesTextureProceduralNode(shader);
-			waves.WaveType = WavesTextureProceduralNode.WaveTypes.LINEAR;
-			waves.WaveWidth = VeinWidth;
-			waves.Contrast1 = 1.0f - Blur;
-			waves.Contrast2 = 1.0f - Blur;
-			waves.WaveWidthTextureOn = false;
+			RhinoWavesTextureNode waves = new (shader);
+			waves.ins.WaveType.Value = RhinoWavesTextureNode.RhinoWavesTextureNodeWaveType.Linear;
+			waves.ins.WaveWidth.Value = VeinWidth;
+			waves.ins.Contrast1.Value = 1.0f - Blur;
+			waves.ins.Contrast2.Value = 1.0f - Blur;
+			waves.ins.WaveWidthTextureOn.Value = false;
 			waves.ins.Color1.Value = Color1.ToFloat4();
 			waves.ins.Alpha1.Value = Color1.ToFloat4().w;
 			//waves.TextureAmount1 = TextureAmount1; // TODO
@@ -1696,14 +1682,14 @@ namespace RhinoCyclesCore.Converters
 			//waves.TextureAmount2 = TextureAmount2; // TODO
 
 			var waves_transform = new MatrixMathNode(shader);
-			waves_transform.Transform = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
+			waves_transform.ins.Transform.Value = ccl.Transform.Scale(4.0f / Size, 4.0f / Size, 4.0f / Size);
 
 			var perturbing_transform = new MatrixMathNode(shader);
-			perturbing_transform.Transform = new ccl.Transform(MappingTransform);
+			perturbing_transform.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			PerturbingPart1TextureProceduralNode perturbing1 = new PerturbingPart1TextureProceduralNode(shader);
-			PerturbingPart2TextureProceduralNode perturbing2 = new PerturbingPart2TextureProceduralNode(shader);
-			perturbing2.Amount = 0.1f * Noise;
+			RhinoPerturbingPart1TextureNode perturbing1 = new (shader);
+			RhinoPerturbingPart2TextureNode perturbing2 = new (shader);
+			perturbing2.ins.Amount.Value = 0.1f * Noise;
 
 			uvw_output.Connect(perturbing_transform.ins.Vector);
 			perturbing_transform.outs.Vector.Connect(perturbing1.ins.UVW);
@@ -1750,28 +1736,28 @@ namespace RhinoCyclesCore.Converters
 				MaskType = StringToProjectionType(mask_type);
 		}
 
-		private static MaskTextureProceduralNode.MaskTypes StringToProjectionType(string enum_string)
+		private static RhinoMaskTextureNode.RhinoMaskTextureNodeMaskType StringToProjectionType(string enum_string)
 		{
 			switch (enum_string)
 			{
-				case "luminance": return MaskTextureProceduralNode.MaskTypes.LUMINANCE;
-				case "red": return MaskTextureProceduralNode.MaskTypes.RED;
-				case "green": return MaskTextureProceduralNode.MaskTypes.GREEN;
-				case "blue": return MaskTextureProceduralNode.MaskTypes.BLUE;
-				case "alpha": return MaskTextureProceduralNode.MaskTypes.ALPHA;
+				case "luminance": return RhinoMaskTextureNode.RhinoMaskTextureNodeMaskType.Luminance;
+				case "red": return RhinoMaskTextureNode.RhinoMaskTextureNodeMaskType.Red;
+				case "green": return RhinoMaskTextureNode.RhinoMaskTextureNodeMaskType.Green;
+				case "blue": return RhinoMaskTextureNode.RhinoMaskTextureNodeMaskType.Blue;
+				case "alpha": return RhinoMaskTextureNode.RhinoMaskTextureNodeMaskType.Alpha;
 				default:
 					{
 						System.Diagnostics.Debug.Assert(false);
-						return MaskTextureProceduralNode.MaskTypes.LUMINANCE;
+						return RhinoMaskTextureNode.RhinoMaskTextureNodeMaskType.Luminance;
 					}
 			}
 		}
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			var mask_node = new MaskTextureProceduralNode(shader);
+			var mask_node = new RhinoMaskTextureNode(shader);
 
-			mask_node.MaskType = MaskType;
+			mask_node.ins.MaskType.Value = MaskType;
 
 			// Recursive call
 			MaskChild?.CreateAndConnectProceduralNode(shader, uvw_output, mask_node.ins.Color, mask_node.ins.Alpha.ToList(), IsData);
@@ -1783,7 +1769,7 @@ namespace RhinoCyclesCore.Converters
 			return null;
 		}
 
-		public MaskTextureProceduralNode.MaskTypes MaskType;
+		public RhinoMaskTextureNode.RhinoMaskTextureNodeMaskType MaskType;
 		public Procedural MaskChild { get; set; }
 	}
 
@@ -1815,16 +1801,16 @@ namespace RhinoCyclesCore.Converters
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var perlin_marble_node = new PerlinMarbleTextureProceduralNode(shader);
+			RhinoPerlinMarbleTextureNode perlin_marble_node = new (shader);
 
-			perlin_marble_node.Levels = Levels;
-			perlin_marble_node.Noise = Noise;
-			perlin_marble_node.Blur = Blur;
-			perlin_marble_node.Size = Size;
-			perlin_marble_node.Color1Saturation = Color1Saturation;
-			perlin_marble_node.Color2Saturation = Color2Saturation;
+			perlin_marble_node.ins.Levels.Value = Levels;
+			perlin_marble_node.ins.Noise.Value = Noise;
+			perlin_marble_node.ins.Blur.Value = Blur;
+			perlin_marble_node.ins.Size.Value = Size;
+			perlin_marble_node.ins.Color1Saturation.Value = Color1Saturation;
+			perlin_marble_node.ins.Color2Saturation.Value = Color2Saturation;
 
 			// Recursive call
 			ConnectChildNodes(shader, uvw_output, perlin_marble_node.ins.Color1, perlin_marble_node.ins.Color2, IsData);
@@ -1885,24 +1871,21 @@ namespace RhinoCyclesCore.Converters
 		{
 			var texco = new RhinoTextureCoordinateNode(shader, "texco for physical sky texture");
 
-			var physical_sky_node = new PhysicalSkyTextureProceduralNode(shader);
+			RhinoPhysicalSkyTextureNode physical_sky_node = new (shader);
 
-			physical_sky_node.SunDirectionX = (float)SunDirection.X;
-			physical_sky_node.SunDirectionY = (float)SunDirection.Y;
-			physical_sky_node.SunDirectionZ = (float)SunDirection.Z;
-			physical_sky_node.AtmosphericDensity = AtmosphericDensity;
-			physical_sky_node.RayleighScattering = RayleighScattering;
-			physical_sky_node.MieScattering = MieScattering;
-			physical_sky_node.ShowSun = ShowSun;
-			physical_sky_node.SunBrightness = SunBrightness;
-			physical_sky_node.SunSize = SunSize;
-			physical_sky_node.SunColorRed = (float)SunColor.X;
-			physical_sky_node.SunColorGreen = (float)SunColor.Y;
-			physical_sky_node.SunColorBlue = (float)SunColor.Z;
-			physical_sky_node.InverseWavelengthsX = (float)InverseWavelengths.X;
-			physical_sky_node.InverseWavelengthsY = (float)InverseWavelengths.Y;
-			physical_sky_node.InverseWavelengthsZ = (float)InverseWavelengths.Z;
-			physical_sky_node.Exposure = Exposure;
+			float3 sundir = new float3((float)SunDirection.X, (float)SunDirection.Y, (float)SunDirection.Z);
+			float3 suncolor = new float3((float)SunColor.X, (float)SunColor.Y, (float)SunColor.Z);
+			float3 inv_wavelengths = new float3((float)InverseWavelengths.X, (float)InverseWavelengths.Y, (float)InverseWavelengths.Z);
+			physical_sky_node.ins.SunDirection.Value = sundir;
+			physical_sky_node.ins.AtmosphericDensity.Value = AtmosphericDensity;
+			physical_sky_node.ins.RayleighScattering.Value = RayleighScattering;
+			physical_sky_node.ins.MieScattering.Value = MieScattering;
+			physical_sky_node.ins.ShowSun.Value = ShowSun;
+			physical_sky_node.ins.SunBrightness.Value = SunBrightness;
+			physical_sky_node.ins.SunSize.Value = SunSize;
+			physical_sky_node.ins.SunColor.Value = suncolor;
+			physical_sky_node.ins.InverseWavelengths.Value = inv_wavelengths;
+			physical_sky_node.ins.Exposure.Value = Exposure;
 
 			texco.outs.EnvSpherical.Connect(physical_sky_node.ins.UVW);
 			physical_sky_node.outs.Color.Connect(parent_color_input);
@@ -1940,13 +1923,14 @@ namespace RhinoCyclesCore.Converters
 		{
 			var transform_node = new MatrixMathNode(shader);
 
-			transform_node.Operation = MatrixMathNode.Operations.Point;
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Type.Value = MatrixMathNode.MatrixMathNodeType.Point;
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
 			var image_texture_node = new ImageTextureNode(shader);
 
 			if (CyclesTexture.HasTextureImage)
 			{
+#if NOTYET
 				if (CyclesTexture.HasByteImage)
 				{
 					image_texture_node.ByteImagePtr = CyclesTexture.TexByte.Memory();
@@ -1955,14 +1939,15 @@ namespace RhinoCyclesCore.Converters
 				{
 					image_texture_node.FloatImagePtr = CyclesTexture.TexFloat.Memory();
 				}
-				image_texture_node.Filename = CyclesTexture.Name;
 				image_texture_node.Width = (uint)CyclesTexture.TexWidth;
 				image_texture_node.Height = (uint)CyclesTexture.TexHeight;
+#endif
+				image_texture_node.ins.Filename.Value = CyclesTexture.Name;
 			}
 
-			image_texture_node.UseAlpha = false;
-			image_texture_node.AlternateTiles = false;
-			image_texture_node.Interpolation = Interpolate ? InterpolationType.Cubic : InterpolationType.Closest;
+			image_texture_node.ins.AlphaType.Value = ImageTextureNode.ImageTextureNodeAlphaType.Auto;
+			image_texture_node.ins.AlternateTiles.Value = false;
+			image_texture_node.ins.Interpolation.Value = Interpolate ? InterpolationType.INTERPOLATION_CUBIC : InterpolationType.INTERPOLATION_CLOSEST;
 
 			uvw_output.Connect(transform_node.ins.Vector);
 			transform_node.outs.Vector.Connect(image_texture_node.ins.Vector);
@@ -2031,25 +2016,25 @@ namespace RhinoCyclesCore.Converters
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
-			NoiseTextureProceduralNode noise = new NoiseTextureProceduralNode(shader);
-			noise.NoiseType = NoiseTextureProceduralNode.NoiseTypes.PERLIN;
-			noise.OctaveCount = 2;
-			noise.FrequencyMultiplier = 1.0f + Thickness;
-			noise.AmplitudeMultiplier = 1.0f;
-			noise.ClampMin = 0.6f * Threshold;
-			noise.ClampMax = 0.6f;
-			noise.ScaleToClamp = true;
-			noise.Inverse = false;
-			noise.Gain = 0.5f;
+			RhinoNoiseTextureNode noise = new (shader);
+			noise.ins.NoiseType.Value = RhinoNoiseTextureNode.RhinoNoiseTextureNodeNoiseType.Perlin;
+			noise.ins.OctaveCount.Value = 2;
+			noise.ins.FrequencyMultiplier.Value = 1.0f + Thickness;
+			noise.ins.AmplitudeMultiplier.Value = 1.0f;
+			noise.ins.ClampMin.Value = 0.6f * Threshold;
+			noise.ins.ClampMax.Value = 0.6f;
+			noise.ins.ScaleToClamp.Value = true;
+			noise.ins.Inverse.Value = false;
+			noise.ins.Gain.Value = 0.5f;
 
 
 			var noise_transform = new MatrixMathNode(shader);
 
-			noise_transform.Transform = ccl.Transform.Scale(8.0f / Size, 8.0f / Size, 8.0f / Size);
+			noise_transform.ins.Transform.Value = ccl.Transform.Scale(8.0f / Size, 8.0f / Size, 8.0f / Size);
 
-			BlendTextureProceduralNode blend = new BlendTextureProceduralNode(shader);
+			RhinoBlendTextureNode blend = new (shader);
 
-			blend.UseBlendColor = true;
+			blend.ins.UseBlendColor.Value = true;
 			blend.ins.Color1.Value = Color1.ToFloat4();
 			blend.ins.Alpha1.Value = Color1.ToFloat4().w;
 			//pBlendTexture->SetTextureOn1(TextureOn1()); // TODO
@@ -2060,7 +2045,7 @@ namespace RhinoCyclesCore.Converters
 			//pBlendTexture->SetTextureAmount2(TextureAmount2()); // TODO
 
 			var blend_transform = new MatrixMathNode(shader);
-			blend_transform.Transform = new ccl.Transform(MappingTransform);
+			blend_transform.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
 			Child1?.CreateAndConnectProceduralNode(shader, blend_transform.outs.Vector, blend.ins.Color1, blend.ins.Alpha1.ToList(), IsData);
 			Child2?.CreateAndConnectProceduralNode(shader, blend_transform.outs.Vector, blend.ins.Color2, blend.ins.Alpha2.ToList(), IsData);
@@ -2141,25 +2126,25 @@ namespace RhinoCyclesCore.Converters
 			float tx = FlipHorizontal ? 1.0f : 0.0f;
 			float ty = FlipVertical ? 1.0f : 0.0f;
 			var diagonal_transform = ccl.Transform.Identity();
-			diagonal_transform[0][0] = dx;
-			diagonal_transform[1][1] = dy;
+			diagonal_transform[0, 0] = dx;
+			diagonal_transform[1, 1] = dy;
 
-			transform_node.Transform = ccl.Transform.Translate(tx, ty, 0.0f) * diagonal_transform * MappingTransform;
+			transform_node.ins.Transform.Value = ccl.Transform.Translate(tx, ty, 0.0f) * diagonal_transform * MappingTransform;
 
-			var texture_adjustment_node = new TextureAdjustmentTextureProceduralNode(shader);
+			RhinoTextureAdjustmentTextureNode texture_adjustment_node = new (shader);
 
-			texture_adjustment_node.Grayscale = AdjustGrayscale;
-			texture_adjustment_node.Invert = AdjustInvert;
-			texture_adjustment_node.Clamp = AdjustClamp;
-			texture_adjustment_node.ScaleToClamp = AdjustScaleToClamp;
-			texture_adjustment_node.Multiplier = AdjustMultiplier;
-			texture_adjustment_node.ClampMin = AdjustClampMin;
-			texture_adjustment_node.ClampMax = AdjustClampMax;
-			texture_adjustment_node.Gain = AdjustGain;
-			texture_adjustment_node.Gamma = AdjustGamma;
-			texture_adjustment_node.Saturation = AdjustSaturation;
-			texture_adjustment_node.HueShift = AdjustHueShift;
-			texture_adjustment_node.IsHdr = AdjustIsHdr;
+			texture_adjustment_node.ins.Grayscale.Value = AdjustGrayscale;
+			texture_adjustment_node.ins.Invert.Value = AdjustInvert;
+			texture_adjustment_node.ins.Clamp.Value = AdjustClamp;
+			texture_adjustment_node.ins.ScaleToClamp.Value = AdjustScaleToClamp;
+			texture_adjustment_node.ins.Multiplier.Value = AdjustMultiplier;
+			texture_adjustment_node.ins.ClampMin.Value = AdjustClampMin;
+			texture_adjustment_node.ins.ClampMax.Value = AdjustClampMax;
+			texture_adjustment_node.ins.Gain.Value = AdjustGain;
+			texture_adjustment_node.ins.Gamma.Value = AdjustGamma;
+			texture_adjustment_node.ins.Saturation.Value = AdjustSaturation;
+			texture_adjustment_node.ins.HueShift.Value = AdjustHueShift;
+			texture_adjustment_node.ins.IsHdr.Value = AdjustIsHdr;
 
 			uvw_output.Connect(transform_node.ins.Vector);
 
@@ -2197,19 +2182,19 @@ namespace RhinoCyclesCore.Converters
 			JoinWidth = new Vector3d(width_x, width_y, width_z);
 		}
 
-		private static TileTextureProceduralNode.TileTypes StringToTileType(string enum_string)
+		private static RhinoTileTextureNode.RhinoTileTextureNodeType StringToTileType(string enum_string)
 		{
 			switch (enum_string)
 			{
-				case "3d-rectangular": return TileTextureProceduralNode.TileTypes.RECTANGULAR_3D;
-				case "2d-rectangular": return TileTextureProceduralNode.TileTypes.RECTANGULAR_2D;
-				case "2d_hexagonal": return TileTextureProceduralNode.TileTypes.HEXAGONAL_2D;
-				case "2d-triangular": return TileTextureProceduralNode.TileTypes.TRIANGULAR_2D;
-				case "2d_octagonal": return TileTextureProceduralNode.TileTypes.OCTAGONAL_2D;
+				case "3d-rectangular": return RhinoTileTextureNode.RhinoTileTextureNodeType.Rhi3dRectangular;
+				case "2d-rectangular": return RhinoTileTextureNode.RhinoTileTextureNodeType.Rhi2dRectangular;
+				case "2d_hexagonal": return RhinoTileTextureNode.RhinoTileTextureNodeType.Rhi2dHexagonal;
+				case "2d-triangular": return RhinoTileTextureNode.RhinoTileTextureNodeType.Rhi2dTriangular;
+				case "2d_octagonal": return RhinoTileTextureNode.RhinoTileTextureNodeType.Rhi2dOctagonal;
 				default:
 					{
 						System.Diagnostics.Debug.Assert(false);
-						return TileTextureProceduralNode.TileTypes.RECTANGULAR_3D;
+						return RhinoTileTextureNode.RhinoTileTextureNodeType.Rhi3dRectangular;
 					}
 			}
 		}
@@ -2217,17 +2202,15 @@ namespace RhinoCyclesCore.Converters
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
 			var transform_node = new MatrixMathNode(shader);
-			transform_node.Transform = new ccl.Transform(MappingTransform);
+			transform_node.ins.Transform.Value = new ccl.Transform(MappingTransform);
 
-			var tile_node = new TileTextureProceduralNode(shader);
+			RhinoTileTextureNode tile_node = new (shader);
 
-			tile_node.TileType = TileType;
-			tile_node.PhaseX = (float)Phase.X;
-			tile_node.PhaseY = (float)Phase.Y;
-			tile_node.PhaseZ = (float)Phase.Z;
-			tile_node.JoinWidthX = (float)JoinWidth.X;
-			tile_node.JoinWidthY = (float)JoinWidth.Y;
-			tile_node.JoinWidthZ = (float)JoinWidth.Z;
+			float3 phase = new float3((float)Phase.X, (float)Phase.Y, (float)Phase.Z);
+			float3 joinWidth = new float3((float)JoinWidth.X, (float)JoinWidth.Y, (float)JoinWidth.Z);
+			tile_node.ins.Type.Value = RhinoTileTextureNode.RhinoTileTextureNodeType.Rhi2dRectangular;
+			tile_node.ins.Phase.Value = phase;
+			tile_node.ins.JoinWidth.Value = joinWidth;
 
 			uvw_output.Connect(transform_node.ins.Vector);
 
@@ -2241,7 +2224,7 @@ namespace RhinoCyclesCore.Converters
 			return null;
 		}
 
-		public TileTextureProceduralNode.TileTypes TileType { get; set; }
+		public RhinoTileTextureNode.RhinoTileTextureNodeType TileType { get; set; }
 		public Vector3d Phase { get; set; }
 		public Vector3d JoinWidth { get; set; }
 	}
@@ -2262,10 +2245,10 @@ namespace RhinoCyclesCore.Converters
 				RingRadius = (float)ring_radius;
 
 			if (rtf.TryGetValue("fall-off-type", out int falloff_type))
-				FalloffType = (DotsTextureProceduralNode.FalloffTypes)falloff_type;
+				FalloffType = (RhinoDotsTextureNode.RhinoDotsTextureNodeFalloff)falloff_type;
 
 			if (rtf.TryGetValue("composition", out int composition_type))
-				CompositionType = (DotsTextureProceduralNode.CompositionTypes)composition_type;
+				CompositionType = (RhinoDotsTextureNode.RhinoDotsTextureNodeComposition)composition_type;
 		}
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
@@ -2299,8 +2282,8 @@ namespace RhinoCyclesCore.Converters
 		public float SampleAreaSize { get; set; }
 		public bool Rings { get; set; }
 		public float RingRadius { get; set; }
-		public DotsTextureProceduralNode.FalloffTypes FalloffType { get; set; }
-		public DotsTextureProceduralNode.CompositionTypes CompositionType { get; set; }
+		public RhinoDotsTextureNode.RhinoDotsTextureNodeFalloff FalloffType { get; set; }
+		public RhinoDotsTextureNode.RhinoDotsTextureNodeComposition CompositionType { get; set; }
 	}
 
 	public class ShaderConverter
@@ -2424,17 +2407,17 @@ namespace RhinoCyclesCore.Converters
 			var sizeterm= 1.0f - (float)lg.ShadowIntensity;
 			size = sizeterm*sizeterm*sizeterm * 100.0f; // / 100.f;
 
-			var lt = LightType.Point;
+			var lt = LightType.LIGHT_POINT;
 			if (lg.IsDirectionalLight)
 			{
-				lt = LightType.Distant;
+				lt = LightType.LIGHT_DISTANT;
 				strength = (float)(lg.Intensity * RcCore.It.AllSettings.SunLightFactor);
 				angle = Math.Max(sizeterm * sizeterm * sizeterm * 1.5f, 0.009180f);
 				//size = 0.01f;
 			}
 			else if (lg.IsSpotLight)
 			{
-				lt = LightType.Spot;
+				lt = LightType.LIGHT_SPOT;
 				spotangle = lg.SpotAngleRadians * 2;
 				smooth = 1.0 / Math.Max(lg.HotSpot, 0.001f) - 1.0;
 				strength = (float)(lg.Intensity * RcCore.It.AllSettings.SpotLightFactor);
@@ -2453,7 +2436,7 @@ namespace RhinoCyclesCore.Converters
 			}
 			else if (lg.IsRectangularLight)
 			{
-				lt = LightType.Area;
+				lt = LightType.LIGHT_AREA;
 
 				strength = (float)(lg.Intensity * RcCore.It.AllSettings.AreaLightFactor);
 

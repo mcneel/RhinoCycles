@@ -82,7 +82,6 @@ namespace RhinoCyclesCore.Materials
 			diffuse.outs.BSDF.Connect(sh.Output.ins.Surface);
 			outsocket = diffuse.outs.BSDF;
 
-			if (finalize) sh.WriteDataToNodes();
 			return true;
 		}
 		public ClosureSocket GetClosureSocket(ccl.Shader sh)

@@ -28,7 +28,7 @@ namespace RhinoCyclesCore.Materials
 	[CustomRenderContent(IsPrivate = true)]
 	public class XmlMaterial : RenderMaterial, ICyclesMaterial
 	{
-		static private Dictionary<Size, Bitmap> material_icons = new Dictionary<Size, Bitmap>();
+		static private Dictionary<Size, Bitmap> material_icons = new();
 		public override bool Icon(Size size, out Bitmap bitmap)
 		{
 			if (false == material_icons.ContainsKey(size)) {

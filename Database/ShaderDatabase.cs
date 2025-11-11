@@ -197,24 +197,13 @@ namespace RhinoCyclesCore.Database
 			{
 				if (disposing)
 				{
-					/*
-					foreach (var allshader in _allShaders)
-					{
-						allshader.Item2?.Dispose();
-					}
-					_allShaders.Clear();
-					*/
-					_cqObjectsShaderChanges.Clear(); // CyclesObjectShader
+					_cqObjectsShaderChanges.Clear();
 					foreach (var shader in _cqShaders)
 					{
 						shader.Dispose();
 					}
 					ClearShaders();
-					foreach (var cclshader in _rhCclShaders)
-					{
-						cclshader.Value?.Dispose();
-					}
-					_rhCclShaders.Clear(); // uint, CclShader
+					_rhCclShaders.Clear();
 				}
 
 				// TODO: free unmanaged resources (unmanaged objects) and override finalizer

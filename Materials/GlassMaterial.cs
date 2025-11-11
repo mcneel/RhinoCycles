@@ -99,11 +99,11 @@ namespace RhinoCyclesCore.Materials
 			ccl.ShaderNodes.MathMaximum max = new ccl.ShaderNodes.MathMaximum(sh, "max");
 			ccl.ShaderNodes.MixClosureNode mix = new ccl.ShaderNodes.MixClosureNode(sh, "mix");
 
-			glass.ins.Transmission.Value = 1.0f;
+			glass.ins.TransmissionWeight.Value = 1.0f;
 
 			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, glass.ins.BaseColor.ToList(), false, Gamma, false, false);
 			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, transp.ins.Color.ToList(), false, Gamma, false, false);
-			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.TransmissionRoughness.ToList(), false, Gamma, true, false);
+			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.CoatRoughness.ToList(), false, Gamma, true, false);
 			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.IOR.ToList(), false, Gamma, true, false);
 
 			transp.outs.BSDF.Connect(mix.ins.Closure2);
@@ -115,7 +115,6 @@ namespace RhinoCyclesCore.Materials
 
 			outsocket = mix.outs.Closure;
 
-			if (finalize) sh.WriteDataToNodes();
 			return true;
 		}
 		public ClosureSocket GetClosureSocket(ccl.Shader sh)

@@ -30,9 +30,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using CclClippingPlane = ccl.ClippingPlane;
+// NOTYET TODO using CclClippingPlane = ccl.ClippingPlane;
 using CclLight = ccl.Light;
 using CclMesh = ccl.Mesh;
 using CclObject = ccl.Object;
@@ -172,11 +173,12 @@ namespace RhinoCyclesCore.Database
 					var oldShader = _shaderDatabase.GetShaderFromHash(obshad.OldShaderHash);
 					if (newShader != null)
 					{
-						cob.Shader = newShader.Id;
-						newShader.Tag();
+						cob.ins.Shader.Value = newShader.Ptr;
+						newShader.TagUpdate(_renderEngine.Session.Scene);
 					}
-					oldShader?.Tag(false); // tag old shader to be no longer used (on this object)
-					cob.TagUpdate();
+					// NOTYET TODO oldShader?.Tag(false); // tag old shader to be no longer used (on this object)
+					newShader.TagUpdate(_renderEngine.Session.Scene);
+					newShader.TagUsed(_renderEngine.Session.Scene);
 					_objectShaderDatabase.ReplaceShaderRelation(obshad.OldShaderHash, obshad.NewShaderHash, obshad.Id);
 				}
 			}
@@ -194,7 +196,7 @@ namespace RhinoCyclesCore.Database
 			if (LinearWorkflowHasChanged)
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadGammaChanges entry");
-				//_environmentDatabase.CurrentBackgroundShader?.Reset();
+				_environmentDatabase.CurrentBackgroundShader?.Reset();
 
 				foreach (var tup in _shaderDatabase.AllShaders)
 				{
@@ -255,9 +257,9 @@ namespace RhinoCyclesCore.Database
 					var cob = _objectDatabase.FindObjectRelation(cot.Id);
 					if (cob == null) return;
 
-					cob.Transform = cot.Transform;
-					cob.Mesh?.TagRebuild();
-					cob.TagUpdate();
+					cob.ins.Transform.Value = cot.Transform;
+					// NOTYET TODO cob.Mesh?.TagRebuild();
+					// NOTYET TODO cob.TagUpdate();
 				});
 
 				RcCore.It.AddLogStringIfVerbose("\tUploadDynamicObjectTransforms exit");
@@ -281,13 +283,13 @@ namespace RhinoCyclesCore.Database
 					{
 						if (cob == null) continue;
 
-						RcCore.It.AddLogStringIfVerbose($"\t\tDeleting mesh {cob}.{cob.Mesh?.GeometryPointer} ({meshDelete})");
+						RcCore.It.AddLogStringIfVerbose($"\t\tDeleting mesh {cob}.{cob.ins.Geometry.Value} ({meshDelete})");
 						// remove mesh data
-						cob.Mesh?.ClearData();
-						cob.Mesh?.TagRebuild();
+						// NOTYET TODO cob.Mesh?.ClearData();
+						// NOTYET TODO cob.Mesh?.TagRebuild();
 						// hide object containing the mesh
-						cob.Visibility = PathRay.Hidden;
-						cob.TagUpdate();
+						cob.ins.Visibility.Value = 0;
+						// NOTYET TODO cob.TagUpdate();
 					}
 				}
 
@@ -312,11 +314,13 @@ namespace RhinoCyclesCore.Database
 					// creat a new mesh to upload mesh data to
 					if (newme)
 					{
-						me = new CclMesh(_renderEngine.Session, _renderEngine._Shader);
+						me = _renderEngine.Session.Scene.AddMesh();
+						me.SetShader(_renderEngine._Shader);
 					}
 
 					if (newme) _objectDatabase.RecordObjectMeshRelation(cyclesMesh.MeshId, me);
-					_objectDatabase.RecordMeshOcsFrame(me.GeometryPointer, cyclesMesh.OcsFrame);
+					_objectDatabase.RecordMeshOcsFrame(me.Ptr, cyclesMesh.OcsFrame);
+					
 
 					meshChangesList.Add(new Tuple<CyclesMesh, ccl.Mesh>(cyclesMesh, me));
 				}
@@ -329,7 +333,7 @@ namespace RhinoCyclesCore.Database
 					var cyclesMesh = meshChange.Item1;
 					var me = meshChange.Item2;
 
-					me.Resize((uint)cyclesMesh.Verts.Length / 3, (uint)cyclesMesh.Faces.Length / 3);
+					me.ResizeMesh(cyclesMesh.Verts.Length / 3, cyclesMesh.Faces.Length / 3);
 
 					// update status bar of render window.
 					var stat =
@@ -353,18 +357,32 @@ namespace RhinoCyclesCore.Database
 		private bool UploadMeshData(CclMesh me, CyclesMesh cyclesMesh)
 		{
 			// set raw vertex data
+
 			var verts = cyclesMesh.Verts;
-			me.SetVerts(ref verts);
+
+			var float3List =
+						(from index in Enumerable.Range(0, verts.Length / 3)
+						 let x = verts[index * 3]
+						 let y = verts[index * 3 + 1]
+						 let z = verts[index * 3 + 2]
+						 select new float3(x, y, z))
+						.ToList();
+
+			me.ReserveMesh(float3List.Count, cyclesMesh.Faces.Length);
+
+			me.MeshNodeInputs.Vertices.Value = float3List;
 			if (_renderEngine.ShouldBreak) return false;
 			// set the triangles
 			var faces = cyclesMesh.Faces;
-			me.SetVertTris(ref faces, cyclesMesh.VertexNormals != null);
+			List<int> _faces = new(faces);
+			me.MeshNodeInputs.Triangles.Value = _faces;
+			//me.SetVertTris(ref faces, cyclesMesh.VertexNormals != null);
 			if (_renderEngine.ShouldBreak) return false;
 			// set vertex normals
 			if (cyclesMesh.VertexNormals != null)
 			{
 				var vertex_normals = cyclesMesh.VertexNormals;
-				me.SetVertNormals(ref vertex_normals);
+				me.SetVertexNormals(vertex_normals);
 			}
 			if (_renderEngine.ShouldBreak) return false;
 			// set uvs
@@ -374,19 +392,19 @@ namespace RhinoCyclesCore.Database
 				{
 					var (chanidx, uvs) = cyclesMesh.Uvs[idx];
 					string uvmap_name = $"uvmap{chanidx}";
-					me.SetUvs(ref uvs, uvmap_name);
+					me.SetUvs(uvs, uvmap_name);
 					// compute tangent space
-					me.AttrTangentSpace(uvmap_name);
+					// NOTYET TODO me.AttrTangentSpace(uvmap_name);
 				}
 			}
 			// set vertex colors
 			if(cyclesMesh.VertexColors != null)
 			{
 				var vcs = cyclesMesh.VertexColors;
-				me.SetVertexColors(ref vcs);
+				// NOTYET TODO me.SetVertexColors(ref vcs);
 			}
 			// and finally tag for rebuilding
-			me.TagRebuild();
+			me.TagUpdate(_renderEngine.Session.Scene);
 			return true;
 		}
 
@@ -519,6 +537,7 @@ namespace RhinoCyclesCore.Database
 		{
 			if (HasClippingPlaneChanges)
 			{
+#if NOTYET
 				RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneChanges entry");
 				_renderEngine.Session.Scene.ClearClippingPlanes();
 				foreach (var cp in ClippingPlanes)
@@ -528,6 +547,7 @@ namespace RhinoCyclesCore.Database
 				}
 				HasClippingPlaneChanges = false;
 				RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneChanges exit");
+#endif
 			}
 		}
 
@@ -597,13 +617,13 @@ namespace RhinoCyclesCore.Database
 		private void UploadFocalBlur(FocalBlur fb)
 		{
 			var scene = _renderEngine.Session.Scene;
-			scene.Camera.FocalDistance = fb.FocalDistance;
+			scene.Camera.ins.FocalDistance.Value = fb.FocalDistance;
 			var unitscale = (float)LengthUnit.Scale(LengthUnit.Millimeters, ModelUnits);
-			scene.Camera.ApertureSize = fb.FocalAperture < 0.00001f ? 0.0f : (fb.LensLength * unitscale) / fb.FocalAperture;
-			scene.Camera.Blades = Blades;
-			scene.Camera.BladesRotation = (float)RhinoMath.ToRadians(BladesRotation);
-			scene.Camera.ApertureRatio = ApertureRatio;
-			scene.Camera.Update();
+			scene.Camera.ins.ApertureSize.Value = fb.FocalAperture < 0.00001f ? 0.0f : (fb.LensLength * unitscale) / fb.FocalAperture;
+			scene.Camera.ins.Blades.Value = Blades;
+			scene.Camera.ins.BladesRotation.Value = (float)RhinoMath.ToRadians(BladesRotation);
+			scene.Camera.ins.ApertureRatio.Value = ApertureRatio;
+			scene.Camera.TagUpdate(scene);
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Focal blur handled", -1.0f);
 
 		}
@@ -624,22 +644,34 @@ namespace RhinoCyclesCore.Database
 			// Pick smaller of the angles
 			var angle = newSize.Width > newSize.Height ? (float)view.Vertical * 2.0f : (float)view.Horizontal * 2.0f;
 
-			scene.Camera.Size = _modalRenderer ? _renderEngine.FullSize : newSize;
-			scene.Camera.Matrix = view.Transform;
-			scene.Camera.Type = view.Projection;
-			scene.Camera.Fov = angle;
-			scene.Camera.BladesRotation = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
-			scene.Camera.ApertureRatio = ApertureRatio;
-			scene.Camera.Blades = Blades;
+			var sizeToUse = _modalRenderer ? _renderEngine.FullSize : newSize;
+			scene.Camera.ins.FullWidth.Value = sizeToUse.Width;
+			scene.Camera.ins.FullHeight.Value = sizeToUse.Height;
+			scene.Camera.ins.Matrix.Value = view.Transform;
+			scene.Camera.ins.Type.Value = view.Projection;
+			scene.Camera.ins.FOV.Value = angle;
+			scene.Camera.ins.BladesRotation.Value = (float)Rhino.RhinoMath.ToRadians(BladesRotation);
+			scene.Camera.ins.ApertureRatio.Value = ApertureRatio;
+			scene.Camera.ins.Blades.Value = Blades;
 
 			//scene.Camera.NearClip = (float)view.Near;
-			scene.Camera.FarClip = (float)view.Far; // 1.0E+14f; // gp_side_extension;
-			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
-			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
+			scene.Camera.ins.FarClip.Value = (float)view.Far; // 1.0E+14f; // gp_side_extension;
 
-			scene.Camera.SensorHeight = RcCore.It.AllSettings.SensorHeight;
-			scene.Camera.SensorWidth = RcCore.It.AllSettings.SensorWidth;
-			scene.Camera.Update();
+			if (view.Projection == CameraType.CAMERA_ORTHOGRAPHIC || view.TwoPoint)
+			{
+				scene.Camera.SetViewplaneLeft(view.Viewplane.Left);
+				scene.Camera.SetViewplaneRight(view.Viewplane.Right);
+				scene.Camera.SetViewplaneTop(view.Viewplane.Top);
+				scene.Camera.SetViewplaneBottom(view.Viewplane.Bottom);
+			}
+			else if (view.Projection == CameraType.CAMERA_PERSPECTIVE)
+			{
+				scene.Camera.ComputeAutoViewplane();
+			}
+
+			scene.Camera.ins.SensorHeight.Value = RcCore.It.AllSettings.SensorHeight;
+			scene.Camera.ins.SensorWidth.Value = RcCore.It.AllSettings.SensorWidth;
+			scene.Camera.TagUpdate(scene);
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Camera changes handled", -1.0f);
 		}
 
@@ -786,7 +818,7 @@ namespace RhinoCyclesCore.Database
 				Vertical = vertical,
 				Horizontal = horizontal,
 				ViewAspectRatio = viewAspectratio,
-				Projection = parallel ? CameraType.Orthographic : CameraType.Perspective,
+				Projection = parallel ? CameraType.CAMERA_ORTHOGRAPHIC : CameraType.CAMERA_PERSPECTIVE,
 				Viewplane = new ViewPlane((float)frl, (float)frr, (float)frt, (float)frb),
 				TwoPoint = twopoint,
 				Width = w,
@@ -942,7 +974,7 @@ namespace RhinoCyclesCore.Database
 							Rhino.Geometry.Interval dx = new Interval(0, acrossLength);
 							Rhino.Geometry.Interval dy = new Interval(0, upLength);
 							Rhino.Geometry.Interval dz = new Interval(0, 0);
-							texmapping = TextureMapping.CreatePlaneMapping(toPlane, dx, dy, dz);
+							texmapping = Rhino.Render.TextureMapping.CreatePlaneMapping(toPlane, dx, dy, dz);
 						}
 						break;
 					case DecalMapping.Cylindrical:
@@ -952,13 +984,13 @@ namespace RhinoCyclesCore.Database
 							cyl_spherPlane.Origin = l.To;
 							Rhino.Geometry.Circle circle = new Circle(cyl_spherPlane, radius);
 							Cylinder cylinder = new Cylinder(circle, height);
-							texmapping = TextureMapping.CreateCylinderMapping(cylinder, true);
+							texmapping = Rhino.Render.TextureMapping.CreateCylinderMapping(cylinder, true);
 						}
 						break;
 					case DecalMapping.Spherical:
 						{
 							Sphere sphere = new Sphere(cyl_spherPlane, radius);
-							texmapping = TextureMapping.CreateSphereMapping(sphere);
+							texmapping = Rhino.Render.TextureMapping.CreateSphereMapping(sphere);
 						}
 					break;
 					case DecalMapping.UV:
@@ -1015,7 +1047,7 @@ namespace RhinoCyclesCore.Database
 			return decalList;
 		}
 
-		public void HandleMeshTextureCoordinates(Rhino.Geometry.Mesh meshdata, int[] findices, List<Tuple<int, float[]>> cmuvList, int channelIndex)
+		public void HandleMeshTextureCoordinates(Rhino.Geometry.Mesh meshdata, int[] findices, List<Tuple<int, List<ccl.float2>>> cmuvList, int channelIndex)
 		{
 				var tc = meshdata.TextureCoordinates;
 				var rhuv = tc.ToFloatArray();
@@ -1033,7 +1065,9 @@ namespace RhinoCyclesCore.Database
 						cmuv[fioffs] = rhuvit;
 						cmuv[fioffs + 1] = rhuvit1;
 					}
-					cmuvList.Add(new Tuple<int, float[]>(channelIndex, cmuv));
+					Span<float> uvspan = cmuv;
+					Span<float2> uv2span = MemoryMarshal.Cast<float, float2>(uvspan);
+					cmuvList.Add(new Tuple<int, List<float2>>(channelIndex, new(uv2span.ToArray())));
 				}
 		}
 
@@ -1065,9 +1099,17 @@ namespace RhinoCyclesCore.Database
 			}
 
 			var vn = meshdata.Normals;
-			var rhvn = vn.ToFloatArray();
+			var _rhvn = vn.ToFloatArray();
 
-			var cmuvList = new List<Tuple<int, float[]>>();
+			var rhvn =
+						(from index in Enumerable.Range(0, _rhvn.Length / 3)
+						 let x = _rhvn[index * 3]
+						 let y = _rhvn[index * 3 + 1]
+						 let z = _rhvn[index * 3 + 2]
+						 select new float3(x, y, z))
+						.ToList();
+
+			var cmuvList = new List<Tuple<int, List<ccl.float2>>>();
 
 			if (_renderEngine.ShouldBreak) return;
 			// now convert UVs: from vertex indexed array to per face per vertex
@@ -1200,7 +1242,7 @@ namespace RhinoCyclesCore.Database
 				{
 					var delob = new CyclesObject { cob = cob };
 					_objectDatabase.DeleteObject(delob);
-					RcCore.It.AddLogStringIfVerbose($"\tDeleting mesh instance {d} (ptr {cob.ObjectPtr})");
+					RcCore.It.AddLogStringIfVerbose($"\tDeleting mesh instance {d} (ptr {cob.Ptr})");
 				}
 				else
 				{
@@ -1406,7 +1448,8 @@ namespace RhinoCyclesCore.Database
 					_shaderDatabase.RecordRhCclShaderRelation(shader.Id, sh);
 					_shaderDatabase.Add(shader, sh);
 
-					sh.Tag();
+					sh.TagUpdate(_renderEngine.Session.Scene);
+					sh.TagUsed(_renderEngine.Session.Scene);
 				}
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Shaders handled", -1.0f);
 
@@ -1468,7 +1511,7 @@ namespace RhinoCyclesCore.Database
 			var texscale = gp.TextureScale;
 			var tscale = Rhino.Geometry.Transform.Scale(p, texscale.X, texscale.Y, 1.0);
 			tfm *= tscale;
-			var texturemapping = TextureMapping.CreatePlaneMapping(pmap, smext, smext, smext);
+			var texturemapping = Rhino.Render.TextureMapping.CreatePlaneMapping(pmap, smext, smext, smext);
 			if (texturemapping != null)
 			{
 				m.SetTextureCoordinates(texturemapping, tfm, false);
@@ -1556,47 +1599,45 @@ namespace RhinoCyclesCore.Database
 
 				l.Gamma = PreProcessGamma;
 
-				var lgsh = l.Type!=LightType.Background ? _renderEngine.CreateSimpleEmissionShader(l) : _renderEngine.Session.Scene.Background.Shader;
+				var lgsh = l.Type!=LightType.LIGHT_BACKGROUND ? _renderEngine.CreateSimpleEmissionShader(l) : Shader.FromIntPtr(_renderEngine.Session.Scene.Background.ins.Shader.Value);
 
-				if (l.Type != LightType.Background)
+				if (l.Type != LightType.LIGHT_BACKGROUND)
 				{
 					_shaderDatabase.Add(l, lgsh);
 				}
 
 				if (_renderEngine.ShouldBreak) return;
 
-				var light = new CclLight(_renderEngine.Session, _renderEngine.Session.Scene, lgsh)
-				{
-					Type = l.Type,
-					Size = l.Size,
-					Angle = 0.0f,
-					Location = l.Co,
-					Direction = l.Dir,
-					UseMis = l.UseMis,
-					CastShadow = l.CastShadow,
-					Samples = 1,
-					MaxBounces = 8,
-					SizeU = l.SizeU,
-					SizeV = l.SizeV,
-					AxisU = l.AxisU,
-					AxisV = l.AxisV,
-				};
+				var light = _renderEngine.Session.Scene.AddLight();
+				light.SetShader(lgsh);
+				light.ins.Type.Value = l.Type;
+				light.ins.Size.Value = l.Size;
+				light.ins.Angle.Value = 0.0f;
+				// NOTYET TODO - this changed light.ins.Location.Value = l.Co;
+				// NOTYET TODO - this changed light.ins.Direction.Value = l.Dir;
+				light.ins.UseMis.Value = l.UseMis;
+				light.ins.CastShadow.Value = l.CastShadow;
+				light.ins.MaxBounces.Value = 8;
+				light.ins.SizeU.Value = l.SizeU;
+				light.ins.SizeV.Value = l.SizeV;
+				// NOTYET TODO - this changed light.ins.AxisU.Value = l.AxisU;
+				// NOTYET TODO - this changed light.ins.AxisV.Value = l.AxisV;
 
 				switch (l.Type)
 				{
-					case LightType.Spot:
-						light.SpotAngle = l.SpotAngle;
-						light.SpotSmooth = l.SpotSmooth;
+					case LightType.LIGHT_SPOT:
+						light.ins.SpotAngle.Value = l.SpotAngle;
+						light.ins.SpotSmooth.Value = l.SpotSmooth;
 						break;
-					case LightType.Distant:
-						light.Size = 0.0f;
-						light.Angle = l.Angle;
+					case LightType.LIGHT_DISTANT:
+						light.ins.Size.Value = 0.0f;
+						light.ins.Angle.Value = l.Angle;
 						break;
 					default:
 						break;
 				}
 
-				light.TagUpdate();
+				light.TagUpdate(_renderEngine.Session.Scene);
 				_lightDatabase.RecordLightRelation(l.Id, light);
 			}
 
@@ -1604,35 +1645,32 @@ namespace RhinoCyclesCore.Database
 			foreach (var l in _lightDatabase.LightsToUpdate)
 			{
 				var existingL = _lightDatabase.ExistingLight(l.Id);
-				if(l.Type == LightType.Background)
+				if(l.Type == LightType.LIGHT_BACKGROUND)
 				{
-					existingL.Shader = _renderEngine.Session.Scene.Background.Shader;
-				} else
+					existingL.SetShader(Shader.FromIntPtr(_renderEngine.Session.Scene.Background.ins.Shader.Value));
+				}
+				else
 				{
-					TriggerLightShaderChanged(l, existingL.Shader);
+					TriggerLightShaderChanged(l, existingL.GetShader());
 				}
 
-				existingL.Type = l.Type;
-				existingL.Size = l.Size;
-				existingL.Angle = l.Angle;
-				existingL.Location = l.Co;
-				existingL.Direction = l.Dir;
-				existingL.UseMis = l.UseMis;
-				existingL.CastShadow = l.CastShadow;
-				existingL.SpotAngle = l.SpotAngle;
-				existingL.SpotSmooth = l.SpotSmooth;
-				existingL.Samples = 1;
-				existingL.MaxBounces = 8;
-				existingL.SizeU = l.SizeU;
-				existingL.SizeV = l.SizeV;
-				existingL.AxisU = l.AxisU;
-				existingL.AxisV = l.AxisV;
+				existingL.ins.Type.Value = l.Type;
+				existingL.ins.Size.Value = l.Size;
+				existingL.ins.Angle.Value = l.Angle;
+				// NOTYET TODO existingL.Location = l.Co;
+				// NOTYET TODO existingL.Direction = l.Dir;
+				existingL.ins.UseMis.Value = l.UseMis;
+				existingL.ins.CastShadow.Value = l.CastShadow;
+				existingL.ins.SpotAngle.Value = l.SpotAngle;
+				existingL.ins.SpotSmooth.Value = l.SpotSmooth;
+				// NOTYET TODO existingL.Samples = 1;
+				existingL.ins.MaxBounces.Value = 8;
+				existingL.ins.SizeU.Value = l.SizeU;
+				existingL.ins.SizeV.Value = l.SizeV;
+				// NOTYET TODO existingL.AxisU = l.AxisU;
+				// NOTYET TODO existingL.AxisV = l.AxisV;
 
-				if(l.Type == LightType.Distant) {
-						existingL.Samples = (uint)(isGpShadowsOnly ? 1 : 1024);
-						break;
-				}
-				existingL.TagUpdate();
+				existingL.TagUpdate(_renderEngine.Session.Scene);
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Lights handled", -1.0f);
 			RcCore.It.AddLogStringIfVerbose("\tUploadLightChanges exit");
@@ -1872,7 +1910,7 @@ namespace RhinoCyclesCore.Database
 			if (ob == null) return;
 			if(ob.obid == GroundPlaneMeshInstanceId)
 			{
-				CSycles.film_set_use_approximate_shadow_catcher(_renderEngine.Session.Id, ob.IsShadowCatcher);
+				_renderEngine.Session.Scene.Film.ins.UseApproximateShadowCatcher.Value = ob.IsShadowCatcher;
 			}
 		}
 
@@ -1891,13 +1929,13 @@ namespace RhinoCyclesCore.Database
 				HandleGroundPlaneShadowcatcherState(ob);
 				if (ob.cob != null)
 				{
-					RcCore.It.AddLogStringIfVerbose($"\t\tUploadObjectChanges: deleting object {ob.obid} {ob.cob.ObjectPtr}");
+					RcCore.It.AddLogStringIfVerbose($"\t\tUploadObjectChanges: deleting object {ob.obid} {ob.cob.Ptr}");
 					var cob = ob.cob;
 					// deleting we do (for now?) by marking object as hidden.
 					// we *don't* clear mesh data here, since that very mesh
 					// may be used elsewhere.
-					cob.Visibility = PathRay.Hidden;
-					cob.TagUpdate();
+					cob.ins.Visibility.Value = 0; // PathRay.Hidden;
+					cob.TagUpdate(_renderEngine.Session.Scene);
 				}
 			}
 
@@ -1919,9 +1957,9 @@ namespace RhinoCyclesCore.Database
 				if (mesh == null) continue;
 
 
-				ccl.Transform t = _objectDatabase.MeshOcsFrames.ContainsKey(mesh.GeometryPointer) ? _objectDatabase.MeshOcsFrames[mesh.GeometryPointer] : ccl.Transform.Identity();
+				ccl.Transform t = _objectDatabase.MeshOcsFrames.ContainsKey(mesh.Ptr) ? _objectDatabase.MeshOcsFrames[mesh.Ptr] : ccl.Transform.Identity();
 
-				if(false && _gObTransform != Rhino.Geometry.Transform.Identity) {
+				if (false && _gObTransform != Rhino.Geometry.Transform.Identity) {
 					var rt = t.ToRhinoTransform();
 					if(rt.TryGetInverse(out Rhino.Geometry.Transform rtinv))
 					{
@@ -1941,34 +1979,39 @@ namespace RhinoCyclesCore.Database
 				// new object, so lets create it and record necessary stuff about it
 				if (newcob)
 				{
-					cob = new CclObject(_renderEngine.Session);
+					cob = _renderEngine.Session.Scene.AddObject();
+					cob.ins.AssetName.Value = ob.obid.ToString();
+					RcCore.It.AddLogStringIfVerbose($"\t\tSet object asset name to {cob.ins.AssetName.Value}");
 					_objectDatabase.RecordObjectRelation(ob.obid, cob);
 					_objectDatabase.RecordObjectIdMeshIdRelation(ob.obid, ob.meshid);
 				}
 
-				RcCore.It.AddLogStringIfVerbose($"\t\tadding/modifying object {ob.obid} {ob.meshid} (ptr: {cob.ObjectPtr})");
+				RcCore.It.AddLogStringIfVerbose($"\t\tadding/modifying object {ob.obid} {ob.meshid} (ptr: {cob.Ptr})");
 
 				// set mesh reference and other stuff
-				cob.Mesh = mesh;
-				cob.RandomId = ob.obid;
-				cob.PassId = ob.passobid;
-				cob.Transform = ob.Transform;
-				cob.OcsFrame = t;
-				cob.IsShadowCatcher = ob.IsShadowCatcher;
+
+				cob.ins.Geometry.Value = mesh.Ptr;
+				cob.ins.RandomID.Value = ob.obid;
+				cob.ins.PassID.Value = ob.passobid;
+				cob.ins.Transform.Value = ob.Transform;
+				cob.ins.OCSFrame.Value = t;
+				cob.ins.ShadowCatcher.Value = ob.IsShadowCatcher;
+
 				//cob.IsBlockInstance = true;
-				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
-				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;
+				var norefl = PathRayFlag.PATH_RAY_ALL_VISIBILITY & ~PathRayFlag.PATH_RAY_REFLECT;
+				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl : PathRayFlag.PATH_RAY_ALL_VISIBILITY): (PathRayFlag)0;
 				if (ob.CastShadow == false)
 				{
-					vis &= ~PathRay.Shadow;
+					vis &= ~PathRayFlag.PATH_RAY_SHADOW;
 				}
-				cob.MeshLightNoCastShadow = ob.CastNoShadow;
-				cob.Visibility = vis;
+
+				cob.ins.MeshLightNoCastShadow.Value = ob.CastNoShadow;
+				cob.ins.Visibility.Value = (uint)vis;
 
 				Shader shader = _shaderDatabase.GetShaderFromHash(ob.matid);
-				cob.Shader = shader.Id;
+				cob.ins.Shader.Value = shader.Ptr;
 				//cob.Cutout = false;
-				cob.TagUpdate();
+				cob.TagUpdate(_renderEngine.Session.Scene);
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Objects handled", -1.0f);
 			RcCore.It.AddLogStringIfVerbose("\tUploadObjectChanges exit");
@@ -2064,7 +2107,7 @@ namespace RhinoCyclesCore.Database
 				{
 					mre.MaxSamples = RealtimePreviewPasses;
 				}
-				_renderEngine.Session.Scene.Background.Transparent = TransparentBackground;
+				_renderEngine.Session.Scene.Background.ins.Transparent.Value = TransparentBackground;
 				RcCore.It.AddLogStringIfVerbose("\tUploadDataDisplayPipelineAttributesChanges exit");
 			}
 			return true;

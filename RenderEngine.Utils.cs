@@ -33,39 +33,45 @@ namespace RhinoCyclesCore
 			switch(channel) {
 				case StandardChannels.RGB:
 				case StandardChannels.RGBA:
-					return PassType.Combined;
+					return PassType.PASS_COMBINED;
 				case StandardChannels.DistanceFromCamera:
-					return PassType.Depth;
+					return PassType.PASS_DEPTH;
 				case StandardChannels.NormalXYZ:
-					return PassType.Normal;
+					return PassType.PASS_NORMAL;
 				case StandardChannels.AlbedoRGB:
-					return PassType.DiffuseColor;
+					return PassType.PASS_DIFFUSE_COLOR;
 				case StandardChannels.MaterialIds:
-					return PassType.MaterialId;
+					return PassType.PASS_MATERIAL_ID;
 				case StandardChannels.ObjectIds:
-					return PassType.ObjectId;
+					return PassType.PASS_OBJECT_ID;
 				default:
-					return PassType.Combined;
+					return PassType.PASS_COMBINED;
 			}
 		}
 
+
 		public static StandardChannels StandardChannelForPassType(PassType pass) {
 			switch(pass) {
-				case PassType.Combined:
+				case PassType.PASS_COMBINED:
 					return StandardChannels.RGBA;
-				case PassType.Depth:
+				case PassType.PASS_DEPTH:
 					return StandardChannels.DistanceFromCamera;
-				case PassType.Normal:
+				case PassType.PASS_NORMAL:
 					return StandardChannels.NormalXYZ;
-				case PassType.DiffuseColor:
+				case PassType.PASS_DIFFUSE_COLOR:
 					return StandardChannels.AlbedoRGB;
-				case PassType.MaterialId:
+				case PassType.PASS_MATERIAL_ID:
 					return StandardChannels.MaterialIds;
-				case PassType.ObjectId:
+				case PassType.PASS_OBJECT_ID:
 					return StandardChannels.ObjectIds;
 				default:
 					return StandardChannels.RGBA;
 			}
+		}
+
+		public static string NameForPassType(PassType pass)
+		{
+			return pass.ToString().Replace("PASS_", "").ToLowerInvariant();
 		}
 
 
@@ -108,89 +114,44 @@ namespace RhinoCyclesCore
 		/// <param name="render_device">Render device this scene is created for</param>
 		/// <param name="cycles_engine">Engine instance to create for</param>
 		/// <returns></returns>
-		protected static /*Session*/ void InitializeSceneSettings(Session session, Device render_device,
+		protected static void InitializeSceneSettings(Session session, Device render_device,
 			RenderEngine cycles_engine, IAllSettings engineSettings)
 		{
-#if LEGACY
-			#region set up scene parameters
-			BvhLayout bvhLayout = BvhLayout.Default;
-			if(render_device.IsOptix) {
-				bvhLayout = BvhLayout.OptiX;
-			}
-			else if (render_device.IsCpu && HostUtils.RunningOnOSX) {
-				bvhLayout = BvhLayout.Bvh2;
-			}
-			var scene_params = new SceneParameters(client, ShadingSystem.SVM, BvhType.Static, false, bvhLayout, false);
-			#endregion
+			session.Scene.Film.ins.FilterType.Value = Film.FilmFilter.Gaussian;
+			session.Scene.Film.ins.FilterWidth.Value = 1.5f;
+			session.Scene.Film.ins.Exposure.Value = 1.0f;
 
-			#region create scene
-			var scene = new Scene(client, scene_params, session)
-			{
-			};
-			#endregion
-
-
-
-			#region background shader
-
-			// we add here a simple background shader. This will be repopulated with
-			// other nodes whenever background changes are detected.
-			var background_shader = new Shader(client, Shader.ShaderType.World)
-			{
-				Name = "Rhino Background"
-			};
-
-			var bgnode = new BackgroundNode("orig bg");
-			bgnode.ins.Color.Value = new float4(1.0f);
-			bgnode.ins.Strength.Value = 1.0f;
-
-			bgnode.outs.Background.Connect(background_shader.Output.ins.Surface);
-			background_shader.FinalizeGraph();
-
-			scene.AddShader(background_shader);
-
-			scene.Background.Shader = background_shader;
-			scene.Background.AoDistance = 0.0f;
-			scene.Background.AoFactor = 0.0f;
-			scene.Background.Visibility = PathRay.AllVisibility;
-			scene.Background.Transparent = false;
-
-			#endregion
-
-			session.Scene = scene;
-#endif
-			session.Scene.Film.SetFilter(FilterType.Gaussian, 1.5f);
-			session.Scene.Film.Exposure = 1.0f;
 			session.Scene.Film.Update();
 			#region integrator settings
-			session.Scene.Integrator.MaxBounce = engineSettings.MaxBounce;
-			session.Scene.Integrator.TransparentMaxBounce = engineSettings.TransparentMaxBounce;
-			session.Scene.Integrator.MaxDiffuseBounce = engineSettings.MaxDiffuseBounce;
-			session.Scene.Integrator.MaxGlossyBounce = engineSettings.MaxGlossyBounce;
-			session.Scene.Integrator.MaxTransmissionBounce = engineSettings.MaxTransmissionBounce;
-			session.Scene.Integrator.MaxVolumeBounce = engineSettings.MaxVolumeBounce;
-			session.Scene.Integrator.NoCaustics = engineSettings.NoCaustics;
-			session.Scene.Integrator.CausticsReflective = engineSettings.CausticsReflective;
-			session.Scene.Integrator.CausticsRefractive = engineSettings.CausticsRefractive;
-			session.Scene.Integrator.AoBounces = engineSettings.AoBounces;
-			session.Scene.Integrator.AoFactor = engineSettings.AoFactor;
-			session.Scene.Integrator.AoDistance = engineSettings.AoDistance;
-			session.Scene.Integrator.AoAdditiveFactor = engineSettings.AoAdditiveFactor;
-			session.Scene.Integrator.VolumeSamples = engineSettings.VolumeSamples;
-			session.Scene.Integrator.AaSamples = engineSettings.AaSamples;
-			session.Scene.Integrator.FilterGlossy = engineSettings.FilterGlossy;
-			session.Scene.Integrator.UseDirectLight = engineSettings.UseDirectLight;
-			session.Scene.Integrator.UseIndirectLight = engineSettings.UseIndirectLight;
-			session.Scene.Integrator.SampleClampDirect = engineSettings.SampleClampDirect;
-			session.Scene.Integrator.SampleClampIndirect = engineSettings.SampleClampIndirect;
-			session.Scene.Integrator.LightSamplingThreshold =  engineSettings.LightSamplingThreshold;
-			session.Scene.Integrator.SamplingPattern = SamplingPattern.Sobol;
-			session.Scene.Integrator.Seed = engineSettings.Seed;
+			session.Scene.Integrator.ins.MaxBounce.Value = engineSettings.MaxBounce;
+			session.Scene.Integrator.ins.TransparentMaxBounce.Value = engineSettings.TransparentMaxBounce;
+			session.Scene.Integrator.ins.MaxDiffuseBounce.Value = engineSettings.MaxDiffuseBounce;
+			session.Scene.Integrator.ins.MaxGlossyBounce.Value = engineSettings.MaxGlossyBounce;
+			session.Scene.Integrator.ins.MaxTransmissionBounce.Value = engineSettings.MaxTransmissionBounce;
+			session.Scene.Integrator.ins.MaxVolumeBounce.Value = engineSettings.MaxVolumeBounce;
+			// TODO no caustics? session.Scene.Integrator.ins.NoCaustics = engineSettings.NoCaustics;
+			session.Scene.Integrator.ins.ReflectiveCaustics.Value = engineSettings.CausticsReflective;
+			session.Scene.Integrator.ins.RefractiveCaustics.Value = engineSettings.CausticsRefractive;
+			session.Scene.Integrator.ins.AOBounces.Value = engineSettings.AoBounces;
+			session.Scene.Integrator.ins.AOFactor.Value = engineSettings.AoFactor;
+			session.Scene.Integrator.ins.AODistance.Value = engineSettings.AoDistance;
+			session.Scene.Integrator.ins.AOAdditiveFactor.Value = engineSettings.AoAdditiveFactor;
+			// TODO Volume samples? session.Scene.Integrator.ins.Volu = engineSettings.VolumeSamples;
+			session.Scene.Integrator.ins.AASamples.Value = engineSettings.AaSamples;
+			session.Scene.Integrator.ins.FilterGlossy.Value = engineSettings.FilterGlossy;
+			session.Scene.Integrator.ins.UseDirectLight.Value = engineSettings.UseDirectLight;
+			session.Scene.Integrator.ins.UseIndirectLight.Value= engineSettings.UseIndirectLight;
+			session.Scene.Integrator.ins.SampleClampDirect.Value = engineSettings.SampleClampDirect;
+			session.Scene.Integrator.ins.SampleClampIndirect.Value = engineSettings.SampleClampIndirect;
+			session.Scene.Integrator.ins.LightSamplingThreshold.Value =  engineSettings.LightSamplingThreshold;
+			session.Scene.Integrator.ins.SamplingPattern.Value = Integrator.IntegratorSamplingPattern.SobolBurley;
+			session.Scene.Integrator.ins.Seed.Value = engineSettings.Seed;
 			#endregion
 		}
 
 		static public float4 CreateFloat4(double x, double y, double z) { return new float4((float)x, (float)y, (float)z, 0.0f); }
 		static public float4 CreateFloat4(double x, double y, double z, double w) { return new float4((float)x, (float)y, (float)z, (float)w); }
+		static public float3 CreateFloat3(double x, double y, double z) { return new float3((float)x, (float)y, (float)z); }
 		static public float4 CreateFloat4(byte x, byte y, byte z, byte w) { return new float4(x / 255.0f, y / 255.0f, z / 255.0f, w / 255.0f); }
 		static public float4 CreateFloat4(Color color) { return CreateFloat4(color.R, color.G, color.B, color.A); }
 
@@ -262,27 +223,30 @@ namespace RhinoCyclesCore
 
 			Guid g = Guid.NewGuid();
 
-			texture_coordinates.UseTransform = false;
+			texture_coordinates.ins.UseTransform.Value = false;
 
-			float4 t = texture.Transform.x;
-			image_node.Translation = t;
-			image_node.Translation.z = 0;
-			image_node.Translation.w = 1;
-			image_node.Scale.x = 1.0f / texture.Transform.y.x;
-			image_node.Scale.y = 1.0f / texture.Transform.y.y;
-			image_node.Rotation.z = -1.0f * DegToRad(texture.Transform.z.z);
+			float3 t = texture.Transform.x;
+			t.z = 0.0f;
+			image_node.SetTexMappingTranslation(t);
+			float3 s = texture.Transform.y;
+			s.x = 1.0f / texture.Transform.y.x;
+			s.y = 1.0f / texture.Transform.y.y;
+			image_node.SetTexMappingScale(s);
+			float3 rot = texture.Transform.z;
+			rot.z = -1.0f * DegToRad(texture.Transform.z.z);
+			image_node.SetTexMappingRotation(rot);
 
-			image_node.Projection = TextureNode.TextureProjection.Flat;
-			image_node.Interpolation = InterpolationType.Cubic;
+			image_node.ins.Projection.Value = ImageTextureNode.ImageTextureNodeProjection.Flat;
+			image_node.ins.Interpolation.Value = ImageTextureNode.ImageTextureNodeInterpolation.Cubic;
 
 			if (texture.ProjectionMode == TextureProjectionMode.WcsBox)
 			{
-				texture_coordinates.UseTransform = true;
+				texture_coordinates.ins.UseTransform.Value = true;
 				texture_coordinates.outs.WcsBox.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.Wcs)
 			{
-				texture_coordinates.UseTransform = true;
+				texture_coordinates.ins.UseTransform.Value = true;
 				texture_coordinates.outs.Object.Connect(image_node.ins.Vector);
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.Screen)
@@ -295,7 +259,7 @@ namespace RhinoCyclesCore
 			}
 			else if (texture.ProjectionMode == TextureProjectionMode.EnvironmentMap)
 			{
-				texture_coordinates.UseTransform = false;
+				texture_coordinates.ins.UseTransform.Value = false;
 				switch (texture.EnvProjectionMode)
 				{
 					case TextureEnvironmentMappingMode.Spherical:
@@ -320,7 +284,7 @@ namespace RhinoCyclesCore
 						texture_coordinates.outs.EnvCubemapHorizontalCross.Connect(image_node.ins.Vector);
 						break;
 					case TextureEnvironmentMappingMode.Hemispherical:
-						texture_coordinates.outs.EnvHemispherical.Connect(image_node.ins.Vector);
+						texture_coordinates.outs.EnvHemi.Connect(image_node.ins.Vector);
 						break;
 					default:
 						texture_coordinates.outs.EnvEmap.Connect(image_node.ins.Vector);
@@ -370,22 +334,20 @@ namespace RhinoCyclesCore
 					case TextureEnvironmentMappingMode.HorizontalCrossCube:
 						return texture_coordinates.outs.EnvCubemapHorizontalCross;
 					case TextureEnvironmentMappingMode.Hemispherical:
-						return texture_coordinates.outs.EnvHemispherical;
+						return texture_coordinates.outs.EnvHemi;
 					default:
 						{
-								var separate_envmap_texco = new SeparateXyzNode(sh, "envmap texco separate vector");
+								var separate_envmap_texco = new SeparateXYZNode(sh, "envmap texco separate vector");
 
 								var flip_sign_envmap_texco_y = new MathMultiply(sh, "flip sign envmap texco y");
 								flip_sign_envmap_texco_y.ins.Value2.Value = -1.0f;
-								flip_sign_envmap_texco_y.Operation = MathNode.Operations.Multiply;
-								flip_sign_envmap_texco_y.UseClamp = false;
+								flip_sign_envmap_texco_y.ins.UseClamp.Value = false;
 
 								var flip_sign_envmap_texco_o = new MathMultiply(sh, "flip sign envmap texco o");
 								flip_sign_envmap_texco_o.ins.Value2.Value = -1.0f;
-								flip_sign_envmap_texco_o.Operation = MathNode.Operations.Multiply;
-								flip_sign_envmap_texco_o.UseClamp = false;
+								flip_sign_envmap_texco_o.ins.UseClamp.Value = false;
 
-								var recombine_envmap_texco = new CombineXyzNode(sh, "recombine envmap texco");
+								var recombine_envmap_texco = new CombineXYZNode(sh, "recombine envmap texco");
 
 								separate_envmap_texco.outs.X.Connect(flip_sign_envmap_texco_o.ins.Value1);
 								separate_envmap_texco.outs.Y.Connect(flip_sign_envmap_texco_y.ins.Value1);

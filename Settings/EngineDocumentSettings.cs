@@ -34,7 +34,7 @@ namespace RhinoCyclesCore.Settings
 			mDict = dictionary;
 		}
 #region Document settings
-		public IntegratorMethod IntegratorMethod
+		public Integrator.IntegratorSamplingPattern IntegratorMethod
 		{
 			get => RcCore.It.AllSettings.IntegratorMethod;
 			set => throw new InvalidOperationException();

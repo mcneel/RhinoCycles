@@ -42,6 +42,7 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
+#if NOTYET
 			(PlugIn as Plugin)?.InitialiseCSycles();
 			var numDevices = Device.Count;
 			var endS = numDevices != 1 ? "s" : "";
@@ -90,6 +91,7 @@ namespace RhinoCycles.Commands
 				RcCore.It.AllSettings.SelectedDeviceStr = idxstr;
 				return Result.Success;
 			}
+			#endif
 
 			return Result.Nothing;
 		}

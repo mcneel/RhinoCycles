@@ -282,7 +282,7 @@ namespace RhinoCyclesCore
 			if (t == typeof(float))
 			{
 				ValueNode vn = new ValueNode(sh, $"input_value_for_{slot.Name}_");
-				vn.Value = (float)(object)slot.Value;
+				vn.ins.Value.Value = (float)(object)slot.Value;
 				if (invert)
 				{
 					MathSubtract invval = new MathSubtract(sh, $"invert_value_for_{slot.Name}_");
@@ -298,7 +298,7 @@ namespace RhinoCyclesCore
 			else if (t == typeof(Color4f))
 			{
 				ColorNode cn = new ColorNode(sh, $"input_color_for_{slot.Name}_");
-				cn.Value = ((Color4f)(object)slot.Value).ToFloat4();
+				cn.ins.Value.Value = ((Color4f)(object)slot.Value).ToFloat3();
 				if (invert)
 				{
 					InvertNode invcol = new InvertNode(sh, $"invert_input_color_for_{slot.Name}_");
@@ -340,7 +340,7 @@ namespace RhinoCyclesCore
 
 				alphaOut = alpha_node.outs.Value;
 
-				texco.UvMap = teximg.GetUvMapForChannel();
+				texco.Uvmap = teximg.GetUvMapForChannel();
 
 				valueSocket?.Connect(mixerNode.ins.Color1);
 
@@ -372,12 +372,9 @@ namespace RhinoCyclesCore
 
 				if (normalMap)
 				{
-					var normalmapnode = new NormalMapNode(sh, $"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}")
-					{
-						Attribute = teximg.GetUvMapForChannel(),
-						// ideally we calculate the tangents and switch to Tangent space here.
-						SpaceType = NormalMapNode.Space.Tangent
-					};
+					var normalmapnode = new NormalMapNode(sh, $"Normal map node for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+					normalmapnode.ins.Attribute.Value = teximg.GetUvMapForChannel();
+					normalmapnode.ins.Space.Value = NormalMapNode.NormalMapNodeSpace.Tangent;
 					mixerNode.outs.Color.Connect(normalmapnode.ins.Color);
 					normalmapnode.ins.Strength.Value = amount * RcCore.It.AllSettings.NormalStrengthFactor;
 					foreach(var sock in socketsToConnectTo) {
@@ -398,7 +395,7 @@ namespace RhinoCyclesCore
 					{
 						use_outsocket = mixerNode.outs.Color;
 						if(toBw) {
-							var tobwnode = new RgbToBwNode(sh, $"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
+							var tobwnode = new RGBToBWNode(sh, $"convert imtexnode to bw for {valueSocket?.Parent.VariableName ?? "unknown input"}");
 							use_outsocket.Connect(tobwnode.ins.Color);
 							use_outsocket = tobwnode.outs.Val;
 						}
@@ -413,15 +410,15 @@ namespace RhinoCyclesCore
 							use_outsocket.Connect(sock);
 						}
 					} else { // multiply the output of mixerNode.outs.Color with amount.
-						SeparateRgbNode separateRgbNode = new SeparateRgbNode(sh, $"separating the color for multiplication {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						SeparateRGBNode separateRgbNode = new SeparateRGBNode(sh, $"separating the color for multiplication {valueSocket?.Parent.VariableName ?? "unknown input"}");
 						MathMultiply multiplyR = new MathMultiply(sh, $"multiplier for R {valueSocket?.Parent.VariableName ?? "unknown input"}");
 						MathMultiply multiplyG = new MathMultiply(sh, $"multiplier for G {valueSocket?.Parent.VariableName ?? "unknown input"}");
 						MathMultiply multiplyB = new MathMultiply(sh, $"multiplier for B {valueSocket?.Parent.VariableName ?? "unknown input"}");
-						CombineRgbNode combineRgbNode = new CombineRgbNode(sh, $"combining the new color values {valueSocket?.Parent.VariableName ?? "unknown input"}");
+						CombineRGBNode combineRgbNode = new CombineRGBNode(sh, $"combining the new color values {valueSocket?.Parent.VariableName ?? "unknown input"}");
 
-						multiplyR.UseClamp = false;
-						multiplyG.UseClamp = false;
-						multiplyB.UseClamp = false;
+						multiplyR.ins.UseClamp.Value = false;
+						multiplyG.ins.UseClamp.Value = false;
+						multiplyB.ins.UseClamp.Value = false;
 
 						multiplyR.ins.Value1.Value = amount;
 						multiplyG.ins.Value1.Value = amount;
@@ -458,7 +455,7 @@ namespace RhinoCyclesCore
 			{
 				if(!hasDecals && valueSocket.XmlName.Equals("color"))
 				{
-					GammaNode gammaNode = new GammaNode(sh, "gamma node for color inpunputt");
+					GammaNode gammaNode = new GammaNode(sh, "gamma node for color input");
 					gammaNode.ins.Gamma.Value = gamma;
 					valueSocket.Connect(gammaNode.ins.Color);
 					valueSocket = gammaNode.outs.Color;
@@ -481,15 +478,16 @@ namespace RhinoCyclesCore
 		public static MathMultiply ApplyColorMaskGraph(ImageTextureNode image_texture_node, CyclesTextureImage cyclesTexture)
 		{
 			Shader shader = image_texture_node.Shader;
-			var sep_img_col = new SeparateRgbNode(shader, "separate image color");
-			var sep_mask_col = new SeparateRgbNode(shader, "separate mask color");
+			var sep_img_col = new SeparateRGBNode(shader, "separate image color");
+			var sep_mask_col = new SeparateRGBNode(shader, "separate mask color");
 
 			MathSubtract sub_r = new(shader, "subtract r channels");
 			MathSubtract sub_g = new(shader, "subtract g channels");
 			MathSubtract sub_b = new(shader, "subtract b channels");
-			sub_r.UseClamp = false;
-			sub_g.UseClamp = false;
-			sub_b.UseClamp = false;
+
+			sub_r.ins.UseClamp.Value = false;
+			sub_g.ins.UseClamp.Value = false;
+			sub_b.ins.UseClamp.Value = false;
 
 			MathAbsolute abs_r = new(shader, "abs(r)");
 			MathAbsolute abs_g = new(shader, "abs(g)");
@@ -503,11 +501,11 @@ namespace RhinoCyclesCore
 
 			MathAdd add_abs_rg = new (shader, "add r and g abs");
 			MathAdd add_abs_rg_b = new (shader, "add rg b abs");
-			add_abs_rg.UseClamp = false;
-			add_abs_rg_b.UseClamp = false;
+			add_abs_rg.ins.UseClamp.Value = false;
+			add_abs_rg_b.ins.UseClamp.Value = false;
 
 			MathMultiply adjust_img_alpha = new (shader, "adjust_img_alpha");
-			adjust_img_alpha.UseClamp = false;
+			adjust_img_alpha.ins.UseClamp.Value = false;
 
 
 			image_texture_node.outs.Color.Connect(sep_img_col.ins.Image);
@@ -568,7 +566,7 @@ namespace RhinoCyclesCore
 
 		public static bool GpusDisabled => File.Exists(_DisableGpusFile);
 
-		public static bool HasGpus => Device.FirstGpu.Type != DeviceType.Cpu;
+		public static bool HasGpus => Device.FirstGpu.Type != DeviceType.DEVICE_CPU;
 
 		public static void EnableGpus()
 		{
