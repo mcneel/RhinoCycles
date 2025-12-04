@@ -150,7 +150,8 @@ namespace RhinoCycles
 					{
 						try
 						{
-							CSycles.initialise(DeviceTypeMask.ALL);
+							// Initialize everything except OneAPI for now
+							CSycles.initialise(DeviceTypeMask.CPU | DeviceTypeMask.CUDA | DeviceTypeMask.OPTIX | DeviceTypeMask.HIP | DeviceTypeMask.METAL);
 						}
 						catch (Exception)
 						{
