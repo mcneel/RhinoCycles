@@ -109,7 +109,8 @@ namespace RhinoCyclesKernelCompiler
 				(IntPtr ccsessId, SessionParams sessionParameters, SceneParams sceneParameters, BufferParams bufferParams) = Session.PrepareForSession();
 				sessionParameters.Experimental = false;
 				sessionParameters.Samples = 1;
-				sessionParameters.TileSize = 1;
+				sessionParameters.TileSize = 10;
+				sessionParameters.UseAutoTile = false;
 				sessionParameters.Threads = 0;
 				sessionParameters.Shadingsystem = ShadingSystem.SHADINGSYSTEM_SVM;
 				sessionParameters.Background = false;
@@ -317,6 +318,7 @@ namespace RhinoCyclesKernelCompiler
 			Console.WriteLine("Setup tables for Cycles");
 			SetupTables();
 			Console.WriteLine("Cycles initialized");
+			Console.Out.Flush();
 
 			var gpuTasks = ReadGpuTaskData(compileTaskFile, gpuDataPath);
 
