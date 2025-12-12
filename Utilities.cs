@@ -323,6 +323,7 @@ namespace RhinoCyclesCore
 			if(IsOn && null != teximg && teximg.HasProcedural)
 			{
 				var texco = new RhinoTextureCoordinateNode(sh, $"texco for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
+				texco.Uvmap = teximg.GetUvMapForChannel();
 				var mixerNode = new MixNode(sh, $"rgb mix node for imtexnode and {valueSocket?.Parent.VariableName ?? "unknown input"}");
 
 				mixerNode.ins.Fac.Value = Math.Min(1.0f, Math.Max(0.0f, amount));
@@ -337,10 +338,7 @@ namespace RhinoCyclesCore
 				FloatSocket alpha_input_node = alpha_node.ins.Value2;
 				GammaNode gammaNode = null;
 
-
 				alphaOut = alpha_node.outs.Value;
-
-				texco.Uvmap = teximg.GetUvMapForChannel();
 
 				valueSocket?.Connect(mixerNode.ins.Color1);
 

@@ -1636,7 +1636,8 @@ namespace RhinoCyclesCore.Database
 					default:
 						break;
 				}
-
+				lgsh.TagUpdate(_renderEngine.Session.Scene);
+				lgsh.TagUsed(_renderEngine.Session.Scene);
 				light.TagUpdate(_renderEngine.Session.Scene);
 				_lightDatabase.RecordLightRelation(l.Id, light);
 			}
