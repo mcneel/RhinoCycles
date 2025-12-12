@@ -152,6 +152,11 @@ namespace RhinoCyclesCore.Database
 			return _rhCclShaders.ContainsKey(shaderId);
 		}
 
+		public bool HasQueuedShader(uint shaderId)
+		{
+			return _cqShaders.Any(s => s.Id == shaderId);
+		}
+
 		/// <summary>
 		/// Get Shader for hash, or null if not found
 		/// </summary>
