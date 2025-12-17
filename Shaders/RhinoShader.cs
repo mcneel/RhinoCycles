@@ -42,7 +42,7 @@ namespace RhinoCyclesCore.Shaders
 				m_shader.ShaderNodeInputs.HeterogeneousVolume.Value = false;
 
 				/*{
-					// NOTYET TODO UseMis = true,
+					// TODO UseMis = true,
 					UseTransparentShadow = true,
 					HeterogeneousVolume = false,
 					Name = name,

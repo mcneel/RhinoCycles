@@ -150,7 +150,7 @@ namespace RhinoCyclesCore.Shaders
 				bg_env_texture255.ins.Projection.Value = EnvironmentTextureNode.EnvironmentTextureNodeProjection.Equirectangular;
 				bg_env_texture255.ins.Colorspace.Value = "none";
 				bg_env_texture255.ins.Interpolation.Value = EnvironmentTextureNode.EnvironmentTextureNodeInterpolation.Linear;
-				// NOTYET TODO bg_env_texture255.IsLinear = false;
+				// TODO bg_env_texture255.IsLinear = false;
 
 				var bg_color_or_texture259 = new MixNode(m_shader, "bg_color_or_texture");
 				bg_color_or_texture259.ins.Color1.Value = m_original_background.Color1AsFloat4;

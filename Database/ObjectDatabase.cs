@@ -18,8 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
-using CclMesh = ccl.Mesh;
-using CclObject = ccl.Object;
 
 namespace RhinoCyclesCore.Database
 {
@@ -38,7 +36,7 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// record what meshid tuple corresponds to what cycles mesh
 		/// </summary>
-		private readonly ConcurrentDictionary<Tuple<Guid, int>, CclMesh> _rhCclMeshes = new ();
+		private readonly ConcurrentDictionary<Tuple<Guid, int>, ccl.Geometry> _rhCclMeshes = new ();
 
 		/// <summary>
 		/// Record the clipping object status of MeshIds.
@@ -54,7 +52,7 @@ namespace RhinoCyclesCore.Database
 		/// record what uint corresponds to what object id in cycles
 		/// Key is InstanceAncestry.Id
 		/// </summary>
-		private readonly ConcurrentDictionary<uint, CclObject> _rhCclObjects = new ();
+		private readonly ConcurrentDictionary<uint, ccl.Object> _rhCclObjects = new ();
 		/// <summary>
 		/// record objects to push to cycles
 		/// </summary>
@@ -138,7 +136,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		/// <param name="obid"></param>
 		/// <returns></returns>
-		public CclObject FindObjectRelation(uint obid)
+		public ccl.Object FindObjectRelation(uint obid)
 		{
 			if (_rhCclObjects.ContainsKey(obid)) return _rhCclObjects[obid];
 
@@ -204,18 +202,17 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		/// <param name="id"></param>
 		/// <param name="mid"></param>
-		public void RecordObjectMeshRelation(Tuple<Guid, int> id, CclMesh mid)
+		public void RecordObjectMeshRelation(Tuple<Guid, int> id, ccl.Geometry mid)
 		{
 			_rhCclMeshes[id] = mid;
 		}
-
 
 		/// <summary>
 		/// Find all Cycles meshes for a Rhino object Guid
 		/// </summary>
 		/// <param name="id"></param>
 		/// <returns>List of meshes</returns>
-		public CclMesh FindMeshRelation(Tuple<Guid, int> id)
+		public ccl.Geometry FindMeshRelation(Tuple<Guid, int> id)
 		{
 			if (_rhCclMeshes.ContainsKey(id)) return _rhCclMeshes[id];
 
@@ -227,7 +224,7 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		/// <param name="obid">uint of Rhino Object</param>
 		/// <param name="mid"></param>
-		public void RecordObjectRelation(uint obid, CclObject mid)
+		public void RecordObjectRelation(uint obid, ccl.Object mid)
 		{
 			_rhCclObjects[obid] = mid;
 		}
@@ -301,9 +298,9 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		/// <param name="id"></param>
 		/// <returns></returns>
-		public List<CclObject> GetCyclesObjectsForGuid(Guid id)
+		public List<ccl.Object> GetCyclesObjectsForGuid(Guid id)
 		{
-			var cclobs = new List<CclObject>();
+			var cclobs = new List<ccl.Object>();
 			var obids = new List<uint>();
 			foreach (var x in _rhObjectidMeshid.Where(x => x.Value.Item1.Equals(id) && !obids.Contains(x.Key)))
 			{

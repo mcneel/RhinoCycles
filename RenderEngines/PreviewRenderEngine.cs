@@ -34,7 +34,7 @@ namespace RhinoCyclesCore.RenderEngines
 			State = State.Rendering;
 
 #region create callbacks for Cycles
-			// NOTYET TODO CSycles.log_to_stdout(false);
+			// TODO CSycles.log_to_stdout(false);
 #endregion
 		}
 

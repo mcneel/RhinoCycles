@@ -106,7 +106,7 @@ namespace RhinoCyclesCore
 
 		public string TimeString;
 
-		// NOTYET TODO protected CSycles.LoggerCallback m_logger_callback;
+		// TODO protected CSycles.LoggerCallback m_logger_callback;
 
 		protected bool m_flush;
 		/// <summary>
