@@ -33,7 +33,7 @@ namespace RhinoCyclesCore.Settings
 		public override void OnHelp() => RhinoHelp.Show("options/cycles.htm");
 
 		System.Drawing.Image g_page_image = null;
-		public override System.Drawing.Image PageImage => g_page_image ?? (g_page_image = Rhino.Resources.Assets.Rhino.SystemDrawing.Bitmaps.TryGet(Rhino.Resources.ResourceIds.Svg_CyclesViewportPropertiesSvg, new System.Drawing.Size(48, 48)));
+		public override System.Drawing.Image PageImage => g_page_image ?? (g_page_image = Rhino.Resources.Assets.Rhino.SystemDrawing.Bitmaps.TryGet(Rhino.Resources.ResourceIds.RenderToolsStandardRenderSvgRenderToolsStandardRenderSvg, new System.Drawing.Size(80, 80)));
 
 		public override void OnDefaults()
 		{
