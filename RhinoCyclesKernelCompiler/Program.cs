@@ -312,8 +312,7 @@ namespace RhinoCyclesKernelCompiler
 			Console.WriteLine($"\tKernel path: {kernelPath}");
 			Console.WriteLine($"\tData path: {dataUserPath}");
 			CSycles.path_init(kernelPath, dataUserPath);
-			// Initialize everything except OneAPI for now
-			CSycles.initialise(DeviceTypeMask.CPU | DeviceTypeMask.CUDA | DeviceTypeMask.OPTIX | DeviceTypeMask.HIP | DeviceTypeMask.METAL);
+			CSycles.initialise(DeviceTypeMask.ALL);
 			Console.WriteLine("Setup tables for Cycles");
 			SetupTables();
 			Console.WriteLine("Cycles initialized");
