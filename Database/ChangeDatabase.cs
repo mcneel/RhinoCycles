@@ -35,6 +35,7 @@ using System.Text;
 using System.Threading.Tasks;
 // NOTYET TODO using CclClippingPlane = ccl.ClippingPlane;
 using CclLight = ccl.Light;
+using CclMesh = ccl.Mesh;
 using CclObject = ccl.Object;
 using CqClippingPlane = Rhino.Render.ChangeQueue.ClippingPlane;
 using CqGroundPlane = Rhino.Render.ChangeQueue.GroundPlane;
@@ -303,14 +304,14 @@ namespace RhinoCyclesCore.Database
 					var cyclesMesh = meshChange.Value;
 					var mid = meshChange.Key;
 
-					ccl.Mesh me = _objectDatabase.FindMeshRelation(mid) as ccl.Mesh;
+					var me = _objectDatabase.FindMeshRelation(mid);
 
 					// newme true if we have to upload new mesh data
 					var newme = me == null;
 
 					if (_renderEngine.ShouldBreak) return;
 
-					// create a new mesh to upload mesh data to
+					// creat a new mesh to upload mesh data to
 					if (newme)
 					{
 						me = _renderEngine.Session.Scene.AddMesh();
@@ -320,6 +321,7 @@ namespace RhinoCyclesCore.Database
 					if (newme) _objectDatabase.RecordObjectMeshRelation(cyclesMesh.MeshId, me);
 					_objectDatabase.RecordMeshOcsFrame(me.Ptr, cyclesMesh.OcsFrame);
 					
+
 					meshChangesList.Add(new Tuple<CyclesMesh, ccl.Mesh>(cyclesMesh, me));
 				}
 
@@ -352,9 +354,10 @@ namespace RhinoCyclesCore.Database
 		/// <param name="me">mesh to upload to</param>
 		/// <param name="cyclesMesh">data to upload from</param>
 		/// <returns>true if uploaded without cancellation, false otherwise</returns>
-		private bool UploadMeshData(ccl.Mesh me, CyclesMesh cyclesMesh)
+		private bool UploadMeshData(CclMesh me, CyclesMesh cyclesMesh)
 		{
 			// set raw vertex data
+
 			var verts = cyclesMesh.Verts;
 
 			var float3List =
@@ -373,6 +376,7 @@ namespace RhinoCyclesCore.Database
 			var faces = cyclesMesh.Faces;
 			List<int> _faces = new(faces);
 			me.MeshNodeInputs.Triangles.Value = _faces;
+			//me.SetVertTris(ref faces, cyclesMesh.VertexNormals != null);
 			if (_renderEngine.ShouldBreak) return false;
 			// set vertex normals
 			if (cyclesMesh.VertexNormals != null)
@@ -389,6 +393,8 @@ namespace RhinoCyclesCore.Database
 					var (chanidx, uvs) = cyclesMesh.Uvs[idx];
 					string uvmap_name = $"uvmap{chanidx}";
 					me.SetUvs(uvs, uvmap_name);
+					// compute tangent space
+					// NOTYET TODO me.AttrTangentSpace(uvmap_name);
 				}
 			}
 			// set vertex colors
@@ -1285,14 +1291,13 @@ namespace RhinoCyclesCore.Database
 				var ob = new CyclesObject
 				{
 					obid = a.InstanceId,
-					geomid = meshid,
+					meshid = meshid,
 					Transform = obxform.ToCyclesTransform(),
 					OcsFrame = Rhino.Geometry.Transform.Identity.ToCyclesTransform(),
 					matid = matid,
 					CastShadow = a.CastShadows,
 					Cutout = false, //cutout,
-					Decals = cyclesDecals,
-					IsLight = false,
+					Decals = cyclesDecals
 				};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
 
@@ -1529,7 +1534,7 @@ namespace RhinoCyclesCore.Database
 			{
 				matid = matrenderhash,
 				obid = GroundPlaneMeshInstanceId,
-				geomid = gpid,
+				meshid = gpid,
 				Transform = _gObTransform.ToCyclesTransform(),
 				Visible = gp.Enabled,
 				CastShadow = true,
@@ -1612,12 +1617,16 @@ namespace RhinoCyclesCore.Database
 				light.SetShader(lgsh);
 				light.ins.Type.Value = l.Type;
 				light.ins.Size.Value = l.Size;
-				light.ins.Angle.Value = l.Angle;
+				light.ins.Angle.Value = 0.0f;
+				// NOTYET TODO - this changed light.ins.Location.Value = l.Co;
+				// NOTYET TODO - this changed light.ins.Direction.Value = l.Dir;
 				light.ins.UseMis.Value = l.UseMis;
 				light.ins.CastShadow.Value = l.CastShadow;
 				light.ins.MaxBounces.Value = 8;
 				light.ins.SizeU.Value = l.SizeU;
 				light.ins.SizeV.Value = l.SizeV;
+				// NOTYET TODO - this changed light.ins.AxisU.Value = l.AxisU;
+				// NOTYET TODO - this changed light.ins.AxisV.Value = l.AxisV;
 
 				switch (l.Type)
 				{
@@ -1633,15 +1642,9 @@ namespace RhinoCyclesCore.Database
 						break;
 				}
 				lgsh.TagUpdate(_renderEngine.Session.Scene);
-				if (l.Strength > 0.0f)
-				{
-					lgsh.TagUsed(_renderEngine.Session.Scene);
-				}
+				lgsh.TagUsed(_renderEngine.Session.Scene);
 				light.TagUpdate(_renderEngine.Session.Scene);
 				_lightDatabase.RecordLightRelation(l.Id, light);
-				_objectDatabase.RecordObjectMeshRelation(new Tuple<Guid, int>(l.Id, 0), light);
-				_shaderDatabase.RecordRhCclShaderRelation(l.Matid, lgsh);
-				_shaderDatabase.Add(l, lgsh);
 			}
 
 			// update existing ones
@@ -1660,13 +1663,18 @@ namespace RhinoCyclesCore.Database
 				existingL.ins.Type.Value = l.Type;
 				existingL.ins.Size.Value = l.Size;
 				existingL.ins.Angle.Value = l.Angle;
+				// NOTYET TODO existingL.Location = l.Co;
+				// NOTYET TODO existingL.Direction = l.Dir;
 				existingL.ins.UseMis.Value = l.UseMis;
 				existingL.ins.CastShadow.Value = l.CastShadow;
 				existingL.ins.SpotAngle.Value = l.SpotAngle;
 				existingL.ins.SpotSmooth.Value = l.SpotSmooth;
+				// NOTYET TODO existingL.Samples = 1;
 				existingL.ins.MaxBounces.Value = 8;
 				existingL.ins.SizeU.Value = l.SizeU;
 				existingL.ins.SizeV.Value = l.SizeV;
+				// NOTYET TODO existingL.AxisU = l.AxisU;
+				// NOTYET TODO existingL.AxisV = l.AxisV;
 
 				existingL.TagUpdate(_renderEngine.Session.Scene);
 			}
@@ -1674,7 +1682,7 @@ namespace RhinoCyclesCore.Database
 			RcCore.It.AddLogStringIfVerbose("\tUploadLightChanges exit");
 		}
 
-		private uint LightMaterialCRC(Rhino.Geometry.Light ll)
+		private uint LinearLightMaterialCRC(Rhino.Geometry.Light ll)
 		{
 			uint crc = 0xBABECAFE;
 
@@ -1684,7 +1692,6 @@ namespace RhinoCyclesCore.Database
 			crc = Rhino.RhinoMath.CRC32(crc, ll.Intensity);
 			crc = Rhino.RhinoMath.CRC32(crc, ll.ShadowIntensity);
 			crc = Rhino.RhinoMath.CRC32(crc, ll.IsEnabled ? 1 : 0);
-			crc = Rhino.RhinoMath.CRC32(crc, (int)ll.AttenuationType);
 
 			return crc;
 		}
@@ -1764,10 +1771,11 @@ namespace RhinoCyclesCore.Database
 			{
 				if (light.ChangeType == CqLight.Event.Deleted) PopEnabledLight();
 				else if (light.ChangeType == CqLight.Event.Added || light.ChangeType == CqLight.Event.Undeleted) PushEnabledLight();
-				uint lightmeshinstanceid = CrcFromGuid(light.Id);
-				var ld = light.Data;
+
 				if (light.Data.IsLinearLight)
 				{
+					uint lightmeshinstanceid = light.IdCrc;
+					var ld = light.Data;
 					switch (light.ChangeType)
 					{
 						case CqLight.Event.Deleted:
@@ -1785,40 +1793,10 @@ namespace RhinoCyclesCore.Database
 				{
 					var cl = _shaderConverter.ConvertLight(this, light, v, PreProcessGamma, _gObTransform);
 
-					var ldid = new Tuple<Guid, int>(ld.Id, 0);
-					var matid = LightMaterialCRC(ld);
-					cl.Matid = matid;
-					ccl.Transform xform = TransformForLight(cl);
-
 					_lightDatabase.AddLight(cl);
-					var lightObject = new CyclesObject
-					{
-						matid = matid,
-						obid = lightmeshinstanceid,
-						geomid = ldid,
-						Transform = xform,
-						Visible = ld.IsEnabled,
-						CastShadow = false,
-						IsShadowCatcher = false,
-						CastNoShadow = ld.ShadowIntensity < 0.05,
-						IgnoreCutout = true,
-					};
-
-					_objectDatabase.AddOrUpdateObject(lightObject);
-
 				}
 			}
 			_environmentDatabase.TagUpdate();
-		}
-
-		private static ccl.Transform TransformForLight(CyclesLight cl)
-		{
-			Point3d lightPos = new Point3d(cl.Co.x, cl.Co.y, cl.Co.z);
-			Vector3d lightDir = new Vector3d(cl.Dir.x, cl.Dir.y, cl.Dir.z);
-			lightDir.Unitize();
-			Plane lightPlane = new Plane(lightPos, lightDir);
-			ccl.Transform xform = Rhino.Geometry.Transform.PlaneToPlane(Rhino.Geometry.Plane.WorldXY, lightPlane).ToCyclesTransform();
-			return xform;
 		}
 
 		private readonly MeshingParameters mp = MeshingParameters.FastRenderMesh;
@@ -1858,17 +1836,18 @@ namespace RhinoCyclesCore.Database
 
 			var ldid = new Tuple<Guid, int>(ld.Id, 0);
 
-			var matid = LightMaterialCRC(ld);
+			var matid = LinearLightMaterialCRC(ld);
 
 			HandleLightMaterial(ld, matid);
 
 			HandleMeshData(ld.Id, 0, mesh, null, false, matid, t);
 
+
 			var lightObject = new CyclesObject
 			{
 				matid = matid,
 				obid = lightmeshinstanceid,
-				geomid = ldid,
+				meshid = ldid,
 				Transform = t,
 				Visible = c.IsValid ? ld.IsEnabled : false,
 				CastShadow = false,
@@ -1885,23 +1864,15 @@ namespace RhinoCyclesCore.Database
 		{
 			foreach (var light in dynamicLightChanges)
 			{
-				uint lightmeshinstanceid = CrcFromGuid(light.Id);
 				if (light.IsLinearLight)
 				{
+					uint lightmeshinstanceid = CrcFromGuid(light.Id);
 					HandleLinearLightAddOrModify(lightmeshinstanceid, light);
 				}
 				else
 				{
 					var cl = _shaderConverter.ConvertLight(light, PreProcessGamma, _gObTransform);
-					//_lightDatabase.AddLight(cl);
-
-					var ldid = new Tuple<Guid, int>(light.Id, 0);
-					var matid = LightMaterialCRC(light);
-					ccl.Transform xform = TransformForLight(cl);
-
-					var cot = new CyclesObjectTransform(lightmeshinstanceid, xform);
-					_objectDatabase.AddDynamicObjectTransform(cot);
-
+					_lightDatabase.AddLight(cl);
 				}
 			}
 		}
@@ -1986,10 +1957,11 @@ namespace RhinoCyclesCore.Database
 				curcount++;
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, $"handling object {curcount}/{totalobcount}", -1.0f);
 				// mesh for this object id
-				var mesh = _objectDatabase.FindMeshRelation(ob.geomid);
+				var mesh = _objectDatabase.FindMeshRelation(ob.meshid);
 
 				// hmm, no mesh. Oh well, lets get on with the next
 				if (mesh == null) continue;
+
 
 				ccl.Transform t = _objectDatabase.MeshOcsFrames.ContainsKey(mesh.Ptr) ? _objectDatabase.MeshOcsFrames[mesh.Ptr] : ccl.Transform.Identity();
 
@@ -2017,10 +1989,10 @@ namespace RhinoCyclesCore.Database
 					cob.ins.AssetName.Value = ob.obid.ToString();
 					RcCore.It.AddLogStringIfVerbose($"\t\tSet object asset name to {cob.ins.AssetName.Value}");
 					_objectDatabase.RecordObjectRelation(ob.obid, cob);
-					_objectDatabase.RecordObjectIdMeshIdRelation(ob.obid, ob.geomid);
+					_objectDatabase.RecordObjectIdMeshIdRelation(ob.obid, ob.meshid);
 				}
 
-				RcCore.It.AddLogStringIfVerbose($"\t\tadding/modifying object {ob.obid} {ob.geomid} (ptr: {cob.Ptr})");
+				RcCore.It.AddLogStringIfVerbose($"\t\tadding/modifying object {ob.obid} {ob.meshid} (ptr: {cob.Ptr})");
 
 				// set mesh reference and other stuff
 

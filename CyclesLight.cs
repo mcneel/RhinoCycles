@@ -104,7 +104,5 @@ namespace RhinoCyclesCore
 		public Guid Id { get; set; }
 
 		public float Gamma { get; set; }
-
-		public uint Matid { get; set; } = 0;
 	}
 }

@@ -149,7 +149,7 @@ namespace RhinoCyclesCore.Shaders
 			imgtex.ins.AlternateTiles.Value = decal.Texture.AlternateTiles;
 			texco.Uvmap = decal.Texture.GetUvMapForChannel();
 			imgtex.ins.Extension.Value = ImageTextureNode.ImageTextureNodeExtension.Clamp;
-			// TODO imgtex.ins.UseAlpha = true;
+			// NOTYET TODO imgtex.ins.UseAlpha = true;
 
 			adjust.Grayscale = decal.Texture.AdjustGrayscale;
 			adjust.Invert = decal.Texture.AdjustInvert;
@@ -534,10 +534,10 @@ namespace RhinoCyclesCore.Shaders
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.SpecularIORLevel.ToList(), false, part.Gamma, true, false);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, principled.ins.SpecularTint.ToList(), false, part.Gamma, true, false);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture, principled.ins.Roughness.ToList(), false, part.Gamma, true, false);
-					// TODO check Sheen replacement: Roughness or Weight?
+					// NOTYET TODO check Sheen replacement: Roughness or Weight?
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.SheenWeight.ToList(), false, part.Gamma, true, false);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, principled.ins.SheenTint.ToList(), false, part.Gamma, true, false);
-					// TODO Check Clearcoat replacement: IOR or Weight?
+					// NOTYET TODO Check Clearcoat replacement: IOR or Weight?
 					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.CoatWeight.ToList(), false, part.Gamma, true, false);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.CoatIOR.ToList(), false, part.Gamma, true, false);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.SubsurfaceWeight.ToList(), false, part.Gamma, true, false);
@@ -846,7 +846,7 @@ namespace RhinoCyclesCore.Shaders
 					var principledbsdf117 = new PrincipledBsdfNode(m_shader, "principledbsdf_");
 					principledbsdf117.ins.SubsurfaceWeight.Value = 0f;
 					principledbsdf117.ins.SubsurfaceRadius.Value = new float4(0f, 0f, 0f, 1f);
-					// TODO principledbsdf117.ins.SubsurfaceColor.Value = new float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
+					// NOTYET TODO principledbsdf117.ins.SubsurfaceColor.Value = new float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 					principledbsdf117.ins.Metallic.Value = part.Metallic;
 					principledbsdf117.ins.SpecularIORLevel.Value = part.Specular;
 					principledbsdf117.ins.SpecularTint.Value = part.SpecularTint;
@@ -860,7 +860,7 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.IOR.Value = part.IOR;
 					principledbsdf117.ins.EmissionStrength.Value = 0.0f;
 					principledbsdf117.ins.TransmissionWeight.Value = part.Transparency;
-					// TODO principledbsdf117.ins.Roughness.Value = part.RefractionRoughness;
+					// NOTYET TODO principledbsdf117.ins.Roughness.Value = part.RefractionRoughness;
 					principledbsdf117.ins.Tangent.Value = new float4(0f, 0f, 0f, 1f);
 
 					var custom_environment_blend195 = new MixClosureNode(m_shader, "custom_environment_blend_principled_");

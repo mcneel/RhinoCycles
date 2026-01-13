@@ -40,9 +40,9 @@ namespace RhinoCyclesCore.RenderEngines
 			BeginChangesNotified += ViewportRenderEngine_BeginChangesNotified;
 
 #region create callbacks for Cycles
-			// TODO m_logger_callback = ViewportLoggerCallback;
+			// NOTYET TODO m_logger_callback = ViewportLoggerCallback;
 
-			// TODO CSycles.log_to_stdout(false);
+			// NOTYET TODO CSycles.log_to_stdout(false);
 			//CSycles.set_logger(m_logger_callback);
 #endregion
 
@@ -500,7 +500,7 @@ Please click the link below for more information.", 69));
 				cyclesIntegrator.ins.UseAdaptiveSampling.Value = integrator.UseAdaptiveSampling;
 				cyclesIntegrator.ins.AdaptiveMinSamples.Value = integrator.AdaptiveMinSamples;
 				cyclesIntegrator.ins.AdaptiveThreshold.Value = integrator.AdaptiveThreshold;
-				// TODO cyclesIntegrator.TagForUpdate();
+				// NOTYET TODO cyclesIntegrator.TagForUpdate();
 				_needReset = true;
 			}
 		}

@@ -2413,7 +2413,7 @@ namespace RhinoCyclesCore.Converters
 				lt = LightType.LIGHT_DISTANT;
 				strength = (float)(lg.Intensity * RcCore.It.AllSettings.SunLightFactor);
 				angle = Math.Max(sizeterm * sizeterm * sizeterm * 1.5f, 0.009180f);
-				size = 0.01f;
+				//size = 0.01f;
 			}
 			else if (lg.IsSpotLight)
 			{
@@ -2433,7 +2433,6 @@ namespace RhinoCyclesCore.Converters
 				axisu = RenderEngine.CreateFloat4(light_x.X, light_x.Y, light_x.Z);
 				axisv = RenderEngine.CreateFloat4(light_y.X, light_y.Y, light_y.Z);
 				dir   = RenderEngine.CreateFloat4(light_z.X, light_z.Y, light_z.Z);
-				size = 1.0f;
 			}
 			else if (lg.IsRectangularLight)
 			{
@@ -2468,8 +2467,6 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			strength *= enabled;
-
-			dir *= -1.0f;
 
 			var clight = new CyclesLight
 				{

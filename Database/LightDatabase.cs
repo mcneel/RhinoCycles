@@ -15,7 +15,6 @@ limitations under the License.
 **/
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using CclLight = ccl.Light;
@@ -31,12 +30,11 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// record light changes to push to cycles
 		/// </summary>
-		private readonly ConcurrentDictionary<Tuple<Guid, int>, CyclesLight> _cqLightChanges = new ConcurrentDictionary<Tuple<Guid, int>, CyclesLight>();
-		public ConcurrentDictionary<Tuple<Guid, int>, CyclesLight> LightChanges => _cqLightChanges;
+		private readonly List<CyclesLight> _cqLightChanges = new List<CyclesLight>();
 		/// <summary>
 		/// record what Guid corresponds to what light in cycles
 		/// </summary>
-		private readonly Dictionary<Tuple<Guid, int>, CclLight> _rhCclLights = new Dictionary<Tuple<Guid, int>, CclLight>();
+		private readonly Dictionary<Guid, CclLight> _rhCclLights = new Dictionary<Guid, CclLight>();
 
 		public readonly Guid BackgroundLightGuid = new Guid("e9bb5342-bbd7-466a-8cd1-96f471e57e65");
 
@@ -70,7 +68,7 @@ namespace RhinoCyclesCore.Database
 		/// <returns>ccl.Light</returns>
 		public CclLight ExistingLight(Guid id)
 		{
-			return _rhCclLights[new Tuple<Guid, int>(id, 0)];
+			return _rhCclLights[id];
 		}
 
 		/// <summary>
@@ -79,17 +77,17 @@ namespace RhinoCyclesCore.Database
 		/// <param name="light"></param>
 		public void AddLight(CyclesLight light)
 		{
-			_cqLightChanges[new Tuple<Guid, int>(light.Id, 0)] = light;
+			_cqLightChanges.Add(light);
 		}
 
 		/// <summary>
 		/// Get a list of Guids from the ChangeQueue recorded light changes.
 		/// </summary>
-		private List<Tuple<Guid, int>> LightIds
+		private List<Guid> LightIds
 		{
 			get
 			{
-				var lightIds = (from key in _cqLightChanges.Keys select key).ToList();
+				var lightIds = (from light in _cqLightChanges select light.Id).ToList();
 				return lightIds;
 			}
 		}
@@ -104,7 +102,7 @@ namespace RhinoCyclesCore.Database
 				// determine Guids of lights that need to be added
 				var addIds = from lightkey in LightIds where !_rhCclLights.ContainsKey(lightkey) select lightkey;
 				// get the CyclesLights for the Guids
-				var addLights = (from aid in addIds from ll in _cqLightChanges.Values where aid.Item1 == ll.Id select ll).ToList();
+				var addLights = (from aid in addIds from ll in _cqLightChanges where aid == ll.Id select ll).ToList();
 				return addLights;
 			}
 		}
@@ -139,7 +137,7 @@ namespace RhinoCyclesCore.Database
 				// determine Guids of lights that need updating
 				var updateIds = from lightkey in LightIds where _rhCclLights.ContainsKey(lightkey) select lightkey;
 				// find the CyclesLights for the Guids
-				var updateLights = (from uid in updateIds from ll in _cqLightChanges where uid == ll.Key select ll.Value).ToList();
+				var updateLights = (from uid in updateIds from ll in _cqLightChanges where uid == ll.Id select ll).ToList();
 				return updateLights;
 			}
 		}
@@ -151,8 +149,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="cLight">ccl.Light to save</param>
 		public void RecordLightRelation(Guid id, CclLight cLight)
 		{
-			Tuple<Guid, int> key = new Tuple<Guid, int>(id, 0);
-			_rhCclLights[key] = cLight;
+			_rhCclLights[id] = cLight;
 		}
 	}
 }

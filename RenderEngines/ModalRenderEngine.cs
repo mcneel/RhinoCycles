@@ -54,7 +54,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#region create callbacks for Cycles
 
-			// TODO CSycles.log_to_stdout(false);
+			// NOTYET TODO CSycles.log_to_stdout(false);
 
 			#endregion
 		}
