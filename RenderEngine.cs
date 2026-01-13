@@ -536,7 +536,6 @@ namespace RhinoCyclesCore
 		{
 			ReCreateSimpleEmissionShader(e.RcLightShader, e.CclShader);
 			e.CclShader.TagUpdate(Session.Scene);
-			e.CclShader.TagUsed(Session.Scene);
 		}
 
 		protected void Database_FilmUpdateTagged(object sender, EventArgs e)
