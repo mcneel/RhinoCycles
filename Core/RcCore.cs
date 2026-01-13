@@ -200,7 +200,7 @@ namespace RhinoCyclesCore.Core
 			AddLogString($"All sessions cleaned up\n");
 			gpuDevicesReadiness.Clear();
 			RcCore.It.AddLogStringIfVerbose("Shutting Cycles down\n");
-			CSycles.shutdown();
+			// NOTYET CSycles.shutdown();
 			RcCore.It.AddLogStringIfVerbose("Cycles shutdown complete\n");
 			AddLogStringIfVerbose("Shutdown: clearing log queues start");
 			ClearLogQueues();
