@@ -1280,7 +1280,6 @@ namespace RhinoCyclesCore.Database
 				}
 
 				HandleRenderMaterial(mat, matid, cyclesDecals, false);
-				
 
 				//var cutout = _objectDatabase.MeshIsClippingObject(meshid);
 #pragma warning disable CS0618
@@ -1339,7 +1338,6 @@ namespace RhinoCyclesCore.Database
 
 #region SHADERS
 
-		private readonly object handleMaterialLock = new object();
 		/// <summary>
 		/// Handle RenderMaterial - will queue new shader if necessary
 		/// </summary>
@@ -1348,18 +1346,15 @@ namespace RhinoCyclesCore.Database
 		/// <param name="invisibleUnderside">True if geometry should be see-through from the backface. Used for the groundplane.</param>
 		private void HandleRenderMaterial(RenderMaterial mat, uint matId, List<CyclesDecal> decals, bool invisibleUnderside, bool shadowCatcher = false)
 		{
-			lock (handleMaterialLock)
+			if (_shaderDatabase.HasShader(matId))
 			{
-				if (_shaderDatabase.HasShader(matId) || _shaderDatabase.HasQueuedShader(matId))
-				{
-					return;
-				}
-
-				var sh = _shaderConverter.RecordDataToSetupCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals, _doc_serialnr);
-				sh.InvisibleUnderside = invisibleUnderside;
-				sh.ShadowCatcher = shadowCatcher;
-				_shaderDatabase.AddShader(sh);
+				return;
 			}
+
+			var sh = _shaderConverter.RecordDataToSetupCyclesShader(mat.TopLevelParent as RenderMaterial, LinearWorkflow, matId, BitmapConverter, decals, _doc_serialnr);
+			sh.InvisibleUnderside = invisibleUnderside;
+			sh.ShadowCatcher = shadowCatcher;
+			_shaderDatabase.AddShader(sh);
 		}
 
 		/// <summary>
