@@ -166,11 +166,6 @@ namespace RhinoCyclesCore.ExtensionMethods
 			return RenderEngine.CreateFloat4(cl.R, cl.G, cl.B, cl.A);
 		}
 
-		public static ccl.float3 ToFloat3(this Rhino.Display.Color4f cl)
-		{
-			return RenderEngine.CreateFloat3(cl.R, cl.G, cl.B);
-		}
-
 		public static Rhino.Display.Color4f ToColor4f(this ccl.float4 cl)
 		{
 			return new Rhino.Display.Color4f(cl.x, cl.y, cl.z, cl.w);

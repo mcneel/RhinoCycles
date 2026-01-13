@@ -27,6 +27,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using Transform = ccl.Transform;
 
 namespace RhinoCyclesCore.Converters
 {
@@ -261,7 +262,7 @@ namespace RhinoCyclesCore.Converters
 				rhinotfm.M22 = Rhino.RhinoMath.ToRadians(rot.Z);
 			}
 
-			ccl.Transform t = new ccl.Transform(
+			Transform t = new Transform(
 				rhinotfm.ToFloatArray(true)
 				);
 			teximg.Transform = t;

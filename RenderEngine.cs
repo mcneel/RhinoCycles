@@ -106,7 +106,7 @@ namespace RhinoCyclesCore
 
 		public string TimeString;
 
-		// NOTYET TODO protected CSycles.LoggerCallback m_logger_callback;
+		protected CSycles.LoggerCallback m_logger_callback;
 
 		protected bool m_flush;
 		/// <summary>
@@ -231,7 +231,7 @@ namespace RhinoCyclesCore
 			var _sh = _Shader;
 			if(_sh == null)
 			{
-				_Shader = Session.Scene.AddShader();
+				_Shader = new ccl.Shader(Session.Scene);
 			}
 		}
 
@@ -262,7 +262,7 @@ namespace RhinoCyclesCore
 			{
 				if (PreviewEventArgs.Cancel)
 				{
-					Session.Cancel(quick: true);
+					Session.QuickCancel();
 					State = State.Stopping;
 					CancelRender = true;
 				}
@@ -307,18 +307,17 @@ namespace RhinoCyclesCore
 
 			RcCore.It.AddLogStringIfVerbose($"RenderEngine.UpdateCallback (ptr {sid}) entry");
 
-			(string status, string substatus) = Session.Progress.GetStatus();
-			RenderedSamples = Session.Progress.GetCurrentSample();
-			RenderedTiles = Session.Progress.GetRenderedTiles();
+			var status = CSycles.progress_get_status(sid);
+			var substatus = CSycles.progress_get_substatus(sid);
+			RenderedSamples = CSycles.progress_get_sample(sid);
+			RenderedTiles = CSycles.progress_get_rendered_tiles(sid);
 
 			//Debug.WriteLine("Current sample: {0}", RenderedSamples);
 
-			float _prog = RenderedSamples > 0 ? (float)RenderedSamples / (float)MaxSamples : 0.0f;
-			float progress = RenderedSamples >= MaxSamples ? 1.0f : _prog;
-			// double total_time, sample_time;
-			//CSycles.progress_get_time(sid, out total_time, out sample_time);
-			Session.Progress.GetTime(out double total_time, out double sample_time);
-			//CSycles.progress_get_progress(sid, out progress);
+			float progress;
+			double total_time, sample_time;
+			CSycles.progress_get_time(sid, out total_time, out sample_time);
+			CSycles.progress_get_progress(sid, out progress);
 			int hr = ((int)total_time) / (60 * 60);
 			int min = (((int)total_time) / 60) % 60;
 			int sec = ((int)total_time) % 60;
@@ -378,7 +377,6 @@ namespace RhinoCyclesCore
 			int width = renderWindowSize.Width;
 			int height = renderWindowSize.Height;
 			var rect = new Rectangle(0, 0, width, height);
-
 			foreach (var pass in Session.Passes)
 			{
 				IntPtr pixel_buffer = IntPtr.Zero;
@@ -408,8 +406,8 @@ namespace RhinoCyclesCore
 
 					Session.ReleasePixelBuffer(pass);
 				}
-			}
 
+			}
 			RcCore.It.AddLogStringIfVerbose("BlitPixelsToRenderWindowChannel exit");
 		}
 
@@ -495,13 +493,13 @@ namespace RhinoCyclesCore
 			if (Session != null)
 			{
 				RcCore.It.AddLogStringIfVerbose("Session Wait, lock and unlock start");
-				Session.Scene.WaitUntilLocked();
-				Session.Scene.Unlock();
+				Session.WaitUntilLocked();
+				Session.Unlock();
 				RcCore.It.AddLogStringIfVerbose("Session Wait, lock and unlock end");
 				RcCore.It.AddLogStringIfVerbose("Session QuickCancel start");
-				Session.Cancel(quick: true);
+				Session.QuickCancel();
 				RcCore.It.AddLogStringIfVerbose("Session QuickCancel end");
-				Session.Cancel(quick: false);
+				Session.Cancel("StopTheRenderer");
 				Thread.Sleep(500);
 				RcCore.It.AddLogStringIfVerbose("Session Dispose start");
 				Session.Dispose();
@@ -528,14 +526,14 @@ namespace RhinoCyclesCore
 		protected void Database_MaterialShaderChanged(object sender, MaterialShaderUpdatedEventArgs e)
 		{
 			RecreateMaterialShader(e.RcShader, e.CclShader);
-			e.CclShader.TagUpdate(Session.Scene);
+			e.CclShader.Tag();
 		}
 
 		// handle light shader updates
 		protected void Database_LightShaderChanged(object sender, LightShaderUpdatedEventArgs e)
 		{
 			ReCreateSimpleEmissionShader(e.RcLightShader, e.CclShader);
-			e.CclShader.TagUpdate(Session.Scene);
+			e.CclShader.Tag();
 		}
 
 		protected void Database_FilmUpdateTagged(object sender, EventArgs e)

@@ -48,7 +48,7 @@ namespace RhinoCycles.Commands
 			var randomwalk = getOption.AddOption("RandomWalk"); // = 44,
 			var principledrandomwalk = getOption.AddOption("PrincipledRandomWalk"); // = 45
 
-			// NOTYET getOption.SetDefaultString(SubsurfaceScatteringNode.SssMethodFromInt(RcCore.It.AllSettings.SssMethod));
+			getOption.SetDefaultString(SubsurfaceScatteringNode.SssMethodFromInt(RcCore.It.AllSettings.SssMethod));
 
 			var getOrc = getOption.Get();
 			if (getOption.CommandResult() != Result.Success) return getOption.CommandResult();
@@ -78,8 +78,7 @@ namespace RhinoCycles.Commands
 						m = "Burley";
 						break;
 				}
-				// NOTYET var i = SubsurfaceScatteringNode.IntFromSssMethod(m);
-				var i = 0;
+				var i = SubsurfaceScatteringNode.IntFromSssMethod(m);
 				RhinoApp.WriteLine($"User chose {m} ({i})");
 				RcCore.It.AllSettings.SssMethod = i;
 				return Result.Success;

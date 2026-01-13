@@ -47,8 +47,8 @@ namespace RhinoCycles.Commands
 			RhinoApp.WriteLine("----------");
 			foreach (var dev in Device.Devices)
 			{
-				if(dev.Index < 100000)
-					RhinoApp.WriteLine($"	Device {dev.Index}: {dev.Name} ({dev.Description})");
+				if(dev.Id < 100000)
+					RhinoApp.WriteLine($"	Device {dev.Id}: {dev.Name} ({dev.Description})");
 			}
 			RhinoApp.WriteLine("----------");
 			var getNumber = new GetInteger();

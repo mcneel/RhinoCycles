@@ -28,8 +28,8 @@ namespace RhinoCyclesCore.Settings
 
 		public ApplicationAndDocumentSettings()
 		{
-			// IntegratorMethod = Integrator.IntegratorSamplingPattern.;
-			SamplingPattern = SamplingPattern.SAMPLING_PATTERN_AUTOMATIC;
+			IntegratorMethod = IntegratorMethod.Path;
+			SamplingPattern = SamplingPattern.CMJ;
 
 			// persisted settings
 			Verbose = Verbose;
@@ -145,7 +145,8 @@ namespace RhinoCyclesCore.Settings
 
 		public void DefaultSettings()
 		{
-			SamplingPattern = SamplingPattern.SAMPLING_PATTERN_AUTOMATIC;
+			IntegratorMethod = IntegratorMethod.Path;
+			SamplingPattern = SamplingPattern.CMJ;
 
 			// persisted settings
 			Verbose = DefaultEngineSettings.Verbose;
@@ -540,7 +541,7 @@ namespace RhinoCyclesCore.Settings
 			set { RcPlugIn.Settings.SetDouble(SettingNames.OldDpiScale, value); }
 		}
 
-		public virtual Integrator.IntegratorSamplingPattern IntegratorMethod { get; set; }
+		public virtual IntegratorMethod IntegratorMethod { get; set; }
 		public virtual uint IntegratorHash
 		{
 			get

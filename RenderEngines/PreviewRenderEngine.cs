@@ -34,7 +34,7 @@ namespace RhinoCyclesCore.RenderEngines
 			State = State.Rendering;
 
 #region create callbacks for Cycles
-			// NOTYET TODO CSycles.log_to_stdout(false);
+			CSycles.log_to_stdout(false);
 #endregion
 		}
 
@@ -91,19 +91,17 @@ namespace RhinoCyclesCore.RenderEngines
 				*/
 
 				#region set up session parameters
-
-				var (idPtr, sessionParams, sceneParams, bufferParams) = Session.PrepareForSession();
-				sessionParams.Device = renderDevice;
-
-				sessionParams.Experimental = false;
-				sessionParams.Samples = cyclesEngine.MaxSamples;
-				sessionParams.TileSize = gpusize;
-				sessionParams.Threads = (int)threads;
-				sessionParams.Shadingsystem = ShadingSystem.SHADINGSYSTEM_SVM;
-				sessionParams.Background = false;
-				sessionParams.PixelSize = pixelSize;
-				sessionParams.UseResolutionDivider = false;
-				sceneParams.Shadingsystem = sessionParams.Shadingsystem;
+				var sessionParams = new SessionParameters(renderDevice)
+				{
+					Experimental = false,
+					Samples = cyclesEngine.MaxSamples,
+					TileSize = gpusize,
+					Threads = threads,
+					ShadingSystem = ShadingSystem.SVM,
+					Background = false,
+					PixelSize = pixelSize,
+					UseResolutionDivider = false,
+				};
 				#endregion
 
 				if (cyclesEngine.CancelRender)
@@ -113,44 +111,40 @@ namespace RhinoCyclesCore.RenderEngines
 				}
 
 				#region create session for scene
-				cyclesEngine.Session = RcCore.It.CreateSession(idPtr, sessionParams, sceneParams);
+				cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
 				cyclesEngine.CreateSimpShader();
 				#endregion
 
-				Pass pass = cyclesEngine.Session.Scene.AddPass();
-				pass.ins.Name.Value = NameForPassType(PassType.PASS_COMBINED);
-				pass.ins.Type.Value = PassType.PASS_COMBINED;
-				cyclesEngine.Session.AddPass(pass);
-
+				cyclesEngine.Session.AddPass(PassType.Combined);
 
 				// main render loop
 				cyclesEngine.Database.Flush();
-				cyclesEngine.Session.Scene.WaitUntilLocked();
+				cyclesEngine.Session.WaitUntilLocked();
 				cyclesEngine.UploadData();
-				cyclesEngine.Session.Scene.Unlock();
+				cyclesEngine.Session.Unlock();
 
-				cyclesEngine.Session.Scene.Integrator.ins.UseAdaptiveSampling.Value = true;
-				cyclesEngine.Session.Scene.Integrator.ins.AdaptiveMinSamples.Value = 3;
-				cyclesEngine.Session.Scene.Integrator.ins.AdaptiveThreshold.Value = 0.3f;
+				cyclesEngine.Session.Scene.Integrator.UseAdaptiveSampling = true;
+				cyclesEngine.Session.Scene.Integrator.AdaptiveMinSamples = 3;
+				cyclesEngine.Session.Scene.Integrator.AdaptiveThreshold = 0.3f;
 
 				bool renderSuccess = true;
 
-				bufferParams.ins.Width.Value = size.Width;
-				bufferParams.ins.Height.Value = size.Height;
-				bufferParams.ins.FullX.Value = 0;
-				bufferParams.ins.FullY.Value = 0;
-				bufferParams.ins.FullWidth.Value = size.Width;
-				bufferParams.ins.FullHeight.Value = size.Height;
-				bufferParams.ins.Samples.Value = cyclesEngine.MaxSamples;
-
-				cyclesEngine.Session.Reset(sessionParams, bufferParams);
+				cyclesEngine.Session.Reset(
+					width: size.Width,
+					height: size.Height,
+					samples: cyclesEngine.MaxSamples,
+					full_x: 0,
+					full_y: 0,
+					full_width: size.Width,
+					full_height: size.Height,
+					pixel_size: pixelSize);
 				cyclesEngine.Session.Start();
 
 				while (!cyclesEngine.Finished)
 				{
 					if (!cyclesEngine.ShouldBreak)
 					{
-						cyclesEngine.UpdateCallback(cyclesEngine.Session.Ptr);
+						cyclesEngine.UpdateCallback(cyclesEngine.Session.Id);
 
 						if (cyclesEngine.RenderedSamples == -13)
 						{

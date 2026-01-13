@@ -54,7 +54,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			#region create callbacks for Cycles
 
-			// NOTYET TODO CSycles.log_to_stdout(false);
+			CSycles.log_to_stdout(false);
 
 			#endregion
 		}
@@ -139,26 +139,24 @@ namespace RhinoCyclesCore.RenderEngines
 			#endregion
 
 			#region set up session parameters
-			var (idPtr, sessionParams, sceneParams, bufferParams) = Session.PrepareForSession();
-			sessionParams.Device = RenderDevice;
-
-			sessionParams.Experimental = false;
-			sessionParams.Samples = MaxSamples;
-			sessionParams.TileSize = TileSize(RenderDevice);
-			sessionParams.Threads = RenderDevice.IsGpu ? 0 : engineSettings.Threads;
-			sessionParams.Shadingsystem = ShadingSystem.SHADINGSYSTEM_SVM;
-			sessionParams.Background = false;
-			sessionParams.PixelSize = 1;
-			sessionParams.UseResolutionDivider = false;
-			sceneParams.Shadingsystem = sessionParams.Shadingsystem;
-
+			var sessionParams = new SessionParameters(RenderDevice)
+			{
+				Experimental = false,
+				Samples = MaxSamples,
+				TileSize = TileSize(RenderDevice),
+				Threads = (uint)(RenderDevice.IsGpu ? 0 : engineSettings.Threads),
+				ShadingSystem = ShadingSystem.SVM,
+				Background = false,
+				PixelSize = 1,
+				UseResolutionDivider = false,
+			};
 			#endregion
 
 			if (cyclesEngine.ShouldBreak) return;
 
 			#region create session for scene
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer CreateSession");
-			cyclesEngine.Session = RcCore.It.CreateSession(idPtr, sessionParams, sceneParams);
+			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
 			cyclesEngine.CreateSimpShader();
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer CreateSession done");
 			#endregion
@@ -169,25 +167,19 @@ namespace RhinoCyclesCore.RenderEngines
 			// Set up passes
 			foreach (var reqPass in reqPassTypes)
 			{
-				Pass pass = cyclesEngine.Session.Scene.AddPass();
-				pass.ins.Name.Value = NameForPassType(reqPass);
-				pass.ins.Type.Value = reqPass;
-				Session.AddPass(pass);
+				Session.AddPass(reqPass);
 			}
 
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer Session.Reset");
-
-			BufferParams bp = cyclesEngine.Session.BufferParams;
-			SessionParams sp = cyclesEngine.Session.SessionParams;
-
-			bp.FullWidth = FullSize.Width;
-			bp.FullHeight = FullSize.Height;
-			bp.Width = size.Width;
-			bp.Height = size.Height;
-			bp.FullX = BufferRectangle.X;
-			bp.FullY = BufferRectangle.Top;
-			bp.Samples = MaxSamples;
-			cyclesEngine.Session.Reset(sp, bp);
+			cyclesEngine.Session.Reset(
+				width: size.Width,
+				height: size.Height,
+				samples: MaxSamples,
+				full_x: BufferRectangle.X,
+				full_y: BufferRectangle.Top,
+				full_width: FullSize.Width,
+				full_height: FullSize.Height,
+				pixel_size: 1);
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer Session.Reset done");
 
 			// main render loop, including restarts
@@ -201,11 +193,11 @@ namespace RhinoCyclesCore.RenderEngines
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer Flush done");
 			if (cyclesEngine.ShouldBreak)
 				return;
-			cyclesEngine.Session.Scene.WaitUntilLocked();
+			cyclesEngine.Session.WaitUntilLocked();
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer UploadData");
 			var renderSuccess = cyclesEngine.UploadData();
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer UploadData done");
-			cyclesEngine.Session.Scene.Unlock();
+			cyclesEngine.Session.Unlock();
 			cyclesEngine.Database.ResetChangeQueue();
 
 			if (renderSuccess)
@@ -220,7 +212,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 				while (!Finished)
 				{
-					UpdateCallback(cyclesEngine.Session.Ptr);
+					UpdateCallback(cyclesEngine.Session.Id);
 
 					if (RenderedSamples == -13)
 					{

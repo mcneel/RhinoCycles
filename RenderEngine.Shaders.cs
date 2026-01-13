@@ -38,7 +38,7 @@ namespace RhinoCyclesCore
 						sh = CreateCyclesShaderFromXml(shader.Front);
 						break;
 					case ShaderBody.CyclesMaterial.CustomRenderMaterial:
-						sh = Session.Scene.AddShader();
+						sh = new CclShader(Session.Scene);
 						shader.Front.Crm.GetShader(sh, true);
 						break;
 					default:
@@ -47,7 +47,7 @@ namespace RhinoCyclesCore
 				}
 			}
 
-			sh.ShaderNodeInputs.PassID.Value = shader.PassId;
+			sh.PassId = shader.PassId;
 
 			return sh;
 		}
@@ -68,7 +68,7 @@ namespace RhinoCyclesCore
 						sh = RecreateCyclesShaderFromXml(shader.Front, existing);
 						break;
 					case ShaderBody.CyclesMaterial.CustomRenderMaterial:
-						sh = Session.Scene.AddShader();
+						sh = new CclShader(Session.Scene);
 						shader.Front.Crm.GetShader(sh, true);
 						break;
 					default:
@@ -77,17 +77,20 @@ namespace RhinoCyclesCore
 				}
 			}
 
-			sh.ShaderNodeInputs.PassID.Value = shader.PassId;
+			sh.PassId = shader.PassId;
 
 			return sh;
 		}
 
 		internal CclShader CreateCyclesShaderFromXml(ShaderBody shader)
 		{
-			var sh = Session.Scene.AddShader();
-			sh.ShaderNodeInputs.UseTransparentShadow.Value = true;
-			sh.ShaderNodeInputs.HeterogeneousVolume.Value = false;
-			sh.Name = shader.Name ?? $"V6 Basic Material {shader.Id}";
+			var sh = new CclShader(Session.Scene)
+			{
+				UseMis = true,
+				UseTransparentShadow = true,
+				HeterogeneousVolume = false,
+				Name = shader.Name ?? $"V6 Basic Material {shader.Id}"
+			};
 
 			CclShader.ShaderFromXml(sh, shader.Crm.MaterialXml, true);
 
@@ -96,7 +99,7 @@ namespace RhinoCyclesCore
 
 		internal CclShader RecreateCyclesShaderFromXml(ShaderBody shader, CclShader existing)
 		{
-			existing.Recreate(Session.Scene);
+			existing.Recreate();
 			CclShader.ShaderFromXml(existing, shader.Crm.MaterialXml, true);
 			return existing;
 		}
@@ -106,13 +109,14 @@ namespace RhinoCyclesCore
 			if (string.IsNullOrEmpty(texture.Filename)) return; 
 
 			imnode.ins.Filename.Value = texture.Filename;
-			imnode.ins.Interpolation.Value = InterpolationType.INTERPOLATION_CUBIC;
+			imnode.Interpolation = InterpolationType.Cubic;
 		}
 
 		internal static void SetTextureImage(EnvironmentTextureNode envnode, CyclesTextureImage texture)
 		{
 			if (string.IsNullOrEmpty(texture.Filename)) return;
 
+			envnode.Filename = texture.Name;
 			envnode.ins.Filename.Value = texture.Filename;
 		}
 
@@ -132,9 +136,9 @@ namespace RhinoCyclesCore
 
 		internal void RecreateBackgroundShader(CyclesBackground background)
 		{
-			CclShader bg = CclShader.FromIntPtr(Session.Scene.Background.ins.Shader.Value);
+			var bg = Session.Scene.Background.Shader;
 			var rhinobg = RhinoShader.CreateRhinoBackgroundShader(Session, background, bg);
-			Session.Scene.Background.ins.Shader.Value = rhinobg.GetShader().Ptr;
+			Session.Scene.Background.Shader = rhinobg.GetShader();
 		}
 
 		internal CclShader CreateSimpleEmissionShader(CyclesLight light)

@@ -41,7 +41,7 @@ namespace RhinoCycles.Commands
 			(PlugIn as Plugin)?.InitialiseCSycles();
 
 			var rhcyclesAss = Assembly.GetExecutingAssembly();
-			var csyclesAss = Assembly.GetAssembly(typeof(ccl.Session));
+			var csyclesAss = Assembly.GetAssembly(typeof(ccl.Client));
 			var csyclesFvi = FileVersionInfo.GetVersionInfo(csyclesAss.Location);
 
 			RhinoApp.WriteLine("----------");

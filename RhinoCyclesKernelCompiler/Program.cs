@@ -15,7 +15,7 @@ limitations under the License.
 **/
 
 // Enable next line for debug assistance
-//#define DEBUGCOMPILER
+// #define DEBUGCOMPILER
 using System;
 using ccl;
 using RhinoCyclesCore;
@@ -99,37 +99,28 @@ namespace RhinoCyclesKernelCompiler
 
 			Console.WriteLine($"Start compiling {id}\n");
 
+			string sha = device.NiceNameSha;
 			string laststatus = "";
 			Session session = null;
-			
 			Stopwatch sw = Stopwatch.StartNew();
 			bool exceptionHappened = false;
 			try
 			{
-				(IntPtr ccsessId, SessionParams sessionParameters, SceneParams sceneParameters, BufferParams bufferParams) = Session.PrepareForSession();
-				sessionParameters.Experimental = false;
-				sessionParameters.Samples = 1;
-				sessionParameters.TileSize = 1;
-				sessionParameters.Threads = 0;
-				sessionParameters.Shadingsystem = ShadingSystem.SHADINGSYSTEM_SVM;
-				sessionParameters.Background = false;
-				sessionParameters.PixelSize = 1;
-				sessionParameters.Device = device;
+				Client client = new Client();
+				SessionParameters sessionParameters = new SessionParameters(device)
+				{
+					Experimental = false,
+					Samples = 1,
+					TileSize = 1,
+					Threads = 0,
+					ShadingSystem = ShadingSystem.SVM,
+					Background = false,
+					PixelSize = 1,
+				};
+				session = new Session(sessionParameters);
 
-				sceneParameters.Shadingsystem = ShadingSystem.SHADINGSYSTEM_SVM;
-				
-				session = Session.CreateSession(ccsessId, sessionParameters, sceneParameters);
 				//session.AddPass(PassType.Combined);
-				BufferParams bp = session.BufferParams;
-				bp.FullHeight = 10;
-				bp.FullWidth = 10;
-				bp.Height = 10;
-				bp.Width = 10;
-				bp.Samples = 1;
-				bp.FullX = 0;
-				bp.FullY = 0;
-
-				session.Reset(session_params: sessionParameters, buffer_params: bufferParams);
+				session.Reset(1, 1, 1, 0, 0, 1, 1, 1);
 				session.Start();
 				while (true)
 				{
@@ -141,9 +132,9 @@ namespace RhinoCyclesKernelCompiler
 						exceptionHappened = true;
 						throw new Exception("Debug Rhino process no longer running");
 					}
-					(string status, string substatus) = session.Progress.GetStatus();
-					Console.WriteLine($"Status: {status}, Substatus: {substatus}");
-					int sample = session.Progress.GetCurrentSample();
+					string status = CSycles.progress_get_status(session.Id);
+					string substatus = CSycles.progress_get_substatus(session.Id);
+					int sample = CSycles.progress_get_sample(session.Id);
 					status = $"{id} ({sample}) | {status}: {substatus}";
 					string lowstatus = status.ToLowerInvariant();
 					bool finished = lowstatus.Contains("finished") || lowstatus.Contains("rendering done");
@@ -157,8 +148,6 @@ namespace RhinoCyclesKernelCompiler
 					{
 						break;
 					}
-					double timeRemaining = session.GetEstimatedRemainingTime();
-					Console.WriteLine($"Time remaining: {timeRemaining}");
 					if (!status.Equals(laststatus))
 					{
 						Console.WriteLine(status);
@@ -183,19 +172,20 @@ namespace RhinoCyclesKernelCompiler
 			{
 				if (session != null && !exceptionHappened)
 				{
-					session.Cancel(quick: true);
-					//session.Dispose();
+					session.Cancel("done");
+					session.Dispose();
 					File.Move(compilingSignal, gpuCompileFile, true);
 				}
 				sw.Stop();
 				Console.WriteLine($"Completed {id}");
 				Console.WriteLine($"   time: {sw.Elapsed}");
 			}
+
 		}
 
 		static List<DeviceAndPath> ReadGpuTaskData(string gpuTaskFile, string gpuDataPath)
 		{
-			List<DeviceAndPath> gpuTasks = [];
+			List<DeviceAndPath> gpuTasks = new List<DeviceAndPath>();
 
 			var gpuTaskData = File.ReadAllLines(gpuTaskFile);
 			var separator = " || ";
@@ -224,7 +214,7 @@ namespace RhinoCyclesKernelCompiler
 			programToRun += ".exe";
 #endif
 
-			ProcessStartInfo startInfo = new(
+			ProcessStartInfo startInfo = new ProcessStartInfo(
 						fileName: programToRun,
 						arguments: argumentsToProgramToRun)
 			{
@@ -282,9 +272,10 @@ namespace RhinoCyclesKernelCompiler
 			}
 
 			return result;
+
 		} /* end of Main */
 
-		static readonly float[] DummyTable = { 1.0f };
+		static float[] DummyTable = { 1.0f };
 
 		private static void SetupTables()
 		{
@@ -312,7 +303,7 @@ namespace RhinoCyclesKernelCompiler
 			Console.WriteLine($"\tKernel path: {kernelPath}");
 			Console.WriteLine($"\tData path: {dataUserPath}");
 			CSycles.path_init(kernelPath, dataUserPath);
-			CSycles.initialise(DeviceTypeMask.ALL);
+			CSycles.initialise(DeviceTypeMask.All);
 			Console.WriteLine("Setup tables for Cycles");
 			SetupTables();
 			Console.WriteLine("Cycles initialized");

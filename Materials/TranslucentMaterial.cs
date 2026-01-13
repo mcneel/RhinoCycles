@@ -79,6 +79,7 @@ namespace RhinoCyclesCore.Materials
 			translucent.outs.BSDF.Connect(sh.Output.ins.Surface);
 			outsocket = translucent.outs.BSDF;
 
+			if (finalize) sh.WriteDataToNodes();
 			return true;
 		}
 		public ClosureSocket GetClosureSocket(ccl.Shader sh)

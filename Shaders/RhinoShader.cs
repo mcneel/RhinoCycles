@@ -32,22 +32,18 @@ namespace RhinoCyclesCore.Shaders
 			if (existing != null)
 			{
 				m_shader = existing;
-				if(recreate) m_shader.Recreate(m_session.Scene);
+				if(recreate) m_shader.Recreate();
 			}
 			else
 			{
-				m_shader = m_session.Scene.AddShader();
-				m_shader.Name = name;
-				m_shader.ShaderNodeInputs.UseTransparentShadow.Value = true;
-				m_shader.ShaderNodeInputs.HeterogeneousVolume.Value = false;
-
-				/*{
-					// NOTYET TODO UseMis = true,
+				m_shader = new Shader(m_session.Scene)
+				{
+					UseMis = true,
 					UseTransparentShadow = true,
 					HeterogeneousVolume = false,
 					Name = name,
 					Verbose = false
-				};*/
+				};
 			}
 
 		}
@@ -77,7 +73,7 @@ namespace RhinoCyclesCore.Shaders
 
 		public void Reset()
 		{
-			m_shader?.Recreate(m_session.Scene);
+			m_shader?.Recreate();
 		}
 
 		public static RhinoShader CreateRhinoMaterialShader(Session session, CyclesShader intermediate)

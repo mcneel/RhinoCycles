@@ -119,7 +119,7 @@ namespace RhinoCyclesCore.Database
 					Strength = 1.0f,
 					Size = 0.0f,
 					Angle = 0.0f,
-					Type = ccl.LightType.LIGHT_BACKGROUND,
+					Type = ccl.LightType.Background,
 					CastShadow = true,
 				};
 				AddLight(bgLight);

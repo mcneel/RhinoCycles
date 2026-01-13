@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
-using ccl;
 using System;
 using System.Collections.Generic;
 
@@ -43,11 +42,11 @@ namespace RhinoCyclesCore
 		/// <summary>
 		/// List of tuples of channel indices and float arrays with UV coordinates. Stride 2.
 		/// </summary>
-		public List<Tuple<int, List<ccl.float2>>> Uvs { get; set; }
+		public List<Tuple<int, float[]>> Uvs { get; set; }
 		/// <summary>
 		/// Float array with vertex normal data. Stride 3.
 		/// </summary>
-		public List<float3> VertexNormals { get; set; }
+		public float[] VertexNormals { get; set; }
 
 		/// <summary>
 		/// Float array with vertex color data or null. Stride 3.

@@ -134,7 +134,7 @@ namespace RhinoCyclesCore.Settings
 		}*/
 
 		#region Document settings
-		public Integrator.IntegratorSamplingPattern IntegratorMethod { get => RcCore.It.AllSettings.IntegratorMethod; set => RcCore.It.AllSettings.IntegratorMethod = value; }
+		public IntegratorMethod IntegratorMethod { get => RcCore.It.AllSettings.IntegratorMethod; set => RcCore.It.AllSettings.IntegratorMethod = value; }
 		public uint IntegratorHash
 		{
 			get
