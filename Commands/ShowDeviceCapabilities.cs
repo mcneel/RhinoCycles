@@ -38,7 +38,7 @@ namespace RhinoCycles.Commands
 
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			var capabilities = Device.Capabilities;
+			var capabilities = Device.DeviceCapabilities(uint.MaxValue);
 			RhinoApp.WriteLine($"The following capabilities have been found by Cycles:\n----------\n{capabilities}\n\n----------");
 			return Result.Success;
 		}

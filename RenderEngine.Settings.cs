@@ -86,16 +86,16 @@ namespace RhinoCyclesCore
 				if (hash != _oldIntegratorHash)
 				{
 					var integrator = Session.Scene.Integrator;
-					integrator.Seed = settings.Seed;
-					integrator.MaxBounce = settings.MaxBounce;
-					integrator.MaxDiffuseBounce = settings.MaxDiffuseBounce;
-					integrator.MaxGlossyBounce = settings.MaxGlossyBounce;
-					integrator.MaxTransmissionBounce = settings.MaxTransmissionBounce;
-					integrator.MaxVolumeBounce = settings.MaxVolumeBounce;
-					integrator.UseAdaptiveSampling = settings.UseAdaptiveSampling;
-					integrator.AdaptiveMinSamples = settings.AdaptiveMinSamples;
-					integrator.AdaptiveThreshold = settings.AdaptiveThreshold;
-					integrator.TagForUpdate();
+					integrator.IntegratorNodeInputs.Seed.Value = settings.Seed;
+					integrator.IntegratorNodeInputs.MaxBounce.Value = settings.MaxBounce;
+					integrator.IntegratorNodeInputs.MaxDiffuseBounce.Value = settings.MaxDiffuseBounce;
+					integrator.IntegratorNodeInputs.MaxGlossyBounce.Value = settings.MaxGlossyBounce;
+					integrator.IntegratorNodeInputs.MaxTransmissionBounce.Value = settings.MaxTransmissionBounce;
+					integrator.IntegratorNodeInputs.MaxVolumeBounce.Value = settings.MaxVolumeBounce;
+					integrator.IntegratorNodeInputs.UseAdaptiveSampling.Value = settings.UseAdaptiveSampling;
+					integrator.IntegratorNodeInputs.AdaptiveMinSamples.Value = settings.AdaptiveMinSamples;
+					integrator.IntegratorNodeInputs.AdaptiveThreshold.Value = settings.AdaptiveThreshold;
+					// TODO integrator.TagForUpdate();
 					_needReset = true;
 					_oldIntegratorHash = hash;
 				}

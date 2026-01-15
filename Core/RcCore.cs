@@ -218,12 +218,13 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		/// <param name="sessionParameters"></param>
 		/// <returns></returns>
-		public Session CreateSession(SessionParameters sessionParameters)
+		public Session CreateSession(IntPtr idPtr, SessionParams sessionParams, SceneParams sceneParams)
 		{
-			var session = new Session(sessionParameters);
-			AddLogStringIfVerbose($"Created session {session.Id}.\n");
+			Session session = Session.CreateSession(idPtr, sessionParams, sceneParams);
 
-			active_sessions[session.Id] = session;
+			AddLogStringIfVerbose($"Created session {session.Ptr}.\n");
+
+			active_sessions[session.Ptr] = session;
 
 			return session;
 		}
@@ -231,18 +232,18 @@ namespace RhinoCyclesCore.Core
 		public void ReleaseSession(Session session)
 		{
 			AddLogStringIfVerbose("ReleaseSession: entry");
-			if(session != null && active_sessions.ContainsKey(session.Id))
+			if(session != null && active_sessions.ContainsKey(session.Ptr))
 			{
-				AddLogStringIfVerbose($"ReleaseSession: cancel session {session.Id} start");
-				session.QuickCancel();
-				while(!active_sessions.TryRemove(key: session.Id, value: out _))
+				AddLogStringIfVerbose($"ReleaseSession: cancel session {session.Ptr} start");
+				session.Cancel(true);
+				while(!active_sessions.TryRemove(key: session.Ptr, value: out _))
 				{
 					Thread.Sleep(10);
 				}
-				AddLogStringIfVerbose($"ReleaseSession: cancel session {session.Id} done");
-				AddLogStringIfVerbose($"ReleaseSession: dispose session {session.Id} start");
+				AddLogStringIfVerbose($"ReleaseSession: cancel session {session.Ptr} done");
+				AddLogStringIfVerbose($"ReleaseSession: dispose session {session.Ptr} start");
 				session.Dispose();
-				AddLogStringIfVerbose($"ReleaseSession: dispose session {session.Id} done");
+				AddLogStringIfVerbose($"ReleaseSession: dispose session {session.Ptr} done");
 			}
 			AddLogStringIfVerbose("ReleaseSession: exit");
 		}
@@ -275,7 +276,7 @@ namespace RhinoCyclesCore.Core
 		/// Otherwise isDeviceReady will be false and actualDevice Device.Default.
 		/// </returns>
 		public (bool isDeviceReady, Device actualDevice) IsDeviceReady(Device device) {
-			if (device.Type != DeviceType.Multi)
+			if (device.Type != DeviceType.DEVICE_MULTI)
 			{
 				lock (accessGpuKernelDevicesReadiness)
 				{
@@ -288,6 +289,7 @@ namespace RhinoCyclesCore.Core
 			}
 			else
 			{
+#if NOTYET
 				lock (accessGpuKernelDevicesReadiness)
 				{
 					bool allSubdevicesReady =
@@ -296,6 +298,7 @@ namespace RhinoCyclesCore.Core
 						select devreadiness.IsReady).Any(b => b == false);
 					if (allSubdevicesReady) return (true, device);
 				}
+#endif
 			}
 			return (false, Device.Default);
 		}
@@ -391,6 +394,7 @@ namespace RhinoCyclesCore.Core
 							ToggleViewportsRunningRealtime();
 						}
 					}
+#if NOTYET
 					// then handle multi device
 					if(device.Device.IsMulti && !isReady) {
 						bool allSubdevicesReady =
@@ -407,6 +411,7 @@ namespace RhinoCyclesCore.Core
 							}
 						}
 					}
+#endif
 				}
 				bool ready = true;
 				lock (accessGpuKernelDevicesReadiness)
@@ -540,7 +545,7 @@ namespace RhinoCyclesCore.Core
 				foreach (Device device in devices)
 				{
 					var info = GenerateGpuDeviceInfo(device: device);
-					tw.WriteLine($"{device.Id} || {info}");
+					tw.WriteLine($"{device.Index} || {info}");
 				}
 				tw.Close();
 			}
@@ -657,9 +662,9 @@ namespace RhinoCyclesCore.Core
 
 			List<Device> currentDeviceGroup = (from d in Device.Devices where d.IsGpu && d.Type.Equals(cd.Type) select d).ToList();
 			List<Device> otherDeviceGroup = (from d in Device.Devices where d.IsGpu && !d.Type.Equals(cd.Type) select d).ToList();
-			List<Device> cudaGroup = (from d in otherDeviceGroup where d.Type.Equals(DeviceType.Cuda) select d).ToList();
-			List<Device> optixGroup = (from d in otherDeviceGroup where d.Type.Equals(DeviceType.Optix) select d).ToList();
-			otherDeviceGroup = (from d in otherDeviceGroup where !cudaGroup.Contains(d) && !optixGroup.Contains(d) && d.Type != DeviceType.Multi select d).ToList();
+			List<Device> cudaGroup = (from d in otherDeviceGroup where d.Type.Equals(DeviceType.DEVICE_CUDA) select d).ToList();
+			List<Device> optixGroup = (from d in otherDeviceGroup where d.Type.Equals(DeviceType.DEVICE_OPTIX) select d).ToList();
+			otherDeviceGroup = (from d in otherDeviceGroup where !cudaGroup.Contains(d) && !optixGroup.Contains(d) && d.Type != DeviceType.DEVICE_MULTI select d).ToList();
 
 			List < List < Device >> deviceListings = new List<List<Device>>
 			{

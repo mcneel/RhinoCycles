@@ -369,10 +369,10 @@ namespace RhinoCyclesCore.Settings
 			lb.Clear();
 			foreach (var d in ccl.Device.Devices)
 			{
-				if (d.Type == t && d.Type!=ccl.DeviceType.Multi)
+				if (d.Type == t && d.Type!=ccl.DeviceType.DEVICE_MULTI)
 				{
 					var deviceCheck = RcCore.It.IsDeviceReady(d);
-					lb.Add(new DeviceItem { Text = d.NiceName, Selected = rd.HasId(d.Id), Id = (int)d.Id, Ready = deviceCheck.isDeviceReady });
+					lb.Add(new DeviceItem { Text = d.NiceName, Selected = rd.HasId(d.Index), Id = (int)d.Index, Ready = deviceCheck.isDeviceReady });
 				}
 			}
 		}
@@ -407,12 +407,12 @@ namespace RhinoCyclesCore.Settings
 					SuspendLayout();
 					UnRegisterControlEvents();
 					ShowDeviceData();
-					SetupDeviceData(e.AllSettings, m_tabpage_cpu.Collection, ccl.DeviceType.Cpu);
-					if(ccl.Device.CudaAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_cuda.Collection, ccl.DeviceType.Cuda);
-					if(ccl.Device.OptixAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_optix.Collection, ccl.DeviceType.Optix);
-					if(ccl.Device.MetalAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_metal.Collection, ccl.DeviceType.Metal);
-					if(ccl.Device.HipAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_hip.Collection, ccl.DeviceType.Hip);
-					if(ccl.Device.OneApiAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_oneapi.Collection, ccl.DeviceType.OneApi);
+					SetupDeviceData(e.AllSettings, m_tabpage_cpu.Collection, ccl.DeviceType.DEVICE_CPU);
+					if(ccl.Device.CudaAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_cuda.Collection, ccl.DeviceType.DEVICE_CUDA);
+					if(ccl.Device.OptixAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_optix.Collection, ccl.DeviceType.DEVICE_OPTIX);
+					if(ccl.Device.MetalAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_metal.Collection, ccl.DeviceType.DEVICE_METAL);
+					if(ccl.Device.HipAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_hip.Collection, ccl.DeviceType.DEVICE_HIP);
+					if(ccl.Device.OneApiAvailable()) SetupDeviceData(e.AllSettings, m_tabpage_oneapi.Collection, ccl.DeviceType.DEVICE_ONEAPI);
 					ActivateDevicePage(e.AllSettings);
 					m_lb_threadcount.Visible = m_currentDevice.IsCpu;
 					m_lb_threadcount_currentval.Visible = m_currentDevice.IsCpu;
@@ -445,12 +445,12 @@ namespace RhinoCyclesCore.Settings
 		{
 			m_tc = new TabControl();
 
-			m_tabpage_cpu = new GridDevicePage { DeviceType = ccl.DeviceType.Cpu, Text = "CPU", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CPUSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Cpu category.", 24) };
-			m_tabpage_cuda = new GridDevicePage { DeviceType = ccl.DeviceType.Cuda, Text = "CUDA", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CUDASvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Cuda category.\nThese are the NVidia graphics and compute cards.", 25) };
-			m_tabpage_optix = new GridDevicePage { DeviceType = ccl.DeviceType.Optix, Text = "Optix", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_OPTIXSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Optix category.\nThese are the NVidia graphics and compute cards from Maxwell architecture and newer.", 41) };
-			m_tabpage_metal = new GridDevicePage { DeviceType = ccl.DeviceType.Metal, Text = "Metal", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_AppleMetalLogoSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Metal category.\nThese include GPU devices on MacOS systems.", 26) };
-			m_tabpage_hip = new GridDevicePage { DeviceType = ccl.DeviceType.Hip, Text = "HIP", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_HIPSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the HIP category.\nThese include AMD GPU and supported devices.", 78) };
-			m_tabpage_oneapi = new GridDevicePage { DeviceType = ccl.DeviceType.OneApi, Text = "OneAPI", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_OneAPISvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the OneAPI category.\nThese include Intel GPU and supported devices.", 79) };
+			m_tabpage_cpu = new GridDevicePage { DeviceType = ccl.DeviceType.DEVICE_CPU, Text = "CPU", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CPUSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Cpu category.", 24) };
+			m_tabpage_cuda = new GridDevicePage { DeviceType = ccl.DeviceType.DEVICE_CUDA, Text = "CUDA", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CUDASvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Cuda category.\nThese are the NVidia graphics and compute cards.", 25) };
+			m_tabpage_optix = new GridDevicePage { DeviceType = ccl.DeviceType.DEVICE_OPTIX, Text = "Optix", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_OPTIXSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Optix category.\nThese are the NVidia graphics and compute cards from Maxwell architecture and newer.", 41) };
+			m_tabpage_metal = new GridDevicePage { DeviceType = ccl.DeviceType.DEVICE_METAL, Text = "Metal", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_AppleMetalLogoSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Metal category.\nThese include GPU devices on MacOS systems.", 26) };
+			m_tabpage_hip = new GridDevicePage { DeviceType = ccl.DeviceType.DEVICE_HIP | DeviceType.DEVICE_HIPRT, Text = "HIP", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_HIPSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the HIP category.\nThese include AMD GPU and supported devices.", 78) };
+			m_tabpage_oneapi = new GridDevicePage { DeviceType = ccl.DeviceType.DEVICE_ONEAPI, Text = "OneAPI", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_OneAPISvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the OneAPI category.\nThese include Intel GPU and supported devices.", 79) };
 
 			m_tc.Pages.Add(m_tabpage_cpu);
 			if (ccl.Device.CudaAvailable()) {
@@ -613,7 +613,7 @@ namespace RhinoCyclesCore.Settings
 			var nodev = "-";
 			if(m_currentDevice!=null)
 			{
-					if (m_currentDevice.Type != ccl.DeviceType.Optix && m_currentDevice.Type != ccl.DeviceType.Multi)
+					if (m_currentDevice.Type != ccl.DeviceType.DEVICE_OPTIX && m_currentDevice.Type != ccl.DeviceType.DEVICE_MULTI)
 						m_curdev.Text = $"{m_currentDevice.NiceName} ({m_currentDevice.Type})";
 					else
 						m_curdev.Text = $"{m_currentDevice.NiceName}";
@@ -647,7 +647,7 @@ namespace RhinoCyclesCore.Settings
 		private void M_cb_enablecpu_in_multi_CheckedChanged(object sender, EventArgs e)
 		{
 			UnRegisterControlEvents();
-			GridDevicePage cpuPage = GetGridDevicePage(ccl.DeviceType.Cpu);
+			GridDevicePage cpuPage = GetGridDevicePage(ccl.DeviceType.DEVICE_CPU);
 			if(cpuPage != null) {
 				if(m_cb_enablecpu_in_multi.Checked.Value) {
 					cpuPage.SelectAll();
@@ -672,7 +672,7 @@ namespace RhinoCyclesCore.Settings
 				{
 					if (page is GridDevicePage p)
 					{
-						if (p != senderpage && !(p.DeviceType == ccl.DeviceType.Cpu && stillUseCpu))
+						if (p != senderpage && !(p.DeviceType == ccl.DeviceType.DEVICE_CPU && stillUseCpu))
 						{
 							p.ClearSelection();
 						}

@@ -50,9 +50,9 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
-		/// Guid of the mesh this object references
+		/// Guid of the geometry this object references
 		/// </summary>
-		public Tuple<Guid, int> meshid { get; set; }
+		public Tuple<Guid, int> geomid { get; set; }
 
 		/// <summary>
 		/// The transformation matrix for this object.
@@ -76,6 +76,8 @@ namespace RhinoCyclesCore
 		public uint Shader { get; set; }
 
 		public bool CastShadow { get; set; }
+
+		public bool IsLight { get; set; }
 
 		/// <summary>
 		/// Shadow-only toggle.

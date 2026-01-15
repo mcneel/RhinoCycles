@@ -48,9 +48,6 @@ namespace RhinoCyclesCore.Shaders
 			// plug BSDF into material surface
 			diffuse_bsdf.outs.BSDF.Connect(m_shader.Output.ins.Surface);
 
-			// done
-			m_shader.WriteDataToNodes();
-
 			return m_shader;
 		}
 	}

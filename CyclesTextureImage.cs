@@ -58,7 +58,7 @@ namespace RhinoCyclesCore
 		/// Transform.y = scale
 		/// Transform.z = rotate
 		/// </summary>
-		public ccl.Transform Transform { get; set; }
+		public ccl.Transform Transform { get; set; } = ccl.Transform.Identity();
 
 		/// <summary>
 		/// Strength of texture. Used in environment textures.
@@ -69,7 +69,7 @@ namespace RhinoCyclesCore
 		{
 			get
 			{
-				if (Transform == null) return 0.0f;
+				if (Transform == ccl.Transform.Identity()) return 0.0f;
 				var td = Transform.x.x;
 				if (td > 0.2f) return 0.05f;
 				if (td < 0.06) return 2.0f;
