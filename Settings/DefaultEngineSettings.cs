@@ -137,6 +137,8 @@ namespace RhinoCyclesCore.Settings
 		static public float AdaptiveThreshold => 0.01f;
 		static public float JiggleFactor => 0.0001f;
 		static public float GpJiggleDistance => 0.0001f;
-		static public bool SkipPreview => false;
+		// https://mcneel.myjetbrains.com/youtrack/issue/RH-91229/Rhino-shuts-down-when-rotating-texture-previews
+		// set to true until RH-91229 is resolved
+		static public bool SkipPreview => true;
 	}
 }

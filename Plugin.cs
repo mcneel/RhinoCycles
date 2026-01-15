@@ -125,22 +125,18 @@ namespace RhinoCycles
 
 					CSycles.path_init(RcCore.It.KernelPath, RcCore.It.DataUserPath);
 
-					// TODO: Is this the right spot?
 					IntPtr perlin_noise_array = RenderTexture.GetProceduralPerlinNoiseArrayPointer();
 					uint perlin_noise_array_size = RenderTexture.GetProceduralPerlinNoiseArraySize();
 					CSycles.set_rhino_perlin_noise_table(perlin_noise_array, perlin_noise_array_size);
 
-					// TODO: Is this the right spot?
 					IntPtr impulse_noise_array = RenderTexture.GetProceduralImpulseNoiseArrayPointer();
 					uint impulse_noise_array_size = RenderTexture.GetProceduralImpulseNoiseArraySize();
 					CSycles.set_rhino_impulse_noise_table(impulse_noise_array, impulse_noise_array_size);
 
-					// TODO: Is this the right spot?
 					IntPtr vc_noise_array = RenderTexture.GetProceduralVcNoiseArrayPointer();
 					uint vc_noise_array_size = RenderTexture.GetProceduralVcNoiseArraySize();
 					CSycles.set_rhino_vc_noise_table(vc_noise_array, vc_noise_array_size);
 
-					// TODO: Is this the right spot?
 					IntPtr aaltonen_noise_array = RenderTexture.GetProceduralAaltonenNoiseArrayPointer();
 					uint aaltonen_noise_array_size = RenderTexture.GetProceduralAaltonenNoiseArraySize();
 					CSycles.set_rhino_aaltonen_noise_table(aaltonen_noise_array, aaltonen_noise_array_size);
@@ -154,7 +150,8 @@ namespace RhinoCycles
 					{
 						try
 						{
-							CSycles.initialise(DeviceTypeMask.All);
+							// Initialize everything except OneAPI for now
+							CSycles.initialise(DeviceTypeMask.CPU | DeviceTypeMask.CUDA | DeviceTypeMask.OPTIX | DeviceTypeMask.HIP | DeviceTypeMask.METAL);
 						}
 						catch (Exception)
 						{
@@ -170,6 +167,7 @@ namespace RhinoCycles
 
 					RcCore.It.TriggerInitialisationCompleted(this);
 					RcCore.It.AddLogString("InitialiseCSycles exit");
+
 				}
 			}
 		}

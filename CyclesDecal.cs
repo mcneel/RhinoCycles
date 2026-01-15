@@ -43,7 +43,7 @@ namespace RhinoCyclesCore
 		public float VerticalSweepStart { get; set; } = 0.0f;
 		public float VerticalSweepEnd { get; set; } = 1.0f;
 
-		public ccl.Transform Transform { get; set; } = null;
+		public ccl.Transform Transform { get; set; } = ccl.Transform.Identity();
 
 		/// <summary>
 		/// Decal origin

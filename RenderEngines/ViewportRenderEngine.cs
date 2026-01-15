@@ -40,9 +40,9 @@ namespace RhinoCyclesCore.RenderEngines
 			BeginChangesNotified += ViewportRenderEngine_BeginChangesNotified;
 
 #region create callbacks for Cycles
-			m_logger_callback = ViewportLoggerCallback;
+			// TODO m_logger_callback = ViewportLoggerCallback;
 
-			CSycles.log_to_stdout(false);
+			// TODO CSycles.log_to_stdout(false);
 			//CSycles.set_logger(m_logger_callback);
 #endregion
 
@@ -57,7 +57,7 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				return;
 			}
-			Session.QuickCancel();
+			Session.Cancel(true);
 		}
 
 		public void ViewportLoggerCallback(string msg) {
@@ -167,7 +167,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 		private void HandleRenderCrash()
 		{
-			Session.QuickCancel();
+			Session.Cancel(quick: true);
 			State = State.Stopping;
 			Action switchToWireframe = () =>
 			{
@@ -252,23 +252,24 @@ Please click the link below for more information.", 69));
 			#region set up session parameters
 			ThreadCount = (RenderDevice.IsCpu ? eds.Threads : 0);
 			int pixelSize = DeterminePixelSize();
-			var sessionParams = new SessionParameters(RenderDevice)
-			{
-				Experimental = false,
-				Samples = (int)MaxSamples,
-				TileSize = TileSize(RenderDevice),
-				Threads = (uint)ThreadCount,
-				ShadingSystem = ShadingSystem.SVM,
-				Background = false,
-				PixelSize = pixelSize,
-				UseResolutionDivider = !RenderDevice.IsMulti,
-			};
+
+			var (idPtr, sessionParams, sceneParams, bufferParams) = Session.PrepareForSession();
+			sessionParams.Device = RenderDevice;
+			sessionParams.Experimental = false;
+			sessionParams.Samples = MaxSamples;
+			sessionParams.TileSize = TileSize(RenderDevice);
+			sessionParams.Threads = ThreadCount;
+			sessionParams.Shadingsystem = ShadingSystem.SHADINGSYSTEM_SVM;
+			sessionParams.Background = false;
+			sessionParams.PixelSize = pixelSize;
+			sessionParams.UseResolutionDivider = !RenderDevice.IsMulti;
+			sceneParams.Shadingsystem = sessionParams.Shadingsystem;
 			#endregion
 
 			if (this == null || ShouldBreak) return;
 
 			#region create session for scene
-			Session = RcCore.It.CreateSession( sessionParams);
+			Session = RcCore.It.CreateSession(idPtr, sessionParams, sceneParams);
 			CreateSimpShader();
 			#endregion
 
@@ -277,18 +278,23 @@ Please click the link below for more information.", 69));
 			// Set up passes
 			foreach (var reqPass in reqPassTypes)
 			{
-				Session.AddPass(reqPass);
+				Pass pass = Session.Scene.AddPass();
+				pass.ins.Type.Value = reqPass;
+				pass.ins.Name.Value = NameForPassType(reqPass);
+				Session.AddPass(pass);
 			}
 
 			RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Reset start");
-			Session.Reset(
-				width: FullSize.Width,
-				height: FullSize.Height,
-				samples: MaxSamples,
-				full_x: 0, full_y: 0,
-				full_width: FullSize.Width,
-				full_height: FullSize.Height,
-				pixel_size: pixelSize);
+
+			bufferParams.ins.Width.Value = FullSize.Width;
+			bufferParams.ins.Height.Value = FullSize.Height;
+			bufferParams.ins.Samples.Value = MaxSamples;
+			bufferParams.ins.FullX.Value = 0;
+			bufferParams.ins.FullY.Value = 0;
+			bufferParams.ins.FullWidth.Value = FullSize.Width;
+			bufferParams.ins.FullHeight.Value = FullSize.Height;
+
+			Session.Reset(session_params: sessionParams, buffer_params: bufferParams);
 			RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Reset end");
 
 			// main render loop, including restarts
@@ -355,15 +361,7 @@ Please click the link below for more information.", 69));
 				{
 					var size = FullSize;
 					RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Reset start");
-					Session.Reset(
-						width: size.Width,
-						height: size.Height,
-						samples: MaxSamples,
-						full_x: 0,
-						full_y: 0,
-						full_width: size.Width,
-						full_height: size.Height,
-						pixel_size: pixelSize);
+					Session.Reset(session_params: sessionParams, buffer_params: bufferParams);
 					RcCore.It.AddLogString("ViewportRenderEngine.Renderer Session.Reset end");
 					lastRenderedSample = -1;
 					renderingDone = false;
@@ -372,7 +370,7 @@ Please click the link below for more information.", 69));
 
 				if (!Finished)
 				{
-					UpdateCallback(Session.Id);
+					UpdateCallback(Session.Ptr);
 				}
 
 				// If we have rendered a new sample
@@ -464,7 +462,7 @@ Please click the link below for more information.", 69));
 			{
 				TriggerStartSynchronizing();
 
-				Session.WaitUntilLocked();
+				Session.Scene.WaitUntilLocked();
 
 				if (UploadData())
 				{
@@ -472,7 +470,7 @@ Please click the link below for more information.", 69));
 					_needReset = true;
 				}
 
-				Session.Unlock();
+				Session.Scene.Unlock();
 
 				if (CancelRender)
 				{
@@ -492,17 +490,17 @@ Please click the link below for more information.", 69));
 			if (Session != null)
 			{
 				var cyclesIntegrator = Session.Scene.Integrator;
-				cyclesIntegrator.Seed = integrator.Seed;
-				cyclesIntegrator.MaxBounce = integrator.MaxBounce;
-				cyclesIntegrator.MaxDiffuseBounce = integrator.MaxDiffuseBounce;
-				cyclesIntegrator.MaxGlossyBounce = integrator.MaxGlossyBounce;
-				cyclesIntegrator.MaxTransmissionBounce = integrator.MaxTransmissionBounce;
-				cyclesIntegrator.MaxVolumeBounce = integrator.MaxVolumeBounce;
-				cyclesIntegrator.TransparentMaxBounce = integrator.MaxTransparentBounce;
-				cyclesIntegrator.UseAdaptiveSampling = integrator.UseAdaptiveSampling;
-				cyclesIntegrator.AdaptiveMinSamples = integrator.AdaptiveMinSamples;
-				cyclesIntegrator.AdaptiveThreshold = integrator.AdaptiveThreshold;
-				cyclesIntegrator.TagForUpdate();
+				cyclesIntegrator.ins.Seed.Value = integrator.Seed;
+				cyclesIntegrator.ins.MaxBounce.Value = integrator.MaxBounce;
+				cyclesIntegrator.ins.MaxDiffuseBounce.Value = integrator.MaxDiffuseBounce;
+				cyclesIntegrator.ins.MaxGlossyBounce.Value = integrator.MaxGlossyBounce;
+				cyclesIntegrator.ins.MaxTransmissionBounce.Value = integrator.MaxTransmissionBounce;
+				cyclesIntegrator.ins.MaxVolumeBounce.Value = integrator.MaxVolumeBounce;
+				cyclesIntegrator.ins.TransparentMaxBounce.Value = integrator.MaxTransparentBounce;
+				cyclesIntegrator.ins.UseAdaptiveSampling.Value = integrator.UseAdaptiveSampling;
+				cyclesIntegrator.ins.AdaptiveMinSamples.Value = integrator.AdaptiveMinSamples;
+				cyclesIntegrator.ins.AdaptiveThreshold.Value = integrator.AdaptiveThreshold;
+				// TODO cyclesIntegrator.TagForUpdate();
 				_needReset = true;
 			}
 		}

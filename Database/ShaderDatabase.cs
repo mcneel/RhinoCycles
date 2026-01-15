@@ -152,6 +152,11 @@ namespace RhinoCyclesCore.Database
 			return _rhCclShaders.ContainsKey(shaderId);
 		}
 
+		public bool HasQueuedShader(uint shaderId)
+		{
+			return _cqShaders.Any(s => s.Id == shaderId);
+		}
+
 		/// <summary>
 		/// Get Shader for hash, or null if not found
 		/// </summary>
@@ -197,24 +202,13 @@ namespace RhinoCyclesCore.Database
 			{
 				if (disposing)
 				{
-					/*
-					foreach (var allshader in _allShaders)
-					{
-						allshader.Item2?.Dispose();
-					}
-					_allShaders.Clear();
-					*/
-					_cqObjectsShaderChanges.Clear(); // CyclesObjectShader
+					_cqObjectsShaderChanges.Clear();
 					foreach (var shader in _cqShaders)
 					{
 						shader.Dispose();
 					}
 					ClearShaders();
-					foreach (var cclshader in _rhCclShaders)
-					{
-						cclshader.Value?.Dispose();
-					}
-					_rhCclShaders.Clear(); // uint, CclShader
+					_rhCclShaders.Clear();
 				}
 
 				// TODO: free unmanaged resources (unmanaged objects) and override finalizer
