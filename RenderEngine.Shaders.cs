@@ -127,7 +127,7 @@ namespace RhinoCyclesCore
 			// We need to know this so that we can disable material decals on Mac
 			// when rendering with CPU. We should probably do this in a more
 			// elegant way in the future or maybe we can remove altogether.
-			v6.IsCpuRender = RenderDevice.IsCpu;
+			v6.IsCpuRender = RenderDevice?.IsCpu;
 
 			return v6.GetShader();
 		}
