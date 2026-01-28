@@ -470,45 +470,12 @@ namespace RhinoCyclesCore
 		protected object UploadDataLock = new();
 
 		/// <summary>
-		/// Call to cancel rendering, stop and destroy the session, and change state to Stopped. At the start
-		/// state is changed to Stopping
+		/// Signal render engine to stop rendering.
 		/// </summary>
 		public void StopTheRenderer()
 		{
 			RcCore.It.AddLogStringIfVerbose("StopTheRenderer entry");
 			State = State.Stopping;
-
-			RcCore.It.AddLogStringIfVerbose("StopTheRenderer, acquire UploadData lock...");
-			// Try to get the lock. If we can't get it, we're still uploading data, so wait
-			// for the upload to finish. Once we can get the lock, we know that no other actor
-			// is uploading data, so we can just unlock and continue with the teardown.
-			lock(UploadDataLock)
-			{
-				RcCore.It.AddLogStringIfVerbose("StopTheRenderer, UploadData lock acquired");
-			}
-
-			// try to get scene lock. Necessary since UploadData might still be writing to
-			// the session. Wait for it to react to state being set to Stopping.
-			// Once we can lock we know there is no other actor accessing the session, so
-			// we can just unlock and continue with the teardown.
-			Debug.Assert(Session != null);
-			if (Session != null)
-			{
-				RcCore.It.AddLogStringIfVerbose("Session Wait, lock and unlock start");
-				Session.Scene.WaitUntilLocked();
-				Session.Scene.Unlock();
-				RcCore.It.AddLogStringIfVerbose("Session Wait, lock and unlock end");
-				RcCore.It.AddLogStringIfVerbose("Session QuickCancel start");
-				Session.Cancel(quick: true);
-				RcCore.It.AddLogStringIfVerbose("Session QuickCancel end");
-				Session.Cancel(quick: false);
-				Thread.Sleep(500);
-				RcCore.It.AddLogStringIfVerbose("Session Dispose start");
-				Session.Dispose();
-				RcCore.It.AddLogStringIfVerbose("Session Dispose end");
-			}
-			CancelRender = true;
-			State = State.Stopped;
 			RcCore.It.AddLogStringIfVerbose("StopTheRenderer exit");
 		}
 

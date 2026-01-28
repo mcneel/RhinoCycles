@@ -257,17 +257,6 @@ namespace RhinoCyclesCore.RenderEngines
 			#endregion
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer Stopping");
 
-			while (State == State.Stopping) {
-				Thread.Sleep(10);
-			}
-
-			RcCore.It.AddLogString("ModalRenderEngine.Renderer StopTheRenderer");
-			cyclesEngine.StopTheRenderer();
-			RcCore.It.AddLogString("ModalRenderEngine.Renderer StopTheRenderer done");
-
-			// note: no cleaning up of database here. There will be otherwise potential
-			// for double frees.
-
 			// signal stop
 			cyclesEngine.State = State.Stopped;
 
