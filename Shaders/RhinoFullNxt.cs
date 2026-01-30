@@ -17,16 +17,17 @@ limitations under the License.
 using ccl;
 using ccl.ShaderNodes;
 using ccl.ShaderNodes.Sockets;
+using Rhino;
+using Rhino.Render;
+using Rhino.Runtime;
 using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Rhino;
-using System.Diagnostics;
-using Rhino.Runtime;
 
 namespace RhinoCyclesCore.Shaders
 {
@@ -140,7 +141,7 @@ namespace RhinoCyclesCore.Shaders
 			return m_shader;
 		}
 
-		static private void SetupOneDecalNodes(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, ref ISocket alpha, TextureAdjustmentTextureProceduralNode adjust)
+		static private void SetupOneDecalNodes(Shader shader, CyclesDecal decal, RhinoTextureCoordinateNode texco, ImageTextureNode imgtex, MathMultiply transp, TextureAdjustmentTextureProceduralNode adjust)
 		{
 			texco.ObjectTransform = decal.Transform;
 			texco.UseTransform = true;
@@ -201,16 +202,22 @@ namespace RhinoCyclesCore.Shaders
 			texco.VerticalSweepStart = decal.VerticalSweepStart;
 			texco.VerticalSweepEnd = decal.VerticalSweepEnd;
 
-			// if color mask is set we add here a branch of nodes to adjust the
-			// imgtex alpha output with the color mask.
-			if (decal.Texture.UseColorMask) {
-				MathMultiply adjust_img_alpha = Utilities.ApplyColorMaskGraph(imgtex, decal.Texture);
-				alpha = adjust_img_alpha.outs.Value;
-			}
-			else {
-				alpha = imgtex.outs.Alpha;
-			}
+			if(transp != null)
+			{
+				transp.ins.Value2.Value = 1.0f - decal.Transparency;
 
+				// if color mask is set we add here a branch of nodes to adjust the
+				// imgtex alpha output with the color mask.
+				if (decal.Texture.UseColorMask)
+				{
+					MathMultiply adjust_img_alpha = Utilities.ApplyColorMaskGraph(imgtex, decal.Texture);
+					adjust_img_alpha.outs.Value.Connect(transp.ins.Value1);
+				}
+				else
+				{
+					imgtex.outs.Alpha.Connect(transp.ins.Value1);
+				}
+			}
 
 			switch(decal.Mapping) {
 				case Rhino.Render.DecalMapping.Planar:
@@ -351,198 +358,6 @@ namespace RhinoCyclesCore.Shaders
 			return multiply2.outs.Value;
 		}
 
-		private (ClosureSocket decal_closure, FloatSocket mask_socket) HandleTextureDecal(List<CyclesDecal> decals, bool gamma_correct_decals, float shaderGamma)
-		{
-			int count = decals.Count;
-
-			var texcos = new List<RhinoTextureCoordinateNode>(count);
-			var imgtexs = new List<ImageTextureNode>(count);
-			var mixrgbs = new List<MixNode>(count);
-			var alphas = new List<ISocket>(count);
-			var alphamaths = new List<MathAdd>(count);
-			var adjustments = new List<TextureAdjustmentTextureProceduralNode>(count);
-			int idx = 1;
-
-			// First create all the nodes we need to set up decals
-			// for this material.
-			for (int i = 0; i < count; i++)
-			{
-				texcos.Add(new RhinoTextureCoordinateNode(m_shader, $"Decal_{idx}_texco_"));
-				imgtexs.Add(new ImageTextureNode(m_shader, $"Texture_for_decal_{idx}_"));
-				mixrgbs.Add(new MixNode(m_shader, $"Decal_mixer_{idx}_"));
-				adjustments.Add(new TextureAdjustmentTextureProceduralNode(m_shader, $"Decal_texadjustment_{idx}_"));
-				if (i < count - 1)
-				{
-					alphamaths.Add(new MathAdd(m_shader, $"Decal_alpha_adder_{idx}_"));
-				}
-
-				idx++;
-			}
-
-			// Note: lastMixer is not needed but things get a bit tricky when removed.
-			MixNode lastMixer = mixrgbs.Last();
-			lastMixer.ins.Fac.Value = 1.0f;
-
-			GammaNode decalGammaNode = null;
-			if (gamma_correct_decals)
-			{
-				decalGammaNode = new GammaNode(m_shader, "gamma node for decal");
-				decalGammaNode.ins.Gamma.Value = m_original.Gamma;
-				decalGammaNode.outs.Color.Connect(lastMixer.ins.Color2);
-			}
-
-			ISocket sock_to_connect_to = gamma_correct_decals ? decalGammaNode.ins.Color : lastMixer.ins.Color2;
-			ISocket alpha_socket = null;
-
-			if (count == 1)
-			{
-				var texco = texcos[0];
-				var imgtex = imgtexs[0];
-				var adjust = adjustments[0];
-
-				SetupOneDecalNodes(m_shader, decals.First(), texco, imgtex, ref alpha_socket, adjust);
-
-				if (decals[0].Texture.AdjustNeeded)
-				{
-					imgtex.outs.Color.Connect(adjust.ins.Color);
-					adjust.outs.Color.Connect(sock_to_connect_to);
-				}
-				else
-				{
-					imgtex.outs.Color.Connect(sock_to_connect_to);
-				}
-			}
-			else
-			{
-				idx = 0;
-
-				// Set up decal images and texture coordinates.
-				foreach (var decal in decals)
-				{
-					var texco = texcos[idx];
-					var imgtex = imgtexs[idx];
-					var adjust = adjustments[idx];
-
-					ISocket alpha = null;
-					SetupOneDecalNodes(m_shader, decal, texco, imgtex, ref alpha, adjust);
-					alphas.Add(alpha);
-
-					idx++;
-				}
-				idx = 0;
-
-				MixNode previousMixRgb = null;
-				MathAdd previousAlphaMath = null;
-				ImageTextureNode imgA = null;
-				TextureAdjustmentTextureProceduralNode adjustA = null;
-				// Use alpa addition nodes to go through all
-				// node lists and connect them as needed.
-				foreach (MathAdd alphaMath in alphamaths)
-				{
-					alphaMath.UseClamp = true;
-					ISocket alphaA;
-					if (idx == 0)
-					{
-						CyclesTextureImage teximA = decals[idx].Texture;
-						MixNode mixer = mixrgbs[idx];
-						mixer.BlendType = MixNode.BlendTypes.Blend;
-						imgA = imgtexs[idx];
-						adjustA = adjustments[idx];
-						alphaA = alphas[idx];
-
-						CyclesTextureImage teximB = decals[idx + 1].Texture;
-						ImageTextureNode imgB = imgtexs[idx + 1];
-						ISocket alphaB = alphas[idx + 1];
-						TextureAdjustmentTextureProceduralNode adjustB = adjustments[idx];
-
-						if (teximA.AdjustNeeded)
-						{
-							imgA.outs.Color.Connect(adjustA.ins.Color);
-							adjustA.outs.Color.Connect(mixer.ins.Color1);
-
-						}
-						else
-						{
-							imgA.outs.Color.Connect(mixer.ins.Color1);
-						}
-						if (teximB.AdjustNeeded)
-						{
-							imgB.outs.Color.Connect(adjustB.ins.Color);
-							adjustB.outs.Color.Connect(mixer.ins.Color2);
-						}
-						else
-						{
-							imgB.outs.Color.Connect(mixer.ins.Color2);
-						}
-
-						alphaA.Connect(alphaMath.ins.Value1);
-						alphaB.Connect(alphaMath.ins.Value2);
-
-						alphaB.Connect(mixer.ins.Fac);
-
-						previousAlphaMath = alphaMath;
-						previousMixRgb = mixer;
-					}
-					else
-					{
-						MixNode mixer = mixrgbs[idx];
-						CyclesTextureImage teximA = decals[idx + 1].Texture;
-						imgA = imgtexs[idx + 1];
-						alphaA = alphas[idx + 1];
-						adjustA = adjustments[idx + 1];
-
-						previousMixRgb.outs.Color.Connect(mixer.ins.Color1);
-						if (teximA.AdjustNeeded)
-						{
-							imgA.outs.Color.Connect(adjustA.ins.Color);
-							adjustA.outs.Color.Connect(mixer.ins.Color2);
-						}
-						else
-						{
-							imgA.outs.Color.Connect(mixer.ins.Color2);
-						}
-
-						previousAlphaMath.outs.Value.Connect(alphaMath.ins.Value1);
-						alphaA.Connect(alphaMath.ins.Value2);
-						alphaA.Connect(mixer.ins.Fac);
-
-						previousAlphaMath = alphaMath;
-						previousMixRgb = mixer;
-					}
-
-					idx++;
-					if (idx == alphamaths.Count)
-					{
-						previousMixRgb.outs.Color.Connect(sock_to_connect_to);
-						alpha_socket = previousAlphaMath.outs.Value;
-					}
-				}
-			}
-
-			GammaNode gammaNode = new GammaNode(m_shader, "gamma node for decalled pbr base tex");
-			gammaNode.ins.Gamma.Value = shaderGamma;
-			lastMixer.outs.Color.Connect(gammaNode.ins.Color);
-
-			FloatSocket prevFloatSocket = GetDecalMaskNode(m_shader, decals[0], new RhinoTextureCoordinateNode(m_shader, "decal_texco_"), alpha_socket);
-			for (int i = 1; i < decals.Count; i++)
-			{
-				MathAdd add = new MathAdd(m_shader, $"Decal_mask_add_{i}_");
-				add.UseClamp = true;
-
-				FloatSocket floatSocket = GetDecalMaskNode(m_shader, decals[i], new RhinoTextureCoordinateNode(m_shader, "decal_texco_"), alpha_socket);
-				prevFloatSocket.Connect(add.ins.Value1);
-				floatSocket.Connect(add.ins.Value2);
-
-				prevFloatSocket = add.outs.Value;
-			}
-
-			var decalStickerMaterial = new PrincipledBsdfNode(m_shader, "decal_sticker_material");
-			gammaNode.outs.Color.Connect(decalStickerMaterial.ins.BaseColor);
-			decalStickerMaterial.ins.Roughness.Value = 1.0f;
-
-			return (decalStickerMaterial.outs.BSDF, prevFloatSocket);
-		}
-
 		private (ClosureSocket, FloatSocket) HandleMaterialDecal(CyclesDecal decal, bool gamma_correct_decals)
 		{
 			var decalProcessingInfo = new DecalProcessingInfo { Decal = decal };
@@ -552,80 +367,240 @@ namespace RhinoCyclesCore.Shaders
 		}
 
 		/// <summary>
-		/// Handle decals for this shader. Set up a partial shader graph
+		/// Handle texture decals for this shader. Set up a partial shader graph
+		/// and return the ShaderNodes that can be bound into the basecolor
+		/// of the actual shader.
+		/// </summary>
+		/// <returns>ShaderNode, the final node in the shader graph branch. This will be a MixNode.
+		/// The base color (color or texture) will have to be connected to the Color1 input.</returns>
+		/// <since>7.0</since>
+		private MixNode HandleTextureDecals(bool gamma_correct_decals = false)
+		{
+			//ccl.CodeShader m_codeshader = new ccl.CodeShader(ccl.Shader.ShaderType.Material);
+			MixNode nodeToBindIntoShader = null;
+
+			var textureDecals = new List<CyclesDecal>();
+
+			if (m_original.Decals != null)
+			{
+				foreach (CyclesDecal decal in m_original.Decals)
+				{
+					if (decal.Material == null)
+					{
+						textureDecals.Add(decal);
+					}
+				}
+			}
+
+			int count = textureDecals.Count;
+
+			if (count > 0)
+			{
+				List<RhinoTextureCoordinateNode> texcos = new List<RhinoTextureCoordinateNode>(count);
+				List<ImageTextureNode> imgtexs = new List<ImageTextureNode>(count);
+				List<MixNode> mixrgbs = new List<MixNode>(count);
+				List<MathMultiply> transparencies = new List<MathMultiply>(count);
+				List<MathAdd> alphamaths = new List<MathAdd>(count);
+				List<TextureAdjustmentTextureProceduralNode> adjustments = new List<TextureAdjustmentTextureProceduralNode>(count);
+				int idx = 1;
+
+				// First create all the nodes we need to set up decals
+				// for this material.
+				for (int i = 0; i < count; i++)
+				{
+					texcos.Add(new RhinoTextureCoordinateNode(m_shader, $"Decal_{idx}_texco_"));
+					imgtexs.Add(new ImageTextureNode(m_shader, $"Texture_for_decal_{idx}_"));
+					mixrgbs.Add(new MixNode(m_shader, $"Decal_mixer_{idx}_"));
+					transparencies.Add(new MathMultiply(m_shader, $"Decal_transparency_multiplier_{idx}_"));
+					adjustments.Add(new TextureAdjustmentTextureProceduralNode(m_shader, $"Decal_texadjustment_{idx}_"));
+					if (i < count - 1)
+					{
+						alphamaths.Add(new MathAdd(m_shader, $"Decal_alpha_adder_{idx}_"));
+					}
+
+					idx++;
+				}
+
+				MixNode lastMixer = mixrgbs.Last();
+				GammaNode decalGammaNode = null;
+				if (gamma_correct_decals)
+				{
+					decalGammaNode = new GammaNode(m_shader, "gamma node for decal");
+					decalGammaNode.ins.Gamma.Value = m_original.Gamma;
+					decalGammaNode.outs.Color.Connect(lastMixer.ins.Color2);
+				}
+				ISocket sock_to_connect_to = gamma_correct_decals ? decalGammaNode.ins.Color : lastMixer.ins.Color2;
+
+				if (count == 1)
+				{
+					var texco = texcos[0];
+					var imgtex = imgtexs[0];
+					var trans = transparencies[0];
+					var adjust = adjustments[0];
+					SetupOneDecalNodes(m_shader, textureDecals.First(), texco, imgtex, trans, adjust);
+					if (textureDecals[0].Texture.AdjustNeeded)
+					{
+						imgtex.outs.Color.Connect(adjust.ins.Color);
+						adjust.outs.Color.Connect(sock_to_connect_to);
+					}
+					else
+					{
+						imgtex.outs.Color.Connect(sock_to_connect_to);
+					}
+					trans.outs.Value.Connect(lastMixer.ins.Fac);
+				}
+				else
+				{
+					idx = 0;
+
+					// Set up decal images and texture coordinates.
+					foreach (var decal in textureDecals)
+					{
+						var texco = texcos[idx];
+						var imgtex = imgtexs[idx];
+						var trans = transparencies[idx];
+						var adjust = adjustments[idx];
+						SetupOneDecalNodes(m_shader, decal, texco, imgtex, trans, adjust);
+						idx++;
+					}
+					idx = 0;
+
+					MixNode previousMixRgb = null;
+					MathAdd previousAlphaMath = null;
+					ImageTextureNode imgA = null;
+					MathMultiply transA = null;
+					TextureAdjustmentTextureProceduralNode adjustA = null;
+					// Use alpa addition nodes to go through all
+					// node lists and connect them as needed.
+					foreach (MathAdd alphaMath in alphamaths)
+					{
+						alphaMath.UseClamp = true;
+						if (idx == 0)
+						{
+							CyclesTextureImage teximA = textureDecals[idx].Texture;
+							MixNode mixer = mixrgbs[idx];
+							mixer.BlendType = MixNode.BlendTypes.Blend;
+							imgA = imgtexs[idx];
+							adjustA = adjustments[idx];
+							transA = transparencies[idx];
+
+							CyclesTextureImage teximB = textureDecals[idx + 1].Texture;
+							ImageTextureNode imgB = imgtexs[idx + 1];
+							MathMultiply transB = transparencies[idx + 1];
+							TextureAdjustmentTextureProceduralNode adjustB = adjustments[idx];
+
+							if (teximA.AdjustNeeded)
+							{
+								imgA.outs.Color.Connect(adjustA.ins.Color);
+								adjustA.outs.Color.Connect(mixer.ins.Color1);
+
+							}
+							else
+							{
+								imgA.outs.Color.Connect(mixer.ins.Color1);
+							}
+							if (teximB.AdjustNeeded)
+							{
+								imgB.outs.Color.Connect(adjustB.ins.Color);
+								adjustB.outs.Color.Connect(mixer.ins.Color2);
+							}
+							else
+							{
+								imgB.outs.Color.Connect(mixer.ins.Color2);
+							}
+
+							transA.outs.Value.Connect(alphaMath.ins.Value1);
+							transB.outs.Value.Connect(alphaMath.ins.Value2);
+
+							transB.outs.Value.Connect(mixer.ins.Fac);
+
+							previousAlphaMath = alphaMath;
+							previousMixRgb = mixer;
+						}
+						else
+						{
+							MixNode mixer = mixrgbs[idx];
+							CyclesTextureImage teximA = textureDecals[idx + 1].Texture;
+							imgA = imgtexs[idx + 1];
+							transA = transparencies[idx + 1];
+							adjustA = adjustments[idx + 1];
+
+							previousMixRgb.outs.Color.Connect(mixer.ins.Color1);
+							if (teximA.AdjustNeeded)
+							{
+								imgA.outs.Color.Connect(adjustA.ins.Color);
+								adjustA.outs.Color.Connect(mixer.ins.Color2);
+							}
+							else
+							{
+								imgA.outs.Color.Connect(mixer.ins.Color2);
+							}
+
+							previousAlphaMath.outs.Value.Connect(alphaMath.ins.Value1);
+							transA.outs.Value.Connect(alphaMath.ins.Value2);
+							transA.outs.Value.Connect(mixer.ins.Fac);
+
+							previousAlphaMath = alphaMath;
+							previousMixRgb = mixer;
+						}
+
+						idx++;
+						if (idx == alphamaths.Count)
+						{
+							previousMixRgb.outs.Color.Connect(sock_to_connect_to);
+							previousAlphaMath.outs.Value.Connect(lastMixer.ins.Fac);
+						}
+					}
+				}
+				nodeToBindIntoShader = lastMixer;
+
+				//lastMixer.outs.Color.Connect(m_codeshader.Output.ins.Surface);
+				//m_codeshader.WriteDataToNodes();
+				//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
+			}
+
+
+			return nodeToBindIntoShader;
+		}
+
+		/// <summary>
+		/// Handle material decals for this shader. Set up a partial shader graph
 		/// and return a tuple of decal material closures and decal mask sockets.
 		/// These can be used to properly mix decals together in the shader graph.
 		/// </summary>
 		/// <returns>A tuple of decal material closures and decal mask sockets.
 		/// These can be mixed together with MixClosureNodes</returns>
 		/// <since>7.0</since>
-		private (List<ClosureSocket> decalMaterials, List<FloatSocket> decalMaskSockets) HandleDecals(float shaderGamma, bool gamma_correct_decals = false) {
+		private (List<ClosureSocket> decalMaterials, List<FloatSocket> decalMaskSockets) HandleMaterialDecals(float shaderGamma, bool gamma_correct_decals = false) {
 
 			var decalClosures = new List<ClosureSocket>();
 			var decalMaskSockets = new List<FloatSocket>();
 
-			var validDecals = new List<CyclesDecal>();
+			var materialDecals = new List<CyclesDecal>();
 
 			if (m_original.Decals != null)
 			{
 				foreach (CyclesDecal decal in m_original.Decals)
 				{
-					// If on Mac and rendering on CPU then we disable full material decal support for now.
-					// This is because I get a crash due to stack buffer overflow in the rendering code.
-					bool unsupportedCase = (decal.MaterialShader != null) && HostUtils.RunningOnOSX && (IsCpuRender ?? true);
-					if (!unsupportedCase)
+					if (decal.MaterialShader != null)
 					{
-						validDecals.Add(decal);
+						// If on Mac and rendering on CPU then we disable full material decal support for now.
+						// This is because I get a crash due to stack buffer overflow in the rendering code.
+						bool unsupportedCase = HostUtils.RunningOnOSX && (IsCpuRender ?? true);
+						if (!unsupportedCase)
+						{
+							materialDecals.Add(decal);
+						}
 					}
 				}
 			}
 
-			if (validDecals.Count > 0)
+			foreach (var decal in materialDecals)
 			{
-				// Organize decals into groups based on whether they are textures or materials.
-				var decalGroups = new List<List<CyclesDecal>>();
+				var (materialDecalClosure, decalMaskSocket) = HandleMaterialDecal(decal, gamma_correct_decals);
 
-				bool? lastDecalWasTexture = null;
-				foreach (CyclesDecal decal in validDecals)
-				{
-					bool currentDecalIsTexture = decal.MaterialShader == null;
-
-					if (currentDecalIsTexture != lastDecalWasTexture)
-					{
-						decalGroups.Add(new List<CyclesDecal>());
-					}
-
-					decalGroups.Last().Add(decal);
-
-					lastDecalWasTexture = currentDecalIsTexture;
-				}
-
-				foreach(var decals in decalGroups)
-				{
-					if (decals.Count == 0)
-						continue;
-
-					bool decalIsTexture = decals.First().MaterialShader == null;
-
-					if (decalIsTexture)
-					{
-						// HandleTextureDecal function takes the whole decal group and combines them into one closure and mask.
-						var (textureDecalClosure, decalMaskSocket) = HandleTextureDecal(decals, gamma_correct_decals, shaderGamma);
-						decalClosures.Add(textureDecalClosure);
-						decalMaskSockets.Add(decalMaskSocket);
-					}
-					else
-					{
-						foreach(var decal in decals)
-						{
-							// HandleMaterialDecal function takes a single decal and returns its closure and mask.
-							var (materialDecalClosure, decalMaskSocket) = HandleMaterialDecal(decal, gamma_correct_decals);
-
-							decalClosures.Add(materialDecalClosure);
-							decalMaskSockets.Add(decalMaskSocket);
-						}
-					}
-				}
+				decalClosures.Add(materialDecalClosure);
+				decalMaskSockets.Add(decalMaskSocket);
 			}
 
 			return (decalClosures, decalMaskSockets);
@@ -675,12 +650,14 @@ namespace RhinoCyclesCore.Shaders
 			}
 			else
 			{
+				MixNode textureDecalMixin = null;
 				List<ClosureSocket> decalMaterials = null;
 				List<FloatSocket> decalMaskSockets = null;
 
 				if (decalProcessingInfo == null)
 				{
-					(decalMaterials, decalMaskSockets) = HandleDecals(part.Gamma, !part.IsPbr);
+					textureDecalMixin = HandleTextureDecals(!part.IsPbr);
+					(decalMaterials, decalMaskSockets) = HandleMaterialDecals(part.Gamma, !part.IsPbr);
 				}
 
 				if (part.IsPbr)
@@ -743,7 +720,25 @@ namespace RhinoCyclesCore.Shaders
 						coloured_shadow.ins.Color
 					};
 
-					basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, colsocks, false, part.Gamma, false, false, decalProcessingInfo);
+					if (textureDecalMixin != null)
+					{
+						// HACK: tell base tex is data, so that we can manually add here
+						// gamma node after decal mixin before connecting _that_ up to colsocks
+						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, textureDecalMixin.ins.Color1.ToList(), false, part.Gamma, true, true, decalProcessingInfo);
+
+						// now add gamma node to ensure decals are corrected properly
+						GammaNode gammaNode = new GammaNode(m_shader, "gamma node for decalled pbr base tex");
+						gammaNode.ins.Gamma.Value = part.Gamma;
+						textureDecalMixin.outs.Color.Connect(gammaNode.ins.Color);
+						foreach (var colsock in colsocks)
+						{
+							gammaNode.outs.Color.Connect(colsock);
+						}
+					}
+					else
+					{
+						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, colsocks, false, part.Gamma, false, false, decalProcessingInfo);
+					}
 
 					basewithao.outs.Color.Connect(principled.ins.BaseColor);
 
@@ -1154,10 +1149,21 @@ namespace RhinoCyclesCore.Shaders
 					use_alpha_weighted_with_modded_amount71.outs.Value.Connect(diffuse_base_color_through_alpha120.ins.Fac);
 					bump_amount72.outs.Value.Connect(bump88.ins.Height);
 
-					diffuse_base_color_through_alpha120.outs.Color.Connect(final_diffuse89.ins.Color);
-					diffuse_base_color_through_alpha120.outs.Color.Connect(shadeless_bsdf90.ins.Color);
-					diffuse_base_color_through_alpha120.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
-					diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
+					if (textureDecalMixin != null)
+					{
+						diffuse_base_color_through_alpha120.outs.Color.Connect(textureDecalMixin.ins.Color1);
+						textureDecalMixin.outs.Color.Connect(final_diffuse89.ins.Color);
+						textureDecalMixin.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+						textureDecalMixin.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
+						textureDecalMixin.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
+					}
+					else
+					{
+						diffuse_base_color_through_alpha120.outs.Color.Connect(final_diffuse89.ins.Color);
+						diffuse_base_color_through_alpha120.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+						diffuse_base_color_through_alpha120.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
+						diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
+					}
 
 					light_path109.outs.IsCameraRay.Connect(shadeless_on_cameraray122.ins.Value1);
 					fresnel_based_on_constant92.outs.Fac.Connect(fresnel_reflection94.ins.R);
@@ -1243,7 +1249,7 @@ namespace RhinoCyclesCore.Shaders
 							diffuse_base_color_through_alpha120.ins.Color2,
 							diffuse_base_color_through_alpha180.ins.Color2
 						};
-						var alpha = Utilities.GraphForSlot(m_shader, null, true, part.DiffuseTexture.Amount, part.DiffuseTexture, sockets, false, false, false, false, part.Gamma, false, decalProcessingInfo);
+						var alpha = Utilities.GraphForSlot(m_shader, null, true, part.DiffuseTexture.Amount, part.DiffuseTexture, sockets, false, false, false, false, part.Gamma, textureDecalMixin != null, decalProcessingInfo);
 						if (alpha != null)
 						{
 							if (decalProcessingInfo == null)
