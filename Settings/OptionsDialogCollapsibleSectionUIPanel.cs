@@ -95,7 +95,7 @@ namespace RhinoCyclesCore.Settings
 							Content = new TableLayout() {
 								Spacing = new Eto.Drawing.Size(1, 5),
 								Rows = {
-									new TableRow(mNoteAboutAdvancedSettings, mLinkToRenderPage),
+									new TableLayout{ Spacing = new Eto.Drawing.Size(4,0), Rows = {new TableRow(mNoteAboutAdvancedSettings, mLinkToRenderPage) } },
 									new TableRow(mNoteAboutSettingsScope),
 								}
 							}
