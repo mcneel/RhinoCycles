@@ -148,5 +148,27 @@ namespace RhinoCycles.Commands
 			return Result.Success;
 		}
 	}
+
+
+
+	[Guid("2E317CD6-0B3E-4BE8-9930-0D54ECA93291")]
+	[CommandStyle(Style.Hidden)]
+	public class RenderOptionsReset : Command
+	{
+		private static RenderOptionsReset _gThecommand;
+
+		public RenderOptionsReset()
+		{
+			if (_gThecommand == null) _gThecommand = this;
+		}
+
+		public override string EnglishName => "RhinoCycles_RenderOptionsReset";
+
+		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
+		{
+			RcCore.It.AllSettings.DefaultSettings();
+			return Result.Success;
+		}
+	}
 }
 
