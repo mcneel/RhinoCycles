@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.IO;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 #if ON_RUNTIME_WIN
 #if DEBUG
 using System.Management;
@@ -36,6 +37,34 @@ namespace RhinoCyclesKernelCompiler
 {
 	class Program
 	{
+		static string CreateTraceId(Device device)
+		{
+			return $"{Process.GetCurrentProcess().Id}:{Environment.CurrentManagedThreadId}:{device.Id}:{Stopwatch.GetTimestamp()}";
+		}
+
+		static string FormatHandle(IntPtr handle)
+		{
+			return handle == IntPtr.Zero ? "0x0" : "0x" + handle.ToInt64().ToString("X");
+		}
+
+		static void LogTrace(string traceId, string message)
+		{
+			Console.WriteLine($"[kernel-compiler:{traceId}] {message}");
+		}
+
+		static void LogException(string traceId, Exception exception)
+		{
+			int depth = 0;
+			for (Exception current = exception; current != null; current = current.InnerException)
+			{
+				LogTrace(traceId, $"Exception[{depth}] {current.GetType().FullName}: {current.Message}");
+				if (!string.IsNullOrWhiteSpace(current.StackTrace))
+				{
+					LogTrace(traceId, $"Stack[{depth}] {current.StackTrace}");
+				}
+				depth++;
+			}
+		}
 
 		static bool parentProcessStillRunning()
 		{
@@ -95,8 +124,10 @@ namespace RhinoCyclesKernelCompiler
 			fs.Dispose();
 
 			string id = $"{device.Id}: {device.NiceName}";
+			string traceId = CreateTraceId(device);
 
-			Console.WriteLine($"Start compiling {id}\n");
+			Console.WriteLine($"Start compiling {id}");
+			LogTrace(traceId, $"HandleDevice enter device='{device.NiceName}' compileFile='{gpuCompileFile}' signalFile='{compilingSignal}'");
 
 			string sha = device.NiceNameSha;
 			string laststatus = "";
@@ -106,6 +137,7 @@ namespace RhinoCyclesKernelCompiler
 			try
 			{
 				Client client = new Client();
+				LogTrace(traceId, "Creating SessionParameters");
 				SessionParameters sessionParameters = new SessionParameters(device)
 				{
 					Experimental = false,
@@ -116,10 +148,14 @@ namespace RhinoCyclesKernelCompiler
 					Background = false,
 					PixelSize = 1,
 				};
+				LogTrace(traceId, $"SessionParameters created id={FormatHandle(sessionParameters.Id)}");
+				LogTrace(traceId, "Creating Session");
 				session = new Session(sessionParameters);
+				LogTrace(traceId, $"Session created id={FormatHandle(session.Id)}");
 
 				//session.AddPass(PassType.Combined);
 				session.Reset(1, 1, 1, 0, 0, 1, 1, 1);
+				LogTrace(traceId, "Starting session");
 				session.Start();
 				while (true)
 				{
@@ -156,10 +192,23 @@ namespace RhinoCyclesKernelCompiler
 				}
 				// just do one, it'll compile and then we're ready.
 			}
+			catch (SEHException e)
+			{
+				exceptionHappened = true;
+				LogTrace(traceId, $"SEHException while compiling {id}");
+				LogException(traceId, e);
+				if (File.Exists(compilingSignal))
+				{
+					File.Delete(compilingSignal);
+				}
+				throw new Exception($"Exception while compiling for {id}", e);
+			}
 			catch (Exception e)
 			{
 				exceptionHappened = true;
-				Console.WriteLine($"Failed for {id}\n\t{e}");
+				Console.WriteLine($"Failed for {id}");
+				Console.WriteLine($"\t{e}");
+				LogException(traceId, e);
 				if (File.Exists(compilingSignal))
 				{
 					File.Delete(compilingSignal);
@@ -171,6 +220,7 @@ namespace RhinoCyclesKernelCompiler
 			{
 				if (session != null && !exceptionHappened)
 				{
+					LogTrace(traceId, $"Cancelling and disposing session id={FormatHandle(session.Id)}");
 					session.Cancel("done");
 					session.Dispose();
 					File.Move(compilingSignal, gpuCompileFile, true);
@@ -298,22 +348,35 @@ namespace RhinoCyclesKernelCompiler
 			string gpuDataPath = new DirectoryInfo(Path.GetDirectoryName(compileTaskFile)).FullName;
 			string dataUserPath = new DirectoryInfo(Path.GetDirectoryName(compileTaskFile)).Parent.FullName;
 
+			Console.WriteLine("Initializing Cycles");
+			Console.WriteLine($"\tKernel path: {kernelPath}");
+			Console.WriteLine($"\tData path: {dataUserPath}");
 			CSycles.path_init(kernelPath, dataUserPath);
 			CSycles.initialise(DeviceTypeMask.All);
+			Console.WriteLine("Setup tables for Cycles");
 			SetupTables();
+			Console.WriteLine("Cycles initialized");
 
 			var gpuTasks = ReadGpuTaskData(compileTaskFile, gpuDataPath);
+			LogTrace("main", $"Launching kernel compilation for {gpuTasks.Count} GPU task(s)");
 
 			try
 			{
 				Parallel.ForEach(gpuTasks, HandleDevice);
 			}
+			catch (AggregateException ex)
+			{
+				LogTrace("main", "AggregateException while compiling GPU tasks");
+				foreach (var inner in ex.Flatten().InnerExceptions)
+				{
+					LogException("main", inner);
+				}
+				result = -13;
+			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex.ToString());
-				Console.WriteLine(ex.StackTrace);
-				Console.WriteLine(ex.InnerException.ToString());
-				Console.WriteLine(ex.InnerException.StackTrace);
+				LogTrace("main", "Unhandled exception while compiling GPU tasks");
+				LogException("main", ex);
 				result = -13;
 			}
 			finally

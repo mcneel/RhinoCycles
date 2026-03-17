@@ -557,6 +557,8 @@ namespace RhinoCyclesCore.Core
 		public DateTime CompileStartTime { get; set; } = DateTime.MinValue;
 		public DateTime CompileEndTime { get; set; } = DateTime.MinValue;
 
+		private const string HipLibraryPathPrefix = "HIP Library Path:";
+
 		public string GetFormattedCompileLog()
 		{
 			SetCompileLog();
@@ -564,12 +566,17 @@ namespace RhinoCyclesCore.Core
 			string errlog = Localization.LocalizeString("ERROR LOG", 83);
 			string compstart = Localization.LocalizeString("Compile start time", 84);
 			string compend =   Localization.LocalizeString("Compile end time  ", 85);
-			var compendfinal = $"{compend}: {CompileEndTime}";
-			if(CompileEndTime.Equals(DateTime.MinValue)) {
-				compendfinal = "";
+			var sections = new List<string>
+			{
+				$"{compout}:\n\n{CompileLogStdOut}",
+				$"{errlog}:\n\n{CompileLogStdErr}",
+				$"{compstart}: {CompileStartTime}",
+			};
+			if(!CompileEndTime.Equals(DateTime.MinValue)) {
+				sections.Add($"{compend}: {CompileEndTime}");
 			}
 
-			var log = $"{compout}:\n\n{CompileLogStdOut}\n\n{errlog}:\n\n{CompileLogStdErr}\n\n{compstart}: {CompileStartTime}\n{compendfinal}\n";
+			var log = string.Join("\n\n", sections.Where(section => !string.IsNullOrWhiteSpace(section))) + "\n";
 
 			if(CompileStartTime.Equals(DateTime.MinValue)) {
 				log = Localization.LocalizeString("Kernel compilation not started", 86);
@@ -617,6 +624,9 @@ namespace RhinoCyclesCore.Core
 				argumentsToProgramToRun = $"\"{dll}\" {argumentsToProgramToRun}";
 				programToRun = $"{dotnet_path}";
 			}
+
+			AddLogString($"RcCore SetupProcessStartInfo: program to run   = {programToRun}");
+			AddLogString($"RcCore SetupProcessStartInfo: arguments to run = {argumentsToProgramToRun}");
 
 			ProcessStartInfo startInfo = new ProcessStartInfo(
 						fileName: programToRun,
@@ -680,12 +690,13 @@ namespace RhinoCyclesCore.Core
 			CompileProcessFinished = false;
 			CompileProcessError = false;
 
-			compileStdOut.Enqueue(Localization.LocalizeString("Compile started, waiting for results...", 87) + "\n");
-			compileStdErr.Enqueue(Localization.LocalizeString("No errors.", 88));
+			EnqueueCompileStdOut(Localization.LocalizeString("Compile started, waiting for results...", 87));
+			EnqueueCompileStdErr(Localization.LocalizeString("No errors.", 88));
 			CompileStartTime = DateTime.Now;
 			CompileEndTime = DateTime.MinValue;
 
 			List<List<Device>> deviceListings = GetDeviceListings();
+			bool startedCompileGroup = false;
 			foreach (List<Device> deviceListing in deviceListings)
 			{
 				if (deviceListing.Count == 0) continue;
@@ -694,7 +705,11 @@ namespace RhinoCyclesCore.Core
 				{
 					var compileTaskFile = WriteGpuDevicesFile(deviceListing);
 					string startProcessString = Localization.LocalizeString("Start compile process with device count:", 89);
-					compileStdOut.Enqueue($"{startProcessString} {deviceListing.Count} ({deviceListing[0].Type})\n");
+					if(startedCompileGroup) {
+						EnqueueCompileStdOut(string.Empty);
+					}
+					EnqueueCompileStdOut($"{startProcessString} {deviceListing.Count} ({deviceListing[0].Type})");
+					startedCompileGroup = true;
 
 					ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
 
@@ -703,38 +718,37 @@ namespace RhinoCyclesCore.Core
 					process.OutputDataReceived += new DataReceivedEventHandler((sender,e) => {
 						if(e.Data != null)
 						{
-							compileStdOut.Enqueue(e.Data);
+							EnqueueCompileStdOut(e.Data);
 							SetCompileLog();
 						}
 					});
 					process.ErrorDataReceived += new DataReceivedEventHandler((sender,e) => {
 						if(e.Data != null)
 						{
-							compileStdErr.Enqueue(e.Data);
+							EnqueueCompileStdErr(e.Data);
 							SetCompileLog();
 						}
 					});
 					process.Start();
 					process.BeginOutputReadLine();
 					process.BeginErrorReadLine();
-					//CompileLogStdOut += $"{process.StandardOutput.ReadToEnd()}";
-
-					SetCompileLog();
 
 					process.WaitForExit();
+
+					SetCompileLog();
 					CompileProcessError = process.ExitCode != 0;
 					if (CompileProcessError)
 					{
 						string compile_failed = Localization.LocalizeString("Compile failed", 90);
 						string compile_error_code = Localization.LocalizeString("Error code", 91);
-						compileStdOut.Enqueue($"{compile_failed} {CompileLogStdOut}");
-						compileStdErr.Enqueue($"{compile_error_code}: {process.ExitCode}\n\n{process.StandardError.ReadToEnd()}");
+						EnqueueCompileStdOut($"{compile_failed}.");
+						EnqueueCompileStdErr($"{compile_error_code}: {process.ExitCode}");
 					}
 					process.Close();
 				}
 				catch (Exception processException)
 				{
-					compileStdErr.Enqueue($"{processException}\n\n{processException.StackTrace}");
+					EnqueueCompileStdErr($"{processException}\n\n{processException.StackTrace}");
 					CompileProcessError = true;
 				}
 			}
@@ -763,16 +777,77 @@ namespace RhinoCyclesCore.Core
 
 		public void SetCompileLog()
 		{
+			CompileLogStdOut = FormatCompileLog(compileStdOut, suppressRepeatedHipLibraryPaths: true);
+			CompileLogStdErr = FormatCompileLog(compileStdErr);
+		}
+
+		private void EnqueueCompileStdOut(string message)
+		{
+			EnqueueCompileLog(compileStdOut, message);
+		}
+
+		private void EnqueueCompileStdErr(string message)
+		{
+			string noErrors = Localization.LocalizeString("No errors.", 88);
+
+			if(!string.IsNullOrWhiteSpace(message) &&
+			   !string.Equals(message, noErrors, StringComparison.Ordinal) &&
+			   compileStdErr.TryPeek(out string currentValue) &&
+			   string.Equals(currentValue, noErrors, StringComparison.Ordinal))
+			{
+				ClearLogQueues(LogQueues.CompileStdErr);
+			}
+
+			EnqueueCompileLog(compileStdErr, message);
+		}
+
+		private static void EnqueueCompileLog(ConcurrentQueue<string> queue, string message)
+		{
+			if(message == null) {
+				return;
+			}
+			if(message.Length == 0) {
+				queue.Enqueue(string.Empty);
+				return;
+			}
+
+			using StringReader reader = new StringReader(message.Replace("\r\n", "\n").Replace('\r', '\n'));
+			string line;
+			while((line = reader.ReadLine()) != null) {
+				queue.Enqueue(line.TrimEnd());
+			}
+		}
+
+		private static string FormatCompileLog(IEnumerable<string> logLines, bool suppressRepeatedHipLibraryPaths = false)
+		{
 			StringBuilder sb = new StringBuilder();
-			foreach(string logLine in compileStdOut) {
-				sb.AppendLine(logLine);
+			HashSet<string> seenHipLibraryPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+			bool previousLineBlank = true;
+
+			foreach(string rawLine in logLines) {
+				string line = rawLine?.TrimEnd() ?? string.Empty;
+
+				if(suppressRepeatedHipLibraryPaths &&
+				   line.StartsWith(HipLibraryPathPrefix, StringComparison.OrdinalIgnoreCase) &&
+				   !seenHipLibraryPaths.Add(line)) {
+					continue;
+				}
+
+				if(string.IsNullOrWhiteSpace(line)) {
+					if(previousLineBlank || sb.Length == 0) {
+						continue;
+					}
+
+					sb.AppendLine();
+					previousLineBlank = true;
+					continue;
+				}
+
+				sb.AppendLine(line);
+				previousLineBlank = false;
 			}
-			CompileLogStdOut = sb.ToString();
-			StringBuilder sberr = new StringBuilder();
-			foreach(string logLine in compileStdErr) {
-				sberr.AppendLine(logLine);
-			}
-			CompileLogStdErr = sberr.ToString();
+
+			return sb.ToString().TrimEnd();
 		}
 
 		private bool EnsureCompilerIsNotRunning()
