@@ -97,7 +97,6 @@ namespace RhinoCycles.Commands
 			getNumber.AddOptionDouble("sensor_width", ref sensorWidth);
 			getNumber.AddOptionDouble("sensor_height", ref sensorHeight);
 
-
 			getNumber.AddOptionInteger("seed", ref seed, "Seed to use for sampling distribution");
 
 			getNumber.AddOptionDouble("filter_glossy", ref filterGlossy);
@@ -106,6 +105,8 @@ namespace RhinoCycles.Commands
 			getNumber.AddOptionDouble("light_sampling_threshold", ref lightSamplingThreshold);
 			getNumber.AddOptionToggle("sample_all_lights", ref useDirectLight);
 			getNumber.AddOptionToggle("sample_all_lights_indirect", ref useIndirectLight);
+
+			int defaultsOption = getNumber.AddOption("defaults");
 
 			while (true)
 			{
@@ -140,6 +141,37 @@ namespace RhinoCycles.Commands
 						RcCore.It.AllSettings.UseIndirectLight = useIndirectLight.CurrentValue;
 						break;
 					case GetResult.Option:
+						CommandLineOption cmdOption = getNumber.Option();
+						if (cmdOption != null)
+						{
+							if (cmdOption.Index == defaultsOption)
+							{
+								RcCore.It.AllSettings.DefaultSettings();
+								getNumber.SetDefaultInteger(RcCore.It.AllSettings.Samples);
+								showMaxPasses.CurrentValue = RcCore.It.AllSettings.ShowMaxPasses;
+								seed.CurrentValue = RcCore.It.AllSettings.Seed;
+								maxBounce.CurrentValue = RcCore.It.AllSettings.MaxBounce;
+								tileX.CurrentValue = RcCore.It.AllSettings.TileX;
+								tileY.CurrentValue = RcCore.It.AllSettings.TileY;
+								noCaustics.CurrentValue = RcCore.It.AllSettings.NoCaustics;
+								maxDiffuseBounce.CurrentValue = RcCore.It.AllSettings.MaxDiffuseBounce;
+								maxGlossyBounce.CurrentValue = RcCore.It.AllSettings.MaxGlossyBounce;
+								maxTransmissionBounce.CurrentValue = RcCore.It.AllSettings.MaxTransmissionBounce;
+								maxVolumeBounce.CurrentValue = RcCore.It.AllSettings.MaxVolumeBounce;
+								transparentMaxBounce.CurrentValue = RcCore.It.AllSettings.TransparentMaxBounce;
+								aaSamples.CurrentValue = RcCore.It.AllSettings.AaSamples;
+								diffSamples.CurrentValue = RcCore.It.AllSettings.DiffuseSamples;
+								glossySamples.CurrentValue = RcCore.It.AllSettings.GlossySamples;
+								sensorWidth.CurrentValue = RcCore.It.AllSettings.SensorWidth;
+								sensorHeight.CurrentValue = RcCore.It.AllSettings.SensorHeight;
+								filterGlossy.CurrentValue = RcCore.It.AllSettings.FilterGlossy ;
+								sampleClampDirect.CurrentValue = RcCore.It.AllSettings.SampleClampDirect;
+								sampleClampIndirect.CurrentValue = RcCore.It.AllSettings.SampleClampIndirect;
+								lightSamplingThreshold.CurrentValue = RcCore.It.AllSettings.LightSamplingThreshold;
+								useDirectLight.CurrentValue = RcCore.It.AllSettings.UseDirectLight;
+								useIndirectLight.CurrentValue = RcCore.It.AllSettings.UseIndirectLight;
+							}
+						}
 						continue;
 				}
 
@@ -148,27 +180,4 @@ namespace RhinoCycles.Commands
 			return Result.Success;
 		}
 	}
-
-
-
-	[Guid("2E317CD6-0B3E-4BE8-9930-0D54ECA93291")]
-	[CommandStyle(Style.Hidden)]
-	public class RenderOptionsReset : Command
-	{
-		private static RenderOptionsReset _gThecommand;
-
-		public RenderOptionsReset()
-		{
-			if (_gThecommand == null) _gThecommand = this;
-		}
-
-		public override string EnglishName => "RhinoCycles_RenderOptionsReset";
-
-		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
-		{
-			RcCore.It.AllSettings.DefaultSettings();
-			return Result.Success;
-		}
-	}
 }
-
