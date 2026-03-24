@@ -308,6 +308,61 @@ namespace RhinoCyclesCore.Core
 		/// Thread that will check if compiles have finished.
 		/// </summary>
 		Thread checkGpuKernelCompilationCompletedThread = null;
+		readonly object gpuKernelCompilerThreadLock = new object();
+
+		private static bool IsGpuKernelCompileThreadRunning(Thread thread)
+		{
+			return thread != null && thread.IsAlive;
+		}
+
+		private bool WaitForGpuKernelCompilerThreadsToFinish(int timeoutMilliseconds = 5000)
+		{
+			Thread compilerThread;
+			Thread checkerThread;
+
+			lock (gpuKernelCompilerThreadLock)
+			{
+				stopCheckingForGpuKernelCompileFinished = true;
+				compilerThread = kernelCompilerThread;
+				checkerThread = checkGpuKernelCompilationCompletedThread;
+			}
+
+			bool compilerStopped = !IsGpuKernelCompileThreadRunning(compilerThread) || compilerThread.Join(timeoutMilliseconds);
+			bool checkerStopped = !IsGpuKernelCompileThreadRunning(checkerThread) || checkerThread.Join(timeoutMilliseconds);
+
+			lock (gpuKernelCompilerThreadLock)
+			{
+				if (ReferenceEquals(kernelCompilerThread, compilerThread) && !IsGpuKernelCompileThreadRunning(compilerThread))
+				{
+					kernelCompilerThread = null;
+				}
+				if (ReferenceEquals(checkGpuKernelCompilationCompletedThread, checkerThread) && !IsGpuKernelCompileThreadRunning(checkerThread))
+				{
+					checkGpuKernelCompilationCompletedThread = null;
+				}
+				stopCheckingForGpuKernelCompileFinished = false;
+			}
+
+			if (!compilerStopped)
+			{
+				AddLogString("Timed out waiting for kernel compiler thread to stop");
+			}
+			if (!checkerStopped)
+			{
+				AddLogString("Timed out waiting for kernel compile completion checker to stop");
+			}
+
+			return compilerStopped && checkerStopped;
+		}
+
+		private bool IsGpuKernelCompilationInProgress()
+		{
+			lock (gpuKernelCompilerThreadLock)
+			{
+				return IsGpuKernelCompileThreadRunning(kernelCompilerThread) ||
+					   IsGpuKernelCompileThreadRunning(checkGpuKernelCompilationCompletedThread);
+			}
+		}
 		/// <summary>
 		/// Start the process to initialize OpenCL for Cycles in a separate thread.
 		/// Before starting the process create a list of all OpenCL devices and
@@ -315,15 +370,31 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		public void InitialiseGpuKernels()
 		{
-			InitialiseGpuDeviceReadinessList();
+			Thread compilerThread;
+			Thread checkerThread;
+
+			lock (gpuKernelCompilerThreadLock)
+			{
+				if (IsGpuKernelCompileThreadRunning(kernelCompilerThread) ||
+					IsGpuKernelCompileThreadRunning(checkGpuKernelCompilationCompletedThread))
+				{
+					AddLogStringIfVerbose("InitialiseGpuKernels: compile already running, skipping duplicate start");
+					return;
+				}
+
+				InitialiseGpuDeviceReadinessList();
+				CompileProcessFinished = false;
+				CompileProcessError = false;
+				stopCheckingForGpuKernelCompileFinished = false;
+				compilerThread = new Thread(StartCompileGpuKernels);
+				checkerThread = new Thread(CheckGpuKernelCompileFinished);
+				kernelCompilerThread = compilerThread;
+				checkGpuKernelCompilationCompletedThread = checkerThread;
+			}
 
 			DeviceKernelReady?.Invoke(this, EventArgs.Empty);
-
-			kernelCompilerThread = new Thread(StartCompileGpuKernels);
-			kernelCompilerThread.Start();
-
-			checkGpuKernelCompilationCompletedThread = new Thread(CheckGpuKernelCompileFinished);
-			checkGpuKernelCompilationCompletedThread.Start();
+			compilerThread.Start();
+			checkerThread.Start();
 		}
 
 		private void InitialiseGpuDeviceReadinessList()
@@ -369,56 +440,69 @@ namespace RhinoCyclesCore.Core
 		bool stopCheckingForGpuKernelCompileFinished = false;
 		public void CheckGpuKernelCompileFinished()
 		{
-			if(gpuDevicesReadiness.Count == 0) return;
-
-			do
+			try
 			{
-				Thread.Sleep(100);
-				for (int idx = 0; idx < gpuDevicesReadiness.Count; idx++)
+				if(gpuDevicesReadiness.Count == 0) return;
+
+				do
 				{
-					(DeviceAndPath device, bool isReady) = gpuDevicesReadiness[idx];
-
-					// first handle non-multi devices
-					if (!device.Device.IsMulti && File.Exists(path: device.Path) && !isReady)
+					Thread.Sleep(100);
+					for (int idx = 0; idx < gpuDevicesReadiness.Count; idx++)
 					{
-						lock (accessGpuKernelDevicesReadiness)
-						{
-							gpuDevicesReadiness[idx] = (device, true);
-							DeviceKernelReady?.Invoke(this, EventArgs.Empty);
-						}
-						if(HostUtils.RunningOnWindows && It.AllSettings.RenderDevice.Equals(device.Device))
-						{
-							ToggleViewportsRunningRealtime();
-						}
-					}
-					// then handle multi device
-					if(device.Device.IsMulti && !isReady) {
-						bool allSubdevicesReady =
-							!(from devreadiness in gpuDevicesReadiness
-							where device.Device.Subdevices.Contains(devreadiness.DeviceAndPath.Device)
-							select devreadiness.IsReady).Any(b => b == false);
+						(DeviceAndPath device, bool isReady) = gpuDevicesReadiness[idx];
 
-						if(allSubdevicesReady)
+						// first handle non-multi devices
+						if (!device.Device.IsMulti && File.Exists(path: device.Path) && !isReady)
 						{
 							lock (accessGpuKernelDevicesReadiness)
 							{
 								gpuDevicesReadiness[idx] = (device, true);
 								DeviceKernelReady?.Invoke(this, EventArgs.Empty);
 							}
+							if(HostUtils.RunningOnWindows && It.AllSettings.RenderDevice.Equals(device.Device))
+							{
+								ToggleViewportsRunningRealtime();
+							}
+						}
+						// then handle multi device
+						if(device.Device.IsMulti && !isReady) {
+							bool allSubdevicesReady =
+								!(from devreadiness in gpuDevicesReadiness
+								where device.Device.Subdevices.Contains(devreadiness.DeviceAndPath.Device)
+								select devreadiness.IsReady).Any(b => b == false);
+
+							if(allSubdevicesReady)
+							{
+								lock (accessGpuKernelDevicesReadiness)
+								{
+									gpuDevicesReadiness[idx] = (device, true);
+									DeviceKernelReady?.Invoke(this, EventArgs.Empty);
+								}
+							}
 						}
 					}
+					bool ready = true;
+					lock (accessGpuKernelDevicesReadiness)
+					{
+						ready = gpuDevicesReadiness.Aggregate(true, (state, next) => state && next.IsReady);
+					}
+					if (ready || CompileProcessFinished)
+					{
+						break;
+					}
 				}
-				bool ready = true;
-				lock (accessGpuKernelDevicesReadiness)
+				while (!stopCheckingForGpuKernelCompileFinished);
+			}
+			finally
+			{
+				lock (gpuKernelCompilerThreadLock)
 				{
-					ready = gpuDevicesReadiness.Aggregate(true, (state, next) => state && next.IsReady);
-				}
-				if (ready)
-				{
-					break;
+					if (ReferenceEquals(checkGpuKernelCompilationCompletedThread, Thread.CurrentThread))
+					{
+						checkGpuKernelCompilationCompletedThread = null;
+					}
 				}
 			}
-			while (!stopCheckingForGpuKernelCompileFinished);
 		}
 
 		private static void ToggleViewportsRunningRealtime()
@@ -540,7 +624,7 @@ namespace RhinoCyclesCore.Core
 				foreach (Device device in devices)
 				{
 					var info = GenerateGpuDeviceInfo(device: device);
-					tw.WriteLine($"{device.Id} || {info}");
+					tw.WriteLine($"{device.Id} || {info} || {device.Type} || {device.Name}");
 				}
 				tw.Close();
 			}
@@ -557,13 +641,14 @@ namespace RhinoCyclesCore.Core
 		public DateTime CompileStartTime { get; set; } = DateTime.MinValue;
 		public DateTime CompileEndTime { get; set; } = DateTime.MinValue;
 
-		private const string HipLibraryPathPrefix = "HIP Library Path:";
+				private const string HipLibraryPathPrefix = "HIP Library Path:";
+		private const string OpenColorIoInfoPrefix = "[OpenColorIO Info]: Color management disabled.";
 
 		public string GetFormattedCompileLog()
 		{
 			SetCompileLog();
 			string compout = Localization.LocalizeString("COMPILER OUTPUT", 82);
-			string errlog = Localization.LocalizeString("ERROR LOG", 83);
+			string errlog = Localization.LocalizeString("DIAGNOSTICS / STDERR", 92);
 			string compstart = Localization.LocalizeString("Compile start time", 84);
 			string compend =   Localization.LocalizeString("Compile end time  ", 85);
 			var sections = new List<string>
@@ -590,14 +675,14 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		/// <param name="compileTaskFile"></param>
 		/// <returns></returns>
-		private ProcessStartInfo SetupProcessStartInfo(string compileTaskFile)
+		private ProcessStartInfo SetupProcessStartInfo(string compileTaskFile, DeviceType deviceType)
 		{
 			AddLogString("RcCore SetupProcessStartInfo entry");
 			Assembly assembly = Assembly.GetExecutingAssembly();
 			string assemblyDirectory = Path.GetDirectoryName(path: assembly.Location);
 			AddLogString($"RcCore SetupProcessStartInfo {assembly.Location}");
 			string programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
-			string argumentsToProgramToRun = $"\"{KernelPath}\" \"{compileTaskFile}\"";
+			string argumentsToProgramToRun = $"\"{KernelPath}\" \"{compileTaskFile}\" {deviceType}";
 #if ON_RUNTIME_WIN
 #if DEBUG
 			argumentsToProgramToRun += " inception";
@@ -711,7 +796,7 @@ namespace RhinoCyclesCore.Core
 					EnqueueCompileStdOut($"{startProcessString} {deviceListing.Count} ({deviceListing[0].Type})");
 					startedCompileGroup = true;
 
-					ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
+					ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile, deviceListing[0].Type);
 
 					var process = new Process();
 					process.StartInfo = startInfo;
@@ -756,6 +841,13 @@ namespace RhinoCyclesCore.Core
 
 			CompileProcessFinished = true;
 			CompileEndTime = DateTime.Now;
+			lock (gpuKernelCompilerThreadLock)
+			{
+				if (ReferenceEquals(kernelCompilerThread, Thread.CurrentThread))
+				{
+					kernelCompilerThread = null;
+				}
+			}
 
 		} /* end of StartCompileGpuKernel() */
 
@@ -830,6 +922,10 @@ namespace RhinoCyclesCore.Core
 				if(suppressRepeatedHipLibraryPaths &&
 				   line.StartsWith(HipLibraryPathPrefix, StringComparison.OrdinalIgnoreCase) &&
 				   !seenHipLibraryPaths.Add(line)) {
+					continue;
+				}
+
+				if(line.StartsWith(OpenColorIoInfoPrefix, StringComparison.OrdinalIgnoreCase)) {
 					continue;
 				}
 
@@ -945,7 +1041,14 @@ namespace RhinoCyclesCore.Core
 
 		public void RecompileKernels()
 		{
+			if (IsGpuKernelCompilationInProgress())
+			{
+				AddLogStringIfVerbose("RecompileKernels: compile already running, leaving current compile in place");
+				return;
+			}
+
 			if (!EnsureCompilerIsNotRunning()) return;
+			if (!WaitForGpuKernelCompilerThreadsToFinish()) return;
 
 			if (!ClearOutGpusFolder()) return;
 
