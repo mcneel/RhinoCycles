@@ -53,6 +53,11 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public float[] VertexColors { get; set; }
 
+		/// <summary>
+		/// True when the source mesh is closed and should be treated as solid for decals.
+		/// </summary>
+		public bool IsSolid { get; set; }
+
 		public ccl.Transform OcsFrame { get; set; } = ccl.Transform.Identity();
 
 		public void Clear()

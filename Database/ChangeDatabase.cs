@@ -339,6 +339,17 @@ namespace RhinoCyclesCore.Database
 					// upload, if we get false back we were signalled to stop rendering by user
 					if (!UploadMeshData(me, cyclesMesh)) _uploadMeshData = false;
 				});
+
+				// Mesh-only updates can leave existing Cycles objects with stale IsSolid state.
+				foreach (var meshChange in meshChangesList)
+				{
+					var cyclesMesh = meshChange.Item1;
+					foreach (var cob in _objectDatabase.GetCyclesObjectsForGuid(cyclesMesh.MeshId.Item1))
+					{
+						if (cob == null) continue;
+						cob.IsSolid = cyclesMesh.IsSolid;
+					}
+				}
 				_renderEngine.SetProgress(_renderEngine.RenderWindow, "Mesh changes done", -1.0f);
 				RcCore.It.AddLogStringIfVerbose("\tUploadMeshChanges exit");
 			}
@@ -1121,11 +1132,13 @@ namespace RhinoCyclesCore.Database
 				Uvs = cmuvList,
 				VertexNormals = rhvn,
 				VertexColors = cmvc,
+				IsSolid = meshdata.IsClosed,
 				MatId = crc,
 				OcsFrame = t,
 			};
 			_objectDatabase.AddMesh(cyclesMesh);
 			_objectDatabase.SetIsClippingObject(meshid, isClippingObject);
+			_objectDatabase.SetIsSolid(meshid, cyclesMesh.IsSolid);
 		}
 
 		public double ModelAbsoluteTolerance { get; set; }
@@ -1257,6 +1270,7 @@ namespace RhinoCyclesCore.Database
 					matid = matid,
 					CastShadow = a.CastShadows,
 					Cutout = false, //cutout,
+					IsSolid = _objectDatabase.MeshIsSolid(meshid),
 					Decals = cyclesDecals
 				};
 				var oldhash = _objectShaderDatabase.FindRenderHashForObjectId(a.InstanceId);
@@ -1958,6 +1972,7 @@ namespace RhinoCyclesCore.Database
 				cob.Transform = ob.Transform;
 				cob.OcsFrame = t;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
+				cob.IsSolid = ob.IsSolid;
 				//cob.IsBlockInstance = true;
 				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
 				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;

@@ -45,6 +45,10 @@ namespace RhinoCyclesCore.Database
 		/// </summary>
 		private readonly Dictionary<Tuple<Guid, int>, bool> _rhCclMeshesCutout = new Dictionary<Tuple<Guid, int>, bool>();
 		/// <summary>
+		/// Record whether mesh ids represent solid geometry.
+		/// </summary>
+		private readonly ConcurrentDictionary<Tuple<Guid, int>, bool> _rhCclMeshesSolid = new ();
+		/// <summary>
 		/// Record what meshinstanceid (objectid) points to what meshid
 		/// </summary>
 		private readonly ConcurrentDictionary<uint, Tuple<Guid, int>> _rhObjectidMeshid = new ();
@@ -197,6 +201,26 @@ namespace RhinoCyclesCore.Database
 		public bool MeshIsClippingObject(Tuple<Guid, int> id)
 		{
 			return _rhCclMeshesCutout.ContainsKey(id) ? _rhCclMeshesCutout[id] : false;
+		}
+
+		/// <summary>
+		/// Record the solid status of MeshId.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <param name="status"></param>
+		public void SetIsSolid(Tuple<Guid, int> id, bool status)
+		{
+			_rhCclMeshesSolid[id] = status;
+		}
+
+		/// <summary>
+		/// Get the solid status for MeshId.
+		/// </summary>
+		/// <param name="id"></param>
+		/// <returns></returns>
+		public bool MeshIsSolid(Tuple<Guid, int> id)
+		{
+			return _rhCclMeshesSolid.TryGetValue(id, out var isSolid) && isSolid;
 		}
 
 		/// <summary>

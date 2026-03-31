@@ -83,6 +83,11 @@ namespace RhinoCyclesCore
 		public bool IsShadowCatcher { get; set; }
 
 		/// <summary>
+		/// True when the source mesh represents solid geometry.
+		/// </summary>
+		public bool IsSolid { get; set; }
+
+		/// <summary>
 		/// Like CastShadow, but to be used for objects that have an
 		/// emissive material. Such an object is considered a
 		/// mesh ligh. Set to true to ensure this light doesn't cast
