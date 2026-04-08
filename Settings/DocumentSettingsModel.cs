@@ -108,7 +108,7 @@ namespace RhinoCyclesCore.Settings
 			var renderSettings = rs.GetRenderSettings();
 			var dictionary = renderSettings.UserDictionary;
 
-			dictionary[valueName] = value;
+			dictionary[valueName] = (double)value;
 
 			rs.SetRenderSettings(renderSettings);
 			CommitRenderSettings(valueName);
@@ -155,8 +155,6 @@ namespace RhinoCyclesCore.Settings
 				rem = RhinoMath.CRC32(rem, AdaptiveThreshold);
 
 				RcCore.It.AddLogStringIfVerbose($"\t\t-- DocumentSettingsModel.IntegratorHash: {rem}. UseAdaptiveSampling {UseAdaptiveSampling}. Seed {Seed}");
-
-
 
 				return rem;
 			}

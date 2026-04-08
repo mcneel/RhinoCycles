@@ -97,5 +97,17 @@ namespace RhinoCyclesCore.Settings
 			get { return m_eds.AdaptiveThreshold; }
 			set { }
 		}
+
+		public float FilterGlossy
+		{
+			get { return m_eds.FilterGlossy; }
+			set { }
+		}
+
+		public float SampleClampIndirect
+		{
+			get { return m_eds.SampleClampIndirect; }
+			set { }
+		}
 	}
 }

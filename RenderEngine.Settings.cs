@@ -95,6 +95,8 @@ namespace RhinoCyclesCore
 					integrator.UseAdaptiveSampling = settings.UseAdaptiveSampling;
 					integrator.AdaptiveMinSamples = settings.AdaptiveMinSamples;
 					integrator.AdaptiveThreshold = settings.AdaptiveThreshold;
+					integrator.FilterGlossy = settings.FilterGlossy;
+					integrator.SampleClampIndirect = settings.SampleClampIndirect;
 					integrator.TagForUpdate();
 					_needReset = true;
 					_oldIntegratorHash = hash;

@@ -57,6 +57,8 @@ namespace RhinoCyclesCore.Settings
 				rem = RhinoMath.CRC32(rem, MaxTransmissionBounce);
 				rem = RhinoMath.CRC32(rem, TransparentMaxBounce);
 				rem = RhinoMath.CRC32(rem, UseAdaptiveSampling ? 1 : 0);
+				rem = RhinoMath.CRC32(rem, FilterGlossy);
+				rem = RhinoMath.CRC32(rem, SampleClampIndirect);
 
 				RcCore.It.AddLogStringIfVerbose($"\t\t-- EngineDocumentSettings.IntegratorHash: {rem}. UseAdaptiveSampling {UseAdaptiveSampling}. Seed {Seed}");
 

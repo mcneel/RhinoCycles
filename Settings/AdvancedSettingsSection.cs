@@ -15,7 +15,10 @@ limitations under the License.
 **/
 using Eto.Forms;
 using Rhino.UI;
+using Rhino.UI.Controls;
+using RhinoCyclesCore.Core;
 using System;
+using System.Collections.Generic;
 using static RhinoCyclesCore.RenderEngine;
 
 namespace RhinoCyclesCore.Settings
@@ -36,6 +39,7 @@ namespace RhinoCyclesCore.Settings
 		private NumericStepper StepperSamples;
 		private CheckBox CheckboxUseSamples;
 		private DropDown ListboxTextureBakeQuality;
+		private EnumRadioButtonList<Presets> RadiobuttonPresets;
 
 		public override LocalizeStringPair Caption => m_caption;
 
@@ -87,6 +91,18 @@ namespace RhinoCyclesCore.Settings
 			InitializeLayout();
 			RegisterControlEvents();
 		}
+
+		public enum Presets
+		{
+			Architecture = 0,
+			Product = 1,
+		};
+
+		public static Dictionary<Presets, string> PresetLabels = new Dictionary<Presets, string>
+		{
+			{Presets.Architecture, LOC.STR("Architecture")},
+			{Presets.Product, LOC.STR("Product")},
+		};
 
 		public override void HolderVisible(bool visible)
 		{
@@ -156,6 +172,7 @@ namespace RhinoCyclesCore.Settings
 			if (e.AllSettings != null)
 			{
 				UnregisterControlEvents();
+				RadiobuttonPresets.SelectedValue = (e.AllSettings.FilterGlossy == 0.0f && e.AllSettings.SampleClampIndirect == 0.0f) ? Presets.Product : Presets.Architecture;
 				StepperSeed.Value = e.AllSettings.Seed;
 				CheckboxUseSamples.Checked = e.AllSettings.UseDocumentSamples;
 				StepperSamples.Value = e.AllSettings.Samples;
@@ -329,7 +346,12 @@ namespace RhinoCyclesCore.Settings
 					Localization.LocalizeString("Disable", 77),
 				}
 			};
-
+			RadiobuttonPresets = new EnumRadioButtonList<Presets>
+			{
+				Orientation = Orientation.Vertical,
+				Spacing = RhinoLayout.Spacing(RhinoLayout.SpacingType.Dialog),
+				GetText = v => PresetLabels[v],
+			};
 		}
 
 
@@ -467,6 +489,36 @@ namespace RhinoCyclesCore.Settings
 				}
 			};
 
+
+			var presetsTableTitle = new TableLayout()
+			{
+				Rows =
+				{
+					new TableRow(LOC.STR("Presets"), new Rhino.UI.Controls.Divider())
+				}
+			};
+
+			var presetsTable = new TableLayout()
+			{
+				Spacing = new Eto.Drawing.Size(5, 5),
+				Padding = new Eto.Drawing.Padding(14, 0, 0, 0),
+				Rows =
+				{
+					new TableRow(new TableCell(RadiobuttonPresets, true))
+				}
+			};
+
+			var presetsMainTable = new TableLayout()
+			{
+				Spacing = new Eto.Drawing.Size(5, 5),
+				ToolTip = LOC.STR("Setting to control caustics."),
+				Rows =
+				{
+					new TableRow(presetsTableTitle),
+					new TableRow(presetsTable),
+				}
+			};
+
 			MainLayout = new StackLayout()
 			{
 				// Padding around the table
@@ -477,6 +529,9 @@ namespace RhinoCyclesCore.Settings
 				Spacing = 10,
 				Items =
 				{
+				TableLayout.Horizontal(10,
+						presetsMainTable
+					),
 				TableLayout.Horizontal(10,
 						seedMainTable
 					),
@@ -506,6 +561,7 @@ namespace RhinoCyclesCore.Settings
 			StepperMaxVolumeBounces.ValueChanged += IntegratorSettingValueChangedHandler;
 			StepperMaxTransmissionBounces.ValueChanged += IntegratorSettingValueChangedHandler;
 			StepperMaxTransparencyBounces.ValueChanged += IntegratorSettingValueChangedHandler;
+			RadiobuttonPresets.SelectedValueChanged += RadiobuttonPresetsSelectedValueChanged;
 		}
 
 		private void ListboxTextureBakeQuality_SelectedIndexChanged(object sender, EventArgs e)
@@ -523,6 +579,23 @@ namespace RhinoCyclesCore.Settings
 			vud.UseDocumentSamples = CheckboxUseSamples.Checked.GetValueOrDefault(false);
 		}
 
+		private void RadiobuttonPresetsSelectedValueChanged(object sender, EventArgs e)
+		{
+			var vud = Settings;
+			if (vud == null) return;
+
+			if (RadiobuttonPresets.SelectedValue == Presets.Product)
+			{
+				vud.FilterGlossy = 0.0f;
+				vud.SampleClampIndirect = 0.0f;
+			}
+			else
+			{
+				vud.FilterGlossy = RcCore.It.AllSettings.FilterGlossy == 0.0f ? DefaultEngineSettings.FilterGlossy : RcCore.It.AllSettings.FilterGlossy;
+				vud.SampleClampIndirect = RcCore.It.AllSettings.SampleClampIndirect == 0.0f ? DefaultEngineSettings.SampleClampIndirect : RcCore.It.AllSettings.SampleClampIndirect;
+			}
+		}
+
 		private void UnregisterControlEvents()
 		{
 			CheckboxUseSamples.CheckedChanged -= CheckboxUseSamples_CheckedChanged;
@@ -535,6 +608,7 @@ namespace RhinoCyclesCore.Settings
 			StepperMaxVolumeBounces.ValueChanged -= IntegratorSettingValueChangedHandler;
 			StepperMaxTransmissionBounces.ValueChanged -= IntegratorSettingValueChangedHandler;
 			StepperMaxTransparencyBounces.ValueChanged -= IntegratorSettingValueChangedHandler;
+			RadiobuttonPresets.SelectedValueChanged -= RadiobuttonPresetsSelectedValueChanged;
 		}
 
 		private void IntegratorSettingValueChangedHandler(object sender, EventArgs e)
