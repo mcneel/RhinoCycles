@@ -100,8 +100,8 @@ namespace RhinoCyclesCore.Settings
 
 		public static Dictionary<Presets, string> PresetLabels = new Dictionary<Presets, string>
 		{
-			{Presets.Architecture, LOC.STR("Architecture")},
-			{Presets.Product, LOC.STR("Product")},
+			{Presets.Architecture, Localization.LocalizeString("Architecture", 49)},
+			{Presets.Product, Localization.LocalizeString("Product", 50)},
 		};
 
 		public override void HolderVisible(bool visible)
@@ -494,7 +494,7 @@ namespace RhinoCyclesCore.Settings
 			{
 				Rows =
 				{
-					new TableRow(LOC.STR("Presets"), new Rhino.UI.Controls.Divider())
+					new TableRow(Localization.LocalizeString("Presets", 51), new Rhino.UI.Controls.Divider())
 				}
 			};
 
@@ -511,7 +511,7 @@ namespace RhinoCyclesCore.Settings
 			var presetsMainTable = new TableLayout()
 			{
 				Spacing = new Eto.Drawing.Size(5, 5),
-				ToolTip = LOC.STR("Setting to control caustics."),
+				ToolTip = Localization.LocalizeString("Setting to control caustics.", 52),
 				Rows =
 				{
 					new TableRow(presetsTableTitle),
