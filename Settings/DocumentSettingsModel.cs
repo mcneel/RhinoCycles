@@ -114,25 +114,6 @@ namespace RhinoCyclesCore.Settings
 			CommitRenderSettings(valueName);
 		}
 
-		/*private void GetString(string valueName, string defaultValue, out string value)
-		{
-			var dictionary = RenderSettingsForRead();
-
-			value = dictionary.GetString(valueName, defaultValue);
-		}
-
-		private void SetString(string valueName, string value)
-		{
-			var rs = RenderSettingsForWrite();
-			var renderSettings = rs.GetRenderSettings();
-			var dictionary = renderSettings.UserDictionary;
-
-			dictionary[valueName] = value;
-
-			rs.SetRenderSettings(renderSettings);
-			CommitRenderSettings(valueName);
-		}*/
-
 		#region Document settings
 		public IntegratorMethod IntegratorMethod { get => RcCore.It.AllSettings.IntegratorMethod; set => RcCore.It.AllSettings.IntegratorMethod = value; }
 		public uint IntegratorHash
@@ -512,6 +493,8 @@ namespace RhinoCyclesCore.Settings
 			}
 			set => SetFloat(SettingNames.FilterGlossy, value);
 		}
+
+		public bool IsProductPreset => RenderPresetHelpers.IsProductPreset(this);
 
 		public float SampleClampDirect
 		{

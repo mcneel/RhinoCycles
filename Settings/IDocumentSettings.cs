@@ -18,6 +18,19 @@ using ccl;
 
 namespace RhinoCyclesCore.Settings
 {
+	public static class RenderPresetHelpers
+	{
+		public static bool IsProductPreset(float filterGlossy, float sampleClampIndirect)
+		{
+			return filterGlossy == 0.0f && sampleClampIndirect == 0.0f;
+		}
+
+		public static bool IsProductPreset(IDocumentSettings settings)
+		{
+			return IsProductPreset(settings.FilterGlossy, settings.SampleClampIndirect);
+		}
+	}
+
 	public interface IDocumentSettings
 	{
 		uint IntegratorHash { get;  }
@@ -64,6 +77,7 @@ namespace RhinoCyclesCore.Settings
 		int VolumeSamples { get; set; }
 
 		float FilterGlossy { get; set; }
+		bool IsProductPreset { get; }
 
 		float SampleClampDirect { get; set; }
 		float SampleClampIndirect { get; set; }

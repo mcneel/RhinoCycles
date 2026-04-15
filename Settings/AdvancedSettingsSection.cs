@@ -172,7 +172,7 @@ namespace RhinoCyclesCore.Settings
 			if (e.AllSettings != null)
 			{
 				UnregisterControlEvents();
-				RadiobuttonPresets.SelectedValue = (e.AllSettings.FilterGlossy == 0.0f && e.AllSettings.SampleClampIndirect == 0.0f) ? Presets.Product : Presets.Architecture;
+				RadiobuttonPresets.SelectedValue = e.AllSettings.IsProductPreset ? Presets.Product : Presets.Architecture;
 				StepperSeed.Value = e.AllSettings.Seed;
 				CheckboxUseSamples.Checked = e.AllSettings.UseDocumentSamples;
 				StepperSamples.Value = e.AllSettings.Samples;

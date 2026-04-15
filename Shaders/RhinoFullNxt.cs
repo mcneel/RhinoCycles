@@ -23,6 +23,7 @@ using Rhino.Runtime;
 using RhinoCyclesCore.Converters;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.ExtensionMethods;
+using RhinoCyclesCore.Settings;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -671,10 +672,23 @@ namespace RhinoCyclesCore.Shaders
 					basewithao.ins.Fac.Value = 1.0f;
 					basewithao.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
 
-					var coloured_shadow_mix_custom = new MixClosureNode(m_shader, "coloured_shadow_mix_custom");
-					var lightpath = new LightPathNode(m_shader, "light_path_for_coloured_shadow");
-					var coloured_shadow_switch = new MathMultiply(m_shader, "coloured_shadow_switch");
-					var coloured_shadow = new TransparentBsdfNode(m_shader, "coloured_shadow_transp_bsdf");
+					var engineSettings = Utilities.GetEngineDocumentSettings(m_original.DocumentSerialNumber);
+					var useColoredShadows = !RenderPresetHelpers.IsProductPreset(engineSettings);
+					MixClosureNode coloured_shadow_mix_custom = null;
+					MathMultiply coloured_shadow_switch = null;
+					TransparentBsdfNode coloured_shadow = null;
+					if (useColoredShadows)
+					{
+						coloured_shadow_mix_custom = new MixClosureNode(m_shader, "coloured_shadow_mix_custom");
+						var lightpath = new LightPathNode(m_shader, "light_path_for_coloured_shadow");
+						coloured_shadow_switch = new MathMultiply(m_shader, "coloured_shadow_switch");
+						coloured_shadow = new TransparentBsdfNode(m_shader, "coloured_shadow_transp_bsdf");
+
+						lightpath.outs.IsShadowRay.Connect(coloured_shadow_switch.ins.Value1);
+						coloured_shadow_switch.outs.Value.Connect(coloured_shadow_mix_custom.ins.Fac);
+						coloured_shadow.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure2);
+						principled.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure1);
+					}
 
 					principled.Sss = PrincipledBsdfNode.ScatterMethod.RandomWalk; //SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.AllSettings.SssMethod);
 
@@ -717,8 +731,11 @@ namespace RhinoCyclesCore.Shaders
 					List<ISocket> colsocks = new()
 					{
 						basewithao.ins.Color1, //principled.ins.BaseColor,
-						coloured_shadow.ins.Color
 					};
+					if (coloured_shadow != null)
+					{
+						colsocks.Add(coloured_shadow.ins.Color);
+					}
 
 					if (textureDecalMixin != null)
 					{
@@ -761,9 +778,12 @@ namespace RhinoCyclesCore.Shaders
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 
 					List<ISocket> transmissionSockets = new() {
-						principled.ins.Transmission,
-						coloured_shadow_switch.ins.Value2
+						principled.ins.Transmission
 					};
+					if (coloured_shadow_switch != null)
+					{
+						transmissionSockets.Add(coloured_shadow_switch.ins.Value2);
+					}
 					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, transmissionSockets, true, part.Gamma, true, false, decalProcessingInfo);
 
 					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
@@ -805,11 +825,6 @@ namespace RhinoCyclesCore.Shaders
 							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, principled.ins.ClearcoatNormal.ToList(), false, true, false, true, part.Gamma, false, decalProcessingInfo);
 						}
 					}
-
-					lightpath.outs.IsShadowRay.Connect(coloured_shadow_switch.ins.Value1);
-					coloured_shadow_switch.outs.Value.Connect(coloured_shadow_mix_custom.ins.Fac);
-					coloured_shadow.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure2);
-					principled.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure1);
 
 					float emission_strength = part.EmissionStrength;
 					// When an emission texture is added and active make sure that the emission
@@ -864,7 +879,7 @@ namespace RhinoCyclesCore.Shaders
 
 					if(decalMaterials?.Count > 0)
 					{
-						var prevClosureSocket = coloured_shadow_mix_custom.GetClosureSocket();
+						var prevClosureSocket = useColoredShadows ? coloured_shadow_mix_custom.GetClosureSocket() : principled.GetClosureSocket();
 
 						// Blend all decals together using MixClosureNodes.
 						for (int idx = 0; idx < decalMaterials.Count; idx++)
@@ -885,7 +900,14 @@ namespace RhinoCyclesCore.Shaders
 					}
 					else
 					{
-						coloured_shadow_mix_custom.outs.Closure.Connect(alpha_cutter_mixer.ins.Closure2);
+						if (useColoredShadows)
+						{
+							coloured_shadow_mix_custom.outs.Closure.Connect(alpha_cutter_mixer.ins.Closure2);
+						}
+						else
+						{
+							principled.outs.BSDF.Connect(alpha_cutter_mixer.ins.Closure2);
+						}
 					}
 
 					return alpha_cutter_mixer;

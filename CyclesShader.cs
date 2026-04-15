@@ -80,6 +80,8 @@ namespace RhinoCyclesCore
 			return other != null && Id.Equals(other.Id);
 		}
 
+		public uint DocumentSerialNumber => _docsrn;
+
 		public bool RecordDataForFrontShader(RenderMaterial rm, float gamma)
 		{
 			_front = new ShaderBody(Id)
@@ -140,7 +142,7 @@ namespace RhinoCyclesCore
 
 		public float Gamma { get; set; }
 
-		private enum ProbableMaterial
+		internal enum ProbableMaterial
 		{
 			Plaster,
 			Picture,
@@ -279,6 +281,7 @@ namespace RhinoCyclesCore
 
 			// figure out what type of material we are.
 			var probemat = WhatMaterial(rm, onMaterial);
+			shb.MaterialKind = probemat;
 
 			ShaderBody.CyclesMaterial mattype = ShaderBody.CyclesMaterial.No;
 
@@ -458,9 +461,11 @@ namespace RhinoCyclesCore
 		private Guid blendMaterialTypeId = new Guid("0322370F-A9AF-4264-A57C-58FF8E4345DD");
 		private void RecordDataForPbrShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
-			var pbrmat = rm.ToMaterial(RenderTexture.TextureGeneration.Allow).PhysicallyBased;
+			var onMaterial = rm.ToMaterial(RenderTexture.TextureGeneration.Allow);
+			var pbrmat = onMaterial.PhysicallyBased;
 
 			shb.IsPbr = true;
+			shb.MaterialKind = WhatMaterial(rm, onMaterial);
 			shb.Name = rm.Name ?? "";
 			shb.Gamma = gamma;
 			shb.UseBaseColorTextureAlphaAsObjectAlpha = pbrmat.UseBaseColorTextureAlphaForObjectAlphaTransparencyTexture;
@@ -617,6 +622,7 @@ namespace RhinoCyclesCore
 
 		#region PBR style parameters
 		public bool IsPbr { get; set; }
+		internal CyclesShader.ProbableMaterial MaterialKind { get; set; } = CyclesShader.ProbableMaterial.Custom;
 
 		public TexturedColor PbrBase = new TexturedColor(PbrCSN.BaseColor, Color4f.White, false, 0.0f);
 		public CyclesTextureImage PbrBaseTexture = new CyclesTextureImage();
