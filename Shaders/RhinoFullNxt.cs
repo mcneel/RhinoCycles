@@ -613,6 +613,107 @@ namespace RhinoCyclesCore.Shaders
 			public ISocket AlphaOut;
 		}
 
+
+		private ShaderNode GemMaterial()
+		{
+			var baseIOR = new ValueNode(m_shader, "base_ior");
+			baseIOR.Value = 2.418f;
+
+			var dispersion = new ValueNode(m_shader, "dispersion");
+			dispersion.Value = 0.044f;
+
+			var subIorAndDispersion = new MathSubtract(m_shader, "sub_ior_and_dispersion");
+
+			var addIorDispersion = new MathAdd(m_shader, "add_ior_and_dispersion");
+
+			var glassRed = new GlassBsdfNode(m_shader, "red_channel");
+			glassRed.ins.Color.Value = new float4(1.0f, 0.0f, 0.0f, 1.0f);
+			glassRed.ins.Roughness.Value = 0.001f;
+
+			var glassGreen = new GlassBsdfNode(m_shader, "green_channel");
+			glassGreen.ins.Color.Value = new float4(0.0f, 1.0f, 0.0f, 1.0f);
+			glassGreen.ins.Roughness.Value = 0.001f;
+
+			var glassBlue = new GlassBsdfNode(m_shader, "blue_channel");
+			glassBlue.ins.Color.Value = new float4(0.0f, 0.0f, 1.0f, 1.0f);
+			glassBlue.ins.Roughness.Value = 0.001f;
+
+			var addRG = new AddClosureNode(m_shader, "add_rg_channels");
+			var addRGB = new AddClosureNode(m_shader, "add_rgb_channels");
+
+			var lightPass = new LightPathNode(m_shader, "light_path_for_camera_ray");
+
+			var glassMixIn = new GlassBsdfNode(m_shader, "glass_mix_in");
+			glassMixIn.ins.Color.Value = new float4(1.0f, 1.0f, 1.0f, 1.0f);
+			glassMixIn.ins.Roughness.Value = 0.001f;
+
+			var mixShaderGlassMixIn = new MixClosureNode(m_shader, "mix_shader_for_light_path");
+
+			var mixShaderOutput = new MixClosureNode(m_shader, "mix_shader_for_rgb_glass_mixin");
+			mixShaderOutput.ins.Fac.Value = 0.750f;
+
+			baseIOR.outs.Value.Connect(subIorAndDispersion.ins.Value1);
+			baseIOR.outs.Value.Connect(glassGreen.ins.IOR);
+			baseIOR.outs.Value.Connect(addIorDispersion.ins.Value1);
+
+			dispersion.outs.Value.Connect(subIorAndDispersion.ins.Value2);
+			dispersion.outs.Value.Connect(addIorDispersion.ins.Value2);
+
+			subIorAndDispersion.outs.Value.Connect(glassRed.ins.IOR);
+			addIorDispersion.outs.Value.Connect(glassBlue.ins.IOR);
+
+			glassRed.outs.BSDF.Connect(addRG.ins.Closure1);
+			glassGreen.outs.BSDF.Connect(addRG.ins.Closure2);
+			addRG.outs.Closure.Connect(addRGB.ins.Closure1);
+			glassBlue.outs.BSDF.Connect(addRGB.ins.Closure2);
+
+			baseIOR.outs.Value.Connect(glassMixIn.ins.IOR);
+
+			lightPass.outs.IsCameraRay.Connect(mixShaderGlassMixIn.ins.Fac);
+			glassMixIn.outs.BSDF.Connect(mixShaderGlassMixIn.ins.Closure1);
+			addRGB.outs.Closure.Connect(mixShaderGlassMixIn.ins.Closure2);
+
+			mixShaderGlassMixIn.outs.Closure.Connect(mixShaderOutput.ins.Closure1);
+			addRGB.outs.Closure.Connect(mixShaderOutput.ins.Closure2);
+
+			mixShaderOutput.outs.Closure.Connect(m_shader.Output.ins.Surface);
+
+			return mixShaderOutput;
+		}
+
+		private ShaderNode SimpleGemMaterial()
+		{
+			var glassRed = new GlassBsdfNode(m_shader, "red_channel");
+			glassRed.ins.Color.Value = new float4(1.0f, 0.0f, 0.0f, 1.0f);
+			glassRed.ins.Roughness.Value = 0.001f;
+			glassRed.ins.IOR.Value = 1.440f;
+
+			glassRed.outs.BSDF.Connect(m_shader.Output.ins.Surface);
+
+			var glassGreen = new GlassBsdfNode(m_shader, "green_channel");
+			glassGreen.ins.Color.Value = new float4(0.0f, 1.0f, 0.0f, 1.0f);
+			glassGreen.ins.Roughness.Value = 0.001f;
+			glassGreen.ins.IOR.Value = 1.450f;
+
+			var glassBlue = new GlassBsdfNode(m_shader, "blue_channel");
+			glassBlue.ins.Color.Value = new float4(0.0f, 0.0f, 1.0f, 1.0f);
+			glassBlue.ins.Roughness.Value = 0.001f;
+			glassBlue.ins.IOR.Value = 1.460f;
+
+			var addRG = new AddClosureNode(m_shader, "add_rg_channels");
+			var addRGB = new AddClosureNode(m_shader, "add_rgb_channels");
+
+			glassRed.outs.BSDF.Connect(addRG.ins.Closure1);
+			glassGreen.outs.BSDF.Connect(addRG.ins.Closure2);
+			addRG.outs.Closure.Connect(addRGB.ins.Closure1);
+			glassBlue.outs.BSDF.Connect(addRGB.ins.Closure2);
+
+			addRGB.outs.Closure.Connect(m_shader.Output.ins.Surface);
+
+			return addRGB;
+		}
+
+
 		private ShaderNode GetShaderPart(ShaderBody part, DecalProcessingInfo decalProcessingInfo = null)
 		{
 			if (part.BlendMaterial)
@@ -663,6 +764,12 @@ namespace RhinoCyclesCore.Shaders
 
 				if (part.IsPbr)
 				{
+					if (part.MaterialKind == CyclesShader.ProbableMaterial.Gem)
+					{
+						return SimpleGemMaterial();
+					}
+
+
 					var principled = new PrincipledBsdfNode(m_shader, "pbr_principled");
 
 					var tangent = new TangentNode(m_shader, "tangents");
