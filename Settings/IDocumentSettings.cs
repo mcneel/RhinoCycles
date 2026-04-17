@@ -15,19 +15,56 @@ limitations under the License.
 **/
 
 using ccl;
+using Rhino;
+using RhinoCyclesCore.Core;
+using System.Net;
 
 namespace RhinoCyclesCore.Settings
 {
 	public static class RenderPresetHelpers
 	{
-		public static bool IsProductPreset(float filterGlossy, float sampleClampIndirect)
+		public enum Presets
 		{
-			return filterGlossy == 0.0f && sampleClampIndirect == 0.0f;
+			Architecture = 0,
+			Product = 1,
+		};
+
+		public static Presets ProductPreset(float filterGlossy, float sampleClampIndirect)
+		{
+			return (filterGlossy == 0.0f && sampleClampIndirect == 0.0f) ? Presets.Product : Presets.Architecture;
 		}
 
-		public static bool IsProductPreset(IDocumentSettings settings)
+		public static Presets ProductPreset(IDocumentSettings settings)
 		{
-			return IsProductPreset(settings.FilterGlossy, settings.SampleClampIndirect);
+			return ProductPreset(settings.FilterGlossy, settings.SampleClampIndirect);
+		}
+
+		public static void SetPreset(IDocumentSettings settings, Presets preset)
+		{
+			var previousPreset = ProductPreset(settings);
+
+			if (preset == Presets.Product)
+			{
+				settings.FilterGlossy = 0.0f;
+				settings.SampleClampIndirect = 0.0f;
+			}
+			else
+			{
+				settings.FilterGlossy = RcCore.It.AllSettings.FilterGlossy == 0.0f ? DefaultEngineSettings.FilterGlossy : RcCore.It.AllSettings.FilterGlossy;
+				settings.SampleClampIndirect = RcCore.It.AllSettings.SampleClampIndirect == 0.0f ? DefaultEngineSettings.SampleClampIndirect : RcCore.It.AllSettings.SampleClampIndirect;
+			}
+
+			if (previousPreset != ProductPreset(settings))
+			{
+				var docSerialNumber = settings switch
+				{
+					DocumentSettingsModel documentSettings => documentSettings.DocumentSerialNumber,
+					EngineDocumentSettings engineSettings => engineSettings.DocumentSerialNumber,
+					_ => RhinoDoc.ActiveDoc?.RuntimeSerialNumber ?? 0
+				};
+
+				Rhino.Render.ChangeQueue.ChangeQueue.RefreshMaterialsForDocument(ApplicationAndDocumentSettings.RcPlugIn.Id, docSerialNumber);
+			}
 		}
 	}
 

@@ -38,6 +38,8 @@ namespace RhinoCyclesCore.Settings
 		{
 		}
 
+		internal uint DocumentSerialNumber => RhinoDoc.ActiveDoc?.RuntimeSerialNumber ?? 0;
+
 #pragma warning disable CS0067
 		public event PropertyChangedEventHandler PropertyChanged;
 #pragma warning restore CS0067
@@ -494,7 +496,7 @@ namespace RhinoCyclesCore.Settings
 			set => SetFloat(SettingNames.FilterGlossy, value);
 		}
 
-		public bool IsProductPreset => RenderPresetHelpers.IsProductPreset(this);
+		public bool IsProductPreset => (RenderPresetHelpers.ProductPreset(this) == RenderPresetHelpers.Presets.Product);
 
 		public float SampleClampDirect
 		{

@@ -25,14 +25,22 @@ namespace RhinoCyclesCore.Settings
 	public class EngineDocumentSettings : IAllSettings
 	{
 		internal ArchivableDictionary mDict;
-		internal EngineDocumentSettings(EngineDocumentSettings eds) { mDict = eds.mDict; }
+		private readonly uint _docSerialNumber;
+		internal EngineDocumentSettings(EngineDocumentSettings eds)
+		{
+			mDict = eds.mDict;
+			_docSerialNumber = eds._docSerialNumber;
+		}
 		public EngineDocumentSettings(uint docSerialNumber) {
+			_docSerialNumber = docSerialNumber;
 			mDict = (RhinoDoc.FromRuntimeSerialNumber(docSerialNumber))?.RenderSettings?.UserDictionary;
 		}
 		internal EngineDocumentSettings(ArchivableDictionary dictionary)
 		{
 			mDict = dictionary;
 		}
+
+		internal uint DocumentSerialNumber => _docSerialNumber;
 #region Document settings
 		public IntegratorMethod IntegratorMethod
 		{
@@ -270,7 +278,7 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
-		public bool IsProductPreset => RenderPresetHelpers.IsProductPreset(this);
+		public bool IsProductPreset => (RenderPresetHelpers.ProductPreset(this) == RenderPresetHelpers.Presets.Product);
 
 		public float SampleClampDirect
 		{
