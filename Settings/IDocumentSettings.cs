@@ -53,7 +53,7 @@ namespace RhinoCyclesCore.Settings
 				settings.FilterGlossy = RcCore.It.AllSettings.FilterGlossy == 0.0f ? DefaultEngineSettings.FilterGlossy : RcCore.It.AllSettings.FilterGlossy;
 				settings.SampleClampIndirect = RcCore.It.AllSettings.SampleClampIndirect == 0.0f ? DefaultEngineSettings.SampleClampIndirect : RcCore.It.AllSettings.SampleClampIndirect;
 			}
-
+			/*
 			if (previousPreset != ProductPreset(settings))
 			{
 				var docSerialNumber = settings switch
@@ -64,7 +64,7 @@ namespace RhinoCyclesCore.Settings
 				};
 
 				Rhino.Render.ChangeQueue.ChangeQueue.RefreshMaterialsForDocument(ApplicationAndDocumentSettings.RcPlugIn.Id, docSerialNumber);
-			}
+			}*/
 		}
 	}
 
