@@ -39,7 +39,7 @@ namespace RhinoCyclesCore.Settings
 		private NumericStepper StepperSamples;
 		private CheckBox CheckboxUseSamples;
 		private DropDown ListboxTextureBakeQuality;
-		private EnumRadioButtonList<Presets> RadiobuttonPresets;
+		private EnumRadioButtonList<RenderPresetHelpers.Presets> RadiobuttonPresets;
 
 		public override LocalizeStringPair Caption => m_caption;
 
@@ -92,16 +92,10 @@ namespace RhinoCyclesCore.Settings
 			RegisterControlEvents();
 		}
 
-		public enum Presets
+		public static Dictionary<RenderPresetHelpers.Presets, string> PresetLabels = new Dictionary<RenderPresetHelpers.Presets, string>
 		{
-			Architecture = 0,
-			Product = 1,
-		};
-
-		public static Dictionary<Presets, string> PresetLabels = new Dictionary<Presets, string>
-		{
-			{Presets.Architecture, Localization.LocalizeString("Architecture", 49)},
-			{Presets.Product, Localization.LocalizeString("Product", 50)},
+			{RenderPresetHelpers.Presets.Architecture, Localization.LocalizeString("Architecture", 49)},
+			{RenderPresetHelpers.Presets.Product, Localization.LocalizeString("Product", 50)},
 		};
 
 		public override void HolderVisible(bool visible)
@@ -172,7 +166,7 @@ namespace RhinoCyclesCore.Settings
 			if (e.AllSettings != null)
 			{
 				UnregisterControlEvents();
-				RadiobuttonPresets.SelectedValue = e.AllSettings.IsProductPreset ? Presets.Product : Presets.Architecture;
+				RadiobuttonPresets.SelectedValue = e.AllSettings.IsProductPreset ? RenderPresetHelpers.Presets.Product : RenderPresetHelpers.Presets.Architecture;
 				StepperSeed.Value = e.AllSettings.Seed;
 				CheckboxUseSamples.Checked = e.AllSettings.UseDocumentSamples;
 				StepperSamples.Value = e.AllSettings.Samples;
@@ -346,7 +340,7 @@ namespace RhinoCyclesCore.Settings
 					Localization.LocalizeString("Disable", 77),
 				}
 			};
-			RadiobuttonPresets = new EnumRadioButtonList<Presets>
+			RadiobuttonPresets = new EnumRadioButtonList<RenderPresetHelpers.Presets>
 			{
 				Orientation = Orientation.Vertical,
 				Spacing = RhinoLayout.Spacing(RhinoLayout.SpacingType.Dialog),
@@ -584,16 +578,7 @@ namespace RhinoCyclesCore.Settings
 			var vud = Settings;
 			if (vud == null) return;
 
-			if (RadiobuttonPresets.SelectedValue == Presets.Product)
-			{
-				vud.FilterGlossy = 0.0f;
-				vud.SampleClampIndirect = 0.0f;
-			}
-			else
-			{
-				vud.FilterGlossy = RcCore.It.AllSettings.FilterGlossy == 0.0f ? DefaultEngineSettings.FilterGlossy : RcCore.It.AllSettings.FilterGlossy;
-				vud.SampleClampIndirect = RcCore.It.AllSettings.SampleClampIndirect == 0.0f ? DefaultEngineSettings.SampleClampIndirect : RcCore.It.AllSettings.SampleClampIndirect;
-			}
+			RenderPresetHelpers.SetPreset(vud, RadiobuttonPresets.SelectedValue);
 		}
 
 		private void UnregisterControlEvents()

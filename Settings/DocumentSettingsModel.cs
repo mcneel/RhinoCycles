@@ -494,7 +494,7 @@ namespace RhinoCyclesCore.Settings
 			set => SetFloat(SettingNames.FilterGlossy, value);
 		}
 
-		public bool IsProductPreset => RenderPresetHelpers.IsProductPreset(this);
+		public bool IsProductPreset => (RenderPresetHelpers.ProductPreset(this) == RenderPresetHelpers.Presets.Product);
 
 		public float SampleClampDirect
 		{
