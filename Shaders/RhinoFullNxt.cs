@@ -613,7 +613,7 @@ namespace RhinoCyclesCore.Shaders
 			public ISocket AlphaOut;
 		}
 
-		private ShaderNode GemMaterial(ShaderBody part, DecalProcessingInfo decalProcessingInfo = null)
+		private ShaderNode CodexGemMaterial(ShaderBody part, DecalProcessingInfo decalProcessingInfo = null)
 		{
 			var baseIor = new MathMaximum(m_shader, "codex_gem_base_ior");
 			baseIor.ins.Value2.Value = 1.001f;
@@ -752,7 +752,7 @@ namespace RhinoCyclesCore.Shaders
 
 					if ((part.MaterialKind == CyclesShader.ProbableMaterial.Gem) && productPreset)
 					{
-						return GemMaterial(part, decalProcessingInfo);
+						return CodexGemMaterial(part, decalProcessingInfo);
 					}
 
 					var principled = new PrincipledBsdfNode(m_shader, "pbr_principled");
