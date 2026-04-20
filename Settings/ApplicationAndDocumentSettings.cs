@@ -700,7 +700,7 @@ namespace RhinoCyclesCore.Settings
 			set { RcPlugIn.Settings.SetDouble(SettingNames.FilterGlossy, value); }
 		}
 
-		public virtual bool IsProductPreset => RenderPresetHelpers.IsProductPreset(this);
+		public virtual bool IsProductPreset => (RenderPresetHelpers.ProductPreset(this) == RenderPresetHelpers.Presets.Product);
 
 		public virtual float SampleClampDirect
 		{

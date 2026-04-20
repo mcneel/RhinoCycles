@@ -57,7 +57,7 @@ namespace RhinoCyclesCore.Shaders
 				var front = GetShaderPart(m_original.Front);
 				var back = GetShaderPart(m_original.Back);
 
-				var backfacing=  new GeometryInfoNode(m_shader, "backfacepicker_");
+				var backfacing = new GeometryInfoNode(m_shader, "backfacepicker_");
 				var flipper = new MixClosureNode(m_shader, "front_or_back_");
 
 				backfacing.outs.Backfacing.Connect(flipper.ins.Fac);
@@ -174,7 +174,8 @@ namespace RhinoCyclesCore.Shaders
 			imgtex.Scale.y = 1.0f / decal.Texture.Transform.y.y;
 			imgtex.Rotation.z = -1.0f * RenderEngine.DegToRad(decal.Texture.Transform.z.z);
 
-			switch(decal.Projection) {
+			switch (decal.Projection)
+			{
 				case Rhino.Render.DecalProjection.Forward:
 					texco.Direction = DecalDirection.Forward;
 					break;
@@ -203,7 +204,7 @@ namespace RhinoCyclesCore.Shaders
 			texco.VerticalSweepStart = decal.VerticalSweepStart;
 			texco.VerticalSweepEnd = decal.VerticalSweepEnd;
 
-			if(transp != null)
+			if (transp != null)
 			{
 				transp.ins.Value2.Value = 1.0f - decal.Transparency;
 
@@ -220,7 +221,8 @@ namespace RhinoCyclesCore.Shaders
 				}
 			}
 
-			switch(decal.Mapping) {
+			switch (decal.Mapping)
+			{
 				case Rhino.Render.DecalMapping.Planar:
 					texco.outs.DecalPlanar.Connect(imgtex.ins.Vector);
 					break;
@@ -572,7 +574,8 @@ namespace RhinoCyclesCore.Shaders
 		/// <returns>A tuple of decal material closures and decal mask sockets.
 		/// These can be mixed together with MixClosureNodes</returns>
 		/// <since>7.0</since>
-		private (List<ClosureSocket> decalMaterials, List<FloatSocket> decalMaskSockets) HandleMaterialDecals(float shaderGamma, bool gamma_correct_decals = false) {
+		private (List<ClosureSocket> decalMaterials, List<FloatSocket> decalMaskSockets) HandleMaterialDecals(float shaderGamma, bool gamma_correct_decals = false)
+		{
 
 			var decalClosures = new List<ClosureSocket>();
 			var decalMaskSockets = new List<FloatSocket>();
@@ -613,6 +616,89 @@ namespace RhinoCyclesCore.Shaders
 			public ISocket AlphaOut;
 		}
 
+		private ShaderNode GemMaterial(ShaderBody part, DecalProcessingInfo decalProcessingInfo = null)
+		{
+			var baseIor = new MathMaximum(m_shader, "gem_base_ior");
+			baseIor.ins.Value2.Value = 1.001f;
+
+			var dispersionScale = new ValueNode(m_shader, "gem_dispersion_scale");
+			dispersionScale.Value = 0.045f;
+
+			var roughnessComplement = new MathSubtract(m_shader, "gem_roughness_complement");
+			roughnessComplement.ins.Value1.Value = 1.0f;
+
+			var roughnessClamp = new MathMaximum(m_shader, "gem_roughness_complement_clamp");
+			var dispersionAmount = new MathMultiply(m_shader, "gem_dispersion_amount");
+			var subIorAndDispersion = new MathSubtract(m_shader, "gem_sub_ior_and_dispersion");
+			var addIorAndDispersion = new MathAdd(m_shader, "gem_add_ior_and_dispersion");
+			var redIorFloor = new MathMaximum(m_shader, "gem_red_ior_floor");
+			redIorFloor.ins.Value2.Value = 1.001f;
+
+			var glassRed = new GlassBsdfNode(m_shader, "gem_red_channel");
+			glassRed.ins.Color.Value = new float4(1.0f, 0.0f, 0.0f, 1.0f);
+
+			var glassGreen = new GlassBsdfNode(m_shader, "gem_green_channel");
+			glassGreen.ins.Color.Value = new float4(0.0f, 1.0f, 0.0f, 1.0f);
+
+			var glassBlue = new GlassBsdfNode(m_shader, "gem_blue_channel");
+			glassBlue.ins.Color.Value = new float4(0.0f, 0.0f, 1.0f, 1.0f);
+
+			var glassCore = new GlassBsdfNode(m_shader, "gem_core");
+			glassCore.ins.Color.Value = new float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+			var addRG = new AddClosureNode(m_shader, "gem_add_rg_channels");
+			var addRGB = new AddClosureNode(m_shader, "gem_add_rgb_channels");
+
+			var lightPath = new LightPathNode(m_shader, "gem_light_path");
+			var cameraRayMix = new MixClosureNode(m_shader, "gem_camera_ray_mix");
+			var finalMix = new MixClosureNode(m_shader, "gem_final_mix");
+			finalMix.ins.Fac.Value = 0.75f;
+
+			Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture,
+				glassCore.ins.Color.ToList(),
+				false, part.Gamma, false, false, decalProcessingInfo);
+
+			Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture,
+				new List<ISocket> { roughnessComplement.ins.Value2, glassRed.ins.Roughness, glassGreen.ins.Roughness, glassBlue.ins.Roughness, glassCore.ins.Roughness },
+				false, part.Gamma, true, false, decalProcessingInfo);
+
+			Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture,
+				baseIor.ins.Value1.ToList(),
+				false, part.Gamma, true, false, decalProcessingInfo);
+
+			roughnessComplement.outs.Value.Connect(roughnessClamp.ins.Value1);
+			roughnessClamp.ins.Value2.Value = 0.0f;
+
+			dispersionScale.outs.Value.Connect(dispersionAmount.ins.Value1);
+			roughnessClamp.outs.Value.Connect(dispersionAmount.ins.Value2);
+
+			baseIor.outs.Value.Connect(subIorAndDispersion.ins.Value1);
+			baseIor.outs.Value.Connect(glassGreen.ins.IOR);
+			baseIor.outs.Value.Connect(addIorAndDispersion.ins.Value1);
+			baseIor.outs.Value.Connect(glassCore.ins.IOR);
+
+			dispersionAmount.outs.Value.Connect(subIorAndDispersion.ins.Value2);
+			dispersionAmount.outs.Value.Connect(addIorAndDispersion.ins.Value2);
+
+			subIorAndDispersion.outs.Value.Connect(redIorFloor.ins.Value1);
+			redIorFloor.outs.Value.Connect(glassRed.ins.IOR);
+			addIorAndDispersion.outs.Value.Connect(glassBlue.ins.IOR);
+
+			glassRed.outs.BSDF.Connect(addRG.ins.Closure1);
+			glassGreen.outs.BSDF.Connect(addRG.ins.Closure2);
+			addRG.outs.Closure.Connect(addRGB.ins.Closure1);
+			glassBlue.outs.BSDF.Connect(addRGB.ins.Closure2);
+
+			lightPath.outs.IsCameraRay.Connect(cameraRayMix.ins.Fac);
+			glassCore.outs.BSDF.Connect(cameraRayMix.ins.Closure1);
+			addRGB.outs.Closure.Connect(cameraRayMix.ins.Closure2);
+
+			cameraRayMix.outs.Closure.Connect(finalMix.ins.Closure1);
+			addRGB.outs.Closure.Connect(finalMix.ins.Closure2);
+
+			return finalMix;
+		}
+
 		private ShaderNode GetShaderPart(ShaderBody part, DecalProcessingInfo decalProcessingInfo = null)
 		{
 			if (part.BlendMaterial)
@@ -644,7 +730,8 @@ namespace RhinoCyclesCore.Shaders
 				materialOne.GetClosureSocket().Connect(blender.ins.Closure1);
 				materialTwo.GetClosureSocket().Connect(blender.ins.Closure2);
 
-				if (part.BlendMixAmountTexture.HasProcedural) {
+				if (part.BlendMixAmountTexture.HasProcedural)
+				{
 					Utilities.GraphForSlot(m_shader, null, part.BlendMixAmount > 0.0f, part.BlendMixAmountTexture.Amount, part.BlendMixAmountTexture, blender.ins.Fac.ToList(), true, false, false, true, part.Gamma, false, null);
 				}
 				return blender;
@@ -663,6 +750,14 @@ namespace RhinoCyclesCore.Shaders
 
 				if (part.IsPbr)
 				{
+					var engineSettings = Utilities.GetEngineDocumentSettings(m_original.DocumentSerialNumber);
+					var productPreset = (RenderPresetHelpers.ProductPreset(engineSettings) == RenderPresetHelpers.Presets.Product);
+
+					if ((part.MaterialKind == CyclesShader.ProbableMaterial.Gem) && productPreset)
+					{
+						return GemMaterial(part, decalProcessingInfo);
+					}
+
 					var principled = new PrincipledBsdfNode(m_shader, "pbr_principled");
 
 					var tangent = new TangentNode(m_shader, "tangents");
@@ -672,12 +767,10 @@ namespace RhinoCyclesCore.Shaders
 					basewithao.ins.Fac.Value = 1.0f;
 					basewithao.ins.Color2.Value = Rhino.Display.Color4f.White.ToFloat4();
 
-					var engineSettings = Utilities.GetEngineDocumentSettings(m_original.DocumentSerialNumber);
-					var useColoredShadows = !RenderPresetHelpers.IsProductPreset(engineSettings);
 					MixClosureNode coloured_shadow_mix_custom = null;
 					MathMultiply coloured_shadow_switch = null;
 					TransparentBsdfNode coloured_shadow = null;
-					if (useColoredShadows)
+					if (!productPreset)
 					{
 						coloured_shadow_mix_custom = new MixClosureNode(m_shader, "coloured_shadow_mix_custom");
 						var lightpath = new LightPathNode(m_shader, "light_path_for_coloured_shadow");
@@ -709,7 +802,8 @@ namespace RhinoCyclesCore.Shaders
 
 					MixNode aoamount = null;
 
-					if (part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasProcedural) {
+					if (part.PbrAmbientOcclusion.On && part.PbrAmbientOcclusion.Amount > 0.01f && part.PbrAmbientOcclusionTexture.HasProcedural)
+					{
 						aoamount = new(m_shader, "pbr_aoamount")
 						{
 							BlendType = MixNode.BlendTypes.Blend
@@ -788,7 +882,7 @@ namespace RhinoCyclesCore.Shaders
 
 					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic.ToList(), false, part.Gamma, true, false	, decalProcessingInfo);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 
 					if (part.PbrBump.On && part.PbrBumpTexture.HasProcedural)
@@ -829,7 +923,8 @@ namespace RhinoCyclesCore.Shaders
 					float emission_strength = part.EmissionStrength;
 					// When an emission texture is added and active make sure that the emission
 					// base color isn't black.
-					if (part.PbrEmission.On) {
+					if (part.PbrEmission.On)
+					{
 						if (part.PbrEmission.Value.Equals(Rhino.Display.Color4f.Black))
 						{
 							part.PbrEmission.Value = Rhino.Display.Color4f.White;
@@ -845,7 +940,7 @@ namespace RhinoCyclesCore.Shaders
 
 					alpha_basecolalpha_plus_alphatransp.outs.Value.Connect(alpha_transparency_final.ins.Value2);
 
-					if(decalProcessingInfo == null)
+					if (decalProcessingInfo == null)
 					{
 						alpha_transparency_final.outs.Value.Connect(principled.ins.Alpha);
 						alpha_transparency_final.outs.Value.Connect(alpha_cutter_mixer.ins.Fac);
@@ -877,9 +972,9 @@ namespace RhinoCyclesCore.Shaders
 						displacement.outs.Displacement.Connect(m_shader.Output.ins.Displacement);
 					}
 
-					if(decalMaterials?.Count > 0)
+					if (decalMaterials?.Count > 0)
 					{
-						var prevClosureSocket = useColoredShadows ? coloured_shadow_mix_custom.GetClosureSocket() : principled.GetClosureSocket();
+						var prevClosureSocket = !productPreset ? coloured_shadow_mix_custom.GetClosureSocket() : principled.GetClosureSocket();
 
 						// Blend all decals together using MixClosureNodes.
 						for (int idx = 0; idx < decalMaterials.Count; idx++)
@@ -900,7 +995,7 @@ namespace RhinoCyclesCore.Shaders
 					}
 					else
 					{
-						if (useColoredShadows)
+						if (!productPreset)
 						{
 							coloured_shadow_mix_custom.outs.Closure.Connect(alpha_cutter_mixer.ins.Closure2);
 						}
@@ -1318,7 +1413,8 @@ namespace RhinoCyclesCore.Shaders
 						// Need to manually set here the correct projection mode as this
 						// information isn't available while the texture is being evaluated
 						part.EnvironmentTexture.Procedural.ProjectionMode = Rhino.Render.TextureProjectionMode.EnvironmentMap;
-						if (part.EnvironmentTexture.Procedural.EnvironmentMappingMode == Rhino.Render.TextureEnvironmentMappingMode.Automatic) {
+						if (part.EnvironmentTexture.Procedural.EnvironmentMappingMode == Rhino.Render.TextureEnvironmentMappingMode.Automatic)
+						{
 							part.EnvironmentTexture.Procedural.EnvironmentMappingMode = Rhino.Render.TextureEnvironmentMappingMode.EnvironmentMap;
 						}
 						Utilities.GraphForSlot(m_shader, null, true, part.EnvironmentTexture.Amount, part.EnvironmentTexture, attenuated_environment_color106.ins.Color2.ToList(), false, false, false, false, part.Gamma, false, decalProcessingInfo);
