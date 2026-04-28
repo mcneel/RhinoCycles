@@ -1394,6 +1394,16 @@ namespace RhinoCyclesCore.Database
 					var rm = MaterialFromId(distinct);
 					HandleRenderMaterial(rm, distinct, null, false);
 				}
+				else
+				{
+					var rcShader = _shaderDatabase.AllShaders.Where(t => t.Item1 is CyclesShader shader && shader.Id == distinct)
+						.Select(t => t.Item1 as CyclesShader).FirstOrDefault();
+
+					if (rcShader != null)
+					{
+						TriggerMaterialShaderChanged(rcShader, existing);
+					}
+				}
 			}
 		}
 
@@ -2008,12 +2018,20 @@ namespace RhinoCyclesCore.Database
 		private bool _wallpaperInitialized = false;
 		private IntegratorSettings integratorSettings { get; set; } = null;
 		private uint _oldIntegratorHash { get; set; } = 0;
+		private RenderPresetHelpers.Presets? _oldRenderPreset { get; set; } = null;
 		private bool _integratorChanged { get; set; } = false;
 		protected override void ApplyRenderSettingsChanges(RenderSettings rs)
 		{
 			if (rs != null)
 			{
 				EngineDocumentSettings eds = new EngineDocumentSettings(rs.UserDictionary);
+				var renderPreset = RenderPresetHelpers.ProductPreset(eds);
+				if (_oldRenderPreset.HasValue && (renderPreset != _oldRenderPreset.Value))
+				{
+					RcCore.It.AddLogStringIfVerbose($"\tRenderPreset changed from {_oldRenderPreset.Value} to {renderPreset}, refreshing materials");
+					RefreshMaterials();
+				}
+				_oldRenderPreset = renderPreset;
 				if(eds.IntegratorHash!=_oldIntegratorHash)
 				{
 					integratorSettings = new IntegratorSettings(eds);
