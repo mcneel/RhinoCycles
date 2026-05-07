@@ -152,15 +152,18 @@ namespace RhinoCycles
 						CSycles.initialise(DeviceTypeMask.CPU);
 					} else
 					{
-						try
+						DeviceTypeMask previouslyDisabled = RhinoCyclesCore.Utilities.DisabledGpus;
+						CSycles.initialise(DeviceTypeMask.All & ~previouslyDisabled);
+
+						DeviceTypeMask failed = CSycles.failed_gpus_mask();
+						foreach (DeviceType t in Enum.GetValues(typeof(DeviceType)))
 						{
-							CSycles.initialise(DeviceTypeMask.All);
+							var bit = (DeviceTypeMask)(1u << (int)t);
+							if ((failed & bit) == 0) continue;
+							bool persisted = RhinoCyclesCore.Utilities.DisableGpu(bit);
+							RcCore.It.AddLogString($"RhinoCycles GPU {t} failed to initialise{(persisted ? "; disabled for next start" : "")}: {CSycles.gpu_init_error(t)}");
 						}
-						catch (Exception)
-						{
-							CSycles.initialise(DeviceTypeMask.CPU);
-							RhinoCyclesCore.Utilities.DisableGpus();
-						}
+
 						if (RcCore.It.AllSettings.StartGpuKernelCompiler)
 						{
 							RcCore.It.InitialiseGpuKernels();
