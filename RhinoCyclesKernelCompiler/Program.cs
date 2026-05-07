@@ -300,6 +300,13 @@ namespace RhinoCyclesKernelCompiler
 
 			CSycles.path_init(kernelPath, dataUserPath);
 			CSycles.initialise(DeviceTypeMask.All);
+			DeviceTypeMask failed = CSycles.failed_gpus_mask();
+			foreach (DeviceType t in Enum.GetValues(typeof(DeviceType)))
+			{
+				var bit = (DeviceTypeMask)(1u << (int)t);
+				if ((failed & bit) == 0) continue;
+				Console.WriteLine($"GPU {t} failed to initialise: {CSycles.gpu_init_error(t)}");
+			}
 			SetupTables();
 
 			var gpuTasks = ReadGpuTaskData(compileTaskFile, gpuDataPath);

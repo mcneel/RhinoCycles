@@ -576,6 +576,10 @@ namespace RhinoCyclesCore
 			{
 				File.Delete(_DisableGpusFile);
 			}
+			foreach (var gpu in AllGpus)
+			{
+				EnableGpu(gpu);
+			}
 		}
 
 		public static void DisableGpus()
@@ -583,6 +587,69 @@ namespace RhinoCyclesCore
 			if(!File.Exists(_DisableGpusFile))
 			{
 				File.Create(_DisableGpusFile);
+			}
+		}
+
+		private static readonly (DeviceTypeMask Mask, string FileName)[] _GpuSentinels = new[]
+		{
+			(DeviceTypeMask.CUDA,   "disable_cuda"),
+			(DeviceTypeMask.OPTIX,  "disable_optix"),
+			(DeviceTypeMask.HIP,    "disable_hip"),
+			(DeviceTypeMask.METAL,  "disable_metal"),
+			(DeviceTypeMask.ONEAPI, "disable_oneapi"),
+		};
+
+		public static IEnumerable<DeviceTypeMask> AllGpus =>
+			_GpuSentinels.Select(b => b.Mask);
+
+		private static string _DisabledGpuFile(DeviceTypeMask gpu)
+		{
+			var entry = _GpuSentinels.FirstOrDefault(b => b.Mask == gpu);
+			if (entry.FileName == null) return null;
+			var settingsDirectory = RcPlugIn.SettingsDirectory;
+			if (!Directory.Exists(settingsDirectory))
+			{
+				Directory.CreateDirectory(settingsDirectory);
+			}
+			return Path.Combine(settingsDirectory, entry.FileName);
+		}
+
+		public static DeviceTypeMask DisabledGpus
+		{
+			get
+			{
+				DeviceTypeMask mask = 0;
+				foreach (var (m, _) in _GpuSentinels)
+				{
+					if (File.Exists(_DisabledGpuFile(m))) mask |= m;
+				}
+				return mask;
+			}
+		}
+
+		public static bool IsGpuDisabled(DeviceTypeMask gpu)
+		{
+			var f = _DisabledGpuFile(gpu);
+			return f != null && File.Exists(f);
+		}
+
+		public static bool DisableGpu(DeviceTypeMask gpu)
+		{
+			var f = _DisabledGpuFile(gpu);
+			if (f == null) return false;
+			if (!File.Exists(f))
+			{
+				File.Create(f);
+			}
+			return true;
+		}
+
+		public static void EnableGpu(DeviceTypeMask gpu)
+		{
+			var f = _DisabledGpuFile(gpu);
+			if (f != null && File.Exists(f))
+			{
+				File.Delete(f);
 			}
 		}
 	}
