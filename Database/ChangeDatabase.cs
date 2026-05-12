@@ -1431,6 +1431,7 @@ namespace RhinoCyclesCore.Database
 					// create a cycles shader
 					var sh = _renderEngine.CreateMaterialShader(shader);
 					_shaderDatabase.RecordRhCclShaderRelation(shader.Id, sh);
+					_shaderDatabase.RecordTransmissive(shader.Id, shader.IsTransmissive);
 					_shaderDatabase.Add(shader, sh);
 
 					sh.Tag();
@@ -1576,6 +1577,9 @@ namespace RhinoCyclesCore.Database
 
 			RcCore.It.AddLogStringIfVerbose("\tUploadLightChanges entry");
 
+			// MNEE diagnostic counter (per upload batch).
+			int causticsLightCount = 0;
+
 			/* new light shaders and lights. */
 			foreach (var l in _lightDatabase.LightsToAdd)
 			{
@@ -1600,6 +1604,7 @@ namespace RhinoCyclesCore.Database
 					Location = l.Co,
 					Direction = l.Dir,
 					UseMis = l.UseMis,
+					UseCaustics = l.Type != LightType.Background,
 					CastShadow = l.CastShadow,
 					Samples = 1,
 					MaxBounces = 8,
@@ -1608,6 +1613,7 @@ namespace RhinoCyclesCore.Database
 					AxisU = l.AxisU,
 					AxisV = l.AxisV,
 				};
+				if (l.Type != LightType.Background) causticsLightCount++;
 
 				switch (l.Type)
 				{
@@ -1645,6 +1651,8 @@ namespace RhinoCyclesCore.Database
 				existingL.Location = l.Co;
 				existingL.Direction = l.Dir;
 				existingL.UseMis = l.UseMis;
+				existingL.UseCaustics = l.Type != LightType.Background;
+				if (l.Type != LightType.Background) causticsLightCount++;
 				existingL.CastShadow = l.CastShadow;
 				existingL.SpotAngle = l.SpotAngle;
 				existingL.SpotSmooth = l.SpotSmooth;
@@ -1662,6 +1670,7 @@ namespace RhinoCyclesCore.Database
 				existingL.TagUpdate();
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Lights handled", -1.0f);
+			RcCore.It.AddLogStringIfVerbose($"\t\tMNEE light tags: {causticsLightCount} caustic light(s). Must be >0 (and >=1 caster + >=1 receiver) for MNEE to activate.");
 			RcCore.It.AddLogStringIfVerbose("\tUploadLightChanges exit");
 		}
 
@@ -1912,6 +1921,10 @@ namespace RhinoCyclesCore.Database
 
 			RcCore.It.AddLogStringIfVerbose("\tUploadObjectChanges entry");
 
+			// MNEE diagnostic counters (per upload batch).
+			int causticsCasterCount = 0;
+			int causticsReceiverCount = 0;
+
 			// first delete objects
 			foreach (var ob in _objectDatabase.DeletedObjects)
 			{
@@ -1983,6 +1996,14 @@ namespace RhinoCyclesCore.Database
 				cob.OcsFrame = t;
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				cob.IsSolid = ob.IsSolid;
+				// Tag for Manifold Next Event Estimation: transmissive objects cast caustic
+				// shadow rays, everything else receives. Cycles only activates MNEE when at
+				// least one caster, one receiver and one light with UseCaustics coexist, so
+				// tagging unconditionally is free for scenes without glass.
+				bool isTransmissiveMaterial = _shaderDatabase.IsTransmissive(ob.matid);
+				cob.IsCausticsCaster = isTransmissiveMaterial;
+				cob.IsCausticsReceiver = !isTransmissiveMaterial;
+				if (isTransmissiveMaterial) causticsCasterCount++; else causticsReceiverCount++;
 				//cob.IsBlockInstance = true;
 				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
 				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;
@@ -1999,6 +2020,7 @@ namespace RhinoCyclesCore.Database
 				cob.TagUpdate();
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Objects handled", -1.0f);
+			RcCore.It.AddLogStringIfVerbose($"\t\tMNEE object tags: {causticsCasterCount} caster(s), {causticsReceiverCount} receiver(s). Both must be >0 for MNEE to activate.");
 			RcCore.It.AddLogStringIfVerbose("\tUploadObjectChanges exit");
 		}
 

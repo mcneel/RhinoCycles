@@ -133,6 +133,12 @@ namespace RhinoCyclesCore
 		public ShaderBody Front => _front;
 		public ShaderBody Back => _back;
 
+		/// <summary>
+		/// True if either side of this material refracts light. Used to tag the
+		/// corresponding Cycles object as a caustics caster for MNEE.
+		/// </summary>
+		public bool IsTransmissive => (_front?.IsTransmissive ?? false) || (_back?.IsTransmissive ?? false);
+
 		public bool DisplayMaterial => _front != null && _back != null;
 
 		public bool ValidDisplayMaterial =>
@@ -617,6 +623,28 @@ namespace RhinoCyclesCore
 		public CyclesTextureImage BlendMixAmountTexture = new CyclesTextureImage();
 		public bool BlendMaterial => MaterialOne != null || MaterialTwo != null;
 		#endregion
+
+		/// <summary>
+		/// True if this body (or any nested blend part) refracts light, so it should
+		/// be tagged as a Cycles caustics caster for Manifold Next Event Estimation.
+		/// </summary>
+		public bool IsTransmissive
+		{
+			get
+			{
+				if (BlendMaterial)
+				{
+					return (MaterialOne?.IsTransmissive ?? false) || (MaterialTwo?.IsTransmissive ?? false);
+				}
+				if (IsPbr)
+				{
+					return MaterialKind == CyclesShader.ProbableMaterial.Glass
+						|| MaterialKind == CyclesShader.ProbableMaterial.Gem
+						|| PbrTransmission.Value > 0.0f;
+				}
+				return Transparency > 0.0f;
+			}
+		}
 
 		/**** Blend Material ****/
 

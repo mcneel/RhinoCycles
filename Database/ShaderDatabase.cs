@@ -36,6 +36,7 @@ namespace RhinoCyclesCore.Database
 		bool HasShader(uint shaderId);
 		CclShader GetShaderFromHash(uint shaderId);
 		uint GetHashFromShader(CclShader shader);
+		bool IsTransmissive(uint shaderId);
 	}
 
 	public interface IWriteShaderDatabase
@@ -65,6 +66,11 @@ namespace RhinoCyclesCore.Database
 		/// record RenderMaterial CRC and Shader relationship. Key is RenderHash, Value is Shader.
 		/// </summary>
 		private readonly ConcurrentDictionary<uint, CclShader> _rhCclShaders = new ();
+		/// <summary>
+		/// RenderHashes of shaders that refract/transmit light. Used to tag the matching
+		/// Cycles objects as MNEE caustics casters.
+		/// </summary>
+		private readonly ConcurrentDictionary<uint, bool> _transmissiveShaders = new ();
 		private bool disposedValue;
 
 		/// <summary>
@@ -99,6 +105,23 @@ namespace RhinoCyclesCore.Database
 		public void RecordRhCclShaderRelation(uint id, CclShader shader)
 		{
 			_rhCclShaders.TryAdd(id, shader);
+		}
+
+		/// <summary>
+		/// Record whether the given RenderHash corresponds to a transmissive material.
+		/// </summary>
+		public void RecordTransmissive(uint id, bool isTransmissive)
+		{
+			_transmissiveShaders[id] = isTransmissive;
+		}
+
+		/// <summary>
+		/// Returns true when the shader for the given RenderHash refracts light.
+		/// Unknown ids return false.
+		/// </summary>
+		public bool IsTransmissive(uint shaderId)
+		{
+			return _transmissiveShaders.TryGetValue(shaderId, out var v) && v;
 		}
 
 		/// <summary>
@@ -215,6 +238,7 @@ namespace RhinoCyclesCore.Database
 						cclshader.Value?.Dispose();
 					}
 					_rhCclShaders.Clear(); // uint, CclShader
+					_transmissiveShaders.Clear();
 				}
 
 				// TODO: free unmanaged resources (unmanaged objects) and override finalizer
