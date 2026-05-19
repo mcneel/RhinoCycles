@@ -463,17 +463,20 @@ namespace RhinoCyclesCore
 			}
 			else
 			{
-				if(!hasDecals && valueSocket.XmlName.Equals("color"))
+				if (valueSocket != null)
 				{
-					GammaNode gammaNode = new GammaNode(sh, "gamma node for color inpunputt");
-					gammaNode.ins.Gamma.Value = gamma;
-					valueSocket.Connect(gammaNode.ins.Color);
-					valueSocket = gammaNode.outs.Color;
+					if(!hasDecals && valueSocket.XmlName.Equals("color"))
+					{
+						GammaNode gammaNode = new GammaNode(sh, "gamma node for color inpunputt");
+						gammaNode.ins.Gamma.Value = gamma;
+						valueSocket.Connect(gammaNode.ins.Color);
+						valueSocket = gammaNode.outs.Color;
 
-				}
-				foreach (var sock in socketsToConnectTo)
-				{
-					valueSocket?.Connect(sock);
+					}
+					foreach (var sock in socketsToConnectTo)
+					{
+						valueSocket?.Connect(sock);
+					}
 				}
 			}
 			return null;
