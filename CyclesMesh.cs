@@ -60,6 +60,27 @@ namespace RhinoCyclesCore
 
 		public ccl.Transform OcsFrame { get; set; } = ccl.Transform.Identity();
 
+		/// <summary>
+		/// True when the source mesh's instance has a Planar mapping (UV or UVW).
+		/// </summary>
+		public bool HasPlanarUvwMapping { get; set; } = false;
+
+		/// <summary>
+		/// False means that the Z texture coordinate will always be 0.0.
+		/// Only meaningful when <see cref="HasPlanarUvwMapping"/> is true.
+		/// </summary>
+		public bool PlanarUvwCapped { get; set; } = false;
+
+		/// <summary>
+		/// Pre-composed world-to-UVW transform for the Planar mapping on this
+		/// mesh's instance. Composition (applied right-to-left to a world point):
+		///   xform = m_uvw * Translate(0.5, 0.5, 0) * Scale(0.5, 0.5, 1) * m_Pxyz
+		/// Only meaningful when <see cref="HasPlanarUvwMapping"/> is true. The
+		/// W-clamp for Planar UV mode is applied kernel-side based on
+		/// <see cref="PlanarUvwCapped"/>; the C# side does not zero the W row.
+		/// </summary>
+		public ccl.Transform PlanarUvwXform { get; set; } = ccl.Transform.Identity();
+
 		public void Clear()
 		{
 			this.Verts = null;

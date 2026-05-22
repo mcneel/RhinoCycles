@@ -317,6 +317,7 @@ namespace RhinoCyclesCore.Database
 
 					if (newme) _objectDatabase.RecordObjectMeshRelation(cyclesMesh.MeshId, me);
 					_objectDatabase.RecordMeshOcsFrame(me.GeometryPointer, cyclesMesh.OcsFrame);
+					_objectDatabase.RecordMeshPlanarUvw(me.GeometryPointer, cyclesMesh.HasPlanarUvwMapping, cyclesMesh.PlanarUvwCapped, cyclesMesh.PlanarUvwXform);
 
 					meshChangesList.Add(new Tuple<CyclesMesh, ccl.Mesh>(cyclesMesh, me));
 				}
@@ -1082,6 +1083,9 @@ namespace RhinoCyclesCore.Database
 			var rhvn = vn.ToFloatArray();
 
 			var cmuvList = new List<Tuple<int, float[]>>();
+			bool hasPlanarUvw = false;
+			bool planarUvwCapped = false;
+			ccl.Transform planarUvwXform = ccl.Transform.Identity();
 
 			if (_renderEngine.ShouldBreak) return;
 			// now convert UVs: from vertex indexed array to per face per vertex
@@ -1112,6 +1116,17 @@ namespace RhinoCyclesCore.Database
 					RcCore.It.AddLogStringIfVerbose($"\t\tHandleMeshData: mapping {mapping.Mapping.MappingType} {mapping.Channel} {mapping.Mapping} {mapping.Local}");
 					meshdata.SetTextureCoordinates(mapping.Mapping, mapping.Local, false);
 					HandleMeshTextureCoordinates(meshdata, findices, cmuvList, mapping.Channel == 0 ? 1 : mapping.Channel);
+
+					if (!hasPlanarUvw && mapping.Mapping.MappingType == Rhino.Render.TextureMappingType.PlaneMapping)
+					{
+						var normalize = new Rhino.Geometry.Transform(1.0);
+						normalize.M00 = 0.5; normalize.M03 = 0.5;
+						normalize.M11 = 0.5; normalize.M13 = 0.5;
+						var composed = mapping.Mapping.UvwTransform * normalize * mapping.Mapping.PrimitiveTransform;
+						planarUvwXform = composed.ToCyclesTransform();
+						planarUvwCapped = mapping.Mapping.Capped;
+						hasPlanarUvw = true;
+					}
 				}
 			}
 
@@ -1135,6 +1150,9 @@ namespace RhinoCyclesCore.Database
 				IsSolid = meshdata.IsClosed,
 				MatId = crc,
 				OcsFrame = t,
+				HasPlanarUvwMapping = hasPlanarUvw,
+				PlanarUvwCapped = planarUvwCapped,
+				PlanarUvwXform = planarUvwXform,
 			};
 			_objectDatabase.AddMesh(cyclesMesh);
 			_objectDatabase.SetIsClippingObject(meshid, isClippingObject);
@@ -1981,6 +1999,14 @@ namespace RhinoCyclesCore.Database
 				cob.PassId = ob.passobid;
 				cob.Transform = ob.Transform;
 				cob.OcsFrame = t;
+				if (_objectDatabase.MeshPlanarUvw.TryGetValue(mesh.GeometryPointer, out var planarUvw))
+				{
+					cob.SetPlanarUvwMapping(planarUvw.Item1, planarUvw.Item2, planarUvw.Item3);
+				}
+				else
+				{
+					cob.SetPlanarUvwMapping(false, false, ccl.Transform.Identity());
+				}
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				cob.IsSolid = ob.IsSolid;
 				//cob.IsBlockInstance = true;

@@ -32,6 +32,10 @@ namespace RhinoCyclesCore.Database
 		private readonly ConcurrentDictionary<Tuple<Guid, int>, CyclesMesh> _cqMeshChanges = new ();
 		private readonly ConcurrentDictionary<IntPtr, ccl.Transform> _cqMeshOcsFrames = new ();
 		/// <summary>
+		/// Record the planar mapping state.
+		/// </summary>
+		private readonly ConcurrentDictionary<IntPtr, Tuple<bool, bool, ccl.Transform>> _cqMeshPlanarUvw = new ();
+		/// <summary>
 		/// record mesh removes from cycles
 		/// </summary>
 		private readonly ConcurrentQueue<Guid> _cqMeshesToDelete = new ();
@@ -118,6 +122,11 @@ namespace RhinoCyclesCore.Database
 		public ConcurrentDictionary<Tuple<Guid, int>, CyclesMesh> MeshChanges => _cqMeshChanges;
 
 		public ConcurrentDictionary<IntPtr, ccl.Transform> MeshOcsFrames => _cqMeshOcsFrames;
+
+		/// <summary>
+		/// Get Planar mapping state. Item1 = has-mapping, Item2 = capped, Item3 = transform.
+		/// </summary>
+		public ConcurrentDictionary<IntPtr, Tuple<bool, bool, ccl.Transform>> MeshPlanarUvw => _cqMeshPlanarUvw;
 
 		/// <summary>
 		/// Get list of meshes to delete.
@@ -346,6 +355,14 @@ namespace RhinoCyclesCore.Database
 		public void RecordMeshOcsFrame(IntPtr meshId, ccl.Transform t)
 		{
 			_cqMeshOcsFrames[meshId] = t;
+		}
+
+		/// <summary>
+		/// Record the Planar mapping state.
+		/// </summary>
+		public void RecordMeshPlanarUvw(IntPtr meshId, bool hasMapping, bool capped, ccl.Transform xform)
+		{
+			_cqMeshPlanarUvw[meshId] = Tuple.Create(hasMapping, capped, xform);
 		}
 	}
 }
