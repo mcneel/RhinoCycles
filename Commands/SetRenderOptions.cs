@@ -19,6 +19,7 @@ using Rhino.Commands;
 using Rhino.Input;
 using Rhino.Input.Custom;
 using RhinoCyclesCore.Core;
+using RhinoCyclesCore.Settings;
 using System.Runtime.InteropServices;
 
 namespace RhinoCycles.Commands
@@ -37,46 +38,70 @@ namespace RhinoCycles.Commands
 
 		public override string EnglishName => "RhinoCycles_SetRenderOptions";
 
+		private static readonly string[] _allSupportedKeys =
+		{
+			SettingNames.Samples, SettingNames.MaxPasses, SettingNames.Seed,
+			SettingNames.MaxBounce, SettingNames.TileX, SettingNames.TileY,
+			SettingNames.NoCaustics, SettingNames.MaxDiffuseBounce, SettingNames.MaxGlossyBounce,
+			SettingNames.MaxTransmissionBounce, SettingNames.MaxVolumeBounce, SettingNames.TransparentMaxBounce,
+			SettingNames.AaSamples, SettingNames.DiffuseSamples, SettingNames.GlossySamples,
+			SettingNames.SensorWidth, SettingNames.SensorHeight, SettingNames.FilterGlossy,
+			SettingNames.SampleClampDirect, SettingNames.SampleClampIndirect, SettingNames.LightSamplingThreshold,
+			SettingNames.UseDirectLight, SettingNames.UseIndirectLight,
+		};
+
+		private bool IsDocumentTheSource
+		{
+			get => (Settings != null) && Settings.TryGetBool("DocumentIsSource", out bool docSettingsTarget) && docSettingsTarget;
+			set => Settings?.SetBool("DocumentIsSource", value);
+		}
+
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
+			var targetDocument = IsDocumentTheSource;
+			IAllSettings CurrentSource () => targetDocument ? new EngineDocumentSettings(doc.RuntimeSerialNumber) : (IAllSettings)RcCore.It.AllSettings;
+			var source = CurrentSource();
+
 			var getNumber = new GetNumber();
 			getNumber.SetLowerLimit(2.0, false);
 			getNumber.SetUpperLimit(uint.MaxValue, false);
-			getNumber.SetDefaultInteger(RcCore.It.AllSettings.Samples);
+			getNumber.SetDefaultInteger(source.Samples);
 			getNumber.SetCommandPrompt("Set render samples");
 
-			var showMaxPasses = new OptionToggle(RcCore.It.AllSettings.ShowMaxPasses, "HideMaxPasses", "ShowMaxPasses");
+			var dataSource = new OptionToggle(targetDocument, "Application", "Document");
 
-			var maxBounce = new OptionInteger(RcCore.It.AllSettings.MaxBounce, 0, 500);
-			var tileX = new OptionInteger(RcCore.It.AllSettings.TileX, 0, 10000);
-			var tileY = new OptionInteger(RcCore.It.AllSettings.TileY, 0, 10000);
+			var showMaxPasses = new OptionToggle(source.ShowMaxPasses, "HideMaxPasses", "ShowMaxPasses");
 
+			var maxBounce = new OptionInteger(source.MaxBounce, 0, 500);
+			var tileX = new OptionInteger(source.TileX, 0, 10000);
+			var tileY = new OptionInteger(source.TileY, 0, 10000);
 
-			var maxDiffuseBounce = new OptionInteger(RcCore.It.AllSettings.MaxDiffuseBounce, 0, 200);
-			var maxGlossyBounce = new OptionInteger(RcCore.It.AllSettings.MaxGlossyBounce, 0, 200);
-			var maxTransmissionBounce = new OptionInteger(RcCore.It.AllSettings.MaxTransmissionBounce, 0, 200);
-			var maxVolumeBounce = new OptionInteger(RcCore.It.AllSettings.MaxVolumeBounce, 0, 200);
+			var maxDiffuseBounce = new OptionInteger(source.MaxDiffuseBounce, 0, 200);
+			var maxGlossyBounce = new OptionInteger(source.MaxGlossyBounce, 0, 200);
+			var maxTransmissionBounce = new OptionInteger(source.MaxTransmissionBounce, 0, 200);
+			var maxVolumeBounce = new OptionInteger(source.MaxVolumeBounce, 0, 200);
 
-			var noCaustics = new OptionToggle(RcCore.It.AllSettings.NoCaustics, "Caustics", "NoCaustics");
+			var noCaustics = new OptionToggle(source.NoCaustics, "Caustics", "NoCaustics");
 
-			var aaSamples = new OptionInteger(RcCore.It.AllSettings.AaSamples, 1, 100);
-			var diffSamples = new OptionInteger(RcCore.It.AllSettings.DiffuseSamples, 1, 100);
-			var glossySamples = new OptionInteger(RcCore.It.AllSettings.GlossySamples, 1, 100);
+			var aaSamples = new OptionInteger(source.AaSamples, 1, 100);
+			var diffSamples = new OptionInteger(source.DiffuseSamples, 1, 100);
+			var glossySamples = new OptionInteger(source.GlossySamples, 1, 100);
 
-			var seed = new OptionInteger(RcCore.It.AllSettings.Seed, 0, int.MaxValue);
+			var seed = new OptionInteger(source.Seed, 0, int.MaxValue);
 
-			var sensorWidth = new OptionDouble(RcCore.It.AllSettings.SensorWidth, 10.0, 100.0);
-			var sensorHeight = new OptionDouble(RcCore.It.AllSettings.SensorHeight, 10.0, 100.0);
+			var sensorWidth = new OptionDouble(source.SensorWidth, 10.0, 100.0);
+			var sensorHeight = new OptionDouble(source.SensorHeight, 10.0, 100.0);
 
-			var transparentMaxBounce = new OptionInteger(RcCore.It.AllSettings.TransparentMaxBounce, 0, 200);
+			var transparentMaxBounce = new OptionInteger(source.TransparentMaxBounce, 0, 200);
 
-			var filterGlossy = new OptionDouble(RcCore.It.AllSettings.FilterGlossy, 0.0, 100.0);
-			var sampleClampDirect = new OptionDouble(RcCore.It.AllSettings.SampleClampDirect, 0.0, 100.0);
-			var sampleClampIndirect = new OptionDouble(RcCore.It.AllSettings.SampleClampIndirect, 0.0, 100.0);
-			var lightSamplingThreshold = new OptionDouble(RcCore.It.AllSettings.LightSamplingThreshold, 0.0, 1.0);
-			var useDirectLight = new OptionToggle(RcCore.It.AllSettings.UseDirectLight, "no", "yes");
-			var useIndirectLight = new OptionToggle(RcCore.It.AllSettings.UseIndirectLight, "no", "yes");
+			var filterGlossy = new OptionDouble(source.FilterGlossy, 0.0, 100.0);
+			var sampleClampDirect = new OptionDouble(source.SampleClampDirect, 0.0, 100.0);
+			var sampleClampIndirect = new OptionDouble(source.SampleClampIndirect, 0.0, 100.0);
+			var lightSamplingThreshold = new OptionDouble(source.LightSamplingThreshold, 0.0, 1.0);
+			var useDirectLight = new OptionToggle(source.UseDirectLight, "no", "yes");
+			var useIndirectLight = new OptionToggle(source.UseIndirectLight, "no", "yes");
 
+			int dataSourceOption = getNumber.AddOptionToggle("data_source", ref dataSource);
 			getNumber.AddOptionToggle("show_max_passes", ref showMaxPasses);
 			getNumber.AddOptionInteger("max_bounces", ref maxBounce);
 			getNumber.AddOptionInteger("tile_x", ref tileX);
@@ -108,6 +133,91 @@ namespace RhinoCycles.Commands
 
 			int defaultsOption = getNumber.AddOption("defaults");
 
+			void LoadFrom(IAllSettings s)
+			{
+				getNumber.SetDefaultInteger(s.Samples);
+				showMaxPasses.CurrentValue = s.ShowMaxPasses;
+				seed.CurrentValue = s.Seed;
+				maxBounce.CurrentValue = s.MaxBounce;
+				tileX.CurrentValue = s.TileX;
+				tileY.CurrentValue = s.TileY;
+				noCaustics.CurrentValue = s.NoCaustics;
+				maxDiffuseBounce.CurrentValue = s.MaxDiffuseBounce;
+				maxGlossyBounce.CurrentValue = s.MaxGlossyBounce;
+				maxTransmissionBounce.CurrentValue = s.MaxTransmissionBounce;
+				maxVolumeBounce.CurrentValue = s.MaxVolumeBounce;
+				transparentMaxBounce.CurrentValue = s.TransparentMaxBounce;
+				aaSamples.CurrentValue = s.AaSamples;
+				diffSamples.CurrentValue = s.DiffuseSamples;
+				glossySamples.CurrentValue = s.GlossySamples;
+				sensorWidth.CurrentValue = s.SensorWidth;
+				sensorHeight.CurrentValue = s.SensorHeight;
+				filterGlossy.CurrentValue = s.FilterGlossy;
+				sampleClampDirect.CurrentValue = s.SampleClampDirect;
+				sampleClampIndirect.CurrentValue = s.SampleClampIndirect;
+				lightSamplingThreshold.CurrentValue = s.LightSamplingThreshold;
+				useDirectLight.CurrentValue = s.UseDirectLight;
+				useIndirectLight.CurrentValue = s.UseIndirectLight;
+			}
+
+			void SaveToApplication(int samples)
+			{
+				var a = RcCore.It.AllSettings;
+				a.Samples = samples;
+				a.ShowMaxPasses = showMaxPasses.CurrentValue;
+				a.Seed = seed.CurrentValue;
+				a.MaxBounce = maxBounce.CurrentValue;
+				a.TileX = tileX.CurrentValue;
+				a.TileY = tileY.CurrentValue;
+				a.NoCaustics = noCaustics.CurrentValue;
+				a.MaxDiffuseBounce = maxDiffuseBounce.CurrentValue;
+				a.MaxGlossyBounce = maxGlossyBounce.CurrentValue;
+				a.MaxTransmissionBounce = maxTransmissionBounce.CurrentValue;
+				a.MaxVolumeBounce = maxVolumeBounce.CurrentValue;
+				a.TransparentMaxBounce = transparentMaxBounce.CurrentValue;
+				a.AaSamples = aaSamples.CurrentValue;
+				a.DiffuseSamples = diffSamples.CurrentValue;
+				a.GlossySamples = glossySamples.CurrentValue;
+				a.SensorWidth = (float)sensorWidth.CurrentValue;
+				a.SensorHeight = (float)sensorHeight.CurrentValue;
+				a.FilterGlossy = (float)filterGlossy.CurrentValue;
+				a.SampleClampDirect = (float)sampleClampDirect.CurrentValue;
+				a.SampleClampIndirect = (float)sampleClampIndirect.CurrentValue;
+				a.LightSamplingThreshold = (float)lightSamplingThreshold.CurrentValue;
+				a.UseDirectLight = useDirectLight.CurrentValue;
+				a.UseIndirectLight = useIndirectLight.CurrentValue;
+			}
+
+			void SaveToDocument(int samples)
+			{
+				var rs = doc.RenderSettings.Duplicate();
+				var d = rs.UserDictionary;
+				d[SettingNames.Samples] = samples;
+				d[SettingNames.MaxPasses] = showMaxPasses.CurrentValue;
+				d[SettingNames.Seed] = seed.CurrentValue;
+				d[SettingNames.MaxBounce] = maxBounce.CurrentValue;
+				d[SettingNames.TileX] = tileX.CurrentValue;
+				d[SettingNames.TileY] = tileY.CurrentValue;
+				d[SettingNames.NoCaustics] = noCaustics.CurrentValue;
+				d[SettingNames.MaxDiffuseBounce] = maxDiffuseBounce.CurrentValue;
+				d[SettingNames.MaxGlossyBounce] = maxGlossyBounce.CurrentValue;
+				d[SettingNames.MaxTransmissionBounce] = maxTransmissionBounce.CurrentValue;
+				d[SettingNames.MaxVolumeBounce] = maxVolumeBounce.CurrentValue;
+				d[SettingNames.TransparentMaxBounce] = transparentMaxBounce.CurrentValue;
+				d[SettingNames.AaSamples] = aaSamples.CurrentValue;
+				d[SettingNames.DiffuseSamples] = diffSamples.CurrentValue;
+				d[SettingNames.GlossySamples] = glossySamples.CurrentValue;
+				d[SettingNames.SensorWidth] = sensorWidth.CurrentValue;
+				d[SettingNames.SensorHeight] = sensorHeight.CurrentValue;
+				d[SettingNames.FilterGlossy] = filterGlossy.CurrentValue;
+				d[SettingNames.SampleClampDirect] = sampleClampDirect.CurrentValue;
+				d[SettingNames.SampleClampIndirect] = sampleClampIndirect.CurrentValue;
+				d[SettingNames.LightSamplingThreshold] = lightSamplingThreshold.CurrentValue;
+				d[SettingNames.UseDirectLight] = useDirectLight.CurrentValue;
+				d[SettingNames.UseIndirectLight] = useIndirectLight.CurrentValue;
+				doc.RenderSettings = rs;
+			}
+
 			while (true)
 			{
 				var getRc = getNumber.Get();
@@ -115,61 +225,37 @@ namespace RhinoCycles.Commands
 				switch (getRc)
 				{
 					case GetResult.Number:
-						RhinoApp.WriteLine($"We got: {getNumber.Number()}, {maxBounce.CurrentValue}");
-						RcCore.It.AllSettings.Samples = (int)getNumber.Number();
-						RcCore.It.AllSettings.ShowMaxPasses = showMaxPasses.CurrentValue;
-						RcCore.It.AllSettings.Seed = seed.CurrentValue;
-						RcCore.It.AllSettings.MaxBounce = maxBounce.CurrentValue;
-						RcCore.It.AllSettings.TileX = tileX.CurrentValue;
-						RcCore.It.AllSettings.TileY = tileY.CurrentValue;
-						RcCore.It.AllSettings.NoCaustics = noCaustics.CurrentValue;
-						RcCore.It.AllSettings.MaxDiffuseBounce = maxDiffuseBounce.CurrentValue;
-						RcCore.It.AllSettings.MaxGlossyBounce = maxGlossyBounce.CurrentValue;
-						RcCore.It.AllSettings.MaxTransmissionBounce = maxTransmissionBounce.CurrentValue;
-						RcCore.It.AllSettings.MaxVolumeBounce = maxVolumeBounce.CurrentValue;
-						RcCore.It.AllSettings.TransparentMaxBounce = transparentMaxBounce.CurrentValue;
-						RcCore.It.AllSettings.AaSamples = aaSamples.CurrentValue;
-						RcCore.It.AllSettings.DiffuseSamples = diffSamples.CurrentValue;
-						RcCore.It.AllSettings.GlossySamples = glossySamples.CurrentValue;
-						RcCore.It.AllSettings.SensorWidth = (float)sensorWidth.CurrentValue;
-						RcCore.It.AllSettings.SensorHeight = (float)sensorHeight.CurrentValue;
-						RcCore.It.AllSettings.FilterGlossy = (float)filterGlossy.CurrentValue;
-						RcCore.It.AllSettings.SampleClampDirect = (float)sampleClampDirect.CurrentValue;
-						RcCore.It.AllSettings.SampleClampIndirect = (float)sampleClampIndirect.CurrentValue;
-						RcCore.It.AllSettings.LightSamplingThreshold = (float)lightSamplingThreshold.CurrentValue;
-						RcCore.It.AllSettings.UseDirectLight = useDirectLight.CurrentValue;
-						RcCore.It.AllSettings.UseIndirectLight = useIndirectLight.CurrentValue;
+						int samples = (int)getNumber.Number();
+						if (targetDocument)
+							SaveToDocument(samples);
+						else
+							SaveToApplication(samples);
 						break;
 					case GetResult.Option:
 						CommandLineOption cmdOption = getNumber.Option();
 						if (cmdOption != null)
 						{
-							if (cmdOption.Index == defaultsOption)
+							if (cmdOption.Index == dataSourceOption)
 							{
-								RcCore.It.AllSettings.DefaultSettings();
-								getNumber.SetDefaultInteger(RcCore.It.AllSettings.Samples);
-								showMaxPasses.CurrentValue = RcCore.It.AllSettings.ShowMaxPasses;
-								seed.CurrentValue = RcCore.It.AllSettings.Seed;
-								maxBounce.CurrentValue = RcCore.It.AllSettings.MaxBounce;
-								tileX.CurrentValue = RcCore.It.AllSettings.TileX;
-								tileY.CurrentValue = RcCore.It.AllSettings.TileY;
-								noCaustics.CurrentValue = RcCore.It.AllSettings.NoCaustics;
-								maxDiffuseBounce.CurrentValue = RcCore.It.AllSettings.MaxDiffuseBounce;
-								maxGlossyBounce.CurrentValue = RcCore.It.AllSettings.MaxGlossyBounce;
-								maxTransmissionBounce.CurrentValue = RcCore.It.AllSettings.MaxTransmissionBounce;
-								maxVolumeBounce.CurrentValue = RcCore.It.AllSettings.MaxVolumeBounce;
-								transparentMaxBounce.CurrentValue = RcCore.It.AllSettings.TransparentMaxBounce;
-								aaSamples.CurrentValue = RcCore.It.AllSettings.AaSamples;
-								diffSamples.CurrentValue = RcCore.It.AllSettings.DiffuseSamples;
-								glossySamples.CurrentValue = RcCore.It.AllSettings.GlossySamples;
-								sensorWidth.CurrentValue = RcCore.It.AllSettings.SensorWidth;
-								sensorHeight.CurrentValue = RcCore.It.AllSettings.SensorHeight;
-								filterGlossy.CurrentValue = RcCore.It.AllSettings.FilterGlossy ;
-								sampleClampDirect.CurrentValue = RcCore.It.AllSettings.SampleClampDirect;
-								sampleClampIndirect.CurrentValue = RcCore.It.AllSettings.SampleClampIndirect;
-								lightSamplingThreshold.CurrentValue = RcCore.It.AllSettings.LightSamplingThreshold;
-								useDirectLight.CurrentValue = RcCore.It.AllSettings.UseDirectLight;
-								useIndirectLight.CurrentValue = RcCore.It.AllSettings.UseIndirectLight;
+								targetDocument = dataSource.CurrentValue;
+								IsDocumentTheSource = targetDocument;
+								LoadFrom(CurrentSource());
+							}
+							else if (cmdOption.Index == defaultsOption)
+							{
+								if (targetDocument)
+								{
+									var rs = doc.RenderSettings.Duplicate();
+									var d = rs.UserDictionary;
+									foreach (var key in _allSupportedKeys)
+										d.Remove(key);
+									doc.RenderSettings = rs;
+								}
+								else
+								{
+									RcCore.It.AllSettings.DefaultSettings();
+								}
+								LoadFrom(CurrentSource());
 							}
 						}
 						continue;

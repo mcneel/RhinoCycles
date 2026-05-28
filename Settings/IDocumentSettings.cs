@@ -29,6 +29,9 @@ namespace RhinoCyclesCore.Settings
 			Product = 1,
 		};
 
+		/// <summary>
+		/// Legacy fallback when document settings do not yet hold the RenderPreset.
+		/// </summary>
 		public static Presets ProductPreset(float filterGlossy, float sampleClampIndirect)
 		{
 			return (filterGlossy == 0.0f && sampleClampIndirect == 0.0f) ? Presets.Product : Presets.Architecture;
@@ -36,12 +39,12 @@ namespace RhinoCyclesCore.Settings
 
 		public static Presets ProductPreset(IDocumentSettings settings)
 		{
-			return ProductPreset(settings.FilterGlossy, settings.SampleClampIndirect);
+			return settings.RenderPreset;
 		}
 
 		public static void SetPreset(IDocumentSettings settings, Presets preset)
 		{
-			var previousPreset = ProductPreset(settings);
+			settings.RenderPreset = preset;
 
 			if (preset == Presets.Product)
 			{
@@ -50,15 +53,15 @@ namespace RhinoCyclesCore.Settings
 			}
 			else
 			{
-				settings.FilterGlossy = RcCore.It.AllSettings.FilterGlossy == 0.0f ? DefaultEngineSettings.FilterGlossy : RcCore.It.AllSettings.FilterGlossy;
-				settings.SampleClampIndirect = RcCore.It.AllSettings.SampleClampIndirect == 0.0f ? DefaultEngineSettings.SampleClampIndirect : RcCore.It.AllSettings.SampleClampIndirect;
+				settings.FilterGlossy = DefaultEngineSettings.FilterGlossy;
+				settings.SampleClampIndirect = DefaultEngineSettings.SampleClampIndirect;
 			}
 		}
 	}
 
 	public interface IDocumentSettings
 	{
-		uint IntegratorHash { get;  }
+		uint IntegratorHash { get; }
 		int Samples { get; set; }
 		bool UseDocumentSamples { get; set; }
 		int TextureBakeQuality { get; set; }
@@ -102,6 +105,7 @@ namespace RhinoCyclesCore.Settings
 		int VolumeSamples { get; set; }
 
 		float FilterGlossy { get; set; }
+		RenderPresetHelpers.Presets RenderPreset { get; set; }
 		bool IsProductPreset { get; }
 
 		float SampleClampDirect { get; set; }

@@ -270,6 +270,12 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
+		public RenderPresetHelpers.Presets RenderPreset
+		{
+			get => (RenderPresetHelpers.Presets)mDict.GetInteger(SettingNames.RenderPreset, (int)RenderPresetHelpers.ProductPreset(FilterGlossy, SampleClampIndirect));
+			set => throw new InvalidOperationException();
+		}
+
 		public bool IsProductPreset => (RenderPresetHelpers.ProductPreset(this) == RenderPresetHelpers.Presets.Product);
 
 		public float SampleClampDirect
