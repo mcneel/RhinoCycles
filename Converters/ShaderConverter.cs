@@ -2307,6 +2307,12 @@ namespace RhinoCyclesCore.Converters
 	{
 		private Guid realtimDisplaMaterialId = new Guid("e6cd1973-b739-496e-ab69-32957fa48492");
 
+		public ShaderBody CreateDecalMaterialShader(RenderMaterial rm, LinearWorkflow lw, BitmapConverter bitmapConverter, uint docsrn)
+		{
+			using var host = new CyclesShader(rm.RenderHash, bitmapConverter, docsrn);
+			return host.BuildDecalMaterialShader(rm, lw.PreProcessGamma);
+		}
+
 		/// <summary>
 		/// Create a CyclesShader based on given Material m
 		/// </summary>
@@ -2321,18 +2327,6 @@ namespace RhinoCyclesCore.Converters
 				Type = CyclesShader.Shader.Diffuse,
 				Decals = decals,
 			};
-
-			// Decals can now be full materials, so we need to process them too.
-			if (shader.Decals != null)
-			{
-				foreach (var decal in shader.Decals)
-				{
-					if(decal.Material != null)
-					{
-						shader.RecordDataForDecalShader(decal, lw.PreProcessGamma);
-					}
-				}
-			}
 
 			if (rm.TypeId.Equals(realtimDisplaMaterialId))
 			{

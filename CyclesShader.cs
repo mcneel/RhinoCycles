@@ -91,13 +91,14 @@ namespace RhinoCyclesCore
 			return RecordDataForShaderPart(_front, rm, gamma);
 		}
 
-		public bool RecordDataForDecalShader(CyclesDecal decal, float gamma)
+		public ShaderBody BuildDecalMaterialShader(RenderMaterial rm, float gamma)
 		{
-			decal.MaterialShader = new ShaderBody(Id)
+			var materialShader = new ShaderBody(Id)
 			{
 				UnitScale = (float)Rhino.LengthUnit.Scale(Rhino.LengthUnit.Meters, ModelUnits)
 			};
-			return RecordDataForShaderPart(decal.MaterialShader, decal.Material, gamma);
+			RecordDataForShaderPart(materialShader, rm, gamma);
+			return materialShader;
 		}
 
 		/// <summary>

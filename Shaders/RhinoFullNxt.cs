@@ -388,7 +388,8 @@ namespace RhinoCyclesCore.Shaders
 			{
 				foreach (CyclesDecal decal in m_original.Decals)
 				{
-					if (decal.Material == null)
+					// A decal is a texture decal when it has no material shader.
+					if (decal.MaterialShader == null)
 					{
 						textureDecals.Add(decal);
 					}

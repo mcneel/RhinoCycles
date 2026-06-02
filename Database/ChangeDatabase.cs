@@ -103,6 +103,23 @@ namespace RhinoCyclesCore.Database
 
 		private readonly ShaderConverter _shaderConverter = new ShaderConverter();
 
+		/// <summary>
+		/// Per-object decal data keyed by mesh instance id. Lets ApplyMaterialChanges
+		/// rebuild the decal-inclusive shader hash instead of reverting the object to
+		/// the plain, decal-less material shader.
+		/// </summary>
+		private readonly ConcurrentDictionary<uint, ObjectDecalInfo> _objectDecals = new ();
+
+		/// <summary>
+		/// Data needed to recreate an object's decal-inclusive shader hash and shader.
+		/// </summary>
+		private sealed class ObjectDecalInfo
+		{
+			public List<CyclesDecal> Decals { get; set; }
+			public Rhino.Geometry.Transform Transform { get; set; }
+			public Tuple<Guid, int> MeshId { get; set; }
+		}
+
 		private readonly bool _modalRenderer;
 
 		public uint Blades { get; } = (uint)RcCore.It.AllSettings.Blades;
@@ -149,6 +166,7 @@ namespace RhinoCyclesCore.Database
 			_objectShaderDatabase?.Dispose();
 			_objectDatabase?.Dispose();
 			_shaderDatabase?.Dispose();
+			_objectDecals.Clear();
 			base.Dispose(isDisposing);
 		}
 
@@ -994,6 +1012,11 @@ namespace RhinoCyclesCore.Database
 				var rt = TextureFromOriginalInstanceId(decal.TextureInstanceId);
 				var rm = (rt == null) ? MaterialFromOriginalInstanceId(decal.TextureInstanceId) : null;
 
+				// Create the decal material now, while the RenderMaterial is valid within this flush.
+				ShaderBody decalMaterialShader = (rm == null)
+					? null
+					: _shaderConverter.CreateDecalMaterialShader(rm, LinearWorkflow, BitmapConverter, _doc_serialnr);
+
 				CyclesTextureImage tex = new CyclesTextureImage();
 				Utilities.HandleRenderTexture(rt, tex, false, true, BitmapConverter, _doc_serialnr, LinearWorkflow.PreProcessGamma, false, true);
 
@@ -1009,7 +1032,7 @@ namespace RhinoCyclesCore.Database
 					Texture = tex,
 					Height = (float)height,
 					Radius = (float)radius,
-					Material = rm,
+					MaterialShader = decalMaterialShader,
 					HorizontalSweepStart = (float)horsweepstart,
 					HorizontalSweepEnd = (float)horsweepend,
 					VerticalSweepStart = (float)versweepstart,
@@ -1028,6 +1051,21 @@ namespace RhinoCyclesCore.Database
 			string sbstr = sb.ToString();
 			RhinoApp.OutputDebugString($"{sbstr}\n\n");
 			return decalList;
+		}
+
+		/// <summary>
+		/// Fold decal data into a material id so an object that carries decals gets
+		/// its own unique shader hash. Must stay in sync between ApplyMeshInstanceChanges
+		/// and ApplyMaterialChanges, otherwise editing the material drops the decals.
+		/// </summary>
+		private static uint ComputeDecalMaterialId(uint matid, Rhino.Geometry.Transform transform, Tuple<Guid, int> meshid, List<CyclesDecal> decals)
+		{
+			uint decalsCRC = CyclesDecal.CRCForList(decals);
+			matid = transform.TransformCrc(matid);
+			matid = RhinoMath.CRC32(matid, meshid.Item1.ToByteArray());
+			matid = RhinoMath.CRC32(matid, meshid.Item2);
+			matid = RhinoMath.CRC32(matid, decalsCRC);
+			return matid;
 		}
 
 		public void HandleMeshTextureCoordinates(Rhino.Geometry.Mesh meshdata, int[] findices, List<Tuple<int, float[]>> cmuvList, int channelIndex)
@@ -1229,6 +1267,7 @@ namespace RhinoCyclesCore.Database
 			Parallel.ForEach(realDeleted, d =>
 			{
 				if (_renderEngine.ShouldBreak) return;
+				_objectDecals.TryRemove(d, out _);
 				var cob = _objectDatabase.FindObjectRelation(d);
 				if (cob != null)
 				{
@@ -1264,11 +1303,20 @@ namespace RhinoCyclesCore.Database
 
 				if (cyclesDecals != null)
 				{
-					uint decalsCRC = CyclesDecal.CRCForList(cyclesDecals);
-					matid = a.Transform.TransformCrc(matid);
-					matid = RhinoMath.CRC32(matid, a.MeshId.ToByteArray());
-					matid = RhinoMath.CRC32(matid, a.MeshIndex);
-					matid = RhinoMath.CRC32(matid, decalsCRC);
+					matid = ComputeDecalMaterialId(matid, a.Transform, meshid, cyclesDecals);
+
+					// Remember the decal data so a later material edit can rebuild this
+					// same hash instead of reverting the object to the plain material shader.
+					_objectDecals[a.InstanceId] = new ObjectDecalInfo
+					{
+						Decals = cyclesDecals,
+						Transform = a.Transform,
+						MeshId = meshid
+					};
+				}
+				else
+				{
+					_objectDecals.TryRemove(a.InstanceId, out _);
 				}
 
 				HandleRenderMaterial(mat, matid, cyclesDecals, false);
@@ -1395,8 +1443,22 @@ namespace RhinoCyclesCore.Database
 
 				var obid = mat.MeshInstanceId;
 
-				// no mesh id here, but shouldn't be necessary either. Passing in null.
-				HandleMaterialChangeOnObject(mat.Id, obid, null);
+				// An object that carries decals uses a decal-inclusive shader hash (see
+				// ApplyMeshInstanceChanges). Rebuild that hash and its shader here so the
+				// decals survive the material edit instead of being dropped.
+				if (_objectDecals.TryGetValue(obid, out var decalInfo))
+				{
+					// Decals carry their own self-contained MaterialShader, so the
+					// decal-inclusive shader can be rebuilt here with the edited material.
+					var decalMatId = ComputeDecalMaterialId(mat.Id, decalInfo.Transform, decalInfo.MeshId, decalInfo.Decals);
+					HandleRenderMaterial(rm, decalMatId, decalInfo.Decals, false);
+					HandleMaterialChangeOnObject(decalMatId, obid, decalInfo.MeshId);
+				}
+				else
+				{
+					// no mesh id here, but shouldn't be necessary either. Passing in null.
+					HandleMaterialChangeOnObject(mat.Id, obid, null);
+				}
 			}
 
 			totalmats = distinctMats.Count;
