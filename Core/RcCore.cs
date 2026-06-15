@@ -446,6 +446,36 @@ namespace RhinoCyclesCore.Core
 			}
 		}
 
+		/// <summary>
+		/// Keep the CUDA compile cache on a local path by setting CUDA_CACHE_PATH.
+		/// The default location is %APPDATA%\NVIDIA\ComputeCache. If folder redirection
+		/// is used to point at a UNC share the cache doesn't work, so shaders get built
+		/// on every render. Only set when CUDA_CACHE_PATH hasn't been configured.
+		/// Must run before CUDA is initialised.
+		/// </summary>
+		public void EnsureLocalCudaCachePath()
+		{
+			if (!HostUtils.RunningOnWindows)
+				return;
+
+			if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CUDA_CACHE_PATH")))
+				return;
+
+			try
+			{
+				string nvCache = Path.Combine(
+					Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+					"McNeel", "Rhinoceros", "RhinoCycles", "NvCache");
+				Directory.CreateDirectory(nvCache);
+				Environment.SetEnvironmentVariable("CUDA_CACHE_PATH", nvCache);
+				AddLogString($"Set CUDA_CACHE_PATH to local path {nvCache}");
+			}
+			catch (Exception e)
+			{
+				AddLogString($"Failed to set a local CUDA_CACHE_PATH: {e.Message}");
+			}
+		}
+
 		private void EnsureGpuCompilePath()
 		{
 			if(!Directory.Exists(path: GpuCompilePath))
@@ -632,6 +662,12 @@ namespace RhinoCyclesCore.Core
 
 			if(HostUtils.RunningOnWindows) {
 				startInfo.CreateNoWindow = true;
+
+				// Make sure the kernel compiler child uses the same local CUDA
+				// compile cache as the main process.
+				var cudaCachePath = Environment.GetEnvironmentVariable("CUDA_CACHE_PATH");
+				if(!string.IsNullOrEmpty(cudaCachePath))
+					startInfo.Environment["CUDA_CACHE_PATH"] = cudaCachePath;
 			}
 			if(HostUtils.RunningOnOSX) {
 				var dylib_path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assembly.Location), "..", "..", "..", ".."));

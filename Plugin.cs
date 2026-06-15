@@ -87,6 +87,9 @@ namespace RhinoCycles
 #else
 				RhinoCyclesCore.RenderEngine._MonitorPixelCount = (int)(Eto.Forms.Screen.PrimaryScreen.Bounds.Width * Eto.Forms.Screen.PrimaryScreen.Bounds.Height);
 #endif
+				// RH-96272: Ensure CUDA compiler cache is on a local path.
+				RcCore.It.EnsureLocalCudaCachePath();
+
 				AsyncInitialise();
 
 				var timeTaken = sw.Elapsed;
