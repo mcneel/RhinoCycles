@@ -891,7 +891,7 @@ namespace RhinoCyclesCore.Shaders
 						if (!part.PbrBumpTexture.IsNormalMap)
 						{
 							var bump = new BumpNode(m_shader, "bump");
-							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * part.UnitScale;
+							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
 							bump.Invert = part.PbrBump.Amount < 0.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 							part.PbrBump.Amount = 1.0f;
@@ -1045,7 +1045,7 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump_amount72 = new MathMultiply(m_shader, "bump_amount_");
 					bump_amount72.ins.Value1.Value = 1.0f;
-					bump_amount72.ins.Value2.Value = part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor; // * part.UnitScale;
+					bump_amount72.ins.Value2.Value = part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor * 4.66f;
 					bump_amount72.Operation = MathNode.Operations.Multiply;
 					bump_amount72.UseClamp = false;
 
@@ -1055,7 +1055,7 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump88 = new BumpNode(m_shader, "bump_");
 					bump88.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					bump88.ins.Strength.Value = part.UnitScale;  //part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor; // * 100.0f;
+					bump88.ins.Strength.Value = 1.0f;  //part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor; // * 100.0f;
 					bump88.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 					bump88.ins.UseObjectSpace.Value = true;
 
