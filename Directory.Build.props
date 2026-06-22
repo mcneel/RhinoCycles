@@ -1,7 +1,8 @@
 ﻿<Project>
   <PropertyGroup>
 		<!-- Since we have two .csproj's in the same folder we use a separate intermediate path for each -->
-		<BaseIntermediateOutputPath>obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
+		<!-- Also, be nice to those that compile on multiple OS' with the same source -->
+		<BaseIntermediateOutputPath>obj\$(OS)\$(MSBuildProjectName)</BaseIntermediateOutputPath>
 		<DefaultItemExcludes>obj\*</DefaultItemExcludes>
   </PropertyGroup>
 </Project>
