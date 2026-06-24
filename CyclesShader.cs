@@ -509,6 +509,16 @@ namespace RhinoCyclesCore
 			HandlePbrTexturedProperty(StdCS.PbrOpacity, (float)pbrmat.Opacity, rm, shb.PbrTransmission, shb.PbrTransmissionTexture);
 			HandlePbrTexturedProperty(StdCS.PbrOpacityIor, (float)pbrmat.OpacityIOR, rm, shb.PbrIor, shb.PbrIorTexture);
 			HandlePbrTexturedProperty(StdCS.PbrOpacityRoughness, (float)pbrmat.OpacityRoughness, rm, shb.PbrTransmissionRoughness, shb.PbrTransmissionRoughnessTexture);
+			// Attenuation (glTF KHR_materials_volume). The standard PBR field-sync that propagates values
+			// from the RDK content into ON_PhysicallyBasedMaterial does not currently carry the
+			// pbr-attenuation-* dynamic fields, so reading via pbrmat.AttenuationColor would always
+			// return the default. Read directly from the RDK content's field/parameter store instead.
+			Rhino.Display.Color4f attColor;
+			if (rm.Fields.TryGetValue("pbr-attenuation-color", out attColor))
+				shb.PbrAttenuationColor.Value = attColor;
+			double attDist;
+			if (rm.Fields.TryGetValue("pbr-attenuation-distance", out attDist))
+				shb.PbrAttenuationDistance.Value = (float)attDist;
 			HandlePbrTexturedProperty(StdCS.Bump, Color4f.Black, rm, shb.PbrBump, shb.PbrBumpTexture);
 			HandlePbrTexturedProperty(StdCS.PbrDisplacement, Color4f.Black, rm, shb.PbrDisplacement, shb.PbrDisplacementTexture);
 			HandlePbrTexturedProperty(StdCS.PbrAmbientOcclusion, 0.0f, rm, shb.PbrAmbientOcclusion, shb.PbrAmbientOcclusionTexture);
@@ -713,6 +723,12 @@ namespace RhinoCyclesCore
 
 		public TexturedFloat PbrTransmissionRoughness = new TexturedFloat(PbrCSN.OpacityRoughness, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrTransmissionRoughnessTexture = new CyclesTextureImage();
+
+		// glTF KHR_materials_volume - volumetric attenuation for colored glass.
+		public TexturedColor PbrAttenuationColor = new TexturedColor(PbrCSN.AttenuationColor, new Color4f(1.0f, 1.0f, 1.0f, 1.0f), false, 0.0f);
+		public CyclesTextureImage PbrAttenuationColorTexture = new CyclesTextureImage();
+		public TexturedFloat PbrAttenuationDistance = new TexturedFloat(PbrCSN.AttenuationDistance, 0.0f, false, 0.0f);
+		public CyclesTextureImage PbrAttenuationDistanceTexture = new CyclesTextureImage();
 
 		public TexturedFloat PbrAmbientOcclusion = new TexturedFloat(PbrCSN.AmbientOcclusion, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrAmbientOcclusionTexture = new CyclesTextureImage();

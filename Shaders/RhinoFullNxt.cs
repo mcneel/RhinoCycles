@@ -886,6 +886,86 @@ namespace RhinoCyclesCore.Shaders
 					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 
+					// glTF KHR_materials_volume — Beer-Lambert volume absorption. Enabled per-material
+					// when AttenuationDistance > 0. Density = 1/distance makes light traveling exactly
+					// AttenuationDistance through the medium come out at AttenuationColor.
+					if (part.PbrAttenuationDistance.Value > 0.0f)
+					{
+						var absorb = new AbsorptionVolumeNode(m_shader, "pbr_attenuation");
+						absorb.ins.Color.Value = part.PbrAttenuationColor.Value.ToFloat4();
+						absorb.ins.Density.Value = 1.0f / part.PbrAttenuationDistance.Value;
+						absorb.outs.Volume.Connect(m_shader.Output.ins.Volume);
+
+						// =========================================================================
+						// TODO(cycles): rebuild big_libs ccycles.dll, then replace the
+						// Marshal.WriteByte below with `m_shader.HasVolumeConnected = true;`
+						// =========================================================================
+						// WHY THIS HACK EXISTS:
+						//   Cycles (~3.5) only compiles KERNEL_FEATURE_VOLUME into the kernel when
+						//   at least one used Shader has `has_volume_connected == true`. That flag
+						//   is set EXCLUSIVELY inside Shader::set_graph() (cycles/src/scene/shader.cpp
+						//   line ~310), based on graph->output()->input("Volume")->link at the moment
+						//   set_graph is called. csycles' cycles_create_shader runs set_graph(new
+						//   ShaderGraph()) with an EMPTY graph at shader creation, so the flag is
+						//   locked to false — and the incremental add_shader_node + shader_connect_nodes
+						//   pattern (used everywhere in RhinoCycles) never re-runs set_graph. Result:
+						//   AbsorptionVolume → Output.Volume connections produce ZERO visible effect
+						//   because Cycles compiled the kernel without volume support. Calling
+						//   m_shader.Tag() updates `has_volume` but not `has_volume_connected`, and
+						//   the kernel is already built by the time Tag runs.
+						//
+						// THE PROPER FIX (already authored on submodule branches
+						// brian/9.x/volumetric-color, NOT yet built into big_libs):
+						//   1. cycles/src/ccycles/shader.cpp — adds the CCL_CAPI export:
+						//        void cycles_shader_set_has_volume_connected(Session*, Shader*, uint)
+						//      { shader_id->has_volume_connected = (value == 1); }
+						//   2. csycles/CSycles.Shader.cs — DllImport wrapper mirroring
+						//      shader_set_heterogeneous_volume.
+						//   3. csycles/Shader.cs — public bool HasVolumeConnected { set { ... } }
+						//      property.
+						//   Once big_libs/RhinoCycles/ccycles/win/release/ccycles.dll is rebuilt with
+						//   that export, replace the Marshal.WriteByte line below with:
+						//      m_shader.HasVolumeConnected = true;
+						//
+						// WHY MARSHAL.WriteByte INSTEAD:
+						//   ccycles.dll lives in big_libs as a 180 MB prebuilt binary that the
+						//   standard local Rhino build does NOT rebuild — RhinoCyclesCore.csproj
+						//   just copies it. Building it from source needs VS 2022 + VS 2019 Build
+						//   Tools + the Cycles dep libs (boost/OIIO/OpenEXR/...) under cycles/lib/
+						//   win64_vc15/. None of that is present on a vanilla 9.x dev machine. So
+						//   until ccycles is rebuilt by whoever owns big_libs, we poke the byte
+						//   directly from C#.
+						//
+						// THE HARDCODED OFFSET (0x5b):
+						//   Byte offset of `bool has_volume_connected` inside ccl::Shader in the
+						//   CURRENT big_libs/RhinoCycles/ccycles/win/release/ccycles.dll.
+						//   Verified via:
+						//     "<VS18>\VC\Tools\Llvm\x64\bin\llvm-pdbutil.exe" pretty \
+						//        --with-name=ccl::Shader --class-definitions=layout \
+						//        big_libs\RhinoCycles\ccycles\win\release\ccycles.pdb
+						//   That dump shows (excerpt):
+						//     +0x58 [sizeof=1] bool need_update_uvs
+						//     +0x59 [sizeof=1] bool need_update_attribute
+						//     +0x5a [sizeof=1] bool need_update_displacement
+						//     +0x5b [sizeof=1] bool has_volume_connected   <-- THIS BYTE
+						//     +0x5c [sizeof=1] bool has_surface
+						//     +0x5d [sizeof=1] bool has_surface_transparent
+						//     ...
+						//   m_shader.Id is a direct ccl::Shader* (returned by cycles_create_shader),
+						//   so &shader->has_volume_connected == m_shader.Id + 0x5b.
+						//
+						// FRAGILITY:
+						//   The offset is layout-fragile. If big_libs ccycles.dll is rebuilt from a
+						//   different Cycles SHA that adds/removes/reorders members of ccl::Shader,
+						//   ccl::Node, or any base class, this hack silently writes to the wrong
+						//   byte and produces wrong behavior (e.g. corrupts has_surface). RE-VERIFY
+						//   the offset against the new ccycles.pdb whenever big_libs is bumped,
+						//   AND REPLACE with the proper API call ASAP. This block is a temporary
+						//   bridge, not a long-term solution.
+						// =========================================================================
+						System.Runtime.InteropServices.Marshal.WriteByte(m_shader.Id, 0x5b, 1);
+					}
+
 					if (part.PbrBump.On && part.PbrBumpTexture.HasProcedural)
 					{
 						if (!part.PbrBumpTexture.IsNormalMap)
