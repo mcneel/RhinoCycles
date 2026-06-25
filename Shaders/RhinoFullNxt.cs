@@ -1044,7 +1044,7 @@ namespace RhinoCyclesCore.Shaders
 					var bump_texture_to_bw87 = new RgbToBwNode(m_shader, "bump_texture_to_bw_");
 
 					var bump_amount72 = new MathMultiply(m_shader, "bump_amount_");
-					bump_amount72.ins.Value1.Value = 4.66f;
+					bump_amount72.ins.Value1.Value = 1.0f;
 					bump_amount72.ins.Value2.Value = part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor;
 					bump_amount72.Operation = MathNode.Operations.Multiply;
 					bump_amount72.UseClamp = false;
@@ -1055,7 +1055,7 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump88 = new BumpNode(m_shader, "bump_");
 					bump88.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					bump88.ins.Strength.Value = RcCore.It.AllSettings.BumpStrengthFactor;  // overridden by bump_amount72 (4.66 * Amount * BSF) connected below
+					bump88.ins.Strength.Value = RcCore.It.AllSettings.BumpStrengthFactor;  // overridden by bump_amount72 (Amount * BSF) connected below
 					bump88.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 					bump88.ins.UseObjectSpace.Value = false;
 
