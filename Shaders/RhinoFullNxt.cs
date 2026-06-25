@@ -342,7 +342,14 @@ namespace RhinoCyclesCore.Shaders
 			// Multiply the alpha of the decal with the alpha of the decal material
 			var multiply = new MathMultiply(shader, "Decal mask multiply");
 			multiply.ins.Value1.Value = 1.0f - decal.Transparency;
-			color_mask_transp_socket.Connect(multiply.ins.Value2);
+
+			// If a material doesn't have an alpha output (such as a blend material)
+			// then color_mask_transp_socket will be null. In that case, we treat it
+			// as fully opaque so the mask is determined only by the decal transparency.
+			if (color_mask_transp_socket != null)
+				color_mask_transp_socket.Connect(multiply.ins.Value2);
+			else
+				multiply.ins.Value2.Value = 1.0f;
 
 			// Transform (0.0f...1.0f) mask into a (0.0f...DecalAlpha) mask.
 			var min = new MathNode(shader, "Decal mask min");
