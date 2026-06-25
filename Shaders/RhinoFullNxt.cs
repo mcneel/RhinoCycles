@@ -34,6 +34,9 @@ namespace RhinoCyclesCore.Shaders
 {
 	public class RhinoFullNxt : RhinoShader
 	{
+		// Tuned factor to align Cycles bump strength with the viewport display.
+		private const float DisplayBumpMatchFactor = 0.2f;
+
 		public RhinoFullNxt(Session client, CyclesShader intermediate) : this(client, intermediate, null, intermediate.Front.Name, true)
 		{
 		}
@@ -891,7 +894,7 @@ namespace RhinoCyclesCore.Shaders
 						if (!part.PbrBumpTexture.IsNormalMap)
 						{
 							var bump = new BumpNode(m_shader, "bump");
-							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
+							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
 							bump.Invert = part.PbrBump.Amount < 0.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 							part.PbrBump.Amount = 1.0f;
@@ -908,7 +911,7 @@ namespace RhinoCyclesCore.Shaders
 						if (!part.PbrClearcoatBumpTexture.IsNormalMap)
 						{
 							var bump = new BumpNode(m_shader, "clearcoat_bump");
-							bump.ins.Strength.Value = Math.Abs(part.PbrClearcoatBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
+							bump.ins.Strength.Value = Math.Abs(part.PbrClearcoatBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
 							bump.Invert = part.PbrClearcoatBump.Amount < 0.0f;
 							part.PbrClearcoatBump.Amount = 1.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
@@ -1045,7 +1048,7 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump_amount72 = new MathMultiply(m_shader, "bump_amount_");
 					bump_amount72.ins.Value1.Value = 1.0f;
-					bump_amount72.ins.Value2.Value = Math.Abs(part.BumpTexture.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
+					bump_amount72.ins.Value2.Value = Math.Abs(part.BumpTexture.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
 					bump_amount72.Operation = MathNode.Operations.Multiply;
 					bump_amount72.UseClamp = false;
 
