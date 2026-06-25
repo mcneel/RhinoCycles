@@ -743,7 +743,7 @@ namespace RhinoCyclesCore.Shaders
 
 				if (part.BlendMixAmountTexture.HasProcedural)
 				{
-					Utilities.GraphForSlot(m_shader, null, part.BlendMixAmount > 0.0f, part.BlendMixAmountTexture.Amount, part.BlendMixAmountTexture, blender.ins.Fac.ToList(), true, false, false, true, part.Gamma, false, null);
+					Utilities.GraphForSlot(m_shader, null, part.BlendMixAmount > 0.0f, part.BlendMixAmountTexture.Amount, part.BlendMixAmountTexture, blender.ins.Fac.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
 				}
 				return blender;
 			}
