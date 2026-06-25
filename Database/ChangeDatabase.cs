@@ -1025,6 +1025,18 @@ namespace RhinoCyclesCore.Database
 				string textype = tex.HasTextureImage ? (tex.HasByteImage ? "byte" : "float") : "no image";
 
 				sb.Append($"\t{idx} : {mapstr} / {projstr} -> {textype} < {tex.TexWidth}, {tex.TexHeight}> ) | {decalXform}");
+
+				// decal.CRC is the decal's state CRC only (mapping/projection/transform/
+				// transparency + the asset instance id), so editing the referenced texture
+				// or material - e.g. a blend material's color or its amount-slot texture -
+				// leaves it unchanged. That makes the object's decal-inclusive shader hash
+				// identical and the edit gets deduped away, so Raytraced never updates.
+				// Fold in the referenced content's recursive render hash so content edits
+				// change the hash and force a rebuild. Mirrors the change-queue fix in
+				// RhRdkRT_Utilities.cpp ObjectDecalCRC. RH-93944.
+				RenderContent decalContent = (RenderContent)rt ?? rm;
+				uint decalCRC = RhinoMath.CRC32((uint)decal.CRC, decalContent?.RenderHash ?? 0u);
+
 				CyclesDecal cyclesDecal = new CyclesDecal {
 					Mapping = mapping,
 					Projection = projection,
@@ -1042,7 +1054,7 @@ namespace RhinoCyclesCore.Database
 					Origin = origin.ToFloat4(),
 					Across = across.ToFloat4(),
 					Up = up.ToFloat4(),
-					CRC = (uint)decal.CRC
+					CRC = decalCRC
 				};
 				decalList.Insert(0, cyclesDecal);
 
