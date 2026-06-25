@@ -1044,8 +1044,8 @@ namespace RhinoCyclesCore.Shaders
 					var bump_texture_to_bw87 = new RgbToBwNode(m_shader, "bump_texture_to_bw_");
 
 					var bump_amount72 = new MathMultiply(m_shader, "bump_amount_");
-					bump_amount72.ins.Value1.Value = 1.0f;
-					bump_amount72.ins.Value2.Value = part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor * 4.66f;
+					bump_amount72.ins.Value1.Value = 4.66f;
+					bump_amount72.ins.Value2.Value = part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor;
 					bump_amount72.Operation = MathNode.Operations.Multiply;
 					bump_amount72.UseClamp = false;
 
@@ -1055,9 +1055,9 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump88 = new BumpNode(m_shader, "bump_");
 					bump88.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					bump88.ins.Strength.Value = 1.0f;  //part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor; // * 100.0f;
+					bump88.ins.Strength.Value = RcCore.It.AllSettings.BumpStrengthFactor;  // overridden by bump_amount72 (4.66 * Amount * BSF) connected below
 					bump88.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
-					bump88.ins.UseObjectSpace.Value = true;
+					bump88.ins.UseObjectSpace.Value = false;
 
 					var light_path109 = new LightPathNode(m_shader, "light_path_");
 
@@ -1265,7 +1265,7 @@ namespace RhinoCyclesCore.Shaders
 					weight_diffuse_amount_by_transparency_inv69.outs.Value.Connect(use_alpha_weighted_with_modded_amount71.ins.Value2);
 					diffuse_base_color_through_alpha180.outs.Color.Connect(diffuse_base_color_through_alpha120.ins.Color1);
 					use_alpha_weighted_with_modded_amount71.outs.Value.Connect(diffuse_base_color_through_alpha120.ins.Fac);
-					bump_amount72.outs.Value.Connect(bump88.ins.Height);
+					bump_amount72.outs.Value.Connect(bump88.ins.Strength);
 
 					if (textureDecalMixin != null)
 					{
@@ -1404,7 +1404,7 @@ namespace RhinoCyclesCore.Shaders
 
 					if (part.BumpTexture.HasProcedural)
 					{
-						Utilities.GraphForSlot(m_shader, null, true, part.BumpTexture.Amount, part.BumpTexture, bump_amount72.ins.Value1.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
+						Utilities.GraphForSlot(m_shader, null, true, 1.0f, part.BumpTexture, bump88.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
 						bump88.outs.Normal.Connect(principledbsdf117.ins.Normal);
 					}
 
