@@ -1045,7 +1045,7 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump_amount72 = new MathMultiply(m_shader, "bump_amount_");
 					bump_amount72.ins.Value1.Value = 1.0f;
-					bump_amount72.ins.Value2.Value = part.BumpTexture.Amount * RcCore.It.AllSettings.BumpStrengthFactor;
+					bump_amount72.ins.Value2.Value = Math.Abs(part.BumpTexture.Amount) * RcCore.It.AllSettings.BumpStrengthFactor;
 					bump_amount72.Operation = MathNode.Operations.Multiply;
 					bump_amount72.UseClamp = false;
 
@@ -1055,9 +1055,10 @@ namespace RhinoCyclesCore.Shaders
 
 					var bump88 = new BumpNode(m_shader, "bump_");
 					bump88.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					bump88.ins.Strength.Value = RcCore.It.AllSettings.BumpStrengthFactor;  // overridden by bump_amount72 (Amount * BSF) connected below
+					bump88.ins.Strength.Value = RcCore.It.AllSettings.BumpStrengthFactor;  // overridden by bump_amount72 (Abs(Amount) * BSF) connected below
 					bump88.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 					bump88.ins.UseObjectSpace.Value = false;
+					bump88.Invert = part.BumpTexture.Amount < 0.0f;
 
 					var light_path109 = new LightPathNode(m_shader, "light_path_");
 
