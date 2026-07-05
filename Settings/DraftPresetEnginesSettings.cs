@@ -22,6 +22,6 @@ namespace RhinoCyclesCore.Settings
 		{
 		}
 
-		public override int Samples { get => 50; set { } }
+		public override int Samples { get => IsProductPreset ? 100 : 50; set { } }
 	}
 }

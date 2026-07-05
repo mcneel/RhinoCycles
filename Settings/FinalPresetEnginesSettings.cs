@@ -21,6 +21,8 @@ namespace RhinoCyclesCore.Settings
 		public FinalPresetEngineSettings(EngineDocumentSettings parent) : base(parent)
 		{
 		}
-		public override int Samples { get => 1500; set { } }
+		// Product scenes carry their energy in rare caustic paths and need roughly twice
+		// the samples of Architecture scenes for the same visual convergence. RH-95847.
+		public override int Samples { get => IsProductPreset ? 3000 : 1500; set { } }
 	}
 }

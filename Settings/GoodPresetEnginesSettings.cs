@@ -21,6 +21,6 @@ namespace RhinoCyclesCore.Settings
 		public GoodPresetEngineSettings(EngineDocumentSettings parent) : base(parent)
 		{
 		}
-		public override int Samples { get => 500; set { } }
+		public override int Samples { get => IsProductPreset ? 1000 : 500; set { } }
 	}
 }
