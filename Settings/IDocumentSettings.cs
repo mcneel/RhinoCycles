@@ -49,7 +49,10 @@ namespace RhinoCyclesCore.Settings
 			if (preset == Presets.Product)
 			{
 				settings.FilterGlossy = 0.0f;
-				settings.SampleClampIndirect = 0.0f;
+				// 20 is high enough not to visibly dim caustics (tested indistinguishable
+				// from unclamped on caustic scenes) while still bounding the worst firefly
+				// spikes. Do not use 0: unbounded spikes never converge. RH-95847.
+				settings.SampleClampIndirect = 20.0f;
 				// Product scenes are dominated by caustics whose energy arrives through rare
 				// bright paths. With a low minimum the adaptive sampler retires shadow pixels
 				// before such a path ever hits them, leaving holes in the caustics. RH-95847.
