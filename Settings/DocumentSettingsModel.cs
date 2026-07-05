@@ -803,27 +803,30 @@ namespace RhinoCyclesCore.Settings
 		{
 			get
 			{
-				return RcCore.It.AllSettings.UseAdaptiveSampling;
+				GetBool(SettingNames.UseAdaptiveSampling, DefaultEngineSettings.UseAdaptiveSampling, out bool outVal);
+				return outVal;
 			}
-			set => throw new InvalidOperationException();
+			set => SetBool(SettingNames.UseAdaptiveSampling, value);
 		}
 
 		public int AdaptiveMinSamples
 		{
 			get
 			{
-				return RcCore.It.AllSettings.AdaptiveMinSamples;
+				GetInt(SettingNames.AdaptiveMinSamples, DefaultEngineSettings.AdaptiveMinSamples, out int outVal);
+				return outVal;
 			}
-			set => throw new InvalidOperationException();
+			set => SetInt(SettingNames.AdaptiveMinSamples, value);
 		}
 
 		public float AdaptiveThreshold
 		{
 			get
 			{
-				return RcCore.It.AllSettings.AdaptiveThreshold;
+				GetFloat(SettingNames.AdaptiveThreshold, DefaultEngineSettings.AdaptiveThreshold, out float outVal);
+				return outVal;
 			}
-			set => throw new InvalidOperationException();
+			set => SetFloat(SettingNames.AdaptiveThreshold, value);
 		}
 
 		public float JiggleFactor

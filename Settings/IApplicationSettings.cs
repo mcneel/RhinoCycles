@@ -49,9 +49,8 @@ namespace RhinoCyclesCore.Settings
 		int TriggerPostEffectsSample { get; set; }
 
 		bool UseLightTree { get; set; }
-		bool UseAdaptiveSampling { get; set; }
-		int AdaptiveMinSamples { get; set; }
-		float AdaptiveThreshold { get; set; }
+		// UseAdaptiveSampling/AdaptiveMinSamples/AdaptiveThreshold are per-document
+		// settings; they moved to IDocumentSettings. RH-95847.
 		float JiggleFactor { get; set; }
 		float GpJiggleDistance { get; set; }
 		bool SkipPreview { get; set; }

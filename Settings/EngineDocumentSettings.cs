@@ -57,6 +57,8 @@ namespace RhinoCyclesCore.Settings
 				rem = RhinoMath.CRC32(rem, MaxTransmissionBounce);
 				rem = RhinoMath.CRC32(rem, TransparentMaxBounce);
 				rem = RhinoMath.CRC32(rem, UseAdaptiveSampling ? 1 : 0);
+				rem = RhinoMath.CRC32(rem, AdaptiveMinSamples);
+				rem = RhinoMath.CRC32(rem, AdaptiveThreshold);
 				rem = RhinoMath.CRC32(rem, FilterGlossy);
 				rem = RhinoMath.CRC32(rem, SampleClampIndirect);
 
@@ -462,7 +464,7 @@ namespace RhinoCyclesCore.Settings
 
 		public bool UseAdaptiveSampling
 		{
-			get => RcCore.It.AllSettings.UseAdaptiveSampling;
+			get => mDict.GetBool(SettingNames.UseAdaptiveSampling, RcCore.It.AllSettings.UseAdaptiveSampling);
 			set => throw new InvalidOperationException();
 		}
 
@@ -474,13 +476,13 @@ namespace RhinoCyclesCore.Settings
 
 		public int AdaptiveMinSamples
 		{
-			get => RcCore.It.AllSettings.AdaptiveMinSamples;
+			get => mDict.GetInteger(SettingNames.AdaptiveMinSamples, RcCore.It.AllSettings.AdaptiveMinSamples);
 			set => throw new InvalidOperationException();
 		}
 
 		public float AdaptiveThreshold
 		{
-			get => RcCore.It.AllSettings.AdaptiveThreshold;
+			get => (float)mDict.GetDouble(SettingNames.AdaptiveThreshold, RcCore.It.AllSettings.AdaptiveThreshold);
 			set => throw new InvalidOperationException();
 		}
 

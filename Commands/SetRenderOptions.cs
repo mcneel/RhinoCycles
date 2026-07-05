@@ -48,6 +48,7 @@ namespace RhinoCycles.Commands
 			SettingNames.SensorWidth, SettingNames.SensorHeight, SettingNames.FilterGlossy,
 			SettingNames.SampleClampDirect, SettingNames.SampleClampIndirect, SettingNames.LightSamplingThreshold,
 			SettingNames.UseDirectLight, SettingNames.UseIndirectLight,
+			SettingNames.UseAdaptiveSampling, SettingNames.AdaptiveMinSamples, SettingNames.AdaptiveThreshold,
 		};
 
 		private bool IsDocumentTheSource
@@ -101,6 +102,10 @@ namespace RhinoCycles.Commands
 			var useDirectLight = new OptionToggle(source.UseDirectLight, "no", "yes");
 			var useIndirectLight = new OptionToggle(source.UseIndirectLight, "no", "yes");
 
+			var useAdaptiveSampling = new OptionToggle(source.UseAdaptiveSampling, "no", "yes");
+			var adaptiveMinSamples = new OptionInteger(source.AdaptiveMinSamples, 1, 4096);
+			var adaptiveThreshold = new OptionDouble(source.AdaptiveThreshold, 0.0, 1.0);
+
 			int dataSourceOption = getNumber.AddOptionToggle("data_source", ref dataSource);
 			getNumber.AddOptionToggle("show_max_passes", ref showMaxPasses);
 			getNumber.AddOptionInteger("max_bounces", ref maxBounce);
@@ -131,6 +136,10 @@ namespace RhinoCycles.Commands
 			getNumber.AddOptionToggle("sample_all_lights", ref useDirectLight);
 			getNumber.AddOptionToggle("sample_all_lights_indirect", ref useIndirectLight);
 
+			getNumber.AddOptionToggle("use_adaptive_sampling", ref useAdaptiveSampling);
+			getNumber.AddOptionInteger("adaptive_min_samples", ref adaptiveMinSamples);
+			getNumber.AddOptionDouble("adaptive_threshold", ref adaptiveThreshold);
+
 			int defaultsOption = getNumber.AddOption("defaults");
 
 			void LoadFrom(IAllSettings s)
@@ -158,6 +167,9 @@ namespace RhinoCycles.Commands
 				lightSamplingThreshold.CurrentValue = s.LightSamplingThreshold;
 				useDirectLight.CurrentValue = s.UseDirectLight;
 				useIndirectLight.CurrentValue = s.UseIndirectLight;
+				useAdaptiveSampling.CurrentValue = s.UseAdaptiveSampling;
+				adaptiveMinSamples.CurrentValue = s.AdaptiveMinSamples;
+				adaptiveThreshold.CurrentValue = s.AdaptiveThreshold;
 			}
 
 			void SaveToApplication(int samples)
@@ -186,6 +198,9 @@ namespace RhinoCycles.Commands
 				a.LightSamplingThreshold = (float)lightSamplingThreshold.CurrentValue;
 				a.UseDirectLight = useDirectLight.CurrentValue;
 				a.UseIndirectLight = useIndirectLight.CurrentValue;
+				a.UseAdaptiveSampling = useAdaptiveSampling.CurrentValue;
+				a.AdaptiveMinSamples = adaptiveMinSamples.CurrentValue;
+				a.AdaptiveThreshold = (float)adaptiveThreshold.CurrentValue;
 			}
 
 			void SaveToDocument(int samples)
@@ -215,6 +230,9 @@ namespace RhinoCycles.Commands
 				d[SettingNames.LightSamplingThreshold] = lightSamplingThreshold.CurrentValue;
 				d[SettingNames.UseDirectLight] = useDirectLight.CurrentValue;
 				d[SettingNames.UseIndirectLight] = useIndirectLight.CurrentValue;
+				d[SettingNames.UseAdaptiveSampling] = useAdaptiveSampling.CurrentValue;
+				d[SettingNames.AdaptiveMinSamples] = adaptiveMinSamples.CurrentValue;
+				d[SettingNames.AdaptiveThreshold] = adaptiveThreshold.CurrentValue;
 				doc.RenderSettings = rs;
 			}
 

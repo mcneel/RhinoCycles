@@ -50,11 +50,16 @@ namespace RhinoCyclesCore.Settings
 			{
 				settings.FilterGlossy = 0.0f;
 				settings.SampleClampIndirect = 0.0f;
+				// Product scenes are dominated by caustics whose energy arrives through rare
+				// bright paths. With a low minimum the adaptive sampler retires shadow pixels
+				// before such a path ever hits them, leaving holes in the caustics. RH-95847.
+				settings.AdaptiveMinSamples = 256;
 			}
 			else
 			{
 				settings.FilterGlossy = DefaultEngineSettings.FilterGlossy;
 				settings.SampleClampIndirect = DefaultEngineSettings.SampleClampIndirect;
+				settings.AdaptiveMinSamples = DefaultEngineSettings.AdaptiveMinSamples;
 			}
 		}
 	}
@@ -107,6 +112,10 @@ namespace RhinoCyclesCore.Settings
 		float FilterGlossy { get; set; }
 		RenderPresetHelpers.Presets RenderPreset { get; set; }
 		bool IsProductPreset { get; }
+
+		bool UseAdaptiveSampling { get; set; }
+		int AdaptiveMinSamples { get; set; }
+		float AdaptiveThreshold { get; set; }
 
 		float SampleClampDirect { get; set; }
 		float SampleClampIndirect { get; set; }
