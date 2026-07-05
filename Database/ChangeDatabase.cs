@@ -1866,7 +1866,7 @@ namespace RhinoCyclesCore.Database
 				}
 				else
 				{
-					var cl = _shaderConverter.ConvertLight(this, light, v, PreProcessGamma, _gObTransform);
+					var cl = _shaderConverter.ConvertLight(this, light, v, PreProcessGamma, _gObTransform, _doc_serialnr);
 
 					_lightDatabase.AddLight(cl);
 				}
@@ -1946,7 +1946,7 @@ namespace RhinoCyclesCore.Database
 				}
 				else
 				{
-					var cl = _shaderConverter.ConvertLight(light, PreProcessGamma, _gObTransform);
+					var cl = _shaderConverter.ConvertLight(light, PreProcessGamma, _gObTransform, _doc_serialnr);
 					_lightDatabase.AddLight(cl);
 				}
 			}
@@ -1963,7 +1963,7 @@ namespace RhinoCyclesCore.Database
 		/// <param name="sun"></param>
 		protected override void ApplySunChanges(RGLight sun)
 		{
-			var cl = _shaderConverter.ConvertLight(sun, PreProcessGamma, _gObTransform);
+			var cl = _shaderConverter.ConvertLight(sun, PreProcessGamma, _gObTransform, _doc_serialnr);
 			cl.Id = _sunGuid;
 			_lightDatabase.AddLight(cl);
 			if (sun.IsEnabled) PushEnabledLight();

@@ -2365,7 +2365,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="view"></param>
 		/// <param name="gamma"></param>
 		/// <returns></returns>
-		internal CyclesLight ConvertLight(ChangeQueue changequeue, Light light, ViewInfo view, float gamma, Rhino.Geometry.Transform viewTransform)
+		internal CyclesLight ConvertLight(ChangeQueue changequeue, Light light, ViewInfo view, float gamma, Rhino.Geometry.Transform viewTransform, uint docSerialNumber)
 		{
 			if (changequeue != null && view != null)
 			{
@@ -2374,7 +2374,7 @@ namespace RhinoCyclesCore.Converters
 					ChangeQueue.ConvertCameraBasedLightToWorld(changequeue, light, view);
 				}
 			}
-			var cl = ConvertLight(light.Data, gamma, viewTransform);
+			var cl = ConvertLight(light.Data, gamma, viewTransform, docSerialNumber);
 			cl.Id = light.Id;
 
 			if (light.ChangeType == Light.Event.Deleted)
@@ -2391,7 +2391,7 @@ namespace RhinoCyclesCore.Converters
 		/// <param name="lg">The Rhino light to convert</param>
 		/// <param name="gamma"></param>
 		/// <returns><c>CyclesLight</c></returns>
-		internal CyclesLight ConvertLight(Rhino.Geometry.Light lg, float gamma, Rhino.Geometry.Transform viewTransform)
+		internal CyclesLight ConvertLight(Rhino.Geometry.Light lg, float gamma, Rhino.Geometry.Transform viewTransform, uint docSerialNumber)
 		{
 			var enabled = lg.IsEnabled ? 1.0f : 0.0f;
 
@@ -2490,6 +2490,25 @@ namespace RhinoCyclesCore.Converters
 			}
 
 			strength *= enabled;
+
+			if ((lt == LightType.Point) || (lt == LightType.Spot))
+			{
+				// A zero-size light can never be hit by BSDF sampling. In Product mode the
+				// shadow-ray transmission trick is disabled, so all light behind glass has to
+				// arrive as real caustic paths - with size 0 (the default, since ShadowIntensity
+				// defaults to 1.0) that energy is entirely absent. Give point and spot lights a
+				// minimum radius of 1mm so their caustics exist. RH-95847.
+				var eds = Utilities.GetEngineDocumentSettings(docSerialNumber);
+				if (eds.IsProductPreset)
+				{
+					var rhinoDoc = Rhino.RhinoDoc.FromRuntimeSerialNumber(docSerialNumber);
+					if (rhinoDoc != null)
+					{
+						var minSize = (float)Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Millimeters, rhinoDoc.ModelUnitSystem);
+						size = Math.Max(size, minSize);
+					}
+				}
+			}
 
 			var clight = new CyclesLight
 				{
