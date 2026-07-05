@@ -2497,14 +2497,15 @@ namespace RhinoCyclesCore.Converters
 				// shadow-ray transmission trick is disabled, so all light behind glass has to
 				// arrive as real caustic paths - with size 0 (the default, since ShadowIntensity
 				// defaults to 1.0) that energy is entirely absent. Give point and spot lights a
-				// minimum radius of 1mm so their caustics exist. RH-95847.
+				// minimum radius of 10mm (a small physical light source, e.g. an LED with its
+				// housing) so their caustics exist. RH-95847.
 				var eds = Utilities.GetEngineDocumentSettings(docSerialNumber);
 				if (eds.IsProductPreset)
 				{
 					var rhinoDoc = Rhino.RhinoDoc.FromRuntimeSerialNumber(docSerialNumber);
 					if (rhinoDoc != null)
 					{
-						var minSize = (float)Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Millimeters, rhinoDoc.ModelUnitSystem);
+						var minSize = (float)Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Millimeters, rhinoDoc.ModelUnitSystem) * 10.0f;
 						size = Math.Max(size, minSize);
 					}
 				}
