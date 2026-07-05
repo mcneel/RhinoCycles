@@ -184,6 +184,9 @@ namespace RhinoCyclesCore
 			session.Scene.Integrator.SampleClampDirect = engineSettings.SampleClampDirect;
 			session.Scene.Integrator.SampleClampIndirect = engineSettings.SampleClampIndirect;
 			session.Scene.Integrator.LightSamplingThreshold =  engineSettings.LightSamplingThreshold;
+			// The native session init hardcodes the light tree to on; without this line the
+			// UseLightTree setting was never applied.
+			session.Scene.Integrator.UseLightTree = engineSettings.UseLightTree;
 			session.Scene.Integrator.SamplingPattern = SamplingPattern.Sobol;
 			session.Scene.Integrator.Seed = engineSettings.Seed;
 			#endregion
