@@ -61,6 +61,10 @@ namespace RhinoCyclesCore.Settings
 
 		public override Guid PlugInId => m_pluginId;
 
+		// The Cycles sample counts and integrator settings mean nothing to other render
+		// engines, so keep the section hidden while another renderer is current.
+		public override bool Hidden => base.Hidden || (Rhino.Render.Utilities.DefaultRenderPlugInId != m_pluginId);
+
 		public Label LblSeed { get; set; }
 		public Label LblSamples { get; set; }
 		public Label LblMaxBounces { get; set; }
