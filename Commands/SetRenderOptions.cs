@@ -18,7 +18,6 @@ using Rhino;
 using Rhino.Commands;
 using Rhino.Input;
 using Rhino.Input.Custom;
-using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Settings;
 using System.Runtime.InteropServices;
 
@@ -38,30 +37,13 @@ namespace RhinoCycles.Commands
 
 		public override string EnglishName => "RhinoCycles_SetRenderOptions";
 
-		private static readonly string[] _allSupportedKeys =
-		{
-			SettingNames.Samples, SettingNames.MaxPasses, SettingNames.Seed,
-			SettingNames.MaxBounce, SettingNames.TileX, SettingNames.TileY,
-			SettingNames.NoCaustics, SettingNames.MaxDiffuseBounce, SettingNames.MaxGlossyBounce,
-			SettingNames.MaxTransmissionBounce, SettingNames.MaxVolumeBounce, SettingNames.TransparentMaxBounce,
-			SettingNames.AaSamples, SettingNames.DiffuseSamples, SettingNames.GlossySamples,
-			SettingNames.SensorWidth, SettingNames.SensorHeight, SettingNames.FilterGlossy,
-			SettingNames.SampleClampDirect, SettingNames.SampleClampIndirect, SettingNames.LightSamplingThreshold,
-			SettingNames.UseDirectLight, SettingNames.UseIndirectLight,
-			SettingNames.UseAdaptiveSampling, SettingNames.AdaptiveMinSamples, SettingNames.AdaptiveThreshold,
-		};
-
-		private bool IsDocumentTheSource
-		{
-			get => (Settings != null) && Settings.TryGetBool("DocumentIsSource", out bool docSettingsTarget) && docSettingsTarget;
-			set => Settings?.SetBool("DocumentIsSource", value);
-		}
-
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
-			var targetDocument = IsDocumentTheSource;
-			IAllSettings CurrentSource () => targetDocument ? new EngineDocumentSettings(doc.RuntimeSerialNumber) : (IAllSettings)RcCore.It.AllSettings;
+			// All options always change the document.
+			IAllSettings CurrentSource () => new EngineDocumentSettings(doc.RuntimeSerialNumber);
 			var source = CurrentSource();
+
+			var preset = source.RenderPreset;
 
 			var getNumber = new GetNumber();
 			getNumber.SetLowerLimit(2.0, false);
@@ -69,7 +51,7 @@ namespace RhinoCycles.Commands
 			getNumber.SetDefaultInteger(source.Samples);
 			getNumber.SetCommandPrompt("Set render samples");
 
-			var dataSource = new OptionToggle(targetDocument, "Application", "Document");
+			var presetToggle = new OptionToggle(preset == RenderPresetHelpers.Presets.Product, "Architecture", "Product");
 
 			var showMaxPasses = new OptionToggle(source.ShowMaxPasses, "HideMaxPasses", "ShowMaxPasses");
 
@@ -106,7 +88,7 @@ namespace RhinoCycles.Commands
 			var adaptiveMinSamples = new OptionInteger(source.AdaptiveMinSamples, 1, 4096);
 			var adaptiveThreshold = new OptionDouble(source.AdaptiveThreshold, 0.0, 1.0);
 
-			int dataSourceOption = getNumber.AddOptionToggle("data_source", ref dataSource);
+			int presetOption = getNumber.AddOptionToggle("preset", ref presetToggle);
 			getNumber.AddOptionToggle("show_max_passes", ref showMaxPasses);
 			getNumber.AddOptionInteger("max_bounces", ref maxBounce);
 			getNumber.AddOptionInteger("tile_x", ref tileX);
@@ -140,8 +122,6 @@ namespace RhinoCycles.Commands
 			getNumber.AddOptionInteger("adaptive_min_samples", ref adaptiveMinSamples);
 			getNumber.AddOptionDouble("adaptive_threshold", ref adaptiveThreshold);
 
-			int defaultsOption = getNumber.AddOption("defaults");
-
 			void LoadFrom(IAllSettings s)
 			{
 				getNumber.SetDefaultInteger(s.Samples);
@@ -170,37 +150,6 @@ namespace RhinoCycles.Commands
 				useAdaptiveSampling.CurrentValue = s.UseAdaptiveSampling;
 				adaptiveMinSamples.CurrentValue = s.AdaptiveMinSamples;
 				adaptiveThreshold.CurrentValue = s.AdaptiveThreshold;
-			}
-
-			void SaveToApplication(int samples)
-			{
-				var a = RcCore.It.AllSettings;
-				a.Samples = samples;
-				a.ShowMaxPasses = showMaxPasses.CurrentValue;
-				a.Seed = seed.CurrentValue;
-				a.MaxBounce = maxBounce.CurrentValue;
-				a.TileX = tileX.CurrentValue;
-				a.TileY = tileY.CurrentValue;
-				a.NoCaustics = noCaustics.CurrentValue;
-				a.MaxDiffuseBounce = maxDiffuseBounce.CurrentValue;
-				a.MaxGlossyBounce = maxGlossyBounce.CurrentValue;
-				a.MaxTransmissionBounce = maxTransmissionBounce.CurrentValue;
-				a.MaxVolumeBounce = maxVolumeBounce.CurrentValue;
-				a.TransparentMaxBounce = transparentMaxBounce.CurrentValue;
-				a.AaSamples = aaSamples.CurrentValue;
-				a.DiffuseSamples = diffSamples.CurrentValue;
-				a.GlossySamples = glossySamples.CurrentValue;
-				a.SensorWidth = (float)sensorWidth.CurrentValue;
-				a.SensorHeight = (float)sensorHeight.CurrentValue;
-				a.FilterGlossy = (float)filterGlossy.CurrentValue;
-				a.SampleClampDirect = (float)sampleClampDirect.CurrentValue;
-				a.SampleClampIndirect = (float)sampleClampIndirect.CurrentValue;
-				a.LightSamplingThreshold = (float)lightSamplingThreshold.CurrentValue;
-				a.UseDirectLight = useDirectLight.CurrentValue;
-				a.UseIndirectLight = useIndirectLight.CurrentValue;
-				a.UseAdaptiveSampling = useAdaptiveSampling.CurrentValue;
-				a.AdaptiveMinSamples = adaptiveMinSamples.CurrentValue;
-				a.AdaptiveThreshold = (float)adaptiveThreshold.CurrentValue;
 			}
 
 			void SaveToDocument(int samples)
@@ -236,6 +185,20 @@ namespace RhinoCycles.Commands
 				doc.RenderSettings = rs;
 			}
 
+			// Record the selected preset on the document and align the values that differ
+			// per preset with that preset's defaults (consistent with RenderPresetHelpers.SetPreset).
+			void StorePreset(RenderPresetHelpers.Presets p)
+			{
+				var defaults = PresetDefaults.ForPreset(p);
+				var rs = doc.RenderSettings.Duplicate();
+				var d = rs.UserDictionary;
+				d[SettingNames.RenderPreset] = (int)p;
+				d[SettingNames.FilterGlossy] = (double)defaults.FilterGlossy;
+				d[SettingNames.SampleClampIndirect] = (double)defaults.SampleClampIndirect;
+				d[SettingNames.AdaptiveMinSamples] = defaults.AdaptiveMinSamples;
+				doc.RenderSettings = rs;
+			}
+
 			while (true)
 			{
 				var getRc = getNumber.Get();
@@ -244,35 +207,16 @@ namespace RhinoCycles.Commands
 				{
 					case GetResult.Number:
 						int samples = (int)getNumber.Number();
-						if (targetDocument)
-							SaveToDocument(samples);
-						else
-							SaveToApplication(samples);
+						SaveToDocument(samples);
 						break;
 					case GetResult.Option:
 						CommandLineOption cmdOption = getNumber.Option();
 						if (cmdOption != null)
 						{
-							if (cmdOption.Index == dataSourceOption)
+							if (cmdOption.Index == presetOption)
 							{
-								targetDocument = dataSource.CurrentValue;
-								IsDocumentTheSource = targetDocument;
-								LoadFrom(CurrentSource());
-							}
-							else if (cmdOption.Index == defaultsOption)
-							{
-								if (targetDocument)
-								{
-									var rs = doc.RenderSettings.Duplicate();
-									var d = rs.UserDictionary;
-									foreach (var key in _allSupportedKeys)
-										d.Remove(key);
-									doc.RenderSettings = rs;
-								}
-								else
-								{
-									RcCore.It.AllSettings.DefaultSettings();
-								}
+								preset = presetToggle.CurrentValue ? RenderPresetHelpers.Presets.Product : RenderPresetHelpers.Presets.Architecture;
+								StorePreset(preset);
 								LoadFrom(CurrentSource());
 							}
 						}

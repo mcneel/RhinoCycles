@@ -498,8 +498,12 @@ namespace RhinoCyclesCore.Settings
 		{
 			get
 			{
-				GetInt(SettingNames.RenderPreset, (int)RenderPresetHelpers.ProductPreset(FilterGlossy, SampleClampIndirect), out int outVal);
-				return (RenderPresetHelpers.Presets)outVal;
+				// Only derive from values for legacy documents without the stored value - a GetInt
+				// call with PresetFromValues as the default would evaluate it eagerly on every read.
+				var dictionary = RenderSettingsForRead();
+				if (dictionary.ContainsKey(SettingNames.RenderPreset))
+					return (RenderPresetHelpers.Presets)dictionary.GetInteger(SettingNames.RenderPreset, (int)RenderPresetHelpers.DefaultPreset);
+				return RenderPresetHelpers.PresetFromValues(this);
 			}
 			set => SetInt(SettingNames.RenderPreset, (int)value);
 		}

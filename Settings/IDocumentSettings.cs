@@ -17,6 +17,7 @@ limitations under the License.
 using ccl;
 using Rhino;
 using RhinoCyclesCore.Core;
+using System;
 using System.Net;
 
 namespace RhinoCyclesCore.Settings
@@ -30,11 +31,33 @@ namespace RhinoCyclesCore.Settings
 		};
 
 		/// <summary>
-		/// Legacy fallback when document settings do not yet hold the RenderPreset.
+		/// Preset returned when a legacy document's values match no preset's signature. This is
+		/// a deliberate default, NOT an assumption that this preset equals the base defaults.
 		/// </summary>
-		public static Presets ProductPreset(float filterGlossy, float sampleClampIndirect)
+		public const Presets DefaultPreset = Presets.Architecture;
+
+		/// <summary>
+		/// Legacy fallback for documents saved before the RenderPreset value was stored.
+		/// Determines the preset by matching the document's values against each preset's
+		/// signature (<see cref="PresetDefaults.MatchesSignature"/>) rather than any fixed set
+		/// of parameters, so it keeps working as more values start to differ per preset - for
+		/// any preset, Architecture included.
+		/// </summary>
+		public static Presets PresetFromValues(IDocumentSettings settings)
 		{
-			return (filterGlossy == 0.0f && sampleClampIndirect == 0.0f) ? Presets.Product : Presets.Architecture;
+			foreach (Presets preset in Enum.GetValues(typeof(Presets)))
+			{
+				if (preset == DefaultPreset) continue;
+				if (PresetDefaults.ForPreset(preset).MatchesSignature(settings)) return preset;
+			}
+
+			// Frozen historical signature: before RH-95847 the Product preset forced
+			// FilterGlossy and SampleClampIndirect to 0, so documents from that era carry
+			// these values instead of the current Product defaults. Never update this check
+			// when preset values change - it identifies old documents only.
+			if (settings.FilterGlossy == 0.0f && settings.SampleClampIndirect == 0.0f) return Presets.Product;
+
+			return DefaultPreset;
 		}
 
 		public static Presets ProductPreset(IDocumentSettings settings)
@@ -46,24 +69,10 @@ namespace RhinoCyclesCore.Settings
 		{
 			settings.RenderPreset = preset;
 
-			if (preset == Presets.Product)
-			{
-				settings.FilterGlossy = 0.0f;
-				// 20 is high enough not to visibly dim caustics (tested indistinguishable
-				// from unclamped on caustic scenes) while still bounding the worst firefly
-				// spikes. Do not use 0: unbounded spikes never converge. RH-95847.
-				settings.SampleClampIndirect = 20.0f;
-				// Product scenes are dominated by caustics whose energy arrives through rare
-				// bright paths. With a low minimum the adaptive sampler retires shadow pixels
-				// before such a path ever hits them, leaving holes in the caustics. RH-95847.
-				settings.AdaptiveMinSamples = 256;
-			}
-			else
-			{
-				settings.FilterGlossy = DefaultEngineSettings.FilterGlossy;
-				settings.SampleClampIndirect = DefaultEngineSettings.SampleClampIndirect;
-				settings.AdaptiveMinSamples = DefaultEngineSettings.AdaptiveMinSamples;
-			}
+			var defaults = PresetDefaults.ForPreset(preset);
+			settings.FilterGlossy = defaults.FilterGlossy;
+			settings.SampleClampIndirect = defaults.SampleClampIndirect;
+			settings.AdaptiveMinSamples = defaults.AdaptiveMinSamples;
 		}
 	}
 

@@ -702,7 +702,14 @@ namespace RhinoCyclesCore.Settings
 
 		public virtual RenderPresetHelpers.Presets RenderPreset
 		{
-			get { return (RenderPresetHelpers.Presets)RcPlugIn.Settings.GetInteger(SettingNames.RenderPreset, (int)RenderPresetHelpers.ProductPreset(FilterGlossy, SampleClampIndirect)); }
+			get
+			{
+				// Only derive from values when nothing is stored - a GetInteger call with
+				// PresetFromValues as the default would evaluate it eagerly on every read.
+				if (RcPlugIn.Settings.TryGetInteger(SettingNames.RenderPreset, out int stored))
+					return (RenderPresetHelpers.Presets)stored;
+				return RenderPresetHelpers.PresetFromValues(this);
+			}
 			set { RcPlugIn.Settings.SetInteger(SettingNames.RenderPreset, (int)value); }
 		}
 

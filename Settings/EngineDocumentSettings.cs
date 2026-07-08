@@ -56,7 +56,7 @@ namespace RhinoCyclesCore.Settings
 				rem = RhinoMath.CRC32(rem, MaxVolumeBounce);
 				rem = RhinoMath.CRC32(rem, MaxTransmissionBounce);
 				rem = RhinoMath.CRC32(rem, TransparentMaxBounce);
-				rem = RhinoMath.CRC32(rem, UseAdaptiveSampling ? 1 : 0);
+				rem = RhinoMath.CRC32(rem, UseAdaptiveSampling ? 1 : 0);
 				rem = RhinoMath.CRC32(rem, AdaptiveMinSamples);
 				rem = RhinoMath.CRC32(rem, AdaptiveThreshold);
 				rem = RhinoMath.CRC32(rem, FilterGlossy);
@@ -274,7 +274,13 @@ namespace RhinoCyclesCore.Settings
 
 		public RenderPresetHelpers.Presets RenderPreset
 		{
-			get => (RenderPresetHelpers.Presets)mDict.GetInteger(SettingNames.RenderPreset, (int)RenderPresetHelpers.ProductPreset(FilterGlossy, SampleClampIndirect));
+			get
+			{
+				if (mDict.ContainsKey(SettingNames.RenderPreset))
+					return (RenderPresetHelpers.Presets)mDict.GetInteger(SettingNames.RenderPreset, (int)RenderPresetHelpers.DefaultPreset);
+
+				return RenderPresetHelpers.PresetFromValues(new EngineDocumentSettings(mDict));
+			}
 			set => throw new InvalidOperationException();
 		}
 
