@@ -266,8 +266,7 @@ namespace RhinoCyclesCore.RenderEngines
 			if (!capturing && renderSuccess)
 			{
 				// set final status string and progress to 1.0f to signal completed render
-				cyclesEngine.SetProgress(rw,
-					String.Format(Localization.LocalizeString("Render ready {0} samples, duration {1}", 39), cyclesEngine.RenderedSamples, cyclesEngine.TimeString), 1.0f);
+				cyclesEngine.SetProgress(rw, cyclesEngine.FinalStatusString(), 1.0f);
 			}
 
 			cyclesEngine.CancelRender = true;

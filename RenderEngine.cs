@@ -20,6 +20,7 @@ using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Render;
 using Rhino.Render.PostEffects;
+using Rhino.UI;
 using RhinoCyclesCore.Core;
 using RhinoCyclesCore.Database;
 using System;
@@ -332,7 +333,10 @@ namespace RhinoCyclesCore
 			_previouStatusMessage = status;
 
 			TimeString = $"{hr}h {min}m {sec}.{hun}s";
-			status = $"{status} {TimeString}";
+			// Use the same final message here as ModalRenderEngine sets after the render
+			// loop ends. The completion notification can pick up either one, so they must
+			// match or the notification text varies from render to render (RH-94273).
+			status = finished ? FinalStatusString() : $"{status} {TimeString}";
 
 
 			Finished = finished;
@@ -344,6 +348,14 @@ namespace RhinoCyclesCore
 			RenderWindow?.SetProgress(status, progress);
 			TriggerStatusTextUpdated(new StatusTextEventArgs(status, progress, RenderedSamples, finished));
 			RcCore.It.AddLogStringIfVerbose($"RenderEngine.UpdateCallback (ptr {sid}) exit");
+		}
+
+		/// <summary>
+		/// The status string reported when a render has completed.
+		/// </summary>
+		public string FinalStatusString()
+		{
+			return String.Format(Localization.LocalizeString("Render ready {0} samples, duration {1}", 39), RenderedSamples, TimeString);
 		}
 
 		/// <summary>
