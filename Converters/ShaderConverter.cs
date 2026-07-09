@@ -2491,14 +2491,16 @@ namespace RhinoCyclesCore.Converters
 
 			strength *= enabled;
 
-			if ((lt == LightType.Point) || (lt == LightType.Spot))
+			if ((lt == LightType.Point) || (lt == LightType.Spot) || (lt == LightType.Area))
 			{
 				// A zero-size light can never be hit by BSDF sampling. In Product mode the
 				// shadow-ray transmission trick is disabled, so all light behind glass has to
 				// arrive as real caustic paths - with size 0 (the default, since ShadowIntensity
 				// defaults to 1.0) that energy is entirely absent. Give point and spot lights a
 				// minimum radius of 10mm (a small physical light source, e.g. an LED with its
-				// housing) so their caustics exist. RH-95847.
+				// housing) so their caustics exist. Area lights always have real area, but a
+				// small emitter makes caustic paths rare and slow to converge, so their
+				// dimensions get the same physical minimum. RH-95847.
 				var eds = Utilities.GetEngineDocumentSettings(docSerialNumber);
 				if (eds.IsProductPreset)
 				{
@@ -2506,7 +2508,23 @@ namespace RhinoCyclesCore.Converters
 					if (rhinoDoc != null)
 					{
 						var minSize = (float)Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Millimeters, rhinoDoc.ModelUnitSystem) * 10.0f;
-						size = Math.Max(size, minSize);
+						if (lt == LightType.Area)
+						{
+							// Only enforce a small absolute minimum per dimension (clamped
+							// separately - a strip light must not grow in length because its
+							// width is below the minimum). Do NOT blanket-enlarge area lights
+							// for caustic convergence: the light is normalized, so a bigger
+							// emitter has lower surface radiance, which visibly dims specular
+							// reflections and caustic glints of the light itself in glass/gem
+							// scenes (RH-95847 testing). Emitter enlargement stays a per-light,
+							// user-driven trade-off (ShadowIntensity below 0.5).
+							sizeU = Math.Max(sizeU, minSize / size);
+							sizeV = Math.Max(sizeV, minSize / size);
+						}
+						else
+						{
+							size = Math.Max(size, minSize);
+						}
 					}
 				}
 			}
