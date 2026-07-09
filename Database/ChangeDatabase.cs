@@ -1022,9 +1022,12 @@ namespace RhinoCyclesCore.Database
 
 				// TODO XXX
 				var rtid = rt?.Id ?? Guid.Empty;
-				string textype = tex.HasTextureImage ? (tex.HasByteImage ? "byte" : "float") : "no image";
 
-				sb.Append($"\t{idx} : {mapstr} / {projstr} -> {textype} < {tex.TexWidth}, {tex.TexHeight}> ) | {decalXform}");
+				if (RcCore.It.AllSettings.VerboseLogging)
+				{
+					string textype = tex.HasTextureImage ? (tex.HasByteImage ? "byte" : "float") : "no image";
+					sb.Append($"\t{idx} : {mapstr} / {projstr} -> {textype} < {tex.TexWidth}, {tex.TexHeight}> ) | {decalXform}");
+				}
 
 				// decal.CRC is the decal's state CRC only (mapping/projection/transform/
 				// transparency + the asset instance id), so editing the referenced texture
@@ -1060,8 +1063,7 @@ namespace RhinoCyclesCore.Database
 
 				idx++;
 			}
-			string sbstr = sb.ToString();
-			RhinoApp.OutputDebugString($"{sbstr}\n\n");
+			RcCore.It.AddLogStringIfVerbose($"{sb}\n\n");
 			return decalList;
 		}
 
