@@ -367,9 +367,9 @@ namespace RhinoCyclesCore
 
 				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alphaNodes, IsData);
 
-				// apply gamma now also to bitmaps since the change to no longer do
-				// czolor conversion in the kernel. RH-83550
-				if (!IsData)
+				// Gamma decode in the shader since the kernel no longer converts (RH-83550),
+				// but only for trees with image content - procedurals are already linear (RH-92750).
+				if (!IsData && teximg.TextureList.Count > 0)
 				{
 					gammaNode = new GammaNode(sh, "gamma node for color channel");
 					gammaNode.ins.Gamma.Value = gamma;

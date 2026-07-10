@@ -51,7 +51,8 @@ namespace RhinoCyclesCore.Converters
 
 		private static bool ShouldSimulate(RenderTexture rt) {
 			Guid type_id = rt.TypeId;
-			return type_id == ContentUuids.ResampleTextureType || type_id == ContentUuids.AdvancedDotTextureType || type_id == ContentUuids.GritBumpTexture || type_id == ContentUuids.DotBumpTexture || type_id == ContentUuids.WoodBumpTexture || type_id == ContentUuids.HatchBumpTexture || type_id == ContentUuids.LeatherBumpTexture || type_id == ContentUuids.SpeckleBumpTexture || type_id == ContentUuids.CrossHatchBumpTexture;
+			// Waves and Noise bake until their native nodes match the RDK evaluation. RH-92750.
+			return type_id == ContentUuids.ResampleTextureType || type_id == ContentUuids.AdvancedDotTextureType || type_id == ContentUuids.GritBumpTexture || type_id == ContentUuids.DotBumpTexture || type_id == ContentUuids.WoodBumpTexture || type_id == ContentUuids.HatchBumpTexture || type_id == ContentUuids.LeatherBumpTexture || type_id == ContentUuids.SpeckleBumpTexture || type_id == ContentUuids.CrossHatchBumpTexture || type_id == ContentUuids.WavesTextureType || type_id == ContentUuids.NoiseTextureType;
 		}
 
 		public static Procedural CreateProcedural(RenderTexture render_texture, List<CyclesTextureImage> texture_list, BitmapConverter bitmap_converter, uint docsrn, float gamma, bool is_color)
@@ -71,6 +72,8 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new CheckerTextureProcedural(render_texture, false, is_color);
 			}
+			/* TODO: re-enable once the native nodes match the RDK evaluation. Until then
+			   handled as bitmap texture via ShouldSimulate. RH-92750.
 			else if (type_id == ContentUuids.NoiseTextureType)
 			{
 				procedural = new NoiseTextureProcedural(render_texture, is_color);
@@ -78,7 +81,7 @@ namespace RhinoCyclesCore.Converters
 			else if (type_id == ContentUuids.WavesTextureType)
 			{
 				procedural = new WavesTextureProcedural(render_texture, is_color);
-			}
+			}*/
 			else if (type_id == ContentUuids.PerturbingTextureType)
 			{
 				procedural = new PerturbingTextureProcedural(render_texture, is_color);
@@ -199,7 +202,12 @@ namespace RhinoCyclesCore.Converters
 					(two_color.Color1, two_color.Color2) = (two_color.Color2, two_color.Color1);
 					(two_color.Amount1, two_color.Amount2) = (two_color.Amount2, two_color.Amount1);
 					(two_color.Child1, two_color.Child2) = (two_color.Child2, two_color.Child1);
+					(two_color.On1, two_color.On2) = (two_color.On2, two_color.On1);
 				}
+
+				// Toggled-off children don't render; the slot color is used instead. RH-92750.
+				if (!two_color.On1) two_color.Child1 = null;
+				if (!two_color.On2) two_color.Child2 = null;
 			}
 
 			if(procedural is WavesTextureProcedural waves_texture)
@@ -494,6 +502,8 @@ namespace RhinoCyclesCore.Converters
 			Color2 = render_texture.Fields.TryGetValue("color-two", out Color4f color2) ? color2 : Color4f.White;
 			Amount1 = render_texture.Fields.TryGetValue("texture-amount-one", out double texture_amount1) ? (float)texture_amount1 : 1.0f;
 			Amount2 = render_texture.Fields.TryGetValue("texture-amount-two", out double texture_amount2) ? (float)texture_amount2 : 1.0f;
+			On1 = render_texture.Fields.TryGetValue("texture-on-one", out bool texture_on1) ? texture_on1 : true;
+			On2 = render_texture.Fields.TryGetValue("texture-on-two", out bool texture_on2) ? texture_on2 : true;
 			SwapColors = render_texture.Fields.TryGetValue("swap-colors", out bool swap_colors) ? swap_colors : false;
 		}
 
@@ -570,6 +580,8 @@ namespace RhinoCyclesCore.Converters
 		public Color4f Color2 { get; set; }
 		public float Amount1 { get; set; }
 		public float Amount2 { get; set; }
+		public bool On1 { get; set; } = true;
+		public bool On2 { get; set; } = true;
 		public bool SwapColors { get; set; }
 
 		public Procedural Child1 { get; set; } = null;
