@@ -593,6 +593,9 @@ namespace RhinoCyclesCore.Converters
 		public CheckerTextureProcedural(RenderTexture render_texture, bool is_2d, bool is_color)
 			: base(render_texture, is_color)
 		{
+			// Children sample the undoubled repeat space when remap-textures is off. RH-92750.
+			ChildMappingTransform = new ccl.Transform(MappingTransform);
+
 			MappingTransform *= ccl.Transform.Scale(2.0f, 2.0f, 2.0f);
 			MappingTransform.x.w *= 2.0f;
 			MappingTransform.y.w *= 2.0f;
@@ -601,6 +604,7 @@ namespace RhinoCyclesCore.Converters
 			if(is_2d)
 			{
 				MappingTransform.z.z = 0.0f;
+				ChildMappingTransform.z.z = 0.0f;
 			}
 
 			if (render_texture.Fields.TryGetValue("remap-textures", out bool remap_textures))
@@ -618,8 +622,26 @@ namespace RhinoCyclesCore.Converters
 
 			uvw_output.Connect(transform_node.ins.Vector);
 
+			// remap on: children sample the doubled checker space. remap off: the
+			// undoubled repeat space - the RDK evaluates per cell either way, never
+			// in global UVW. RH-92750.
+			VectorSocket child_uvw;
+			if (RemapTextures)
+			{
+				child_uvw = transform_node.outs.Vector;
+			}
+			else
+			{
+				var child_transform_node = new MatrixMathNode(shader)
+				{
+					Transform = new ccl.Transform(ChildMappingTransform)
+				};
+				uvw_output.Connect(child_transform_node.ins.Vector);
+				child_uvw = child_transform_node.outs.Vector;
+			}
+
 			// Recursive call
-			ConnectChildNodes(shader, RemapTextures ? transform_node.outs.Vector : uvw_output, node.ins.Color1, node.ins.Alpha1, node.ins.Color2, node.ins.Alpha2, IsData);
+			ConnectChildNodes(shader, child_uvw, node.ins.Color1, node.ins.Alpha1, node.ins.Color2, node.ins.Alpha2, IsData);
 
 			transform_node.outs.Vector.Connect(node.ins.UVW);
 
@@ -630,6 +652,7 @@ namespace RhinoCyclesCore.Converters
 		}
 
 		public bool RemapTextures { get; set; } = true;
+		public ccl.Transform ChildMappingTransform { get; set; }
 	}
 
 	public class NoiseTextureProcedural : TwoColorProcedural
