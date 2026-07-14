@@ -1,4 +1,4 @@
-/**
+﻿/**
 Copyright 2014-2024 Robert McNeel and Associates
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -279,6 +279,8 @@ namespace RhinoCyclesCore
 		private void RecordDataForCustomShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
 			var onMaterial = rm.ToMaterial(RenderTexture.TextureGeneration.Allow);
+			if (onMaterial == null)
+				return; // simulation failed - leave the shader body at its defaults. RH-96518.
 
 			// figure out what type of material we are.
 			var probemat = WhatMaterial(rm, onMaterial);
@@ -432,7 +434,7 @@ namespace RhinoCyclesCore
 				//have any children, but it fills out the textures slots of an ON_Material in response to
 				//simulate material.
 				var mat = rm.ToMaterial(RenderTexture.TextureGeneration.Allow);
-				var tex = mat.GetTexture(RenderMaterial.TextureTypeFromSlot(childSlot));
+				var tex = mat?.GetTexture(RenderMaterial.TextureTypeFromSlot(childSlot));
 
 				if (null != tex)
 				{
@@ -463,7 +465,14 @@ namespace RhinoCyclesCore
 		private void RecordDataForPbrShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
 			var onMaterial = rm.ToMaterial(RenderTexture.TextureGeneration.Allow);
-			var pbrmat = onMaterial.PhysicallyBased;
+			var pbrmat = onMaterial?.PhysicallyBased;
+			// This simulation can disagree with the TextureGeneration.Skip one that
+			// classified the material as PBR, so pbrmat can be null. RH-96518.
+			if (pbrmat == null)
+			{
+				RecordDataForCustomShaderPart(shb, rm, gamma);
+				return;
+			}
 
 			shb.IsPbr = true;
 			shb.MaterialKind = WhatMaterial(rm, onMaterial);
