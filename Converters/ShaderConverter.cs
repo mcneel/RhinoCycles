@@ -186,6 +186,16 @@ namespace RhinoCyclesCore.Converters
 				texture_list.Add(cycles_texture);
 				procedural = new ResampleTextureProcedural(render_texture, cycles_texture, bitmap_converter);
 			}*/
+			else
+			{
+				// Any texture we neither support as a native Cycles procedural nor can hand
+				// to Cycles as a plain image file - e.g. third-party textures like Bongo's
+				// video texture - is baked to a bitmap through the RDK texture evaluator so it
+				// renders like Rendered mode instead of black. RH-94515.
+				CyclesTextureImage cycles_texture = new CyclesTextureImage();
+				texture_list.Add(cycles_texture);
+				procedural = new BitmapTextureProcedural(render_texture, cycles_texture, bitmap_converter, docsrn, gamma, true, is_color);
+			}
 
 			if (procedural is OneColorProcedural one_color)
 			{
