@@ -109,6 +109,13 @@ namespace RhinoCyclesCore.Core
 		public bool Initialised { get; set; }
 
 		/// <summary>
+		/// Set to true when CSycles initialisation threw (e.g. ccycles or one of
+		/// its native dependencies could not be loaded). When set, Cycles is
+		/// unavailable but the host process has not been aborted. See RH-96737.
+		/// </summary>
+		public bool InitialisationFailed { get; set; }
+
+		/// <summary>
 		/// Event triggred when a rendering device is ready.
 		/// </summary>
 		public event EventHandler DeviceKernelReady;

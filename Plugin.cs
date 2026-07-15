@@ -119,9 +119,17 @@ namespace RhinoCycles
 		{
 			lock(InitialiseLock)
 			{
-				if(!RcCore.It.Initialised)
+				if(!RcCore.It.Initialised && !RcCore.It.InitialisationFailed)
 				{
 					RcCore.It.AddLogString("InitialiseCSycles entry");
+
+					// RH-96737: This runs on a background thread, so any exception escaping
+					// here (e.g. a DllNotFoundException because ccycles or one of its native
+					// dependencies cannot be loaded under Rhino.Inside) would be unhandled and
+					// abort the whole host process. Guard it: log, mark Cycles unavailable, and
+					// keep the host alive instead of crashing it.
+					try
+					{
 
 					// Curtis RH-79171: Ensure that we don't load ccycles.dll during OnLoad, it
 					// can add a 15-40 second delay on initial/first startup due to Windows Defender
@@ -176,6 +184,13 @@ namespace RhinoCycles
 
 					RcCore.It.TriggerInitialisationCompleted(this);
 					RcCore.It.AddLogString("InitialiseCSycles exit");
+					}
+					catch (Exception ex)
+					{
+						// Do not let this escape the background thread - it would abort the host.
+						RcCore.It.InitialisationFailed = true;
+						RcCore.It.AddLogString($"InitialiseCSycles failed; Cycles is unavailable: {ex}");
+					}
 				}
 			}
 		}
