@@ -1166,7 +1166,7 @@ namespace RhinoCyclesCore.Database
 						continue;
 
 					RcCore.It.AddLogStringIfVerbose($"\t\tHandleMeshData: mapping {mapping.Mapping.MappingType} {mapping.Channel} {mapping.Mapping} {mapping.Local}");
-					meshdata.SetTextureCoordinates(mapping.Mapping, mapping.Local, false);
+					meshdata.SetTextureCoordinates(mapping.Mapping, mapping.Local, true);
 					HandleMeshTextureCoordinates(meshdata, findices, cmuvList, mapping.Channel == 0 ? 1 : mapping.Channel);
 
 					if (!hasPlanarUvw && mapping.Mapping.MappingType == Rhino.Render.TextureMappingType.PlaneMapping)
