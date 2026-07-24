@@ -369,7 +369,7 @@ namespace RhinoCyclesCore
 
 				// Gamma decode in the shader since the kernel no longer converts (RH-83550),
 				// but only for trees with image content - procedurals are already linear (RH-92750).
-				if (!IsData && teximg.TextureList.Count > 0)
+				if (!IsData && teximg.TextureList.Count > 0 && !teximg.TextureList.Any(t => t.IsSimulatedProcedural))
 				{
 					gammaNode = new GammaNode(sh, "gamma node for color channel");
 					gammaNode.ins.Gamma.Value = gamma;

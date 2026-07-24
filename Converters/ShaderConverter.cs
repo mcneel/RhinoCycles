@@ -55,6 +55,18 @@ namespace RhinoCyclesCore.Converters
 			return type_id == ContentUuids.ResampleTextureType || type_id == ContentUuids.AdvancedDotTextureType || type_id == ContentUuids.GritBumpTexture || type_id == ContentUuids.DotBumpTexture || type_id == ContentUuids.WoodBumpTexture || type_id == ContentUuids.HatchBumpTexture || type_id == ContentUuids.LeatherBumpTexture || type_id == ContentUuids.SpeckleBumpTexture || type_id == ContentUuids.CrossHatchBumpTexture || type_id == ContentUuids.WavesTextureType || type_id == ContentUuids.NoiseTextureType;
 		}
 
+		// RH-92750: true if rt or any child needs baking (ShouldSimulate).
+		private static bool SubtreeNeedsSimulation(RenderTexture rt)
+		{
+			if (rt == null) return false;
+			if (ShouldSimulate(rt)) return true;
+			for (var child = rt.FirstChild; child != null; child = child.NextSibling)
+			{
+				if (child is RenderTexture crt && SubtreeNeedsSimulation(crt)) return true;
+			}
+			return false;
+		}
+
 		public static Procedural CreateProcedural(RenderTexture render_texture, List<CyclesTextureImage> texture_list, BitmapConverter bitmap_converter, uint docsrn, float gamma, bool is_color)
 		{
 			if (render_texture == null)
@@ -64,7 +76,15 @@ namespace RhinoCyclesCore.Converters
 
 			Guid type_id = render_texture.TypeId;
 
-			if (type_id == ContentUuids.Texture2DCheckerTextureType)
+			bool isComposite = type_id == ContentUuids.AddTextureType || type_id == ContentUuids.MultiplyTextureType || type_id == ContentUuids.BlendTextureType;
+			if (isComposite && SubtreeNeedsSimulation(render_texture))
+			{
+				// RH-92750: bake composite to bitmap to match the display's simulation.
+				CyclesTextureImage cti = new CyclesTextureImage { IsSimulatedProcedural = true };
+				texture_list.Add(cti);
+				procedural = new BitmapTextureProcedural(render_texture, cti, bitmap_converter, docsrn, gamma, true, is_color);
+			}
+			else if (type_id == ContentUuids.Texture2DCheckerTextureType)
 			{
 				procedural = new CheckerTextureProcedural(render_texture, true, is_color);
 			}
