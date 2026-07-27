@@ -1298,16 +1298,29 @@ namespace RhinoCyclesCore.Database
 			var curmesh = 0;
 			RcCore.It.AddLogStringIfVerbose($"ApplyMeshInstanceChanges: Received {totalmeshes} mesh instance changes");
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, $"Handling adds/edits mesh instances: {totalmeshes}", -1.0f);
-			//foreach (var a in addedOrChanged)
-			Parallel.ForEach(addedOrChanged, a =>
+
+			// RH-97099: Decals are native RDK objects, unsafe to enumerate across
+			// threads (double-freed an ON_IntPtrArray). Resolve them serially first,
+			// keep the rest of the per-instance work parallel.
+			var cyclesDecalsPerInstance = new List<CyclesDecal>[totalmeshes];
+			for (int i = 0; i < totalmeshes; i++)
 			{
+				if (_renderEngine.ShouldBreak) return;
+				var a = addedOrChanged[i];
+				cyclesDecalsPerInstance[i] = HandleMeshDecals(a.MeshId, a.Decals, a.Transform);
+			}
+
+			//foreach (var a in addedOrChanged)
+			Parallel.For(0, totalmeshes, i =>
+			{
+				var a = addedOrChanged[i];
 				curmesh++;
 
 				if (_renderEngine.ShouldBreak) return;
 
 #pragma warning disable CS0618
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
-				var cyclesDecals = HandleMeshDecals(a.MeshId, a.Decals, a.Transform);
+				var cyclesDecals = cyclesDecalsPerInstance[i];
 
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
