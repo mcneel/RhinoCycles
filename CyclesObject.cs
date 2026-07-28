@@ -40,11 +40,18 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public uint obid { get; set; }
 
+		/// <summary>Persistent id (RootId) for a reproducible Object ID pass; Guid.Empty falls back to obid. RH-97236.</summary>
+		public Guid PassObjectId { get; set; } = Guid.Empty;
+
 		public int passobid
 		{
 			get
 			{
-				int passid = (int)(obid & 0x07fff);
+				// RH-97236: obid (ChangeQueue InstanceId) is fresh per render; RootId is stable.
+				uint src = PassObjectId != Guid.Empty
+					? Rhino.RhinoMath.CRC32(0, PassObjectId.ToByteArray())
+					: obid;
+				int passid = (int)(src & 0x07fff);
 				return passid;
 			}
 		}

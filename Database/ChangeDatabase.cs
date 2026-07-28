@@ -118,6 +118,7 @@ namespace RhinoCyclesCore.Database
 			public List<CyclesDecal> Decals { get; set; }
 			public Rhino.Geometry.Transform Transform { get; set; }
 			public Tuple<Guid, int> MeshId { get; set; }
+			public Guid StableObjId { get; set; } // RH-97236: persistent id (RootId) for a reproducible decal hash
 		}
 
 		private readonly bool _modalRenderer;
@@ -1072,12 +1073,13 @@ namespace RhinoCyclesCore.Database
 		/// its own unique shader hash. Must stay in sync between ApplyMeshInstanceChanges
 		/// and ApplyMaterialChanges, otherwise editing the material drops the decals.
 		/// </summary>
-		private static uint ComputeDecalMaterialId(uint matid, Rhino.Geometry.Transform transform, Tuple<Guid, int> meshid, List<CyclesDecal> decals)
+		private static uint ComputeDecalMaterialId(uint matid, Rhino.Geometry.Transform transform, Guid stableObjId, int meshIndex, List<CyclesDecal> decals)
 		{
 			uint decalsCRC = CyclesDecal.CRCForList(decals);
 			matid = transform.TransformCrc(matid);
-			matid = RhinoMath.CRC32(matid, meshid.Item1.ToByteArray());
-			matid = RhinoMath.CRC32(matid, meshid.Item2);
+			// RH-97236: fold the persistent RootId, not the per-flush mesh guid, so decal matids are reproducible.
+			matid = RhinoMath.CRC32(matid, stableObjId.ToByteArray());
+			matid = RhinoMath.CRC32(matid, meshIndex);
 			matid = RhinoMath.CRC32(matid, decalsCRC);
 			return matid;
 		}
@@ -1330,7 +1332,7 @@ namespace RhinoCyclesCore.Database
 
 				if (cyclesDecals != null)
 				{
-					matid = ComputeDecalMaterialId(matid, a.Transform, meshid, cyclesDecals);
+					matid = ComputeDecalMaterialId(matid, a.Transform, a.RootId, meshid.Item2, cyclesDecals);
 
 					// Remember the decal data so a later material edit can rebuild this
 					// same hash instead of reverting the object to the plain material shader.
@@ -1338,7 +1340,8 @@ namespace RhinoCyclesCore.Database
 					{
 						Decals = cyclesDecals,
 						Transform = a.Transform,
-						MeshId = meshid
+						MeshId = meshid,
+						StableObjId = a.RootId
 					};
 				}
 				else
@@ -1357,6 +1360,7 @@ namespace RhinoCyclesCore.Database
 				var ob = new CyclesObject
 				{
 					obid = a.InstanceId,
+					PassObjectId = a.RootId, // RH-97236: reproducible Object ID pass
 					meshid = meshid,
 					Transform = obxform.ToCyclesTransform(),
 					OcsFrame = Rhino.Geometry.Transform.Identity.ToCyclesTransform(),
@@ -1477,7 +1481,7 @@ namespace RhinoCyclesCore.Database
 				{
 					// Decals carry their own self-contained MaterialShader, so the
 					// decal-inclusive shader can be rebuilt here with the edited material.
-					var decalMatId = ComputeDecalMaterialId(mat.Id, decalInfo.Transform, decalInfo.MeshId, decalInfo.Decals);
+					var decalMatId = ComputeDecalMaterialId(mat.Id, decalInfo.Transform, decalInfo.StableObjId, decalInfo.MeshId.Item2, decalInfo.Decals);
 					HandleRenderMaterial(rm, decalMatId, decalInfo.Decals, false);
 					HandleMaterialChangeOnObject(decalMatId, obid, decalInfo.MeshId);
 				}
