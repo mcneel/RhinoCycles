@@ -371,7 +371,7 @@ namespace RhinoCyclesCore.Shaders
 			return multiply2.outs.Value;
 		}
 
-		private (ClosureSocket, FloatSocket) HandleMaterialDecal(CyclesDecal decal, bool gamma_correct_decals)
+		private (ClosureSocket, FloatSocket) HandleMaterialDecal(CyclesDecal decal)
 		{
 			var decalProcessingInfo = new DecalProcessingInfo { Decal = decal };
 			ShaderNode shader = GetShaderPart(decal.MaterialShader, decalProcessingInfo);
@@ -388,12 +388,15 @@ namespace RhinoCyclesCore.Shaders
 		/// which is a plain 'over' operation. A decal in front therefore correctly hides the ones
 		/// behind it, and the base color keeps showing through wherever the decals are transparent.
 		/// </summary>
+		/// <param name="gamma">Gamma to decode the decal images with. This has to be the same gamma
+		/// that decodes the base color the decals are composited over, so that the compositing
+		/// happens in linear space.</param>
 		/// <returns>The first and the last MixNode of the decal chain, or (null, null) when this
 		/// material has no texture decals. The base color (color or texture) has to be connected to
 		/// the first node's Color1 input, the composited result is read from the last node's Color
 		/// output. For a single decal both are the same node.</returns>
 		/// <since>7.0</since>
-		private (MixNode First, MixNode Last) HandleTextureDecals(bool gamma_correct_decals = false)
+		private (MixNode First, MixNode Last) HandleTextureDecals(float gamma)
 		{
 			var textureDecals = new List<CyclesDecal>();
 
@@ -428,15 +431,11 @@ namespace RhinoCyclesCore.Shaders
 
 				SetupOneDecalNodes(m_shader, decal, texco, imgtex, trans, adjust);
 
-				ISocket sock_to_connect_to = mixer.ins.Color2;
+				var decalGammaNode = new GammaNode(m_shader, $"gamma node for decal {idx}");
+				decalGammaNode.ins.Gamma.Value = gamma;
+				decalGammaNode.outs.Color.Connect(mixer.ins.Color2);
 
-				if (gamma_correct_decals)
-				{
-					var decalGammaNode = new GammaNode(m_shader, $"gamma node for decal {idx}");
-					decalGammaNode.ins.Gamma.Value = m_original.Gamma;
-					decalGammaNode.outs.Color.Connect(mixer.ins.Color2);
-					sock_to_connect_to = decalGammaNode.ins.Color;
-				}
+				ISocket sock_to_connect_to = decalGammaNode.ins.Color;
 
 				if (decal.Texture.AdjustNeeded)
 				{
@@ -468,7 +467,7 @@ namespace RhinoCyclesCore.Shaders
 		/// <returns>A tuple of decal material closures and decal mask sockets.
 		/// These can be mixed together with MixClosureNodes</returns>
 		/// <since>7.0</since>
-		private (List<ClosureSocket> decalMaterials, List<FloatSocket> decalMaskSockets) HandleMaterialDecals(float shaderGamma, bool gamma_correct_decals = false)
+		private (List<ClosureSocket> decalMaterials, List<FloatSocket> decalMaskSockets) HandleMaterialDecals()
 		{
 
 			var decalClosures = new List<ClosureSocket>();
@@ -495,7 +494,7 @@ namespace RhinoCyclesCore.Shaders
 
 			foreach (var decal in materialDecals)
 			{
-				var (materialDecalClosure, decalMaskSocket) = HandleMaterialDecal(decal, gamma_correct_decals);
+				var (materialDecalClosure, decalMaskSocket) = HandleMaterialDecal(decal);
 
 				decalClosures.Add(materialDecalClosure);
 				decalMaskSockets.Add(decalMaskSocket);
@@ -641,8 +640,8 @@ namespace RhinoCyclesCore.Shaders
 
 				if (decalProcessingInfo == null)
 				{
-					(textureDecalMixin, textureDecalMixinOut) = HandleTextureDecals(!part.IsPbr);
-					(decalMaterials, decalMaskSockets) = HandleMaterialDecals(part.Gamma, !part.IsPbr);
+					(textureDecalMixin, textureDecalMixinOut) = HandleTextureDecals(part.Gamma);
+					(decalMaterials, decalMaskSockets) = HandleMaterialDecals();
 				}
 
 				if (part.IsPbr)
@@ -728,24 +727,15 @@ namespace RhinoCyclesCore.Shaders
 						colsocks.Add(coloured_shadow.ins.Color);
 					}
 
+					List<ISocket> basecolsocks = textureDecalMixin != null ? textureDecalMixin.ins.Color1.ToList() : colsocks;
+					basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, basecolsocks, false, part.Gamma, false, false, decalProcessingInfo);
+
 					if (textureDecalMixin != null)
 					{
-						// HACK: tell base tex is data, so that we can manually add here
-						// gamma node after decal mixin before connecting _that_ up to colsocks
-						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, textureDecalMixin.ins.Color1.ToList(), false, part.Gamma, true, true, decalProcessingInfo);
-
-						// now add gamma node to ensure decals are corrected properly
-						GammaNode gammaNode = new GammaNode(m_shader, "gamma node for decalled pbr base tex");
-						gammaNode.ins.Gamma.Value = part.Gamma;
-						textureDecalMixinOut.outs.Color.Connect(gammaNode.ins.Color);
 						foreach (var colsock in colsocks)
 						{
-							gammaNode.outs.Color.Connect(colsock);
+							textureDecalMixinOut.outs.Color.Connect(colsock);
 						}
-					}
-					else
-					{
-						basecoltexAlphaOut = Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture, colsocks, false, part.Gamma, false, false, decalProcessingInfo);
 					}
 
 					basewithao.outs.Color.Connect(principled.ins.BaseColor);
