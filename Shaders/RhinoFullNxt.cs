@@ -383,15 +383,18 @@ namespace RhinoCyclesCore.Shaders
 		/// Handle texture decals for this shader. Set up a partial shader graph
 		/// and return the ShaderNodes that can be bound into the basecolor
 		/// of the actual shader.
+		///
+		/// Each decal is composited over the result of the previous one with a single MixNode,
+		/// which is a plain 'over' operation. A decal in front therefore correctly hides the ones
+		/// behind it, and the base color keeps showing through wherever the decals are transparent.
 		/// </summary>
-		/// <returns>ShaderNode, the final node in the shader graph branch. This will be a MixNode.
-		/// The base color (color or texture) will have to be connected to the Color1 input.</returns>
+		/// <returns>The first and the last MixNode of the decal chain, or (null, null) when this
+		/// material has no texture decals. The base color (color or texture) has to be connected to
+		/// the first node's Color1 input, the composited result is read from the last node's Color
+		/// output. For a single decal both are the same node.</returns>
 		/// <since>7.0</since>
-		private MixNode HandleTextureDecals(bool gamma_correct_decals = false)
+		private (MixNode First, MixNode Last) HandleTextureDecals(bool gamma_correct_decals = false)
 		{
-			//ccl.CodeShader m_codeshader = new ccl.CodeShader(ccl.Shader.ShaderType.Material);
-			MixNode nodeToBindIntoShader = null;
-
 			var textureDecals = new List<CyclesDecal>();
 
 			if (m_original.Decals != null)
@@ -406,175 +409,55 @@ namespace RhinoCyclesCore.Shaders
 				}
 			}
 
-			int count = textureDecals.Count;
+			MixNode firstMixer = null;
+			MixNode previousMixer = null;
 
-			if (count > 0)
+			for (int i = 0; i < textureDecals.Count; i++)
 			{
-				List<RhinoTextureCoordinateNode> texcos = new List<RhinoTextureCoordinateNode>(count);
-				List<ImageTextureNode> imgtexs = new List<ImageTextureNode>(count);
-				List<MixNode> mixrgbs = new List<MixNode>(count);
-				List<MathMultiply> transparencies = new List<MathMultiply>(count);
-				List<MathAdd> alphamaths = new List<MathAdd>(count);
-				List<TextureAdjustmentTextureProceduralNode> adjustments = new List<TextureAdjustmentTextureProceduralNode>(count);
-				int idx = 1;
+				CyclesDecal decal = textureDecals[i];
 
-				// First create all the nodes we need to set up decals
-				// for this material.
-				for (int i = 0; i < count; i++)
+				int idx = i + 1;
+				var texco = new RhinoTextureCoordinateNode(m_shader, $"Decal_{idx}_texco_");
+				var imgtex = new ImageTextureNode(m_shader, $"Texture_for_decal_{idx}_");
+				var trans = new MathMultiply(m_shader, $"Decal_transparency_multiplier_{idx}_");
+				var adjust = new TextureAdjustmentTextureProceduralNode(m_shader, $"Decal_texadjustment_{idx}_");
+				var mixer = new MixNode(m_shader, $"Decal_mixer_{idx}_")
 				{
-					texcos.Add(new RhinoTextureCoordinateNode(m_shader, $"Decal_{idx}_texco_"));
-					imgtexs.Add(new ImageTextureNode(m_shader, $"Texture_for_decal_{idx}_"));
-					mixrgbs.Add(new MixNode(m_shader, $"Decal_mixer_{idx}_"));
-					transparencies.Add(new MathMultiply(m_shader, $"Decal_transparency_multiplier_{idx}_"));
-					adjustments.Add(new TextureAdjustmentTextureProceduralNode(m_shader, $"Decal_texadjustment_{idx}_"));
-					if (i < count - 1)
-					{
-						alphamaths.Add(new MathAdd(m_shader, $"Decal_alpha_adder_{idx}_"));
-					}
+					BlendType = MixNode.BlendTypes.Blend
+				};
 
-					idx++;
-				}
+				SetupOneDecalNodes(m_shader, decal, texco, imgtex, trans, adjust);
 
-				MixNode lastMixer = mixrgbs.Last();
-				GammaNode decalGammaNode = null;
+				ISocket sock_to_connect_to = mixer.ins.Color2;
+
 				if (gamma_correct_decals)
 				{
-					decalGammaNode = new GammaNode(m_shader, "gamma node for decal");
+					var decalGammaNode = new GammaNode(m_shader, $"gamma node for decal {idx}");
 					decalGammaNode.ins.Gamma.Value = m_original.Gamma;
-					decalGammaNode.outs.Color.Connect(lastMixer.ins.Color2);
+					decalGammaNode.outs.Color.Connect(mixer.ins.Color2);
+					sock_to_connect_to = decalGammaNode.ins.Color;
 				}
-				ISocket sock_to_connect_to = gamma_correct_decals ? decalGammaNode.ins.Color : lastMixer.ins.Color2;
 
-				if (count == 1)
+				if (decal.Texture.AdjustNeeded)
 				{
-					var texco = texcos[0];
-					var imgtex = imgtexs[0];
-					var trans = transparencies[0];
-					var adjust = adjustments[0];
-					SetupOneDecalNodes(m_shader, textureDecals.First(), texco, imgtex, trans, adjust);
-					if (textureDecals[0].Texture.AdjustNeeded)
-					{
-						imgtex.outs.Color.Connect(adjust.ins.Color);
-						adjust.outs.Color.Connect(sock_to_connect_to);
-					}
-					else
-					{
-						imgtex.outs.Color.Connect(sock_to_connect_to);
-					}
-					trans.outs.Value.Connect(lastMixer.ins.Fac);
+					imgtex.outs.Color.Connect(adjust.ins.Color);
+					adjust.outs.Color.Connect(sock_to_connect_to);
 				}
 				else
 				{
-					idx = 0;
-
-					// Set up decal images and texture coordinates.
-					foreach (var decal in textureDecals)
-					{
-						var texco = texcos[idx];
-						var imgtex = imgtexs[idx];
-						var trans = transparencies[idx];
-						var adjust = adjustments[idx];
-						SetupOneDecalNodes(m_shader, decal, texco, imgtex, trans, adjust);
-						idx++;
-					}
-					idx = 0;
-
-					MixNode previousMixRgb = null;
-					MathAdd previousAlphaMath = null;
-					ImageTextureNode imgA = null;
-					MathMultiply transA = null;
-					TextureAdjustmentTextureProceduralNode adjustA = null;
-					// Use alpa addition nodes to go through all
-					// node lists and connect them as needed.
-					foreach (MathAdd alphaMath in alphamaths)
-					{
-						alphaMath.UseClamp = true;
-						if (idx == 0)
-						{
-							CyclesTextureImage teximA = textureDecals[idx].Texture;
-							MixNode mixer = mixrgbs[idx];
-							mixer.BlendType = MixNode.BlendTypes.Blend;
-							imgA = imgtexs[idx];
-							adjustA = adjustments[idx];
-							transA = transparencies[idx];
-
-							CyclesTextureImage teximB = textureDecals[idx + 1].Texture;
-							ImageTextureNode imgB = imgtexs[idx + 1];
-							MathMultiply transB = transparencies[idx + 1];
-							TextureAdjustmentTextureProceduralNode adjustB = adjustments[idx];
-
-							if (teximA.AdjustNeeded)
-							{
-								imgA.outs.Color.Connect(adjustA.ins.Color);
-								adjustA.outs.Color.Connect(mixer.ins.Color1);
-
-							}
-							else
-							{
-								imgA.outs.Color.Connect(mixer.ins.Color1);
-							}
-							if (teximB.AdjustNeeded)
-							{
-								imgB.outs.Color.Connect(adjustB.ins.Color);
-								adjustB.outs.Color.Connect(mixer.ins.Color2);
-							}
-							else
-							{
-								imgB.outs.Color.Connect(mixer.ins.Color2);
-							}
-
-							transA.outs.Value.Connect(alphaMath.ins.Value1);
-							transB.outs.Value.Connect(alphaMath.ins.Value2);
-
-							transB.outs.Value.Connect(mixer.ins.Fac);
-
-							previousAlphaMath = alphaMath;
-							previousMixRgb = mixer;
-						}
-						else
-						{
-							MixNode mixer = mixrgbs[idx];
-							CyclesTextureImage teximA = textureDecals[idx + 1].Texture;
-							imgA = imgtexs[idx + 1];
-							transA = transparencies[idx + 1];
-							adjustA = adjustments[idx + 1];
-
-							previousMixRgb.outs.Color.Connect(mixer.ins.Color1);
-							if (teximA.AdjustNeeded)
-							{
-								imgA.outs.Color.Connect(adjustA.ins.Color);
-								adjustA.outs.Color.Connect(mixer.ins.Color2);
-							}
-							else
-							{
-								imgA.outs.Color.Connect(mixer.ins.Color2);
-							}
-
-							previousAlphaMath.outs.Value.Connect(alphaMath.ins.Value1);
-							transA.outs.Value.Connect(alphaMath.ins.Value2);
-							transA.outs.Value.Connect(mixer.ins.Fac);
-
-							previousAlphaMath = alphaMath;
-							previousMixRgb = mixer;
-						}
-
-						idx++;
-						if (idx == alphamaths.Count)
-						{
-							previousMixRgb.outs.Color.Connect(sock_to_connect_to);
-							previousAlphaMath.outs.Value.Connect(lastMixer.ins.Fac);
-						}
-					}
+					imgtex.outs.Color.Connect(sock_to_connect_to);
 				}
-				nodeToBindIntoShader = lastMixer;
 
-				//lastMixer.outs.Color.Connect(m_codeshader.Output.ins.Surface);
-				//m_codeshader.WriteDataToNodes();
-				//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
+				trans.outs.Value.Connect(mixer.ins.Fac);
+
+				// Color1 of the first mixer stays free - the caller binds the base color to it.
+				previousMixer?.outs.Color.Connect(mixer.ins.Color1);
+
+				firstMixer ??= mixer;
+				previousMixer = mixer;
 			}
 
-
-			return nodeToBindIntoShader;
+			return (firstMixer, previousMixer);
 		}
 
 		/// <summary>
@@ -749,13 +632,16 @@ namespace RhinoCyclesCore.Shaders
 			}
 			else
 			{
+				// The base color goes into the first node of the decal chain, the decalled color
+				// comes back out of the last one.
 				MixNode textureDecalMixin = null;
+				MixNode textureDecalMixinOut = null;
 				List<ClosureSocket> decalMaterials = null;
 				List<FloatSocket> decalMaskSockets = null;
 
 				if (decalProcessingInfo == null)
 				{
-					textureDecalMixin = HandleTextureDecals(!part.IsPbr);
+					(textureDecalMixin, textureDecalMixinOut) = HandleTextureDecals(!part.IsPbr);
 					(decalMaterials, decalMaskSockets) = HandleMaterialDecals(part.Gamma, !part.IsPbr);
 				}
 
@@ -851,7 +737,7 @@ namespace RhinoCyclesCore.Shaders
 						// now add gamma node to ensure decals are corrected properly
 						GammaNode gammaNode = new GammaNode(m_shader, "gamma node for decalled pbr base tex");
 						gammaNode.ins.Gamma.Value = part.Gamma;
-						textureDecalMixin.outs.Color.Connect(gammaNode.ins.Color);
+						textureDecalMixinOut.outs.Color.Connect(gammaNode.ins.Color);
 						foreach (var colsock in colsocks)
 						{
 							gammaNode.outs.Color.Connect(colsock);
@@ -1281,10 +1167,10 @@ namespace RhinoCyclesCore.Shaders
 					if (textureDecalMixin != null)
 					{
 						diffuse_base_color_through_alpha120.outs.Color.Connect(textureDecalMixin.ins.Color1);
-						textureDecalMixin.outs.Color.Connect(final_diffuse89.ins.Color);
-						textureDecalMixin.outs.Color.Connect(shadeless_bsdf90.ins.Color);
-						textureDecalMixin.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
-						textureDecalMixin.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
+						textureDecalMixinOut.outs.Color.Connect(final_diffuse89.ins.Color);
+						textureDecalMixinOut.outs.Color.Connect(shadeless_bsdf90.ins.Color);
+						textureDecalMixinOut.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
+						textureDecalMixinOut.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
 					}
 					else
 					{
