@@ -2492,16 +2492,20 @@ namespace RhinoCyclesCore.Converters
 			var dir = RenderEngine.CreateFloat4(lightdir.X, lightdir.Y, lightdir.Z);
 			var color = RenderEngine.CreateFloat4(lg.Diffuse.R, lg.Diffuse.G, lg.Diffuse.B, lg.Diffuse.A);
 
-			var sizeterm= 1.0f - (float)lg.ShadowIntensity;
-			size = sizeterm*sizeterm*sizeterm * 100.0f; // / 100.f;
+			// Emitter size/softness come from the light's geometry now, not the hidden
+			// shadow-intensity term (RH-96957/RH-96839): point/spot use Radius, rect
+			// uses Width/Length, directional uses Radius as angular size (below).
+			size = (float)lg.Radius;
 
 			var lt = LightType.Point;
 			if (lg.IsDirectionalLight)
 			{
 				lt = LightType.Distant;
 				strength = (float)(lg.Intensity * RcCore.It.AllSettings.SunLightFactor);
-				angle = Math.Max(sizeterm * sizeterm * sizeterm * 1.5f, 0.009180f);
-				//size = 0.01f;
+				// Angular size (soft shadows) in degrees, stored in Radius (m_width.x,
+				// unused by directional); 0 -> the sun's ~0.53 deg diameter. Replaces
+				// the hidden shadow-intensity term (RH-96839).
+				angle = Math.Max((float)Rhino.RhinoMath.ToRadians(lg.Radius), 0.009180f);
 			}
 			else if (lg.IsSpotLight)
 			{
@@ -2534,7 +2538,9 @@ namespace RhinoCyclesCore.Converters
 				sizeU = (float)width.Length;
 				sizeV = (float)length.Length;
 
-				size = 1.0f + size/10.0f;// - (float)lg.ShadowIntensity / 100.f;
+				// Shadow intensity no longer scales the emitter (RH-96957); the legacy
+				// size behavior is now baked into the geometry on file read (RH-96952).
+				size = 1.0f;
 
 				var rectLoc = lg.Location + (lg.Width * 0.5) + (lg.Length * 0.5);
 				rectLoc.Transform(viewTransform);
@@ -2618,7 +2624,8 @@ namespace RhinoCyclesCore.Converters
 
 					Falloff = lfalloff,
 
-					CastShadow = lg.ShadowIntensity > 0.0,
+					// SI no longer drives Cycles (RH-96957/RH-96958); always cast, softness = emitter size.
+					CastShadow = true,
 
 					Gamma = gamma,
 

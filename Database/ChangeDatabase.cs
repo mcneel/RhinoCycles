@@ -1784,7 +1784,6 @@ namespace RhinoCyclesCore.Database
 			crc = Rhino.RhinoMath.CRC32(crc, ll.Diffuse.G);
 			crc = Rhino.RhinoMath.CRC32(crc, ll.Diffuse.B);
 			crc = Rhino.RhinoMath.CRC32(crc, ll.Intensity);
-			crc = Rhino.RhinoMath.CRC32(crc, ll.ShadowIntensity);
 			crc = Rhino.RhinoMath.CRC32(crc, ll.IsEnabled ? 1 : 0);
 
 			return crc;
@@ -1793,8 +1792,6 @@ namespace RhinoCyclesCore.Database
 		private void HandleLightMaterial(Rhino.Geometry.Light rgl, uint matid)
 		{
 			if (_shaderDatabase.HasShader(matid)) return;
-
-			float sizeterm= rgl.ShadowIntensity > 0.1 ? (float)rgl.ShadowIntensity : 0.1f;
 
 			var emissive = new Materials.EmissiveMaterial();
 			Color4f color = new Color4f(rgl.Diffuse);
@@ -1813,7 +1810,7 @@ namespace RhinoCyclesCore.Database
 					emissive.SetParameter(Materials.EmissiveMaterial._Falloff, 0);
 					break;
 			}
-			emissive.SetParameter(Materials.EmissiveMaterial._Strength, (float)rgl.Intensity * RcCore.It.AllSettings.LinearLightFactor * (rgl.IsEnabled ? 1 : 0)*sizeterm*sizeterm);
+			emissive.SetParameter(Materials.EmissiveMaterial._Strength, (float)rgl.Intensity * RcCore.It.AllSettings.LinearLightFactor * (rgl.IsEnabled ? 1 : 0));
 			emissive.EndChange();
 			emissive.BakeParameters(BitmapConverter, _doc_serialnr);
 			var shader = new CyclesShader(matid, BitmapConverter, _doc_serialnr);
@@ -1899,15 +1896,37 @@ namespace RhinoCyclesCore.Database
 
 		private void HandleLinearLightAddOrModify(uint lightmeshinstanceid, RGLight ld)
 		{
-			float sizeterm= 1.0f - (float)ld.ShadowIntensity;
-			float size = 1.0f + sizeterm*sizeterm*sizeterm * 100.0f; // / 100.f;
+			// Shadow intensity no longer scales the emitter (RH-96957); the legacy
+			// size behavior is now baked into the geometry on file read (RH-96952).
+			float size = 1.0f;
+
+			double radius = ld.Width.Length * 0.5 * size;
+
+			// Product mode disables the shadow-ray transmission trick, so a very thin tube
+			// emitter can't resolve caustics. Give the diameter the same 10mm physical
+			// minimum area/rect lights get. RH-96950 / RH-95847.
+			var eds = Utilities.GetEngineDocumentSettings(_doc_serialnr);
+			if (eds != null && eds.IsProductPreset)
+			{
+				var rhinoDoc = Rhino.RhinoDoc.FromRuntimeSerialNumber(_doc_serialnr);
+				if (rhinoDoc != null)
+				{
+					double minSize = Rhino.RhinoMath.UnitScale(Rhino.UnitSystem.Millimeters, rhinoDoc.ModelUnitSystem) * 10.0;
+					radius = Math.Max(radius, minSize * 0.5);
+				}
+			}
 
 			var p = new Plane(ld.Location, ld.Direction);
-			var circle = new Circle(p, ld.Width.Length*0.5*size);
-			var c = Surface.CreateExtrusion(circle.ToNurbsCurve(), ld.Direction);
+			var circle = new Circle(p, radius);
+			// circle.ToNurbsCurve() and CreateExtrusion can return null (e.g. a
+			// degenerate radius/length); guard so we fall back to the placeholder
+			// mesh instead of crashing on c.IsValid (RH-96956 testing).
+			var nc = circle.ToNurbsCurve();
+			Surface c = (nc != null) ? Surface.CreateExtrusion(nc, ld.Direction) : null;
 			//var c = new Cylinder(circle, ld.Direction.Length);
 			var mesh = new Rhino.Geometry.Mesh();
-			if (c.IsValid)
+			bool valid_emitter = (c != null && c.IsValid);
+			if (valid_emitter)
 			{
 				var m = Rhino.Geometry.Mesh.CreateFromBrep(c.ToBrep(), mp);
 				foreach (var im in m) mesh.Append(im);
@@ -1943,10 +1962,11 @@ namespace RhinoCyclesCore.Database
 				obid = lightmeshinstanceid,
 				meshid = ldid,
 				Transform = t,
-				Visible = c.IsValid ? ld.IsEnabled : false,
+				Visible = valid_emitter ? ld.IsEnabled : false,
 				CastShadow = false,
 				IsShadowCatcher = false,
-				CastNoShadow = ld.ShadowIntensity < 0.05,
+				// SI no longer drives Cycles (RH-96957/RH-96958); linear emitter always casts.
+				CastNoShadow = false,
 				IgnoreCutout = true,
 			};
 
