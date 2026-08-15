@@ -97,6 +97,9 @@ namespace RhinoCyclesCore
 					integrator.AdaptiveThreshold = settings.AdaptiveThreshold;
 					integrator.FilterGlossy = settings.FilterGlossy;
 					integrator.SampleClampIndirect = settings.SampleClampIndirect;
+					// RH-95655: in the Product preset clipped geometry is truly "gone" -
+					// clip all rays (indirect bounces too), not just camera rays.
+					integrator.ClipAllRays = settings.IsProductPreset;
 					integrator.TagForUpdate();
 					_needReset = true;
 					_oldIntegratorHash = hash;
