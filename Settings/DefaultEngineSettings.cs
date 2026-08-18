@@ -57,7 +57,14 @@ namespace RhinoCyclesCore.Settings
 		static public bool CausticsRefractive => true;
 
 		static public int MaxDiffuseBounce => 4;
-		static public int MaxGlossyBounce => 16;
+		// A total internal reflection is LABEL_REFLECT without LABEL_DIFFUSE, so Cycles
+		// counts it against the glossy budget, not the transmission budget. A high-IOR
+		// stone (diamond, IOR 2.42) bounces around its own pavilion many times before it
+		// exits, so at 16 the cap is hit mid-stone, the path is killed and it contributes
+		// black - facet-sized dark patches inside gems. Keep this equal to MaxBounce and
+		// MaxTransmissionBounce so the glossy budget is never the binding constraint on
+		// its own. RH-96566.
+		static public int MaxGlossyBounce => 32;
 		static public int MaxTransmissionBounce => 32;
 
 		static public int MaxVolumeBounce => 32;
