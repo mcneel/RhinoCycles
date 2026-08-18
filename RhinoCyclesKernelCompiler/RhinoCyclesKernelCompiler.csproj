@@ -47,7 +47,7 @@
     <PackageReference Condition=" '$(Configuration)' == 'Debug' " Include="System.Management" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\..\cycles\src\csycles\csycles.csproj" PrivateAssets="all" />
     <ProjectReference Include="..\RhinoCyclesCore.csproj" />
   </ItemGroup>
 </Project>

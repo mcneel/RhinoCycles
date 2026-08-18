@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RhinoWindows", "..\..\..\..
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RhinoCycles", "RhinoCycles.csproj", "{7DB01F36-A1C2-49A0-8326-FF09FFC6ADF3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "csycles", "..\cycles\csycles\csycles.csproj", "{36396655-E087-4C00-990B-CE44F08E4FB2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "csycles", "..\cycles\src\csycles\csycles.csproj", "{36396655-E087-4C00-990B-CE44F08E4FB2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RhinoCyclesKernelCompiler", "RhinoCyclesKernelCompiler\RhinoCyclesKernelCompiler.csproj", "{B2D5828B-677C-4191-84D2-4613E5F19FE4}"
 EndProject

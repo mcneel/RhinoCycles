@@ -88,7 +88,7 @@
     <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj" Private="False" ExcludeAssets="all" />
     <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj" Private="False" ExcludeAssets="all" />
     <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj" Private="False" ExcludeAssets="all" />
-    <ProjectReference Include="..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\cycles\src\csycles\csycles.csproj" PrivateAssets="all" />
     <ProjectReference Include="RhinoCyclesCore.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
@@ -157,7 +157,7 @@
     <EmbeddedResource Include="Icons\Cycles_viewport_properties.ico" />
   </ItemGroup>
   <ItemGroup>
-    <LicenseFiles Include="$(ProjectDir)..\cycles\cycles\src\doc\license\*.txt" />
+    <LicenseFiles Include="$(ProjectDir)..\cycles\src\doc\license\*.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Icons\Cycles_material.ico" />
@@ -165,8 +165,7 @@
   <Target Name="CopyFiles" BeforeTargets="BeforeBuild">
     <MakeDir Directories="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" />
     <Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" OverwriteReadOnlyFiles="True" />
-    <Copy SourceFiles="$(ProjectDir)..\cycles\cycles\third_party\cuew\LICENSE" DestinationFiles="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\cuew.txt" OverwriteReadOnlyFiles="True" />
-    <Copy SourceFiles="$(ProjectDir)..\cycles\pthreads\COPYING" DestinationFiles="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\pthreads.txt" OverwriteReadOnlyFiles="True" />
+    <Copy SourceFiles="$(ProjectDir)..\cycles\third_party\cuew\LICENSE" DestinationFiles="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\cuew.txt" OverwriteReadOnlyFiles="True" />
     <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\CMakeLists.txt" />
     <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\OSL.txt" />
   </Target>
