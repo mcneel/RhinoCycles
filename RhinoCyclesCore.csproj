@@ -243,8 +243,12 @@
   <PropertyGroup>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' And '$(RHINOCYCLESDEV)' == '' ">
       Copy /Y $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\* $(OutputPath). > NUL
-      XCopy $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\lib $(OutputPath)RhinoCycles\lib /Y /I /S /Q
-      XCopy $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\source $(OutputPath)RhinoCycles\source /Y /I /S /Q
+      rem /MIR so kernels/sources dropped from the build (e.g. an arch no longer built) do not linger and get loaded.
+      robocopy $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\lib $(OutputPath)RhinoCycles\lib /MIR /NJH /NJS /NFL /NDL /NP
+      if errorlevel 8 exit /b 1
+      robocopy $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\source $(OutputPath)RhinoCycles\source /MIR /NJH /NJS /NFL /NDL /NP
+      if errorlevel 8 exit /b 1
+      exit /b 0
     </PostBuildEvent>
   </PropertyGroup>
 </Project>
