@@ -504,6 +504,7 @@ Please click the link below for more information.", 69));
 				cyclesIntegrator.AdaptiveThreshold = integrator.AdaptiveThreshold;
 				cyclesIntegrator.FilterGlossy = integrator.FilterGlossy;
 				cyclesIntegrator.SampleClampIndirect = integrator.SampleClampIndirect;
+				cyclesIntegrator.ClipAllRays = integrator.ClipAllRays;
 				cyclesIntegrator.TagForUpdate();
 				_needReset = true;
 			}

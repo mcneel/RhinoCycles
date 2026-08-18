@@ -179,6 +179,9 @@ namespace RhinoCyclesCore
 			session.Scene.Integrator.VolumeSamples = engineSettings.VolumeSamples;
 			session.Scene.Integrator.AaSamples = engineSettings.AaSamples;
 			session.Scene.Integrator.FilterGlossy = engineSettings.FilterGlossy;
+			// RH-95655: needed here too, not just in HandleIntegrator - the viewport engine
+			// never goes through that path.
+			session.Scene.Integrator.ClipAllRays = engineSettings.IsProductPreset;
 			session.Scene.Integrator.UseDirectLight = engineSettings.UseDirectLight;
 			session.Scene.Integrator.UseIndirectLight = engineSettings.UseIndirectLight;
 			session.Scene.Integrator.SampleClampDirect = engineSettings.SampleClampDirect;
