@@ -563,6 +563,7 @@ namespace RhinoCyclesCore.Settings
 				rem = RhinoMath.CRC32(rem, AdaptiveThreshold);
 				rem = RhinoMath.CRC32(rem, FilterGlossy);
 				rem = RhinoMath.CRC32(rem, SampleClampIndirect);
+				rem = RhinoMath.CRC32(rem, IsProductPreset ? 1 : 0);
 
 				RcCore.It.AddLogStringIfVerbose($"\t\t-- ApplicationAndDocumentSetting.IntegratorHash: {rem}. UseAdaptiveSampling {UseAdaptiveSampling}. Seed {Seed}");
 
