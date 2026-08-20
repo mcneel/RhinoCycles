@@ -241,17 +241,21 @@
     payload. This used to be skipped when RHINOCYCLESDEV was set, which left the
     two cases taking different paths.
 
-    The folder follows the configuration. It was hardcoded to "release", so a
-    Debug build silently picked up release Cycles - debug RhinoCyclesCore against
-    a release ccycles.dll, with the CRT mismatch that implies.
+    The folder follows the configuration, but only release is committed to
+    big_libs. The debug payload is 444 MB of binaries nobody but a Cycles
+    developer has any use for, and a Debug build of Rhino ran against release
+    Cycles for years without trouble. So the debug folder is used when it is
+    actually there - which means someone ticked "Cycles Core" and built Debug
+    locally - and release otherwise. A checkout with no local Cycles build gets a
+    working ccycles.dll in every configuration.
 
     ReleaseDebuggable maps to release: build_cycles.ps1 builds it as
     RelWithDebInfo and installs it there.
   -->
   <PropertyGroup>
-    <CyclesPayloadDir>release</CyclesPayloadDir>
-    <CyclesPayloadDir Condition="'$(Configuration)' == 'Debug'">debug</CyclesPayloadDir>
-    <CyclesPayloadPath>$(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\$(CyclesPayloadDir)</CyclesPayloadPath>
+    <CyclesPayloadRoot>$(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win</CyclesPayloadRoot>
+    <CyclesPayloadPath>$(CyclesPayloadRoot)\release</CyclesPayloadPath>
+    <CyclesPayloadPath Condition="'$(Configuration)' == 'Debug' And Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')">$(CyclesPayloadRoot)\debug</CyclesPayloadPath>
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT'">
       Copy /Y $(CyclesPayloadPath)\* $(OutputPath). > NUL
       XCopy $(CyclesPayloadPath)\lib $(OutputPath)RhinoCycles\lib /Y /I /S /Q
