@@ -2123,7 +2123,9 @@ namespace RhinoCyclesCore.Database
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				cob.IsSolid = ob.IsSolid;
 				//cob.IsBlockInstance = true;
-				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
+				/* Reflect is gone from the 5.x visibility enum; a shadow catcher that
+				 * should not show up in reflections is one without Glossy visibility. */
+				var norefl = PathRay.AllVisibility & ~PathRay.Glossy;
 				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;
 				if (ob.CastShadow == false)
 				{
