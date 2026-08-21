@@ -336,7 +336,21 @@ namespace RhinoCyclesCore
 				// otherwise, use object/texture mappings.
 				VectorSocket uv_output_socket = null;
 				if (DecalProcessingInfo != null)
-					uv_output_socket = RhinoFullNxt.GetDecalUVNode(DecalProcessingInfo.Decal, texco);
+				{
+					// A texture in a decal material keeps its own WCS or WCS box projection,
+					// like it does in the display. The decal region is masked separately, see
+					// GetDecalMaskNode. RH-97945.
+					var decalProjection = teximg.Procedural.ProjectionMode;
+					if (decalProjection == TextureProjectionMode.Wcs || decalProjection == TextureProjectionMode.WcsBox)
+					{
+						texco.UseTransform = true; // identity object transform, so world space
+						uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, decalProjection, teximg.Procedural.EnvironmentMappingMode, texco);
+					}
+					else
+					{
+						uv_output_socket = RhinoFullNxt.GetDecalUVNode(DecalProcessingInfo.Decal, texco);
+					}
+				}
 				else
 					uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, teximg.Procedural.ProjectionMode, teximg.Procedural.EnvironmentMappingMode, texco);
 

@@ -224,23 +224,54 @@ namespace RhinoCyclesCore.Shaders
 				}
 			}
 
-			switch (decal.Mapping)
+			VectorSocket decalUvwSocket = decal.Mapping switch
 			{
-				case Rhino.Render.DecalMapping.Planar:
-					texco.outs.DecalPlanar.Connect(imgtex.ins.Vector);
-					break;
-				case Rhino.Render.DecalMapping.Cylindrical:
-					texco.outs.DecalCylindrical.Connect(imgtex.ins.Vector);
-					break;
-				case Rhino.Render.DecalMapping.Spherical:
-					texco.outs.DecalSpherical.Connect(imgtex.ins.Vector);
-					break;
-				case Rhino.Render.DecalMapping.UV:
-					texco.outs.DecalUv.Connect(imgtex.ins.Vector);
-					break;
-			}
+				Rhino.Render.DecalMapping.Planar => texco.outs.DecalPlanar,
+				Rhino.Render.DecalMapping.Cylindrical => texco.outs.DecalCylindrical,
+				Rhino.Render.DecalMapping.Spherical => texco.outs.DecalSpherical,
+				_ => texco.outs.DecalUv,
+			};
+
+			DecalTextureCoordinateSocket(shader, decal, decalUvwSocket, imgtex.Name).Connect(imgtex.ins.Vector);
+
 			texco.outs.DecalForward.Connect(imgtex.ins.DecalForward);
 			texco.outs.DecalUsage.Connect(imgtex.ins.DecalUsage);
+		}
+
+		/// <summary>
+		/// Give the coordinate socket a decal texture has to be sampled with. A decal
+		/// texture that carries its own WCS or WCS box projection is sampled in world
+		/// space instead of in decal uv space, so that its repeat is in model units.
+		/// The z component keeps coming from the decal mapping - it is what masks the
+		/// decal region. Mirrors the display pipeline, see ConvertMappingTypeValue in
+		/// RhinoDisplayPipeline_Private.cpp. RH-97945.
+		/// </summary>
+		static private VectorSocket DecalTextureCoordinateSocket(Shader shader, CyclesDecal decal, VectorSocket decalUvwSocket, string name)
+		{
+			TextureProjectionMode projection = decal.Texture.ProjectionMode;
+			if (projection != TextureProjectionMode.Wcs && projection != TextureProjectionMode.WcsBox)
+				return decalUvwSocket;
+
+			// A texture coordinate node of its own: the decal one carries the decal
+			// transform, which would end up in the world space coordinates.
+			var wcsTexco = new RhinoTextureCoordinateNode(shader, $"wcs_texco_for_{name}")
+			{
+				UseTransform = true
+			};
+			VectorSocket wcsSocket = (projection == TextureProjectionMode.WcsBox) ? wcsTexco.outs.WcsBox : wcsTexco.outs.Object;
+
+			var separateWcs = new SeparateXyzNode(shader, $"wcs_separate_for_{name}");
+			wcsSocket.Connect(separateWcs.ins.Vector);
+
+			var separateDecal = new SeparateXyzNode(shader, $"decal_uvw_separate_for_{name}");
+			decalUvwSocket.Connect(separateDecal.ins.Vector);
+
+			var combine = new CombineXyzNode(shader, $"wcs_decal_combine_for_{name}");
+			separateWcs.outs.X.Connect(combine.ins.X);
+			separateWcs.outs.Y.Connect(combine.ins.Y);
+			separateDecal.outs.Z.Connect(combine.ins.Z);
+
+			return combine.outs.Vector;
 		}
 
 		static public VectorSocket GetDecalUVNode(CyclesDecal decal, RhinoTextureCoordinateNode texco)
