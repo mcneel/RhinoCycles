@@ -1122,12 +1122,14 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.SubsurfaceColor.Value = new float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 					principledbsdf117.ins.Metallic.Value = part.Metallic;
 					principledbsdf117.ins.Specular.Value = part.Specular;
-					principledbsdf117.ins.SpecularTint.Value = part.SpecularTint;
+					/* Specular Tint and Sheen Tint became colours in the 4.x principled rework;
+					 * Rhino still has a single scalar for each, so feed it as grey. */
+					principledbsdf117.ins.SpecularTint.Value = new float4(part.SpecularTint, part.SpecularTint, part.SpecularTint, 1f);
 					principledbsdf117.ins.Roughness.Value = part.ReflectionRoughness;
 					principledbsdf117.ins.Anisotropic.Value = 0f;
 					principledbsdf117.ins.AnisotropicRotation.Value = 0f;
 					principledbsdf117.ins.Sheen.Value = part.Sheen;
-					principledbsdf117.ins.SheenTint.Value = part.SheenTint;
+					principledbsdf117.ins.SheenTint.Value = new float4(part.SheenTint, part.SheenTint, part.SheenTint, 1f);
 					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
 					principledbsdf117.ins.ClearcoatGloss.Value = part.Gloss;
 					principledbsdf117.ins.IOR.Value = part.IOR;
