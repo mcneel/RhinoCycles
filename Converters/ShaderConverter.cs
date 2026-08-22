@@ -2562,6 +2562,10 @@ namespace RhinoCyclesCore.Converters
 
 			strength *= enabled;
 
+			RcCore.It.AddLogStringIfVerbose(
+				$"ConvertLight {lt}: enabled={lg.IsEnabled} intensity={lg.Intensity} " +
+				$"strength={strength} diffuse={lg.Diffuse} radius={lg.Radius}");
+
 			var clight = new CyclesLight
 				{
 					Type = lt,
