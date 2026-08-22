@@ -115,6 +115,24 @@ namespace RhinoCyclesCore.Shaders
 
 		}
 
+		/// <summary>
+		/// Turn Rhino's scalar "tint towards the base colour" into the colour that
+		/// the 4.x principled BSDF wants for Specular Tint and Sheen Tint.
+		///
+		/// Those sockets were floats until 4.x, where 0 meant untinted. They are
+		/// colours now and untinted is white, so 0 has to give white rather than
+		/// black - black asks for no specular reflection at all.
+		/// </summary>
+		private static float4 TintToColour(float amount, float4 baseColour)
+		{
+			float t = Math.Max(0.0f, Math.Min(1.0f, amount));
+			return new float4(
+				(1.0f - t) + t * baseColour.x,
+				(1.0f - t) + t * baseColour.y,
+				(1.0f - t) + t * baseColour.z,
+				1.0f);
+		}
+
 		public override Shader GetShader()
 		{
 			if (RcCore.It.AllSettings.DebugSimpleShaders)
@@ -748,10 +766,34 @@ namespace RhinoCyclesCore.Shaders
 
 					Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, principled.ins.SpecularTint.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					/* Untinted is white in 4.x, and that is now the socket default, so
+					 * an unused slot needs no graph at all. When it is used, mix white
+					 * towards the base colour by the amount - which is what Rhino's
+					 * scalar has always meant. Driving the colour socket with the scalar
+					 * directly made it grey, so 0 asked for a black specular. */
+					if (part.PbrSpecularTint.On)
+					{
+						var spectintmix = new MixNode(m_shader, "pbr_speculartint");
+						spectintmix.ins.Color1.Value = new float4(1f, 1f, 1f, 1f);
+						basewithao.outs.Color.Connect(spectintmix.ins.Color2);
+						spectintmix.outs.Color.Connect(principled.ins.SpecularTint);
+						Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, spectintmix.ins.Fac.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					}
 					Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture, principled.ins.Roughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, principled.ins.SheenTint.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					/* Untinted is white in 4.x, and that is now the socket default, so
+					 * an unused slot needs no graph at all. When it is used, mix white
+					 * towards the base colour by the amount - which is what Rhino's
+					 * scalar has always meant. Driving the colour socket with the scalar
+					 * directly made it grey, so 0 asked for a black specular. */
+					if (part.PbrSheenTint.On)
+					{
+						var sheentintmix = new MixNode(m_shader, "pbr_sheentint");
+						sheentintmix.ins.Color1.Value = new float4(1f, 1f, 1f, 1f);
+						basewithao.outs.Color.Connect(sheentintmix.ins.Color2);
+						sheentintmix.outs.Color.Connect(principled.ins.SheenTint);
+						Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, sheentintmix.ins.Fac.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					}
 					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.Clearcoat.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.CoatRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
@@ -1122,14 +1164,17 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.SubsurfaceColor.Value = new float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 					principledbsdf117.ins.Metallic.Value = part.Metallic;
 					principledbsdf117.ins.Specular.Value = part.Specular;
-					/* Specular Tint and Sheen Tint became colours in the 4.x principled rework;
-					 * Rhino still has a single scalar for each, so feed it as grey. */
-					principledbsdf117.ins.SpecularTint.Value = new float4(part.SpecularTint, part.SpecularTint, part.SpecularTint, 1f);
+					/* Specular Tint and Sheen Tint became colours in the 4.x rework, where
+					 * white is untinted. Rhino has a single scalar "how much to tint
+					 * towards the base colour", so the colour is that interpolation.
+					 * Feeding the scalar as grey made an untinted material black, which is
+					 * no specular at all rather than an untinted one. */
+					principledbsdf117.ins.SpecularTint.Value = TintToColour(part.SpecularTint, part.BaseColor);
 					principledbsdf117.ins.Roughness.Value = part.ReflectionRoughness;
 					principledbsdf117.ins.Anisotropic.Value = 0f;
 					principledbsdf117.ins.AnisotropicRotation.Value = 0f;
 					principledbsdf117.ins.Sheen.Value = part.Sheen;
-					principledbsdf117.ins.SheenTint.Value = new float4(part.SheenTint, part.SheenTint, part.SheenTint, 1f);
+					principledbsdf117.ins.SheenTint.Value = TintToColour(part.SheenTint, part.BaseColor);
 					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
 					/* Gloss is ReflectionGlossiness, where 1 is a mirror. The 4.x socket is
 					 * Coat Roughness, the inverse, so it has to be flipped - feeding gloss
