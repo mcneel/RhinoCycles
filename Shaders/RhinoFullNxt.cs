@@ -753,7 +753,7 @@ namespace RhinoCyclesCore.Shaders
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, principled.ins.SheenTint.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.Clearcoat.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.ClearcoatGloss.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.CoatRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor.ToList(), false, part.Gamma, false, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
@@ -1131,7 +1131,10 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.Sheen.Value = part.Sheen;
 					principledbsdf117.ins.SheenTint.Value = new float4(part.SheenTint, part.SheenTint, part.SheenTint, 1f);
 					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
-					principledbsdf117.ins.ClearcoatGloss.Value = part.Gloss;
+					/* Gloss is ReflectionGlossiness, where 1 is a mirror. The 4.x socket is
+					 * Coat Roughness, the inverse, so it has to be flipped - feeding gloss
+					 * straight in asked for a fully rough coat on the shiniest materials. */
+					principledbsdf117.ins.CoatRoughness.Value = 1.0f - part.Gloss;
 					principledbsdf117.ins.IOR.Value = part.IOR;
 					principledbsdf117.ins.EmissionStrength.Value = 0.0f;
 					principledbsdf117.ins.Transmission.Value = part.Transparency;
