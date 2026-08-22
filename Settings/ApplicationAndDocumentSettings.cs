@@ -29,7 +29,7 @@ namespace RhinoCyclesCore.Settings
 		public ApplicationAndDocumentSettings()
 		{
 			IntegratorMethod = IntegratorMethod.Path;
-			SamplingPattern = SamplingPattern.CMJ;
+			SamplingPattern = SamplingPattern.TabulatedSobol;
 
 			// persisted settings
 			Verbose = Verbose;
@@ -146,7 +146,7 @@ namespace RhinoCyclesCore.Settings
 		public void DefaultSettings()
 		{
 			IntegratorMethod = IntegratorMethod.Path;
-			SamplingPattern = SamplingPattern.CMJ;
+			SamplingPattern = SamplingPattern.TabulatedSobol;
 
 			// persisted settings
 			Verbose = DefaultEngineSettings.Verbose;

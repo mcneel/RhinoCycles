@@ -113,7 +113,7 @@ namespace RhinoCyclesCore
 		{
 #if LEGACY
 			#region set up scene parameters
-			BvhLayout bvhLayout = BvhLayout.Default;
+			BvhLayout bvhLayout = BvhLayout.Auto;
 			if(render_device.IsOptix) {
 				bvhLayout = BvhLayout.OptiX;
 			}
@@ -187,7 +187,7 @@ namespace RhinoCyclesCore
 			// The native session init hardcodes the light tree to on; without this line the
 			// UseLightTree setting was never applied.
 			session.Scene.Integrator.UseLightTree = engineSettings.UseLightTree;
-			session.Scene.Integrator.SamplingPattern = SamplingPattern.Sobol;
+			session.Scene.Integrator.SamplingPattern = SamplingPattern.SobolBurley;
 			session.Scene.Integrator.Seed = engineSettings.Seed;
 			#endregion
 		}
