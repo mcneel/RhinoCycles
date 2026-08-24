@@ -272,11 +272,17 @@
     A Message and not a Warning: the solution builds with zero warnings and that
     is worth keeping, and using release Cycles under a Debug Rhino is the normal
     case rather than a mistake.
+
+    The fallback line is gated on RHINOCYCLESDEV. No fresh checkout has a debug
+    payload - only release is committed - so an ungated message would tell every
+    developer on every Debug build that native Cycles debugging is unavailable,
+    which is only news to someone who wanted it. The flag being set is the
+    closest thing to a statement of that intent.
   -->
   <Target Name="ReportCyclesPayload" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
     <Message Importance="high" Text="RhinoCycles: deployed Cycles payload from $(CyclesPayloadPath)" />
     <Message Importance="high"
-             Condition="'$(Configuration)' == 'Debug' And !Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')"
+             Condition="'$(Configuration)' == 'Debug' And '$(RHINOCYCLESDEV)' != '' And !Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')"
              Text="RhinoCycles: no debug Cycles payload in big_libs, so this Debug build uses release Cycles. Native debugging into ccycles will not work. Build the solution once as Debug with RHINOCYCLESDEV set to produce one." />
   </Target>
 </Project>
