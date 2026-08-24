@@ -256,10 +256,23 @@
     <CyclesPayloadRoot>$(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win</CyclesPayloadRoot>
     <CyclesPayloadPath>$(CyclesPayloadRoot)\release</CyclesPayloadPath>
     <CyclesPayloadPath Condition="'$(Configuration)' == 'Debug' And Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')">$(CyclesPayloadRoot)\debug</CyclesPayloadPath>
+    <!--
+      /D on all three: copy only what is newer than the destination.
+
+      RunPostBuildEvent is Always, so this runs on every build of this project -
+      including one where nothing changed and the compile was skipped. Without
+      /D that recopied the whole payload every time, which is 321 MB, 29 MB of
+      it kernels. XCopy returns 0 when everything is already up to date, so a
+      no-op copy does not fail the build.
+
+      XCopy rather than Copy for the first line so it can take /D. No /S there,
+      which keeps it non-recursive exactly as Copy was - lib and source are
+      handled by the two lines below, into different destinations.
+    -->
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT'">
-      Copy /Y $(CyclesPayloadPath)\* $(OutputPath). > NUL
-      XCopy $(CyclesPayloadPath)\lib $(OutputPath)RhinoCycles\lib /Y /I /S /Q
-      XCopy $(CyclesPayloadPath)\source $(OutputPath)RhinoCycles\source /Y /I /S /Q
+      XCopy $(CyclesPayloadPath)\* $(OutputPath). /Y /D /I /Q
+      XCopy $(CyclesPayloadPath)\lib $(OutputPath)RhinoCycles\lib /Y /D /I /S /Q
+      XCopy $(CyclesPayloadPath)\source $(OutputPath)RhinoCycles\source /Y /D /I /S /Q
     </PostBuildEvent>
   </PropertyGroup>
 
