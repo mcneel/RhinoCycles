@@ -262,4 +262,21 @@
       XCopy $(CyclesPayloadPath)\source $(OutputPath)RhinoCycles\source /Y /I /S /Q
     </PostBuildEvent>
   </PropertyGroup>
+
+  <!--
+    Say which payload was deployed. Which one you got was invisible before, and
+    it is the difference between being able to step into ccycles and not - a
+    Debug build silently falls back to the release payload whenever the debug one
+    has not been built locally, because only release is committed to big_libs.
+
+    A Message and not a Warning: the solution builds with zero warnings and that
+    is worth keeping, and using release Cycles under a Debug Rhino is the normal
+    case rather than a mistake.
+  -->
+  <Target Name="ReportCyclesPayload" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+    <Message Importance="high" Text="RhinoCycles: deployed Cycles payload from $(CyclesPayloadPath)" />
+    <Message Importance="high"
+             Condition="'$(Configuration)' == 'Debug' And !Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')"
+             Text="RhinoCycles: no debug Cycles payload in big_libs, so this Debug build uses release Cycles. Native debugging into ccycles will not work. Build the solution once as Debug with RHINOCYCLESDEV set to produce one." />
+  </Target>
 </Project>
