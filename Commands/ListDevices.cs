@@ -17,6 +17,8 @@ limitations under the License.
 using ccl;
 using Rhino;
 using Rhino.Commands;
+using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace RhinoCycles.Commands
@@ -39,6 +41,21 @@ namespace RhinoCycles.Commands
 		protected override Result RunCommand(RhinoDoc doc, RunMode mode)
 		{
 			(PlugIn as Plugin)?.InitialiseCSycles();
+
+			// Which ccycles.dll am I actually running? There are two ways to get
+			// one - the prebuilt payload from big_libs, or a local +Cycles build -
+			// and they are indistinguishable without asking. The Cycles version
+			// says what the source was; the file date and path say which copy.
+			RhinoApp.WriteLine($"Cycles {CSycles.version_string()}");
+			var ccyclesPath = Path.Combine(
+				Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+				"ccycles.dll");
+			if (File.Exists(ccyclesPath))
+			{
+				RhinoApp.WriteLine($"	{ccyclesPath}");
+				RhinoApp.WriteLine($"	built {File.GetLastWriteTime(ccyclesPath):yyyy-MM-dd HH:mm}");
+			}
+			RhinoApp.WriteLine("----------");
 
 			var numDevices = Device.Count;
 			var endS = numDevices != 1 ? "s" : "";
