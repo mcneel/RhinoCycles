@@ -511,6 +511,22 @@ namespace RhinoCyclesCore.Database
 		private readonly Dictionary<Guid, Plane> ClippingPlanes = new Dictionary<Guid, Plane>(16);
 		private bool HasClippingPlaneChanges = false;
 
+		/// <summary>
+		/// RH-98012: clipping plane ids in upload order. The index is the bit in the
+		/// per-object participation mask.
+		/// </summary>
+		private readonly List<Guid> _clippingPlaneOrder = new List<Guid>(16);
+		/// <summary>
+		/// Set when the set of clipping planes or their participation lists changed,
+		/// so every object needs its participation mask recomputed.
+		/// </summary>
+		private bool _clippingPlaneParticipationChanged = false;
+		/// <summary>
+		/// Cycles object id (mesh instance id) to the top level Rhino object id that
+		/// clip participation is resolved for.
+		/// </summary>
+		private readonly ConcurrentDictionary<uint, Guid> _objectRootIds = new ConcurrentDictionary<uint, Guid>();
+
 		protected override void ApplyDynamicClippingPlaneChanges(List<CqClippingPlane> changed)
 		{
 			HandleClippingPlaneChanges(changed, true);
@@ -525,6 +541,7 @@ namespace RhinoCyclesCore.Database
 				HasClippingPlaneChanges = true;
 			}
 			HandleClippingPlaneChanges(addedOrModified, false);
+			_clippingPlaneParticipationChanged = true;
 		}
 
 		private void HandleClippingPlaneChanges(List<CqClippingPlane> addedOrModified, bool isDynamic)
@@ -552,14 +569,68 @@ namespace RhinoCyclesCore.Database
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneChanges entry");
 				_renderEngine.Session.Scene.ClearClippingPlanes();
+				// RH-98012: the slot order is what the per-object participation mask bits refer to.
+				var previousOrder = new List<Guid>(_clippingPlaneOrder);
+				_clippingPlaneOrder.Clear();
 				foreach (var cp in ClippingPlanes)
 				{
 					var equation = new float4(cp.Value.GetPlaneEquation());
 					var cclcp = new CclClippingPlane(_renderEngine.Session, equation);
+					_clippingPlaneOrder.Add(cp.Key);
+				}
+				if (!_clippingPlaneOrder.SequenceEqual(previousOrder))
+				{
+					_clippingPlaneParticipationChanged = true;
 				}
 				HasClippingPlaneChanges = false;
 				RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneChanges exit");
 			}
+		}
+
+
+		/// <summary>
+		/// RH-98012: build the clipping plane participation mask for a Rhino object.
+		/// Bit i is set when the clipping plane in slot i clips the object.
+		/// </summary>
+		private uint ClippingPlaneMaskFor(Guid objectId, Dictionary<Guid, ClippingPlaneObject> cache)
+		{
+			uint mask = 0;
+			int count = Math.Min(_clippingPlaneOrder.Count, 32);
+			for (int i = 0; i < count; i++)
+			{
+				Guid planeId = _clippingPlaneOrder[i];
+				if (!cache.TryGetValue(planeId, out ClippingPlaneObject cpo))
+				{
+					cpo = RhinoDoc.FromRuntimeSerialNumber(_doc_serialnr)?.Objects.FindId(planeId) as ClippingPlaneObject;
+					cache[planeId] = cpo;
+				}
+				// unknown clipping plane object: clip like we always did
+				if (cpo == null || cpo.ObjectParticipates(objectId)) mask |= 1u << i;
+			}
+			return mask;
+		}
+
+		/// <summary>
+		/// Push participation masks for objects already in the Cycles scene. Needed
+		/// when clipping planes or their participation lists changed without the
+		/// objects themselves changing.
+		/// </summary>
+		public void UploadClippingPlaneParticipationChanges()
+		{
+			if (!_clippingPlaneParticipationChanged) return;
+			_clippingPlaneParticipationChanged = false;
+			if (_clippingPlaneOrder.Count == 0) return;
+
+			RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneParticipationChanges entry");
+			var cache = new Dictionary<Guid, ClippingPlaneObject>();
+			foreach (var kv in _objectRootIds)
+			{
+				var cob = _objectDatabase.FindObjectRelation(kv.Key);
+				if (cob == null) continue;
+				cob.ClippingPlaneMask = ClippingPlaneMaskFor(kv.Value, cache);
+				cob.TagUpdate();
+			}
+			RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneParticipationChanges exit");
 		}
 
 		/// <summary>
@@ -2043,6 +2114,9 @@ namespace RhinoCyclesCore.Database
 
 			RcCore.It.AddLogStringIfVerbose("\tUploadObjectChanges entry");
 
+			// RH-98012: clip participation is resolved per top level Rhino object.
+			var clipParticipationCache = new Dictionary<Guid, ClippingPlaneObject>();
+
 			// first delete objects
 			foreach (var ob in _objectDatabase.DeletedObjects)
 			{
@@ -2131,6 +2205,12 @@ namespace RhinoCyclesCore.Database
 				}
 				cob.MeshLightNoCastShadow = ob.CastNoShadow;
 				cob.Visibility = vis;
+
+				_objectRootIds[ob.obid] = ob.PassObjectId;
+				if (_clippingPlaneOrder.Count > 0)
+				{
+					cob.ClippingPlaneMask = ClippingPlaneMaskFor(ob.PassObjectId, clipParticipationCache);
+				}
 
 				Shader shader = _shaderDatabase.GetShaderFromHash(ob.matid);
 				cob.Shader = shader.Id;
