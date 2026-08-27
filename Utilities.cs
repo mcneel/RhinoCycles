@@ -321,7 +321,9 @@ namespace RhinoCyclesCore
 		public static ISocket GraphForSlot(Shader sh, ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ISocket> socketsToConnectTo, bool toBw, bool normalMap, bool invert, bool IsData, float gamma, bool hasDecals, RhinoFullNxt.DecalProcessingInfo DecalProcessingInfo)
 		{
 			ISocket alphaOut = null;
-			if(IsOn && null != teximg && teximg.HasProcedural)
+			// RH-94469: snapshot Procedural - another thread can Dispose/Clear teximg mid-build.
+			var procedural = teximg?.Procedural;
+			if(IsOn && null != teximg && null != procedural)
 			{
 				var texco = new RhinoTextureCoordinateNode(sh, $"texco for input {valueSocket?.Parent.VariableName ?? "unknown input"}");
 				var mixerNode = new MixNode(sh, $"rgb mix node for imtexnode and {valueSocket?.Parent.VariableName ?? "unknown input"}");
@@ -340,11 +342,11 @@ namespace RhinoCyclesCore
 					// A texture in a decal material keeps its own WCS or WCS box projection,
 					// like it does in the display. The decal region is masked separately, see
 					// GetDecalMaskNode. RH-97945.
-					var decalProjection = teximg.Procedural.ProjectionMode;
+					var decalProjection = procedural.ProjectionMode;
 					if (decalProjection == TextureProjectionMode.Wcs || decalProjection == TextureProjectionMode.WcsBox)
 					{
 						texco.UseTransform = true; // identity object transform, so world space
-						uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, decalProjection, teximg.Procedural.EnvironmentMappingMode, texco);
+						uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, decalProjection, procedural.EnvironmentMappingMode, texco);
 					}
 					else
 					{
@@ -352,7 +354,7 @@ namespace RhinoCyclesCore
 					}
 				}
 				else
-					uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, teximg.Procedural.ProjectionMode, teximg.Procedural.EnvironmentMappingMode, texco);
+					uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, procedural.ProjectionMode, procedural.EnvironmentMappingMode, texco);
 
 				ColorSocket color_input_node = mixerNode.ins.Color2;
 				FloatSocket alpha_input_node = alpha_node.ins.Value2;
@@ -379,7 +381,7 @@ namespace RhinoCyclesCore
 					alphaNodes.Add(alphamult.ins.Value2);
 				}
 
-				teximg.Procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alphaNodes, IsData);
+				procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alphaNodes, IsData);
 
 				// Gamma decode in the shader since the kernel no longer converts (RH-83550),
 				// but only for trees with image content - procedurals are already linear (RH-92750).
