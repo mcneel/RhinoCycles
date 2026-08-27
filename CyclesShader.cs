@@ -495,11 +495,22 @@ namespace RhinoCyclesCore
 			{
 				// Rhino factors intensity (emission-multiplier) into EmissionColor.
 				// undo that so we can use emission strength as input instead.
+				//
+				// Only when there is a strength to undo. EmissionStrength stays at its
+				// 0.0f default for any material carrying neither an emission-multiplier
+				// nor an intensity field, and a black emission colour then divided 0/0
+				// into NaN. That NaN reaches the principled BSDF's Emission Color socket,
+				// so Shader::estimate_emission returns NaN (1 * NaN, and NaN * 0 is still
+				// NaN), which poisons the importance maths in the light tree: nothing in
+				// the scene is ever sampled and the whole render comes back black.
 				float es = shb.EmissionStrength;
-				float r = emissionColor.R / es;
-				float g = emissionColor.G / es;
-				float b = emissionColor.B / es;
-				shb.PbrEmission.Value = new Color4f(r, g, b, 1.0f);
+				if (es > 0.0f)
+				{
+					float r = emissionColor.R / es;
+					float g = emissionColor.G / es;
+					float b = emissionColor.B / es;
+					shb.PbrEmission.Value = new Color4f(r, g, b, 1.0f);
+				}
 			}
 
 			HandlePbrTexturedProperty(StdCS.PbrMetallic, (float)pbrmat.Metallic, rm, shb.PbrMetallic, shb.PbrMetallicTexture);
