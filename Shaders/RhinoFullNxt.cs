@@ -820,7 +820,11 @@ namespace RhinoCyclesCore.Shaders
 						{
 							var bump = new BumpNode(m_shader, "bump");
 							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
-							bump.Invert = part.PbrBump.Amount < 0.0f;
+							/* Invert exists as both a direct member and an input socket, and
+							 * SetSockets runs after SetDirectMembers and pushes every socket
+							 * value - so writing the member was silently overwritten by the
+							 * socket default and negative bump amounts never inverted. */
+							bump.ins.Invert.Value = part.PbrBump.Amount < 0.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 							part.PbrBump.Amount = 1.0f;
 							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
@@ -837,7 +841,8 @@ namespace RhinoCyclesCore.Shaders
 						{
 							var bump = new BumpNode(m_shader, "clearcoat_bump");
 							bump.ins.Strength.Value = Math.Abs(part.PbrClearcoatBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
-							bump.Invert = part.PbrClearcoatBump.Amount < 0.0f;
+							/* Same member/socket clash as the base bump above. */
+							bump.ins.Invert.Value = part.PbrClearcoatBump.Amount < 0.0f;
 							part.PbrClearcoatBump.Amount = 1.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
