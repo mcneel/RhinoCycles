@@ -30,6 +30,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace RhinoCyclesCore.Core
@@ -599,24 +600,129 @@ namespace RhinoCyclesCore.Core
 		public DateTime CompileStartTime { get; set; } = DateTime.MinValue;
 		public DateTime CompileEndTime { get; set; } = DateTime.MinValue;
 
+		// Lines the kernel compiler tags with the device they belong to:
+		// [gpu <id>|<gpu name>|<backend>] <message>
+		private static readonly Regex GpuTaggedLine = new Regex(@"^\[gpu (?<id>\d+)\|(?<name>[^|\]]+)\|(?<backend>[^\]]+)\]\s?(?<msg>.*)$", RegexOptions.Compiled);
+		// Third party chatter like "[OpenColorIO Info]: ..." arrives on stderr but isn't an error.
+		private static readonly Regex InformationalLine = new Regex(@"^\[[^\]]*\b(Info|Warning)\]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+		private static List<string> SplitLogLines(string log)
+		{
+			if (string.IsNullOrWhiteSpace(log)) return new List<string>();
+			return (
+				from l in log.Split('\n')
+				let trimmed = l.TrimEnd('\r').TrimEnd()
+				where trimmed.Trim().Length > 0
+				select trimmed
+			).ToList();
+		}
+
+		/// <summary>
+		/// Collapse repeats into a single line with an "(xN)" suffix.
+		/// </summary>
+		private static List<string> DedupeLines(IEnumerable<string> lines)
+		{
+			List<string> order = new List<string>();
+			Dictionary<string, int> counts = new Dictionary<string, int>();
+			foreach (string line in lines)
+			{
+				if (counts.ContainsKey(line)) counts[line]++;
+				else { counts[line] = 1; order.Add(line); }
+			}
+			return (from line in order select counts[line] > 1 ? $"{line} (x{counts[line]})" : line).ToList();
+		}
+
+		/// <summary>
+		/// Compile log grouped one GPU at a time, with errors collected at the end.
+		/// </summary>
 		public string GetFormattedCompileLog()
 		{
 			SetCompileLog();
-			string compout = Localization.LocalizeString("COMPILER OUTPUT", 82);
-			string errlog = Localization.LocalizeString("ERROR LOG", 83);
-			string compstart = Localization.LocalizeString("Compile start time", 84);
-			string compend =   Localization.LocalizeString("Compile end time  ", 85);
-			var compendfinal = $"{compend}: {CompileEndTime}";
-			if(CompileEndTime.Equals(DateTime.MinValue)) {
-				compendfinal = "";
+
+			if (CompileStartTime.Equals(DateTime.MinValue))
+			{
+				return Localization.LocalizeString("Kernel compilation not started", 86);
 			}
 
-			var log = $"{compout}:\n\n{CompileLogStdOut}\n\n{errlog}:\n\n{CompileLogStdErr}\n\n{compstart}: {CompileStartTime}\n{compendfinal}\n";
+			List<string> general = new List<string>();
+			List<string> gpuOrder = new List<string>();
+			// gpu name -> backend name -> log lines, both in first seen order
+			Dictionary<string, List<string>> backendOrder = new Dictionary<string, List<string>>();
+			Dictionary<string, Dictionary<string, List<string>>> gpuLines = new Dictionary<string, Dictionary<string, List<string>>>();
 
-			if(CompileStartTime.Equals(DateTime.MinValue)) {
-				log = Localization.LocalizeString("Kernel compilation not started", 86);
+			foreach (string line in SplitLogLines(CompileLogStdOut))
+			{
+				Match m = GpuTaggedLine.Match(line);
+				if (!m.Success)
+				{
+					general.Add(line);
+					continue;
+				}
+
+				string gpu = m.Groups["name"].Value;
+				string backend = m.Groups["backend"].Value;
+				if (!gpuLines.TryGetValue(gpu, out Dictionary<string, List<string>> backends))
+				{
+					backends = new Dictionary<string, List<string>>();
+					gpuLines[gpu] = backends;
+					backendOrder[gpu] = new List<string>();
+					gpuOrder.Add(gpu);
+				}
+				if (!backends.TryGetValue(backend, out List<string> lines))
+				{
+					lines = new List<string>();
+					backends[backend] = lines;
+					backendOrder[gpu].Add(backend);
+				}
+				lines.Add(m.Groups["msg"].Value);
 			}
-			return log;
+
+			List<string> stdErrLines = SplitLogLines(CompileLogStdErr);
+			general.AddRange(DedupeLines(from l in stdErrLines where InformationalLine.IsMatch(l) select l));
+			List<string> errors = DedupeLines(from l in stdErrLines where !InformationalLine.IsMatch(l) select l);
+
+			StringBuilder sb = new StringBuilder();
+			sb.AppendLine(Localization.LocalizeString("COMPILER OUTPUT", 82));
+			sb.AppendLine($"{Localization.LocalizeString("Compile start time", 84)}: {CompileStartTime}");
+			if (CompileEndTime.Equals(DateTime.MinValue))
+			{
+				sb.AppendLine($"{Localization.LocalizeString("Compile end time  ", 85)}: still running ({(DateTime.Now - CompileStartTime):hh\\:mm\\:ss})");
+			}
+			else
+			{
+				sb.AppendLine($"{Localization.LocalizeString("Compile end time  ", 85)}: {CompileEndTime} ({(CompileEndTime - CompileStartTime):hh\\:mm\\:ss})");
+			}
+
+			if (general.Count > 0)
+			{
+				sb.AppendLine();
+				sb.AppendLine("--- Setup ---");
+				foreach (string line in DedupeLines(general)) sb.AppendLine($"  {line}");
+			}
+
+			foreach (string gpu in gpuOrder)
+			{
+				sb.AppendLine();
+				sb.AppendLine($"--- {gpu} ---");
+				foreach (string backend in backendOrder[gpu])
+				{
+					sb.AppendLine($"  {backend}");
+					foreach (string line in gpuLines[gpu][backend]) sb.AppendLine($"    {line}");
+				}
+			}
+
+			sb.AppendLine();
+			sb.AppendLine($"--- {Localization.LocalizeString("ERROR LOG", 83)} ---");
+			if (errors.Count == 0)
+			{
+				sb.AppendLine($"  {Localization.LocalizeString("No errors.", 88)}");
+			}
+			else
+			{
+				foreach (string line in errors) sb.AppendLine($"  {line}");
+			}
+
+			return sb.ToString();
 		}
 
 		/// <summary>
@@ -731,8 +837,6 @@ namespace RhinoCyclesCore.Core
 			CompileProcessFinished = false;
 			CompileProcessError = false;
 
-			compileStdOut.Enqueue(Localization.LocalizeString("Compile started, waiting for results...", 87) + "\n");
-			compileStdErr.Enqueue(Localization.LocalizeString("No errors.", 88));
 			CompileStartTime = DateTime.Now;
 			CompileEndTime = DateTime.MinValue;
 
@@ -744,8 +848,6 @@ namespace RhinoCyclesCore.Core
 				try
 				{
 					var compileTaskFile = WriteGpuDevicesFile(deviceListing);
-					string startProcessString = Localization.LocalizeString("Start compile process with device count:", 89);
-					compileStdOut.Enqueue($"{startProcessString} {deviceListing.Count} ({deviceListing[0].Type})\n");
 
 					ProcessStartInfo startInfo = SetupProcessStartInfo(compileTaskFile);
 
@@ -777,14 +879,13 @@ namespace RhinoCyclesCore.Core
 					{
 						string compile_failed = Localization.LocalizeString("Compile failed", 90);
 						string compile_error_code = Localization.LocalizeString("Error code", 91);
-						compileStdOut.Enqueue($"{compile_failed} {CompileLogStdOut}");
-						compileStdErr.Enqueue($"{compile_error_code}: {process.ExitCode}. {CompileLogStdErr}");
+						compileStdErr.Enqueue($"{compile_failed} ({compile_error_code}: {process.ExitCode})");
 					}
 					process.Close();
 				}
 				catch (Exception processException)
 				{
-					compileStdErr.Enqueue($"{processException}\n\n{processException.StackTrace}");
+					compileStdErr.Enqueue(processException.ToString());
 					CompileProcessError = true;
 				}
 			}

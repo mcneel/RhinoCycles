@@ -76,18 +76,21 @@ namespace RhinoCyclesKernelCompiler
 
 			if (device.IsCpu) return;
 
+			// Tag every line with GPU and backend so the host can group the log per GPU.
+			string tag = $"[gpu {device.Id}|{DisplayName(device)}|{BackendName(device.Type)}]";
+			void Log(string message) => Console.WriteLine($"{tag} {message}");
+
 			string gpuCompileFile = deviceWithHash.Path;
-			Console.WriteLine($"About to start with {device.NiceName}");
 			if (File.Exists(gpuCompileFile))
 			{
-				Console.WriteLine($"{device.NiceName} already completed");
+				Log("Already compiled, nothing to do.");
 				return;
 			}
 
 			string compilingSignal = $"{gpuCompileFile}.compiling";
 			if (File.Exists(compilingSignal))
 			{
-				Console.WriteLine($"{device.NiceName} already compiling");
+				Log("Already compiling in another process.");
 				return;
 			}
 
@@ -95,11 +98,8 @@ namespace RhinoCyclesKernelCompiler
 			fs.Close();
 			fs.Dispose();
 
-			string id = $"{device.Id}: {device.NiceName}";
+			Log("Compile started.");
 
-			Console.WriteLine($"Start compiling {id}\n");
-
-			string sha = device.NiceNameSha;
 			string laststatus = "";
 			Session session = null;
 			Stopwatch sw = Stopwatch.StartNew();
@@ -119,14 +119,13 @@ namespace RhinoCyclesKernelCompiler
 				};
 				session = new Session(sessionParameters);
 
-				//session.AddPass(PassType.Combined);
 				session.Reset(1, 1, 1, 0, 0, 1, 1, 1);
 				session.Start();
 				while (true)
 				{
 					if(sw.ElapsedMilliseconds > (15 * 60 * 1000)) {
 						exceptionHappened = true;
-						throw new Exception("30 minute limit reached");
+						throw new Exception("15 minute limit reached");
 					}
 					if(!parentProcessStillRunning()) {
 						exceptionHappened = true;
@@ -135,14 +134,13 @@ namespace RhinoCyclesKernelCompiler
 					string status = CSycles.progress_get_status(session.Id);
 					string substatus = CSycles.progress_get_substatus(session.Id);
 					int sample = CSycles.progress_get_sample(session.Id);
-					status = $"{id} ({sample}) | {status}: {substatus}";
+					status = $"{status}: {substatus}".Trim().TrimEnd(':');
 					string lowstatus = status.ToLowerInvariant();
 					bool finished = lowstatus.Contains("finished") || lowstatus.Contains("rendering done");
 					if (lowstatus.Contains("error"))
 					{
-						Console.WriteLine(status);
 						exceptionHappened = true;
-						throw new Exception($"Error in session ({id}) -> {status}.");
+						throw new Exception(status);
 					}
 					if (sample >= 2 || finished)
 					{
@@ -150,7 +148,7 @@ namespace RhinoCyclesKernelCompiler
 					}
 					if (!status.Equals(laststatus))
 					{
-						Console.WriteLine(status);
+						Log(status);
 						laststatus = status;
 					}
 					Thread.Sleep(100);
@@ -160,13 +158,12 @@ namespace RhinoCyclesKernelCompiler
 			catch (Exception e)
 			{
 				exceptionHappened = true;
-				Console.WriteLine($"Failed for {id}\n\t{e}");
+				Log($"Failed after {FormatElapsed(sw.Elapsed)}: {e.Message}");
 				if (File.Exists(compilingSignal))
 				{
 					File.Delete(compilingSignal);
 				}
-				throw new Exception($"Exception while compiling for {id}", e);
-
+				throw new Exception($"{DisplayName(device)} ({BackendName(device.Type)}): {e.Message}", e);
 			}
 			finally
 			{
@@ -175,12 +172,50 @@ namespace RhinoCyclesKernelCompiler
 					session.Cancel("done");
 					session.Dispose();
 					File.Move(compilingSignal, gpuCompileFile, true);
+					Log($"Compile completed in {FormatElapsed(sw.Elapsed)}.");
 				}
 				sw.Stop();
-				Console.WriteLine($"Completed {id}");
-				Console.WriteLine($"   time: {sw.Elapsed}");
 			}
 
+		}
+
+		static string FormatElapsed(TimeSpan elapsed) => elapsed.ToString(@"hh\:mm\:ss");
+
+		static string Vendor(DeviceType type)
+		{
+			switch (type)
+			{
+				case DeviceType.Cuda:
+				case DeviceType.Optix: return "NVIDIA";
+				case DeviceType.Hip: return "AMD";
+				case DeviceType.OneApi: return "Intel";
+				case DeviceType.Metal: return "Apple";
+				default: return "";
+			}
+		}
+
+		static string BackendName(DeviceType type)
+		{
+			switch (type)
+			{
+				case DeviceType.Cuda: return "CUDA";
+				case DeviceType.Optix: return "OptiX";
+				case DeviceType.Hip: return "HIP";
+				case DeviceType.OneApi: return "oneAPI";
+				case DeviceType.Metal: return "Metal";
+				default: return type.ToString();
+			}
+		}
+
+		// Vendor + device name, e.g. "NVIDIA GeForce RTX 4090". The backend is reported
+		// separately, so drop the "(Optix)" NiceName adds and prepend the vendor when the
+		// name doesn't already start with it.
+		static string DisplayName(Device device)
+		{
+			string name = device.NiceName.Replace(" (Optix)", "").Trim();
+			string vendor = Vendor(device.Type);
+			if (vendor.Length == 0 || name.StartsWith(vendor, StringComparison.OrdinalIgnoreCase)) return name;
+			return $"{vendor} {name}";
 		}
 
 		static List<DeviceAndPath> ReadGpuTaskData(string gpuTaskFile, string gpuDataPath)
@@ -299,23 +334,21 @@ namespace RhinoCyclesKernelCompiler
 			string gpuDataPath = new DirectoryInfo(Path.GetDirectoryName(compileTaskFile)).FullName;
 			string dataUserPath = new DirectoryInfo(Path.GetDirectoryName(compileTaskFile)).Parent.FullName;
 
-			Console.WriteLine("Initializing Cycles");
-			Console.WriteLine($"\tKernel path: {kernelPath}");
-			Console.WriteLine($"\tData path: {dataUserPath}");
+			Console.WriteLine($"Kernel path: {kernelPath}");
+			Console.WriteLine($"Data path  : {dataUserPath}");
 			CSycles.path_init(kernelPath, dataUserPath);
 			CSycles.initialise(DeviceTypeMask.All);
-			Console.WriteLine("Setup tables for Cycles");
 
 			DeviceTypeMask failed = CSycles.failed_gpus_mask();
 			foreach (DeviceType t in Enum.GetValues(typeof(DeviceType)))
 			{
 				var bit = (DeviceTypeMask)(1u << (int)t);
 				if ((failed & bit) == 0) continue;
-				Console.WriteLine($"GPU {t} failed to initialise: {CSycles.gpu_init_error(t)}");
+				Console.Error.WriteLine($"{Vendor(t)} {BackendName(t)} failed to initialise: {CSycles.gpu_init_error(t)}".TrimStart());
 			}
 
 			SetupTables();
-			Console.WriteLine("Cycles initialized");
+			Console.WriteLine("Cycles initialized.");
 
 			var gpuTasks = ReadGpuTaskData(compileTaskFile, gpuDataPath);
 
@@ -325,10 +358,8 @@ namespace RhinoCyclesKernelCompiler
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex.ToString());
-				Console.WriteLine(ex.StackTrace);
-				Console.WriteLine(ex.InnerException.ToString());
-				Console.WriteLine(ex.InnerException.StackTrace);
+				// stderr, so the host log shows these grouped at the end
+				Console.Error.WriteLine(ex.ToString());
 				result = -13;
 			}
 			finally
