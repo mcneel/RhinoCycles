@@ -213,10 +213,12 @@ namespace RhinoCyclesCore.Core
 			AddLogStringIfVerbose("Shutdown: clearing log queues start");
 			ClearLogQueues();
 			AddLogStringIfVerbose("Shutdown: clear log queues done");
+			// Last thing written, and it has to be written while the writer is still open:
+			// RhinoCyclesReport reads this line to tell a clean exit from a crash.
+			RcCore.It.AddLogStringIfVerbose("Shutdown exit\n");
 			StopLogFlusher();
 			logTw.Close();
 			logTw.Dispose();
-			RcCore.It.AddLogStringIfVerbose("Shutdown exit\n");
 		}
 
 		ConcurrentDictionary<IntPtr, Session> active_sessions = new ConcurrentDictionary<IntPtr, Session>();
@@ -1123,15 +1125,23 @@ namespace RhinoCyclesCore.Core
 		{
 			while (_flushLogs)
 			{
-				while (logFlushStrings.Count > 0 && logTw != null)
-				{
-					if (logFlushStrings.TryDequeue(out string logstr))
-					{
-						logTw.Write(logstr);
-						logTw.Flush();
-					}
-				}
+				DrainLogQueue();
 				Thread.Sleep(200);
+			}
+			// Once more on the way out: StopLogFlusher can flip _flushLogs while we are asleep,
+			// and the lines enqueued in that window are the shutdown lines we most want on disk.
+			DrainLogQueue();
+		}
+
+		void DrainLogQueue()
+		{
+			while (logFlushStrings.Count > 0 && logTw != null)
+			{
+				if (logFlushStrings.TryDequeue(out string logstr))
+				{
+					logTw.Write(logstr);
+					logTw.Flush();
+				}
 			}
 		}
 
