@@ -74,11 +74,11 @@ namespace RhinoCycles.Commands
 			(PlugIn as Plugin)?.InitialiseCSycles();
 
 			bool wasDetailed = RcCore.It.AllSettings.VerboseLogging;
-			var detailedLogging = new OptionToggle(wasDetailed, LOC.STR("No"), LOC.STR("Yes"));
-			var openFolder = new OptionToggle(true, LOC.STR("No"), LOC.STR("Yes"));
+			var detailedLogging = new OptionToggle(wasDetailed, Localization.LocalizeString("No", 53), Localization.LocalizeString("Yes", 87));
+			var openFolder = new OptionToggle(true, Localization.LocalizeString("No", 89), Localization.LocalizeString("Yes", 100));
 
 			var go = new GetOption();
-			go.SetCommandPrompt(LOC.STR("Press Enter to write the RhinoCycles report"));
+			go.SetCommandPrompt(Localization.LocalizeString("Press Enter to write the RhinoCycles report", 101));
 			go.AddOptionToggle("DetailedLogging", ref detailedLogging);
 			go.AddOptionToggle("OpenFolder", ref openFolder);
 			go.AcceptNothing(true);
@@ -101,15 +101,15 @@ namespace RhinoCycles.Commands
 				if (detailedLogging.CurrentValue)
 				{
 					RhinoApp.WriteLine("----------");
-					RhinoApp.WriteLine(LOC.STR("Detailed logging is now on. No report was written yet - the logs so far do not contain the detail."));
-					RhinoApp.WriteLine(LOC.STR("1. Restart Rhino."));
-					RhinoApp.WriteLine(LOC.STR("2. Reproduce the problem."));
-					RhinoApp.WriteLine(string.Format(LOC.STR("3. Run {0} again to write the report."), EnglishName));
+					RhinoApp.WriteLine(Localization.LocalizeString("Detailed logging is now on. No report was written yet - the logs so far do not contain the detail.", 102));
+					RhinoApp.WriteLine(Localization.LocalizeString("1. Restart Rhino.", 103));
+					RhinoApp.WriteLine(Localization.LocalizeString("2. Reproduce the problem.", 104));
+					RhinoApp.WriteLine(string.Format(Localization.LocalizeString("3. Run {0} again to write the report.", 105), EnglishName));
 					RhinoApp.WriteLine("----------");
 				}
 				else
 				{
-					RhinoApp.WriteLine(LOC.STR("Detailed logging is off again. No report was written."));
+					RhinoApp.WriteLine(Localization.LocalizeString("Detailed logging is off again. No report was written.", 106));
 				}
 				return Result.Success;
 			}
@@ -121,17 +121,17 @@ namespace RhinoCycles.Commands
 			}
 			catch (Exception ex)
 			{
-				RhinoApp.WriteLine(string.Format(LOC.STR("Could not write the report: {0}"), ex.Message));
+				RhinoApp.WriteLine(string.Format(Localization.LocalizeString("Could not write the report: {0}", 107), ex.Message));
 				return Result.Failure;
 			}
 
 			RhinoApp.WriteLine("----------");
-			RhinoApp.WriteLine(string.Format(LOC.STR("RhinoCycles report written to {0}"), zipPath));
-			RhinoApp.WriteLine(LOC.STR("Please attach this file to your support request."));
+			RhinoApp.WriteLine(string.Format(Localization.LocalizeString("RhinoCycles report written to {0}", 108), zipPath));
+			RhinoApp.WriteLine(Localization.LocalizeString("Please attach this file to your support request.", 109));
 			if (!RcCore.It.AllSettings.VerboseLogging)
 			{
 				RhinoApp.WriteLine(string.Format(
-					LOC.STR("For a crash or a failed render, run {0} with DetailedLogging=Yes for a fuller report."),
+					Localization.LocalizeString("For a crash or a failed render, run {0} with DetailedLogging=Yes for a fuller report.", 110),
 					EnglishName));
 			}
 			RhinoApp.WriteLine("----------");
