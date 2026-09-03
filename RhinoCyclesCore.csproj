@@ -251,11 +251,20 @@
 
     ReleaseDebuggable maps to release: build_cycles.ps1 builds it as
     RelWithDebInfo and installs it there.
+
+    And "local" wins over both when it exists, in every configuration. That is
+    the payload a narrow local build writes - build_cycles.ps1 builds kernels
+    only for the GPUs in the machine, which is what both +Cycles configurations
+    do - and it exists precisely because that build must not overwrite the
+    committed payload with kernels for one card. It is gitignored in big_libs.
+    So a developer who rebuilt Cycles runs exactly what they built, and a
+    developer who did not is unaffected because the folder is not there.
   -->
   <PropertyGroup>
     <CyclesPayloadRoot>$(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win</CyclesPayloadRoot>
     <CyclesPayloadPath>$(CyclesPayloadRoot)\release</CyclesPayloadPath>
     <CyclesPayloadPath Condition="'$(Configuration)' == 'Debug' And Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')">$(CyclesPayloadRoot)\debug</CyclesPayloadPath>
+    <CyclesPayloadPath Condition="Exists('$(CyclesPayloadRoot)\local\ccycles.dll')">$(CyclesPayloadRoot)\local</CyclesPayloadPath>
     <!--
       /D on all three: copy only what is newer than the destination.
 
