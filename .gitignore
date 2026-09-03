@@ -7,3 +7,7 @@ obj/
 
 .fake
 .ionide
+# MSBuild generates these when building the solution; the Rhino repo ignores them
+# too, but a submodule does not inherit the parent .gitignore.
+*.metaproj
+*.metaproj.tmp
