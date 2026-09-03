@@ -254,6 +254,21 @@ namespace RhinoCyclesKernelCompiler
 			{
 				ProcessStartInfo startInfo = SetupProcessStartInfo(args[0], args[1]);
 				Process cp = Process.Start(startInfo);
+
+				/* Drain both pipes while the child runs. Reading them only after it has
+				 * exited deadlocks the moment the child writes more than the pipe buffer
+				 * holds (~4KB): the child blocks in write, so it never exits, so the loop
+				 * below waits for it forever. Compiling the kernels for every GPU
+				 * architecture produces far more output than that.
+				 *
+				 * This branch is #if DEBUG only, which is why it presented as a
+				 * "dev-only" stall: Release calls RunCompile in-process and starts no
+				 * child at all. */
+				cp.OutputDataReceived += (sender, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
+				cp.ErrorDataReceived += (sender, e) => { if (e.Data != null) Console.Error.WriteLine(e.Data); };
+				cp.BeginOutputReadLine();
+				cp.BeginErrorReadLine();
+
 				while(!cp.HasExited)
 				{
 					if(!parentProcessStillRunning())
@@ -262,8 +277,9 @@ namespace RhinoCyclesKernelCompiler
 					}
 					Thread.Sleep(20);
 				}
-				Console.Write(cp.StandardOutput.ReadToEnd());
-				Console.Error.Write(cp.StandardError.ReadToEnd());
+
+				/* Let the async readers flush what is still buffered. */
+				cp.WaitForExit();
 
 			}
 			else
