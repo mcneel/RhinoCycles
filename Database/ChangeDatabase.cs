@@ -2197,7 +2197,11 @@ namespace RhinoCyclesCore.Database
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				cob.IsSolid = ob.IsSolid;
 				//cob.IsBlockInstance = true;
-				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
+				// Diffuse and Glossy are the bits that gate reflection visibility, not
+				// Reflect. A reflection bounce carries Reflect *and* one of Diffuse or
+				// Glossy, and an object survives culling when it shares any bit with the
+				// ray, so clearing Reflect on its own never hides it. Cite RH-77285.
+				var norefl = PathRay.AllVisibility & ~(PathRay.Diffuse | PathRay.Glossy);
 				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;
 				if (ob.CastShadow == false)
 				{
