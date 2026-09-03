@@ -842,7 +842,14 @@ namespace RhinoCyclesCore.Core
 			CompileStartTime = DateTime.Now;
 			CompileEndTime = DateTime.MinValue;
 
-			List<List<Device>> deviceListings = GetDeviceListings();
+			// Anything thrown here would skip the end time below, leaving the log on "still running".
+			List<List<Device>> deviceListings = new List<List<Device>>();
+			try { deviceListings = GetDeviceListings(); }
+			catch (Exception deviceListingException)
+			{
+				compileStdErr.Enqueue(deviceListingException.ToString());
+				CompileProcessError = true;
+			}
 			foreach (List<Device> deviceListing in deviceListings)
 			{
 				if (deviceListing.Count == 0) continue;

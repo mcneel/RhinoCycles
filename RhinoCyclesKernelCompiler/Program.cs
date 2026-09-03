@@ -137,7 +137,7 @@ namespace RhinoCyclesKernelCompiler
 					status = $"{status}: {substatus}".Trim().TrimEnd(':');
 					string lowstatus = status.ToLowerInvariant();
 					bool finished = lowstatus.Contains("finished") || lowstatus.Contains("rendering done");
-					if (lowstatus.Contains("error"))
+					if (IsFailureStatus(lowstatus))
 					{
 						exceptionHappened = true;
 						throw new Exception(status);
@@ -177,6 +177,22 @@ namespace RhinoCyclesKernelCompiler
 				sw.Stop();
 			}
 
+		}
+
+		// Cycles reports a fatal device error by putting the error text in the status (it
+		// becomes the cancel message), so matching "error" alone misses e.g. a PTX load
+		// failure, leaving the poll loop spinning until the 15 minute limit.
+		static readonly string[] FailureStatusMarkers = {
+			"error", "failed", "unsupported", "not supported", "out of memory",
+		};
+
+		static bool IsFailureStatus(string lowstatus)
+		{
+			foreach (string marker in FailureStatusMarkers)
+			{
+				if (lowstatus.Contains(marker)) return true;
+			}
+			return false;
 		}
 
 		static string FormatElapsed(TimeSpan elapsed) => elapsed.ToString(@"hh\:mm\:ss");
@@ -356,10 +372,19 @@ namespace RhinoCyclesKernelCompiler
 			{
 				Parallel.ForEach(gpuTasks, HandleDevice);
 			}
+			catch (AggregateException ex)
+			{
+				// stderr, so the host log shows these grouped at the end. Messages only:
+				// a full stack dump would swamp the error section of the compile log.
+				foreach (Exception inner in ex.Flatten().InnerExceptions)
+				{
+					Console.Error.WriteLine(inner.Message);
+				}
+				result = -13;
+			}
 			catch (Exception ex)
 			{
-				// stderr, so the host log shows these grouped at the end
-				Console.Error.WriteLine(ex.ToString());
+				Console.Error.WriteLine(ex.Message);
 				result = -13;
 			}
 			finally
