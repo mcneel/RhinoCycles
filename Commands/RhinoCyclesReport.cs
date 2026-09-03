@@ -206,7 +206,6 @@ namespace RhinoCycles.Commands
 			public DateTime When;
 			public long Bytes;
 			public int Lines;
-			public int Lookups;
 			public bool SawShutdownStart;
 			public bool SawShutdownEnd;
 		}
@@ -263,10 +262,6 @@ namespace RhinoCycles.Commands
 					foreach (string line in File.ReadLines(copy))
 					{
 						entry.Lines++;
-						if (line.IndexOf("Finding render device", StringComparison.OrdinalIgnoreCase) >= 0)
-						{
-							entry.Lookups++;
-						}
 						// Both are verbose-only, so a session with neither tells us nothing.
 						if (line.IndexOf("Shutdown entry", StringComparison.OrdinalIgnoreCase) >= 0)
 						{
@@ -321,8 +316,8 @@ namespace RhinoCycles.Commands
 				string shutdown = !(e.SawShutdownStart || e.SawShutdownEnd) ? ""
 					: e.SawShutdownEnd ? "  clean-exit" : "  NO CLEAN EXIT";
 				manifest.AppendLine(string.Format(CultureInfo.InvariantCulture,
-					"{0:yyyy-MM-dd HH:mm:ss}  {1,5} lines  {2,9:N0} bytes  {3,3} lookups  {4,-9}  {5}{6}",
-					e.When, e.Lines, e.Bytes, e.Lookups, isBusy ? "[busy]" : "[startup]", e.Name, shutdown));
+					"{0:yyyy-MM-dd HH:mm:ss}  {1,5} lines  {2,9:N0} bytes  {3,-9}  {4}{5}",
+					e.When, e.Lines, e.Bytes, isBusy ? "[busy]" : "[startup]", e.Name, shutdown));
 			}
 
 			manifest.AppendLine();

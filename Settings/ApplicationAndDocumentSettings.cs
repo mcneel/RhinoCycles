@@ -255,20 +255,37 @@ namespace RhinoCyclesCore.Settings
 
 		}
 
-		public bool RenderDeviceIsCuda => RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
+		public bool RenderDeviceIsCuda
+		{
+			get
+			{
+				Device dev = RenderDevice;
+				return dev.IsMultiCuda || dev.IsCuda;
+			}
+		}
+
+		private string lastLoggedDeviceStr;
 
 		public Device RenderDevice
 		{
 			get
 			{
-				RcCore.It.AddLogString($"Finding render device with {SelectedDeviceStr}");
-				Device dev = Device.DeviceFromString(Device.ValidDeviceString(SelectedDeviceStr));
-				RcCore.It.AddLogString($"Got render device {dev}");
-				if(dev == null)
+				string selected = SelectedDeviceStr;
+				Device dev = Device.DeviceFromString(Device.ValidDeviceString(selected));
+				bool fallback = dev == null;
+				if (fallback)
 				{
-					RcCore.It.AddLogString("Device was null");
 					dev = Device.FirstCpu;
-					RcCore.It.AddLogString($"Fall back to device {dev}");
+				}
+
+				// Read very often, so log only when the resolved device changes - the repeats say nothing.
+				string devstr = dev?.DeviceString ?? "none";
+				if (devstr != lastLoggedDeviceStr)
+				{
+					lastLoggedDeviceStr = devstr;
+					RcCore.It.AddLogString(fallback
+						? $"Render device for {selected} did not resolve, falling back to {dev}"
+						: $"Render device for {selected} is {dev}");
 				}
 				return dev;
 			}
