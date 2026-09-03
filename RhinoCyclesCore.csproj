@@ -252,19 +252,39 @@
     ReleaseDebuggable maps to release: build_cycles.ps1 builds it as
     RelWithDebInfo and installs it there.
 
-    And "local" wins over both when it exists, in every configuration. That is
-    the payload a narrow local build writes - build_cycles.ps1 builds kernels
-    only for the GPUs in the machine, which is what both +Cycles configurations
-    do - and it exists precisely because that build must not overwrite the
-    committed payload with kernels for one card. It is gitignored in big_libs.
-    So a developer who rebuilt Cycles runs exactly what they built, and a
-    developer who did not is unaffected because the folder is not there.
+    And "local" wins over both, in every configuration, but only while it is
+    newer than the committed payload. That is the payload a narrow local build
+    writes - build_cycles.ps1 builds kernels only for the GPUs in the machine,
+    which is what both +Cycles configurations do - and it exists precisely
+    because that build must not overwrite the committed payload with kernels for
+    one card. It is gitignored in big_libs.
+
+    The freshness test is what stops it becoming a trap. Preferring it merely
+    because it exists would mean a developer who built +Cycles once kept
+    deploying that build for ever, including after pulling commits that
+    republished the payload - silently, months later. Comparing write times
+    expires it by itself: git touches the committed ccycles.dll when a pull
+    changes it, so the newer payload simply wins, and rebuilding +Cycles makes
+    the local one win again. Nothing to remember and no folder to delete.
+
+    The debug payload keeps its old behaviour - preferred whenever it exists, in
+    Debug only - on purpose. Someone who built it wants to step into ccycles, and
+    silently switching them to release Cycles because a pull was newer would take
+    that away.
   -->
   <PropertyGroup>
     <CyclesPayloadRoot>$(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win</CyclesPayloadRoot>
     <CyclesPayloadPath>$(CyclesPayloadRoot)\release</CyclesPayloadPath>
     <CyclesPayloadPath Condition="'$(Configuration)' == 'Debug' And Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')">$(CyclesPayloadRoot)\debug</CyclesPayloadPath>
-    <CyclesPayloadPath Condition="Exists('$(CyclesPayloadRoot)\local\ccycles.dll')">$(CyclesPayloadRoot)\local</CyclesPayloadPath>
+
+    <!--
+      File.GetLastWriteTime returns 1601-01-01 for a path that does not exist
+      rather than failing, so the release side needs no Exists guard - a missing
+      committed payload just makes any local one newer, which is the right answer.
+    -->
+    <CyclesLocalTicks Condition="Exists('$(CyclesPayloadRoot)\local\ccycles.dll')">$([System.IO.File]::GetLastWriteTime('$(CyclesPayloadRoot)\local\ccycles.dll').Ticks)</CyclesLocalTicks>
+    <CyclesReleaseTicks>$([System.IO.File]::GetLastWriteTime('$(CyclesPayloadRoot)\release\ccycles.dll').Ticks)</CyclesReleaseTicks>
+    <CyclesPayloadPath Condition="'$(CyclesLocalTicks)' != '' And $(CyclesLocalTicks) &gt; $(CyclesReleaseTicks)">$(CyclesPayloadRoot)\local</CyclesPayloadPath>
     <!--
       /D on all three: copy only what is newer than the destination.
 
@@ -303,6 +323,17 @@
   -->
   <Target Name="ReportCyclesPayload" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
     <Message Importance="high" Text="RhinoCycles: deployed Cycles payload from $(CyclesPayloadPath)" />
+
+    <!--
+      A local payload that lost the freshness test is worth a line. Without one,
+      a developer who built +Cycles some time ago and has since pulled sees their
+      build stop being used with no explanation - which is the confusion the test
+      was meant to prevent, moved one step along. Rebuilding +Cycles is the fix,
+      and saying so beats leaving them to work it out.
+    -->
+    <Message Importance="high"
+             Condition="'$(CyclesLocalTicks)' != '' And $(CyclesLocalTicks) &lt;= $(CyclesReleaseTicks)"
+             Text="RhinoCycles: your local Cycles payload is older than the committed one, so the committed one was used. Rebuild a +Cycles configuration to use yours again." />
     <Message Importance="high"
              Condition="'$(Configuration)' == 'Debug' And '$(RHINOCYCLESDEV)' != '' And !Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')"
              Text="RhinoCycles: no debug Cycles payload in big_libs, so this Debug build uses release Cycles. Native debugging into ccycles will not work. Build the solution once as Debug with RHINOCYCLESDEV set to produce one." />
