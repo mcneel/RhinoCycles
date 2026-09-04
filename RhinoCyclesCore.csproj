@@ -273,7 +273,17 @@
     that away.
   -->
   <PropertyGroup>
-    <CyclesPayloadRoot>$(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win</CyclesPayloadRoot>
+    <!--
+      Derived from this project's own directory, not $(SolutionDir). The payload does
+      not move when you build a different solution, but the old path did: building
+      RhinoCycles.sln rather than Rhino.sln resolved it to
+      src4\rhino4\Plug-ins\big_libs, which does not exist, and the post-build XCopy
+      failed with "File not found - *" and took the build down with it. Nothing about
+      where big_libs lives depends on which solution is open.
+
+      RhinoCycles -> RDK -> Plug-ins -> rhino4 -> src4 -> repo root.
+    -->
+    <CyclesPayloadRoot>$(MSBuildProjectDirectory)\..\..\..\..\..\big_libs\RhinoCycles\ccycles\win</CyclesPayloadRoot>
     <CyclesPayloadPath>$(CyclesPayloadRoot)\release</CyclesPayloadPath>
     <CyclesPayloadPath Condition="'$(Configuration)' == 'Debug' And Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')">$(CyclesPayloadRoot)\debug</CyclesPayloadPath>
 
