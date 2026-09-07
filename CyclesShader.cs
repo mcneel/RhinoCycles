@@ -461,6 +461,10 @@ namespace RhinoCyclesCore
 			}
 		}
 
+		// ON_PBR_MATERIAL_ATTENUATION_* from opennurbs_xml.h - not exposed through RhinoCommon.
+		private const string ON_PBR_ATTENUATION_COLOR = "pbr-attenuation-color";
+		private const string ON_PBR_ATTENUATION_DISTANCE = "pbr-attenuation-distance";
+
 		private Guid blendMaterialTypeId = new Guid("0322370F-A9AF-4264-A57C-58FF8E4345DD");
 		private void RecordDataForPbrShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
 		{
@@ -518,6 +522,13 @@ namespace RhinoCyclesCore
 			HandlePbrTexturedProperty(StdCS.PbrOpacity, (float)pbrmat.Opacity, rm, shb.PbrTransmission, shb.PbrTransmissionTexture);
 			HandlePbrTexturedProperty(StdCS.PbrOpacityIor, (float)pbrmat.OpacityIOR, rm, shb.PbrIor, shb.PbrIorTexture);
 			HandlePbrTexturedProperty(StdCS.PbrOpacityRoughness, (float)pbrmat.OpacityRoughness, rm, shb.PbrTransmissionRoughness, shb.PbrTransmissionRoughnessTexture);
+			// Attenuation is read straight from the content's field store: the PBR field sync that
+			// fills ON_PhysicallyBasedMaterial does not carry the pbr-attenuation-* fields, so
+			// pbrmat.AttenuationDistance would always come back as the default. RH-96156.
+			if (rm.Fields.TryGetValue(ON_PBR_ATTENUATION_COLOR, out Color4f attenuationColor))
+				shb.PbrAttenuationColor = attenuationColor;
+			if (rm.Fields.TryGetValue(ON_PBR_ATTENUATION_DISTANCE, out double attenuationDistance))
+				shb.PbrAttenuationDistance = (float)attenuationDistance;
 			HandlePbrTexturedProperty(StdCS.Bump, Color4f.Black, rm, shb.PbrBump, shb.PbrBumpTexture);
 			HandlePbrTexturedProperty(StdCS.PbrDisplacement, Color4f.Black, rm, shb.PbrDisplacement, shb.PbrDisplacementTexture);
 			HandlePbrTexturedProperty(StdCS.PbrAmbientOcclusion, 0.0f, rm, shb.PbrAmbientOcclusion, shb.PbrAmbientOcclusionTexture);
@@ -722,6 +733,12 @@ namespace RhinoCyclesCore
 
 		public TexturedFloat PbrTransmissionRoughness = new TexturedFloat(PbrCSN.OpacityRoughness, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrTransmissionRoughnessTexture = new CyclesTextureImage();
+
+		// glTF KHR_materials_volume: per-material volumetric attenuation. A distance of 0 means the
+		// material does not set one, and the application-wide GlassAbsorptionDistanceMm is used with
+		// the base colour instead. RH-96156.
+		public Color4f PbrAttenuationColor = Color4f.White;
+		public float PbrAttenuationDistance = 0.0f;
 
 		public TexturedFloat PbrAmbientOcclusion = new TexturedFloat(PbrCSN.AmbientOcclusion, 0.0f, false, 0.0f);
 		public CyclesTextureImage PbrAmbientOcclusionTexture = new CyclesTextureImage();

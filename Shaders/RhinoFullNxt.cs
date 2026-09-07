@@ -635,12 +635,36 @@ namespace RhinoCyclesCore.Shaders
 		private static bool GlassAbsorptionUseVolume => RcCore.It.AllSettings.GlassAbsorptionUseVolume;
 
 		/// <summary>
-		/// Reference thickness in Cycles scene units for this shader part.
+		/// True when this part should get volumetric glass colour at all.
+		/// </summary>
+		private static bool GlassAbsorptionActive(ShaderBody part)
+		{
+			return part.PbrAttenuationDistance > 0.0f || GlassAbsorptionDistanceMm > 0.0f;
+		}
+
+		/// <summary>
+		/// Reference thickness in Cycles scene units for this shader part. A material that sets its
+		/// own attenuation distance (glTF KHR_materials_volume) wins; otherwise the application-wide
+		/// GlassAbsorptionDistanceMm applies. The per-material value is in model units already, the
+		/// setting is in millimeters.
 		/// </summary>
 		private static float GlassAbsorptionReference(ShaderBody part)
 		{
-			// UnitScale is model units per meter, the setting is in millimeters.
+			if (part.PbrAttenuationDistance > 0.0f)
+				return Math.Max(part.PbrAttenuationDistance, 1e-6f);
+
+			// UnitScale is model units per meter.
 			return Math.Max(GlassAbsorptionDistanceMm * 0.001f * part.UnitScale, 1e-6f);
+		}
+
+		/// <summary>
+		/// Colour light becomes after travelling one reference thickness. A material that sets its
+		/// own attenuation distance also supplies its own attenuation colour; otherwise the glass
+		/// colour itself is used.
+		/// </summary>
+		private static Rhino.Display.Color4f GlassAbsorptionColor(ShaderBody part)
+		{
+			return part.PbrAttenuationDistance > 0.0f ? part.PbrAttenuationColor : part.PbrBase.Value;
 		}
 
 		/// <summary>
@@ -652,7 +676,7 @@ namespace RhinoCyclesCore.Shaders
 		private void GlassAbsorptionVolume(ShaderBody part)
 		{
 			float reference = GlassAbsorptionReference(part);
-			var colour = part.PbrBase.Value;
+			var colour = GlassAbsorptionColor(part);
 
 			// Cycles builds the absorption coefficient as sigma = (1 - nodeColour) * density and
 			// transmits exp(-sigma * d). To land on the authored colour after `reference` of glass
@@ -678,18 +702,12 @@ namespace RhinoCyclesCore.Shaders
 			absorb.ins.Density.Value = k / reference;
 			absorb.outs.Volume.Connect(m_shader.Output.ins.Volume);
 
-			// SCAFFOLDING - replace with m_shader.HasVolumeConnected = true once ccycles.dll in
-			// big_libs exports cycles_shader_set_has_volume_connected (already written on the
-			// brian/9.x/volumetric-color submodule branches).
-			// Cycles only compiles KERNEL_FEATURE_VOLUME when a used Shader has
-			// has_volume_connected set, and that is assigned exclusively inside Shader::set_graph
+			// Cycles only compiles KERNEL_FEATURE_VOLUME when a used Shader has has_volume_connected
+			// set, and that is assigned exclusively inside Shader::set_graph
 			// (cycles/src/scene/shader.cpp). csycles calls set_graph once with an EMPTY graph at
-			// shader creation and RhinoCycles then adds nodes incrementally, so the flag is stuck
-			// at false and the volume would have no effect at all. 0x5b is the byte offset of
-			// has_volume_connected in ccl::Shader, re-verified against the current
-			// big_libs/RhinoCycles/ccycles/win/release/ccycles.pdb with llvm-pdbutil. It is
-			// layout-fragile: re-verify whenever big_libs is bumped.
-			System.Runtime.InteropServices.Marshal.WriteByte(m_shader.Id, 0x5b, 1);
+			// shader creation and RhinoCycles then adds nodes incrementally, so without this the
+			// flag stays false and the volume has no effect at all.
+			m_shader.HasVolumeConnected = true;
 		}
 
 		/// <summary>
@@ -708,7 +726,18 @@ namespace RhinoCyclesCore.Shaders
 			float reference = GlassAbsorptionReference(part);
 
 			var separate = new SeparateRgbNode(m_shader, "glass_absorption_separate");
-			baseColorOut.Connect(separate.ins.Image);
+			if (part.PbrAttenuationDistance > 0.0f)
+			{
+				// The material carries its own attenuation colour, so the base-colour chain (with
+				// its textures) is not what gets absorbed.
+				var attenuation = new ColorNode(m_shader, "glass_absorption_color");
+				attenuation.Value = GlassAbsorptionColor(part).ToFloat4();
+				attenuation.outs.Color.Connect(separate.ins.Image);
+			}
+			else
+			{
+				baseColorOut.Connect(separate.ins.Image);
+			}
 
 			var lightPath = new LightPathNode(m_shader, "glass_absorption_light_path");
 			var distance = new MathDivide(m_shader, "glass_absorption_distance");
@@ -896,7 +925,7 @@ namespace RhinoCyclesCore.Shaders
 					// where thin panes stay coloured.
 					bool glassAbsorption = productPreset
 						&& part.MaterialKind == CyclesShader.ProbableMaterial.Glass
-						&& GlassAbsorptionDistanceMm > 0.0f;
+						&& GlassAbsorptionActive(part);
 
 					if (glassAbsorption && GlassAbsorptionUseVolume)
 					{
