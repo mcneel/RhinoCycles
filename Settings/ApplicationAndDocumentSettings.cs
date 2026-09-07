@@ -46,6 +46,7 @@ namespace RhinoCyclesCore.Settings
 			BumpDistance = BumpDistance;
 			NormalStrengthFactor = NormalStrengthFactor;
 			BumpStrengthFactor = BumpStrengthFactor;
+			GlassAbsorptionDistanceMm = GlassAbsorptionDistanceMm;
 
 			SelectedDeviceStr = SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = IntermediateSelectedDeviceStr;
@@ -165,6 +166,7 @@ namespace RhinoCyclesCore.Settings
 			BumpDistance = DefaultEngineSettings.BumpDistance;
 			NormalStrengthFactor = DefaultEngineSettings.NormalStrengthFactor;
 			BumpStrengthFactor = DefaultEngineSettings.BumpStrengthFactor;
+			GlassAbsorptionDistanceMm = DefaultEngineSettings.GlassAbsorptionDistanceMm;
 
 			SelectedDeviceStr = DefaultEngineSettings.SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = DefaultEngineSettings.SelectedDeviceStr;
@@ -514,6 +516,18 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.BumpDistance, DefaultEngineSettings.BumpDistance); }
 			set { RcPlugIn.Settings.SetDouble(SettingNames.BumpDistance, value); }
+		}
+
+		/// <summary>
+		/// Thickness in millimetres at which glass shows exactly its material colour (RH-96156).
+		/// Larger keeps thick glass lighter, 0 turns volumetric glass colour off. Application
+		/// setting only - deliberately not on IAllSettings; exposed by
+		/// RhinoCycles_SetAdvancedOptions, which reflects over this class.
+		/// </summary>
+		public float GlassAbsorptionDistanceMm
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.GlassAbsorptionDistanceMm, DefaultEngineSettings.GlassAbsorptionDistanceMm); }
+			set { RcPlugIn.Settings.SetDouble(SettingNames.GlassAbsorptionDistanceMm, value); }
 		}
 
 		public virtual string SelectedDeviceStr

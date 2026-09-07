@@ -39,6 +39,9 @@ namespace RhinoCyclesCore.Settings
 		static public float NormalStrengthFactor => 1.0f;
 		static public float BumpStrengthFactor => 1.0f;
 
+		// Thickness in mm at which glass shows exactly its material colour. 0 = off.
+		static public float GlassAbsorptionDistanceMm => 10.0f;
+
 		static public string SelectedDeviceStr => "-1";
 		static public bool AllowSelectedDeviceOverride => false;
 

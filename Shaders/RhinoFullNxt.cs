@@ -624,10 +624,10 @@ namespace RhinoCyclesCore.Shaders
 		}
 
 		/// <summary>
-		/// Thickness at which a glass material shows exactly its authored colour. Everything
-		/// thinner is clearer, everything thicker is deeper - see GlassAbsorptionTint.
+		/// Thickness in millimeters at which a glass material shows exactly its authored colour;
+		/// thinner glass is clearer, thicker glass deeper. 0 turns the effect off.
 		/// </summary>
-		private const float GlassAbsorptionReferenceMeters = 0.01f;
+		private static float GlassAbsorptionDistanceMm => RcCore.It.AllSettings.GlassAbsorptionDistanceMm;
 
 		/// <summary>
 		/// Beer-Lambert absorption tint for glass (RH-96156). Cycles tints the refraction
@@ -636,13 +636,14 @@ namespace RhinoCyclesCore.Shaders
 		/// ray leaves the medium, raised to (distance travelled inside / reference thickness),
 		/// which makes a crossing cost exactly one Beer-Lambert term over the real path length.
 		/// Ray Length at a backfacing hit is the length of the segment inside the object.
+		/// The reference thickness comes from GlassAbsorptionDistanceMm (RhinoCycles_SetAdvancedOptions).
 		/// </summary>
 		/// <param name="baseColorOut">Socket carrying the material's base colour.</param>
 		/// <returns>Socket to feed into the principled BSDF base colour.</returns>
 		private ISocket GlassAbsorptionTint(ShaderBody part, ISocket baseColorOut)
 		{
-			// part.UnitScale is model units per meter.
-			float reference = Math.Max(GlassAbsorptionReferenceMeters * part.UnitScale, 1e-6f);
+			// UnitScale is model units per meter, the setting is in millimeters.
+			float reference = Math.Max(GlassAbsorptionDistanceMm * 0.001f * part.UnitScale, 1e-6f);
 
 			var separate = new SeparateRgbNode(m_shader, "glass_absorption_separate");
 			baseColorOut.Connect(separate.ins.Image);
@@ -831,7 +832,8 @@ namespace RhinoCyclesCore.Shaders
 					// RH-96156: glass gets its colour from the distance light travels through it.
 					// Product preset only, like gem dispersion - Architecture keeps the legacy look
 					// where thin panes stay coloured.
-					if (productPreset && part.MaterialKind == CyclesShader.ProbableMaterial.Glass)
+					if (productPreset && part.MaterialKind == CyclesShader.ProbableMaterial.Glass
+						&& GlassAbsorptionDistanceMm > 0.0f)
 					{
 						GlassAbsorptionTint(part, basewithao.outs.Color).Connect(principled.ins.BaseColor);
 					}

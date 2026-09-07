@@ -59,6 +59,7 @@ namespace RhinoCyclesCore.Settings
 		public static string NormalStrengthFactor => "NormalStrengthFactor";
 		public static string BumpStrengthFactor => "BumpStrengthFactor";
 		public static string BumpDistance => "BumpDistance";
+		public static string GlassAbsorptionDistanceMm => "GlassAbsorptionDistanceMm";
 		public static string SelectedDevice => "SelectedDevice";
 		public static string NoCaustics => "NoCaustics";
 		public static string CausticsReflective => "CausticsReflective";
