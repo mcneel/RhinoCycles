@@ -630,6 +630,69 @@ namespace RhinoCyclesCore.Shaders
 		private static float GlassAbsorptionDistanceMm => RcCore.It.AllSettings.GlassAbsorptionDistanceMm;
 
 		/// <summary>
+		/// Real Cycles volume absorption instead of the surface approximation below.
+		/// </summary>
+		private static bool GlassAbsorptionUseVolume => RcCore.It.AllSettings.GlassAbsorptionUseVolume;
+
+		/// <summary>
+		/// Reference thickness in Cycles scene units for this shader part.
+		/// </summary>
+		private static float GlassAbsorptionReference(ShaderBody part)
+		{
+			// UnitScale is model units per meter, the setting is in millimeters.
+			return Math.Max(GlassAbsorptionDistanceMm * 0.001f * part.UnitScale, 1e-6f);
+		}
+
+		/// <summary>
+		/// Real Beer-Lambert absorption through a participating medium: an Absorption Volume on
+		/// the shader's Volume output, the way Blender does it. The surface is left clear by the
+		/// caller, so the colour is applied once, over the true path length, by the volume
+		/// integrator - no Ray Length assumptions, and correct for nested geometry.
+		/// </summary>
+		private void GlassAbsorptionVolume(ShaderBody part)
+		{
+			float reference = GlassAbsorptionReference(part);
+			var colour = part.PbrBase.Value;
+
+			// Cycles builds the absorption coefficient as sigma = (1 - nodeColour) * density and
+			// transmits exp(-sigma * d). To land on the authored colour after `reference` of glass
+			// (the glTF/OpenPBR definition) sigma must be -ln(colour)/reference, which is per
+			// channel - and density is a single float. So carry a factor k in the density and the
+			// rest in the node colour: with density = k/reference and nodeColour = 1 + ln(colour)/k
+			// the k cancels and sigma comes out exact on all three channels. k is picked so the
+			// darkest channel still gives nodeColour >= 0.
+			// (Setting density = 1/reference and the colour straight through - what Blender's own
+			// glTF importer does - lands on exp(-(1-colour)) instead, which is well off for
+			// saturated glass.)
+			float r = Math.Max(colour.R, 1e-4f);
+			float g = Math.Max(colour.G, 1e-4f);
+			float b = Math.Max(colour.B, 1e-4f);
+			float k = Math.Max(1.0f, -(float)Math.Log(Math.Min(r, Math.Min(g, b))));
+
+			var absorb = new AbsorptionVolumeNode(m_shader, "glass_absorption_volume");
+			absorb.ins.Color.Value = new float4(
+				1.0f + (float)Math.Log(r) / k,
+				1.0f + (float)Math.Log(g) / k,
+				1.0f + (float)Math.Log(b) / k,
+				1.0f);
+			absorb.ins.Density.Value = k / reference;
+			absorb.outs.Volume.Connect(m_shader.Output.ins.Volume);
+
+			// SCAFFOLDING - replace with m_shader.HasVolumeConnected = true once ccycles.dll in
+			// big_libs exports cycles_shader_set_has_volume_connected (already written on the
+			// brian/9.x/volumetric-color submodule branches).
+			// Cycles only compiles KERNEL_FEATURE_VOLUME when a used Shader has
+			// has_volume_connected set, and that is assigned exclusively inside Shader::set_graph
+			// (cycles/src/scene/shader.cpp). csycles calls set_graph once with an EMPTY graph at
+			// shader creation and RhinoCycles then adds nodes incrementally, so the flag is stuck
+			// at false and the volume would have no effect at all. 0x5b is the byte offset of
+			// has_volume_connected in ccl::Shader, re-verified against the current
+			// big_libs/RhinoCycles/ccycles/win/release/ccycles.pdb with llvm-pdbutil. It is
+			// layout-fragile: re-verify whenever big_libs is bumped.
+			System.Runtime.InteropServices.Marshal.WriteByte(m_shader.Id, 0x5b, 1);
+		}
+
+		/// <summary>
 		/// Beer-Lambert absorption tint for glass (RH-96156). Cycles tints the refraction
 		/// closure with the base colour at every boundary crossing, so colour accumulated per
 		/// crossing instead of per distance travelled. Here the colour is applied only where a
@@ -642,8 +705,7 @@ namespace RhinoCyclesCore.Shaders
 		/// <returns>Socket to feed into the principled BSDF base colour.</returns>
 		private ISocket GlassAbsorptionTint(ShaderBody part, ISocket baseColorOut)
 		{
-			// UnitScale is model units per meter, the setting is in millimeters.
-			float reference = Math.Max(GlassAbsorptionDistanceMm * 0.001f * part.UnitScale, 1e-6f);
+			float reference = GlassAbsorptionReference(part);
 
 			var separate = new SeparateRgbNode(m_shader, "glass_absorption_separate");
 			baseColorOut.Connect(separate.ins.Image);
@@ -832,8 +894,18 @@ namespace RhinoCyclesCore.Shaders
 					// RH-96156: glass gets its colour from the distance light travels through it.
 					// Product preset only, like gem dispersion - Architecture keeps the legacy look
 					// where thin panes stay coloured.
-					if (productPreset && part.MaterialKind == CyclesShader.ProbableMaterial.Glass
-						&& GlassAbsorptionDistanceMm > 0.0f)
+					bool glassAbsorption = productPreset
+						&& part.MaterialKind == CyclesShader.ProbableMaterial.Glass
+						&& GlassAbsorptionDistanceMm > 0.0f;
+
+					if (glassAbsorption && GlassAbsorptionUseVolume)
+					{
+						// The volume carries the colour, so the surface has to stay clear or the
+						// glass would be tinted twice.
+						principled.ins.BaseColor.Value = Rhino.Display.Color4f.White.ToFloat4();
+						GlassAbsorptionVolume(part);
+					}
+					else if (glassAbsorption)
 					{
 						GlassAbsorptionTint(part, basewithao.outs.Color).Connect(principled.ins.BaseColor);
 					}

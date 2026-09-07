@@ -47,6 +47,7 @@ namespace RhinoCyclesCore.Settings
 			NormalStrengthFactor = NormalStrengthFactor;
 			BumpStrengthFactor = BumpStrengthFactor;
 			GlassAbsorptionDistanceMm = GlassAbsorptionDistanceMm;
+			GlassAbsorptionUseVolume = GlassAbsorptionUseVolume;
 
 			SelectedDeviceStr = SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = IntermediateSelectedDeviceStr;
@@ -167,6 +168,7 @@ namespace RhinoCyclesCore.Settings
 			NormalStrengthFactor = DefaultEngineSettings.NormalStrengthFactor;
 			BumpStrengthFactor = DefaultEngineSettings.BumpStrengthFactor;
 			GlassAbsorptionDistanceMm = DefaultEngineSettings.GlassAbsorptionDistanceMm;
+			GlassAbsorptionUseVolume = DefaultEngineSettings.GlassAbsorptionUseVolume;
 
 			SelectedDeviceStr = DefaultEngineSettings.SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = DefaultEngineSettings.SelectedDeviceStr;
@@ -528,6 +530,18 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.GlassAbsorptionDistanceMm, DefaultEngineSettings.GlassAbsorptionDistanceMm); }
 			set { RcPlugIn.Settings.SetDouble(SettingNames.GlassAbsorptionDistanceMm, value); }
+		}
+
+		/// <summary>
+		/// Use real Cycles volume absorption for glass instead of the surface Ray Length
+		/// approximation. Both honour GlassAbsorptionDistanceMm identically; the volume is the
+		/// physically correct one but turns on the volume kernel feature. Application setting,
+		/// exposed by RhinoCycles_SetAdvancedOptions.
+		/// </summary>
+		public bool GlassAbsorptionUseVolume
+		{
+			get { return RcPlugIn.Settings.GetBool(SettingNames.GlassAbsorptionUseVolume, DefaultEngineSettings.GlassAbsorptionUseVolume); }
+			set { RcPlugIn.Settings.SetBool(SettingNames.GlassAbsorptionUseVolume, value); }
 		}
 
 		public virtual string SelectedDeviceStr
