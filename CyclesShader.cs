@@ -254,14 +254,14 @@ namespace RhinoCyclesCore
 				shb.Name = rm.Name ?? "Blend material";
 				if (rm.FindChild("material-1") is RenderMaterial first)
 				{
-					ShaderBody materialOne = new ShaderBody(first.RenderHash);
+					ShaderBody materialOne = new ShaderBody(first.RenderHash) { UnitScale = shb.UnitScale };
 					RecordDataForShaderPart(materialOne, first, gamma);
 					shb.MaterialOne = materialOne;
 					shb.MaterialOne.Name = "material-1";
 				}
 				if (rm.FindChild("material-2") is RenderMaterial second)
 				{
-					ShaderBody materialTwo = new ShaderBody(second.RenderHash);
+					ShaderBody materialTwo = new ShaderBody(second.RenderHash) { UnitScale = shb.UnitScale };
 					RecordDataForShaderPart(materialTwo, second, gamma);
 					shb.MaterialTwo = materialTwo;
 					shb.MaterialTwo.Name = "material-2";

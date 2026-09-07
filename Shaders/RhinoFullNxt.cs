@@ -623,6 +623,65 @@ namespace RhinoCyclesCore.Shaders
 			return finalMix;
 		}
 
+		/// <summary>
+		/// Thickness at which a glass material shows exactly its authored colour. Everything
+		/// thinner is clearer, everything thicker is deeper - see GlassAbsorptionTint.
+		/// </summary>
+		private const float GlassAbsorptionReferenceMeters = 0.01f;
+
+		/// <summary>
+		/// Beer-Lambert absorption tint for glass (RH-96156). Cycles tints the refraction
+		/// closure with the base colour at every boundary crossing, so colour accumulated per
+		/// crossing instead of per distance travelled. Here the colour is applied only where a
+		/// ray leaves the medium, raised to (distance travelled inside / reference thickness),
+		/// which makes a crossing cost exactly one Beer-Lambert term over the real path length.
+		/// Ray Length at a backfacing hit is the length of the segment inside the object.
+		/// </summary>
+		/// <param name="baseColorOut">Socket carrying the material's base colour.</param>
+		/// <returns>Socket to feed into the principled BSDF base colour.</returns>
+		private ISocket GlassAbsorptionTint(ShaderBody part, ISocket baseColorOut)
+		{
+			// part.UnitScale is model units per meter.
+			float reference = Math.Max(GlassAbsorptionReferenceMeters * part.UnitScale, 1e-6f);
+
+			var separate = new SeparateRgbNode(m_shader, "glass_absorption_separate");
+			baseColorOut.Connect(separate.ins.Image);
+
+			var lightPath = new LightPathNode(m_shader, "glass_absorption_light_path");
+			var distance = new MathDivide(m_shader, "glass_absorption_distance");
+			distance.ins.Value2.Value = reference;
+			lightPath.outs.RayLength.Connect(distance.ins.Value1);
+
+			var combine = new CombineRgbNode(m_shader, "glass_absorption_combine");
+
+			var powR = new MathPower(m_shader, "glass_absorption_pow_r");
+			separate.outs.R.Connect(powR.ins.Value1);
+			distance.outs.Value.Connect(powR.ins.Value2);
+			powR.outs.Value.Connect(combine.ins.R);
+
+			var powG = new MathPower(m_shader, "glass_absorption_pow_g");
+			separate.outs.G.Connect(powG.ins.Value1);
+			distance.outs.Value.Connect(powG.ins.Value2);
+			powG.outs.Value.Connect(combine.ins.G);
+
+			var powB = new MathPower(m_shader, "glass_absorption_pow_b");
+			separate.outs.B.Connect(powB.ins.Value1);
+			distance.outs.Value.Connect(powB.ins.Value2);
+			powB.outs.Value.Connect(combine.ins.B);
+
+			// Entering the medium must not tint, or the colour is applied per crossing again.
+			var backfacing = new GeometryInfoNode(m_shader, "glass_absorption_backfacing");
+			var pick = new MixNode(m_shader, "glass_absorption_pick")
+			{
+				BlendType = MixNode.BlendTypes.Blend
+			};
+			pick.ins.Color1.Value = Rhino.Display.Color4f.White.ToFloat4();
+			combine.outs.Image.Connect(pick.ins.Color2);
+			backfacing.outs.Backfacing.Connect(pick.ins.Fac);
+
+			return pick.outs.Color;
+		}
+
 		private ShaderNode GetShaderPart(ShaderBody part, DecalProcessingInfo decalProcessingInfo = null)
 		{
 			if (part.BlendMaterial)
@@ -769,7 +828,17 @@ namespace RhinoCyclesCore.Shaders
 						}
 					}
 
-					basewithao.outs.Color.Connect(principled.ins.BaseColor);
+					// RH-96156: glass gets its colour from the distance light travels through it.
+					// Product preset only, like gem dispersion - Architecture keeps the legacy look
+					// where thin panes stay coloured.
+					if (productPreset && part.MaterialKind == CyclesShader.ProbableMaterial.Glass)
+					{
+						GlassAbsorptionTint(part, basewithao.outs.Color).Connect(principled.ins.BaseColor);
+					}
+					else
+					{
+						basewithao.outs.Color.Connect(principled.ins.BaseColor);
+					}
 
 					if (basecoltexAlphaOut != null && part.UseBaseColorTextureAlphaAsObjectAlpha)
 					{
