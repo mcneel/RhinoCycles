@@ -700,14 +700,9 @@ namespace RhinoCyclesCore.Shaders
 				1.0f + (float)Math.Log(b) / k,
 				1.0f);
 			absorb.ins.Density.Value = k / reference;
+			// Cycles picks up KERNEL_FEATURE_VOLUME from this connection when it computes kernel
+			// features - see the has_volume_connected re-derivation in ShaderManager (our fork).
 			absorb.outs.Volume.Connect(m_shader.Output.ins.Volume);
-
-			// Cycles only compiles KERNEL_FEATURE_VOLUME when a used Shader has has_volume_connected
-			// set, and that is assigned exclusively inside Shader::set_graph
-			// (cycles/src/scene/shader.cpp). csycles calls set_graph once with an EMPTY graph at
-			// shader creation and RhinoCycles then adds nodes incrementally, so without this the
-			// flag stays false and the volume has no effect at all.
-			m_shader.HasVolumeConnected = true;
 		}
 
 		/// <summary>
