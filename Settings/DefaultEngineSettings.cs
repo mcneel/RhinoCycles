@@ -39,9 +39,6 @@ namespace RhinoCyclesCore.Settings
 		static public float NormalStrengthFactor => 1.0f;
 		static public float BumpStrengthFactor => 1.0f;
 
-		// Real Cycles volume absorption instead of the surface approximation.
-		static public bool GlassAbsorptionUseVolume => true;
-
 		static public string SelectedDeviceStr => "-1";
 		static public bool AllowSelectedDeviceOverride => false;
 

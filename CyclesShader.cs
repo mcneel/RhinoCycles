@@ -735,8 +735,8 @@ namespace RhinoCyclesCore
 		public CyclesTextureImage PbrTransmissionRoughnessTexture = new CyclesTextureImage();
 
 		// glTF KHR_materials_volume: per-material volumetric attenuation. A distance of 0 means the
-		// material does not set one, and the application-wide GlassAbsorptionDistanceMm is used with
-		// the base colour instead. RH-96156.
+		// material does not set one, and the shader's fallback thickness is used with the base
+		// colour instead. RH-96156.
 		public Color4f PbrAttenuationColor = Color4f.White;
 		public float PbrAttenuationDistance = 0.0f;
 
