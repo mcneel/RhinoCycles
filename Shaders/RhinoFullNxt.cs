@@ -864,12 +864,18 @@ namespace RhinoCyclesCore.Shaders
 					// RH-96156: glass gets its colour from the distance light travels through it.
 					// Product preset only, like gem dispersion - Architecture keeps the legacy look
 					// where thin panes stay coloured.
-					// A Glass material is in by default. Any other PBR material opts in by setting a
-					// positive attenuation distance - a transmissive custom PBR material does not
-					// smell like glass, so it would never qualify on MaterialKind alone.
+					// Anything that transmits light qualifies, not just materials that smell like the
+					// Glass preset - otherwise converting a Glass material to Physically Based would
+					// silently drop the effect. PbrTransmission carries OPACITY (the graph inverts it
+					// later), so opacity below 1 means the material transmits.
+					// Deliberately the value only, not a textured opacity: a material whose opacity
+					// comes from a texture keeps its old look rather than changing under existing
+					// files. Reconsider if that turns out to matter.
+					bool transmissive = part.PbrTransmission.Value < 0.999f;
 					bool glassAbsorption = productPreset
 						&& (part.MaterialKind == CyclesShader.ProbableMaterial.Glass
-							|| part.PbrAttenuationDistance > 0.0f)
+							|| part.PbrAttenuationDistance > 0.0f
+							|| transmissive)
 						&& GlassAbsorptionActive(part);
 
 					if (glassAbsorption)
