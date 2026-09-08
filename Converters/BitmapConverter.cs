@@ -176,7 +176,8 @@ namespace RhinoCyclesCore.Converters
 			var tra = renderTexture.GetOffset();
 
 			teximg.ForImageTextureNode = false;
-			if(teximg.HasProcedural && teximg.Procedural is BitmapTextureProcedural bmp)
+			// RH-94469: single read - another thread can Dispose/Clear teximg mid-build.
+			if(teximg?.Procedural is BitmapTextureProcedural bmp)
 			{
 				// if wallpaper then don't use as environment texture node texture, but
 				// regular image texture node with texco.window as mapping

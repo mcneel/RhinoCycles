@@ -37,11 +37,6 @@ namespace RhinoCyclesCore.Shaders
 		{
 		}
 
-		private bool _IsBitmapTextureProcedural(CyclesTextureImage img)
-		{
-			return img != null && img.HasProcedural && img.Procedural is BitmapTextureProcedural;
-		}
-
 		private VectorSocket _GetTexcoordSocket(CyclesTextureImage img, RhinoTextureCoordinateNode texco)
 		{
 			switch(img.EnvProjectionMode)
@@ -427,18 +422,20 @@ namespace RhinoCyclesCore.Shaders
 
 				if (m_original_background.BackgroundFill == BackgroundStyle.Environment && m_original_background.HasBgEnvTexture)
 				{
-					if(m_original_background.BgTexture.HasProcedural) {
-						if (_IsBitmapTextureProcedural(m_original_background.BgTexture))
+					// RH-94469: snapshot Procedural - another thread can Dispose/Clear the texture mid-build.
+					var bgProcedural = m_original_background.BgTexture?.Procedural;
+					if(bgProcedural != null) {
+						if (bgProcedural is BitmapTextureProcedural)
 						{
 							VectorSocket texco_out = _IsPlanarProjection(m_original_background.BgTexture) ? _GetTexcoordSocket(m_original_background.BgTexture, texcoord210) : bgAzimuthAltitudeTransformNode.ins.Vector;
-							var envnode = m_original_background.BgTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texco_out, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
+							var envnode = bgProcedural.CreateAndConnectProceduralNode(m_shader, texco_out, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
 							_SetEnvironmentProjection(m_original_background.BgTexture, envnode);
 							//bgAzimuthAltitudeTransformNode.outs.Vector.Connect(envnode.ins.Vector);
 							bgAzimuthAltitudeTransformNode.Altitude = m_original_background.BgTexture.Transform.z.x;
 							bgAzimuthAltitudeTransformNode.Azimuth = m_original_background.BgTexture.Transform.z.z;
 						} else {
 							var texcosocket = _GetTexcoordSocket(m_original_background.BgTexture, texcoord210);
-							m_original_background.BgTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcosocket, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: false);
+							bgProcedural.CreateAndConnectProceduralNode(m_shader, texcosocket, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: false);
 						}
 					}
 					else {
@@ -458,18 +455,19 @@ namespace RhinoCyclesCore.Shaders
 				}
 				if (m_original_background.HasReflEnvTexture)
 				{
-					if (m_original_background.ReflectionTexture.HasProcedural) {
-						if (_IsBitmapTextureProcedural(m_original_background.ReflectionTexture))
+					var reflProcedural = m_original_background.ReflectionTexture?.Procedural;
+					if (reflProcedural != null) {
+						if (reflProcedural is BitmapTextureProcedural)
 						{
 							VectorSocket texco_out = _IsPlanarProjection(m_original_background.ReflectionTexture) ? _GetTexcoordSocket(m_original_background.BgTexture, texcoord210) : reflAzimuthAltitudeTransformNode.ins.Vector;
-							var envnode = m_original_background.ReflectionTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texco_out, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
+							var envnode = reflProcedural.CreateAndConnectProceduralNode(m_shader, texco_out, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
 							_SetEnvironmentProjection(m_original_background.ReflectionTexture, envnode);
 							//reflAzimuthAltitudeTransformNode.outs.Vector.Connect(envnode.ins.Vector);
 							reflAzimuthAltitudeTransformNode.Altitude = m_original_background.ReflectionTexture.Transform.z.x;
 							reflAzimuthAltitudeTransformNode.Azimuth = m_original_background.ReflectionTexture.Transform.z.z;
 						} else {
 							var texcosocket = _GetTexcoordSocket(m_original_background.ReflectionTexture, texcoord210);
-							m_original_background.ReflectionTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcosocket, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: false);
+							reflProcedural.CreateAndConnectProceduralNode(m_shader, texcosocket, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: false);
 						}
 					}
 					else {
@@ -483,12 +481,13 @@ namespace RhinoCyclesCore.Shaders
 				}
 				if (m_original_background.HasSkyEnvTexture)
 				{
-					if (m_original_background.SkyTexture.HasProcedural)
+					var skyProcedural = m_original_background.SkyTexture?.Procedural;
+					if (skyProcedural != null)
 					{
-						if (_IsBitmapTextureProcedural(m_original_background.SkyTexture))
+						if (skyProcedural is BitmapTextureProcedural)
 						{
 							VectorSocket texco_out = _IsPlanarProjection(m_original_background.SkyTexture) ? _GetTexcoordSocket(m_original_background.BgTexture, texcoord210) : reflAzimuthAltitudeTransformNode.ins.Vector;
-							var envnode = m_original_background.SkyTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texco_out, sky_color_or_texture258.ins.Color2, parent_alpha_input: null, IsData: true);
+							var envnode = skyProcedural.CreateAndConnectProceduralNode(m_shader, texco_out, sky_color_or_texture258.ins.Color2, parent_alpha_input: null, IsData: true);
 							_SetEnvironmentProjection(m_original_background.SkyTexture, envnode as EnvironmentTextureNode);
 							skyAzimuthAltitudeTransformNode.Altitude = m_original_background.SkyTexture.Transform.z.x;
 							skyAzimuthAltitudeTransformNode.Azimuth = m_original_background.SkyTexture.Transform.z.z;
@@ -496,7 +495,7 @@ namespace RhinoCyclesCore.Shaders
 						else
 						{
 							var texcosocket = _GetTexcoordSocket(m_original_background.SkyTexture, texcoord210);
-							m_original_background.SkyTexture.Procedural.CreateAndConnectProceduralNode(m_shader, texcosocket, sky_color_or_texture258.ins.Color2, parent_alpha_input: null, IsData: false);
+							skyProcedural.CreateAndConnectProceduralNode(m_shader, texcosocket, sky_color_or_texture258.ins.Color2, parent_alpha_input: null, IsData: false);
 						}
 					}
 					else

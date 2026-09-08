@@ -310,8 +310,15 @@
     -->
     <PostBuildEvent Condition="'$(OS)' == 'Windows_NT'">
       XCopy $(CyclesPayloadPath)\* $(OutputPath). /Y /D /I /Q
-      XCopy $(CyclesPayloadPath)\lib $(OutputPath)RhinoCycles\lib /Y /D /I /S /Q
-      XCopy $(CyclesPayloadPath)\source $(OutputPath)RhinoCycles\source /Y /D /I /S /Q
+      rem /MIR on lib and source so kernels/sources dropped from the payload (e.g. an arch
+      rem no longer built, or a kernel header removed upstream) do not linger and get
+      rem loaded. XCopy /D only ever adds and overwrites, so it could not remove them.
+      rem robocopy is itself incremental, so this keeps the no-op build cheap.
+      robocopy $(CyclesPayloadPath)\lib $(OutputPath)RhinoCycles\lib /MIR /NJH /NJS /NFL /NDL /NP
+      if errorlevel 8 exit /b 1
+      robocopy $(CyclesPayloadPath)\source $(OutputPath)RhinoCycles\source /MIR /NJH /NJS /NFL /NDL /NP
+      if errorlevel 8 exit /b 1
+      exit /b 0
     </PostBuildEvent>
   </PropertyGroup>
 
