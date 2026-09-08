@@ -578,11 +578,20 @@ namespace RhinoCyclesCore.Shaders
 			var finalMix = new MixClosureNode(m_shader, "gem_final_mix");
 			finalMix.ins.Fac.Value = 0.75f;
 
-			// A gem's colour is absorption too - a ruby is Beer-Lambert, not a tinted surface.
-			// The core stays clear (it is white from construction) and the volume carries the
-			// colour; the dispersion lobes are channel splitters, not the material colour, so
-			// they are left alone. RH-96156.
-			GlassAbsorptionVolume(part);
+			if (GlassAbsorptionActive(part))
+			{
+				// A gem's colour is absorption too - a ruby is Beer-Lambert, not a tinted
+				// surface. The core stays clear (white from construction) and the volume
+				// carries the colour; the dispersion lobes are channel splitters, not the
+				// material colour, so they are left alone. RH-96156.
+				GlassAbsorptionVolume(part);
+			}
+			else
+			{
+				Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture,
+					glassCore.ins.Color.ToList(),
+					false, part.Gamma, false, false, decalProcessingInfo);
+			}
 
 			Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture,
 				new List<ISocket> { roughnessComplement.ins.Value2, glassRed.ins.Roughness, glassGreen.ins.Roughness, glassBlue.ins.Roughness, glassCore.ins.Roughness },
@@ -633,10 +642,16 @@ namespace RhinoCyclesCore.Shaders
 		/// </summary>
 		private const float GlassAbsorptionFallbackMm = 25.0f;
 
-		// NOTE: attenuation distance 0 currently means "this material has no value", which is also
-		// what a material that predates the field reads as - so there is no way for a material to
-		// say "no volumetric colour for me". Giving it one needs the RDK
-		// pbr-attenuation-distance-on flag (already in template.rmtl) wired up. RH-96156.
+		/// <summary>
+		/// False when the material switches volumetric colour off for itself with a distance of
+		/// exactly 0 - the same meaning Arnold and OpenPBR give transmission_depth 0, and it lands
+		/// on the pre-9 look because the base colour then tints at the surface. "Not set" is
+		/// negative, not 0, so materials from before the field still get the effect. RH-96156.
+		/// </summary>
+		private static bool GlassAbsorptionActive(ShaderBody part)
+		{
+			return part.PbrAttenuationDistance != 0.0f;
+		}
 
 		/// <summary>
 		/// Reference thickness in Cycles scene units for this shader part. The material's own
@@ -849,8 +864,13 @@ namespace RhinoCyclesCore.Shaders
 					// RH-96156: glass gets its colour from the distance light travels through it.
 					// Product preset only, like gem dispersion - Architecture keeps the legacy look
 					// where thin panes stay coloured.
+					// A Glass material is in by default. Any other PBR material opts in by setting a
+					// positive attenuation distance - a transmissive custom PBR material does not
+					// smell like glass, so it would never qualify on MaterialKind alone.
 					bool glassAbsorption = productPreset
-						&& part.MaterialKind == CyclesShader.ProbableMaterial.Glass;
+						&& (part.MaterialKind == CyclesShader.ProbableMaterial.Glass
+							|| part.PbrAttenuationDistance > 0.0f)
+						&& GlassAbsorptionActive(part);
 
 					if (glassAbsorption)
 					{
