@@ -634,12 +634,22 @@ namespace RhinoCyclesCore.Shaders
 		private const float GlassAbsorptionFallbackMm = 25.0f;
 
 		/// <summary>
+		/// Gems get their own, longer reference: a cut stone is a small chunky solid, so light
+		/// travels much further through it than through the wall of a glass vessel of the same
+		/// overall size. One constant cannot suit both.
+		/// </summary>
+		private const float GemAbsorptionFallbackMm = 40.0f;
+
+		/// <summary>
 		/// Reference thickness in Cycles scene units for this shader part. UnitScale is model units
-		/// per meter, the constant is in millimeters.
+		/// per meter, the constants are in millimeters.
 		/// </summary>
 		private static float GlassAbsorptionReference(ShaderBody part)
 		{
-			return Math.Max(GlassAbsorptionFallbackMm * 0.001f * part.UnitScale, 1e-6f);
+			float mm = part.MaterialKind == CyclesShader.ProbableMaterial.Gem
+				? GemAbsorptionFallbackMm
+				: GlassAbsorptionFallbackMm;
+			return Math.Max(mm * 0.001f * part.UnitScale, 1e-6f);
 		}
 
 		/// <summary>
