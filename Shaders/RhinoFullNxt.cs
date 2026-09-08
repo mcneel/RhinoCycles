@@ -578,20 +578,11 @@ namespace RhinoCyclesCore.Shaders
 			var finalMix = new MixClosureNode(m_shader, "gem_final_mix");
 			finalMix.ins.Fac.Value = 0.75f;
 
-			if (GlassAbsorptionActive(part))
-			{
-				// A gem's colour is absorption too - a ruby is Beer-Lambert, not a tinted
-				// surface. The core stays clear (white from construction) and the volume
-				// carries the colour; the dispersion lobes are channel splitters, not the
-				// material colour, so they are left alone. RH-96156.
-				GlassAbsorptionVolume(part);
-			}
-			else
-			{
-				Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture,
-					glassCore.ins.Color.ToList(),
-					false, part.Gamma, false, false, decalProcessingInfo);
-			}
+			// A gem's colour is absorption too - a ruby is Beer-Lambert, not a tinted surface.
+			// The core stays clear (white from construction) and the volume carries the colour;
+			// the dispersion lobes are channel splitters, not the material colour, so they are
+			// left alone. RH-96156.
+			GlassAbsorptionVolume(part);
 
 			Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture,
 				new List<ISocket> { roughnessComplement.ins.Value2, glassRed.ins.Roughness, glassGreen.ins.Roughness, glassBlue.ins.Roughness, glassCore.ins.Roughness },
@@ -643,38 +634,20 @@ namespace RhinoCyclesCore.Shaders
 		private const float GlassAbsorptionFallbackMm = 25.0f;
 
 		/// <summary>
-		/// False when the material switches volumetric colour off for itself with a distance of
-		/// exactly 0 - the same meaning Arnold and OpenPBR give transmission_depth 0, and it lands
-		/// on the pre-9 look because the base colour then tints at the surface. "Not set" is
-		/// negative, not 0, so materials from before the field still get the effect. RH-96156.
-		/// </summary>
-		private static bool GlassAbsorptionActive(ShaderBody part)
-		{
-			return part.PbrAttenuationDistance != 0.0f;
-		}
-
-		/// <summary>
-		/// Reference thickness in Cycles scene units for this shader part. The material's own
-		/// attenuation distance (glTF KHR_materials_volume) is authoritative and already in model
-		/// units; the fallback is in millimeters and gets scaled.
+		/// Reference thickness in Cycles scene units for this shader part. UnitScale is model units
+		/// per meter, the constant is in millimeters.
 		/// </summary>
 		private static float GlassAbsorptionReference(ShaderBody part)
 		{
-			if (part.PbrAttenuationDistance > 0.0f)
-				return Math.Max(part.PbrAttenuationDistance, 1e-6f);
-
-			// UnitScale is model units per meter.
 			return Math.Max(GlassAbsorptionFallbackMm * 0.001f * part.UnitScale, 1e-6f);
 		}
 
 		/// <summary>
-		/// Colour light becomes after travelling one reference thickness. A material that sets its
-		/// own attenuation distance also supplies its own attenuation colour; otherwise the glass
-		/// colour itself is used.
+		/// Colour light becomes after travelling one reference thickness: the material's own colour.
 		/// </summary>
 		private static Rhino.Display.Color4f GlassAbsorptionColor(ShaderBody part)
 		{
-			return part.PbrAttenuationDistance > 0.0f ? part.PbrAttenuationColor : part.PbrBase.Value;
+			return part.PbrBase.Value;
 		}
 
 		/// <summary>
@@ -874,9 +847,7 @@ namespace RhinoCyclesCore.Shaders
 					bool transmissive = part.PbrTransmission.Value < 0.999f;
 					bool glassAbsorption = productPreset
 						&& (part.MaterialKind == CyclesShader.ProbableMaterial.Glass
-							|| part.PbrAttenuationDistance > 0.0f
-							|| transmissive)
-						&& GlassAbsorptionActive(part);
+							|| transmissive);
 
 					if (glassAbsorption)
 					{
