@@ -39,8 +39,6 @@ namespace RhinoCyclesCore.Settings
 		static public float NormalStrengthFactor => 1.0f;
 		static public float BumpStrengthFactor => 1.0f;
 
-		// Thickness in mm at which glass shows exactly its material colour. 0 = off.
-		static public float GlassAbsorptionDistanceMm => 25.0f;
 		// Real Cycles volume absorption instead of the surface approximation.
 		static public bool GlassAbsorptionUseVolume => true;
 

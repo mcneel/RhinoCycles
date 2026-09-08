@@ -542,6 +542,8 @@ namespace RhinoCyclesCore.Shaders
 
 		private ShaderNode GemMaterial(ShaderBody part, DecalProcessingInfo decalProcessingInfo = null)
 		{
+			bool useVolume = GlassAbsorptionUseVolume;
+
 			var baseIor = new MathMaximum(m_shader, "gem_base_ior");
 			baseIor.ins.Value2.Value = 1.001f;
 
@@ -578,9 +580,20 @@ namespace RhinoCyclesCore.Shaders
 			var finalMix = new MixClosureNode(m_shader, "gem_final_mix");
 			finalMix.ins.Fac.Value = 0.75f;
 
-			Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture,
-				glassCore.ins.Color.ToList(),
-				false, part.Gamma, false, false, decalProcessingInfo);
+			if (useVolume)
+			{
+				// A gem's colour is absorption too - a ruby is Beer-Lambert, not a tinted surface.
+				// The core stays clear (it is white from construction) and the volume carries the
+				// colour; the dispersion lobes are channel splitters, not the material colour, so
+				// they are left alone. RH-96156.
+				GlassAbsorptionVolume(part);
+			}
+			else
+			{
+				Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture,
+					glassCore.ins.Color.ToList(),
+					false, part.Gamma, false, false, decalProcessingInfo);
+			}
 
 			Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture,
 				new List<ISocket> { roughnessComplement.ins.Value2, glassRed.ins.Roughness, glassGreen.ins.Roughness, glassBlue.ins.Roughness, glassCore.ins.Roughness },
@@ -624,29 +637,27 @@ namespace RhinoCyclesCore.Shaders
 		}
 
 		/// <summary>
-		/// Thickness in millimeters at which a glass material shows exactly its authored colour;
-		/// thinner glass is clearer, thicker glass deeper. 0 turns the effect off.
+		/// Reference thickness used when a material carries no attenuation distance of its own -
+		/// materials from before the field existed, essentially. Millimeters, so it means the same
+		/// thing whatever the model units are. Not a setting: absorption distance is a property of
+		/// the glass, so it belongs on the material.
 		/// </summary>
-		private static float GlassAbsorptionDistanceMm => RcCore.It.AllSettings.GlassAbsorptionDistanceMm;
+		private const float GlassAbsorptionFallbackMm = 25.0f;
 
 		/// <summary>
 		/// Real Cycles volume absorption instead of the surface approximation below.
 		/// </summary>
 		private static bool GlassAbsorptionUseVolume => RcCore.It.AllSettings.GlassAbsorptionUseVolume;
 
-		/// <summary>
-		/// True when this part should get volumetric glass colour at all.
-		/// </summary>
-		private static bool GlassAbsorptionActive(ShaderBody part)
-		{
-			return part.PbrAttenuationDistance > 0.0f || GlassAbsorptionDistanceMm > 0.0f;
-		}
+		// NOTE: attenuation distance 0 currently means "this material has no value", which is also
+		// what a material that predates the field reads as - so there is no way for a material to
+		// say "no volumetric colour for me". Giving it one needs the RDK
+		// pbr-attenuation-distance-on flag (already in template.rmtl) wired up. RH-96156.
 
 		/// <summary>
-		/// Reference thickness in Cycles scene units for this shader part. A material that sets its
-		/// own attenuation distance (glTF KHR_materials_volume) wins; otherwise the application-wide
-		/// GlassAbsorptionDistanceMm applies. The per-material value is in model units already, the
-		/// setting is in millimeters.
+		/// Reference thickness in Cycles scene units for this shader part. The material's own
+		/// attenuation distance (glTF KHR_materials_volume) is authoritative and already in model
+		/// units; the fallback is in millimeters and gets scaled.
 		/// </summary>
 		private static float GlassAbsorptionReference(ShaderBody part)
 		{
@@ -654,7 +665,7 @@ namespace RhinoCyclesCore.Shaders
 				return Math.Max(part.PbrAttenuationDistance, 1e-6f);
 
 			// UnitScale is model units per meter.
-			return Math.Max(GlassAbsorptionDistanceMm * 0.001f * part.UnitScale, 1e-6f);
+			return Math.Max(GlassAbsorptionFallbackMm * 0.001f * part.UnitScale, 1e-6f);
 		}
 
 		/// <summary>
@@ -919,8 +930,7 @@ namespace RhinoCyclesCore.Shaders
 					// Product preset only, like gem dispersion - Architecture keeps the legacy look
 					// where thin panes stay coloured.
 					bool glassAbsorption = productPreset
-						&& part.MaterialKind == CyclesShader.ProbableMaterial.Glass
-						&& GlassAbsorptionActive(part);
+						&& part.MaterialKind == CyclesShader.ProbableMaterial.Glass;
 
 					if (glassAbsorption && GlassAbsorptionUseVolume)
 					{
