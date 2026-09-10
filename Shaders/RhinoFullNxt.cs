@@ -578,11 +578,20 @@ namespace RhinoCyclesCore.Shaders
 			var finalMix = new MixClosureNode(m_shader, "gem_final_mix");
 			finalMix.ins.Fac.Value = 0.75f;
 
-			// A gem's colour is absorption too - a ruby is Beer-Lambert, not a tinted surface.
-			// The core stays clear (white from construction) and the volume carries the colour;
-			// the dispersion lobes are channel splitters, not the material colour, so they are
-			// left alone. RH-96156.
-			GlassAbsorptionVolume(part);
+			if (GlassAbsorptionActive(part))
+			{
+				// A gem's colour is absorption too - a ruby is Beer-Lambert, not a tinted surface.
+				// The core stays clear (white from construction) and the volume carries the colour;
+				// the dispersion lobes are channel splitters, not the material colour, so they are
+				// left alone. RH-96156.
+				GlassAbsorptionVolume(part);
+			}
+			else
+			{
+				Utilities.PbrGraphForSlot(m_shader, part.PbrBase, part.PbrBaseTexture,
+					glassCore.ins.Color.ToList(),
+					false, part.Gamma, false, false, decalProcessingInfo);
+			}
 
 			Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture,
 				new List<ISocket> { roughnessComplement.ins.Value2, glassRed.ins.Roughness, glassGreen.ins.Roughness, glassBlue.ins.Roughness, glassCore.ins.Roughness },
@@ -626,30 +635,36 @@ namespace RhinoCyclesCore.Shaders
 		}
 
 		/// <summary>
-		/// Reference thickness used when a material carries no attenuation distance of its own -
-		/// materials from before the field existed, essentially. Millimeters, so it means the same
-		/// thing whatever the model units are. Not a setting: absorption distance is a property of
-		/// the glass, so it belongs on the material.
+		/// Reference thickness in millimetres: the distance over which glass reaches exactly its
+		/// material colour. Gems get their own, longer value - a cut stone is a small chunky solid,
+		/// so light travels much further through it than through the wall of a vessel of the same
+		/// overall size. TEMPORARY as settings (RH-96156): absorption distance is a property of the
+		/// glass and belongs on the material, but there is no material field for it in 9.0, so
+		/// these are exposed as advanced options to find good defaults with.
 		/// </summary>
-		private const float GlassAbsorptionFallbackMm = 25.0f;
+		private static float GlassAbsorptionReferenceMm(ShaderBody part)
+		{
+			return part.MaterialKind == CyclesShader.ProbableMaterial.Gem
+				? RcCore.It.AllSettings.GemAbsorptionDistanceMm
+				: RcCore.It.AllSettings.GlassAbsorptionDistanceMm;
+		}
 
 		/// <summary>
-		/// Gems get their own, longer reference: a cut stone is a small chunky solid, so light
-		/// travels much further through it than through the wall of a glass vessel of the same
-		/// overall size. One constant cannot suit both.
+		/// A distance of 0 means off - the same meaning Arnold and OpenPBR give transmission_depth
+		/// 0, and it lands on the pre-9 look where the base colour tints at the surface.
 		/// </summary>
-		private const float GemAbsorptionFallbackMm = 40.0f;
+		private static bool GlassAbsorptionActive(ShaderBody part)
+		{
+			return GlassAbsorptionReferenceMm(part) > 0.0f;
+		}
 
 		/// <summary>
-		/// Reference thickness in Cycles scene units for this shader part. UnitScale is model units
-		/// per meter, the constants are in millimeters.
+		/// Reference thickness in Cycles scene units. UnitScale is model units per meter, the
+		/// setting is in millimetres.
 		/// </summary>
 		private static float GlassAbsorptionReference(ShaderBody part)
 		{
-			float mm = part.MaterialKind == CyclesShader.ProbableMaterial.Gem
-				? GemAbsorptionFallbackMm
-				: GlassAbsorptionFallbackMm;
-			return Math.Max(mm * 0.001f * part.UnitScale, 1e-6f);
+			return Math.Max(GlassAbsorptionReferenceMm(part) * 0.001f * part.UnitScale, 1e-6f);
 		}
 
 		/// <summary>
@@ -857,7 +872,8 @@ namespace RhinoCyclesCore.Shaders
 					bool transmissive = part.PbrTransmission.Value < 0.999f;
 					bool glassAbsorption = productPreset
 						&& (part.MaterialKind == CyclesShader.ProbableMaterial.Glass
-							|| transmissive);
+							|| transmissive)
+						&& GlassAbsorptionActive(part);
 
 					if (glassAbsorption)
 					{

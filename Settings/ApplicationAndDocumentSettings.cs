@@ -46,6 +46,8 @@ namespace RhinoCyclesCore.Settings
 			BumpDistance = BumpDistance;
 			NormalStrengthFactor = NormalStrengthFactor;
 			BumpStrengthFactor = BumpStrengthFactor;
+			GlassAbsorptionDistanceMm = GlassAbsorptionDistanceMm;
+			GemAbsorptionDistanceMm = GemAbsorptionDistanceMm;
 
 			SelectedDeviceStr = SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = IntermediateSelectedDeviceStr;
@@ -165,6 +167,8 @@ namespace RhinoCyclesCore.Settings
 			BumpDistance = DefaultEngineSettings.BumpDistance;
 			NormalStrengthFactor = DefaultEngineSettings.NormalStrengthFactor;
 			BumpStrengthFactor = DefaultEngineSettings.BumpStrengthFactor;
+			GlassAbsorptionDistanceMm = DefaultEngineSettings.GlassAbsorptionDistanceMm;
+			GemAbsorptionDistanceMm = DefaultEngineSettings.GemAbsorptionDistanceMm;
 
 			SelectedDeviceStr = DefaultEngineSettings.SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = DefaultEngineSettings.SelectedDeviceStr;
@@ -514,6 +518,29 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.BumpDistance, DefaultEngineSettings.BumpDistance); }
 			set { RcPlugIn.Settings.SetDouble(SettingNames.BumpDistance, value); }
+		}
+
+		/// <summary>
+		/// RH-96156, TEMPORARY: thickness in mm at which glass shows exactly its material colour.
+		/// Larger keeps thick glass lighter, 0 turns volumetric colour off. Application setting
+		/// only - deliberately not on IAllSettings; RhinoCycles_SetAdvancedOptions picks it up by
+		/// reflecting over this class. Read when shaders are built, so re-enter Raytraced to see
+		/// a change.
+		/// </summary>
+		public float GlassAbsorptionDistanceMm
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.GlassAbsorptionDistanceMm, DefaultEngineSettings.GlassAbsorptionDistanceMm); }
+			set { RcPlugIn.Settings.SetDouble(SettingNames.GlassAbsorptionDistanceMm, value); }
+		}
+
+		/// <summary>
+		/// RH-96156, TEMPORARY: as GlassAbsorptionDistanceMm, for gems. Cut stones are chunky
+		/// solids, so light travels further through them than through a vessel wall.
+		/// </summary>
+		public float GemAbsorptionDistanceMm
+		{
+			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.GemAbsorptionDistanceMm, DefaultEngineSettings.GemAbsorptionDistanceMm); }
+			set { RcPlugIn.Settings.SetDouble(SettingNames.GemAbsorptionDistanceMm, value); }
 		}
 
 		public virtual string SelectedDeviceStr

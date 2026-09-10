@@ -39,6 +39,11 @@ namespace RhinoCyclesCore.Settings
 		static public float NormalStrengthFactor => 1.0f;
 		static public float BumpStrengthFactor => 1.0f;
 
+		// RH-96156, TEMPORARY: thickness in mm at which glass/gems show exactly their material
+		// colour. 0 = off. Tunable only so Brian can find good values; drop before shipping.
+		static public float GlassAbsorptionDistanceMm => 25.0f;
+		static public float GemAbsorptionDistanceMm => 40.0f;
+
 		static public string SelectedDeviceStr => "-1";
 		static public bool AllowSelectedDeviceOverride => false;
 
