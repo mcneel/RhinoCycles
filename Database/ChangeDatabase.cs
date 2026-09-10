@@ -1294,8 +1294,8 @@ namespace RhinoCyclesCore.Database
 		/// <summary>
 		/// Create a jiggled transform of the MeshInstance transform.
 		///
-		/// To ensure the jiggling is stable use the MeshId GUID to generate a
-		/// jiggle vector.
+		/// The jiggle vector comes from the persistent RootId: MeshId is a fresh
+		/// GUID every render, which made each render jiggle differently. RH-83881.
 		/// </summary>
 		/// <param name="a">MeshInstance to create jiggled transform for</param>
 		/// <returns>Transform with jiggle translation applied</returns>
@@ -1303,7 +1303,7 @@ namespace RhinoCyclesCore.Database
 		{
 			var objectXform = a.Transform;
 			RcCore.It.AddLogStringIfVerbose($"\tJiggle: {objectXform}");
-			var p = a.MeshId.ToByteArray();
+			var p = (a.RootId != Guid.Empty ? a.RootId : a.MeshId).ToByteArray();
 			long l0 = BitConverter.ToInt64(p, 0);
 			long l1 = BitConverter.ToInt64(p, 4);
 			long l2 = BitConverter.ToInt64(p, 8);
@@ -2182,7 +2182,7 @@ namespace RhinoCyclesCore.Database
 
 				// set mesh reference and other stuff
 				cob.Mesh = mesh;
-				cob.RandomId = ob.obid;
+				cob.RandomId = ob.randomid;
 				cob.PassId = ob.passobid;
 				cob.Transform = ob.Transform;
 				cob.OcsFrame = t;
