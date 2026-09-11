@@ -168,7 +168,7 @@
   <Target Name="CopyFiles" BeforeTargets="BeforeBuild">
     <MakeDir Directories="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" />
     <Copy SourceFiles="@(LicenseFiles)" DestinationFolder="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses" OverwriteReadOnlyFiles="True" />
-    <Copy SourceFiles="$(ProjectDir)..\cycles\third_party\cuew\LICENSE" DestinationFiles="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\cuew.txt" OverwriteReadOnlyFiles="True" />
+    <Copy SourceFiles="$(ProjectDir)..\cycles-core\third_party\cuew\LICENSE" DestinationFiles="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\cuew.txt" OverwriteReadOnlyFiles="True" />
     <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\CMakeLists.txt" />
     <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\OSL.txt" />
   </Target>
