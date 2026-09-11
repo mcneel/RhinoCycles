@@ -255,9 +255,11 @@ namespace RhinoCyclesCore
 					shb.MaterialTwo.Name = "material-2";
 				}
 				shb.BlendMixAmount = (float)Convert.ToDouble(rm.GetParameter("mix-amount"));
-				if(rm.FindChild("mix-amount") is RenderTexture mixTexture)
+				if(rm.ChildSlotOn("mix-amount") && rm.FindChild("mix-amount") is RenderTexture mixTexture)
 				{
 					Utilities.HandleRenderTexture(mixTexture, shb.BlendMixAmountTexture, false, false, _bitmapConverter, _docsrn, gamma, false, false);
+					// HandleRenderTexture doesn't touch Amount, and 0 would drop the texture from the mix.
+					shb.BlendMixAmountTexture.Amount = (float)Math.Min(rm.ChildSlotAmount("mix-amount") / 100.0, 1.0);
 				}
 				return true;
 			}
