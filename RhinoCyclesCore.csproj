@@ -242,12 +242,14 @@
     two cases taking different paths.
 
     The folder follows the configuration, but only release is committed to
-    big_libs. The debug payload is 444 MB of binaries nobody but a Cycles
-    developer has any use for, and a Debug build of Rhino ran against release
-    Cycles for years without trouble. So the debug folder is used when it is
-    actually there - which means someone ticked "Cycles Core" and built Debug
-    locally - and release otherwise. A checkout with no local Cycles build gets a
-    working ccycles.dll in every configuration.
+    big_libs. The debug payload is a local build nobody but a Cycles developer
+    has any use for, and a Debug build of Rhino ran against release Cycles for
+    years without trouble. So the debug folder is used when it is actually there
+    - which means someone built Debug+Cycles locally - and release otherwise. A
+    checkout with no local Cycles build gets a working ccycles.dll in every
+    configuration. Since 2026-09 Debug+Cycles builds that payload as
+    RelWithDebInfo, so a Debug Rhino keeps release-speed kernels and still gets
+    PDBs for stepping into ccycles.
 
     ReleaseDebuggable maps to release: build_cycles.ps1 builds it as
     RelWithDebInfo and installs it there.
