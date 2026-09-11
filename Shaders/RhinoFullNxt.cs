@@ -691,7 +691,10 @@ namespace RhinoCyclesCore.Shaders
 
 				if (part.BlendMixAmountTexture.HasProcedural)
 				{
-					Utilities.GraphForSlot(m_shader, null, part.BlendMixAmount > 0.0f, part.BlendMixAmountTexture.Amount, part.BlendMixAmountTexture, mixAmountSockets, true, false, false, true, part.Gamma, false, decalProcessingInfo);
+					// Mix from the slider towards the texture by the texture's alpha, so transparent texels keep the slider value.
+					var mixAmount = new ValueNode(m_shader, "blend material mix amount");
+					mixAmount.Value = part.BlendMixAmount;
+					Utilities.GraphForSlot(m_shader, mixAmount.outs.Value, true, part.BlendMixAmountTexture.Amount, part.BlendMixAmountTexture, mixAmountSockets, true, false, false, true, part.Gamma, false, decalProcessingInfo);
 				}
 				return blender;
 			}
