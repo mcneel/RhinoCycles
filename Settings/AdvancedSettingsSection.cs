@@ -39,6 +39,8 @@ namespace RhinoCyclesCore.Settings
 		private NumericStepper StepperSamples;
 		private CheckBox CheckboxUseSamples;
 		private DropDown ListboxTextureBakeQuality;
+		private NumericStepper StepperGlassAbsorption;
+		private NumericStepper StepperGemAbsorption;
 		private EnumRadioButtonList<RenderPresetHelpers.Presets> RadiobuttonPresets;
 
 		public override LocalizeStringPair Caption => m_caption;
@@ -52,7 +54,7 @@ namespace RhinoCyclesCore.Settings
 			{
 				float dpi = ParentWindow != null ? ParentWindow.LogicalPixelSize : 1.0f;
 				// Content.Height, use 450 for now
-				int height = (int)(450 * dpi);
+				int height = (int)(530 * dpi);
 				return height;
 			}
 		}
@@ -74,6 +76,8 @@ namespace RhinoCyclesCore.Settings
 		public Label LblMaxTransmissionBounces { get; set; }
 		public Label LblMaxTransparencyBounces { get; set; }
 		public Label LblTextureBakeQuality { get; set; }
+		public Label LblGlassAbsorption { get; set; }
+		public Label LblGemAbsorption { get; set; }
 		public StackLayout MainLayout { get; set; }
 
 		/// <summary>
@@ -181,6 +185,8 @@ namespace RhinoCyclesCore.Settings
 				StepperMaxTransmissionBounces.Value = e.AllSettings.MaxTransmissionBounce;
 				StepperMaxTransparencyBounces.Value = e.AllSettings.TransparentMaxBounce;
 				ListboxTextureBakeQuality.SelectedIndex = e.AllSettings.TextureBakeQuality;
+				StepperGlassAbsorption.Value = RcCore.It.AllSettings.GlassAbsorptionDistanceMm;
+				StepperGemAbsorption.Value = RcCore.It.AllSettings.GemAbsorptionDistanceMm;
 				RegisterControlEvents();
 			}
 		}
@@ -363,6 +369,40 @@ namespace RhinoCyclesCore.Settings
 				}
 			};
 
+			LblGlassAbsorption = new Label()
+			{
+				Text = "Glass",
+				ToolTip = "Thickness of glass, in millimeters, that shows exactly the material colour. 0 turns the effect off.",
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			StepperGlassAbsorption = new NumericStepper()
+			{
+				Value = 25.0,
+				ToolTip = LblGlassAbsorption.ToolTip,
+				MaxValue = 10000,
+				MinValue = 0,
+				MaximumDecimalPlaces = 1,
+				Width = 75,
+			};
+
+			LblGemAbsorption = new Label()
+			{
+				Text = "Gem",
+				ToolTip = "As for glass, but for gem materials. Cut stones need a longer distance than a vessel wall.",
+				VerticalAlignment = VerticalAlignment.Center,
+			};
+
+			StepperGemAbsorption = new NumericStepper()
+			{
+				Value = 40.0,
+				ToolTip = LblGemAbsorption.ToolTip,
+				MaxValue = 10000,
+				MinValue = 0,
+				MaximumDecimalPlaces = 1,
+				Width = 75,
+			};
+
 			var bounceTable = new TableLayout()
 			{
 				Padding = new Eto.Drawing.Padding(14, 0, 0, 0),
@@ -458,6 +498,36 @@ namespace RhinoCyclesCore.Settings
 				}
 			};
 
+			var absorptionTableTitle = new TableLayout()
+			{
+				Rows =
+				{
+					new TableRow("Volumetric Colour", new Rhino.UI.Controls.Divider())
+				}
+			};
+
+			var absorptionTable = new TableLayout()
+			{
+				Padding = new Eto.Drawing.Padding(14, 0, 0, 0),
+				Spacing = new Eto.Drawing.Size(5, 5),
+				Rows =
+				{
+					new TableRow(LblGlassAbsorption, StepperGlassAbsorption),
+					new TableRow(LblGemAbsorption, StepperGemAbsorption),
+				}
+			};
+
+			var absorptionMainTable = new TableLayout()
+			{
+				Spacing = new Eto.Drawing.Size(5, 5),
+				ToolTip = "Reference thickness for volumetric colour in the Product preset.",
+				Rows =
+				{
+					new TableRow(absorptionTableTitle),
+					new TableRow(absorptionTable),
+				}
+			};
+
 			var seedTableTitle = new TableLayout()
 			{
 				Rows = 
@@ -542,6 +612,9 @@ namespace RhinoCyclesCore.Settings
 					TableLayout.Horizontal(10,
 						textureMainTable
 					),
+					TableLayout.Horizontal(10,
+						absorptionMainTable
+					),
 				}
 			};
 			Content = MainLayout;
@@ -559,6 +632,8 @@ namespace RhinoCyclesCore.Settings
 			StepperMaxVolumeBounces.ValueChanged += IntegratorSettingValueChangedHandler;
 			StepperMaxTransmissionBounces.ValueChanged += IntegratorSettingValueChangedHandler;
 			StepperMaxTransparencyBounces.ValueChanged += IntegratorSettingValueChangedHandler;
+			StepperGlassAbsorption.ValueChanged += GlassAbsorptionValueChangedHandler;
+			StepperGemAbsorption.ValueChanged += GlassAbsorptionValueChangedHandler;
 			RadiobuttonPresets.SelectedValueChanged += RadiobuttonPresetsSelectedValueChanged;
 		}
 
@@ -585,6 +660,17 @@ namespace RhinoCyclesCore.Settings
 			RenderPresetHelpers.SetPreset(vud, RadiobuttonPresets.SelectedValue);
 		}
 
+		/// <summary>
+		/// RH-96156, TEMPORARY. Application settings, not per-document, so they are written
+		/// straight to RcCore rather than through the view model. Read when shaders are built,
+		/// so a change shows up on the next render or on re-entering Raytraced.
+		/// </summary>
+		private void GlassAbsorptionValueChangedHandler(object sender, EventArgs e)
+		{
+			RcCore.It.AllSettings.GlassAbsorptionDistanceMm = (float)StepperGlassAbsorption.Value;
+			RcCore.It.AllSettings.GemAbsorptionDistanceMm = (float)StepperGemAbsorption.Value;
+		}
+
 		private void UnregisterControlEvents()
 		{
 			CheckboxUseSamples.CheckedChanged -= CheckboxUseSamples_CheckedChanged;
@@ -597,6 +683,8 @@ namespace RhinoCyclesCore.Settings
 			StepperMaxVolumeBounces.ValueChanged -= IntegratorSettingValueChangedHandler;
 			StepperMaxTransmissionBounces.ValueChanged -= IntegratorSettingValueChangedHandler;
 			StepperMaxTransparencyBounces.ValueChanged -= IntegratorSettingValueChangedHandler;
+			StepperGlassAbsorption.ValueChanged -= GlassAbsorptionValueChangedHandler;
+			StepperGemAbsorption.ValueChanged -= GlassAbsorptionValueChangedHandler;
 			RadiobuttonPresets.SelectedValueChanged -= RadiobuttonPresetsSelectedValueChanged;
 		}
 
