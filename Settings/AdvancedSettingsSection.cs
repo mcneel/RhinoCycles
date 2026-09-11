@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 using Eto.Forms;
+using Rhino;
 using Rhino.UI;
 using Rhino.UI.Controls;
 using RhinoCyclesCore.Core;
@@ -669,6 +670,17 @@ namespace RhinoCyclesCore.Settings
 		{
 			RcCore.It.AllSettings.GlassAbsorptionDistanceMm = (float)StepperGlassAbsorption.Value;
 			RcCore.It.AllSettings.GemAbsorptionDistanceMm = (float)StepperGemAbsorption.Value;
+
+			// The shader graph is only built when materials are (re)sent, so the value alone does
+			// nothing to a running Raytraced session. Mirror it into the document render settings:
+			// that raises a render-settings change, which ChangeDatabase answers by refreshing
+			// materials - the same route the Product/Architecture preset takes.
+			var doc = RhinoDoc.ActiveDoc;
+			if (doc == null) return;
+			var rs = doc.RenderSettings.Duplicate();
+			rs.UserDictionary.Set(SettingNames.GlassAbsorptionDistanceMm, StepperGlassAbsorption.Value);
+			rs.UserDictionary.Set(SettingNames.GemAbsorptionDistanceMm, StepperGemAbsorption.Value);
+			doc.RenderSettings = rs;
 		}
 
 		private void UnregisterControlEvents()

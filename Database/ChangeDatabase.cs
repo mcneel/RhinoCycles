@@ -2238,6 +2238,10 @@ namespace RhinoCyclesCore.Database
 		private IntegratorSettings integratorSettings { get; set; } = null;
 		private uint _oldIntegratorHash { get; set; } = 0;
 		private RenderPresetHelpers.Presets? _oldRenderPreset { get; set; } = null;
+		// RH-96156, TEMPORARY: mirrored from the app setting by the render settings UI purely so a
+		// change can be noticed here - the shader itself still reads RcCore.
+		private double _oldGlassAbsorption { get; set; } = double.NaN;
+		private double _oldGemAbsorption { get; set; } = double.NaN;
 		private bool _integratorChanged { get; set; } = false;
 		protected override void ApplyRenderSettingsChanges(RenderSettings rs)
 		{
@@ -2251,6 +2255,21 @@ namespace RhinoCyclesCore.Database
 					RefreshMaterials();
 				}
 				_oldRenderPreset = renderPreset;
+
+				// RH-96156, TEMPORARY: absorption distance changed in the UI, so every glass, gem
+				// and transmissive shader graph is stale. Same treatment as a preset change.
+				double glassAbsorption = rs.UserDictionary.GetDouble(
+					SettingNames.GlassAbsorptionDistanceMm, RcCore.It.AllSettings.GlassAbsorptionDistanceMm);
+				double gemAbsorption = rs.UserDictionary.GetDouble(
+					SettingNames.GemAbsorptionDistanceMm, RcCore.It.AllSettings.GemAbsorptionDistanceMm);
+				if ((!double.IsNaN(_oldGlassAbsorption) && glassAbsorption != _oldGlassAbsorption)
+					|| (!double.IsNaN(_oldGemAbsorption) && gemAbsorption != _oldGemAbsorption))
+				{
+					RcCore.It.AddLogStringIfVerbose("	Absorption distance changed, refreshing materials");
+					RefreshMaterials();
+				}
+				_oldGlassAbsorption = glassAbsorption;
+				_oldGemAbsorption = gemAbsorption;
 				if(eds.IntegratorHash!=_oldIntegratorHash)
 				{
 					integratorSettings = new IntegratorSettings(eds);
