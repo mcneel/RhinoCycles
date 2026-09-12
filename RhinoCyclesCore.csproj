@@ -286,31 +286,52 @@
       RhinoCycles -> RDK -> Plug-ins -> rhino4 -> src4 -> repo root.
     -->
     <CyclesPayloadRoot>$(MSBuildProjectDirectory)\..\..\..\..\..\big_libs\RhinoCycles\ccycles\win</CyclesPayloadRoot>
-    <CyclesPayloadPath>$(CyclesPayloadRoot)\release</CyclesPayloadPath>
-    <CyclesPayloadPath Condition="'$(Configuration)' == 'Debug' And Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')">$(CyclesPayloadRoot)\debug</CyclesPayloadPath>
+  </PropertyGroup>
 
-    <!--
-      File.GetLastWriteTime returns 1601-01-01 for a path that does not exist
-      rather than failing, so the release side needs no Exists guard - a missing
-      committed payload just makes any local one newer, which is the right answer.
-    -->
-    <CyclesLocalTicks Condition="Exists('$(CyclesPayloadRoot)\local\ccycles.dll')">$([System.IO.File]::GetLastWriteTime('$(CyclesPayloadRoot)\local\ccycles.dll').Ticks)</CyclesLocalTicks>
-    <CyclesReleaseTicks>$([System.IO.File]::GetLastWriteTime('$(CyclesPayloadRoot)\release\ccycles.dll').Ticks)</CyclesReleaseTicks>
-    <CyclesPayloadPath Condition="'$(CyclesLocalTicks)' != '' And $(CyclesLocalTicks) &gt; $(CyclesReleaseTicks)">$(CyclesPayloadRoot)\local</CyclesPayloadPath>
-    <!--
-      /D on all three: copy only what is newer than the destination.
+  <!--
+    Which payload to deploy is decided when the target runs, not when MSBuild reads
+    this file. As static properties these were fixed at evaluation, and in a solution
+    build that happens before ccycles.vcxproj has installed anything. So the first
+    Debug+Cycles build in a tree that had no debug payload yet saw Exists() as false
+    and deployed release Cycles next to the debug payload it had just built; only a
+    second build would have picked it up. Found on a fresh clone, 2026-09-12. The
+    same held for a first narrow build writing the local payload.
+  -->
+  <Target Name="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <CyclesPayloadPath>$(CyclesPayloadRoot)\release</CyclesPayloadPath>
+      <CyclesPayloadPath Condition="'$(Configuration)' == 'Debug' And Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')">$(CyclesPayloadRoot)\debug</CyclesPayloadPath>
 
-      RunPostBuildEvent is Always, so this runs on every build of this project -
-      including one where nothing changed and the compile was skipped. Without
-      /D that recopied the whole payload every time, which is 321 MB, 29 MB of
-      it kernels. XCopy returns 0 when everything is already up to date, so a
-      no-op copy does not fail the build.
+      <!--
+        File.GetLastWriteTime returns 1601-01-01 for a path that does not exist
+        rather than failing, so the release side needs no Exists guard - a missing
+        committed payload just makes any local one newer, which is the right answer.
+      -->
+      <CyclesLocalTicks Condition="Exists('$(CyclesPayloadRoot)\local\ccycles.dll')">$([System.IO.File]::GetLastWriteTime('$(CyclesPayloadRoot)\local\ccycles.dll').Ticks)</CyclesLocalTicks>
+      <CyclesReleaseTicks>$([System.IO.File]::GetLastWriteTime('$(CyclesPayloadRoot)\release\ccycles.dll').Ticks)</CyclesReleaseTicks>
+      <CyclesPayloadPath Condition="'$(CyclesLocalTicks)' != '' And $(CyclesLocalTicks) &gt; $(CyclesReleaseTicks)">$(CyclesPayloadRoot)\local</CyclesPayloadPath>
+    </PropertyGroup>
+  </Target>
 
-      XCopy rather than Copy for the first line so it can take /D. No /S there,
-      which keeps it non-recursive exactly as Copy was - lib and source are
-      handled by the two lines below, into different destinations.
-    -->
-    <PostBuildEvent Condition="'$(OS)' == 'Windows_NT'">
+  <!--
+    /D on all three: copy only what is newer than the destination.
+
+    AfterTargets="Build" runs this on every build of this project - including one
+    where nothing changed and the compile was skipped, exactly as the post-build
+    event it replaces did. Without /D that recopied the whole payload every time,
+    which is 321 MB, 29 MB of it kernels. XCopy returns 0 when everything is
+    already up to date, so a no-op copy does not fail the build.
+
+    XCopy rather than Copy for the first line so it can take /D. No /S there,
+    which keeps it non-recursive exactly as Copy was - lib and source are
+    handled by the two lines below, into different destinations.
+
+    The command sits in a property because XML folds the newlines in an attribute
+    into spaces; property expansion happens after parsing and keeps them.
+  -->
+  <Target Name="DeployCyclesPayload" AfterTargets="Build" DependsOnTargets="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <CyclesDeployCommand>
       XCopy $(CyclesPayloadPath)\* $(OutputPath). /Y /D /I /Q
       rem /MIR on lib and source so kernels/sources dropped from the payload (e.g. an arch
       rem no longer built, or a kernel header removed upstream) do not linger and get
@@ -321,8 +342,10 @@
       robocopy $(CyclesPayloadPath)\source $(OutputPath)RhinoCycles\source /MIR /NJH /NJS /NFL /NDL /NP
       if errorlevel 8 exit /b 1
       exit /b 0
-    </PostBuildEvent>
-  </PropertyGroup>
+      </CyclesDeployCommand>
+    </PropertyGroup>
+    <Exec WorkingDirectory="$(OutDir)" Command="$(CyclesDeployCommand)" />
+  </Target>
 
   <!--
     Say which payload was deployed. Which one you got was invisible before, and
@@ -340,7 +363,7 @@
     which is only news to someone who wanted it. The flag being set is the
     closest thing to a statement of that intent.
   -->
-  <Target Name="ReportCyclesPayload" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+  <Target Name="ReportCyclesPayload" AfterTargets="DeployCyclesPayload" DependsOnTargets="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
     <Message Importance="high" Text="RhinoCycles: deployed Cycles payload from $(CyclesPayloadPath)" />
 
     <!--
