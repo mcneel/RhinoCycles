@@ -1,4 +1,16 @@
 ﻿<Project>
+  <!-- MSBuild stops at the first Directory.Build.props it finds walking up, so this
+       file used to hide src4\Directory.Build.props from every RhinoCycles project.
+       That one carries tree-wide settings - among them AccelerateBuildsInVisualStudio
+       =false, which Rhino turned off because Visual Studio's build acceleration copies
+       and prunes files itself in a shared Plug-ins folder; without it the projects
+       here were the only ones in Rhino.sln still built with acceleration on, and
+       RhinoCyclesKernelCompiler.exe kept disappearing from bin\<Config>\Plug-ins
+       (seen 2026-08-22 and 2026-09-12). Chain to the parent first, then add ours. -->
+  <PropertyGroup>
+    <_RhinoParentDirectoryBuildProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))</_RhinoParentDirectoryBuildProps>
+  </PropertyGroup>
+  <Import Project="$(_RhinoParentDirectoryBuildProps)" Condition="'$(_RhinoParentDirectoryBuildProps)' != ''" />
   <PropertyGroup>
 		<!-- Since we have two .csproj's in the same folder we use a separate intermediate path for each -->
 		<!-- Also, be nice to those that compile on multiple OS' with the same source -->
