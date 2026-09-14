@@ -284,7 +284,8 @@ If there is a result visible you can save it still.
 Please click the link below for more information.", 67));
 					dlg.ShowModal(RhinoEtoApp.MainWindow);
 				};
-				RhinoApp.InvokeOnUiThread(showErrorDialog);
+				// Must not block: the main thread may already be in RenderThread.Join() (RH-90731).
+				Eto.Forms.Application.Instance.AsyncInvoke(showErrorDialog);
 			}
 
 

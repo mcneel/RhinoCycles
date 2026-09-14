@@ -180,7 +180,8 @@ To ensure stability the display mode was switched to Rendered.
 Please click the link below for more information.", 69));
 				dlg.ShowModal(RhinoEtoApp.MainWindow);
 			};
-			RhinoApp.InvokeOnUiThread(switchToWireframe);
+			// Must not block: the main thread may already be in RenderThread.Join() (RH-90731).
+			Eto.Forms.Application.Instance.AsyncInvoke(switchToWireframe);
 		}
 
 		/// <summary>
