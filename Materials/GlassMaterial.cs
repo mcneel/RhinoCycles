@@ -103,7 +103,13 @@ namespace RhinoCyclesCore.Materials
 
 			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, glass.ins.BaseColor.ToList(), false, Gamma, false, false, null);
 			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, transp.ins.Color.ToList(), false, Gamma, false, false, null);
-			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.TransmissionRoughness.ToList(), false, Gamma, true, false, null);
+			/* Frost drove Transmission Roughness until Blender 4.0 removed that socket and
+			 * gave the transmission lobe the main Roughness instead. csycles keeps the old
+			 * socket marked Retired, which is a silent no-op, so writing to it left this
+			 * material pinned at Cycles' own Roughness default of 0.5 - frosted at every
+			 * Frost value, including 0. Nothing else in this shader writes Roughness, so
+			 * there is no connection to lose by claiming it. */
+			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.Roughness.ToList(), false, Gamma, true, false, null);
 			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.IOR.ToList(), false, Gamma, true, false, null);
 
 			transp.outs.BSDF.Connect(mix.ins.Closure2);
