@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace RhinoCyclesCore
 {
@@ -608,29 +609,129 @@ namespace RhinoCyclesCore
 			}
 		}
 
+		private static string _GpuAbsentFile =>
+			Path.Combine(RcPlugIn.SettingsDirectory, "gpu_absent");
+
+		/// <summary>
+		/// Record that the machine has a GPU but Cycles offered none. Nothing failed to start -
+		/// the backend came up and found nothing it could use - so this is a note, not a disable:
+		/// it never keeps a backend from being tried. Written once per environment, so it doubles
+		/// as the 'has the user been told yet' flag. RH-98701.
+		/// </summary>
+		/// <returns>True when this is not on record yet.</returns>
+		public static bool RecordGpuAbsent(string systemGpus, string cyclesDevices)
+		{
+			var signature = GpuEnvironmentSignature;
+			try
+			{
+				var f = _GpuAbsentFile;
+				if (File.Exists(f) && string.Equals(_RecordedSignature(f), signature, StringComparison.Ordinal))
+				{
+					return false;
+				}
+				var sb = new StringBuilder();
+				sb.AppendLine(_SignatureKey + signature);
+				sb.AppendLine("first=" + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+				sb.AppendLine("systemgpus=" + _OneLine(systemGpus));
+				sb.AppendLine("cyclesdevices=" + _OneLine(cyclesDevices));
+				sb.AppendLine(_AnnouncedKey + "no");
+				File.WriteAllText(f, sb.ToString());
+			}
+			catch (Exception) { return false; }
+			return true;
+		}
+
+		/// <summary>A GPU is available again, so a later disappearance is worth reporting.</summary>
+		public static void ForgetGpuAbsent()
+		{
+			try { if (File.Exists(_GpuAbsentFile)) File.Delete(_GpuAbsentFile); } catch (Exception) { }
+		}
+
+		/// <summary>The no-GPU-offered record for RhinoCyclesSupportReport, empty when there is none.</summary>
+		public static string GpuAbsentRecord
+		{
+			get
+			{
+				try
+				{
+					var f = _GpuAbsentFile;
+					return File.Exists(f) ? File.ReadAllText(f).TrimEnd() : string.Empty;
+				}
+				catch (Exception ex) { return "<could not read: " + ex.GetType().Name + ">"; }
+			}
+		}
+
+		/// <summary>
+		/// The failure record for each switched off backend, for RhinoCyclesSupportReport.
+		/// Name, file path and the file's own contents.
+		/// </summary>
+		public static IEnumerable<(string Name, string Path, string Content)> DisabledGpuRecords()
+		{
+			foreach (var (mask, _, name) in _GpuBackends)
+			{
+				var f = _DisabledGpuFile(mask);
+				if (f == null || !File.Exists(f)) continue;
+				string content;
+				try { content = File.ReadAllText(f).TrimEnd(); }
+				catch (Exception ex) { content = "<could not read: " + ex.GetType().Name + ">"; }
+				yield return (name, f, content);
+			}
+		}
+
+		/// <summary>Re-enable only the auto-disabled backends, leaving RhinoCyclesDisableGpu alone.</summary>
+		public static void EnableGpuBackends()
+		{
+			foreach (var gpu in AllGpus)
+			{
+				EnableGpu(gpu);
+			}
+		}
+
 		public static void DisableGpus()
 		{
 			if(!File.Exists(_DisableGpusFile))
 			{
-				File.Create(_DisableGpusFile);
+				File.Create(_DisableGpusFile).Dispose();
 			}
 		}
 
-		private static readonly (DeviceTypeMask Mask, string FileName)[] _GpuSentinels = new[]
+		private static readonly (DeviceTypeMask Mask, string FileName, string Name)[] _GpuBackends = new[]
 		{
-			(DeviceTypeMask.CUDA,   "disable_cuda"),
-			(DeviceTypeMask.OPTIX,  "disable_optix"),
-			(DeviceTypeMask.HIP,    "disable_hip"),
-			(DeviceTypeMask.METAL,  "disable_metal"),
-			(DeviceTypeMask.ONEAPI, "disable_oneapi"),
+			(DeviceTypeMask.CUDA,   "disable_cuda",   "CUDA"),
+			(DeviceTypeMask.OPTIX,  "disable_optix",  "OptiX"),
+			(DeviceTypeMask.HIP,    "disable_hip",    "HIP"),
+			(DeviceTypeMask.METAL,  "disable_metal",  "Metal"),
+			(DeviceTypeMask.ONEAPI, "disable_oneapi", "oneAPI"),
 		};
 
 		public static IEnumerable<DeviceTypeMask> AllGpus =>
-			_GpuSentinels.Select(b => b.Mask);
+			_GpuBackends.Select(b => b.Mask);
+
+		/// <summary>Names of the backends currently switched off, for the UI. Empty when none are.</summary>
+		public static string DisabledGpuNames =>
+			string.Join(", ", _GpuBackends.Where(b => IsGpuDisabled(b.Mask)).Select(b => b.Name));
+
+		/// <summary>Backend names for UI and command options, in a stable order.</summary>
+		public static IEnumerable<string> GpuBackendNames => _GpuBackends.Select(b => b.Name);
+
+		/// <summary>Look a backend up by the name from <see cref="GpuBackendNames"/>.</summary>
+		public static bool TryFindGpuBackend(string name, out DeviceTypeMask gpu)
+		{
+			foreach (var b in _GpuBackends)
+			{
+				if (string.Equals(b.Name, name, StringComparison.OrdinalIgnoreCase))
+				{
+					gpu = b.Mask;
+					return true;
+				}
+			}
+			gpu = 0;
+			return false;
+		}
 
 		private static string _DisabledGpuFile(DeviceTypeMask gpu)
 		{
-			var entry = _GpuSentinels.FirstOrDefault(b => b.Mask == gpu);
+			var entry = _GpuBackends.FirstOrDefault(b => b.Mask == gpu);
 			if (entry.FileName == null) return null;
 			var settingsDirectory = RcPlugIn.SettingsDirectory;
 			if (!Directory.Exists(settingsDirectory))
@@ -645,7 +746,7 @@ namespace RhinoCyclesCore
 			get
 			{
 				DeviceTypeMask mask = 0;
-				foreach (var (m, _) in _GpuSentinels)
+				foreach (var (m, _, _) in _GpuBackends)
 				{
 					if (File.Exists(_DisabledGpuFile(m))) mask |= m;
 				}
@@ -659,15 +760,210 @@ namespace RhinoCyclesCore
 			return f != null && File.Exists(f);
 		}
 
-		public static bool DisableGpu(DeviceTypeMask gpu)
+		/// <summary>
+		/// Record that a backend failed to start. The file is stamped with the environment, so
+		/// a driver, GPU or Rhino change earns a retry. It is written only when there is no
+		/// record yet or the environment has changed - a backend that fails at every start
+		/// writes nothing after the first time.
+		/// </summary>
+		/// <param name="gpu">The backend that failed.</param>
+		/// <param name="error">What Cycles said, if anything. Only ever read by a human.</param>
+		/// <param name="alsoFailed">Every backend that failed in the same session.</param>
+		/// <returns>True when this failure was not on record yet - the first time the user
+		/// could be told about it.</returns>
+		public static bool DisableGpu(DeviceTypeMask gpu, string error = null, DeviceTypeMask alsoFailed = 0)
 		{
 			var f = _DisabledGpuFile(gpu);
 			if (f == null) return false;
-			if (!File.Exists(f))
+			var signature = GpuEnvironmentSignature;
+			try
 			{
-				File.Create(f);
+				// Same environment as the existing record: it already says all this.
+				if (File.Exists(f) && string.Equals(_RecordedSignature(f), signature, StringComparison.Ordinal))
+				{
+					return false;
+				}
+				File.WriteAllText(f, _FailureRecord(gpu, signature, error, alsoFailed));
 			}
+			catch (Exception) { return false; }
 			return true;
+		}
+
+		/// <summary>
+		/// The failure record a support person reads. Plain key=value, one line each, deliberately dull:
+		/// RhinoCyclesSupportReport prints this and customers paste that into the forum.
+		/// </summary>
+		private static string _FailureRecord(DeviceTypeMask gpu, string signature, string error,
+			DeviceTypeMask alsoFailed)
+		{
+			var sb = new StringBuilder();
+			// signature must stay the only thing compared - see _RecordedSignature.
+			sb.AppendLine(_SignatureKey + signature);
+			sb.AppendLine("backend=" + _GpuName(gpu));
+			sb.AppendLine("first=" + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+			sb.AppendLine("error=" + _OneLine(error));
+			sb.AppendLine(_AnnouncedKey + "no");
+			sb.AppendLine("alsofailed=" + string.Join(",", _GpuBackends
+				.Where(b => b.Mask != gpu && (alsoFailed & b.Mask) != 0)
+				.Select(b => b.Name)));
+			// The two kernel-cache problems that are invisible by the time anyone asks.
+			try
+			{
+				var cache = RcCore.It.GpuCompilePath;
+				sb.AppendLine("cache=" + cache);
+				sb.AppendLine("cacheexists=" + Directory.Exists(cache));
+				var freeMb = new DriveInfo(Path.GetPathRoot(cache)).AvailableFreeSpace / (1024L * 1024L);
+				sb.AppendLine("cachefreemb=" + freeMb.ToString(CultureInfo.InvariantCulture));
+			}
+			catch (Exception) { }
+			return sb.ToString();
+		}
+
+		private const string _SignatureKey = "signature=";
+		private const string _AnnouncedKey = "announced=";
+
+		/// <summary>Read one key=value line out of a record, empty when it is not there.</summary>
+		private static string _RecordField(string path, string key)
+		{
+			try
+			{
+				foreach (var line in File.ReadAllLines(path))
+				{
+					if (line.StartsWith(key, StringComparison.Ordinal))
+					{
+						return line.Substring(key.Length).Trim();
+					}
+				}
+			}
+			catch (Exception) { }
+			return string.Empty;
+		}
+
+		/// <summary>
+		/// True once, for the first start that shows a record to the user, and false forever
+		/// after. Keeping this in the record rather than in a session variable means the panel
+		/// is still pushed forward if the session that hit the failure never got that far -
+		/// a crash right after a failed GPU init, say - and that a record written by
+		/// RhinoCyclesDisableGpu is announced on the start where it actually takes effect.
+		/// RH-98701.
+		/// </summary>
+		public static bool TakeGpuAnnouncement()
+		{
+			var claimed = false;
+			var files = new List<string>();
+			foreach (var (mask, _, _) in _GpuBackends)
+			{
+				var f = _DisabledGpuFile(mask);
+				if (f != null && File.Exists(f)) files.Add(f);
+			}
+			if (File.Exists(_GpuAbsentFile)) files.Add(_GpuAbsentFile);
+
+			foreach (var f in files)
+			{
+				if (!string.Equals(_RecordField(f, _AnnouncedKey), "no", StringComparison.Ordinal)) continue;
+				try
+				{
+					var text = File.ReadAllText(f);
+					File.WriteAllText(f, text.Replace(_AnnouncedKey + "no", _AnnouncedKey + "yes"));
+					claimed = true;
+				}
+				catch (Exception) { }
+			}
+			return claimed;
+		}
+
+		/// <summary>Collapse to one short line - this ends up in a support report.</summary>
+		private static string _OneLine(string s)
+		{
+			if (string.IsNullOrWhiteSpace(s)) return "(none reported)";
+			// Collapse every whitespace run to one space: driver errors arrive multi-line, and this
+			// has to stay a single short key=value line.
+			var sb = new StringBuilder(s.Length);
+			var pending = false;
+			foreach (var c in s)
+			{
+				if (char.IsWhiteSpace(c)) { pending = true; continue; }
+				if (pending && sb.Length > 0) sb.Append(' ');
+				pending = false;
+				sb.Append(c);
+				if (sb.Length >= 300) break;
+			}
+			return sb.ToString();
+		}
+
+		private static string _GpuName(DeviceTypeMask gpu) =>
+			_GpuBackends.FirstOrDefault(b => b.Mask == gpu).Name ?? gpu.ToString();
+
+		/// <summary>
+		/// The environment a failure record was written in. Only the signature line is compared - the
+		/// rest of the file is notes for humans and must not affect the retry decision.
+		/// Files written before this format existed have no signature line and read as empty,
+		/// which makes them stale, which is what we want.
+		/// </summary>
+		private static string _RecordedSignature(string path)
+		{
+			try
+			{
+				foreach (var line in File.ReadAllLines(path))
+				{
+					if (line.StartsWith(_SignatureKey, StringComparison.Ordinal))
+					{
+						return line.Substring(_SignatureKey.Length).Trim();
+					}
+				}
+			}
+			catch (Exception) { }
+			return string.Empty;
+		}
+
+		/// <summary>
+		/// Identifies the GPU environment: changes when a GPU is swapped, a display driver is
+		/// updated, or Rhino itself is updated. Windows-only detail; on other platforms this
+		/// comes down to the Rhino version.
+		/// </summary>
+		private static string GpuEnvironmentSignature
+		{
+			get
+			{
+				var parts = new List<string> { RhinoApp.Version.ToString() };
+				try
+				{
+					foreach (var gpu in DisplayDeviceInfo.GpuDeviceInfos())
+					{
+						parts.Add(string.Format("{0};{1};{2}", gpu.Name, gpu.Vendor, gpu.DriverDateAsString));
+					}
+				}
+				catch (Exception) { }
+				return string.Join("|", parts);
+			}
+		}
+
+		/// <summary>
+		/// Drop the failure records written in a different GPU environment, giving those backends one
+		/// more chance. Without this a backend that failed once - a new card on a driver too old
+		/// for it, say - stays off forever, even after the driver that would work is installed.
+		/// A backend that fails again is disabled again, stamped with the new environment, so
+		/// this costs one failed start per change and not one per session. RH-98701.
+		/// </summary>
+		/// <returns>The backends that were re-enabled.</returns>
+		public static DeviceTypeMask ClearStaleGpuDisables()
+		{
+			DeviceTypeMask cleared = 0;
+			if (DisabledGpus == 0) return cleared;
+			var current = GpuEnvironmentSignature;
+			foreach (var (mask, _, _) in _GpuBackends)
+			{
+				var f = _DisabledGpuFile(mask);
+				if (f == null || !File.Exists(f)) continue;
+				try
+				{
+					if (string.Equals(_RecordedSignature(f), current, StringComparison.Ordinal)) continue;
+					File.Delete(f);
+					cleared |= mask;
+				}
+				catch (Exception) { }
+			}
+			return cleared;
 		}
 
 		public static void EnableGpu(DeviceTypeMask gpu)

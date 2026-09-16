@@ -603,6 +603,13 @@ namespace RhinoCycles.Commands
 				"GPU use has been switched off (RhinoCyclesDisableGpu was run). Run RhinoCyclesEnableGpu and restart Rhino.",
 				"GPU use is enabled.", null);
 
+			var autoDisabled = RhinoCyclesCore.Utilities.DisabledGpuNames;
+			check(string.IsNullOrEmpty(autoDisabled), 25, "a GPU backend was switched off after it failed",
+				string.Format(CultureInfo.InvariantCulture,
+					"{0} failed to start at some point and has been switched off since - see the Recorded GPU problems section for the error and when. Press 'Retry GPUs' in Rhino Render options and restart.",
+					autoDisabled),
+				"No GPU backend has been switched off after a failure.", null);
+
 			var gpus = new List<Device>();
 			try { gpus = Device.Devices.Where(d => d.IsGpu).ToList(); } catch (Exception) { }
 
@@ -1285,6 +1292,27 @@ namespace RhinoCycles.Commands
 				sb.AppendLine("Has GPUs               " + RhinoCyclesCore.Utilities.HasGpus);
 				sb.AppendLine("Compile finished       " + RcCore.It.CompileProcessFinished);
 				sb.AppendLine("Compile error          " + RcCore.It.CompileProcessError);
+			});
+
+			Section(sb, "Recorded GPU problems", () =>
+			{
+				var any = false;
+				foreach (var rec in RhinoCyclesCore.Utilities.DisabledGpuRecords())
+				{
+					any = true;
+					sb.AppendLine(rec.Name + "  (" + rec.Path + ")");
+					sb.AppendLine(rec.Content);
+					sb.AppendLine();
+				}
+				var absent = RhinoCyclesCore.Utilities.GpuAbsentRecord;
+				if (!string.IsNullOrEmpty(absent))
+				{
+					any = true;
+					sb.AppendLine("No GPU offered although the system reports one:");
+					sb.AppendLine(absent);
+					sb.AppendLine();
+				}
+				if (!any) sb.AppendLine("  (none - every backend is being tried)");
 			});
 
 			Section(sb, "Kernel cache health", () => KernelCacheHealth(sb));
