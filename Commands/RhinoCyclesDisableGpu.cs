@@ -44,12 +44,12 @@ namespace RhinoCycles.Commands
 			// Backend=All is what this command has always done. Naming a single backend records it
 			// as failed instead, which is otherwise only reachable with hardware that really fails -
 			// that is how the switched off warning and the Retry button get tested. RH-98701.
-			var choices = new List<string> { LOC.STR("All") };
+			var choices = new List<string> { Localization.LocalizeString("All", 111) };
 			choices.AddRange(Utilities.GpuBackendNames);
 			var picked = 0;
 
 			var go = new GetOption();
-			go.SetCommandPrompt(LOC.STR("Press Enter to switch off GPU use"));
+			go.SetCommandPrompt(Localization.LocalizeString("Press Enter to switch off GPU use", 112));
 			var list = go.AddOptionList("Backend", choices, picked);
 			go.AcceptNothing(true);
 			while (true)
@@ -78,7 +78,7 @@ namespace RhinoCycles.Commands
 			Utilities.DisableGpu(backend,
 				"switched off with RhinoCyclesDisableGpu, not a real failure");
 			RhinoApp.WriteLine(string.Format(
-				LOC.STR("{0} has been switched off as if it had failed to start. Restart Rhino for the change to take effect."),
+				Localization.LocalizeString("{0} has been switched off as if it had failed to start. Restart Rhino for the change to take effect.", 113),
 				name));
 			return Result.Success;
 		}

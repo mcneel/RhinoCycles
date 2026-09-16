@@ -174,19 +174,19 @@ namespace RhinoCycles
 					var note = new Notification
 					{
 						SeverityLevel = Notification.Severity.Warning,
-						Title = LOC.STR("Rhino Render is using the CPU"),
+						Title = Localization.LocalizeString("Rhino Render is using the CPU", 114),
 						// Description is the one line the Notifications panel lists; Message is the detail
 						// shown when the notification is opened.
 						Description = string.IsNullOrEmpty(names)
-							? LOC.STR("No GPU found - using the CPU.")
-							: string.Format(LOC.STR("{0} is off - using the CPU."), names),
+							? Localization.LocalizeString("No GPU found - using the CPU.", 115)
+							: string.Format(Localization.LocalizeString("{0} is off - using the CPU.", 116), names),
 						Message = string.IsNullOrEmpty(names)
-							? LOC.STR("Rhino Render found no usable GPU, so it falls back to the CPU, which is much slower. This is usually a graphics driver that is too old for the card. Update the graphics driver and restart Rhino.")
+							? Localization.LocalizeString("Rhino Render found no usable GPU, so it falls back to the CPU, which is much slower. This is usually a graphics driver that is too old for the card. Update the graphics driver and restart Rhino.", 117)
 							: string.Format(
-								LOC.STR("{0} failed to start, so Rhino Render and Raytraced fall back to the CPU, which is much slower. This is usually a graphics driver that is too old for the card. Update the driver, then try again."),
+								Localization.LocalizeString("{0} failed to start, so Rhino Render and Raytraced fall back to the CPU, which is much slower. This is usually a graphics driver that is too old for the card. Update the driver, then try again.", 118),
 								names),
-						ConfirmButtonTitle = string.IsNullOrEmpty(names) ? null : LOC.STR("Retry GPUs"),
-						CancelButtonTitle = string.IsNullOrEmpty(names) ? LOC.STR("Close") : LOC.STR("Keep CPU"),
+						ConfirmButtonTitle = string.IsNullOrEmpty(names) ? null : Localization.LocalizeString("Retry GPUs", 119),
+						CancelButtonTitle = string.IsNullOrEmpty(names) ? Localization.LocalizeString("Close", 120) : Localization.LocalizeString("Keep CPU", 121),
 					};
 					note["RhinoCycles"] = "disabled-gpus";
 					note.ButtonClicked = (button) =>

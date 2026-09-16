@@ -448,16 +448,16 @@ namespace RhinoCyclesCore.Settings
 					{
 						m_lb_backendsdisabled_message.TextColor = WarningTextColor();
 						m_btn_retrybackends.ToolTip = string.Format(
-							LOC.STR("Try {0} again on the next start of Rhino"), autoDisabled);
+							Localization.LocalizeString("Try {0} again on the next start of Rhino", 122), autoDisabled);
 						m_lb_backendsdisabled_message.Text = string.Format(
-							LOC.STR("{0} failed to start and is switched off. Press 'Retry GPUs', then restart."),
+							Localization.LocalizeString("{0} failed to start and is switched off. Press 'Retry GPUs', then restart.", 123),
 							autoDisabled);
 					}
 					else if (showNoGpu)
 					{
 						m_lb_backendsdisabled_message.TextColor = WarningTextColor();
 						m_lb_backendsdisabled_message.Text =
-							LOC.STR("No GPU is available - rendering on the CPU. Update the graphics driver.");
+							Localization.LocalizeString("No GPU is available - rendering on the CPU. Update the graphics driver.", 124);
 					}
 					m_btn_recompilekernels.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;
 					m_btn_showcompilelog.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;
@@ -538,8 +538,8 @@ namespace RhinoCyclesCore.Settings
 			};
 			m_btn_retrybackends = new Button
 			{
-				Text = LOC.STR("Retry GPUs"),
-				ToolTip = LOC.STR("Try the switched off GPUs again on the next start of Rhino")
+				Text = Localization.LocalizeString("Retry GPUs", 125),
+				ToolTip = Localization.LocalizeString("Try the switched off GPUs again on the next start of Rhino", 126)
 			};
 			m_btn_recompilekernels = new Button
 			{
@@ -642,8 +642,8 @@ namespace RhinoCyclesCore.Settings
 			// Only the auto-disabled backends - leave a deliberate RhinoCyclesDisableGpu alone.
 			Utilities.EnableGpuBackends();
 			var message = string.IsNullOrEmpty(names)
-				? LOC.STR("Rhino will try the GPUs again the next time it starts.")
-				: string.Format(LOC.STR("Rhino will try {0} again the next time it starts."), names);
+				? Localization.LocalizeString("Rhino will try the GPUs again the next time it starts.", 127)
+				: string.Format(Localization.LocalizeString("Rhino will try {0} again the next time it starts.", 128), names);
 			Eto.Forms.MessageBox.Show(message, Eto.Forms.MessageBoxType.Information);
 		}
 
