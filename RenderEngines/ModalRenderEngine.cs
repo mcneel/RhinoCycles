@@ -200,6 +200,12 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.Unlock();
 			cyclesEngine.Database.ResetChangeQueue();
 
+			// UploadData only returns false by bailing out on ShouldBreak, so a failure
+			// here means the user stopped the render while the data was still being
+			// uploaded. That is not an error, and must not be reported as one (RH-90731).
+			// The only real failure detected below is the -13 sample count.
+			var renderError = false;
+
 			if (renderSuccess)
 			{
 				RcCore.It.AddLogString("ModalRenderEngine.Renderer Session.Start");
@@ -217,6 +223,7 @@ namespace RhinoCyclesCore.RenderEngines
 					if (RenderedSamples == -13)
 					{
 						renderSuccess = false;
+						renderError = true;
 						Finished = true;
 						cyclesEngine.CancelRender = true;
 					}
@@ -271,7 +278,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			cyclesEngine.CancelRender = true;
 
-			if (!renderSuccess)
+			if (renderError)
 			{
 				rw.SetProgress(Localization.LocalizeString("An error occured while trying to render. The render may be incomplete or not started.", 65), 1.0f);
 				Action showErrorDialog = () =>
