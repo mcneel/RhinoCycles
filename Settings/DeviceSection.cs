@@ -457,7 +457,7 @@ namespace RhinoCyclesCore.Settings
 							Localization.LocalizeString("Try {0} again on the next start of Rhino", 122), autoDisabled);
 						m_lb_backendsdisabled_message.Text = string.Format(
 							// RH-98730: worded so it reads for one backend and for several.
-							LOC.STR("{0} failed to start, now switched off. Press 'Retry GPUs', then restart."),
+							Localization.LocalizeString("{0} failed to start, now switched off. Press 'Retry GPUs', then restart.", 123),
 							autoDisabled);
 					}
 					else if (showNoGpu)

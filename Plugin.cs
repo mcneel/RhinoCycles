@@ -189,7 +189,7 @@ namespace RhinoCycles
 						Description = string.IsNullOrEmpty(names)
 							? Localization.LocalizeString("No GPU found - using the CPU.", 115)
 							// RH-98730: worded so it reads for one backend and for several.
-							: string.Format(LOC.STR("{0} switched off - using the CPU."), names),
+							: string.Format(Localization.LocalizeString("{0} switched off - using the CPU.", 116), names),
 						Message = string.IsNullOrEmpty(names)
 							? Localization.LocalizeString("Rhino Render found no usable GPU, so it falls back to the CPU, which is much slower. This is usually a graphics driver that is too old for the card. Update the graphics driver and restart Rhino.", 117)
 							: string.Format(
