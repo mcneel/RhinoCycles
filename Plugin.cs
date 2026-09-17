@@ -118,9 +118,8 @@ namespace RhinoCycles
 		/// Initialise Cycles if necessary.
 		/// </summary>
 		/// <summary>
-		/// Put a warning in the Notifications panel when GPU backends are switched off, so the
-		/// user finds out they are rendering on the CPU without opening the Rhino Render
-		/// options page. RH-98701.
+		/// Note in the Notifications panel that no GPU is left, so the user finds out they are
+		/// rendering on the CPU without opening the Rhino Render options page. RH-98701.
 		/// </summary>
 		/// <summary>
 		/// A backend can come up, find nothing it can use, and report no failure at all - the
@@ -166,6 +165,15 @@ namespace RhinoCycles
 			var absent = RhinoCyclesCore.Utilities.GpuAbsentRecord;
 			if (string.IsNullOrEmpty(names) && string.IsNullOrEmpty(absent)) return;
 
+			// RH-98730: one backend failing is not news while another GPU still renders - the
+			// Rhino Render options page names the one that is off. Only speak up when we really
+			// did fall back to the CPU.
+			if (Device.Devices.Any(d => d.IsGpu))
+			{
+				RcCore.It.AddLogString($"Not notifying about switched off GPU {names}; a usable GPU remains");
+				return;
+			}
+
 			// Init runs on its own thread; notifications are UI-thread only.
 			RhinoApp.InvokeOnUiThread(new Action(() =>
 			{
@@ -173,13 +181,15 @@ namespace RhinoCycles
 				{
 					var note = new Notification
 					{
-						SeverityLevel = Notification.Severity.Warning,
+						// RH-98730: anything above Info forces the panel open again and again.
+						SeverityLevel = Notification.Severity.Info,
 						Title = Localization.LocalizeString("Rhino Render is using the CPU", 114),
 						// Description is the one line the Notifications panel lists; Message is the detail
 						// shown when the notification is opened.
 						Description = string.IsNullOrEmpty(names)
 							? Localization.LocalizeString("No GPU found - using the CPU.", 115)
-							: string.Format(Localization.LocalizeString("{0} is off - using the CPU.", 116), names),
+							// RH-98730: worded so it reads for one backend and for several.
+							: string.Format(LOC.STR("{0} switched off - using the CPU."), names),
 						Message = string.IsNullOrEmpty(names)
 							? Localization.LocalizeString("Rhino Render found no usable GPU, so it falls back to the CPU, which is much slower. This is usually a graphics driver that is too old for the card. Update the graphics driver and restart Rhino.", 117)
 							: string.Format(

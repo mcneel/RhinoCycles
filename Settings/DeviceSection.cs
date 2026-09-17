@@ -446,16 +446,24 @@ namespace RhinoCyclesCore.Settings
 					m_btn_retrybackends.Visible = showAutoDisabled;
 					if (showAutoDisabled)
 					{
-						m_lb_backendsdisabled_message.TextColor = WarningTextColor();
+						// RH-98730: amber and bold is for what actually costs the user - no GPU left at
+						// all. With another GPU still rendering this is a note, so let it read as one.
+						bool onCpu = !Utilities.HasGpus;
+						m_lb_backendsdisabled_message.TextColor =
+							onCpu ? WarningTextColor() : NormalTextColor();
+						m_lb_backendsdisabled_message.Font =
+							onCpu ? Eto.Drawing.SystemFonts.Bold() : Eto.Drawing.SystemFonts.Default();
 						m_btn_retrybackends.ToolTip = string.Format(
 							Localization.LocalizeString("Try {0} again on the next start of Rhino", 122), autoDisabled);
 						m_lb_backendsdisabled_message.Text = string.Format(
-							Localization.LocalizeString("{0} failed to start and is switched off. Press 'Retry GPUs', then restart.", 123),
+							// RH-98730: worded so it reads for one backend and for several.
+							LOC.STR("{0} failed to start, now switched off. Press 'Retry GPUs', then restart."),
 							autoDisabled);
 					}
 					else if (showNoGpu)
 					{
 						m_lb_backendsdisabled_message.TextColor = WarningTextColor();
+						m_lb_backendsdisabled_message.Font = Eto.Drawing.SystemFonts.Bold();
 						m_lb_backendsdisabled_message.Text =
 							Localization.LocalizeString("No GPU is available - rendering on the CPU. Update the graphics driver.", 124);
 					}
@@ -620,6 +628,12 @@ namespace RhinoCyclesCore.Settings
 		{
 			Utilities.EnableGpus();
 			Eto.Forms.MessageBox.Show(Localization.LocalizeString("GPU detection has been enabled. Please restart Rhino.", 75), Eto.Forms.MessageBoxType.Information);
+		}
+
+		/// <summary>The panel's ordinary label colour, for a message that is a note and not a problem.</summary>
+		private static Eto.Drawing.Color NormalTextColor()
+		{
+			return AppearanceSettings.GetPaintColor(PaintColor.TextEnabled).ToEto();
 		}
 
 		/// <summary>Amber that stays legible on the panel background of either theme.</summary>

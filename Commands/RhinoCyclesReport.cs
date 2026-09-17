@@ -606,7 +606,7 @@ namespace RhinoCycles.Commands
 			var autoDisabled = RhinoCyclesCore.Utilities.DisabledGpuNames;
 			check(string.IsNullOrEmpty(autoDisabled), 25, "a GPU backend was switched off after it failed",
 				string.Format(CultureInfo.InvariantCulture,
-					"{0} failed to start at some point and has been switched off since - see the Recorded GPU problems section for the error and when. Press 'Retry GPUs' in Rhino Render options and restart.",
+					"{0} failed to start at some point and stayed off since - see the Recorded GPU problems section for the error and when. Press 'Retry GPUs' in Rhino Render options and restart.",
 					autoDisabled),
 				"No GPU backend has been switched off after a failure.", null);
 
