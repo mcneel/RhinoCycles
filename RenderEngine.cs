@@ -105,6 +105,19 @@ namespace RhinoCyclesCore
 		public int RenderedTiles { get; set; }
 		public bool Finished { get; set; } = false;
 
+		/// <summary>
+		/// True when Cycles reported an error for this render - a failed kernel
+		/// launch, for instance. Whatever is in the render window at that point is
+		/// incomplete or wrong, so it must not be presented as a finished render
+		/// (RH-98759).
+		/// </summary>
+		public bool HasRenderError { get; private set; } = false;
+		/// <summary>
+		/// The message Cycles failed with. Empty while <see cref="HasRenderError"/>
+		/// is false.
+		/// </summary>
+		public string RenderErrorMessage { get; private set; } = "";
+
 		public string TimeString;
 
 		protected CSycles.LoggerCallback m_logger_callback;
@@ -326,8 +339,37 @@ namespace RhinoCyclesCore
 
 			if (!substatus.Equals(string.Empty)) status = status + ": " + substatus;
 
+			// A device failure - a kernel launch that did not go through, say - never
+			// reaches the status string, and Cycles stops scheduling work without ever
+			// reporting "Finished". Left alone that is a render loop that spins until
+			// the user gives up, or a partial image handed back as a complete one, so
+			// pick the error up here and end the render (RH-98759).
+			if (!HasRenderError)
+			{
+				string error = CSycles.progress_get_error(sid);
+				if (!string.IsNullOrEmpty(error))
+				{
+					HasRenderError = true;
+					RenderErrorMessage = error;
+					RcCore.It.AddLogString(String.Format("RenderEngine.UpdateCallback (ptr {0}) render failed: {1}", sid, error));
+				}
+			}
+
 			bool finished = status.Contains("Finished") || status.Contains("Rendering Done");
 			if (finished) RenderedSamples = MaxSamples;
+
+			if (HasRenderError)
+			{
+				// Break the engine's render loop, but do not pretend the render is
+				// complete: the engines check HasRenderError and report a failure.
+				finished = false;
+				Finished = true;
+				status = String.Format(LOC.STR("Render failed: {0}"), RenderErrorMessage);
+				RenderWindow?.SetProgress(status, -1.0f);
+				TriggerStatusTextUpdated(new StatusTextEventArgs(status, -1.0f, RenderedSamples, false));
+				RcCore.It.AddLogStringIfVerbose($"RenderEngine.UpdateCallback (ptr {sid}) exit on error");
+				return;
+			}
 
 			if(!Finished && !status.Equals(_previouStatusMessage)) RcCore.It.AddLogStringIfVerbose($"RenderEngine.UpdateCallback {status}");
 			_previouStatusMessage = status;

@@ -375,6 +375,15 @@ Please click the link below for more information.", 69));
 					UpdateCallback(Session.Id);
 				}
 
+				// Cycles has failed and stopped scheduling work for this session, so
+				// stop asking it for samples that will never arrive (RH-98759).
+				if (HasRenderError)
+				{
+					RcCore.It.AddLogString(String.Format("ViewportRenderEngine.Renderer stopping, render failed: {0}", RenderErrorMessage));
+					CancelRender = true;
+					break;
+				}
+
 				// If we have rendered a new sample
 				if(RenderedSamples > lastRenderedSample)
 				{

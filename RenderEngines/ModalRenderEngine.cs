@@ -77,8 +77,36 @@ namespace RhinoCyclesCore.RenderEngines
 
 		/// <summary>
 		/// Entry point for a new render process. This is to be done in a separate thread.
+		///
+		/// The render device is taken for the duration, so material previews - which
+		/// render on the same device - wait rather than fighting this render for the
+		/// GPU (RH-98759).
 		/// </summary>
 		public void Renderer()
+		{
+			if (!RcCore.It.EnterRenderDeviceGate("ModalRenderEngine.Renderer", () => ShouldBreak, isProductionRender: true))
+			{
+				RcCore.It.AddLogString("ModalRenderEngine.Renderer did not get the render device, not rendering");
+				State = State.Stopped;
+				CancelRender = true;
+				return;
+			}
+
+			try
+			{
+				RenderOnRenderDevice();
+			}
+			finally
+			{
+				RcCore.It.ExitRenderDeviceGate("ModalRenderEngine.Renderer");
+			}
+		}
+
+		/// <summary>
+		/// The render itself. Only called with the render device held, see
+		/// <see cref="Renderer"/>.
+		/// </summary>
+		private void RenderOnRenderDevice()
 		{
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer entry");
 			RcCore.It.StartLogStopwatch("ModalRenderEngine.Renderer entry", RcCore.StopwatchType.Render);
@@ -214,7 +242,7 @@ namespace RhinoCyclesCore.RenderEngines
 				{
 					UpdateCallback(cyclesEngine.Session.Id);
 
-					if (RenderedSamples == -13)
+					if (RenderedSamples == -13 || HasRenderError)
 					{
 						renderSuccess = false;
 						Finished = true;
@@ -273,7 +301,11 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (!renderSuccess)
 			{
-				rw.SetProgress(Localization.LocalizeString("An error occured while trying to render. The render may be incomplete or not started.", 65), 1.0f);
+				RcCore.It.AddLogString(String.Format("ModalRenderEngine.Renderer failed. {0}", HasRenderError ? RenderErrorMessage : "No error reported by Cycles."));
+				string failureMessage = HasRenderError
+					? String.Format(LOC.STR("The render failed and is incomplete: {0}"), RenderErrorMessage)
+					: Localization.LocalizeString("An error occured while trying to render. The render may be incomplete or not started.", 65);
+				rw.SetProgress(failureMessage, 1.0f);
 				Action showErrorDialog = () =>
 				{
 					CrashReporterDialog dlg = new CrashReporterDialog(Localization.LocalizeString("Error while rendering", 66), Localization.LocalizeString(

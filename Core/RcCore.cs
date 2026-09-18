@@ -174,6 +174,10 @@ namespace RhinoCyclesCore.Core
 		public void Shutdown() {
 			AddLogStringIfVerbose("Shutdown entry");
 
+			// Tell anything queued up on the render device gate to give up, so we
+			// don't wait here for a render that will never be allowed to start.
+			shuttingDown = true;
+
 			AddLogStringIfVerbose("Shutdown: release active sessions start");
 			ReleaseActiveSessions();
 			AddLogStringIfVerbose("Shutdown: release active sessions done");
@@ -356,6 +360,85 @@ namespace RhinoCyclesCore.Core
 			{
 				It.AddLogStringIfVerbose("WaitUntilLockedThenUnlockPreviewRenderer: locked");
 			}
+		}
+
+		/// <summary>
+		/// Gate giving one render engine at a time exclusive use of the render
+		/// device. A production render and the material previews otherwise drive
+		/// the same GPU at once, which makes kernel launches fail: the render then
+		/// either never finishes or writes an image that is wrong (RH-98759).
+		///
+		/// The previews already run one at a time among themselves through
+		/// <see cref="PreviewRendererLock"/>; this is what keeps them away from a
+		/// production render as well.
+		/// </summary>
+		private readonly object renderDeviceGate = new object();
+		/// <summary>
+		/// Set at the start of <see cref="Shutdown"/> so waiters on the render
+		/// device gate stop waiting.
+		/// </summary>
+		private volatile bool shuttingDown = false;
+		/// <summary>
+		/// How many production renders are queued for the render device. Previews
+		/// stand aside while this is above zero.
+		/// </summary>
+		private int productionRendersWaiting = 0;
+
+		/// <summary>
+		/// Take exclusive use of the render device, waiting for whoever holds it
+		/// to finish. Every successful call must be paired with a call to
+		/// <see cref="ExitRenderDeviceGate"/> from the same thread.
+		/// </summary>
+		/// <param name="who">Name of the caller, for the log.</param>
+		/// <param name="shouldAbort">Polled while waiting. Return true to give up
+		/// on the wait - a cancelled preview, say. May be null.</param>
+		/// <param name="isProductionRender">True for the render the user asked
+		/// for, which goes ahead of any preview still queued.</param>
+		/// <returns>True when the device was acquired, false when the wait was
+		/// abandoned. Don't render when this returns false.</returns>
+		public bool EnterRenderDeviceGate(string who, Func<bool> shouldAbort, bool isProductionRender = false)
+		{
+			if (isProductionRender) Interlocked.Increment(ref productionRendersWaiting);
+			try
+			{
+				bool waited = false;
+				while (true)
+				{
+					// Opening a document can queue up a minute or more of previews.
+					// Taking the device strictly in turn would hold Render up for all
+					// of it, so a preview lets a waiting production render past rather
+					// than starting another one itself.
+					bool standAside = !isProductionRender && Volatile.Read(ref productionRendersWaiting) > 0;
+					if (!standAside && Monitor.TryEnter(renderDeviceGate, 50)) break;
+					if (standAside) Thread.Sleep(50);
+
+					if (shuttingDown || (shouldAbort?.Invoke() ?? false))
+					{
+						AddLogString(String.Format("EnterRenderDeviceGate: {0} gave up waiting for the render device", who));
+						return false;
+					}
+					if (!waited)
+					{
+						AddLogString(String.Format("EnterRenderDeviceGate: {0} waiting for the render device", who));
+						waited = true;
+					}
+				}
+			}
+			finally
+			{
+				if (isProductionRender) Interlocked.Decrement(ref productionRendersWaiting);
+			}
+			AddLogStringIfVerbose(String.Format("EnterRenderDeviceGate: {0} has the render device", who));
+			return true;
+		}
+
+		/// <summary>
+		/// Release the render device taken with <see cref="EnterRenderDeviceGate"/>.
+		/// </summary>
+		public void ExitRenderDeviceGate(string who)
+		{
+			AddLogStringIfVerbose(String.Format("ExitRenderDeviceGate: {0} released the render device", who));
+			Monitor.Exit(renderDeviceGate);
 		}
 
 		/// <summary>
