@@ -80,11 +80,21 @@ namespace RhinoCyclesCore.RenderEngines
 		///
 		/// The render device is taken for the duration, so material previews - which
 		/// render on the same device - wait rather than fighting this render for the
-		/// GPU (RH-98759).
+		/// GPU (RH-98759). One already rendering gives up where it is, so pressing
+		/// Render does not mean waiting out a thumbnail.
 		/// </summary>
 		public void Renderer()
 		{
-			if (!RcCore.It.EnterRenderDeviceGate("ModalRenderEngine.Renderer", () => ShouldBreak, isProductionRender: true))
+			// A preview holding the device stands down as soon as it sees this render
+			// queued, so the wait is normally imperceptible. Say what is happening
+			// anyway: a render window sitting there with an empty status bar and no
+			// pixels looks like a render that failed to start.
+			Action sayWhyWeAreWaiting = () => SetProgress(
+				RenderWindow,
+				LOC.STR("Waiting for material previews to finish..."),
+				-1.0f);
+
+			if (!RcCore.It.EnterRenderDeviceGate("ModalRenderEngine.Renderer", () => ShouldBreak, isProductionRender: true, onWaitStart: sayWhyWeAreWaiting))
 			{
 				RcCore.It.AddLogString("ModalRenderEngine.Renderer did not get the render device, not rendering");
 				State = State.Stopped;

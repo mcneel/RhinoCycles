@@ -191,6 +191,17 @@ namespace RhinoCyclesCore.RenderEngines
 					cyclesEngine.CancelRender = true;
 					cyclesEngine.Finished = true;
 				}
+				// The user pressing Render must not be made to wait out a thumbnail.
+				// Stop where we are and hand the device over; the RDK asks for this
+				// preview again once the render is done (RH-98759).
+				else if (RcCore.It.ProductionRenderWaiting)
+				{
+					RcCore.It.AddLogString("PreviewRenderEngine.Renderer: standing down, a render wants the device");
+					cyclesEngine.State = State.Stopping;
+					cyclesEngine.CancelRender = true;
+					cyclesEngine.Finished = true;
+					renderSuccess = false;
+				}
 			}
 			if (renderSuccess)
 			{

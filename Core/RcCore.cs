@@ -385,6 +385,14 @@ namespace RhinoCyclesCore.Core
 		private int productionRendersWaiting = 0;
 
 		/// <summary>
+		/// True while a production render is queued for the render device. A
+		/// preview that is already rendering polls this and stops where it is, so
+		/// the render starts in a moment rather than when the preview happens to
+		/// finish. The preview is produced again later.
+		/// </summary>
+		public bool ProductionRenderWaiting => Volatile.Read(ref productionRendersWaiting) > 0;
+
+		/// <summary>
 		/// Take exclusive use of the render device, waiting for whoever holds it
 		/// to finish. Every successful call must be paired with a call to
 		/// <see cref="ExitRenderDeviceGate"/> from the same thread.
@@ -394,9 +402,12 @@ namespace RhinoCyclesCore.Core
 		/// on the wait - a cancelled preview, say. May be null.</param>
 		/// <param name="isProductionRender">True for the render the user asked
 		/// for, which goes ahead of any preview still queued.</param>
+		/// <param name="onWaitStart">Called once, if the device is not free
+		/// straight away. This is where a render tells the user what it is waiting
+		/// for; without it the render window sits there saying nothing.</param>
 		/// <returns>True when the device was acquired, false when the wait was
 		/// abandoned. Don't render when this returns false.</returns>
-		public bool EnterRenderDeviceGate(string who, Func<bool> shouldAbort, bool isProductionRender = false)
+		public bool EnterRenderDeviceGate(string who, Func<bool> shouldAbort, bool isProductionRender = false, Action onWaitStart = null)
 		{
 			if (isProductionRender) Interlocked.Increment(ref productionRendersWaiting);
 			try
@@ -421,6 +432,7 @@ namespace RhinoCyclesCore.Core
 					{
 						AddLogString(String.Format("EnterRenderDeviceGate: {0} waiting for the render device", who));
 						waited = true;
+						onWaitStart?.Invoke();
 					}
 				}
 			}
