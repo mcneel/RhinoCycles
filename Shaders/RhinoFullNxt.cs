@@ -1314,7 +1314,19 @@ namespace RhinoCyclesCore.Shaders
 					principledbsdf117.ins.Roughness.Value = part.ReflectionRoughness;
 					principledbsdf117.ins.Anisotropic.Value = 0f;
 					principledbsdf117.ins.AnisotropicRotation.Value = 0f;
-					principledbsdf117.ins.Sheen.Value = part.Sheen;
+					/* 3.5 built the sheen closure with
+					 *   sheen_weight = weight * sheen * sheen_color * diffuse_weight
+					 * and diffuse_weight = (1 - metallic) * (1 - transmission), so a fully
+					 * transmissive or fully metallic material got no sheen at all. 4.x makes
+					 * sheen the *first layer*, gated only on sheen_weight > cutoff, and it
+					 * attenuates everything beneath it through closure_layering_weight.
+					 *
+					 * The airplane canopy is Sheen 1 with Transparency 1. Shipping renders no
+					 * sheen for it; 5.2 laid a full white sheen over the glass, which is why
+					 * that canopy came out milky and washed out instead of tinted. Carrying
+					 * 3.5's diffuse weight into the value restores it. */
+					principledbsdf117.ins.Sheen.Value =
+						part.Sheen * (1.0f - part.Metallic) * (1.0f - part.Transparency);
 					principledbsdf117.ins.SheenTint.Value = TintToColour(part.SheenTint, part.BaseColor);
 					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
 					/* Gloss is ReflectionGlossiness, where 1 is a mirror. The 4.x socket is
