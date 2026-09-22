@@ -787,7 +787,35 @@ namespace RhinoCyclesCore.Shaders
 						}
 					}
 
-					basewithao.outs.Color.Connect(principled.ins.BaseColor);
+					/* Square the base colour in proportion to the transmission weight, to undo
+					 * the sqrt() the 4.x principled applies to the transmission tint. See the
+					 * long note on the standard path below for why that sqrt exists and what
+					 * it costs us; the short version is that 3.5 tinted the refraction lobe by
+					 * the base colour once per surface crossed, and 5.2 tints it by
+					 * sqrt(base colour) so that a closed solid comes out tinted by the base
+					 * colour in total instead.
+					 *
+					 * Base colour is one socket driving diffuse, specular and transmission
+					 * here, so it cannot be squared outright - that would darken every opaque
+					 * material. Mixing towards the square by the transmission weight leaves an
+					 * opaque material exactly as it was (weight 0 -> Color1) and gives a fully
+					 * transmissive one sqrt(c*c) = c per interface (weight 1 -> Color2), which
+					 * is 3.5's tint. In between it is an approximation, for the same reason as
+					 * on the standard path.
+					 *
+					 * The Fac is added to transmissionSockets below so it carries the same
+					 * value - including any texture - that reaches Transmission Weight. */
+					var squared_base_color = new GammaNode(m_shader, "pbr_squared_base_color");
+					squared_base_color.ins.Gamma.Value = 2.0f;
+
+					var basecolor_squared_by_transmission = new MixNode(m_shader, "pbr_base_color_squared_by_transmission");
+					basecolor_squared_by_transmission.BlendType = MixNode.BlendTypes.Blend;
+					basecolor_squared_by_transmission.UseClamp = false;
+
+					basewithao.outs.Color.Connect(squared_base_color.ins.Color);
+					basewithao.outs.Color.Connect(basecolor_squared_by_transmission.ins.Color1);
+					squared_base_color.outs.Color.Connect(basecolor_squared_by_transmission.ins.Color2);
+					basecolor_squared_by_transmission.outs.Color.Connect(principled.ins.BaseColor);
 
 					if (basecoltexAlphaOut != null && part.UseBaseColorTextureAlphaAsObjectAlpha)
 					{
@@ -832,7 +860,9 @@ namespace RhinoCyclesCore.Shaders
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 
 					List<ISocket> transmissionSockets = new() {
-						principled.ins.Transmission
+						principled.ins.Transmission,
+						// How far to square the base colour; see pbr_squared_base_color above.
+						basecolor_squared_by_transmission.ins.Fac
 					};
 					if (coloured_shadow_switch != null)
 					{
@@ -1194,6 +1224,39 @@ namespace RhinoCyclesCore.Shaders
 					mix_diffuse_and_transparency_color187.BlendType = MixNode.BlendTypes.Blend;
 					mix_diffuse_and_transparency_color187.UseClamp = false;
 
+					/* 3.5 tinted the refraction lobe by the base colour once per surface
+					 * crossed: the closure weight was base_color * glass_weight *
+					 * refraction_fresnel. The 4.x principled halves that exponent - it
+					 * hands sqrt(base_color) to the Fresnel as the transmission tint, so
+					 * that a ray entering and leaving a closed solid is tinted by the base
+					 * colour in total rather than per interface.
+					 *
+					 * Rhino's Transparency colour has always meant the per-surface tint, so
+					 * on 5.2 every transparent material came out lighter and washed towards
+					 * white - a closed solid by a factor of 1/colour, a single surface like
+					 * a canopy by 1/sqrt(colour). Squaring here is what sqrt() undoes.
+					 *
+					 * Only the transparency-colour side is squared, so an opaque material -
+					 * all diffuse colour - is untouched. The squared colour goes to the
+					 * principled base colour alone, through a second mix: the plain mix
+					 * still feeds the coloured-shadow transparent BSDF, which took the
+					 * unsquared colour in 3.5 and should keep taking it.
+					 *
+					 * Exact at Transparency 1, where the mix is all transparency colour and
+					 * sqrt(c*c) is c. Between 0 and 1 it is close rather than exact, since
+					 * sqrt(mix(d, c*c, f)) is not mix(d, c, f) - and it cannot be made
+					 * exact, because 4.x drives the diffuse and transmission lobes from one
+					 * shared base colour that had two separate tints in 3.5. The error is
+					 * mid-range only: the transmission lobe carries no weight near 0, and
+					 * the diffuse lobe carries none near 1. */
+					var square_transparency_color_for_transmission = new GammaNode(m_shader, "square_transparency_color_for_transmission_");
+					square_transparency_color_for_transmission.ins.Gamma.Value = 2.0f;
+
+					var mix_diffuse_and_squared_transparency_color = new MixNode(m_shader, "mix_diffuse_and_squared_transparency_color_");
+					mix_diffuse_and_squared_transparency_color.ins.Fac.Value = part.Transparency;
+					mix_diffuse_and_squared_transparency_color.BlendType = MixNode.BlendTypes.Blend;
+					mix_diffuse_and_squared_transparency_color.UseClamp = false;
+
 					var principledbsdf117 = new PrincipledBsdfNode(m_shader, "principledbsdf_");
 					principledbsdf117.ins.Subsurface.Value = 0f;
 					principledbsdf117.ins.SubsurfaceRadius.Value = new float4(0f, 0f, 0f, 1f);
@@ -1247,6 +1310,7 @@ namespace RhinoCyclesCore.Shaders
 						textureDecalMixinOut.outs.Color.Connect(shadeless_bsdf90.ins.Color);
 						textureDecalMixinOut.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
 						textureDecalMixinOut.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
+						textureDecalMixinOut.outs.Color.Connect(mix_diffuse_and_squared_transparency_color.ins.Color1);
 					}
 					else
 					{
@@ -1254,6 +1318,7 @@ namespace RhinoCyclesCore.Shaders
 						diffuse_base_color_through_alpha120.outs.Color.Connect(shadeless_bsdf90.ins.Color);
 						diffuse_base_color_through_alpha120.outs.Color.Connect(coloured_shadow_trans_color111.ins.Color);
 						diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color1);
+						diffuse_base_color_through_alpha120.outs.Color.Connect(mix_diffuse_and_squared_transparency_color.ins.Color1);
 					}
 
 					light_path109.outs.IsCameraRay.Connect(shadeless_on_cameraray122.ins.Value1);
@@ -1306,7 +1371,9 @@ namespace RhinoCyclesCore.Shaders
 					transparent115.outs.BSDF.Connect(custom_alpha_cutter116.ins.Closure2);
 					add_diffuse_texture_alpha83.outs.Value.Connect(custom_alpha_cutter116.ins.Fac);
 					attennuated_refraction_color99.outs.Color.Connect(mix_diffuse_and_transparency_color187.ins.Color2);
-					mix_diffuse_and_transparency_color187.outs.Color.Connect(principledbsdf117.ins.BaseColor);
+					attennuated_refraction_color99.outs.Color.Connect(square_transparency_color_for_transmission.ins.Color);
+					square_transparency_color_for_transmission.outs.Color.Connect(mix_diffuse_and_squared_transparency_color.ins.Color2);
+					mix_diffuse_and_squared_transparency_color.outs.Color.Connect(principledbsdf117.ins.BaseColor);
 					if (part.Shadeless)
 					{
 						shadeless96.outs.Closure.Connect(custom_environment_blend195.ins.Closure1);
