@@ -123,6 +123,13 @@ namespace RhinoCyclesCore.Shaders
 		/// colours now and untinted is white, so 0 has to give white rather than
 		/// black - black asks for no specular reflection at all.
 		/// </summary>
+		/// <summary>
+		/// The IOR an opaque dielectric gets, so that 4.x's principled still builds a
+		/// specular lobe for it. 1.5 is both Cycles' own default and what 3.5's
+		/// specular-derived IOR came to at the default Specular of 0.5.
+		/// </summary>
+		private const float DielectricIor = 1.5f;
+
 		private static float4 TintToColour(float amount, float4 baseColour)
 		{
 			float t = Math.Max(0.0f, Math.Min(1.0f, amount));
@@ -859,10 +866,45 @@ namespace RhinoCyclesCore.Shaders
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor.ToList(), false, part.Gamma, false, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 
+					/* Rhino's IOR here is the PBR material's *Opacity* IOR, and on an opaque
+					 * material 1.0 is a perfectly ordinary value for it. In 3.5 that was
+					 * harmless: the principled's ior input fed the transmission lobe only,
+					 * and the specular lobe derived its own from Specular -
+					 * bsdf->ior = 2/(1 - sqrt(0.08*specular)) - 1 - while existing whenever
+					 * specular or metallic was non-zero.
+					 *
+					 * In 4.x the ior input *is* the specular lobe's eta, and closure.h skips
+					 * the whole lobe when eta == 1. So every opaque material carrying
+					 * Opacity IOR 1.0 lost its specular highlight and its environment
+					 * reflection outright - the Paint material rendered as a flat disc.
+					 *
+					 * Blending to the dielectric 1.5 as transmission falls away restores 3.5
+					 * exactly rather than approximately: at 1.5 the lobe's
+					 * f0 = F0_from_ior(1.5) * 2 * specular_ior_level = 0.08 * specular,
+					 * which is 3.5's cspec0 term. Transmissive materials keep their own IOR,
+					 * which is what it is for. */
+					var ior_above_dielectric = new MathSubtract(m_shader, "pbr_ior_above_dielectric_");
+					ior_above_dielectric.ins.Value2.Value = DielectricIor;
+					ior_above_dielectric.UseClamp = false;
+
+					var ior_weighted_by_transmission = new MathMultiply(m_shader, "pbr_ior_weighted_by_transmission_");
+					ior_weighted_by_transmission.UseClamp = false;
+
+					var ior_effective = new MathAdd(m_shader, "pbr_ior_effective_");
+					ior_effective.ins.Value1.Value = DielectricIor;
+					ior_effective.UseClamp = false;
+
+					ior_above_dielectric.outs.Value.Connect(ior_weighted_by_transmission.ins.Value1);
+					ior_weighted_by_transmission.outs.Value.Connect(ior_effective.ins.Value2);
+					ior_effective.outs.Value.Connect(principled.ins.IOR);
+
 					List<ISocket> transmissionSockets = new() {
 						principled.ins.Transmission,
 						// How far to square the base colour; see pbr_squared_base_color above.
-						basecolor_squared_by_transmission.ins.Fac
+						basecolor_squared_by_transmission.ins.Fac,
+						// How far to follow the material's own IOR rather than the dielectric
+						// default; see pbr_ior_effective below.
+						ior_weighted_by_transmission.ins.Value2
 					};
 					if (coloured_shadow_switch != null)
 					{
@@ -871,7 +913,7 @@ namespace RhinoCyclesCore.Shaders
 					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, transmissionSockets, true, part.Gamma, true, false, decalProcessingInfo);
 
 					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, ior_above_dielectric.ins.Value1.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 
@@ -1279,7 +1321,13 @@ namespace RhinoCyclesCore.Shaders
 					 * Coat Roughness, the inverse, so it has to be flipped - feeding gloss
 					 * straight in asked for a fully rough coat on the shiniest materials. */
 					principledbsdf117.ins.CoatRoughness.Value = 1.0f - part.Gloss;
-					principledbsdf117.ins.IOR.Value = part.IOR;
+					/* Same trap as the PBR path's Opacity IOR, and the values here are plain
+					 * floats so the blend is done in C#: an opaque custom material with
+					 * IOR 1 would otherwise get no specular lobe at all under 4.x, where in
+					 * 3.5 the ior input never reached the specular. See the long note by
+					 * pbr_ior_effective. */
+					principledbsdf117.ins.IOR.Value =
+						DielectricIor + part.Transparency * (part.IOR - DielectricIor);
 					principledbsdf117.ins.EmissionStrength.Value = 0.0f;
 					principledbsdf117.ins.Transmission.Value = part.Transparency;
 					principledbsdf117.ins.TransmissionRoughness.Value = part.RefractionRoughness;
