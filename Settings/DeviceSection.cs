@@ -15,6 +15,7 @@ limitations under the License.
 **/
 using ccl;
 using Eto.Forms;
+using Rhino.ApplicationSettings;
 using Rhino.Runtime;
 using Rhino.UI;
 using RhinoCyclesCore.Core;
@@ -305,6 +306,8 @@ namespace RhinoCyclesCore.Settings
 		private Label m_lb_use_cpu_in_multi;
 		private CheckBox m_cb_enablecpu_in_multi;
 		private Button m_btn_enablegpus;
+		private Label m_lb_backendsdisabled_message;
+		private Button m_btn_retrybackends;
 		private Button m_btn_recompilekernels;
 		private Button m_btn_showcompilelog;
 
@@ -429,8 +432,41 @@ namespace RhinoCyclesCore.Settings
 						m_cb_enablecpu_in_multi.Checked = false;
 
 					}
-					m_lb_gpusdisabled_message.Visible = Utilities.GpusDisabled && Utilities.HasGpus;
-					m_btn_enablegpus.Visible = Utilities.GpusDisabled && Utilities.HasGpus;
+					// No HasGpus test here: switching GPU detection off starts Cycles CPU-only, so there is
+					// never a GPU left to detect and these two could never show. RH-98700.
+					m_lb_gpusdisabled_message.Visible = Utilities.GpusDisabled;
+					m_btn_enablegpus.Visible = Utilities.GpusDisabled;
+					var autoDisabled = Utilities.DisabledGpuNames;
+					bool showAutoDisabled = !Utilities.GpusDisabled && autoDisabled.Length > 0;
+					// Nothing was switched off, but the machine has a GPU Cycles cannot use. Say so here
+					// too, or this page silently disagrees with the Notifications panel. RH-98701.
+					bool showNoGpu = !Utilities.GpusDisabled && !showAutoDisabled
+						&& Utilities.GpuAbsentRecord.Length > 0;
+					m_lb_backendsdisabled_message.Visible = showAutoDisabled || showNoGpu;
+					m_btn_retrybackends.Visible = showAutoDisabled;
+					if (showAutoDisabled)
+					{
+						// RH-98730: amber and bold is for what actually costs the user - no GPU left at
+						// all. With another GPU still rendering this is a note, so let it read as one.
+						bool onCpu = !Utilities.HasGpus;
+						m_lb_backendsdisabled_message.TextColor =
+							onCpu ? WarningTextColor() : NormalTextColor();
+						m_lb_backendsdisabled_message.Font =
+							onCpu ? Eto.Drawing.SystemFonts.Bold() : Eto.Drawing.SystemFonts.Default();
+						m_btn_retrybackends.ToolTip = string.Format(
+							Localization.LocalizeString("Try {0} again on the next start of Rhino", 122), autoDisabled);
+						m_lb_backendsdisabled_message.Text = string.Format(
+							// RH-98730: worded so it reads for one backend and for several.
+							Localization.LocalizeString("{0} failed to start, now switched off. Press 'Retry GPUs', then restart.", 123),
+							autoDisabled);
+					}
+					else if (showNoGpu)
+					{
+						m_lb_backendsdisabled_message.TextColor = WarningTextColor();
+						m_lb_backendsdisabled_message.Font = Eto.Drawing.SystemFonts.Bold();
+						m_lb_backendsdisabled_message.Text =
+							Localization.LocalizeString("No GPU is available - rendering on the CPU. Update the graphics driver.", 124);
+					}
 					m_btn_recompilekernels.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;
 					m_btn_showcompilelog.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;
 					int utilPerc = (int)((float)e.AllSettings.Threads / Utilities.GetSystemProcessorCount() * 100.0f);
@@ -504,6 +540,15 @@ namespace RhinoCyclesCore.Settings
 				Text = Localization.LocalizeString("Enable GPU detection", 73),
 				ToolTip = Localization.LocalizeString("Press to enable GPU detection, then restart Rhino", 74)
 			};
+			m_lb_backendsdisabled_message = new Label
+			{
+				Font = Eto.Drawing.SystemFonts.Bold()
+			};
+			m_btn_retrybackends = new Button
+			{
+				Text = Localization.LocalizeString("Retry GPUs", 125),
+				ToolTip = Localization.LocalizeString("Try the switched off GPUs again on the next start of Rhino", 126)
+			};
 			m_btn_recompilekernels = new Button
 			{
 				Text = Localization.LocalizeString("Recompile kernels", 92),
@@ -533,7 +578,8 @@ namespace RhinoCyclesCore.Settings
 					TableLayout.HorizontalScaled(spacing: 15, null, m_lb_use_cpu_in_multi, m_cb_enablecpu_in_multi),
 					TableLayout.HorizontalScaled(spacing: 15, m_lb_threadcount, m_threadcount, m_lb_threadcount_currentval),
 					TableLayout.HorizontalScaled(spacing: 15, m_lb_gpusdisabled_message, m_btn_enablegpus),
-					TableLayout.Horizontal(spacing: 15, null, m_btn_recompilekernels, m_btn_showcompilelog),
+					m_lb_backendsdisabled_message,
+					TableLayout.Horizontal(spacing: 15, null, m_btn_retrybackends, m_btn_recompilekernels, m_btn_showcompilelog),
 				}
 			};
 			Content = layout;
@@ -570,6 +616,7 @@ namespace RhinoCyclesCore.Settings
 			}
 			m_threadcount.ValueChanged += M_threadcount_ValueChanged;
 			m_btn_enablegpus.Click += m_btn_enablegpus_Clicked;
+			m_btn_retrybackends.Click += m_btn_retrybackends_Clicked;
 
 			m_btn_recompilekernels.Click += m_btn_recompilekernels_Clicked;
 			m_btn_showcompilelog.Click += m_btn_showcompilelog_Clicked;
@@ -581,6 +628,37 @@ namespace RhinoCyclesCore.Settings
 		{
 			Utilities.EnableGpus();
 			Eto.Forms.MessageBox.Show(Localization.LocalizeString("GPU detection has been enabled. Please restart Rhino.", 75), Eto.Forms.MessageBoxType.Information);
+		}
+
+		/// <summary>The panel's ordinary label colour, for a message that is a note and not a problem.</summary>
+		private static Eto.Drawing.Color NormalTextColor()
+		{
+			return AppearanceSettings.GetPaintColor(PaintColor.TextEnabled).ToEto();
+		}
+
+		/// <summary>Amber that stays legible on the panel background of either theme.</summary>
+		private static Eto.Drawing.Color WarningTextColor()
+		{
+			// Measure the panel we sit on. AdvancedSettings.DarkMode reports false on a dark UI
+			// on at least some machines, and this also copes with custom colour schemes.
+			var bg = AppearanceSettings.GetPaintColor(PaintColor.PanelBackground).ToEto();
+			var luma = 0.299f * bg.R + 0.587f * bg.G + 0.114f * bg.B;
+			// Plain orange washes out on a light panel, so darken it there.
+			return luma < 0.5f
+				? Eto.Drawing.Color.FromArgb(0xFF, 0xB0, 0x3A)
+				: Eto.Drawing.Color.FromArgb(0xB3, 0x45, 0x00);
+		}
+
+		private void m_btn_retrybackends_Clicked(object sender, EventArgs e)
+		{
+			// Read the names before clearing, so the message can say which ones.
+			var names = Utilities.DisabledGpuNames;
+			// Only the auto-disabled backends - leave a deliberate RhinoCyclesDisableGpu alone.
+			Utilities.EnableGpuBackends();
+			var message = string.IsNullOrEmpty(names)
+				? Localization.LocalizeString("Rhino will try the GPUs again the next time it starts.", 127)
+				: string.Format(Localization.LocalizeString("Rhino will try {0} again the next time it starts.", 128), names);
+			Eto.Forms.MessageBox.Show(message, Eto.Forms.MessageBoxType.Information);
 		}
 
 		private void m_btn_recompilekernels_Clicked(object sender, EventArgs e)
@@ -742,6 +820,7 @@ namespace RhinoCyclesCore.Settings
 			}
 			m_threadcount.ValueChanged -= M_threadcount_ValueChanged;
 			m_btn_enablegpus.Click -= m_btn_enablegpus_Clicked;
+			m_btn_retrybackends.Click -= m_btn_retrybackends_Clicked;
 
 			m_btn_recompilekernels.Click -= m_btn_recompilekernels_Clicked;
 			m_btn_showcompilelog.Click -= m_btn_showcompilelog_Clicked;

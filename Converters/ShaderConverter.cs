@@ -51,8 +51,7 @@ namespace RhinoCyclesCore.Converters
 
 		private static bool ShouldSimulate(RenderTexture rt) {
 			Guid type_id = rt.TypeId;
-			// Waves and Noise bake until their native nodes match the RDK evaluation. RH-92750.
-			return type_id == ContentUuids.ResampleTextureType || type_id == ContentUuids.AdvancedDotTextureType || type_id == ContentUuids.GritBumpTexture || type_id == ContentUuids.DotBumpTexture || type_id == ContentUuids.WoodBumpTexture || type_id == ContentUuids.HatchBumpTexture || type_id == ContentUuids.LeatherBumpTexture || type_id == ContentUuids.SpeckleBumpTexture || type_id == ContentUuids.CrossHatchBumpTexture || type_id == ContentUuids.WavesTextureType || type_id == ContentUuids.NoiseTextureType;
+			return type_id == ContentUuids.ResampleTextureType || type_id == ContentUuids.AdvancedDotTextureType || type_id == ContentUuids.GritBumpTexture || type_id == ContentUuids.DotBumpTexture || type_id == ContentUuids.WoodBumpTexture || type_id == ContentUuids.HatchBumpTexture || type_id == ContentUuids.LeatherBumpTexture || type_id == ContentUuids.SpeckleBumpTexture || type_id == ContentUuids.CrossHatchBumpTexture;
 		}
 
 		// RH-92750: true if rt or any child needs baking (ShouldSimulate).
@@ -92,8 +91,6 @@ namespace RhinoCyclesCore.Converters
 			{
 				procedural = new CheckerTextureProcedural(render_texture, false, is_color);
 			}
-			/* TODO: re-enable once the native nodes match the RDK evaluation. Until then
-			   handled as bitmap texture via ShouldSimulate. RH-92750.
 			else if (type_id == ContentUuids.NoiseTextureType)
 			{
 				procedural = new NoiseTextureProcedural(render_texture, is_color);
@@ -101,7 +98,7 @@ namespace RhinoCyclesCore.Converters
 			else if (type_id == ContentUuids.WavesTextureType)
 			{
 				procedural = new WavesTextureProcedural(render_texture, is_color);
-			}*/
+			}
 			else if (type_id == ContentUuids.PerturbingTextureType)
 			{
 				procedural = new PerturbingTextureProcedural(render_texture, is_color);

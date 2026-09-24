@@ -676,6 +676,12 @@ namespace RhinoCyclesCore.Database
 
 		public Size RenderDimension { get; set; }
 
+		/// <summary>
+		/// A production render fits the wallpaper to its resolution. The rendered viewport passes
+		/// Size.Empty to use the screen port, since RenderDimension is not updated when it resizes.
+		/// </summary>
+		private Size WallpaperSize => _modalRenderer ? RenderDimension : Size.Empty;
+
 		Rhino.Geometry.Transform _gObTransform = Rhino.Geometry.Transform.Identity;
 
 		/// <summary>
@@ -690,7 +696,7 @@ namespace RhinoCyclesCore.Database
 			if (_wallpaperInitialized)
 			{
 				_environmentDatabase.SetGamma(PreProcessGamma);
-				_environmentDatabase.BackgroundWallpaper(viewInfo, _previousScaleBackgroundToFit);
+				_environmentDatabase.BackgroundWallpaper(viewInfo, _previousScaleBackgroundToFit, WallpaperSize);
 			}
 
 			_currentViewInfo = viewInfo;
@@ -2190,7 +2196,7 @@ namespace RhinoCyclesCore.Database
 					var y = string.IsNullOrEmpty(view.WallpaperFilename);
 					RcCore.It.AddLogStringIfVerbose(
 						$"\t\tview has {(y ? "no" : "")} wallpaper {(y ? "" : "with filename ")} {(y ? "" : view.WallpaperFilename)} {(y ? "" : "its grayscale bool")} {(y ? "" : $"{view.ShowWallpaperInGrayScale}")} {(y ? "" : "its hidden bool")} {(y ? "" : $"{view.WallpaperHidden}")}");
-					_environmentDatabase.BackgroundWallpaper(view, rs.ScaleBackgroundToFit);
+					_environmentDatabase.BackgroundWallpaper(view, rs.ScaleBackgroundToFit, WallpaperSize);
 					_wallpaperInitialized = true;
 				}
 				_previousScaleBackgroundToFit = rs.ScaleBackgroundToFit;

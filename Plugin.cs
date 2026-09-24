@@ -19,12 +19,14 @@ using Rhino;
 using Rhino.PlugIns;
 using Rhino.Render;
 using Rhino.Runtime;
+using Rhino.Runtime.Notifications;
 using Rhino.UI;
 using RhinoCyclesCore.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -115,6 +117,113 @@ namespace RhinoCycles
 		/// <summary>
 		/// Initialise Cycles if necessary.
 		/// </summary>
+		/// <summary>
+		/// Note in the Notifications panel that no GPU is left, so the user finds out they are
+		/// rendering on the CPU without opening the Rhino Render options page. RH-98701.
+		/// </summary>
+		/// <summary>
+		/// A backend can come up, find nothing it can use, and report no failure at all - the
+		/// tabs simply never appear. failed_gpus_mask() is 0 in that case, so the failure path
+		/// above never runs. Catch it by comparing what the system reports against what Cycles
+		/// ended up offering. RH-98701.
+		/// </summary>
+		private static void CheckForMissingGpus()
+		{
+			try
+			{
+				// Windows only: without an independent list of adapters there is nothing to compare
+				// against, and we would be guessing.
+				var systemGpus = DisplayDeviceInfo.GpuDeviceInfos();
+				if (systemGpus == null || systemGpus.Count == 0) return;
+
+				var devices = Device.Devices.ToList();
+				if (devices.Any(d => d.IsGpu))
+				{
+					RhinoCyclesCore.Utilities.ForgetGpuAbsent();
+					return;
+				}
+
+				var names = string.Join(", ", systemGpus.Select(g => g.Name));
+				var offered = string.Join(", ", devices.Select(d => d.Type.ToString()));
+				RhinoCyclesCore.Utilities.RecordGpuAbsent(names, offered);
+				RcCore.It.AddLogString($"No GPU available to Cycles although the system reports {names}; offering {offered}");
+			}
+			catch (Exception ex)
+			{
+				RcCore.It.AddLogString($"Could not check for missing GPUs: {ex.Message}");
+			}
+		}
+
+		/// <param name="firstTime">
+		/// True when a failure was recorded in this session, i.e. the user has not been shown
+		/// this yet. The panel is only pushed to the front then; on later starts the warning is
+		/// still listed, but quietly.
+		/// </param>
+		private static void NotifyAboutDisabledGpus(bool firstTime)
+		{
+			var names = RhinoCyclesCore.Utilities.DisabledGpuNames;
+			var absent = RhinoCyclesCore.Utilities.GpuAbsentRecord;
+			if (string.IsNullOrEmpty(names) && string.IsNullOrEmpty(absent)) return;
+
+			// RH-98730: one backend failing is not news while another GPU still renders - the
+			// Rhino Render options page names the one that is off. Only speak up when we really
+			// did fall back to the CPU.
+			if (Device.Devices.Any(d => d.IsGpu))
+			{
+				RcCore.It.AddLogString($"Not notifying about switched off GPU {names}; a usable GPU remains");
+				return;
+			}
+
+			// Init runs on its own thread; notifications are UI-thread only.
+			RhinoApp.InvokeOnUiThread(new Action(() =>
+			{
+				try
+				{
+					var note = new Notification
+					{
+						// RH-98730: anything above Info forces the panel open again and again.
+						SeverityLevel = Notification.Severity.Info,
+						Title = Localization.LocalizeString("Rhino Render is using the CPU", 114),
+						// Description is the one line the Notifications panel lists; Message is the detail
+						// shown when the notification is opened.
+						Description = string.IsNullOrEmpty(names)
+							? Localization.LocalizeString("No GPU found - using the CPU.", 115)
+							// RH-98730: worded so it reads for one backend and for several.
+							: string.Format(Localization.LocalizeString("{0} switched off - using the CPU.", 116), names),
+						Message = string.IsNullOrEmpty(names)
+							? Localization.LocalizeString("Rhino Render found no usable GPU, so it falls back to the CPU, which is much slower. This is usually a graphics driver that is too old for the card. Update the graphics driver and restart Rhino.", 117)
+							: string.Format(
+								Localization.LocalizeString("{0} failed to start, so Rhino Render and Raytraced fall back to the CPU, which is much slower. This is usually a graphics driver that is too old for the card. Update the driver, then try again.", 118),
+								names),
+						ConfirmButtonTitle = string.IsNullOrEmpty(names) ? null : Localization.LocalizeString("Retry GPUs", 119),
+						CancelButtonTitle = string.IsNullOrEmpty(names) ? Localization.LocalizeString("Close", 120) : Localization.LocalizeString("Keep CPU", 121),
+					};
+					note["RhinoCycles"] = "disabled-gpus";
+					note.ButtonClicked = (button) =>
+					{
+						if (button != ButtonType.Confirm) return;
+						if (string.IsNullOrEmpty(RhinoCyclesCore.Utilities.DisabledGpuNames)) return;
+						RhinoCyclesCore.Utilities.EnableGpuBackends();
+						NotificationCenter.Notifications.Remove(note);
+					};
+					NotificationCenter.Notifications.Add(note);
+
+					// Bring the panel forward only when this is news - nagging at every start is worse
+					// than the tab staying closed. GUID of Commands.UI.NotificationsPanel, whose plug-in
+					// is not referenceable from here.
+					if (firstTime)
+					{
+						Panels.OpenPanel(new Guid("9A0FA999-295D-4D77-B160-074FA2CD8E6D"), true);
+						RcCore.It.AddLogString($"Opened the Notifications panel for switched off GPUs: {names}");
+					}
+				}
+				catch (Exception ex)
+				{
+					RcCore.It.AddLogString($"Could not post the disabled-GPU notification: {ex.Message}");
+				}
+			}));
+		}
+
 		public void InitialiseCSycles()
 		{
 			lock(InitialiseLock)
@@ -163,6 +272,11 @@ namespace RhinoCycles
 						CSycles.initialise(DeviceTypeMask.CPU);
 					} else
 					{
+						DeviceTypeMask retried = RhinoCyclesCore.Utilities.ClearStaleGpuDisables();
+						if (retried != 0)
+						{
+							RcCore.It.AddLogString($"RhinoCycles GPU {retried} was disabled in a different GPU/driver/Rhino environment; trying again");
+						}
 						DeviceTypeMask previouslyDisabled = RhinoCyclesCore.Utilities.DisabledGpus;
 						CSycles.initialise(DeviceTypeMask.All & ~previouslyDisabled);
 
@@ -171,9 +285,13 @@ namespace RhinoCycles
 						{
 							var bit = (DeviceTypeMask)(1u << (int)t);
 							if ((failed & bit) == 0) continue;
-							bool persisted = RhinoCyclesCore.Utilities.DisableGpu(bit);
-							RcCore.It.AddLogString($"RhinoCycles GPU {t} failed to initialise{(persisted ? "; disabled for next start" : "")}: {CSycles.gpu_init_error(t)}");
+							var initError = CSycles.gpu_init_error(t);
+							bool newlyRecorded = RhinoCyclesCore.Utilities.DisableGpu(bit, initError, failed);
+							RcCore.It.AddLogString($"RhinoCycles GPU {t} failed to initialise; disabled for next start{(newlyRecorded ? " (recorded)" : "")}: {initError}");
 						}
+
+						CheckForMissingGpus();
+						NotifyAboutDisabledGpus(RhinoCyclesCore.Utilities.TakeGpuAnnouncement());
 
 						if (RcCore.It.AllSettings.StartGpuKernelCompiler)
 						{

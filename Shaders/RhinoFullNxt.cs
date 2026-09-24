@@ -399,9 +399,7 @@ namespace RhinoCyclesCore.Shaders
 			var multiply = new MathMultiply(shader, "Decal mask multiply");
 			multiply.ins.Value1.Value = 1.0f - decal.Transparency;
 
-			// If a material doesn't have an alpha output (such as a blend material)
-			// then color_mask_transp_socket will be null. In that case, we treat it
-			// as fully opaque so the mask is determined only by the decal transparency.
+			// A material that records no alpha of its own is opaque.
 			if (color_mask_transp_socket != null)
 				color_mask_transp_socket.Connect(multiply.ins.Value2);
 			else
@@ -654,11 +652,15 @@ namespace RhinoCyclesCore.Shaders
 			{
 				ShaderNode materialOne = null;
 				ShaderNode materialTwo = null;
+				ISocket alphaOne = null;
+				ISocket alphaTwo = null;
 				MixClosureNode blender = new MixClosureNode(m_shader, "blend material blender");
 				blender.ins.Fac.Value = part.BlendMixAmount;
+				if (decalProcessingInfo != null) decalProcessingInfo.AlphaOut = null;
 				if (part.MaterialOne != null)
 				{
 					materialOne = GetShaderPart(part.MaterialOne, decalProcessingInfo);
+					alphaOne = decalProcessingInfo?.AlphaOut;
 				}
 				else
 				{
@@ -666,9 +668,11 @@ namespace RhinoCyclesCore.Shaders
 					diff.ins.Color.Value = new float4(0.9, 0.9, 0.9, 1.0);
 					materialOne = diff;
 				}
+				if (decalProcessingInfo != null) decalProcessingInfo.AlphaOut = null;
 				if (part.MaterialTwo != null)
 				{
 					materialTwo = GetShaderPart(part.MaterialTwo, decalProcessingInfo);
+					alphaTwo = decalProcessingInfo?.AlphaOut;
 				}
 				else
 				{
@@ -679,9 +683,43 @@ namespace RhinoCyclesCore.Shaders
 				materialOne.GetClosureSocket().Connect(blender.ins.Closure1);
 				materialTwo.GetClosureSocket().Connect(blender.ins.Closure2);
 
+				List<ISocket> mixAmountSockets = new() { blender.ins.Fac };
+
+				if (decalProcessingInfo != null)
+				{
+					// Both children write the same AlphaOut, so without this the decal mask
+					// would be whichever child was built last. RH-98514.
+					MathSubtract invertMixAmount = new(m_shader, "blend material invert mix amount");
+					invertMixAmount.ins.Value1.Value = 1.0f;
+					invertMixAmount.ins.Value2.Value = part.BlendMixAmount;
+
+					MathMultiply weightedAlphaOne = new(m_shader, "blend material weighted alpha one");
+					MathMultiply weightedAlphaTwo = new(m_shader, "blend material weighted alpha two");
+					MathAdd blendedAlpha = new(m_shader, "blend material blended alpha");
+
+					if (alphaOne != null) alphaOne.Connect(weightedAlphaOne.ins.Value1);
+					else weightedAlphaOne.ins.Value1.Value = 1.0f;
+					if (alphaTwo != null) alphaTwo.Connect(weightedAlphaTwo.ins.Value1);
+					else weightedAlphaTwo.ins.Value1.Value = 1.0f;
+
+					invertMixAmount.outs.Value.Connect(weightedAlphaOne.ins.Value2);
+					weightedAlphaTwo.ins.Value2.Value = part.BlendMixAmount;
+
+					weightedAlphaOne.outs.Value.Connect(blendedAlpha.ins.Value1);
+					weightedAlphaTwo.outs.Value.Connect(blendedAlpha.ins.Value2);
+
+					decalProcessingInfo.AlphaOut = blendedAlpha.outs.Value;
+
+					mixAmountSockets.Add(invertMixAmount.ins.Value2);
+					mixAmountSockets.Add(weightedAlphaTwo.ins.Value2);
+				}
+
 				if (part.BlendMixAmountTexture.HasProcedural)
 				{
-					Utilities.GraphForSlot(m_shader, null, part.BlendMixAmount > 0.0f, part.BlendMixAmountTexture.Amount, part.BlendMixAmountTexture, blender.ins.Fac.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
+					// Mix from the slider towards the texture by the texture's alpha, so transparent texels keep the slider value.
+					var mixAmount = new ValueNode(m_shader, "blend material mix amount");
+					mixAmount.Value = part.BlendMixAmount;
+					Utilities.GraphForSlot(m_shader, mixAmount.outs.Value, true, part.BlendMixAmountTexture.Amount, part.BlendMixAmountTexture, mixAmountSockets, true, false, false, true, part.Gamma, false, decalProcessingInfo);
 				}
 				return blender;
 			}
@@ -898,19 +936,37 @@ namespace RhinoCyclesCore.Shaders
 					ior_weighted_by_transmission.outs.Value.Connect(ior_effective.ins.Value2);
 					ior_effective.outs.Value.Connect(principled.ins.IOR);
 
-					List<ISocket> transmissionSockets = new() {
-						principled.ins.Transmission,
-						// How far to square the base colour; see pbr_squared_base_color above.
-						basecolor_squared_by_transmission.ins.Fac,
-						// How far to follow the material's own IOR rather than the dielectric
-						// default; see pbr_ior_effective below.
-						ior_weighted_by_transmission.ins.Value2
-					};
-					if (coloured_shadow_switch != null)
+					// A decal is a sticker on the object, so a transparent decal material has to
+					// reveal the object underneath rather than refract the scene behind it.
+					// Mirrors RenderPoint in PBR_Shading.inc.slang. RH-98514.
+					MathMultiply decalAlphaTimesOpacity = null;
+
+					if (decalProcessingInfo == null)
 					{
-						transmissionSockets.Add(coloured_shadow_switch.ins.Value2);
+						List<ISocket> transmissionSockets = new() {
+							principled.ins.Transmission,
+							// How far to square the base colour; see pbr_squared_base_color above.
+							basecolor_squared_by_transmission.ins.Fac,
+							// How far to follow the material's own IOR rather than the dielectric
+							// default; see pbr_ior_effective above.
+							ior_weighted_by_transmission.ins.Value2
+						};
+						if (coloured_shadow_switch != null)
+						{
+							transmissionSockets.Add(coloured_shadow_switch.ins.Value2);
+						}
+						Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, transmissionSockets, true, part.Gamma, true, false, decalProcessingInfo);
 					}
-					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, transmissionSockets, true, part.Gamma, true, false, decalProcessingInfo);
+					else
+					{
+						principled.ins.Transmission.Value = 0.0f;
+						// Shaded opaque, so no squared base colour and the dielectric IOR.
+						basecolor_squared_by_transmission.ins.Fac.Value = 0.0f;
+						ior_weighted_by_transmission.ins.Value2.Value = 0.0f;
+
+						decalAlphaTimesOpacity = new MathMultiply(m_shader, "decal_alpha_times_opacity");
+						Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, decalAlphaTimesOpacity.ins.Value2.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					}
 
 					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, ior_above_dielectric.ins.Value1.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
@@ -989,7 +1045,8 @@ namespace RhinoCyclesCore.Shaders
 						principled.ins.Alpha.Value = 1.0f;
 						alpha_cutter_mixer.ins.Fac.Value = 1.0f;
 
-						decalProcessingInfo.AlphaOut = alpha_transparency_final.outs.Value;
+						alpha_transparency_final.outs.Value.Connect(decalAlphaTimesOpacity.ins.Value1);
+						decalProcessingInfo.AlphaOut = decalAlphaTimesOpacity.outs.Value;
 					}
 
 					tangent.outs.Tangent.Connect(principled.ins.Tangent);
@@ -1048,9 +1105,13 @@ namespace RhinoCyclesCore.Shaders
 				{
 					// NOTE: decalMixin is manually added outside of GH definition
 
+					// A decal material shades opaque and its transparency becomes decal alpha
+					// below, so it reveals the object instead of refracting the scene. RH-98514.
+					float transparency = decalProcessingInfo == null ? part.Transparency : 0.0f;
+
 					var invert_transparency68 = new MathSubtract(m_shader, "invert_transparency_");
 					invert_transparency68.ins.Value1.Value = 1f;
-					invert_transparency68.ins.Value2.Value = part.Transparency;
+					invert_transparency68.ins.Value2.Value = transparency;
 					invert_transparency68.Operation = MathNode.Operations.Subtract;
 					invert_transparency68.UseClamp = false;
 
@@ -1148,7 +1209,7 @@ namespace RhinoCyclesCore.Shaders
 					var attennuated_refraction_color99 = new MixNode(m_shader, "attennuated_refraction_color_");
 					attennuated_refraction_color99.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
 					attennuated_refraction_color99.ins.Color2.Value = part.TransparencyColorGamma;
-					attennuated_refraction_color99.ins.Fac.Value = part.Transparency;
+					attennuated_refraction_color99.ins.Fac.Value = transparency;
 					attennuated_refraction_color99.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
 					attennuated_refraction_color99.UseClamp = false;
 
@@ -1160,7 +1221,7 @@ namespace RhinoCyclesCore.Shaders
 					var diffuse_plus_glossy101 = new MixClosureNode(m_shader, "diffuse_plus_glossy_");
 
 					var blend_in_transparency102 = new MixClosureNode(m_shader, "blend_in_transparency_");
-					blend_in_transparency102.ins.Fac.Value = part.Transparency;
+					blend_in_transparency102.ins.Fac.Value = transparency;
 
 					var attenuated_environment_color106 = new MixNode(m_shader, "attenuated_environment_color_");
 					attenuated_environment_color106.ins.Color1.Value = new ccl.float4(0f, 0f, 0f, 1f);
@@ -1169,7 +1230,7 @@ namespace RhinoCyclesCore.Shaders
 					attenuated_environment_color106.UseClamp = false;
 
 					var diffuse_glossy_and_refraction107 = new MixClosureNode(m_shader, "diffuse_glossy_and_refraction_");
-					diffuse_glossy_and_refraction107.ins.Fac.Value = part.Transparency;
+					diffuse_glossy_and_refraction107.ins.Fac.Value = transparency;
 
 					var environment_map_diffuse108 = new DiffuseBsdfNode(m_shader, "environment_map_diffuse_");
 					environment_map_diffuse108.ins.Roughness.Value = 0f;
@@ -1182,7 +1243,7 @@ namespace RhinoCyclesCore.Shaders
 					invert_roughness75.UseClamp = false;
 
 					var multiply_transparency76 = new MathMultiply(m_shader, "multiply_transparency_");
-					multiply_transparency76.ins.Value2.Value = part.Transparency;
+					multiply_transparency76.ins.Value2.Value = transparency;
 					multiply_transparency76.Operation = MathNode.Operations.Multiply;
 					multiply_transparency76.UseClamp = false;
 
@@ -1262,7 +1323,7 @@ namespace RhinoCyclesCore.Shaders
 					var custom_alpha_cutter116 = new MixClosureNode(m_shader, "custom_alpha_cutter_");
 
 					var mix_diffuse_and_transparency_color187 = new MixNode(m_shader, "mix_diffuse_and_transparency_color_");
-					mix_diffuse_and_transparency_color187.ins.Fac.Value = part.Transparency;
+					mix_diffuse_and_transparency_color187.ins.Fac.Value = transparency;
 					mix_diffuse_and_transparency_color187.BlendType = MixNode.BlendTypes.Blend;
 					mix_diffuse_and_transparency_color187.UseClamp = false;
 
@@ -1326,7 +1387,7 @@ namespace RhinoCyclesCore.Shaders
 					 * that canopy came out milky and washed out instead of tinted. Carrying
 					 * 3.5's diffuse weight into the value restores it. */
 					principledbsdf117.ins.Sheen.Value =
-						part.Sheen * (1.0f - part.Metallic) * (1.0f - part.Transparency);
+						part.Sheen * (1.0f - part.Metallic) * (1.0f - transparency);
 					principledbsdf117.ins.SheenTint.Value = TintToColour(part.SheenTint, part.BaseColor);
 					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
 					/* Gloss is ReflectionGlossiness, where 1 is a mirror. The 4.x socket is
@@ -1339,9 +1400,9 @@ namespace RhinoCyclesCore.Shaders
 					 * 3.5 the ior input never reached the specular. See the long note by
 					 * pbr_ior_effective. */
 					principledbsdf117.ins.IOR.Value =
-						DielectricIor + part.Transparency * (part.IOR - DielectricIor);
+						DielectricIor + transparency * (part.IOR - DielectricIor);
 					principledbsdf117.ins.EmissionStrength.Value = 0.0f;
-					principledbsdf117.ins.Transmission.Value = part.Transparency;
+					principledbsdf117.ins.Transmission.Value = transparency;
 					principledbsdf117.ins.TransmissionRoughness.Value = part.RefractionRoughness;
 					principledbsdf117.ins.Tangent.Value = new float4(0f, 0f, 0f, 1f);
 
@@ -1451,6 +1512,15 @@ namespace RhinoCyclesCore.Shaders
 					/* extra code */
 					float useAlpha = 0.0f;
 
+					MathMultiply decalAlphaTimesOpacity = null;
+					if (decalProcessingInfo != null)
+					{
+						decalAlphaTimesOpacity = new MathMultiply(m_shader, "decal_alpha_times_opacity");
+						decalAlphaTimesOpacity.ins.Value1.Value = 1.0f - part.Transparency;
+						decalAlphaTimesOpacity.ins.Value2.Value = 1.0f;
+						decalProcessingInfo.AlphaOut = decalAlphaTimesOpacity.outs.Value;
+					}
+
 					if (part.DiffuseTexture.HasProcedural)
 					{
 						//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
@@ -1482,7 +1552,7 @@ namespace RhinoCyclesCore.Shaders
 								diff_tex_weighted_alpha_for_basecol_mix182.ins.Value2.Value = 1.0f;
 								max_of_texalpha_or_usealpha179.ins.Value1.Value = 1.0f;
 
-								decalProcessingInfo.AlphaOut = alpha;
+								alpha.Connect(decalAlphaTimesOpacity.ins.Value2);
 							}
 						}
 						else

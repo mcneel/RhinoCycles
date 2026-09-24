@@ -214,15 +214,20 @@ namespace RhinoCyclesCore
 		private string m_old_wallpaper = "";
 
 		/// <summary>
-		/// Same as <see cref="HandleWallpaper(ViewInfo, bool)"/>, but re-use old scaletofit setting
+		/// Same as <see cref="HandleWallpaper(ViewInfo, bool, Size)"/>, but re-use old scaletofit setting and fit to the screen port
 		/// </summary>
 		/// <param name="view"></param>
 		public void HandleWallpaper(ViewInfo view)
 		{
-			HandleWallpaper(view, m_old_scaletofit);
+			HandleWallpaper(view, m_old_scaletofit, Size.Empty);
 		}
 
-		public void HandleWallpaper(ViewInfo view, bool scaleToFit)
+		/// <summary>
+		/// Fit the wallpaper to renderSize, or to the view's screen port when renderSize is empty.
+		/// A production render must pass its resolution: the screen port is whatever shape the
+		/// Rhino window happened to be, which made wallpaper renders unreproducible (RH-98903).
+		/// </summary>
+		public void HandleWallpaper(ViewInfo view, bool scaleToFit, Size renderSize)
 		{
 			var file = Rhino.Render.Utilities.FindFile(RhinoDoc.ActiveDoc, view.WallpaperFilename);
 
@@ -280,8 +285,8 @@ namespace RhinoCyclesCore
 				ImageAttributes attr = new ImageAttributes();
 				attr.SetColorMatrix(view.ShowWallpaperInGrayScale ? cmgray : cmcolor);
 
-				var w = Math.Abs(right - left);
-				var h = Math.Abs(bottom - top);
+				var w = renderSize.IsEmpty ? Math.Abs(right - left) : renderSize.Width;
+				var h = renderSize.IsEmpty ? Math.Abs(bottom - top) : renderSize.Height;
 				var viewport_ar = (float)w / h;
 				Bitmap bm = new Bitmap(file);
 				var image_ar = (float)bm.Width / bm.Height;

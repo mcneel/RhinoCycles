@@ -238,6 +238,12 @@ namespace RhinoCyclesCore.RenderEngines
 			cyclesEngine.Session.Unlock();
 			cyclesEngine.Database.ResetChangeQueue();
 
+			// UploadData only returns false by bailing out on ShouldBreak, so a failure
+			// here means the user stopped the render while the data was still being
+			// uploaded. That is not an error, and must not be reported as one (RH-90731).
+			// The only real failure detected below is the -13 sample count.
+			var renderError = false;
+
 			if (renderSuccess)
 			{
 				RcCore.It.AddLogString("ModalRenderEngine.Renderer Session.Start");
@@ -255,6 +261,7 @@ namespace RhinoCyclesCore.RenderEngines
 					if (RenderedSamples == -13 || HasRenderError)
 					{
 						renderSuccess = false;
+						renderError = true;
 						Finished = true;
 						cyclesEngine.CancelRender = true;
 					}
@@ -309,7 +316,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			cyclesEngine.CancelRender = true;
 
-			if (!renderSuccess)
+			if (renderError)
 			{
 				RcCore.It.AddLogString(String.Format("ModalRenderEngine.Renderer failed. {0}", HasRenderError ? RenderErrorMessage : "No error reported by Cycles."));
 				string failureMessage = HasRenderError
@@ -326,7 +333,8 @@ If there is a result visible you can save it still.
 Please click the link below for more information.", 67));
 					dlg.ShowModal(RhinoEtoApp.MainWindow);
 				};
-				RhinoApp.InvokeOnUiThread(showErrorDialog);
+				// Must not block: the main thread may already be in RenderThread.Join() (RH-90731).
+				Eto.Forms.Application.Instance.AsyncInvoke(showErrorDialog);
 			}
 
 
