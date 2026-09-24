@@ -280,7 +280,7 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (renderError)
 			{
-				rw.SetProgress(Localization.LocalizeString("An error occured while trying to render. The render may be incomplete or not started.", 65), 1.0f);
+				rw.SetProgress(Localization.LocalizeString("An error occurred while trying to render. The render may be incomplete or not started.", 65), 1.0f);
 				Action showErrorDialog = () =>
 				{
 					CrashReporterDialog dlg = new CrashReporterDialog(Localization.LocalizeString("Error while rendering", 66), Localization.LocalizeString(

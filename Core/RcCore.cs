@@ -714,7 +714,7 @@ namespace RhinoCyclesCore.Core
 			}
 
 			sb.AppendLine();
-			sb.AppendLine($"--- {Localization.LocalizeString("ERROR LOG", 83)} ---");
+			sb.AppendLine($"--- {Localization.LocalizeString("Error log", 83)} ---");
 			if (errors.Count == 0)
 			{
 				sb.AppendLine($"  {Localization.LocalizeString("No errors.", 88)}");

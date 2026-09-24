@@ -481,7 +481,7 @@ namespace RhinoCyclesCore.Settings
 		{
 			m_tc = new TabControl();
 
-			m_tabpage_cpu = new GridDevicePage { DeviceType = ccl.DeviceType.Cpu, Text = "CPU", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CPUSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Cpu category.", 24) };
+			m_tabpage_cpu = new GridDevicePage { DeviceType = ccl.DeviceType.Cpu, Text = "CPU", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CPUSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the CPU category.", 24) };
 			m_tabpage_cuda = new GridDevicePage { DeviceType = ccl.DeviceType.Cuda, Text = "CUDA", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_CUDASvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Cuda category.\nThese are the NVidia graphics and compute cards.", 25) };
 			m_tabpage_optix = new GridDevicePage { DeviceType = ccl.DeviceType.Optix, Text = "Optix", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_OPTIXSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Optix category.\nThese are the NVidia graphics and compute cards from Maxwell architecture and newer.", 41) };
 			m_tabpage_metal = new GridDevicePage { DeviceType = ccl.DeviceType.Metal, Text = "Metal", Image = Rhino.Resources.Assets.Rhino.Eto.Icons.TryGet(Rhino.Resources.ResourceIds.Svg_AppleMetalLogoSvg, new Eto.Drawing.Size(16, 16)), ToolTip = Localization.LocalizeString("Show all the render devices in the Metal category.\nThese include GPU devices on MacOS systems.", 26) };
@@ -518,7 +518,7 @@ namespace RhinoCyclesCore.Settings
 				Width = 130,
 				Orientation = Orientation.Horizontal
 			};
-			m_lb_threadcount = new Label { Text = Localization.LocalizeString("Cpu Utilization", 13), ToolTip = Localization.LocalizeString("Utilization percentage of Cpu to use when set as render device", 42) };
+			m_lb_threadcount = new Label { Text = Localization.LocalizeString("CPU Utilization", 13), ToolTip = Localization.LocalizeString("Utilization percentage of CPU to use when set as render device", 42) };
 			m_lb_threadcount_currentval = new Label { Text = "-" };
 
 			m_lb_use_cpu_in_multi = new Label
