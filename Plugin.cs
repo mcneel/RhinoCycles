@@ -174,6 +174,10 @@ namespace RhinoCycles
 				return;
 			}
 
+			// The cards the system reports but Cycles did not offer. Nothing failed, so this is often
+			// a card too old for any backend - an RX 570 has no HIP - and no driver will change that.
+			var cards = RhinoCyclesCore.Utilities.GpuAbsentNames;
+
 			// Init runs on its own thread; notifications are UI-thread only.
 			RhinoApp.InvokeOnUiThread(new Action(() =>
 			{
@@ -186,12 +190,18 @@ namespace RhinoCycles
 						Title = Localization.LocalizeString("Rhino Render is using the CPU", 114),
 						// Description is the one line the Notifications panel lists; Message is the detail
 						// shown when the notification is opened.
-						Description = string.IsNullOrEmpty(names)
-							? Localization.LocalizeString("No GPU found - using the CPU.", 115)
+						Description = !string.IsNullOrEmpty(names)
 							// RH-98730: worded so it reads for one backend and for several.
-							: string.Format(Localization.LocalizeString("{0} switched off - using the CPU.", 116), names),
+							? string.Format(Localization.LocalizeString("{0} switched off - using the CPU.", 116), names)
+							: !string.IsNullOrEmpty(cards)
+								? string.Format(LOC.STR("Rhino Render cannot use {0} - using the CPU."), cards)
+								: Localization.LocalizeString("No GPU found - using the CPU.", 115),
 						Message = string.IsNullOrEmpty(names)
-							? Localization.LocalizeString("Rhino Render found no usable GPU, so it falls back to the CPU, which is much slower. This is usually a graphics driver that is too old for the card. Update the graphics driver and restart Rhino.", 117)
+							? !string.IsNullOrEmpty(cards)
+								? string.Format(
+									LOC.STR("Rhino Render cannot use {0}, so it falls back to the CPU, which is much slower. The card may be too old for GPU rendering: AMD needs a Radeon RX 5000 series or newer, NVIDIA a GeForce GTX 750 or newer. If the card is newer than that, update its graphics driver and restart Rhino."),
+									cards)
+								: LOC.STR("Rhino Render found no usable GPU, so it falls back to the CPU, which is much slower. The card may be too old for GPU rendering: AMD needs a Radeon RX 5000 series or newer, NVIDIA a GeForce GTX 750 or newer. If the card is newer than that, update its graphics driver and restart Rhino.")
 							: string.Format(
 								Localization.LocalizeString("{0} failed to start, so Rhino Render and Raytraced fall back to the CPU, which is much slower. This is usually a graphics driver that is too old for the card. Update the driver, then try again.", 118),
 								names),

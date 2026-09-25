@@ -464,8 +464,12 @@ namespace RhinoCyclesCore.Settings
 					{
 						m_lb_backendsdisabled_message.TextColor = WarningTextColor();
 						m_lb_backendsdisabled_message.Font = Eto.Drawing.SystemFonts.Bold();
-						m_lb_backendsdisabled_message.Text =
-							Localization.LocalizeString("No GPU is available - rendering on the CPU. Update the graphics driver.", 124);
+						// Often a card too old for any backend, which no driver fixes - see
+						// NotifyAboutDisabledGpus, which says the same at more length.
+						var cards = Utilities.GpuAbsentNames;
+						m_lb_backendsdisabled_message.Text = string.IsNullOrEmpty(cards)
+							? LOC.STR("No GPU is available - rendering on the CPU. The card may be too old, or its driver.")
+							: string.Format(LOC.STR("Rhino Render cannot use {0} - rendering on the CPU. The card may be too old, or its driver."), cards);
 					}
 					m_btn_recompilekernels.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;
 					m_btn_showcompilelog.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;

@@ -662,6 +662,20 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
+		/// The cards the no-GPU-offered record names, for the UI. Empty when there is no record, or
+		/// it names none.
+		/// </summary>
+		public static string GpuAbsentNames
+		{
+			get
+			{
+				if (!File.Exists(_GpuAbsentFile)) return string.Empty;
+				var names = _RecordField(_GpuAbsentFile, "systemgpus=");
+				return names == _OneLine(null) ? string.Empty : names;
+			}
+		}
+
+		/// <summary>
 		/// The failure record for each switched off backend, for RhinoCyclesSupportReport.
 		/// Name, file path and the file's own contents.
 		/// </summary>
