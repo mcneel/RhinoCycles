@@ -773,7 +773,10 @@ namespace RhinoCyclesCore.Shaders
 						principled.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure1);
 					}
 
-					principled.Sss = PrincipledBsdfNode.ScatterMethod.RandomWalk; //SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.AllSettings.SssMethod);
+					/* The model Rhino has always rendered with: 3.5 called it random walk, and
+					 * Cycles 4.0 renamed it to random walk (skin) when it gave the name to a new
+					 * model. Blender keeps it for pre-4.0 files the same way. */
+					principled.Sss = PrincipledBsdfNode.ScatterMethod.RandomWalkSkin; //SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.AllSettings.SssMethod);
 
 					var alpha_transp_component = new MathSubtract(m_shader, "alpha_transp_component");
 					alpha_transp_component.ins.Value1.Value = 1.0f;
