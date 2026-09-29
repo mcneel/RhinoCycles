@@ -870,7 +870,15 @@ namespace RhinoCyclesCore.Shaders
 						sheentintmix.outs.Color.Connect(principled.ins.SheenTint);
 						Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, sheentintmix.ins.Fac.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					}
-					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.Clearcoat.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					/* Rhino's clearcoat is Disney's: the display draws the coat at a quarter of
+					 * the value (0.25*clearcoat in PBR_Shading.inc.slang), and so did 3.5's
+					 * principled. 4.x's Coat Weight is the coat itself, so a quarter of the value
+					 * goes in - which is also how Blender converts pre-4.0 files. */
+					var clearcoat_to_coat_weight = new MathMultiply(m_shader, "pbr_clearcoat_to_coat_weight_");
+					clearcoat_to_coat_weight.ins.Value2.Value = 0.25f;
+					clearcoat_to_coat_weight.UseClamp = false;
+					clearcoat_to_coat_weight.outs.Value.Connect(principled.ins.Clearcoat);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, clearcoat_to_coat_weight.ins.Value1.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.CoatRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor.ToList(), false, part.Gamma, false, false, decalProcessingInfo);
