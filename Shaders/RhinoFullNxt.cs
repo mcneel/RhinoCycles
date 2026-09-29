@@ -832,7 +832,19 @@ namespace RhinoCyclesCore.Shaders
 						}
 					}
 
-					basewithao.outs.Color.Connect(principled.ins.BaseColor);
+					/* Subsurface. 3.5's principled mixed the base colour towards the SSS colour
+					 * by the Subsurface amount, used that mix for every lobe, and scattered
+					 * over radius * amount - fully, once the amount was above zero. 4.x has no
+					 * SSS colour, it scatters with the base colour, and splits the amount into
+					 * Weight and Scale. Feeding it Rhino's values the way Blender converts
+					 * pre-4.0 files keeps what they mean: this mix as the base colour, Scale =
+					 * the amount, Weight 1 wherever there is any. The random walk itself is
+					 * Cycles 5's. The amount and colour graphs are hooked up further down. */
+					var sss_base_color = new MixNode(m_shader, "pbr_sss_base_color_");
+					sss_base_color.BlendType = MixNode.BlendTypes.Blend;
+					sss_base_color.UseClamp = false;
+					basewithao.outs.Color.Connect(sss_base_color.ins.Color1);
+					sss_base_color.outs.Color.Connect(principled.ins.BaseColor);
 
 					if (basecoltexAlphaOut != null && part.UseBaseColorTextureAlphaAsObjectAlpha)
 					{
@@ -851,7 +863,7 @@ namespace RhinoCyclesCore.Shaders
 					{
 						var spectintmix = new MixNode(m_shader, "pbr_speculartint");
 						spectintmix.ins.Color1.Value = new float4(1f, 1f, 1f, 1f);
-						basewithao.outs.Color.Connect(spectintmix.ins.Color2);
+						sss_base_color.outs.Color.Connect(spectintmix.ins.Color2);
 						spectintmix.outs.Color.Connect(principled.ins.SpecularTint);
 						Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, spectintmix.ins.Fac.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					}
@@ -866,7 +878,7 @@ namespace RhinoCyclesCore.Shaders
 					{
 						var sheentintmix = new MixNode(m_shader, "pbr_sheentint");
 						sheentintmix.ins.Color1.Value = new float4(1f, 1f, 1f, 1f);
-						basewithao.outs.Color.Connect(sheentintmix.ins.Color2);
+						sss_base_color.outs.Color.Connect(sheentintmix.ins.Color2);
 						sheentintmix.outs.Color.Connect(principled.ins.SheenTint);
 						Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, sheentintmix.ins.Fac.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					}
@@ -880,8 +892,12 @@ namespace RhinoCyclesCore.Shaders
 					clearcoat_to_coat_weight.outs.Value.Connect(principled.ins.Clearcoat);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, clearcoat_to_coat_weight.ins.Value1.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.CoatRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor.ToList(), false, part.Gamma, false, false, decalProcessingInfo);
+					// See pbr_sss_base_color above: the amount is the Scale and the colour mix.
+					bool has_subsurface = part.PbrSubsurface.Value > 0.0f ||
+						(part.PbrSubsurface.On && part.PbrSubsurfaceTexture.HasProcedural);
+					principled.ins.Subsurface.Value = has_subsurface ? 1.0f : 0.0f;
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, new List<ISocket> { principled.ins.SubsurfaceScale, sss_base_color.ins.Fac }, false, part.Gamma, true, false, decalProcessingInfo);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, sss_base_color.ins.Color2.ToList(), false, part.Gamma, false, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 
 					/* Rhino's IOR here is the PBR material's *Opacity* IOR, and on an opaque
