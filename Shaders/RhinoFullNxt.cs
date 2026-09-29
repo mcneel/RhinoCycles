@@ -870,7 +870,26 @@ namespace RhinoCyclesCore.Shaders
 						spectintmix.outs.Color.Connect(principled.ins.SpecularTint);
 						Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, spectintmix.ins.Fac.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					}
-					Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture, principled.ins.Roughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					/* 4.x has no Transmission Roughness; its transmission lobe uses Roughness.
+					 * Rhino keeps a separate Opacity Roughness for what is seen through the
+					 * material, so blend the two by the transmission weight:
+					 *   roughness = surface + transmission * (opacity - surface)
+					 * Opaque keeps its surface roughness and fully transmissive takes the
+					 * opacity roughness, so frosted glass stays frosted - at the cost of
+					 * blurring its reflections too. RDK Glass sets both to one value, so it
+					 * is unchanged. The transmission graph is hooked up below. */
+					var roughness_opacity_minus_surface = new MathSubtract(m_shader, "pbr_roughness_opacity_minus_surface_");
+					roughness_opacity_minus_surface.UseClamp = false;
+					var roughness_weighted_by_transmission = new MathMultiply(m_shader, "pbr_roughness_weighted_by_transmission_");
+					roughness_weighted_by_transmission.UseClamp = false;
+					var roughness_effective = new MathAdd(m_shader, "pbr_roughness_effective_");
+					roughness_effective.UseClamp = true;
+					roughness_opacity_minus_surface.outs.Value.Connect(roughness_weighted_by_transmission.ins.Value1);
+					roughness_weighted_by_transmission.outs.Value.Connect(roughness_effective.ins.Value2);
+					roughness_effective.outs.Value.Connect(principled.ins.Roughness);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture,
+						new List<ISocket> { roughness_effective.ins.Value1, roughness_opacity_minus_surface.ins.Value2 },
+						false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					/* Untinted is white in 4.x, and that is now the socket default, so
 					 * an unused slot needs no graph at all. When it is used, mix white
@@ -944,6 +963,8 @@ namespace RhinoCyclesCore.Shaders
 					{
 						List<ISocket> transmissionSockets = new() {
 							principled.ins.Transmission,
+							// How far to follow the opacity roughness; see pbr_roughness_effective above.
+							roughness_weighted_by_transmission.ins.Value2,
 							// How far to follow the material's own IOR rather than the dielectric
 							// default; see pbr_ior_effective above.
 							ior_weighted_by_transmission.ins.Value2
@@ -957,14 +978,16 @@ namespace RhinoCyclesCore.Shaders
 					else
 					{
 						principled.ins.Transmission.Value = 0.0f;
-						// Shaded opaque, so the dielectric IOR.
+						// Shaded opaque, so the surface roughness and the dielectric IOR.
+						roughness_weighted_by_transmission.ins.Value2.Value = 0.0f;
 						ior_weighted_by_transmission.ins.Value2.Value = 0.0f;
 
 						decalAlphaTimesOpacity = new MathMultiply(m_shader, "decal_alpha_times_opacity");
 						Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, decalAlphaTimesOpacity.ins.Value2.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					}
 
-					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					// Opacity Roughness; see pbr_roughness_effective above.
+					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, roughness_opacity_minus_surface.ins.Value1.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, ior_above_dielectric.ins.Value1.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
@@ -1335,7 +1358,12 @@ namespace RhinoCyclesCore.Shaders
 					 * Feeding the scalar as grey made an untinted material black, which is
 					 * no specular at all rather than an untinted one. */
 					principledbsdf117.ins.SpecularTint.Value = TintToColour(part.SpecularTint, part.BaseColor);
-					principledbsdf117.ins.Roughness.Value = part.ReflectionRoughness;
+					/* 4.x has no Transmission Roughness; transmission uses Roughness. Blend
+					 * refraction into reflection roughness by the transparency, as the PBR
+					 * path does (see pbr_roughness_effective): frosted transparency stays
+					 * frosted, and blurs the reflections of a transparent material with it. */
+					principledbsdf117.ins.Roughness.Value =
+						part.ReflectionRoughness + transparency * (part.RefractionRoughness - part.ReflectionRoughness);
 					principledbsdf117.ins.Anisotropic.Value = 0f;
 					principledbsdf117.ins.AnisotropicRotation.Value = 0f;
 					/* 3.5 built the sheen closure with
@@ -1366,7 +1394,6 @@ namespace RhinoCyclesCore.Shaders
 						DielectricIor + transparency * (part.IOR - DielectricIor);
 					principledbsdf117.ins.EmissionStrength.Value = 0.0f;
 					principledbsdf117.ins.Transmission.Value = transparency;
-					principledbsdf117.ins.TransmissionRoughness.Value = part.RefractionRoughness;
 					principledbsdf117.ins.Tangent.Value = new float4(0f, 0f, 0f, 1f);
 
 					var custom_environment_blend195 = new MixClosureNode(m_shader, "custom_environment_blend_principled_");
