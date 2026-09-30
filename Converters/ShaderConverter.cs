@@ -462,6 +462,37 @@ namespace RhinoCyclesCore.Converters
 		public abstract ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData);
 		protected ccl.Transform MappingTransform { get; set; } = ccl.Transform.Identity();
 
+		/// <summary>
+		/// Texels per unit of a procedural's own texture space. Bump slope is measured per
+		/// texel, and procedurals have none. Not persisted, see TestSetBumpVirtualTextureSize.
+		/// </summary>
+		public static float BumpProceduralResolution { get; set; } = 1024.0f;
+
+		/// <summary>
+		/// Map from the texture coordinates given to this procedural to the texels its bump
+		/// slope is measured in, see RhinoBumpNode.
+		/// </summary>
+		public virtual ccl.Transform BumpTexelTransform()
+		{
+			return ccl.Transform.Scale(BumpProceduralResolution, BumpProceduralResolution, BumpProceduralResolution) * MappingTransform;
+		}
+
+		/// <summary>
+		/// True if the bump samples its neighbours at texel centres: an image with Filter off.
+		/// </summary>
+		public virtual bool BumpSnapToTexels => false;
+
+		/// <summary>
+		/// True while the graph feeding a RhinoBumpNode is built. It samples the height at the
+		/// neighbouring texels, which matches the display's normal map with Linear images.
+		/// </summary>
+		[ThreadStatic] internal static bool BuildingBumpGraph;
+
+		/// <summary>
+		/// True while the procedurals for a bump, clearcoat bump or displacement slot are created.
+		/// </summary>
+		[ThreadStatic] internal static bool ConvertingBumpSlot;
+
 		public bool AdjustGrayscale { get; set; }
 		public bool AdjustInvert { get; set; }
 		public bool AdjustClamp { get; set; }
@@ -1049,7 +1080,30 @@ namespace RhinoCyclesCore.Converters
 
 			if (rtf.TryGetValue("alpha-transparency", out bool use_alpha_transp))
 				UseAlpha |= use_alpha_transp;
+
+			if (should_simulate)
+			{
+				PixelWidth = PixelHeight = SimulatedTexture.BitmapSize;
+			}
+			else if (ConvertingBumpSlot)
+			{
+				// Only bump uses the pixel size, and getting it can mean reading the image file.
+				render_texture.PixelSize(out int width, out int height, out int _);
+				PixelWidth = width;
+				PixelHeight = height;
+			}
 		}
+
+		public override ccl.Transform BumpTexelTransform()
+		{
+			if (PixelWidth <= 0 || PixelHeight <= 0)
+				return base.BumpTexelTransform();
+
+			// W doesn't change the image.
+			return ccl.Transform.Scale(PixelWidth, PixelHeight, 0.0f) * MappingTransform;
+		}
+
+		public override bool BumpSnapToTexels => !Filter && PixelWidth > 0 && PixelHeight > 0;
 
 		public override ShaderNode CreateAndConnectProceduralNode(Shader shader, VectorSocket uvw_output, ColorSocket parent_color_input, List<ISocket> parent_alpha_input, bool IsData)
 		{
@@ -1094,7 +1148,8 @@ namespace RhinoCyclesCore.Converters
 					image_texture_node.ColorSpace = TextureNode.TextureColorSpace.Color;
 				}
 				image_texture_node.AlternateTiles = AlternateTiles;
-				image_texture_node.Interpolation = Filter ? InterpolationType.Cubic : InterpolationType.Closest;
+				// The display filters its normal map bilinearly; with Filter off the bump snaps to texel centres.
+				image_texture_node.Interpolation = Filter ? (BuildingBumpGraph ? InterpolationType.Linear : InterpolationType.Cubic) : InterpolationType.Closest;
 				image_texture_node.Extension = Repeat ? TextureNode.TextureExtension.Repeat : TextureNode.TextureExtension.Clip;
 
 				uvw_output.Connect(transform_node.ins.Vector);
@@ -1130,6 +1185,8 @@ namespace RhinoCyclesCore.Converters
 		public bool Filter { get; set; } = true;
 		public float Gamma { get; set; } = 1.0f;
 		public bool Repeat { get; set; } = true;
+		public int PixelWidth { get; set; } = 0;
+		public int PixelHeight { get; set; } = 0;
 
 		/// <summary>
 		/// Set to true if procedural is for environment texture
@@ -1324,6 +1381,13 @@ namespace RhinoCyclesCore.Converters
 
 			return null;
 		}
+
+		public override ccl.Transform BumpTexelTransform()
+		{
+			return ExposureChild != null ? ExposureChild.BumpTexelTransform() * MappingTransform : base.BumpTexelTransform();
+		}
+
+		public override bool BumpSnapToTexels => ExposureChild?.BumpSnapToTexels ?? false;
 
 		public float Exposure { get; set; }
 		public float Multiplier { get; set; }
@@ -2198,15 +2262,7 @@ namespace RhinoCyclesCore.Converters
 		{
 			var transform_node = new MatrixMathNode(shader);
 
-			float dx = FlipHorizontal ? -1.0f : 1.0f;
-			float dy = FlipVertical ? -1.0f : 1.0f;
-			float tx = FlipHorizontal ? 1.0f : 0.0f;
-			float ty = FlipVertical ? 1.0f : 0.0f;
-			var diagonal_transform = ccl.Transform.Identity();
-			diagonal_transform[0][0] = dx;
-			diagonal_transform[1][1] = dy;
-
-			transform_node.Transform = ccl.Transform.Translate(tx, ty, 0.0f) * diagonal_transform * MappingTransform;
+			transform_node.Transform = ChildTransform();
 
 			var texture_adjustment_node = new TextureAdjustmentTextureProceduralNode(shader);
 
@@ -2231,6 +2287,27 @@ namespace RhinoCyclesCore.Converters
 
 			return null;
 		}
+
+		private ccl.Transform ChildTransform()
+		{
+			float dx = FlipHorizontal ? -1.0f : 1.0f;
+			float dy = FlipVertical ? -1.0f : 1.0f;
+			float tx = FlipHorizontal ? 1.0f : 0.0f;
+			float ty = FlipVertical ? 1.0f : 0.0f;
+			var diagonal_transform = ccl.Transform.Identity();
+			diagonal_transform[0][0] = dx;
+			diagonal_transform[1][1] = dy;
+
+			return ccl.Transform.Translate(tx, ty, 0.0f) * diagonal_transform * MappingTransform;
+		}
+
+		// Measure the bump in the child's texels, so wrapping a bitmap doesn't change its bump.
+		public override ccl.Transform BumpTexelTransform()
+		{
+			return TextureAdjustmentChild != null ? TextureAdjustmentChild.BumpTexelTransform() * ChildTransform() : base.BumpTexelTransform();
+		}
+
+		public override bool BumpSnapToTexels => TextureAdjustmentChild?.BumpSnapToTexels ?? false;
 
 		public bool FlipHorizontal { get; set; }
 		public bool FlipVertical { get; set; }

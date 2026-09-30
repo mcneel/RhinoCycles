@@ -69,7 +69,7 @@
     <Compile Include="Commands\TestToggleIsClippingObject.cs" />
     <Compile Include="Commands\TestCreateMultiCuda.cs" />
     <Compile Include="Commands\TestAddUserData.cs" />
-    <Compile Include="Commands\TestSetBumpDistance.cs" />
+    <Compile Include="Commands\TestSetBumpVirtualTextureSize.cs" />
     <Compile Include="Commands\TestSaveDebugImagesToggle.cs" />
     <Compile Include="Commands\ShowInfo.cs" />
     <Compile Include="Commands\ShowPaths.cs" />

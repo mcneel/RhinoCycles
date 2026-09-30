@@ -354,15 +354,6 @@ namespace RhinoCyclesCore.Settings
 			set => SetFloat(SettingNames.PolishFactor, value);
 		}
 
-		public float BumpDistance
-		{
-			get
-			{
-				GetFloat(SettingNames.BumpDistance, DefaultEngineSettings.BumpDistance, out float outVal);
-				return outVal;
-			}
-			set => SetFloat(SettingNames.BumpDistance, value);
-		}
 		public float NormalStrengthFactor
 		{
 			get
@@ -371,15 +362,6 @@ namespace RhinoCyclesCore.Settings
 				return outVal;
 			}
 			set => SetFloat(SettingNames.NormalStrengthFactor, value);
-		}
-		public float BumpStrengthFactor
-		{
-			get
-			{
-				GetFloat(SettingNames.BumpStrengthFactor, DefaultEngineSettings.BumpStrengthFactor, out float outVal);
-				return outVal;
-			}
-			set => SetFloat(SettingNames.BumpStrengthFactor, value);
 		}
 
 		public bool NoCaustics

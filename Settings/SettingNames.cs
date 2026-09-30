@@ -57,8 +57,6 @@ namespace RhinoCyclesCore.Settings
 		public static string Threads => "Threads";
 		public static string ExperimentalCpuInMulti = "ExperimentalCpuInMulti";
 		public static string NormalStrengthFactor => "NormalStrengthFactor";
-		public static string BumpStrengthFactor => "BumpStrengthFactor";
-		public static string BumpDistance => "BumpDistance";
 		public static string SelectedDevice => "SelectedDevice";
 		public static string NoCaustics => "NoCaustics";
 		public static string CausticsReflective => "CausticsReflective";

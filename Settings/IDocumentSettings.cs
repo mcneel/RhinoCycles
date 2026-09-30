@@ -103,9 +103,7 @@ namespace RhinoCyclesCore.Settings
 		float AreaLightFactor { get; set; }
 		float PolishFactor { get; set; }
 
-		float BumpDistance { get; set; }
 		float NormalStrengthFactor { get; set; }
-		float BumpStrengthFactor { get; set; }
 
 		bool NoCaustics { get; set; }
 		bool CausticsReflective { get; set; }

@@ -34,9 +34,6 @@ namespace RhinoCyclesCore.Shaders
 {
 	public class RhinoFullNxt : RhinoShader
 	{
-		// Tuned factor to align Cycles bump strength with the viewport display.
-		private const float DisplayBumpMatchFactor = 0.2f;
-
 		public RhinoFullNxt(Session client, CyclesShader intermediate) : this(client, intermediate, null, intermediate.Front.Name, true)
 		{
 		}
@@ -860,12 +857,9 @@ namespace RhinoCyclesCore.Shaders
 					{
 						if (!part.PbrBumpTexture.IsNormalMap)
 						{
-							var bump = new BumpNode(m_shader, "bump");
-							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
-							bump.Invert = part.PbrBump.Amount < 0.0f;
-							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
-							part.PbrBump.Amount = 1.0f;
-							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
+							var bump = new RhinoBumpNode(m_shader, "bump");
+							bump.ins.Strength.Value = part.PbrBump.Amount;
+							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, 1.0f, part.PbrBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo, bump);
 							bump.outs.Normal.Connect(principled.ins.Normal);
 						}
 						else
@@ -877,12 +871,9 @@ namespace RhinoCyclesCore.Shaders
 					{
 						if (!part.PbrClearcoatBumpTexture.IsNormalMap)
 						{
-							var bump = new BumpNode(m_shader, "clearcoat_bump");
-							bump.ins.Strength.Value = Math.Abs(part.PbrClearcoatBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
-							bump.Invert = part.PbrClearcoatBump.Amount < 0.0f;
-							part.PbrClearcoatBump.Amount = 1.0f;
-							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
-							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
+							var bump = new RhinoBumpNode(m_shader, "clearcoat_bump");
+							bump.ins.Strength.Value = part.PbrClearcoatBump.Amount;
+							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, 1.0f, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo, bump);
 							bump.outs.Normal.Connect(principled.ins.ClearcoatNormal);
 						}
 						else
@@ -1016,24 +1007,14 @@ namespace RhinoCyclesCore.Shaders
 					use_alpha_weighted_with_modded_amount71.Operation = MathNode.Operations.Multiply;
 					use_alpha_weighted_with_modded_amount71.UseClamp = false;
 
-					var bump_texture_to_bw87 = new RgbToBwNode(m_shader, "bump_texture_to_bw_");
-
-					var bump_amount72 = new MathMultiply(m_shader, "bump_amount_");
-					bump_amount72.ins.Value1.Value = 1.0f;
-					bump_amount72.ins.Value2.Value = Math.Abs(part.BumpTexture.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
-					bump_amount72.Operation = MathNode.Operations.Multiply;
-					bump_amount72.UseClamp = false;
-
 					var diffuse_base_color_through_alpha120 = new MixNode(m_shader, "diffuse_base_color_through_alpha_");
 					diffuse_base_color_through_alpha120.BlendType = ccl.ShaderNodes.MixNode.BlendTypes.Blend;
 					diffuse_base_color_through_alpha120.UseClamp = false;
 
-					var bump88 = new BumpNode(m_shader, "bump_");
-					bump88.ins.Normal.Value = new ccl.float4(0f, 0f, 0f, 1f);
-					bump88.ins.Strength.Value = RcCore.It.AllSettings.BumpStrengthFactor;  // overridden by bump_amount72 (Abs(Amount) * BSF) connected below
-					bump88.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
-					bump88.ins.UseObjectSpace.Value = false;
-					bump88.Invert = part.BumpTexture.Amount < 0.0f;
+					var bump88 = new RhinoBumpNode(m_shader, "bump_");
+					// Like the display, the Custom material scales the slope, doubled.
+					bump88.ins.Linear.Value = true;
+					bump88.ins.Strength.Value = 2.0f * part.BumpTexture.Amount;
 
 					var light_path109 = new LightPathNode(m_shader, "light_path_");
 
@@ -1241,7 +1222,6 @@ namespace RhinoCyclesCore.Shaders
 					weight_diffuse_amount_by_transparency_inv69.outs.Value.Connect(use_alpha_weighted_with_modded_amount71.ins.Value2);
 					diffuse_base_color_through_alpha180.outs.Color.Connect(diffuse_base_color_through_alpha120.ins.Color1);
 					use_alpha_weighted_with_modded_amount71.outs.Value.Connect(diffuse_base_color_through_alpha120.ins.Fac);
-					bump_amount72.outs.Value.Connect(bump88.ins.Strength);
 
 					if (textureDecalMixin != null)
 					{
@@ -1389,8 +1369,16 @@ namespace RhinoCyclesCore.Shaders
 
 					if (part.BumpTexture.HasProcedural)
 					{
-						Utilities.GraphForSlot(m_shader, null, true, 1.0f, part.BumpTexture, bump88.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
-						bump88.outs.Normal.Connect(principledbsdf117.ins.Normal);
+						if (!part.BumpTexture.IsNormalMap)
+						{
+							Utilities.GraphForSlot(m_shader, null, true, 1.0f, part.BumpTexture, bump88.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo, bump88);
+							bump88.outs.Normal.Connect(principledbsdf117.ins.Normal);
+						}
+						else
+						{
+							// The display scales a normal map's tangent part like a bump's, by 2 x amount.
+							Utilities.GraphForSlot(m_shader, null, true, 1.0f, part.BumpTexture, principledbsdf117.ins.Normal.ToList(), false, true, false, true, part.Gamma, false, decalProcessingInfo, null, 2.0f * part.BumpTexture.Amount);
+						}
 					}
 
 					if (part.EnvironmentTexture.HasProcedural)

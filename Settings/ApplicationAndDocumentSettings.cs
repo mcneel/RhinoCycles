@@ -43,9 +43,7 @@ namespace RhinoCyclesCore.Settings
 
 			ThrottleMs = ThrottleMs;
 			Threads = Threads;
-			BumpDistance = BumpDistance;
 			NormalStrengthFactor = NormalStrengthFactor;
-			BumpStrengthFactor = BumpStrengthFactor;
 
 			SelectedDeviceStr = SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = IntermediateSelectedDeviceStr;
@@ -162,9 +160,7 @@ namespace RhinoCyclesCore.Settings
 
 			ThrottleMs = DefaultEngineSettings.ThrottleMs;
 			Threads = DefaultEngineSettings.Threads;
-			BumpDistance = DefaultEngineSettings.BumpDistance;
 			NormalStrengthFactor = DefaultEngineSettings.NormalStrengthFactor;
-			BumpStrengthFactor = DefaultEngineSettings.BumpStrengthFactor;
 
 			SelectedDeviceStr = DefaultEngineSettings.SelectedDeviceStr;
 			IntermediateSelectedDeviceStr = DefaultEngineSettings.SelectedDeviceStr;
@@ -502,18 +498,6 @@ namespace RhinoCyclesCore.Settings
 		{
 			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.NormalStrengthFactor, DefaultEngineSettings.NormalStrengthFactor); }
 			set { RcPlugIn.Settings.SetDouble(SettingNames.NormalStrengthFactor, value); }
-		}
-
-		public virtual float BumpStrengthFactor
-		{
-			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.BumpStrengthFactor, DefaultEngineSettings.BumpStrengthFactor); }
-			set { RcPlugIn.Settings.SetDouble(SettingNames.BumpStrengthFactor, value); }
-		}
-
-		public virtual float BumpDistance
-		{
-			get { return (float)RcPlugIn.Settings.GetDouble(SettingNames.BumpDistance, DefaultEngineSettings.BumpDistance); }
-			set { RcPlugIn.Settings.SetDouble(SettingNames.BumpDistance, value); }
 		}
 
 		public virtual string SelectedDeviceStr

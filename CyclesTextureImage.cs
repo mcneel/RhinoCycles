@@ -65,18 +65,6 @@ namespace RhinoCyclesCore
 		/// </summary>
 		public float Strength { get; set; }
 
-		public float BumpDistance
-		{
-			get
-			{
-				if (Transform == null) return 0.0f;
-				var td = Transform.x.x;
-				if (td > 0.2f) return 0.05f;
-				if (td < 0.06) return 2.0f;
-				return td > 0.14 ? 0.1f : 0.75f;
-			}
-		}
-
 		/* ADJUSTMENT SETTINGS */
 		public bool AdjustNeeded {get; set; } = false;
 		public bool AdjustGrayscale { get; set; } = false;

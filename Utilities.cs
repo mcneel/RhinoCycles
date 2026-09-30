@@ -227,7 +227,16 @@ namespace RhinoCyclesCore
 
 			if (!is_leaf_bitmap)
 			{
-				procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter, docsrn, gamma, is_color);
+				var wasConvertingBumpSlot = Procedural.ConvertingBumpSlot;
+				Procedural.ConvertingBumpSlot = wasConvertingBumpSlot || check_for_normal_map;
+				try
+				{
+					procedural = Procedural.CreateProcedural(rt, tex.TextureList, bitmapConverter, docsrn, gamma, is_color);
+				}
+				finally
+				{
+					Procedural.ConvertingBumpSlot = wasConvertingBumpSlot;
+				}
 			}
 
 			if (procedural != null)
@@ -319,7 +328,9 @@ namespace RhinoCyclesCore
 			return GraphForSlot(sh, valsock, slot.On, slot.Amount, teximg, socks, false, false, invert, IsData, gamma, hasDecals, DecalProcessingInfo);
 		}
 
-		public static ISocket GraphForSlot(Shader sh, ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ISocket> socketsToConnectTo, bool toBw, bool normalMap, bool invert, bool IsData, float gamma, bool hasDecals, RhinoFullNxt.DecalProcessingInfo DecalProcessingInfo)
+		/// <param name="bumpNode">If set, gets the texture coordinates and texel size of the slot's texture.</param>
+		/// <param name="normalMapTangentScale">Scales the tangent part of a normal map, as the display's Custom material does.</param>
+		public static ISocket GraphForSlot(Shader sh, ISocket valueSocket, bool IsOn, float amount, CyclesTextureImage teximg, List<ISocket> socketsToConnectTo, bool toBw, bool normalMap, bool invert, bool IsData, float gamma, bool hasDecals, RhinoFullNxt.DecalProcessingInfo DecalProcessingInfo, RhinoBumpNode bumpNode = null, float normalMapTangentScale = 1.0f)
 		{
 			ISocket alphaOut = null;
 			// RH-94469: snapshot Procedural - another thread can Dispose/Clear teximg mid-build.
@@ -357,6 +368,13 @@ namespace RhinoCyclesCore
 				else
 					uv_output_socket = RenderEngine.GetProjectionModeOutputSocket(sh, procedural.ProjectionMode, procedural.EnvironmentMappingMode, texco);
 
+				if (bumpNode != null)
+				{
+					uv_output_socket.Connect(bumpNode.ins.UVW);
+					bumpNode.SetTexelTransform(procedural.BumpTexelTransform());
+					bumpNode.ins.Snap.Value = procedural.BumpSnapToTexels;
+				}
+
 				ColorSocket color_input_node = mixerNode.ins.Color2;
 				FloatSocket alpha_input_node = alpha_node.ins.Value2;
 				GammaNode gammaNode = null;
@@ -382,7 +400,16 @@ namespace RhinoCyclesCore
 					alphaNodes.Add(alphamult.ins.Value2);
 				}
 
-				procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alphaNodes, IsData);
+				var wasBuildingBumpGraph = Procedural.BuildingBumpGraph;
+				Procedural.BuildingBumpGraph = bumpNode != null;
+				try
+				{
+					procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alphaNodes, IsData);
+				}
+				finally
+				{
+					Procedural.BuildingBumpGraph = wasBuildingBumpGraph;
+				}
 
 				// Gamma decode in the shader since the kernel no longer converts (RH-83550),
 				// but only for trees with image content - procedurals are already linear (RH-92750).
@@ -402,7 +429,24 @@ namespace RhinoCyclesCore
 						// ideally we calculate the tangents and switch to Tangent space here.
 						SpaceType = NormalMapNode.Space.Tangent
 					};
-					mixerNode.outs.Color.Connect(normalmapnode.ins.Color);
+					if (normalMapTangentScale != 1.0f)
+					{
+						// Decode the tangent-space normal from the texture's 0..1 values, multiply its x and y by
+						// the scale, and encode it again.
+						var decode = ccl.Transform.Translate(-1.0f, -1.0f, -1.0f) * ccl.Transform.Scale(2.0f, 2.0f, 2.0f);
+						var scale = ccl.Transform.Scale(normalMapTangentScale, normalMapTangentScale, 1.0f);
+						var encode = ccl.Transform.Scale(0.5f, 0.5f, 0.5f) * ccl.Transform.Translate(1.0f, 1.0f, 1.0f);
+						var tangent_scale = new MatrixMathNode(sh, $"normal map tangent scale for {valueSocket?.Parent.VariableName ?? "unknown input"}")
+						{
+							Transform = encode * scale * decode
+						};
+						mixerNode.outs.Color.Connect(tangent_scale.ins.Vector);
+						tangent_scale.outs.Vector.Connect(normalmapnode.ins.Color);
+					}
+					else
+					{
+						mixerNode.outs.Color.Connect(normalmapnode.ins.Color);
+					}
 					normalmapnode.ins.Strength.Value = amount * RcCore.It.AllSettings.NormalStrengthFactor;
 					foreach(var sock in socketsToConnectTo) {
 						normalmapnode.outs.Normal.Connect(sock);

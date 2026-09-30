@@ -35,9 +35,7 @@ namespace RhinoCyclesCore.Settings
 
 		static public bool ExperimentalCpuInMulti => false;
 
-		static public float BumpDistance => 1.0f;
 		static public float NormalStrengthFactor => 1.0f;
-		static public float BumpStrengthFactor => 1.0f;
 
 		static public string SelectedDeviceStr => "-1";
 		static public bool AllowSelectedDeviceOverride => false;

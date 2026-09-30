@@ -192,19 +192,9 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 
-		public float BumpDistance
-		{
-			get => (float)mDict.GetDouble(SettingNames.BumpDistance, RcCore.It.AllSettings.BumpDistance);
-			set => throw new InvalidOperationException();
-		}
 		public float NormalStrengthFactor
 		{
 			get => (float)mDict.GetDouble(SettingNames.NormalStrengthFactor, RcCore.It.AllSettings.NormalStrengthFactor);
-			set => throw new InvalidOperationException();
-		}
-		public float BumpStrengthFactor
-		{
-			get => (float)mDict.GetDouble(SettingNames.BumpStrengthFactor, RcCore.It.AllSettings.BumpStrengthFactor);
 			set => throw new InvalidOperationException();
 		}
 
