@@ -112,6 +112,9 @@ namespace RhinoCyclesCore.RenderEngines
 
 				#region create session for scene
 				cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
+				// The native session init turns the light tree on; follow the setting like
+				// the modal and viewport engines do (RH-98418).
+				cyclesEngine.Session.Scene.Integrator.UseLightTree = RcCore.It.AllSettings.UseLightTree;
 				cyclesEngine.CreateSimpShader();
 				#endregion
 
