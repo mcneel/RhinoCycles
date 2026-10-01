@@ -53,6 +53,7 @@ namespace RhinoCycles.Commands
 
 			foreach(var prop in props)
 			{
+				if (!prop.CanWrite) continue;
 				if (prop.Name.Contains("Default")) continue;
 				if (prop.Name.Contains("Device")) continue;
 				if (prop.Name.Contains("Hash")) continue;
@@ -62,7 +63,7 @@ namespace RhinoCycles.Commands
 				if(prop.PropertyType == typeof(bool))
 				{
 					var curbool = (bool)(prop.GetValue(RcCore.It.AllSettings, null));
-					var boolopt = new OptionToggle(curbool, $"No{prop.Name}", $"{prop.Name}");
+					var boolopt = new OptionToggle(curbool, "No", "Yes");
 					getNumber.AddOptionToggle(prop.Name, ref boolopt);
 					opts[prop.Name] = new Tuple<PropertyInfo, object>(prop, boolopt);
 				}
