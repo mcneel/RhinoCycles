@@ -132,9 +132,7 @@ namespace RhinoCyclesCore.Settings
 		static public int RetentionDays => 3;
 		static public int TriggerPostEffectsSample => 5;
 
-		// Off: the light tree assumes inverse-square falloff and all but ignores Rhino lights
-		// with no falloff (the default) when a sun is on. RH-98418.
-		static public bool UseLightTree => false;
+		static public bool UseLightTree => true;
 		static public bool UseAdaptiveSampling	=> true;
 		static public int AdaptiveMinSamples => 16;
 		static public float AdaptiveThreshold => 0.01f;

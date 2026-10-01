@@ -91,9 +91,7 @@ namespace RhinoCyclesCore.Settings
 
 		public static string RenderPreset => "RenderPreset";
 
-		// Not "UseLightTree": every install already persisted that key as True, so the new
-		// default (off, RH-98418) would never reach existing users.
-		public static string UseLightTree => "EnableLightTree";
+		public static string UseLightTree => "UseLightTree";
 		public static string UseAdaptiveSampling => "UseAdaptiveSampling";
 		public static string AdaptiveMinSamples => "AdaptiveMinSamples";
 		public static string AdaptiveThreshold => "AdaptiveThreshold";
