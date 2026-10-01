@@ -44,13 +44,26 @@ namespace RhinoCyclesCore.Settings
 		///</summary>
 		public SessionSection(uint doc_serial) : base(doc_serial)
 		{
-			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
 			m_caption = new LocalizeStringPair("Session settings", Localization.LocalizeString("Session settings", 5));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
 			EngineSettingsReceived += SessionSection_EngineSettingsReceivedHandler;
 			ViewModelActivated += SessionSection_ViewModelActivated; ;
+		}
+
+		// RcCore lives for the whole session, so only listen to it while loaded, otherwise it keeps
+		// this section (and the options page it is in) alive. RH-97708
+		protected override void OnLoad(EventArgs e)
+		{
+			base.OnLoad(e);
+			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
+		}
+
+		protected override void OnUnLoad(EventArgs e)
+		{
+			base.OnUnLoad(e);
+			RcCore.It.InitialisationCompleted -= It_InitialisationCompleted;
 		}
 
 		private void SessionSection_ViewModelActivated(object sender, EventArgs e)

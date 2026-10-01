@@ -334,13 +334,27 @@ namespace RhinoCyclesCore.Settings
 		///</summary>
 		public DeviceSection(uint doc_serial) : base(doc_serial)
 		{
-			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
-			RcCore.It.DeviceKernelReady += It_DeviceKernelReady;
 			m_caption = new LocalizeStringPair("Device settings", Localization.LocalizeString("Device settings", 14));
 			InitializeComponents();
 			InitializeLayout();
 			RegisterControlEvents();
 			EngineSettingsReceived += DeviceSection_EngineSettingsReceivedHandler;
+		}
+
+		// RcCore lives for the whole session, so only listen to it while loaded, otherwise it keeps
+		// this section (and the options page it is in) alive. RH-97708
+		protected override void OnLoad(EventArgs e)
+		{
+			base.OnLoad(e);
+			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
+			RcCore.It.DeviceKernelReady += It_DeviceKernelReady;
+		}
+
+		protected override void OnUnLoad(EventArgs e)
+		{
+			base.OnUnLoad(e);
+			RcCore.It.InitialisationCompleted -= It_InitialisationCompleted;
+			RcCore.It.DeviceKernelReady -= It_DeviceKernelReady;
 		}
 
 		private void It_DeviceKernelReady(object sender, EventArgs e)
