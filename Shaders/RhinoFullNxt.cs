@@ -836,18 +836,33 @@ namespace RhinoCyclesCore.Shaders
 					}
 
 					/* Subsurface. 3.5's principled mixed the base colour towards the SSS colour
-					 * by the Subsurface amount, used that mix for every lobe, and scattered
+					 * by the Subsurface amount for its diffuse/subsurface lobe, and scattered
 					 * over radius * amount - fully, once the amount was above zero. 4.x has no
 					 * SSS colour, it scatters with the base colour, and splits the amount into
 					 * Weight and Scale. Feeding it Rhino's values the way Blender converts
 					 * pre-4.0 files keeps what they mean: this mix as the base colour, Scale =
 					 * the amount, Weight 1 wherever there is any. The random walk itself is
-					 * Cycles 5's. The amount and colour graphs are hooked up further down. */
+					 * Cycles 5's. The amount and colour graphs are hooked up further down.
+					 *
+					 * Unlike Blender's conversion the mix is weighted by the share that is not
+					 * transmission. 3.5 scaled that lobe by (1 - transmission) and refracted
+					 * with the plain base colour, but 4.x tints transmission with the base
+					 * colour too, so a mostly transparent material with Subsurface on took the
+					 * SSS colour all through: "Cheap Glass" (opacity 0.1, Subsurface 1, a dark
+					 * green SSS colour, GoudaSSS_Distribute_Candle) went from light mint glass
+					 * to dark green. The transmission graph is hooked up further down. */
 					var sss_base_color = new MixNode(m_shader, "pbr_sss_base_color_");
 					sss_base_color.BlendType = MixNode.BlendTypes.Blend;
 					sss_base_color.UseClamp = false;
 					basewithao.outs.Color.Connect(sss_base_color.ins.Color1);
 					sss_base_color.outs.Color.Connect(principled.ins.BaseColor);
+					var sss_one_minus_transmission = new MathSubtract(m_shader, "pbr_sss_one_minus_transmission_");
+					sss_one_minus_transmission.UseClamp = true;
+					sss_one_minus_transmission.ins.Value1.Value = 1.0f;
+					var sss_mix_weight = new MathMultiply(m_shader, "pbr_sss_mix_weight_");
+					sss_mix_weight.UseClamp = false;
+					sss_one_minus_transmission.outs.Value.Connect(sss_mix_weight.ins.Value2);
+					sss_mix_weight.outs.Value.Connect(sss_base_color.ins.Fac);
 
 					if (basecoltexAlphaOut != null && part.UseBaseColorTextureAlphaAsObjectAlpha)
 					{
@@ -914,11 +929,12 @@ namespace RhinoCyclesCore.Shaders
 					clearcoat_to_coat_weight.outs.Value.Connect(principled.ins.Clearcoat);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, clearcoat_to_coat_weight.ins.Value1.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.CoatRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					// See pbr_sss_base_color above: the amount is the Scale and the colour mix.
+					// See pbr_sss_base_color above: the amount is the Scale, and the colour mix
+					// once weighted by the share that is not transmission.
 					bool has_subsurface = part.PbrSubsurface.Value > 0.0f ||
 						(part.PbrSubsurface.On && part.PbrSubsurfaceTexture.HasProcedural);
 					principled.ins.Subsurface.Value = has_subsurface ? 1.0f : 0.0f;
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, new List<ISocket> { principled.ins.SubsurfaceScale, sss_base_color.ins.Fac }, false, part.Gamma, true, false, decalProcessingInfo);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, new List<ISocket> { principled.ins.SubsurfaceScale, sss_mix_weight.ins.Value1 }, false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, sss_base_color.ins.Color2.ToList(), false, part.Gamma, false, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 
@@ -967,7 +983,9 @@ namespace RhinoCyclesCore.Shaders
 							roughness_weighted_by_transmission.ins.Value2,
 							// How far to follow the material's own IOR rather than the dielectric
 							// default; see pbr_ior_effective above.
-							ior_weighted_by_transmission.ins.Value2
+							ior_weighted_by_transmission.ins.Value2,
+							// How much of the SSS colour reaches the base colour; see pbr_sss_base_color.
+							sss_one_minus_transmission.ins.Value2
 						};
 						if (coloured_shadow_switch != null)
 						{
@@ -978,9 +996,11 @@ namespace RhinoCyclesCore.Shaders
 					else
 					{
 						principled.ins.Transmission.Value = 0.0f;
-						// Shaded opaque, so the surface roughness and the dielectric IOR.
+						// Shaded opaque, so the surface roughness, the dielectric IOR and the
+						// full SSS colour mix.
 						roughness_weighted_by_transmission.ins.Value2.Value = 0.0f;
 						ior_weighted_by_transmission.ins.Value2.Value = 0.0f;
+						sss_one_minus_transmission.ins.Value2.Value = 0.0f;
 
 						decalAlphaTimesOpacity = new MathMultiply(m_shader, "decal_alpha_times_opacity");
 						Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, decalAlphaTimesOpacity.ins.Value2.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
