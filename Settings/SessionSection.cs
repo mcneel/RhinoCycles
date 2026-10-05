@@ -50,6 +50,7 @@ namespace RhinoCyclesCore.Settings
 			RegisterControlEvents();
 			EngineSettingsReceived += SessionSection_EngineSettingsReceivedHandler;
 			ViewModelActivated += SessionSection_ViewModelActivated; ;
+			m_seen_initialised = RcCore.It.Initialised;
 		}
 
 		// RcCore lives for the whole session, so only listen to it while loaded, otherwise it keeps
@@ -58,13 +59,19 @@ namespace RhinoCyclesCore.Settings
 		{
 			base.OnLoad(e);
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
+			// catch up if initialisation finished while we weren't listening
+			if (RcCore.It.Initialised && !m_seen_initialised)
+				It_InitialisationCompleted(this, EventArgs.Empty);
 		}
 
 		protected override void OnUnLoad(EventArgs e)
 		{
 			base.OnUnLoad(e);
 			RcCore.It.InitialisationCompleted -= It_InitialisationCompleted;
+			m_seen_initialised = RcCore.It.Initialised;
 		}
+
+		private bool m_seen_initialised;
 
 		private void SessionSection_ViewModelActivated(object sender, EventArgs e)
 		{

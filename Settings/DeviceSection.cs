@@ -339,6 +339,7 @@ namespace RhinoCyclesCore.Settings
 			InitializeLayout();
 			RegisterControlEvents();
 			EngineSettingsReceived += DeviceSection_EngineSettingsReceivedHandler;
+			m_seen_readiness = Readiness();
 		}
 
 		// RcCore lives for the whole session, so only listen to it while loaded, otherwise it keeps
@@ -348,6 +349,9 @@ namespace RhinoCyclesCore.Settings
 			base.OnLoad(e);
 			RcCore.It.InitialisationCompleted += It_InitialisationCompleted;
 			RcCore.It.DeviceKernelReady += It_DeviceKernelReady;
+			// catch up if initialisation finished or a kernel became ready while we weren't listening
+			if (Readiness() != m_seen_readiness)
+				It_DeviceKernelReady(this, EventArgs.Empty);
 		}
 
 		protected override void OnUnLoad(EventArgs e)
@@ -355,7 +359,13 @@ namespace RhinoCyclesCore.Settings
 			base.OnUnLoad(e);
 			RcCore.It.InitialisationCompleted -= It_InitialisationCompleted;
 			RcCore.It.DeviceKernelReady -= It_DeviceKernelReady;
+			m_seen_readiness = Readiness();
 		}
+
+		private string m_seen_readiness;
+
+		private static string Readiness() =>
+			RcCore.It.Initialised + ":" + string.Concat(ccl.Device.Devices.Select(d => RcCore.It.IsDeviceReady(d).isDeviceReady ? '1' : '0'));
 
 		private void It_DeviceKernelReady(object sender, EventArgs e)
 		{
