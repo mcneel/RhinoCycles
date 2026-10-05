@@ -57,6 +57,12 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
+		/// Id that is the same in every render, for Cycles' random_id (Object Info Random);
+		/// null falls back to obid, which is fresh per render.
+		/// </summary>
+		public uint? StableId { get; set; }
+
+		/// <summary>
 		/// Guid of the mesh this object references
 		/// </summary>
 		public Tuple<Guid, int> meshid { get; set; }

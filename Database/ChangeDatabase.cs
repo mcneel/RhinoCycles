@@ -1227,27 +1227,51 @@ namespace RhinoCyclesCore.Database
 		private float gpJiggleFactor => RcCore.It.AllSettings.GpJiggleDistance;
 
 		/// <summary>
+		/// An id for the object a mesh instance comes from that is the same in every render.
+		///
+		/// MeshId and InstanceId cannot be used for this: RDK makes a new random one for
+		/// every mesh it posts, so the jiggle and Object Info Random seeded from them changed
+		/// from render to render. RootId alone is shared by every object inside a block
+		/// instance, so the block references down the ancestry and the leaf object are
+		/// folded in as well. Preview scenes have no object attributes and fall back to the
+		/// MeshId.
+		///
+		/// Reads native change queue data, so call it serially (see RH-97099).
+		/// </summary>
+		private static uint StableObjectId(MeshInstance a)
+		{
+			using (var attributes = a.ObjectAttributes)
+			{
+				if (attributes == null || a.RootId == Guid.Empty)
+					return RhinoMath.CRC32(0, a.MeshId.ToByteArray());
+
+				var crc = RhinoMath.CRC32(0, a.RootId.ToByteArray());
+				foreach (var record in a.Ancestry)
+				{
+					crc = RhinoMath.CRC32(crc, record.ReferenceId.ToByteArray());
+				}
+				return RhinoMath.CRC32(crc, attributes.ObjectId.ToByteArray());
+			}
+		}
+
+		/// <summary>
 		/// Create a jiggled transform of the MeshInstance transform.
 		///
-		/// To ensure the jiggling is stable use the MeshId GUID to generate a
-		/// jiggle vector.
+		/// The jiggle vector comes from the stable object id, so an object moves the same
+		/// way in every render, and all meshes of one object move together.
 		/// </summary>
 		/// <param name="a">MeshInstance to create jiggled transform for</param>
+		/// <param name="stableId">StableObjectId of the MeshInstance</param>
 		/// <returns>Transform with jiggle translation applied</returns>
-		private Rhino.Geometry.Transform Jiggle(MeshInstance a)
+		private Rhino.Geometry.Transform Jiggle(MeshInstance a, uint stableId)
 		{
 			var objectXform = a.Transform;
 			RcCore.It.AddLogStringIfVerbose($"\tJiggle: {objectXform}");
-			var p = a.MeshId.ToByteArray();
-			long l0 = BitConverter.ToInt64(p, 0);
-			long l1 = BitConverter.ToInt64(p, 4);
-			long l2 = BitConverter.ToInt64(p, 8);
 
-			float f0 = (float)(l0 / (double)int.MaxValue);
-			float f1 = (float)(l1 / (double)int.MaxValue);
-			float f2 = (float)(l2 / (double)int.MaxValue);
+			// One component in [-1, 1) per axis.
+			float Component(int axis) => (float)(RhinoMath.CRC32(stableId, axis) / (double)uint.MaxValue * 2.0 - 1.0);
 
-			Vector3f jiggleVector = new Vector3f(f0, f1, f2);
+			Vector3f jiggleVector = new Vector3f(Component(0), Component(1), Component(2));
 			jiggleVector.Unitize();
 			jiggleVector *= jiggleFactor;
 
@@ -1309,13 +1333,16 @@ namespace RhinoCyclesCore.Database
 
 			// RH-97099: Decals are native RDK objects, unsafe to enumerate across
 			// threads (double-freed an ON_IntPtrArray). Resolve them serially first,
-			// keep the rest of the per-instance work parallel.
+			// keep the rest of the per-instance work parallel. The stable ids read the
+			// attributes and ancestry, so they are resolved here too.
 			var cyclesDecalsPerInstance = new List<CyclesDecal>[totalmeshes];
+			var stableIdPerInstance = new uint[totalmeshes];
 			for (int i = 0; i < totalmeshes; i++)
 			{
 				if (_renderEngine.ShouldBreak) return;
 				var a = addedOrChanged[i];
 				cyclesDecalsPerInstance[i] = HandleMeshDecals(a.MeshId, a.Decals, a.Transform);
+				stableIdPerInstance[i] = StableObjectId(a);
 			}
 
 			//foreach (var a in addedOrChanged)
@@ -1329,11 +1356,12 @@ namespace RhinoCyclesCore.Database
 #pragma warning disable CS0618
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				var cyclesDecals = cyclesDecalsPerInstance[i];
+				var stableId = stableIdPerInstance[i];
 
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
 
-				var stat = $"\tHandling mesh instance ({a.InstanceId}). material {mat.Name}. Mesh id {meshid}.";
+				var stat = $"\tHandling mesh instance ({a.InstanceId}). material {mat.Name}. Mesh id {meshid}. Stable id {stableId}.";
 				RcCore.It.AddLogStringIfVerbose(stat);
 
 				if (cyclesDecals != null)
@@ -1362,10 +1390,11 @@ namespace RhinoCyclesCore.Database
 				// Cycles does not cope well with coincident surfaces. Therefor it is
 				// important to ever so slightly move around the objects - to jiggle
 				// them.
-				var obxform = _gObTransform * Jiggle(a) ;
+				var obxform = _gObTransform * Jiggle(a, stableId) ;
 				var ob = new CyclesObject
 				{
 					obid = a.InstanceId,
+					StableId = stableId,
 					PassObjectId = a.RootId, // RH-97236: reproducible Object ID pass
 					meshid = meshid,
 					Transform = obxform.ToCyclesTransform(),
@@ -2114,7 +2143,7 @@ namespace RhinoCyclesCore.Database
 
 				// set mesh reference and other stuff
 				cob.Mesh = mesh;
-				cob.RandomId = ob.obid;
+				cob.RandomId = ob.StableId ?? ob.obid;
 				cob.PassId = ob.passobid;
 				cob.Transform = ob.Transform;
 				cob.OcsFrame = t;
