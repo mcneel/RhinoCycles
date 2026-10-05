@@ -1401,10 +1401,14 @@ namespace RhinoCyclesCore.Shaders
 						part.Sheen * (1.0f - part.Metallic) * (1.0f - transparency);
 					principledbsdf117.ins.SheenTint.Value = TintToColour(part.SheenTint, part.BaseColor);
 					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
-					/* Gloss is ReflectionGlossiness, where 1 is a mirror. The 4.x socket is
-					 * Coat Roughness, the inverse, so it has to be flipped - feeding gloss
-					 * straight in asked for a fully rough coat on the shiniest materials. */
-					principledbsdf117.ins.CoatRoughness.Value = 1.0f - part.Gloss;
+					/* Gloss is ReflectionGlossiness, which is already a roughness: 0 is
+					 * perfectly specular and t lets the reflection stray by up to t*pi/2
+					 * (ON_Material::m_reflection_glossiness), as Roughness above uses it.
+					 * Flipping it gave the most polished materials the roughest coat - a
+					 * milky white film at Coat Weight = Reflectivity ("Chestnut polished",
+					 * polish 0.85: coat roughness 0.85). 3.5 never fed it at all, its
+					 * ClearcoatGloss socket did not exist, so its coat sat at 0.03. */
+					principledbsdf117.ins.CoatRoughness.Value = part.Gloss;
 					/* Same trap as the PBR path's Opacity IOR, and the values here are plain
 					 * floats so the blend is done in C#: an opaque custom material with
 					 * IOR 1 would otherwise get no specular lobe at all under 4.x, where in
