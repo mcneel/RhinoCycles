@@ -28,9 +28,6 @@ namespace RhinoCyclesCore.Settings
 
 		public ApplicationAndDocumentSettings()
 		{
-			IntegratorMethod = IntegratorMethod.Path;
-			SamplingPattern = SamplingPattern.TabulatedSobol;
-
 			// persisted settings
 			Verbose = Verbose;
 
@@ -145,9 +142,6 @@ namespace RhinoCyclesCore.Settings
 
 		public void DefaultSettings()
 		{
-			IntegratorMethod = IntegratorMethod.Path;
-			SamplingPattern = SamplingPattern.TabulatedSobol;
-
 			// persisted settings
 			Verbose = DefaultEngineSettings.Verbose;
 
@@ -558,7 +552,6 @@ namespace RhinoCyclesCore.Settings
 			set { RcPlugIn.Settings.SetDouble(SettingNames.OldDpiScale, value); }
 		}
 
-		public virtual IntegratorMethod IntegratorMethod { get; set; }
 		public virtual uint IntegratorHash
 		{
 			get
@@ -709,8 +702,6 @@ namespace RhinoCyclesCore.Settings
 			get { return RcPlugIn.Settings.GetInteger(SettingNames.Seed, DefaultEngineSettings.Seed); }
 			set { RcPlugIn.Settings.SetInteger(SettingNames.Seed, value); }
 		}
-
-		public virtual SamplingPattern SamplingPattern { get; set; }
 
 		public virtual float FilterGlossy
 		{

@@ -66,8 +66,6 @@ namespace RhinoCycles
 				RhinoApp.Initialized += RhinoApp_Initialized;
 				RcCore.It.InitializeResourceManager();
 
-				ccl.Utilities.RegisterConsoleWriter(RcCore.It.AddLogStringIfVerbose);
-
 				// code got moved to separate DLL so use that to register from.
 				var rccoreass = typeof(RcCore).Assembly;
 				RcCore.It.AddLogString("RhinoCycles OnLoad: RegisterContent start");
