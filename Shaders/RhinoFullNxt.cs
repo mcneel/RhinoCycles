@@ -1369,7 +1369,9 @@ namespace RhinoCyclesCore.Shaders
 					 * deriving one from Reflectivity would lay a white film over every
 					 * polished custom material. */
 					principledbsdf117.ins.Sheen.Value = 0.0f;
-					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
+					/* 3.5's Clearcoat was scaled by 0.25 inside the BSDF; 4.x Coat Weight is
+					 * not, so apply it here, as the PBR path does. */
+					principledbsdf117.ins.Clearcoat.Value = 0.25f * part.ClearCoat;
 					/* Gloss is ReflectionGlossiness, which is already a roughness: 0 is
 					 * perfectly specular and t lets the reflection stray by up to t*pi/2
 					 * (ON_Material::m_reflection_glossiness), as Roughness above uses it.
