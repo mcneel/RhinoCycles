@@ -32,6 +32,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RhinoCyclesCore.Core
 {
@@ -234,13 +235,51 @@ namespace RhinoCyclesCore.Core
 		/// <returns></returns>
 		public Session CreateSession(SessionParameters sessionParameters)
 		{
-			var session = new Session(sessionParameters);
+			Session session;
+			lock (createSessionLock)
+			{
+				var device = sessionParameters.Device;
+				if (device.IsHip || (device.IsMulti && device.Subdevices.Any(d => d.IsHip)))
+				{
+					// HIP device creation occasionally never returns (hipStreamCreateWithFlags).
+					// Give it a while, then render on the CPU instead, now and for the rest of
+					// this Rhino session.
+					var create = Task.Run(() => new Session(sessionParameters));
+					if (create.Wait(HipSessionTimeout))
+					{
+						session = create.Result;
+					}
+					else
+					{
+						hungDevices[device.Id] = true;
+						create.ContinueWith(late => late.Result.Dispose(), TaskContinuationOptions.OnlyOnRanToCompletion);
+						AddLogString($"Creating a session on {device.NiceName} did not finish in {HipSessionTimeout.TotalSeconds} s, rendering on the CPU\n");
+						RhinoApp.WriteLine(string.Format(LOC.STR("{0} did not respond. Cycles renders on the CPU until Rhino is restarted."), device.NiceName));
+						sessionParameters.Device = Device.Default;
+						session = new Session(sessionParameters);
+					}
+				}
+				else
+				{
+					session = new Session(sessionParameters);
+				}
+			}
 			AddLogStringIfVerbose($"Created session {session.Id}.\n");
 
 			active_sessions[session.Id] = session;
 
 			return session;
 		}
+
+		readonly object createSessionLock = new object();
+		static readonly TimeSpan HipSessionTimeout = TimeSpan.FromSeconds(20);
+		/// <summary>
+		/// Devices that did not finish creating a session. Sessions for them go to the CPU.
+		/// </summary>
+		readonly ConcurrentDictionary<uint, bool> hungDevices = new ConcurrentDictionary<uint, bool>();
+
+		public bool IsDeviceHung(Device device) =>
+			hungDevices.ContainsKey(device.Id) || (device.IsMulti && device.Subdevices.Any(d => hungDevices.ContainsKey(d.Id)));
 
 		public void ReleaseSession(Session session)
 		{
@@ -289,6 +328,7 @@ namespace RhinoCyclesCore.Core
 		/// Otherwise isDeviceReady will be false and actualDevice Device.Default.
 		/// </returns>
 		public (bool isDeviceReady, Device actualDevice) IsDeviceReady(Device device) {
+			if (IsDeviceHung(device)) return (false, Device.Default);
 			if (device.Type != DeviceType.Multi)
 			{
 				lock (accessGpuKernelDevicesReadiness)

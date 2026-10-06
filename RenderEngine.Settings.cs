@@ -66,6 +66,19 @@ namespace RhinoCyclesCore
 		public bool IsFallbackRenderDevice { get; set; } = false;
 
 		/// <summary>
+		/// RcCore.CreateSession moves a session to the CPU when the GPU does not respond.
+		/// Follow it, so the HUD and the scene settings see the device actually used.
+		/// </summary>
+		protected void FollowSessionDevice(ccl.SessionParameters sessionParams)
+		{
+			if (sessionParams.Device != RenderDevice)
+			{
+				RenderDevice = sessionParams.Device;
+				IsFallbackRenderDevice = true;
+			}
+		}
+
+		/// <summary>
 		/// Sleep in ms between each pass
 		/// </summary>
 		protected int _throttle { get; set; } = 30;

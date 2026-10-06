@@ -270,6 +270,7 @@ Please click the link below for more information.", 69));
 
 			#region create session for scene
 			Session = RcCore.It.CreateSession( sessionParams);
+			FollowSessionDevice(sessionParams);
 			CreateSimpShader();
 			#endregion
 

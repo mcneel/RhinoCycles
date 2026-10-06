@@ -195,6 +195,7 @@ namespace RhinoCyclesCore.RenderEngines
 			#region create session for scene
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer CreateSession");
 			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
+			cyclesEngine.FollowSessionDevice(sessionParams);
 			cyclesEngine.CreateSimpShader();
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer CreateSession done");
 			#endregion
