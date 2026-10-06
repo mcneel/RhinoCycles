@@ -545,11 +545,6 @@ namespace RhinoCyclesCore.Converters
 			{
 				if(Amount1 < 1.0f)
 				{
-					//var mult = new MathNode();
-					//mult.Operation = MathNode.Operations.Multiply;
-					//mult.ins.Value1.Value = Amount1;
-					//mult.ins.Value2 =
-
 					var mixer = new MixNode(shader);
 
 					mixer.ins.Fac.Value = Amount1;
@@ -1650,8 +1645,6 @@ namespace RhinoCyclesCore.Converters
 				image_texture_node.ColorSpace = TextureNode.TextureColorSpace.Color;
 			}
 
-			//image_texture_node.UseAlpha = false;
-			//image_texture_node.AlternateTiles = false;
 			image_texture_node.Interpolation = Filter ? InterpolationType.Cubic : InterpolationType.Closest;
 
 			var multiplier_node = new MathNode(shader);

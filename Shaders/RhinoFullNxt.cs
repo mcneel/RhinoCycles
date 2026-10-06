@@ -116,20 +116,19 @@ namespace RhinoCyclesCore.Shaders
 		}
 
 		/// <summary>
-		/// Turn Rhino's scalar "tint towards the base colour" into the colour that
-		/// the 4.x principled BSDF wants for Specular Tint and Sheen Tint.
-		///
-		/// Those sockets were floats until 4.x, where 0 meant untinted. They are
-		/// colours now and untinted is white, so 0 has to give white rather than
-		/// black - black asks for no specular reflection at all.
-		/// </summary>
-		/// <summary>
 		/// The IOR an opaque dielectric gets, so that 4.x's principled still builds a
 		/// specular lobe for it. 1.5 is both Cycles' own default and what 3.5's
 		/// specular-derived IOR came to at the default Specular of 0.5.
 		/// </summary>
 		private const float DielectricIor = 1.5f;
 
+		/// <summary>
+		/// Turn Rhino's scalar "tint towards the base colour" into the colour that
+		/// the 4.x principled BSDF wants for Specular Tint and Sheen Tint.
+		///
+		/// Those sockets are colours, and untinted is white, so 0 has to give white
+		/// rather than black - black asks for no specular reflection at all.
+		/// </summary>
 		private static float4 TintToColour(float amount, float4 baseColour)
 		{
 			float t = Math.Max(0.0f, Math.Min(1.0f, amount));
@@ -146,12 +145,8 @@ namespace RhinoCyclesCore.Shaders
 			{
 				AttributeNode attr = new AttributeNode(m_shader, "debug_attr");
 				attr.Attribute = "uvmap1";
-				//RhinoTextureCoordinateNode texco = new RhinoTextureCoordinateNode(m_shader, "debug_texco");
-				//texco.UvMap = "uvmap1";
-				//attr.outs.Vector.Connect(texco.ins.);
 				ccl.ShaderNodes.DiffuseBsdfNode diff = new DiffuseBsdfNode(m_shader, "debug_diff_");
 				diff.ins.Color.Value = new float4(0.8f, 0.6f, 0.5f, 1.0f);
-				//texco.outs.UV.Connect(diff.ins.Color);
 				attr.outs.Vector.Connect(diff.ins.Color);
 				diff.outs.BSDF.Connect(m_shader.Output.ins.Surface);
 			}
@@ -776,7 +771,7 @@ namespace RhinoCyclesCore.Shaders
 					/* The model Rhino has always rendered with: 3.5 called it random walk, and
 					 * Cycles 4.0 renamed it to random walk (skin) when it gave the name to a new
 					 * model. Blender keeps it for pre-4.0 files the same way. */
-					principled.Sss = PrincipledBsdfNode.ScatterMethod.RandomWalkSkin; //SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.AllSettings.SssMethod);
+					principled.Sss = PrincipledBsdfNode.ScatterMethod.RandomWalkSkin;
 
 					var alpha_transp_component = new MathSubtract(m_shader, "alpha_transp_component");
 					alpha_transp_component.ins.Value1.Value = 1.0f;
@@ -817,7 +812,7 @@ namespace RhinoCyclesCore.Shaders
 
 					List<ISocket> colsocks = new()
 					{
-						basewithao.ins.Color1, //principled.ins.BaseColor,
+						basewithao.ins.Color1,
 					};
 					if (coloured_shadow != null)
 					{
@@ -841,16 +836,13 @@ namespace RhinoCyclesCore.Shaders
 					 * SSS colour, it scatters with the base colour, and splits the amount into
 					 * Weight and Scale. Feeding it Rhino's values the way Blender converts
 					 * pre-4.0 files keeps what they mean: this mix as the base colour, Scale =
-					 * the amount, Weight 1 wherever there is any. The random walk itself is
-					 * Cycles 5's. The amount and colour graphs are hooked up further down.
+					 * the amount, Weight 1 wherever there is any.
 					 *
 					 * Unlike Blender's conversion the mix is weighted by the share that is not
-					 * transmission. 3.5 scaled that lobe by (1 - transmission) and refracted
-					 * with the plain base colour, but 4.x tints transmission with the base
-					 * colour too, so a mostly transparent material with Subsurface on took the
-					 * SSS colour all through: "Cheap Glass" (opacity 0.1, Subsurface 1, a dark
-					 * green SSS colour, GoudaSSS_Distribute_Candle) went from light mint glass
-					 * to dark green. The transmission graph is hooked up further down. */
+					 * transmission. 3.5 refracted with the plain base colour, but 4.x tints
+					 * transmission with the base colour too, so without the weight a mostly
+					 * transparent material with Subsurface on takes the SSS colour all through.
+					 * The amount, colour and transmission graphs are hooked up further down. */
 					var sss_base_color = new MixNode(m_shader, "pbr_sss_base_color_");
 					sss_base_color.BlendType = MixNode.BlendTypes.Blend;
 					sss_base_color.UseClamp = false;
@@ -872,11 +864,10 @@ namespace RhinoCyclesCore.Shaders
 
 					Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					/* Untinted is white in 4.x, and that is now the socket default, so
-					 * an unused slot needs no graph at all. When it is used, mix white
+					/* Untinted is white in 4.x, and that is the socket default, so an
+					 * unused slot needs no graph at all. When it is used, mix white
 					 * towards the base colour by the amount - which is what Rhino's
-					 * scalar has always meant. Driving the colour socket with the scalar
-					 * directly made it grey, so 0 asked for a black specular. */
+					 * scalar means. The scalar itself would be a grey, and 0 black. */
 					if (part.PbrSpecularTint.On)
 					{
 						var spectintmix = new MixNode(m_shader, "pbr_speculartint");
@@ -906,11 +897,7 @@ namespace RhinoCyclesCore.Shaders
 						new List<ISocket> { roughness_effective.ins.Value1, roughness_opacity_minus_surface.ins.Value2 },
 						false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					/* Untinted is white in 4.x, and that is now the socket default, so
-					 * an unused slot needs no graph at all. When it is used, mix white
-					 * towards the base colour by the amount - which is what Rhino's
-					 * scalar has always meant. Driving the colour socket with the scalar
-					 * directly made it grey, so 0 asked for a black specular. */
+					/* As Specular Tint above. */
 					if (part.PbrSheenTint.On)
 					{
 						var sheentintmix = new MixNode(m_shader, "pbr_sheentint");
@@ -939,22 +926,18 @@ namespace RhinoCyclesCore.Shaders
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 
 					/* Rhino's IOR here is the PBR material's *Opacity* IOR, and on an opaque
-					 * material 1.0 is a perfectly ordinary value for it. In 3.5 that was
-					 * harmless: the principled's ior input fed the transmission lobe only,
-					 * and the specular lobe derived its own from Specular -
-					 * bsdf->ior = 2/(1 - sqrt(0.08*specular)) - 1 - while existing whenever
-					 * specular or metallic was non-zero.
+					 * material 1.0 is a perfectly ordinary value for it. In 3.5 the
+					 * principled's ior input fed the transmission lobe only, and the specular
+					 * lobe derived its own from Specular.
 					 *
 					 * In 4.x the ior input *is* the specular lobe's eta, and closure.h skips
-					 * the whole lobe when eta == 1. So every opaque material carrying
-					 * Opacity IOR 1.0 lost its specular highlight and its environment
-					 * reflection outright - the Paint material rendered as a flat disc.
+					 * the whole lobe when eta == 1, so an opaque material at IOR 1.0 would
+					 * lose its specular highlight and reflections outright.
 					 *
-					 * Blending to the dielectric 1.5 as transmission falls away restores 3.5
-					 * exactly rather than approximately: at 1.5 the lobe's
-					 * f0 = F0_from_ior(1.5) * 2 * specular_ior_level = 0.08 * specular,
-					 * which is 3.5's cspec0 term. Transmissive materials keep their own IOR,
-					 * which is what it is for. */
+					 * So blend from the dielectric 1.5 to the material's IOR by transmission.
+					 * At 1.5 the lobe's f0 = F0_from_ior(1.5) * 2 * specular_ior_level =
+					 * 0.08 * specular, which is 3.5's cspec0 term exactly. Transmissive
+					 * materials keep their own IOR, which is what it is for. */
 					var ior_above_dielectric = new MathSubtract(m_shader, "pbr_ior_above_dielectric_");
 					ior_above_dielectric.ins.Value2.Value = DielectricIor;
 					ior_above_dielectric.UseClamp = false;
@@ -1018,10 +1001,9 @@ namespace RhinoCyclesCore.Shaders
 						{
 							var bump = new BumpNode(m_shader, "bump");
 							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
-							/* Invert exists as both a direct member and an input socket, and
-							 * SetSockets runs after SetDirectMembers and pushes every socket
-							 * value - so writing the member was silently overwritten by the
-							 * socket default and negative bump amounts never inverted. */
+							/* Invert exists as both a direct member and an input socket. Set the
+							 * socket: SetSockets runs after SetDirectMembers and pushes every
+							 * socket value, so the socket default would overwrite the member. */
 							bump.ins.Invert.Value = part.PbrBump.Amount < 0.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 							part.PbrBump.Amount = 1.0f;
@@ -1369,14 +1351,11 @@ namespace RhinoCyclesCore.Shaders
 					var principledbsdf117 = new PrincipledBsdfNode(m_shader, "principledbsdf_");
 					principledbsdf117.ins.Subsurface.Value = 0f;
 					principledbsdf117.ins.SubsurfaceRadius.Value = new float4(0f, 0f, 0f, 1f);
-					principledbsdf117.ins.SubsurfaceColor.Value = new float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 					principledbsdf117.ins.Metallic.Value = part.Metallic;
 					principledbsdf117.ins.Specular.Value = part.Specular;
-					/* Specular Tint and Sheen Tint became colours in the 4.x rework, where
-					 * white is untinted. Rhino has a single scalar "how much to tint
-					 * towards the base colour", so the colour is that interpolation.
-					 * Feeding the scalar as grey made an untinted material black, which is
-					 * no specular at all rather than an untinted one. */
+					/* Specular Tint is a colour in 4.x, where white is untinted. Rhino has a
+					 * single scalar "how much to tint towards the base colour", so the colour
+					 * is that interpolation; see TintToColour. */
 					principledbsdf117.ins.SpecularTint.Value = TintToColour(part.SpecularTint, part.BaseColor);
 					/* 4.x has no Transmission Roughness; transmission uses Roughness. Blend
 					 * refraction into reflection roughness by the transparency, as the PBR
@@ -1386,11 +1365,9 @@ namespace RhinoCyclesCore.Shaders
 						part.ReflectionRoughness + transparency * (part.RefractionRoughness - part.ReflectionRoughness);
 					principledbsdf117.ins.Anisotropic.Value = 0f;
 					principledbsdf117.ins.AnisotropicRotation.Value = 0f;
-					/* No sheen. A custom material has none; it used to be derived as Sheen =
-					 * Reflectivity, which in 3.5 was a faint term on the diffuse lobe. 4.x makes
-					 * sheen the first layer, so the same value laid a white film over every
-					 * polished custom material: pale floors in Lunch-Box and airplane, the Wash
-					 * Basin counter washed out. Without it those match 3.5 again. */
+					/* No sheen: a custom material has none. 4.x makes sheen the top layer, so
+					 * deriving one from Reflectivity would lay a white film over every
+					 * polished custom material. */
 					principledbsdf117.ins.Sheen.Value = 0.0f;
 					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
 					/* Gloss is ReflectionGlossiness, which is already a roughness: 0 is
@@ -1404,7 +1381,7 @@ namespace RhinoCyclesCore.Shaders
 					/* Same trap as the PBR path's Opacity IOR, and the values here are plain
 					 * floats so the blend is done in C#: an opaque custom material with
 					 * IOR 1 would otherwise get no specular lobe at all under 4.x, where in
-					 * 3.5 the ior input never reached the specular. See the long note by
+					 * 3.5 the ior input never reached the specular. See the note by
 					 * pbr_ior_effective. */
 					principledbsdf117.ins.IOR.Value =
 						DielectricIor + transparency * (part.IOR - DielectricIor);
@@ -1462,9 +1439,6 @@ namespace RhinoCyclesCore.Shaders
 					reflection_factor98.outs.R.Connect(diffuse_plus_glossy101.ins.Fac);
 					shadeless96.outs.Closure.Connect(blend_in_transparency102.ins.Closure1);
 					refraction100.outs.BSDF.Connect(blend_in_transparency102.ins.Closure2);
-					//texcoord84.outs.EnvEmap.Connect(separate_envmap_texco103.ins.Vector);
-					//recombine_envmap_texco104.outs.Vector.Connect(environment_texture105.ins.Vector);
-					//environment_texture105.outs.Color.Connect(attenuated_environment_color106.ins.Color2);
 					diffuse_plus_glossy101.outs.Closure.Connect(diffuse_glossy_and_refraction107.ins.Closure1);
 					blend_in_transparency102.outs.Closure.Connect(diffuse_glossy_and_refraction107.ins.Closure2);
 					attenuated_environment_color106.outs.Color.Connect(environment_map_diffuse108.ins.Color);
@@ -1487,7 +1461,6 @@ namespace RhinoCyclesCore.Shaders
 					invert_luminence79.outs.Value.Connect(transparency_texture_amount80.ins.Value1);
 					invert_alpha70.outs.Value.Connect(toggle_diffuse_texture_alpha_usage81.ins.Value1);
 					transparency_texture_amount80.outs.Value.Connect(toggle_transparency_texture82.ins.Value2);
-					// either this or pbr into here, check which is better... coloured_shadow_mix_custom114.outs.Closure.Connect(add_emission_to_final124.ins.Closure1);
 					coloured_shadow_mix_glass_principled118.outs.Closure.Connect(add_emission_to_final124.ins.Closure1);
 					diffuse_or_shadeless_emission126.outs.Closure.Connect(add_emission_to_final124.ins.Closure2);
 					toggle_diffuse_texture_alpha_usage81.outs.Value.Connect(add_diffuse_texture_alpha83.ins.Value1);
@@ -1525,7 +1498,6 @@ namespace RhinoCyclesCore.Shaders
 
 					if (part.DiffuseTexture.HasProcedural)
 					{
-						//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
 						if (part.DiffuseTexture.Procedural is BitmapTextureProcedural bmtp)
 						{
 							useAlpha = part.DiffuseTexture.UseAlphaAsFloat;

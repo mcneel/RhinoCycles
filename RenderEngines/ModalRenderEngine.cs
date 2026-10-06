@@ -47,7 +47,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 		private void ModalRenderEngineCommonConstruct()
 		{
-			//Client = new Client();
 			State = State.Rendering;
 
 			Database.ViewChanged += MRE_Database_ViewChanged;
@@ -60,7 +59,6 @@ namespace RhinoCyclesCore.RenderEngines
 		}
 		private void MRE_Database_ViewChanged(object sender, Database.ChangeDatabase.ViewChangedEventArgs e)
 		{
-			//ViewCrc = e.Crc;
 		}
 
 		bool capturing = false;

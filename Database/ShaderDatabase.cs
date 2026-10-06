@@ -187,7 +187,6 @@ namespace RhinoCyclesCore.Database
 			if (!_rhCclShaders.ContainsKey(shader.Id) && !_cqShaders.Contains(shader))
 			{
 				_cqShaders.Enqueue(shader);
-				//_allShaders.Add(shader);
 			}
 		}
 
@@ -197,13 +196,6 @@ namespace RhinoCyclesCore.Database
 			{
 				if (disposing)
 				{
-					/*
-					foreach (var allshader in _allShaders)
-					{
-						allshader.Item2?.Dispose();
-					}
-					_allShaders.Clear();
-					*/
 					_cqObjectsShaderChanges.Clear(); // CyclesObjectShader
 					foreach (var shader in _cqShaders)
 					{

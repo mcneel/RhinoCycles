@@ -62,11 +62,6 @@ namespace RhinoCyclesCore.Materials
 			HandleTexturedValue(_Frost, Frost);
 			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, false, false, bitmapConverter, docsrn, Gamma, false, false);
 			HandleTexturedValue(_Ior, Ior);
-			/* IorTexture, not ColorTexture. Baking the IOR texture over the colour one
-			 * replaced the glass colour with the IOR map whenever both were set, and left
-			 * IorTexture - allocated here and disposed in Dispose - never written to and
-			 * never read. HandleRenderTexture returns early on a null texture, so this only
-			 * ever bit a material that actually had an IOR texture assigned. */
 			Utilities.HandleRenderTexture(Ior.Texture, IorTexture, false, false, bitmapConverter, docsrn, Gamma, false, false);
 		}
 
@@ -108,18 +103,9 @@ namespace RhinoCyclesCore.Materials
 
 			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, glass.ins.BaseColor.ToList(), false, Gamma, false, false, null);
 			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, transp.ins.Color.ToList(), false, Gamma, false, false, null);
-			/* Frost drove Transmission Roughness until Blender 4.0 removed that socket and
-			 * gave the transmission lobe the main Roughness instead. csycles keeps the old
-			 * socket marked Retired, which is a silent no-op, so writing to it left this
-			 * material pinned at Cycles' own Roughness default of 0.5 - frosted at every
-			 * Frost value, including 0. Nothing else in this shader writes Roughness, so
-			 * there is no connection to lose by claiming it. */
+			/* Frost is the roughness. 4.x has no Transmission Roughness: the transmission
+			 * lobe uses the main Roughness, and nothing else here writes it. */
 			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.Roughness.ToList(), false, Gamma, true, false, null);
-			/* Ior, not Frost. PbrGraphForSlot writes whether or not the slot is switched on,
-			 * so feeding Frost here put Frost's value into the IOR input - and since Frost
-			 * defaults to 0, every Cycles Glass material was refracting at IOR 0 rather
-			 * than at the 1.45 its own slider showed. The Ior slot was read in
-			 * BakeParameters and then went nowhere. */
 			Utilities.PbrGraphForSlot(sh, Ior, IorTexture, glass.ins.IOR.ToList(), false, Gamma, true, false, null);
 
 			transp.outs.BSDF.Connect(mix.ins.Closure2);

@@ -251,7 +251,7 @@ namespace RhinoCyclesCore
 				} else {
 					SimulatedTexture simtex = rt.SimulatedTexture(RenderTexture.TextureGeneration.Allow);
 					RhinoDoc doc = rt.DocumentAssoc;
-					fs = simtex.Filename; //Rhino.Render.Utilities.FindFile(doc, simtex.Filename, true);
+					fs = simtex.Filename;
 				}
 
 				tex.IsNormalMap = rt.IsNormalMap();
@@ -576,7 +576,6 @@ namespace RhinoCyclesCore
 			return HostUtils.GetSystemProcessorCount();
 		}
 
-		//public static readonly PlugIn RcPlugIn = Rhino.PlugIns.PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"));
 		public static readonly Rhino.PlugIns.PlugIn RcPlugIn = Rhino.PlugIns.PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"));
 
 		private static string _DisableGpusFile {

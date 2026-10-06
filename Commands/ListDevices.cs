@@ -43,10 +43,9 @@ namespace RhinoCycles.Commands
 		{
 			(PlugIn as Plugin)?.InitialiseCSycles();
 
-			// Which ccycles.dll am I actually running? There are two ways to get
-			// one - the prebuilt payload from big_libs, or a local +Cycles build -
-			// and they are indistinguishable without asking. The Cycles version
-			// says what the source was; the file date and path say which copy.
+			// Which ccycles.dll is loaded: the prebuilt payload from big_libs or a
+			// local +Cycles build. The Cycles version says what the source was; the
+			// file date and path say which copy.
 			RhinoApp.WriteLine($"Cycles {CSycles.version_string()}");
 			var ccyclesPath = Path.Combine(
 				Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
@@ -78,8 +77,7 @@ namespace RhinoCycles.Commands
 		/// <remarks>
 		/// publish_payload.ps1 writes ccycles_payload.json beside ccycles.dll and the
 		/// build copies it into the plug-in output, so the answer to "what am I running"
-		/// travels with the binaries. Without this it was only answerable by finding the
-		/// file on disk, which nobody does while wondering why a render looks wrong.
+		/// travels with the binaries.
 		///
 		/// Most useful when it disagrees with expectations: a payload whose kernel source
 		/// hash differs from the tree was built from different kernel code, and a payload

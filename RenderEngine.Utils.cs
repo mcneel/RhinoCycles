@@ -101,64 +101,15 @@ namespace RhinoCyclesCore
 		}
 
 		/// <summary>
-		/// create a ccl.Session
+		/// Apply the film and integrator settings to the scene of a new session.
 		/// </summary>
-		/// <param name="client">Client to create scene for</param>
-		/// <param name="session">Session this scene is created for</param>
-		/// <param name="render_device">Render device this scene is created for</param>
-		/// <param name="cycles_engine">Engine instance to create for</param>
-		/// <returns></returns>
-		protected static /*Session*/ void InitializeSceneSettings(Session session, Device render_device,
+		/// <param name="session">Session whose scene to set up</param>
+		/// <param name="render_device">Render device the session was created for</param>
+		/// <param name="cycles_engine">Engine the session belongs to</param>
+		/// <param name="engineSettings">Settings to apply</param>
+		protected static void InitializeSceneSettings(Session session, Device render_device,
 			RenderEngine cycles_engine, IAllSettings engineSettings)
 		{
-#if LEGACY
-			#region set up scene parameters
-			BvhLayout bvhLayout = BvhLayout.Auto;
-			if(render_device.IsOptix) {
-				bvhLayout = BvhLayout.OptiX;
-			}
-			else if (render_device.IsCpu && HostUtils.RunningOnOSX) {
-				bvhLayout = BvhLayout.Bvh2;
-			}
-			var scene_params = new SceneParameters(client, ShadingSystem.SVM, BvhType.Static, false, bvhLayout, false);
-			#endregion
-
-			#region create scene
-			var scene = new Scene(client, scene_params, session)
-			{
-			};
-			#endregion
-
-
-
-			#region background shader
-
-			// we add here a simple background shader. This will be repopulated with
-			// other nodes whenever background changes are detected.
-			var background_shader = new Shader(client, Shader.ShaderType.World)
-			{
-				Name = "Rhino Background"
-			};
-
-			var bgnode = new BackgroundNode("orig bg");
-			bgnode.ins.Color.Value = new float4(1.0f);
-			bgnode.ins.Strength.Value = 1.0f;
-
-			bgnode.outs.Background.Connect(background_shader.Output.ins.Surface);
-			background_shader.FinalizeGraph();
-
-			scene.AddShader(background_shader);
-
-			scene.Background.Shader = background_shader;
-			scene.Background.AoDistance = 0.0f;
-			scene.Background.AoFactor = 0.0f;
-			scene.Background.Visibility = PathRay.AllVisibility;
-			scene.Background.Transparent = false;
-
-			#endregion
-
-			session.Scene = scene;
-#endif
 			session.Scene.Film.SetFilter(FilterType.Gaussian, 1.5f);
 			session.Scene.Film.Exposure = 1.0f;
 			session.Scene.Film.Update();
@@ -184,8 +135,8 @@ namespace RhinoCyclesCore
 			session.Scene.Integrator.SampleClampDirect = engineSettings.SampleClampDirect;
 			session.Scene.Integrator.SampleClampIndirect = engineSettings.SampleClampIndirect;
 			session.Scene.Integrator.LightSamplingThreshold =  engineSettings.LightSamplingThreshold;
-			// The native session init hardcodes the light tree to on; without this line the
-			// UseLightTree setting was never applied.
+			// The native session init hardcodes the light tree to on, so the setting has to
+			// be applied here.
 			session.Scene.Integrator.UseLightTree = engineSettings.UseLightTree;
 			session.Scene.Integrator.SamplingPattern = SamplingPattern.SobolBurley;
 			session.Scene.Integrator.Seed = engineSettings.Seed;

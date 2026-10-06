@@ -213,7 +213,6 @@ namespace RhinoCyclesCore.Database
 			if (LinearWorkflowHasChanged)
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadGammaChanges entry");
-				//_environmentDatabase.CurrentBackgroundShader?.Reset();
 
 				foreach (var tup in _shaderDatabase.AllShaders)
 				{
@@ -663,8 +662,7 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.ApertureRatio = ApertureRatio;
 			scene.Camera.Blades = Blades;
 
-			//scene.Camera.NearClip = (float)view.Near;
-			scene.Camera.FarClip = (float)view.Far; // 1.0E+14f; // gp_side_extension;
+			scene.Camera.FarClip = (float)view.Far;
 			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
 			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
 
@@ -1345,7 +1343,6 @@ namespace RhinoCyclesCore.Database
 				stableIdPerInstance[i] = StableObjectId(a);
 			}
 
-			//foreach (var a in addedOrChanged)
 			Parallel.For(0, totalmeshes, i =>
 			{
 				var a = addedOrChanged[i];
@@ -1385,7 +1382,6 @@ namespace RhinoCyclesCore.Database
 
 				HandleRenderMaterial(mat, matid, cyclesDecals, false);
 
-				//var cutout = _objectDatabase.MeshIsClippingObject(meshid);
 #pragma warning disable CS0618
 				// Cycles does not cope well with coincident surfaces. Therefor it is
 				// important to ever so slightly move around the objects - to jiggle
@@ -2150,7 +2146,6 @@ namespace RhinoCyclesCore.Database
 				}
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				cob.IsSolid = ob.IsSolid;
-				//cob.IsBlockInstance = true;
 				/* Reflect is gone from the 5.x visibility enum; a shadow catcher that
 				 * should not show up in reflections is one without Glossy visibility. */
 				var norefl = PathRay.AllVisibility & ~PathRay.Glossy;
@@ -2164,7 +2159,6 @@ namespace RhinoCyclesCore.Database
 
 				Shader shader = _shaderDatabase.GetShaderFromHash(ob.matid);
 				cob.Shader = shader.Id;
-				//cob.Cutout = false;
 				cob.TagUpdate();
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Objects handled", -1.0f);

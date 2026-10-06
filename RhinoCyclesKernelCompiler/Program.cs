@@ -310,11 +310,8 @@ namespace RhinoCyclesKernelCompiler
 				 * exited deadlocks the moment the child writes more than the pipe buffer
 				 * holds (~4KB): the child blocks in write, so it never exits, so the loop
 				 * below waits for it forever. Compiling the kernels for every GPU
-				 * architecture produces far more output than that.
-				 *
-				 * This branch is #if DEBUG only, which is why it presented as a
-				 * "dev-only" stall: Release calls RunCompile in-process and starts no
-				 * child at all. */
+				 * architecture produces far more output than that. (DEBUG only: Release
+				 * calls RunCompile in-process and starts no child.) */
 				cp.OutputDataReceived += (sender, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
 				cp.ErrorDataReceived += (sender, e) => { if (e.Data != null) Console.Error.WriteLine(e.Data); };
 				cp.BeginOutputReadLine();

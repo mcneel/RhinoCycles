@@ -112,7 +112,6 @@ namespace RhinoCyclesCore.Database
 		/// <param name="meshInstanceId"></param>
 		private void RemoveRenderHashMeshInstanceId(uint hash, uint meshInstanceId)
 		{
-			//if (_rhRenderhashObjects.ContainsKey(hash)) _rhRenderhashObjects[hash].RemoveAll(x => x.Equals(meshInstanceId));
 			if (_rhRenderhashObjects.ContainsKey(hash))
 			{
 				while (_rhRenderhashObjects[hash].ContainsKey(meshInstanceId))

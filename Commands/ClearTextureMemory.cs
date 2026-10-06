@@ -39,7 +39,6 @@ namespace RhinoCycles.Commands
 			// BitmapConverter moved into RenderEngine as instance. When render engine
 			// gets disposed the BitmapConverter and its dictionaries get removed. No
 			// longer necessary to do that here.
-			//RhinoCyclesCore.Converters.BitmapConverter.ClearTextureMemory();
 			return Result.Success;
 		}
 	}

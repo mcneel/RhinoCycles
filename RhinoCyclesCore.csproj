@@ -234,68 +234,38 @@
     <EmbeddedResource Include="Icons\OpenCL.ico" />
   </ItemGroup>
   <!--
-    Cycles comes from big_libs, always. When RHINOCYCLESDEV is set,
-    ccycles.vcxproj rebuilds it and installs it into big_libs first, so the copy
-    below is the single route into the output either way - what someone who
-    rebuilt Cycles runs is exactly what everyone else gets from the prebuilt
-    payload. This used to be skipped when RHINOCYCLESDEV was set, which left the
-    two cases taking different paths.
+    Cycles comes from big_libs, always. A +Cycles solution configuration makes
+    ccycles.vcxproj rebuild it and install it into big_libs first, so the copy below
+    is the single route into the output either way.
 
-    The folder follows the configuration, but only release is committed to
-    big_libs. The debug payload is a local build nobody but a Cycles developer
-    has any use for, and a Debug build of Rhino ran against release Cycles for
-    years without trouble. So the debug folder is used when it is actually there
-    - which means someone built Debug+Cycles locally - and release otherwise. A
-    checkout with no local Cycles build gets a working ccycles.dll in every
-    configuration. Since 2026-09 Debug+Cycles builds that payload as
-    RelWithDebInfo, so a Debug Rhino keeps release-speed kernels and still gets
-    PDBs for stepping into ccycles.
+    Payload folders under big_libs\RhinoCycles\ccycles\win, most preferred first:
 
-    ReleaseDebuggable maps to release: build_cycles.ps1 builds it as
-    RelWithDebInfo and installs it there.
+      local    Any configuration, while it is newer than release. Written by a
+               narrow build_cycles.ps1 build - kernels for this machine's GPUs only -
+               so that it never overwrites the committed payload. Gitignored.
+      debug    Debug only, when it exists. Written by a local Debug+Cycles build
+               (RelWithDebInfo, so ccycles can be stepped into). Gitignored.
+      release  Committed. Used otherwise.
 
-    And "local" wins over both, in every configuration, but only while it is
-    newer than the committed payload. That is the payload a narrow local build
-    writes - build_cycles.ps1 builds kernels only for the GPUs in the machine,
-    which is what both +Cycles configurations do - and it exists precisely
-    because that build must not overwrite the committed payload with kernels for
-    one card. It is gitignored in big_libs.
-
-    The freshness test is what stops it becoming a trap. Preferring it merely
-    because it exists would mean a developer who built +Cycles once kept
-    deploying that build for ever, including after pulling commits that
-    republished the payload - silently, months later. Comparing write times
-    expires it by itself: git touches the committed ccycles.dll when a pull
-    changes it, so the newer payload simply wins, and rebuilding +Cycles makes
-    the local one win again. Nothing to remember and no folder to delete.
-
-    The debug payload keeps its old behaviour - preferred whenever it exists, in
-    Debug only - on purpose. Someone who built it wants to step into ccycles, and
-    silently switching them to release Cycles because a pull was newer would take
-    that away.
+    The freshness test keeps an old local build from being deployed for ever: git
+    touches the committed ccycles.dll when a pull changes it, so a newer committed
+    payload wins, and rebuilding +Cycles makes the local one win again. The debug
+    payload has no such test on purpose: whoever built it wants to step into
+    ccycles.
   -->
   <PropertyGroup>
     <!--
-      Derived from this project's own directory, not $(SolutionDir). The payload does
-      not move when you build a different solution, but the old path did: building
-      RhinoCycles.sln rather than Rhino.sln resolved it to
-      src4\rhino4\Plug-ins\big_libs, which does not exist, and the post-build XCopy
-      failed with "File not found - *" and took the build down with it. Nothing about
-      where big_libs lives depends on which solution is open.
-
+      From this project's directory, not $(SolutionDir), so the path is the same
+      whichever solution is built.
       RhinoCycles -> RDK -> Plug-ins -> rhino4 -> src4 -> repo root.
     -->
     <CyclesPayloadRoot>$(MSBuildProjectDirectory)\..\..\..\..\..\big_libs\RhinoCycles\ccycles\win</CyclesPayloadRoot>
   </PropertyGroup>
 
   <!--
-    Which payload to deploy is decided when the target runs, not when MSBuild reads
-    this file. As static properties these were fixed at evaluation, and in a solution
-    build that happens before ccycles.vcxproj has installed anything. So the first
-    Debug+Cycles build in a tree that had no debug payload yet saw Exists() as false
-    and deployed release Cycles next to the debug payload it had just built; only a
-    second build would have picked it up. Found on a fresh clone, 2026-09-12. The
-    same held for a first narrow build writing the local payload.
+    The payload is chosen when the target runs, not at evaluation: in a solution
+    build evaluation happens before ccycles.vcxproj has installed anything, so
+    Exists() would miss a payload built by that same build.
   -->
   <Target Name="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
     <PropertyGroup>
@@ -314,17 +284,10 @@
   </Target>
 
   <!--
-    /D on all three: copy only what is newer than the destination.
-
-    AfterTargets="Build" runs this on every build of this project - including one
-    where nothing changed and the compile was skipped, exactly as the post-build
-    event it replaces did. Without /D that recopied the whole payload every time,
-    which is 321 MB, 29 MB of it kernels. XCopy returns 0 when everything is
-    already up to date, so a no-op copy does not fail the build.
-
-    XCopy rather than Copy for the first line so it can take /D. No /S there,
-    which keeps it non-recursive exactly as Copy was - lib and source are
-    handled by the two lines below, into different destinations.
+    AfterTargets="Build" runs this on every build of this project, including no-op
+    ones, and the payload is over 300 MB, so XCopy /D copies only what is newer than
+    the destination (and returns 0 when everything is up to date). No /S: top-level
+    files only. lib and source are mirrored into RhinoCycles\ by robocopy.
 
     The command sits in a property because XML folds the newlines in an attribute
     into spaces; property expansion happens after parsing and keeps them.
@@ -332,14 +295,14 @@
   <Target Name="DeployCyclesPayload" AfterTargets="Build" DependsOnTargets="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
     <PropertyGroup>
       <CyclesDeployCommand>
-      XCopy $(CyclesPayloadPath)\* $(OutputPath). /Y /D /I /Q
+      XCopy "$(CyclesPayloadPath)\*" "$(OutputPath)." /Y /D /I /Q
       rem /MIR on lib and source so kernels/sources dropped from the payload (e.g. an arch
       rem no longer built, or a kernel header removed upstream) do not linger and get
       rem loaded. XCopy /D only ever adds and overwrites, so it could not remove them.
       rem robocopy is itself incremental, so this keeps the no-op build cheap.
-      robocopy $(CyclesPayloadPath)\lib $(OutputPath)RhinoCycles\lib /MIR /NJH /NJS /NFL /NDL /NP
+      robocopy "$(CyclesPayloadPath)\lib" "$(OutputPath)RhinoCycles\lib" /MIR /NJH /NJS /NFL /NDL /NP
       if errorlevel 8 exit /b 1
-      robocopy $(CyclesPayloadPath)\source $(OutputPath)RhinoCycles\source /MIR /NJH /NJS /NFL /NDL /NP
+      robocopy "$(CyclesPayloadPath)\source" "$(OutputPath)RhinoCycles\source" /MIR /NJH /NJS /NFL /NDL /NP
       if errorlevel 8 exit /b 1
       exit /b 0
       </CyclesDeployCommand>
@@ -348,36 +311,24 @@
   </Target>
 
   <!--
-    Say which payload was deployed. Which one you got was invisible before, and
-    it is the difference between being able to step into ccycles and not - a
-    Debug build silently falls back to the release payload whenever the debug one
-    has not been built locally, because only release is committed to big_libs.
+    Say which payload was deployed: it decides whether ccycles can be stepped into.
+    A Message, not a Warning - the solution builds with zero warnings, and release
+    Cycles under a Debug Rhino is the normal case.
 
-    A Message and not a Warning: the solution builds with zero warnings and that
-    is worth keeping, and using release Cycles under a Debug Rhino is the normal
-    case rather than a mistake.
-
-    The fallback line is gated on RHINOCYCLESDEV. No fresh checkout has a debug
-    payload - only release is committed - so an ungated message would tell every
-    developer on every Debug build that native Cycles debugging is unavailable,
-    which is only news to someone who wanted it. The flag being set is the
-    closest thing to a statement of that intent.
+    The no-debug-payload hint is opt-in through the RHINOCYCLESDEV environment
+    variable, which nothing else reads any more. Only a Debug+Cycles build writes a
+    debug payload, so without the opt-in the hint would show on every developer's
+    Debug build.
   -->
   <Target Name="ReportCyclesPayload" AfterTargets="DeployCyclesPayload" DependsOnTargets="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
     <Message Importance="high" Text="RhinoCycles: deployed Cycles payload from $(CyclesPayloadPath)" />
 
-    <!--
-      A local payload that lost the freshness test is worth a line. Without one,
-      a developer who built +Cycles some time ago and has since pulled sees their
-      build stop being used with no explanation - which is the confusion the test
-      was meant to prevent, moved one step along. Rebuilding +Cycles is the fix,
-      and saying so beats leaving them to work it out.
-    -->
+    <!-- Explains why a local +Cycles build stopped being used after a pull. -->
     <Message Importance="high"
              Condition="'$(CyclesLocalTicks)' != '' And $(CyclesLocalTicks) &lt;= $(CyclesReleaseTicks)"
              Text="RhinoCycles: your local Cycles payload is older than the committed one, so the committed one was used. Rebuild a +Cycles configuration to use yours again." />
     <Message Importance="high"
              Condition="'$(Configuration)' == 'Debug' And '$(RHINOCYCLESDEV)' != '' And !Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')"
-             Text="RhinoCycles: no debug Cycles payload in big_libs, so this Debug build uses release Cycles. Native debugging into ccycles will not work. Build the solution once as Debug with RHINOCYCLESDEV set to produce one." />
+             Text="RhinoCycles: no debug Cycles payload in big_libs, so this Debug build uses release Cycles and ccycles cannot be stepped into. Build Debug+Cycles once to produce one." />
   </Target>
 </Project>

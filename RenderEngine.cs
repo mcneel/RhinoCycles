@@ -326,8 +326,6 @@ namespace RhinoCyclesCore
 			RenderedSamples = CSycles.progress_get_sample(sid);
 			RenderedTiles = CSycles.progress_get_rendered_tiles(sid);
 
-			//Debug.WriteLine("Current sample: {0}", RenderedSamples);
-
 			float progress;
 			double total_time, sample_time;
 			CSycles.progress_get_time(sid, out total_time, out sample_time);

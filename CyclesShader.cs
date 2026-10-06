@@ -355,17 +355,8 @@ namespace RhinoCyclesCore
 			shb.TransparencyColor = transp;
 			shb.EmissionColor = emis;
 
-			// In Rhino 7 plaster (through custom material) (also default material
-			// reflection roughness did nothing. Now it does. Set it to 1.0 always
-			// to have it behave the same way as in Rhino 7. RH-77404. jK
-			/*
-			RH-78168 - disabling below code, because it causes 'overexposed'
-			result.
-			if(mattype == ShaderBody.CyclesMaterial.Diffuse)
-			{
-				shb.ReflectionRoughness = 1.0f;
-			}
-			*/
+			// Diffuse materials keep their reflection roughness: forcing it to 1.0 to
+			// behave as in Rhino 7 (RH-77404) overexposed them (RH-78168).
 			if(mattype == ShaderBody.CyclesMaterial.Diffuse)
 			{
 				reflectivity = 0.0f;
@@ -498,13 +489,10 @@ namespace RhinoCyclesCore
 				// Rhino factors intensity (emission-multiplier) into EmissionColor.
 				// undo that so we can use emission strength as input instead.
 				//
-				// Only when there is a strength to undo. EmissionStrength stays at its
-				// 0.0f default for any material carrying neither an emission-multiplier
-				// nor an intensity field, and a black emission colour then divided 0/0
-				// into NaN. That NaN reaches the principled BSDF's Emission Color socket,
-				// so Shader::estimate_emission returns NaN (1 * NaN, and NaN * 0 is still
-				// NaN), which poisons the importance maths in the light tree: nothing in
-				// the scene is ever sampled and the whole render comes back black.
+				// Only when there is a strength to undo. EmissionStrength stays 0 for a
+				// material with neither field, and 0/0 would put NaN into the Emission
+				// Color socket. Shader::estimate_emission then returns NaN, which poisons
+				// the light tree: nothing is sampled and the render comes back black.
 				float es = shb.EmissionStrength;
 				if (es > 0.0f)
 				{

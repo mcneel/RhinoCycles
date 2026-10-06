@@ -108,16 +108,9 @@ namespace RhinoCyclesCore.RenderEngines
 			var gpusize = TileSize(renderDevice);
 			uint threads = renderDevice.IsGpu ? 0u : (uint)RcCore.It.AllSettings.Threads;
 
-			int pixelSize = 1; // Don't use pixel size for now, see  below on SetRenderOutputRect. Math.Max(1, RcCore.It.AllSettings.PixelSize);
-
-			/* HUOM disable SetRenderOutputRect usage for now since this doesn't seem to be
-			 * working properly in previews
-			 *
-			cyclesEngine.PixelSize = pixelSize;
-			cyclesEngine.RenderWindow.SetRenderOutputRect(
-				new Rectangle(0, 0, size.Width / pixelSize, size.Height / pixelSize)
-			);
-			*/
+			// Always 1: a larger pixel size needs RenderWindow.SetRenderOutputRect, which
+			// does not work properly for previews.
+			int pixelSize = 1;
 
 			#region set up session parameters
 			var sessionParams = new SessionParameters(renderDevice)
@@ -207,7 +200,6 @@ namespace RhinoCyclesCore.RenderEngines
 			{
 				RcCore.It.AddLogStringIfVerbose("PreviewRenderEngine.Renderer: rendering done, UpdatePreview start");
 				cyclesEngine.UpdatePreview();
-				RcCore.It.AddLogStringIfVerbose("PreviewRenderEngine.Renderer: rendering done, UpdatePreview start");
 			}
 
 			cyclesEngine.StopTheRenderer();

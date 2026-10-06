@@ -143,10 +143,6 @@ namespace RhinoCyclesCore.ExtensionMethods
 				conv[1] = (T)Convert.ChangeType((byte)(Math.Min(cl.G, 1.0f) * 255.0f), typeof(T));
 				conv[2] = (T)Convert.ChangeType((byte)(Math.Min(cl.B, 1.0f) * 255.0f), typeof(T));
 				conv[3] = (T)Convert.ChangeType((byte)(Math.Min(cl.A, 1.0f) * 255.0f), typeof(T));
-				//conv[0] = (T)((object)((byte)Math.Min(cl.R, 1.0f) * 255.0f));
-				//conv[1] = (T)((object)((byte)Math.Min(cl.G, 1.0f) * 255.0f));
-				//conv[2] = (T)((object)((byte)Math.Min(cl.B, 1.0f) * 255.0f));
-				//conv[3] = (T)((object)((byte)Math.Min(cl.A, 1.0f) * 255.0f));
 			}
 
 			return conv;
