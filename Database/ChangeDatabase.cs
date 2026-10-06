@@ -1747,7 +1747,6 @@ namespace RhinoCyclesCore.Database
 					Direction = l.Dir,
 					UseMis = l.UseMis,
 					CastShadow = l.CastShadow,
-					Samples = 1,
 					MaxBounces = 8,
 					SizeU = l.SizeU,
 					SizeV = l.SizeV,
@@ -1794,17 +1793,11 @@ namespace RhinoCyclesCore.Database
 				existingL.CastShadow = l.CastShadow;
 				existingL.SpotAngle = l.SpotAngle;
 				existingL.SpotSmooth = l.SpotSmooth;
-				existingL.Samples = 1;
 				existingL.MaxBounces = 8;
 				existingL.SizeU = l.SizeU;
 				existingL.SizeV = l.SizeV;
 				existingL.AxisU = l.AxisU;
 				existingL.AxisV = l.AxisV;
-
-				if(l.Type == LightType.Distant) {
-						existingL.Samples = (uint)(isGpShadowsOnly ? 1 : 1024);
-						break;
-				}
 				existingL.TagUpdate();
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Lights handled", -1.0f);
