@@ -904,8 +904,6 @@ namespace RhinoCyclesCore
 		public float Specular => Reflectivity;
 		public float SpecularTint => ReflectivityInverse;
 		public float ReflectivityInverse => 1.0f - Reflectivity;
-		public float Sheen => Reflectivity;
-		public float SheenTint => ReflectivityInverse;
 		public float ClearCoat => NoMetalic ? Reflectivity : 0.0f;
 		public float ClearCoatGloss => ClearCoat;
 		public float Metallic { get; set; }

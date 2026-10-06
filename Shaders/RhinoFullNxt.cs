@@ -1386,20 +1386,12 @@ namespace RhinoCyclesCore.Shaders
 						part.ReflectionRoughness + transparency * (part.RefractionRoughness - part.ReflectionRoughness);
 					principledbsdf117.ins.Anisotropic.Value = 0f;
 					principledbsdf117.ins.AnisotropicRotation.Value = 0f;
-					/* 3.5 built the sheen closure with
-					 *   sheen_weight = weight * sheen * sheen_color * diffuse_weight
-					 * and diffuse_weight = (1 - metallic) * (1 - transmission), so a fully
-					 * transmissive or fully metallic material got no sheen at all. 4.x makes
-					 * sheen the *first layer*, gated only on sheen_weight > cutoff, and it
-					 * attenuates everything beneath it through closure_layering_weight.
-					 *
-					 * The airplane canopy is Sheen 1 with Transparency 1. Shipping renders no
-					 * sheen for it; 5.2 laid a full white sheen over the glass, which is why
-					 * that canopy came out milky and washed out instead of tinted. Carrying
-					 * 3.5's diffuse weight into the value restores it. */
-					principledbsdf117.ins.Sheen.Value =
-						part.Sheen * (1.0f - part.Metallic) * (1.0f - transparency);
-					principledbsdf117.ins.SheenTint.Value = TintToColour(part.SheenTint, part.BaseColor);
+					/* No sheen. A custom material has none; it used to be derived as Sheen =
+					 * Reflectivity, which in 3.5 was a faint term on the diffuse lobe. 4.x makes
+					 * sheen the first layer, so the same value laid a white film over every
+					 * polished custom material: pale floors in Lunch-Box and airplane, the Wash
+					 * Basin counter washed out. Without it those match 3.5 again. */
+					principledbsdf117.ins.Sheen.Value = 0.0f;
 					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
 					/* Gloss is ReflectionGlossiness, which is already a roughness: 0 is
 					 * perfectly specular and t lets the reflection stray by up to t*pi/2
