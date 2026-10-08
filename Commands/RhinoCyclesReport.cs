@@ -1216,8 +1216,8 @@ namespace RhinoCycles.Commands
 				sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "Session logs     {0} collected, {1} busy, {2} startup-only (see logs/manifest.txt)",
 					logs.Total, logs.Busy, logs.Total - logs.Busy));
 				sb.AppendLine(logs.ShutdownKnown > 0
-					? string.Format(CultureInfo.InvariantCulture, "Clean exits      {0} of {1} recorded sessions did NOT finish shutting down",
-						logs.Unclean, logs.ShutdownKnown)
+					? string.Format(CultureInfo.InvariantCulture, "Clean exits      {0} of {1} recorded sessions shut down cleanly",
+						logs.ShutdownKnown - logs.Unclean, logs.ShutdownKnown)
 					: RcCore.It.AllSettings.VerboseLogging
 						? "Clean exits      unknown - no session recorded a shutdown"
 						: "Clean exits      unknown - needs verbose logging");
