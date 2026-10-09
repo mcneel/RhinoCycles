@@ -1692,7 +1692,9 @@ namespace RhinoCyclesCore.Database
 
 			isGpShadowsOnly = gp.IsShadowOnly;
 
-			HandleMeshData(gpid.Item1, gpid.Item2, m, null, false, uint.MaxValue, ccl.Transform.Identity());
+			// RH-93980: textures projected in world space (WCS, WCS box) don't use the UVs set above.
+			// Give them the ground plane texture size, offset and rotation through the OCS frame.
+			HandleMeshData(gpid.Item1, gpid.Item2, m, null, false, uint.MaxValue, tfm.ToCyclesTransform());
 
 			HandleRenderMaterial(mat, materialId, null, !gp.ShowUnderside, isGpShadowsOnly);
 
