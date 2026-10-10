@@ -66,6 +66,19 @@ namespace RhinoCyclesCore
 		public bool IsFallbackRenderDevice { get; set; } = false;
 
 		/// <summary>
+		/// RcCore.CreateSession moves a session to the CPU when the GPU does not respond.
+		/// Follow it, so the HUD and the scene settings see the device actually used.
+		/// </summary>
+		protected void FollowSessionDevice(ccl.SessionParameters sessionParams)
+		{
+			if (sessionParams.Device != RenderDevice)
+			{
+				RenderDevice = sessionParams.Device;
+				IsFallbackRenderDevice = true;
+			}
+		}
+
+		/// <summary>
 		/// Sleep in ms between each pass
 		/// </summary>
 		protected int _throttle { get; set; } = 30;
@@ -97,9 +110,6 @@ namespace RhinoCyclesCore
 					integrator.AdaptiveThreshold = settings.AdaptiveThreshold;
 					integrator.FilterGlossy = settings.FilterGlossy;
 					integrator.SampleClampIndirect = settings.SampleClampIndirect;
-					// RH-95655: in the Product preset clipped geometry is truly "gone" -
-					// clip all rays (indirect bounces too), not just camera rays.
-					integrator.ClipAllRays = settings.IsProductPreset;
 					integrator.TagForUpdate();
 					_needReset = true;
 					_oldIntegratorHash = hash;

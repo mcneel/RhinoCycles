@@ -77,7 +77,6 @@ namespace RhinoCycles.Commands
 			if (getObject.CommandResult() != Result.Success) return getObject.CommandResult();
 			if (getRc == GetResult.Object)
 			{
-				//vpi.UserData.Add(nvud);
 				foreach (var o in getObject.Objects())
 				{
 					var nud = new RcTestUserData();

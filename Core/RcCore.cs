@@ -32,6 +32,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace RhinoCyclesCore.Core
 {
@@ -139,6 +140,11 @@ namespace RhinoCyclesCore.Core
 		public string GpuCompilePath => Path.Combine(DataUserPath, "gpus");
 
 		/// <summary>
+		/// Where DumpMaterialShaderGraph / DumpEnvironmentShaderGraph write their .dot files.
+		/// </summary>
+		public string ShaderGraphPath => Path.Combine(DataUserPath, "shadergraphs");
+
+		/// <summary>
 		/// Get the path used to look up .cubins (relative)
 		/// </summary>
 		public string KernelPathRelative { get; set; }
@@ -173,6 +179,9 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		public void Shutdown() {
 			AddLogStringIfVerbose("Shutdown entry");
+
+			// Make render device gate waiters give up rather than block shutdown.
+			shuttingDown = true;
 
 			AddLogStringIfVerbose("Shutdown: release active sessions start");
 			ReleaseActiveSessions();
@@ -230,13 +239,50 @@ namespace RhinoCyclesCore.Core
 		/// <returns></returns>
 		public Session CreateSession(SessionParameters sessionParameters)
 		{
-			var session = new Session(sessionParameters);
-			AddLogStringIfVerbose($"Created session {session.Id}.\n");
+			Session session;
+			lock (createSessionLock)
+			{
+				var device = sessionParameters.Device;
+				if (device.IsHip || (device.IsMulti && device.Subdevices.Any(d => d.IsHip)))
+				{
+					// HIP device creation sometimes never returns (hipStreamCreateWithFlags);
+					// after the timeout, use the CPU for the rest of the Rhino session.
+					var create = Task.Run(() => new Session(sessionParameters));
+					if (create.Wait(HipSessionTimeout))
+					{
+						session = create.Result;
+					}
+					else
+					{
+						hungDevices[device.Id] = true;
+						create.ContinueWith(late => late.Result.Dispose(), TaskContinuationOptions.OnlyOnRanToCompletion);
+						AddLogString($"Creating a session on {device.NiceName} did not finish in {HipSessionTimeout.TotalSeconds} s, rendering on the CPU\n");
+						RhinoApp.WriteLine(string.Format(LOC.STR("{0} did not respond. Cycles renders on the CPU until Rhino is restarted."), device.NiceName));
+						sessionParameters.Device = Device.Default;
+						session = new Session(sessionParameters);
+					}
+				}
+				else
+				{
+					session = new Session(sessionParameters);
+				}
+			}
+			AddLogString($"Created session {session.Id} on {sessionParameters.Device.NiceName} ({sessionParameters.Device.Type}).\n");
 
 			active_sessions[session.Id] = session;
 
 			return session;
 		}
+
+		readonly object createSessionLock = new object();
+		static readonly TimeSpan HipSessionTimeout = TimeSpan.FromSeconds(20);
+		/// <summary>
+		/// Devices that did not finish creating a session. Sessions for them go to the CPU.
+		/// </summary>
+		readonly ConcurrentDictionary<uint, bool> hungDevices = new ConcurrentDictionary<uint, bool>();
+
+		public bool IsDeviceHung(Device device) =>
+			hungDevices.ContainsKey(device.Id) || (device.IsMulti && device.Subdevices.Any(d => hungDevices.ContainsKey(d.Id)));
 
 		public void ReleaseSession(Session session)
 		{
@@ -285,6 +331,7 @@ namespace RhinoCyclesCore.Core
 		/// Otherwise isDeviceReady will be false and actualDevice Device.Default.
 		/// </returns>
 		public (bool isDeviceReady, Device actualDevice) IsDeviceReady(Device device) {
+			if (IsDeviceHung(device)) return (false, Device.Default);
 			if (device.Type != DeviceType.Multi)
 			{
 				lock (accessGpuKernelDevicesReadiness)
@@ -359,6 +406,80 @@ namespace RhinoCyclesCore.Core
 		}
 
 		/// <summary>
+		/// One render engine at a time on the render device: a production render and previews
+		/// driving the GPU at once make kernel launches fail (RH-98759). Previews also take
+		/// turns among themselves through <see cref="PreviewRendererLock"/>.
+		/// </summary>
+		private readonly object renderDeviceGate = new object();
+		/// <summary>
+		/// Set by <see cref="Shutdown"/> so render device gate waiters give up.
+		/// </summary>
+		private volatile bool shuttingDown = false;
+		/// <summary>
+		/// Production renders queued for the render device; previews stand aside while above zero.
+		/// </summary>
+		private int productionRendersWaiting = 0;
+
+		/// <summary>
+		/// True while a production render is queued. A running preview polls this and stops;
+		/// it is rendered again later.
+		/// </summary>
+		public bool ProductionRenderWaiting => Volatile.Read(ref productionRendersWaiting) > 0;
+
+		/// <summary>
+		/// Take exclusive use of the render device, waiting for its holder. Pair every
+		/// successful call with <see cref="ExitRenderDeviceGate"/> on the same thread.
+		/// </summary>
+		/// <param name="who">Caller name, for the log.</param>
+		/// <param name="shouldAbort">Polled while waiting; true gives up. May be null.</param>
+		/// <param name="isProductionRender">True for a user render, which goes ahead of queued previews.</param>
+		/// <param name="onWaitStart">Called once if the device is not free straight away.</param>
+		/// <returns>False when the wait was abandoned; do not render then.</returns>
+		public bool EnterRenderDeviceGate(string who, Func<bool> shouldAbort, bool isProductionRender = false, Action onWaitStart = null)
+		{
+			if (isProductionRender) Interlocked.Increment(ref productionRendersWaiting);
+			try
+			{
+				bool waited = false;
+				while (true)
+				{
+					// Opening a document can queue a minute of previews; let a waiting
+					// production render go first rather than wait them all out.
+					bool standAside = !isProductionRender && Volatile.Read(ref productionRendersWaiting) > 0;
+					if (!standAside && Monitor.TryEnter(renderDeviceGate, 50)) break;
+					if (standAside) Thread.Sleep(50);
+
+					if (shuttingDown || (shouldAbort?.Invoke() ?? false))
+					{
+						AddLogString(String.Format("EnterRenderDeviceGate: {0} gave up waiting for the render device", who));
+						return false;
+					}
+					if (!waited)
+					{
+						AddLogString(String.Format("EnterRenderDeviceGate: {0} waiting for the render device", who));
+						waited = true;
+						onWaitStart?.Invoke();
+					}
+				}
+			}
+			finally
+			{
+				if (isProductionRender) Interlocked.Decrement(ref productionRendersWaiting);
+			}
+			AddLogStringIfVerbose(String.Format("EnterRenderDeviceGate: {0} has the render device", who));
+			return true;
+		}
+
+		/// <summary>
+		/// Release the render device taken with <see cref="EnterRenderDeviceGate"/>.
+		/// </summary>
+		public void ExitRenderDeviceGate(string who)
+		{
+			AddLogStringIfVerbose(String.Format("ExitRenderDeviceGate: {0} released the render device", who));
+			Monitor.Exit(renderDeviceGate);
+		}
+
+		/// <summary>
 		/// lock object for access to gpuDevicesReadiness
 		/// </summary>
 		private readonly object accessGpuKernelDevicesReadiness = new object();
@@ -367,7 +488,7 @@ namespace RhinoCyclesCore.Core
 		/// </summary>
 		List<(DeviceAndPath DeviceAndPath, bool IsReady)> gpuDevicesReadiness = new List<(DeviceAndPath, bool)>();
 		/// <summary>
-		/// List of SHA256 hashes created from device.NiceName + driver date + rhino app version.
+		/// List of SHA256 hashes created from device.Name + driver date + rhino app version.
 		/// The names are used to create a file with that name when the OpenCL compilation
 		/// has finished successfully.
 		/// </summary>
@@ -526,10 +647,11 @@ namespace RhinoCyclesCore.Core
 			{
 				if (gpudev.DeviceName.Contains(device.NiceName) || device.NiceName.Contains(gpudev.DeviceName))
 				{
+					// Keyed on device.Name (Cycles' id string), not NiceName: a display-name change must not force a recompile.
 					using (SHA256 sha = SHA256.Create())
 					{
 						var hash = sha.ComputeHash(
-							buffer: Encoding.UTF8.GetBytes(s: $"{device.NiceName}{gpudev.DriverDate}{RhinoApp.Version}")
+							buffer: Encoding.UTF8.GetBytes(s: $"{device.Name}{gpudev.DriverDate}{RhinoApp.Version}")
 						);
 
 						info = Path.Combine(
@@ -544,7 +666,7 @@ namespace RhinoCyclesCore.Core
 					using (SHA256 sha = SHA256.Create())
 					{
 						var hash = sha.ComputeHash(
-							buffer: Encoding.UTF8.GetBytes($"{device.NiceName}{RhinoApp.Version}")
+							buffer: Encoding.UTF8.GetBytes($"{device.Name}{RhinoApp.Version}")
 						);
 
 						info = Path.Combine(
@@ -635,15 +757,55 @@ namespace RhinoCyclesCore.Core
 		}
 
 		/// <summary>
+		/// What a locally built Cycles lacks for this machine's GPUs, from the notes
+		/// build_cycles.ps1 leaves beside ccycles.dll. Published payloads carry none.
+		/// </summary>
+		private static void AppendBuildNotes(StringBuilder sb)
+		{
+			List<string> notes;
+			try
+			{
+				string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "ccycles_build_notes.txt");
+				if (!File.Exists(path)) return;
+				notes = SplitLogLines(File.ReadAllText(path));
+			}
+			catch (Exception) { return; }
+			if (notes.Count == 0) return;
+
+			sb.AppendLine("--- This Cycles build ---");
+			foreach (string line in notes) sb.AppendLine($"  {line}");
+			sb.AppendLine();
+		}
+
+		/// <summary>
+		/// A backend that came up with no devices for a reason the user can fix, such as an NVIDIA
+		/// driver too old for OptiX. Not a failure, so it never shows in the error log. RH-98331.
+		/// </summary>
+		private static void AppendDeviceNotes(StringBuilder sb)
+		{
+			string optix = Utilities.OptixUnavailableNote;
+			if (optix.Length == 0) return;
+
+			sb.AppendLine("--- OptiX ---");
+			sb.AppendLine($"  {optix}");
+			sb.AppendLine();
+		}
+
+		/// <summary>
 		/// Compile log grouped one GPU at a time, with errors collected at the end.
 		/// </summary>
 		public string GetFormattedCompileLog()
 		{
 			SetCompileLog();
 
+			StringBuilder sb = new StringBuilder();
+			AppendBuildNotes(sb);
+			AppendDeviceNotes(sb);
+
 			if (CompileStartTime.Equals(DateTime.MinValue))
 			{
-				return Localization.LocalizeString("Kernel compilation not started", 86);
+				sb.Append(Localization.LocalizeString("Kernel compilation not started", 86));
+				return sb.ToString();
 			}
 
 			List<string> general = new List<string>();
@@ -683,7 +845,6 @@ namespace RhinoCyclesCore.Core
 			general.AddRange(DedupeLines(from l in stdErrLines where InformationalLine.IsMatch(l) select l));
 			List<string> errors = DedupeLines(from l in stdErrLines where !InformationalLine.IsMatch(l) select l);
 
-			StringBuilder sb = new StringBuilder();
 			sb.AppendLine(Localization.LocalizeString("COMPILER OUTPUT", 82));
 			sb.AppendLine($"{Localization.LocalizeString("Compile start time", 84)}: {CompileStartTime}");
 			if (CompileEndTime.Equals(DateTime.MinValue))
@@ -850,6 +1011,17 @@ namespace RhinoCyclesCore.Core
 				compileStdErr.Enqueue(deviceListingException.ToString());
 				CompileProcessError = true;
 			}
+
+			// Without the compiler each device group fails with a bare Win32Exception; say what is wrong instead.
+			string compiler = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+				"RhinoCyclesKernelCompiler" + (HostUtils.RunningOnWindows ? ".exe" : ".dll"));
+			if (deviceListings.Any(listing => listing.Count > 0) && !File.Exists(compiler))
+			{
+				compileStdErr.Enqueue(string.Format(LOC.STR("{0} is missing, so no GPU kernels can be compiled. In a developer build, Rebuild the RhinoCyclesKernelCompiler project."), compiler));
+				CompileProcessError = true;
+				deviceListings.Clear();
+			}
+
 			foreach (List<Device> deviceListing in deviceListings)
 			{
 				if (deviceListing.Count == 0) continue;
@@ -1086,6 +1258,10 @@ namespace RhinoCyclesCore.Core
 		public void PurgeOldLogs(bool overrideRetentionSetting)
 		{
 			IEnumerable<string> entries = Directory.EnumerateFiles(DataUserPath, "RhinoCycles*.log");
+			if (Directory.Exists(ShaderGraphPath))
+			{
+				entries = entries.Concat(Directory.EnumerateFiles(ShaderGraphPath, "*.dot"));
+			}
 			foreach(string entry in entries)
 			{
 				if (File.Exists(entry)) {

@@ -62,7 +62,7 @@ namespace RhinoCyclesCore.Materials
 			HandleTexturedValue(_Frost, Frost);
 			Utilities.HandleRenderTexture(Frost.Texture, FrostTexture, false, false, bitmapConverter, docsrn, Gamma, false, false);
 			HandleTexturedValue(_Ior, Ior);
-			Utilities.HandleRenderTexture(Ior.Texture, ColorTexture, false, false, bitmapConverter, docsrn, Gamma, false, false);
+			Utilities.HandleRenderTexture(Ior.Texture, IorTexture, false, false, bitmapConverter, docsrn, Gamma, false, false);
 		}
 
 		protected override void OnAddUserInterfaceSections()
@@ -103,8 +103,10 @@ namespace RhinoCyclesCore.Materials
 
 			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, glass.ins.BaseColor.ToList(), false, Gamma, false, false, null);
 			Utilities.PbrGraphForSlot(sh, Color, ColorTexture, transp.ins.Color.ToList(), false, Gamma, false, false, null);
-			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.TransmissionRoughness.ToList(), false, Gamma, true, false, null);
-			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.IOR.ToList(), false, Gamma, true, false, null);
+			/* Frost is the roughness. 4.x has no Transmission Roughness: the transmission
+			 * lobe uses the main Roughness, and nothing else here writes it. */
+			Utilities.PbrGraphForSlot(sh, Frost, FrostTexture, glass.ins.Roughness.ToList(), false, Gamma, true, false, null);
+			Utilities.PbrGraphForSlot(sh, Ior, IorTexture, glass.ins.IOR.ToList(), false, Gamma, true, false, null);
 
 			transp.outs.BSDF.Connect(mix.ins.Closure2);
 			glass.outs.BSDF.Connect(mix.ins.Closure1);

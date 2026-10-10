@@ -566,7 +566,11 @@ namespace RhinoCycles.Viewport
 
 			if(_cycles.IsFallbackRenderDevice) {
 				var originalDevice = RcCore.It.IsDeviceReady(RcCore.It.AllSettings.RenderDevice);
-				if (!originalDevice.isDeviceReady)
+				if (RcCore.It.IsDeviceHung(RcCore.It.AllSettings.RenderDevice))
+				{
+					pn = $"{pn} - {LOC.STR("fallback to CPU, the GPU did not respond")}";
+				}
+				else if (!originalDevice.isDeviceReady)
 				{
 					var fallback = Localization.LocalizeString("fallback to CPU, kernels still compiling", 97);
 					pn = $"{pn} - {fallback}";

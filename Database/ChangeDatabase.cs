@@ -213,7 +213,6 @@ namespace RhinoCyclesCore.Database
 			if (LinearWorkflowHasChanged)
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadGammaChanges entry");
-				//_environmentDatabase.CurrentBackgroundShader?.Reset();
 
 				foreach (var tup in _shaderDatabase.AllShaders)
 				{
@@ -511,22 +510,6 @@ namespace RhinoCyclesCore.Database
 		private readonly Dictionary<Guid, Plane> ClippingPlanes = new Dictionary<Guid, Plane>(16);
 		private bool HasClippingPlaneChanges = false;
 
-		/// <summary>
-		/// RH-98012: clipping plane ids in upload order. The index is the bit in the
-		/// per-object participation mask.
-		/// </summary>
-		private readonly List<Guid> _clippingPlaneOrder = new List<Guid>(16);
-		/// <summary>
-		/// Set when the set of clipping planes or their participation lists changed,
-		/// so every object needs its participation mask recomputed.
-		/// </summary>
-		private bool _clippingPlaneParticipationChanged = false;
-		/// <summary>
-		/// Cycles object id (mesh instance id) to the top level Rhino object id that
-		/// clip participation is resolved for.
-		/// </summary>
-		private readonly ConcurrentDictionary<uint, Guid> _objectRootIds = new ConcurrentDictionary<uint, Guid>();
-
 		protected override void ApplyDynamicClippingPlaneChanges(List<CqClippingPlane> changed)
 		{
 			HandleClippingPlaneChanges(changed, true);
@@ -541,7 +524,6 @@ namespace RhinoCyclesCore.Database
 				HasClippingPlaneChanges = true;
 			}
 			HandleClippingPlaneChanges(addedOrModified, false);
-			_clippingPlaneParticipationChanged = true;
 		}
 
 		private void HandleClippingPlaneChanges(List<CqClippingPlane> addedOrModified, bool isDynamic)
@@ -569,68 +551,14 @@ namespace RhinoCyclesCore.Database
 			{
 				RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneChanges entry");
 				_renderEngine.Session.Scene.ClearClippingPlanes();
-				// RH-98012: the slot order is what the per-object participation mask bits refer to.
-				var previousOrder = new List<Guid>(_clippingPlaneOrder);
-				_clippingPlaneOrder.Clear();
 				foreach (var cp in ClippingPlanes)
 				{
 					var equation = new float4(cp.Value.GetPlaneEquation());
 					var cclcp = new CclClippingPlane(_renderEngine.Session, equation);
-					_clippingPlaneOrder.Add(cp.Key);
-				}
-				if (!_clippingPlaneOrder.SequenceEqual(previousOrder))
-				{
-					_clippingPlaneParticipationChanged = true;
 				}
 				HasClippingPlaneChanges = false;
 				RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneChanges exit");
 			}
-		}
-
-
-		/// <summary>
-		/// RH-98012: build the clipping plane participation mask for a Rhino object.
-		/// Bit i is set when the clipping plane in slot i clips the object.
-		/// </summary>
-		private uint ClippingPlaneMaskFor(Guid objectId, Dictionary<Guid, ClippingPlaneObject> cache)
-		{
-			uint mask = 0;
-			int count = Math.Min(_clippingPlaneOrder.Count, 32);
-			for (int i = 0; i < count; i++)
-			{
-				Guid planeId = _clippingPlaneOrder[i];
-				if (!cache.TryGetValue(planeId, out ClippingPlaneObject cpo))
-				{
-					cpo = RhinoDoc.FromRuntimeSerialNumber(_doc_serialnr)?.Objects.FindId(planeId) as ClippingPlaneObject;
-					cache[planeId] = cpo;
-				}
-				// unknown clipping plane object: clip like we always did
-				if (cpo == null || cpo.ObjectParticipates(objectId)) mask |= 1u << i;
-			}
-			return mask;
-		}
-
-		/// <summary>
-		/// Push participation masks for objects already in the Cycles scene. Needed
-		/// when clipping planes or their participation lists changed without the
-		/// objects themselves changing.
-		/// </summary>
-		public void UploadClippingPlaneParticipationChanges()
-		{
-			if (!_clippingPlaneParticipationChanged) return;
-			_clippingPlaneParticipationChanged = false;
-			if (_clippingPlaneOrder.Count == 0) return;
-
-			RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneParticipationChanges entry");
-			var cache = new Dictionary<Guid, ClippingPlaneObject>();
-			foreach (var kv in _objectRootIds)
-			{
-				var cob = _objectDatabase.FindObjectRelation(kv.Key);
-				if (cob == null) continue;
-				cob.ClippingPlaneMask = ClippingPlaneMaskFor(kv.Value, cache);
-				cob.TagUpdate();
-			}
-			RcCore.It.AddLogStringIfVerbose("\tUploadClippingPlaneParticipationChanges exit");
 		}
 
 		/// <summary>
@@ -734,8 +662,7 @@ namespace RhinoCyclesCore.Database
 			scene.Camera.ApertureRatio = ApertureRatio;
 			scene.Camera.Blades = Blades;
 
-			//scene.Camera.NearClip = (float)view.Near;
-			scene.Camera.FarClip = (float)view.Far; // 1.0E+14f; // gp_side_extension;
+			scene.Camera.FarClip = (float)view.Far;
 			if (view.Projection == CameraType.Orthographic || view.TwoPoint) scene.Camera.SetViewPlane(view.Viewplane.Left, view.Viewplane.Right, view.Viewplane.Top, view.Viewplane.Bottom);
 			else if(view.Projection == CameraType.Perspective) scene.Camera.ComputeAutoViewPlane();
 
@@ -1298,27 +1225,45 @@ namespace RhinoCyclesCore.Database
 		private float gpJiggleFactor => RcCore.It.AllSettings.GpJiggleDistance;
 
 		/// <summary>
+		/// Id of the object a mesh instance comes from, the same in every render (RDK makes
+		/// MeshId and InstanceId new each time). RootId is shared inside a block, so the
+		/// ancestry and leaf object id are folded in; previews have no attributes and use MeshId.
+		/// Reads native change queue data, so call it serially (see RH-97099).
+		/// </summary>
+		private static uint StableObjectId(MeshInstance a)
+		{
+			using (var attributes = a.ObjectAttributes)
+			{
+				if (attributes == null || a.RootId == Guid.Empty)
+					return RhinoMath.CRC32(0, a.MeshId.ToByteArray());
+
+				var crc = RhinoMath.CRC32(0, a.RootId.ToByteArray());
+				foreach (var record in a.Ancestry)
+				{
+					crc = RhinoMath.CRC32(crc, record.ReferenceId.ToByteArray());
+				}
+				return RhinoMath.CRC32(crc, attributes.ObjectId.ToByteArray());
+			}
+		}
+
+		/// <summary>
 		/// Create a jiggled transform of the MeshInstance transform.
 		///
-		/// The jiggle vector comes from the persistent RootId: MeshId is a fresh
-		/// GUID every render, which made each render jiggle differently. RH-83881.
+		/// The jiggle vector comes from the stable object id, so an object moves the same
+		/// way in every render, and all meshes of one object move together.
 		/// </summary>
 		/// <param name="a">MeshInstance to create jiggled transform for</param>
+		/// <param name="stableId">StableObjectId of the MeshInstance</param>
 		/// <returns>Transform with jiggle translation applied</returns>
-		private Rhino.Geometry.Transform Jiggle(MeshInstance a)
+		private Rhino.Geometry.Transform Jiggle(MeshInstance a, uint stableId)
 		{
 			var objectXform = a.Transform;
 			RcCore.It.AddLogStringIfVerbose($"\tJiggle: {objectXform}");
-			var p = (a.RootId != Guid.Empty ? a.RootId : a.MeshId).ToByteArray();
-			long l0 = BitConverter.ToInt64(p, 0);
-			long l1 = BitConverter.ToInt64(p, 4);
-			long l2 = BitConverter.ToInt64(p, 8);
 
-			float f0 = (float)(l0 / (double)int.MaxValue);
-			float f1 = (float)(l1 / (double)int.MaxValue);
-			float f2 = (float)(l2 / (double)int.MaxValue);
+			// One component in [-1, 1) per axis.
+			float Component(int axis) => (float)(RhinoMath.CRC32(stableId, axis) / (double)uint.MaxValue * 2.0 - 1.0);
 
-			Vector3f jiggleVector = new Vector3f(f0, f1, f2);
+			Vector3f jiggleVector = new Vector3f(Component(0), Component(1), Component(2));
 			jiggleVector.Unitize();
 			jiggleVector *= jiggleFactor;
 
@@ -1380,16 +1325,18 @@ namespace RhinoCyclesCore.Database
 
 			// RH-97099: Decals are native RDK objects, unsafe to enumerate across
 			// threads (double-freed an ON_IntPtrArray). Resolve them serially first,
-			// keep the rest of the per-instance work parallel.
+			// keep the rest of the per-instance work parallel. The stable ids read the
+			// attributes and ancestry, so they are resolved here too.
 			var cyclesDecalsPerInstance = new List<CyclesDecal>[totalmeshes];
+			var stableIdPerInstance = new uint[totalmeshes];
 			for (int i = 0; i < totalmeshes; i++)
 			{
 				if (_renderEngine.ShouldBreak) return;
 				var a = addedOrChanged[i];
 				cyclesDecalsPerInstance[i] = HandleMeshDecals(a.MeshId, a.Decals, a.Transform);
+				stableIdPerInstance[i] = StableObjectId(a);
 			}
 
-			//foreach (var a in addedOrChanged)
 			Parallel.For(0, totalmeshes, i =>
 			{
 				var a = addedOrChanged[i];
@@ -1400,11 +1347,12 @@ namespace RhinoCyclesCore.Database
 #pragma warning disable CS0618
 				var meshid = new Tuple<Guid, int>(a.MeshId, a.MeshIndex);
 				var cyclesDecals = cyclesDecalsPerInstance[i];
+				var stableId = stableIdPerInstance[i];
 
 				var matid = a.MaterialId;
 				var mat = a.RenderMaterial;
 
-				var stat = $"\tHandling mesh instance ({a.InstanceId}). material {mat.Name}. Mesh id {meshid}.";
+				var stat = $"\tHandling mesh instance ({a.InstanceId}). material {mat.Name}. Mesh id {meshid}. Stable id {stableId}.";
 				RcCore.It.AddLogStringIfVerbose(stat);
 
 				if (cyclesDecals != null)
@@ -1428,15 +1376,15 @@ namespace RhinoCyclesCore.Database
 
 				HandleRenderMaterial(mat, matid, cyclesDecals, false);
 
-				//var cutout = _objectDatabase.MeshIsClippingObject(meshid);
 #pragma warning disable CS0618
 				// Cycles does not cope well with coincident surfaces. Therefor it is
 				// important to ever so slightly move around the objects - to jiggle
 				// them.
-				var obxform = _gObTransform * Jiggle(a) ;
+				var obxform = _gObTransform * Jiggle(a, stableId) ;
 				var ob = new CyclesObject
 				{
 					obid = a.InstanceId,
+					StableId = stableId,
 					PassObjectId = a.RootId, // RH-97236: reproducible Object ID pass
 					meshid = meshid,
 					Transform = obxform.ToCyclesTransform(),
@@ -1791,7 +1739,6 @@ namespace RhinoCyclesCore.Database
 					Direction = l.Dir,
 					UseMis = l.UseMis,
 					CastShadow = l.CastShadow,
-					Samples = 1,
 					MaxBounces = 8,
 					SizeU = l.SizeU,
 					SizeV = l.SizeV,
@@ -1838,17 +1785,11 @@ namespace RhinoCyclesCore.Database
 				existingL.CastShadow = l.CastShadow;
 				existingL.SpotAngle = l.SpotAngle;
 				existingL.SpotSmooth = l.SpotSmooth;
-				existingL.Samples = 1;
 				existingL.MaxBounces = 8;
 				existingL.SizeU = l.SizeU;
 				existingL.SizeV = l.SizeV;
 				existingL.AxisU = l.AxisU;
 				existingL.AxisV = l.AxisV;
-
-				if(l.Type == LightType.Distant) {
-						existingL.Samples = (uint)(isGpShadowsOnly ? 1 : 1024);
-						break;
-				}
 				existingL.TagUpdate();
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Lights handled", -1.0f);
@@ -2122,9 +2063,6 @@ namespace RhinoCyclesCore.Database
 
 			RcCore.It.AddLogStringIfVerbose("\tUploadObjectChanges entry");
 
-			// RH-98012: clip participation is resolved per top level Rhino object.
-			var clipParticipationCache = new Dictionary<Guid, ClippingPlaneObject>();
-
 			// first delete objects
 			foreach (var ob in _objectDatabase.DeletedObjects)
 			{
@@ -2190,7 +2128,7 @@ namespace RhinoCyclesCore.Database
 
 				// set mesh reference and other stuff
 				cob.Mesh = mesh;
-				cob.RandomId = ob.randomid;
+				cob.RandomId = ob.StableId ?? ob.obid;
 				cob.PassId = ob.passobid;
 				cob.Transform = ob.Transform;
 				cob.OcsFrame = t;
@@ -2204,8 +2142,8 @@ namespace RhinoCyclesCore.Database
 				}
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				cob.IsSolid = ob.IsSolid;
-				//cob.IsBlockInstance = true;
-				var norefl = PathRay.AllVisibility & ~PathRay.Reflect;
+				/* 5.x has no Reflect visibility; clearing Glossy keeps it out of reflections. */
+				var norefl = PathRay.AllVisibility & ~PathRay.Glossy;
 				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;
 				if (ob.CastShadow == false)
 				{
@@ -2214,15 +2152,8 @@ namespace RhinoCyclesCore.Database
 				cob.MeshLightNoCastShadow = ob.CastNoShadow;
 				cob.Visibility = vis;
 
-				_objectRootIds[ob.obid] = ob.PassObjectId;
-				if (_clippingPlaneOrder.Count > 0)
-				{
-					cob.ClippingPlaneMask = ClippingPlaneMaskFor(ob.PassObjectId, clipParticipationCache);
-				}
-
 				Shader shader = _shaderDatabase.GetShaderFromHash(ob.matid);
 				cob.Shader = shader.Id;
-				//cob.Cutout = false;
 				cob.TagUpdate();
 			}
 			_renderEngine.SetProgress(_renderEngine.RenderWindow, "Objects handled", -1.0f);

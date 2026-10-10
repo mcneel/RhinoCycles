@@ -110,7 +110,7 @@ namespace RhinoCyclesCore
 
 		// For RH-81548 it is important we do not pass on 1.0f in the old !EnabledLights && SkylightEnabled case.
 		// It turns out we can always just return SkyStrength here.
-		public float NonSkyEnvStrengthFactor => SkyStrength; //!EnabledLights && SkylightEnabled ? SkyStrength : 1.0f;
+		public float NonSkyEnvStrengthFactor => SkyStrength;
 
 		/// <summary>
 		/// Hold texture data for skylight
@@ -385,6 +385,9 @@ namespace RhinoCyclesCore
 			catch (Exception e)
 			{
 				RcCore.OutputDebugString($"wallpaper failure: {e.Message}.\n");
+				// OutputDebugString is compiled out without OUTPUTDEBUGSTRINGS; log it too.
+				RcCore.It.AddLogStringIfVerbose("wallpaper failure: "
+					+ e.GetType().Name + ": " + e.Message);
 				Wallpaper.Clear();
 			}
 		}

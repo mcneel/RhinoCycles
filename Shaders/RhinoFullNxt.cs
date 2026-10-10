@@ -115,18 +115,34 @@ namespace RhinoCyclesCore.Shaders
 
 		}
 
+		/// <summary>
+		/// IOR for opaque dielectrics, so 4.x's principled keeps their specular lobe. Cycles'
+		/// default, and 3.5's specular-derived IOR at the default Specular of 0.5.
+		/// </summary>
+		private const float DielectricIor = 1.5f;
+
+		/// <summary>
+		/// Rhino's scalar Specular Tint as the colour 4.x wants: 0 gives white (untinted),
+		/// not black, which would remove the reflection.
+		/// </summary>
+		private static float4 TintToColour(float amount, float4 baseColour)
+		{
+			float t = Math.Max(0.0f, Math.Min(1.0f, amount));
+			return new float4(
+				(1.0f - t) + t * baseColour.x,
+				(1.0f - t) + t * baseColour.y,
+				(1.0f - t) + t * baseColour.z,
+				1.0f);
+		}
+
 		public override Shader GetShader()
 		{
 			if (RcCore.It.AllSettings.DebugSimpleShaders)
 			{
 				AttributeNode attr = new AttributeNode(m_shader, "debug_attr");
 				attr.Attribute = "uvmap1";
-				//RhinoTextureCoordinateNode texco = new RhinoTextureCoordinateNode(m_shader, "debug_texco");
-				//texco.UvMap = "uvmap1";
-				//attr.outs.Vector.Connect(texco.ins.);
 				ccl.ShaderNodes.DiffuseBsdfNode diff = new DiffuseBsdfNode(m_shader, "debug_diff_");
 				diff.ins.Color.Value = new float4(0.8f, 0.6f, 0.5f, 1.0f);
-				//texco.outs.UV.Connect(diff.ins.Color);
 				attr.outs.Vector.Connect(diff.ins.Color);
 				diff.outs.BSDF.Connect(m_shader.Output.ins.Surface);
 			}
@@ -138,8 +154,8 @@ namespace RhinoCyclesCore.Shaders
 			m_shader.WriteDataToNodes();
 			if (RcCore.It.AllSettings.DumpMaterialShaderGraph)
 			{
-				var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-				var graph_path = Path.Combine(home, $"rhinofullnxt_{m_shader.Id}.dot");
+				var dir = Directory.CreateDirectory(RcCore.It.ShaderGraphPath).FullName;
+				var graph_path = Path.Combine(dir, $"rhinofullnxt_{m_shader.Id}.dot");
 				m_shader.DumpGraph(graph_path);
 			}
 			return m_shader;
@@ -748,7 +764,9 @@ namespace RhinoCyclesCore.Shaders
 						principled.outs.BSDF.Connect(coloured_shadow_mix_custom.ins.Closure1);
 					}
 
-					principled.Sss = PrincipledBsdfNode.ScatterMethod.RandomWalk; //SubsurfaceScatteringNode.SssEnumFromInt(RcCore.It.AllSettings.SssMethod);
+					/* 3.5's random walk, which 4.0 renamed random walk (skin); Blender converts
+					 * pre-4.0 files the same way. */
+					principled.Sss = PrincipledBsdfNode.ScatterMethod.RandomWalkSkin;
 
 					var alpha_transp_component = new MathSubtract(m_shader, "alpha_transp_component");
 					alpha_transp_component.ins.Value1.Value = 1.0f;
@@ -789,7 +807,7 @@ namespace RhinoCyclesCore.Shaders
 
 					List<ISocket> colsocks = new()
 					{
-						basewithao.ins.Color1, //principled.ins.BaseColor,
+						basewithao.ins.Color1,
 					};
 					if (coloured_shadow != null)
 					{
@@ -807,7 +825,22 @@ namespace RhinoCyclesCore.Shaders
 						}
 					}
 
-					basewithao.outs.Color.Connect(principled.ins.BaseColor);
+					/* 4.x has no SSS colour. As Blender converts pre-4.0 files: base colour =
+					 * mix(base, SSS colour, amount), Scale = amount, Weight 1 when there is any.
+					 * Unlike Blender the mix is also weighted by 1 - transmission, as 4.x tints
+					 * transmission with the base colour. The inputs are hooked up further down. */
+					var sss_base_color = new MixNode(m_shader, "pbr_sss_base_color_");
+					sss_base_color.BlendType = MixNode.BlendTypes.Blend;
+					sss_base_color.UseClamp = false;
+					basewithao.outs.Color.Connect(sss_base_color.ins.Color1);
+					sss_base_color.outs.Color.Connect(principled.ins.BaseColor);
+					var sss_one_minus_transmission = new MathSubtract(m_shader, "pbr_sss_one_minus_transmission_");
+					sss_one_minus_transmission.UseClamp = true;
+					sss_one_minus_transmission.ins.Value1.Value = 1.0f;
+					var sss_mix_weight = new MathMultiply(m_shader, "pbr_sss_mix_weight_");
+					sss_mix_weight.UseClamp = false;
+					sss_one_minus_transmission.outs.Value.Connect(sss_mix_weight.ins.Value2);
+					sss_mix_weight.outs.Value.Connect(sss_base_color.ins.Fac);
 
 					if (basecoltexAlphaOut != null && part.UseBaseColorTextureAlphaAsObjectAlpha)
 					{
@@ -817,15 +850,75 @@ namespace RhinoCyclesCore.Shaders
 
 					Utilities.PbrGraphForSlot(m_shader, part.PbrMetallic, part.PbrMetallicTexture, principled.ins.Metallic.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecular, part.PbrSpecularTexture, principled.ins.Specular.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, principled.ins.SpecularTint.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture, principled.ins.Roughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					/* The 4.x tint is a colour, white (untinted) by default: mix white towards
+					 * the base colour by Rhino's scalar. An unused slot keeps the default. */
+					if (part.PbrSpecularTint.On)
+					{
+						var spectintmix = new MixNode(m_shader, "pbr_speculartint");
+						spectintmix.ins.Color1.Value = new float4(1f, 1f, 1f, 1f);
+						sss_base_color.outs.Color.Connect(spectintmix.ins.Color2);
+						spectintmix.outs.Color.Connect(principled.ins.SpecularTint);
+						Utilities.PbrGraphForSlot(m_shader, part.PbrSpecularTint, part.PbrSpecularTintTexture, spectintmix.ins.Fac.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					}
+					/* 4.x has no Transmission Roughness, so blend in Rhino's Opacity Roughness:
+					 *   roughness = surface + transmission * (opacity - surface)
+					 * Frosted glass stays frosted, but its reflections blur too. */
+					var roughness_opacity_minus_surface = new MathSubtract(m_shader, "pbr_roughness_opacity_minus_surface_");
+					roughness_opacity_minus_surface.UseClamp = false;
+					var roughness_weighted_by_transmission = new MathMultiply(m_shader, "pbr_roughness_weighted_by_transmission_");
+					roughness_weighted_by_transmission.UseClamp = false;
+					var roughness_effective = new MathAdd(m_shader, "pbr_roughness_effective_");
+					roughness_effective.UseClamp = true;
+					roughness_opacity_minus_surface.outs.Value.Connect(roughness_weighted_by_transmission.ins.Value1);
+					roughness_weighted_by_transmission.outs.Value.Connect(roughness_effective.ins.Value2);
+					roughness_effective.outs.Value.Connect(principled.ins.Roughness);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrRoughness, part.PbrRoughnessTexture,
+						new List<ISocket> { roughness_effective.ins.Value1, roughness_opacity_minus_surface.ins.Value2 },
+						false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSheen, part.PbrSheenTexture, principled.ins.Sheen.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, principled.ins.SheenTint.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, principled.ins.Clearcoat.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.ClearcoatGloss.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, principled.ins.Subsurface.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, principled.ins.SubsurfaceColor.ToList(), false, part.Gamma, false, false, decalProcessingInfo);
+					/* As Specular Tint above. */
+					if (part.PbrSheenTint.On)
+					{
+						var sheentintmix = new MixNode(m_shader, "pbr_sheentint");
+						sheentintmix.ins.Color1.Value = new float4(1f, 1f, 1f, 1f);
+						sss_base_color.outs.Color.Connect(sheentintmix.ins.Color2);
+						sheentintmix.outs.Color.Connect(principled.ins.SheenTint);
+						Utilities.PbrGraphForSlot(m_shader, part.PbrSheenTint, part.PbrSheenTintTexture, sheentintmix.ins.Fac.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					}
+					/* Rhino's clearcoat is Disney's, drawn at 0.25x (PBR_Shading.inc.slang, and 3.5's
+					 * principled); 4.x Coat Weight is unscaled. Blender converts the same way. */
+					var clearcoat_to_coat_weight = new MathMultiply(m_shader, "pbr_clearcoat_to_coat_weight_");
+					clearcoat_to_coat_weight.ins.Value2.Value = 0.25f;
+					clearcoat_to_coat_weight.UseClamp = false;
+					clearcoat_to_coat_weight.outs.Value.Connect(principled.ins.Clearcoat);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoat, part.PbrClearcoatTexture, clearcoat_to_coat_weight.ins.Value1.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrClearcoatRoughness, part.PbrClearcoatRoughnessTexture, principled.ins.CoatRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					// The amount drives Scale and the SSS colour mix; see pbr_sss_base_color above.
+					bool has_subsurface = part.PbrSubsurface.Value > 0.0f ||
+						(part.PbrSubsurface.On && part.PbrSubsurfaceTexture.HasProcedural);
+					principled.ins.Subsurface.Value = has_subsurface ? 1.0f : 0.0f;
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurface, part.PbrSubsurfaceTexture, new List<ISocket> { principled.ins.SubsurfaceScale, sss_mix_weight.ins.Value1 }, false, part.Gamma, true, false, decalProcessingInfo);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceColor, part.PbrSubsurfaceColorTexture, sss_base_color.ins.Color2.ToList(), false, part.Gamma, false, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrSubsurfaceRadius, part.PbrSubsurfaceRadiusTexture, principled.ins.SubsurfaceRadius.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+
+					/* Rhino's IOR is the Opacity IOR, often 1.0 on opaque materials. In 4.x it is
+					 * also the specular lobe's eta, and eta == 1 drops the lobe (closure.h), so
+					 * blend from DielectricIor to the material's IOR by transmission. At 1.5,
+					 * f0 = 0.08 * specular, exactly 3.5's cspec0. */
+					var ior_above_dielectric = new MathSubtract(m_shader, "pbr_ior_above_dielectric_");
+					ior_above_dielectric.ins.Value2.Value = DielectricIor;
+					ior_above_dielectric.UseClamp = false;
+
+					var ior_weighted_by_transmission = new MathMultiply(m_shader, "pbr_ior_weighted_by_transmission_");
+					ior_weighted_by_transmission.UseClamp = false;
+
+					var ior_effective = new MathAdd(m_shader, "pbr_ior_effective_");
+					ior_effective.ins.Value1.Value = DielectricIor;
+					ior_effective.UseClamp = false;
+
+					ior_above_dielectric.outs.Value.Connect(ior_weighted_by_transmission.ins.Value1);
+					ior_weighted_by_transmission.outs.Value.Connect(ior_effective.ins.Value2);
+					ior_effective.outs.Value.Connect(principled.ins.IOR);
 
 					// A decal is a sticker on the object, so a transparent decal material has to
 					// reveal the object underneath rather than refract the scene behind it.
@@ -835,7 +928,13 @@ namespace RhinoCyclesCore.Shaders
 					if (decalProcessingInfo == null)
 					{
 						List<ISocket> transmissionSockets = new() {
-							principled.ins.Transmission
+							principled.ins.Transmission,
+							// How far to follow the opacity roughness; see pbr_roughness_effective above.
+							roughness_weighted_by_transmission.ins.Value2,
+							// How far to follow the material's own IOR; see pbr_ior_effective above.
+							ior_weighted_by_transmission.ins.Value2,
+							// How much of the SSS colour reaches the base colour; see pbr_sss_base_color.
+							sss_one_minus_transmission.ins.Value2
 						};
 						if (coloured_shadow_switch != null)
 						{
@@ -846,13 +945,18 @@ namespace RhinoCyclesCore.Shaders
 					else
 					{
 						principled.ins.Transmission.Value = 0.0f;
+						// Opaque: surface roughness, dielectric IOR and the full SSS colour mix.
+						roughness_weighted_by_transmission.ins.Value2.Value = 0.0f;
+						ior_weighted_by_transmission.ins.Value2.Value = 0.0f;
+						sss_one_minus_transmission.ins.Value2.Value = 0.0f;
 
 						decalAlphaTimesOpacity = new MathMultiply(m_shader, "decal_alpha_times_opacity");
 						Utilities.PbrGraphForSlot(m_shader, part.PbrTransmission, part.PbrTransmissionTexture, decalAlphaTimesOpacity.ins.Value2.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					}
 
-					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, principled.ins.TransmissionRoughness.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
-					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, principled.ins.IOR.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					// Opacity Roughness; see pbr_roughness_effective above.
+					Utilities.PbrGraphForSlot(m_shader, part.PbrTransmissionRoughness, part.PbrTransmissionRoughnessTexture, roughness_opacity_minus_surface.ins.Value1.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
+					Utilities.PbrGraphForSlot(m_shader, part.PbrIor, part.PbrIorTexture, ior_above_dielectric.ins.Value1.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropic, part.PbrAnisotropicTexture, principled.ins.Anisotropic.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 					Utilities.PbrGraphForSlot(m_shader, part.PbrAnisotropicRotation, part.PbrAnisotropicRotationTexture, principled.ins.AnisotropicRotation.ToList(), false, part.Gamma, true, false, decalProcessingInfo);
 
@@ -862,7 +966,9 @@ namespace RhinoCyclesCore.Shaders
 						{
 							var bump = new BumpNode(m_shader, "bump");
 							bump.ins.Strength.Value = Math.Abs(part.PbrBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
-							bump.Invert = part.PbrBump.Amount < 0.0f;
+							/* The socket, not the Invert member: SetSockets runs after
+							 * SetDirectMembers and would overwrite the member with the socket default. */
+							bump.ins.Invert.Value = part.PbrBump.Amount < 0.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 							part.PbrBump.Amount = 1.0f;
 							Utilities.GraphForSlot(m_shader, null, part.PbrBump.On, part.PbrBump.Amount, part.PbrBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
@@ -879,7 +985,8 @@ namespace RhinoCyclesCore.Shaders
 						{
 							var bump = new BumpNode(m_shader, "clearcoat_bump");
 							bump.ins.Strength.Value = Math.Abs(part.PbrClearcoatBump.Amount) * RcCore.It.AllSettings.BumpStrengthFactor * DisplayBumpMatchFactor;
-							bump.Invert = part.PbrClearcoatBump.Amount < 0.0f;
+							/* Same member/socket clash as the base bump above. */
+							bump.ins.Invert.Value = part.PbrClearcoatBump.Amount < 0.0f;
 							part.PbrClearcoatBump.Amount = 1.0f;
 							bump.ins.Distance.Value = RcCore.It.AllSettings.BumpDistance;
 							Utilities.GraphForSlot(m_shader, null, part.PbrClearcoatBump.On, part.PbrClearcoatBump.Amount, part.PbrClearcoatBumpTexture, bump.ins.Height.ToList(), true, false, false, true, part.Gamma, false, decalProcessingInfo);
@@ -1208,21 +1315,32 @@ namespace RhinoCyclesCore.Shaders
 					var principledbsdf117 = new PrincipledBsdfNode(m_shader, "principledbsdf_");
 					principledbsdf117.ins.Subsurface.Value = 0f;
 					principledbsdf117.ins.SubsurfaceRadius.Value = new float4(0f, 0f, 0f, 1f);
-					principledbsdf117.ins.SubsurfaceColor.Value = new float4(0.5019608f, 0.5019608f, 0.5019608f, 1f);
 					principledbsdf117.ins.Metallic.Value = part.Metallic;
 					principledbsdf117.ins.Specular.Value = part.Specular;
-					principledbsdf117.ins.SpecularTint.Value = part.SpecularTint;
-					principledbsdf117.ins.Roughness.Value = part.ReflectionRoughness;
+					/* 4.x Specular Tint is a colour; see TintToColour. */
+					principledbsdf117.ins.SpecularTint.Value = TintToColour(part.SpecularTint, part.BaseColor);
+					/* 4.x has no Transmission Roughness: blend refraction into reflection
+					 * roughness by transparency, as pbr_roughness_effective does. */
+					principledbsdf117.ins.Roughness.Value =
+						part.ReflectionRoughness + transparency * (part.RefractionRoughness - part.ReflectionRoughness);
 					principledbsdf117.ins.Anisotropic.Value = 0f;
 					principledbsdf117.ins.AnisotropicRotation.Value = 0f;
-					principledbsdf117.ins.Sheen.Value = part.Sheen;
-					principledbsdf117.ins.SheenTint.Value = part.SheenTint;
-					principledbsdf117.ins.Clearcoat.Value = part.ClearCoat;
-					principledbsdf117.ins.ClearcoatGloss.Value = part.Gloss;
-					principledbsdf117.ins.IOR.Value = part.IOR;
+					/* Custom materials have no sheen; 4.x puts sheen on top, so deriving one from
+					 * Reflectivity lays a white film over polished materials. */
+					principledbsdf117.ins.Sheen.Value = 0.0f;
+					/* 3.5's Clearcoat was scaled by 0.25 inside the BSDF; 4.x Coat Weight is
+					 * not, so apply it here, as the PBR path does. */
+					principledbsdf117.ins.Clearcoat.Value = 0.25f * part.ClearCoat;
+					/* Gloss is ReflectionGlossiness, already a roughness (0 is perfectly specular,
+					 * see ON_Material::m_reflection_glossiness). Flipping it puts a milky coat on
+					 * the most polished materials. */
+					principledbsdf117.ins.CoatRoughness.Value = part.Gloss;
+					/* As pbr_ior_effective, in C# since these are plain floats: at IOR 1 an opaque
+					 * custom material would lose its specular lobe. */
+					principledbsdf117.ins.IOR.Value =
+						DielectricIor + transparency * (part.IOR - DielectricIor);
 					principledbsdf117.ins.EmissionStrength.Value = 0.0f;
 					principledbsdf117.ins.Transmission.Value = transparency;
-					principledbsdf117.ins.TransmissionRoughness.Value = part.RefractionRoughness;
 					principledbsdf117.ins.Tangent.Value = new float4(0f, 0f, 0f, 1f);
 
 					var custom_environment_blend195 = new MixClosureNode(m_shader, "custom_environment_blend_principled_");
@@ -1275,9 +1393,6 @@ namespace RhinoCyclesCore.Shaders
 					reflection_factor98.outs.R.Connect(diffuse_plus_glossy101.ins.Fac);
 					shadeless96.outs.Closure.Connect(blend_in_transparency102.ins.Closure1);
 					refraction100.outs.BSDF.Connect(blend_in_transparency102.ins.Closure2);
-					//texcoord84.outs.EnvEmap.Connect(separate_envmap_texco103.ins.Vector);
-					//recombine_envmap_texco104.outs.Vector.Connect(environment_texture105.ins.Vector);
-					//environment_texture105.outs.Color.Connect(attenuated_environment_color106.ins.Color2);
 					diffuse_plus_glossy101.outs.Closure.Connect(diffuse_glossy_and_refraction107.ins.Closure1);
 					blend_in_transparency102.outs.Closure.Connect(diffuse_glossy_and_refraction107.ins.Closure2);
 					attenuated_environment_color106.outs.Color.Connect(environment_map_diffuse108.ins.Color);
@@ -1300,7 +1415,6 @@ namespace RhinoCyclesCore.Shaders
 					invert_luminence79.outs.Value.Connect(transparency_texture_amount80.ins.Value1);
 					invert_alpha70.outs.Value.Connect(toggle_diffuse_texture_alpha_usage81.ins.Value1);
 					transparency_texture_amount80.outs.Value.Connect(toggle_transparency_texture82.ins.Value2);
-					// either this or pbr into here, check which is better... coloured_shadow_mix_custom114.outs.Closure.Connect(add_emission_to_final124.ins.Closure1);
 					coloured_shadow_mix_glass_principled118.outs.Closure.Connect(add_emission_to_final124.ins.Closure1);
 					diffuse_or_shadeless_emission126.outs.Closure.Connect(add_emission_to_final124.ins.Closure2);
 					toggle_diffuse_texture_alpha_usage81.outs.Value.Connect(add_diffuse_texture_alpha83.ins.Value1);
@@ -1338,7 +1452,6 @@ namespace RhinoCyclesCore.Shaders
 
 					if (part.DiffuseTexture.HasProcedural)
 					{
-						//Rhino.RhinoApp.OutputDebugString($"{m_codeshader.Code}\n");
 						if (part.DiffuseTexture.Procedural is BitmapTextureProcedural bmtp)
 						{
 							useAlpha = part.DiffuseTexture.UseAlphaAsFloat;

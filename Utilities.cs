@@ -251,7 +251,7 @@ namespace RhinoCyclesCore
 				} else {
 					SimulatedTexture simtex = rt.SimulatedTexture(RenderTexture.TextureGeneration.Allow);
 					RhinoDoc doc = rt.DocumentAssoc;
-					fs = simtex.Filename; //Rhino.Render.Utilities.FindFile(doc, simtex.Filename, true);
+					fs = simtex.Filename;
 				}
 
 				tex.IsNormalMap = rt.IsNormalMap();
@@ -576,7 +576,6 @@ namespace RhinoCyclesCore
 			return HostUtils.GetSystemProcessorCount();
 		}
 
-		//public static readonly PlugIn RcPlugIn = Rhino.PlugIns.PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"));
 		public static readonly Rhino.PlugIns.PlugIn RcPlugIn = Rhino.PlugIns.PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"));
 
 		private static string _DisableGpusFile {
@@ -658,6 +657,45 @@ namespace RhinoCyclesCore
 					return File.Exists(f) ? File.ReadAllText(f).TrimEnd() : string.Empty;
 				}
 				catch (Exception ex) { return "<could not read: " + ex.GetType().Name + ">"; }
+			}
+		}
+
+		/// <summary>
+		/// The cards the no-GPU-offered record names, for the UI; empty if there are none.
+		/// </summary>
+		public static string GpuAbsentNames
+		{
+			get
+			{
+				if (!File.Exists(_GpuAbsentFile)) return string.Empty;
+				var names = _RecordField(_GpuAbsentFile, "systemgpus=");
+				return names == _OneLine(null) ? string.Empty : names;
+			}
+		}
+
+		/// <summary>
+		/// Why OptiX is missing while CUDA renders, e.g. a driver too old for the OptiX SDK, for the
+		/// device page and compile log. Empty when OptiX is fine or there is no NVIDIA GPU. RH-98331.
+		/// </summary>
+		public static string OptixUnavailableNote
+		{
+			get
+			{
+				try
+				{
+					var result = CSycles.optix_init_result();
+					if (result == OptixInitResult.Ok || !Device.Devices.Any(d => d.IsCuda)) return string.Empty;
+					if (result == OptixInitResult.Failed)
+					{
+						return Rhino.UI.LOC.STR("OptiX failed to start. NVIDIA GPUs render with CUDA.");
+					}
+					int driver = CSycles.optix_minimum_driver();
+					return driver > 0
+						? string.Format(Rhino.UI.LOC.STR("OptiX needs NVIDIA driver {0} or newer. NVIDIA GPUs render with CUDA until the driver is updated."), driver)
+						: Rhino.UI.LOC.STR("OptiX needs a newer NVIDIA driver. NVIDIA GPUs render with CUDA until the driver is updated.");
+				}
+				// A ccycles.dll from before these exports: say nothing rather than fail.
+				catch (EntryPointNotFoundException) { return string.Empty; }
 			}
 		}
 

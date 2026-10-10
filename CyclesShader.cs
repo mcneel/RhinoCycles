@@ -355,17 +355,8 @@ namespace RhinoCyclesCore
 			shb.TransparencyColor = transp;
 			shb.EmissionColor = emis;
 
-			// In Rhino 7 plaster (through custom material) (also default material
-			// reflection roughness did nothing. Now it does. Set it to 1.0 always
-			// to have it behave the same way as in Rhino 7. RH-77404. jK
-			/*
-			RH-78168 - disabling below code, because it causes 'overexposed'
-			result.
-			if(mattype == ShaderBody.CyclesMaterial.Diffuse)
-			{
-				shb.ReflectionRoughness = 1.0f;
-			}
-			*/
+			// Diffuse materials keep their reflection roughness: forcing it to 1.0 to
+			// behave as in Rhino 7 (RH-77404) overexposed them (RH-78168).
 			if(mattype == ShaderBody.CyclesMaterial.Diffuse)
 			{
 				reflectivity = 0.0f;
@@ -497,11 +488,17 @@ namespace RhinoCyclesCore
 			{
 				// Rhino factors intensity (emission-multiplier) into EmissionColor.
 				// undo that so we can use emission strength as input instead.
+				//
+				// Only when there is a strength: 0/0 is NaN, which poisons the light tree
+				// (Shader::estimate_emission) and renders black.
 				float es = shb.EmissionStrength;
-				float r = emissionColor.R / es;
-				float g = emissionColor.G / es;
-				float b = emissionColor.B / es;
-				shb.PbrEmission.Value = new Color4f(r, g, b, 1.0f);
+				if (es > 0.0f)
+				{
+					float r = emissionColor.R / es;
+					float g = emissionColor.G / es;
+					float b = emissionColor.B / es;
+					shb.PbrEmission.Value = new Color4f(r, g, b, 1.0f);
+				}
 			}
 
 			HandlePbrTexturedProperty(StdCS.PbrMetallic, (float)pbrmat.Metallic, rm, shb.PbrMetallic, shb.PbrMetallicTexture);
@@ -893,8 +890,6 @@ namespace RhinoCyclesCore
 		public float Specular => Reflectivity;
 		public float SpecularTint => ReflectivityInverse;
 		public float ReflectivityInverse => 1.0f - Reflectivity;
-		public float Sheen => Reflectivity;
-		public float SheenTint => ReflectivityInverse;
 		public float ClearCoat => NoMetalic ? Reflectivity : 0.0f;
 		public float ClearCoatGloss => ClearCoat;
 		public float Metallic { get; set; }

@@ -149,18 +149,8 @@ namespace RhinoCyclesCore.Converters
 			}
 
 
-			if (/*renderTexture.IsImageBased() ||*/ simfilename.Length > 0)
+			if (simfilename.Length > 0)
 			{
-				/*Field tf = renderTexture.Fields.GetField("filename");
-				var fs = "";
-				if(tf != null) {
-					var ofs = tf.GetValue<string>();
-					RhinoDoc doc = rm.DocumentAssoc;
-					fs = Rhino.Render.Utilities.FindFile(doc, ofs, true);
-				}
-				*/
-				//fs = string.IsNullOrEmpty(fs) ? simfilename : fs;
-
 				teximg.Filename = string.IsNullOrEmpty(simfilename) ? null : simfilename;
 			} else {
 				Utilities.HandleRenderTexture(renderTexture, teximg, false, false, this, docsrn, gamma, false, true);
@@ -242,7 +232,7 @@ namespace RhinoCyclesCore.Converters
 
 				rhinotfm.M10 = rep.X;
 				rhinotfm.M11 = rep.Y;
-				rhinotfm.M12 = 1.0f; // rep.Z;
+				rhinotfm.M12 = 1.0f;
 
 				rhinotfm.M20 = -alti;
 				rhinotfm.M21 = -Rhino.RhinoMath.ToRadians(rot.Z);

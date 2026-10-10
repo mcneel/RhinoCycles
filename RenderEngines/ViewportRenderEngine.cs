@@ -43,7 +43,6 @@ namespace RhinoCyclesCore.RenderEngines
 			m_logger_callback = ViewportLoggerCallback;
 
 			CSycles.log_to_stdout(false);
-			//CSycles.set_logger(m_logger_callback);
 #endregion
 
 		}
@@ -156,8 +155,6 @@ namespace RhinoCyclesCore.RenderEngines
 			}
 		}
 
-		//bool _firstDone = false;
-
 		/// <summary>
 		/// Event gets fired when the renderer has started.
 		/// </summary>
@@ -228,26 +225,7 @@ Please click the link below for more information.", 69));
 			PEEController.TriggerSample = Math.Min(MaxSamples, eds.TriggerPostEffectsSample);
 
 			#region pick a render device
-#if YES
-			var rd0 = Device.GetDevice(0);
-			var rd1 = Device.GetDevice(1);
-			var rd2 = Device.GetDevice(2);
-			var rd3 = Device.GetDevice(3);
-			var rd4 = Device.GetDevice(4);
-			var rdlist = new List<Device>();
-			//rdlist.Add(rd0);
-			//rdlist.Add(rd1);
-			rdlist.Add(rd1);
-			rdlist.Add(rd2);
-			//rdlist.Add(rd0);
-			//rdlist.Add(rd3);
-			//rdlist.Add(rd4);
-
-			var renderDevice = Device.CreateMultiDevice(rdlist);
-
-#else
 			HandleDevice(eds);
-#endif
 			#endregion
 
 			#region set up session parameters
@@ -270,6 +248,7 @@ Please click the link below for more information.", 69));
 
 			#region create session for scene
 			Session = RcCore.It.CreateSession( sessionParams);
+			FollowSessionDevice(sessionParams);
 			CreateSimpShader();
 			#endregion
 
@@ -374,6 +353,14 @@ Please click the link below for more information.", 69));
 				if (!Finished)
 				{
 					UpdateCallback(Session.Id);
+				}
+
+				// Cycles has stopped scheduling work; no more samples will come (RH-98759).
+				if (HasRenderError)
+				{
+					RcCore.It.AddLogString(String.Format("ViewportRenderEngine.Renderer stopping, render failed: {0}", RenderErrorMessage));
+					CancelRender = true;
+					break;
 				}
 
 				// If we have rendered a new sample
@@ -505,7 +492,6 @@ Please click the link below for more information.", 69));
 				cyclesIntegrator.AdaptiveThreshold = integrator.AdaptiveThreshold;
 				cyclesIntegrator.FilterGlossy = integrator.FilterGlossy;
 				cyclesIntegrator.SampleClampIndirect = integrator.SampleClampIndirect;
-				cyclesIntegrator.ClipAllRays = integrator.ClipAllRays;
 				cyclesIntegrator.TagForUpdate();
 				_needReset = true;
 			}

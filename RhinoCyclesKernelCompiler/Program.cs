@@ -305,6 +305,14 @@ namespace RhinoCyclesKernelCompiler
 			{
 				ProcessStartInfo startInfo = SetupProcessStartInfo(args[0], args[1]);
 				Process cp = Process.Start(startInfo);
+
+				/* Drain both pipes while the child runs: once its output fills the pipe buffer
+				 * it blocks and never exits. (DEBUG only; Release compiles in-process.) */
+				cp.OutputDataReceived += (sender, e) => { if (e.Data != null) Console.WriteLine(e.Data); };
+				cp.ErrorDataReceived += (sender, e) => { if (e.Data != null) Console.Error.WriteLine(e.Data); };
+				cp.BeginOutputReadLine();
+				cp.BeginErrorReadLine();
+
 				while(!cp.HasExited)
 				{
 					if(!parentProcessStillRunning())
@@ -313,8 +321,9 @@ namespace RhinoCyclesKernelCompiler
 					}
 					Thread.Sleep(20);
 				}
-				Console.Write(cp.StandardOutput.ReadToEnd());
-				Console.Error.Write(cp.StandardError.ReadToEnd());
+
+				/* Let the async readers flush what is still buffered. */
+				cp.WaitForExit();
 
 			}
 			else

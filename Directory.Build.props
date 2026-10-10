@@ -1,4 +1,10 @@
 ﻿<Project>
+  <!-- MSBuild stops at the first Directory.Build.props walking up: chain to src4's first, so
+       its tree-wide settings (AccelerateBuildsInVisualStudio=false) still apply. -->
+  <PropertyGroup>
+    <_RhinoParentDirectoryBuildProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))</_RhinoParentDirectoryBuildProps>
+  </PropertyGroup>
+  <Import Project="$(_RhinoParentDirectoryBuildProps)" Condition="'$(_RhinoParentDirectoryBuildProps)' != ''" />
   <PropertyGroup>
 		<!-- Since we have two .csproj's in the same folder we use a separate intermediate path for each -->
 		<!-- Also, be nice to those that compile on multiple OS' with the same source -->

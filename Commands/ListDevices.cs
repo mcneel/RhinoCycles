@@ -17,7 +17,10 @@ limitations under the License.
 using ccl;
 using Rhino;
 using Rhino.Commands;
+using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace RhinoCycles.Commands
 {
@@ -40,6 +43,20 @@ namespace RhinoCycles.Commands
 		{
 			(PlugIn as Plugin)?.InitialiseCSycles();
 
+			// The path and date tell the big_libs payload from a local +Cycles build.
+			RhinoApp.WriteLine($"Cycles {CSycles.version_string()}");
+			var ccyclesPath = Path.Combine(
+				Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+				"ccycles.dll");
+			if (File.Exists(ccyclesPath))
+			{
+				RhinoApp.WriteLine($"	{ccyclesPath}");
+				RhinoApp.WriteLine($"	built {File.GetLastWriteTime(ccyclesPath):yyyy-MM-dd HH:mm}");
+			}
+
+			ReportPayload(Path.GetDirectoryName(ccyclesPath));
+			RhinoApp.WriteLine("----------");
+
 			var numDevices = Device.Count;
 			var endS = numDevices != 1 ? "s" : "";
 			RhinoApp.WriteLine($"We have {numDevices} device{endS}");
@@ -50,6 +67,70 @@ namespace RhinoCycles.Commands
 			}
 			RhinoApp.WriteLine("----------");
 			return Result.Success;
+		}
+
+		/// <summary>
+		/// Report ccycles_payload.json, which publish_payload.ps1 writes beside ccycles.dll.
+		/// </summary>
+		/// <remarks>
+		/// Regular expressions, not a JSON parser: net48 has no System.Text.Json, and a parse
+		/// failure only costs a line.
+		/// </remarks>
+		private static void ReportPayload(string directory)
+		{
+			if (string.IsNullOrEmpty(directory)) return;
+
+			var manifestPath = Path.Combine(directory, "ccycles_payload.json");
+			if (!File.Exists(manifestPath))
+			{
+				// Not an error: older and hand-assembled payloads have none.
+				RhinoApp.WriteLine("	payload   no manifest - cannot say what this payload contains");
+				return;
+			}
+
+			string json;
+			try
+			{
+				json = File.ReadAllText(manifestPath);
+			}
+			catch (IOException)
+			{
+				return;
+			}
+
+			string Scalar(string name)
+			{
+				var m = Regex.Match(json, "\"" + name + "\"\\s*:\\s*\"([^\"]*)\"");
+				return m.Success ? m.Groups[1].Value : null;
+			}
+
+			int Count(string name)
+			{
+				var block = Regex.Match(json, "\"" + name + "\"\\s*:\\s*\\[(.*?)\\]", RegexOptions.Singleline);
+				return block.Success ? Regex.Matches(block.Groups[1].Value, "\"[^\"]+\"").Count : 0;
+			}
+
+			var configuration = Scalar("configuration") ?? "unknown";
+			var built = Scalar("builtUtc");
+			if (built != null && built.Length >= 16) built = built.Substring(0, 16).Replace("T", " ") + " UTC";
+
+			RhinoApp.WriteLine($"	payload   {configuration}{(built != null ? ", built " + built : "")}");
+
+			var commit = Scalar("commit");
+			if (commit != null)
+			{
+				var branch = Scalar("branch");
+				var dirty = Regex.Match(json, "\"dirty\"\\s*:\\s*true").Success;
+				RhinoApp.WriteLine($"	source    {commit}{(branch != null ? " on " + branch : "")}{(dirty ? " (dirty tree - not reproducible from this commit)" : "")}");
+			}
+
+			RhinoApp.WriteLine($"	kernels   {Count("hip")} HIP, {Count("cuda")} CUDA, {Count("optix")} OptiX");
+
+			var hash = Scalar("kernelSourceHash");
+			if (hash != null && hash.Length >= 16)
+			{
+				RhinoApp.WriteLine($"	sources   {hash.Substring(0, 16)}");
+			}
 		}
 	}
 }

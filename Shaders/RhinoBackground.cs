@@ -80,7 +80,6 @@ namespace RhinoCyclesCore.Shaders
 				var mixcol = new MixNode(m_shader, "color_mixer");
 				var mixbgs = new MixClosureNode(m_shader, "mix_bgs");
 				RenderEngine.SetTextureImage(bgenv, m_original_background.BgTexture);
-				//_SetEnvironmentProjection(m_original_background.BgTexture, bgenv);
 				bgenv.Projection = TextureNode.EnvironmentProjection.Equirectangular;
 				var bg = new BackgroundNode(m_shader, "debug_bg_node");
 				var bg2 = new BackgroundNode(m_shader, "debug_bg2_node");
@@ -98,22 +97,6 @@ namespace RhinoCyclesCore.Shaders
 
 				mixbgs.ins.Fac.Value = 0.8f;
 
-				/*
-
-				texco.outs.Generated.Connect(bgAzimuthAltitudeTransformNode.ins.Vector);
-				bgAzimuthAltitudeTransformNode.outs.Vector.Connect(bgenv.ins.Vector);
-
-				bg.outs.Background.Connect(mixbgs.ins.Closure1);
-				bg2.outs.Background.Connect(mixbgs.ins.Closure2);
-
-				lp.outs.IsCameraRay.Connect(mixbgs.ins.Fac);
-
-				bgenv.outs.Color.Connect(mixcol.ins.Color1);
-
-				mixcol.outs.Color.Connect(bg.ins.Color);
-
-				mixbgs.outs.Closure.Connect(m_shader.Output.ins.Surface);
-				*/
 				bg.ins.Strength.Value = 1.0f;
 				bg.outs.Background.Connect(m_shader.Output.ins.Surface);
 				m_shader.WriteDataToNodes();
@@ -430,7 +413,6 @@ namespace RhinoCyclesCore.Shaders
 							VectorSocket texco_out = _IsPlanarProjection(m_original_background.BgTexture) ? _GetTexcoordSocket(m_original_background.BgTexture, texcoord210) : bgAzimuthAltitudeTransformNode.ins.Vector;
 							var envnode = bgProcedural.CreateAndConnectProceduralNode(m_shader, texco_out, bg_color_or_texture259.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
 							_SetEnvironmentProjection(m_original_background.BgTexture, envnode);
-							//bgAzimuthAltitudeTransformNode.outs.Vector.Connect(envnode.ins.Vector);
 							bgAzimuthAltitudeTransformNode.Altitude = m_original_background.BgTexture.Transform.z.x;
 							bgAzimuthAltitudeTransformNode.Azimuth = m_original_background.BgTexture.Transform.z.z;
 						} else {
@@ -462,7 +444,6 @@ namespace RhinoCyclesCore.Shaders
 							VectorSocket texco_out = _IsPlanarProjection(m_original_background.ReflectionTexture) ? _GetTexcoordSocket(m_original_background.BgTexture, texcoord210) : reflAzimuthAltitudeTransformNode.ins.Vector;
 							var envnode = reflProcedural.CreateAndConnectProceduralNode(m_shader, texco_out, refl_color_or_texture260.ins.Color2, parent_alpha_input: null, IsData: true) as EnvironmentTextureNode;
 							_SetEnvironmentProjection(m_original_background.ReflectionTexture, envnode);
-							//reflAzimuthAltitudeTransformNode.outs.Vector.Connect(envnode.ins.Vector);
 							reflAzimuthAltitudeTransformNode.Altitude = m_original_background.ReflectionTexture.Transform.z.x;
 							reflAzimuthAltitudeTransformNode.Azimuth = m_original_background.ReflectionTexture.Transform.z.z;
 						} else {
@@ -530,8 +511,8 @@ namespace RhinoCyclesCore.Shaders
 			m_shader.WriteDataToNodes();
 			if (RcCore.It.AllSettings.DumpEnvironmentShaderGraph)
 			{
-				var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-				var graph_path = System.IO.Path.Combine(home, $"rhinobg_{m_shader.Id}.dot");
+				var dir = System.IO.Directory.CreateDirectory(RcCore.It.ShaderGraphPath).FullName;
+				var graph_path = System.IO.Path.Combine(dir, $"rhinobg_{m_shader.Id}.dot");
 				m_shader.DumpGraph(graph_path);
 			}
 			m_shader.Tag();

@@ -47,7 +47,6 @@ namespace RhinoCyclesCore.RenderEngines
 
 		private void ModalRenderEngineCommonConstruct()
 		{
-			//Client = new Client();
 			State = State.Rendering;
 
 			Database.ViewChanged += MRE_Database_ViewChanged;
@@ -60,7 +59,6 @@ namespace RhinoCyclesCore.RenderEngines
 		}
 		private void MRE_Database_ViewChanged(object sender, Database.ChangeDatabase.ViewChangedEventArgs e)
 		{
-			//ViewCrc = e.Crc;
 		}
 
 		bool capturing = false;
@@ -77,8 +75,39 @@ namespace RhinoCyclesCore.RenderEngines
 
 		/// <summary>
 		/// Entry point for a new render process. This is to be done in a separate thread.
+		///
+		/// Holds the render device, so material previews wait and a running one stops (RH-98759).
 		/// </summary>
 		public void Renderer()
+		{
+			// The wait is usually a blink, but an empty render window looks like a failed start.
+			Action sayWhyWeAreWaiting = () => SetProgress(
+				RenderWindow,
+				LOC.STR("Waiting for material previews to finish..."),
+				-1.0f);
+
+			if (!RcCore.It.EnterRenderDeviceGate("ModalRenderEngine.Renderer", () => ShouldBreak, isProductionRender: true, onWaitStart: sayWhyWeAreWaiting))
+			{
+				RcCore.It.AddLogString("ModalRenderEngine.Renderer did not get the render device, not rendering");
+				State = State.Stopped;
+				CancelRender = true;
+				return;
+			}
+
+			try
+			{
+				RenderOnRenderDevice();
+			}
+			finally
+			{
+				RcCore.It.ExitRenderDeviceGate("ModalRenderEngine.Renderer");
+			}
+		}
+
+		/// <summary>
+		/// The render itself; <see cref="Renderer"/> calls it with the render device held.
+		/// </summary>
+		private void RenderOnRenderDevice()
 		{
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer entry");
 			RcCore.It.StartLogStopwatch("ModalRenderEngine.Renderer entry", RcCore.StopwatchType.Render);
@@ -157,6 +186,7 @@ namespace RhinoCyclesCore.RenderEngines
 			#region create session for scene
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer CreateSession");
 			cyclesEngine.Session = RcCore.It.CreateSession(sessionParams);
+			cyclesEngine.FollowSessionDevice(sessionParams);
 			cyclesEngine.CreateSimpShader();
 			RcCore.It.AddLogString("ModalRenderEngine.Renderer CreateSession done");
 			#endregion
@@ -220,7 +250,7 @@ namespace RhinoCyclesCore.RenderEngines
 				{
 					UpdateCallback(cyclesEngine.Session.Id);
 
-					if (RenderedSamples == -13)
+					if (RenderedSamples == -13 || HasRenderError)
 					{
 						renderSuccess = false;
 						renderError = true;
@@ -280,7 +310,11 @@ namespace RhinoCyclesCore.RenderEngines
 
 			if (renderError)
 			{
-				rw.SetProgress(Localization.LocalizeString("An error occurred while trying to render. The render may be incomplete or not started.", 65), 1.0f);
+				RcCore.It.AddLogString(String.Format("ModalRenderEngine.Renderer failed. {0}", HasRenderError ? RenderErrorMessage : "No error reported by Cycles."));
+				string failureMessage = HasRenderError
+					? String.Format(LOC.STR("The render failed and is incomplete: {0}"), RenderErrorMessage)
+					: Localization.LocalizeString("An error occurred while trying to render. The render may be incomplete or not started.", 65);
+				rw.SetProgress(failureMessage, 1.0f);
 				Action showErrorDialog = () =>
 				{
 					CrashReporterDialog dlg = new CrashReporterDialog(Localization.LocalizeString("Error while rendering", 66), Localization.LocalizeString(

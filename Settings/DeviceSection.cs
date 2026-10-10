@@ -466,7 +466,12 @@ namespace RhinoCyclesCore.Settings
 					// too, or this page silently disagrees with the Notifications panel. RH-98701.
 					bool showNoGpu = !Utilities.GpusDisabled && !showAutoDisabled
 						&& Utilities.GpuAbsentRecord.Length > 0;
-					m_lb_backendsdisabled_message.Visible = showAutoDisabled || showNoGpu;
+					// Driver too old for OptiX: CUDA still renders, so only a note, and only when
+					// nothing more serious is showing. RH-98331.
+					string optixNote = Utilities.GpusDisabled || showAutoDisabled || showNoGpu
+						? string.Empty : Utilities.OptixUnavailableNote;
+					bool showOptixNote = optixNote.Length > 0;
+					m_lb_backendsdisabled_message.Visible = showAutoDisabled || showNoGpu || showOptixNote;
 					m_btn_retrybackends.Visible = showAutoDisabled;
 					if (showAutoDisabled)
 					{
@@ -488,8 +493,17 @@ namespace RhinoCyclesCore.Settings
 					{
 						m_lb_backendsdisabled_message.TextColor = WarningTextColor();
 						m_lb_backendsdisabled_message.Font = Eto.Drawing.SystemFonts.Bold();
-						m_lb_backendsdisabled_message.Text =
-							Localization.LocalizeString("No GPU is available - rendering on the CPU. Update the graphics driver.", 124);
+						// Often a card too old for any backend; see NotifyAboutDisabledGpus.
+						var cards = Utilities.GpuAbsentNames;
+						m_lb_backendsdisabled_message.Text = string.IsNullOrEmpty(cards)
+							? LOC.STR("No GPU is available - rendering on the CPU. The card may be too old, or its driver.")
+							: string.Format(LOC.STR("Rhino Render cannot use {0} - rendering on the CPU. The card may be too old, or its driver."), cards);
+					}
+					else if (showOptixNote)
+					{
+						m_lb_backendsdisabled_message.TextColor = NormalTextColor();
+						m_lb_backendsdisabled_message.Font = Eto.Drawing.SystemFonts.Default();
+						m_lb_backendsdisabled_message.Text = optixNote;
 					}
 					m_btn_recompilekernels.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;
 					m_btn_showcompilelog.Visible = !Utilities.GpusDisabled && Utilities.HasGpus;

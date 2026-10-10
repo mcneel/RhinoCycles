@@ -109,11 +109,5 @@ namespace RhinoCyclesCore.Settings
 			get { return m_eds.SampleClampIndirect; }
 			set { }
 		}
-
-		public bool ClipAllRays
-		{
-			get { return m_eds.IsProductPreset; }
-			set { }
-		}
 	}
 }

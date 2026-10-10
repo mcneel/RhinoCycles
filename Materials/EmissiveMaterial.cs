@@ -45,7 +45,6 @@ namespace RhinoCyclesCore.Materials
 		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.CustomRenderMaterial;
 
 		private float Strength { get; set; }
-		//private Color4f Emission { get; set; }
 		private int Falloff { get; set; }
 		private float Smooth { get; set; }
 		private bool Hide { get; set; }
@@ -55,8 +54,6 @@ namespace RhinoCyclesCore.Materials
 
 		public EmissiveMaterial()
 		{
-			/*Emission = Color4f.White;
-			Fields.Add("emission_color", Color4f.White, "Emissive Color");*/
 			Utilities.TexturedSlot(this, _Emissive, Color4f.White, "Emissive Color");
 			Strength = 1.0f;
 			Fields.Add(_Strength, 1.0f, "Strength");

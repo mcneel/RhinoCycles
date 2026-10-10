@@ -162,7 +162,7 @@
     <ProjectReference Include="..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj" Private="False" ExcludeAssets="all" />
     <ProjectReference Include="..\..\..\..\DotNetSDK\Rhino.UI\Rhino.UI.csproj" Private="False" ExcludeAssets="all" />
     <ProjectReference Include="..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj" Private="False" ExcludeAssets="all" />
-    <ProjectReference Include="..\cycles\csycles\csycles.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\cycles-core\src\csycles\csycles.csproj" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" ExcludeAssets="runtime" PrivateAssets="all" />
@@ -233,22 +233,70 @@
   <ItemGroup>
     <EmbeddedResource Include="Icons\OpenCL.ico" />
   </ItemGroup>
-  <Target Name="PostBuildDebug" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Debug' And '$(OS)' == 'Windows_NT' And '$(RHINOCYCLESDEV)' != '' ">
-    <Exec Command="powershell ../cycles/cycles/build_cycles_for_rhino.ps1 -buildConfig Debug" />
+  <!--
+    Cycles always deploys from big_libs\RhinoCycles\ccycles\win (a +Cycles build installs
+    there first). Most preferred first:
+      local    a narrow build_cycles.ps1 build, while newer than release. Gitignored.
+      debug    Debug only: a Debug+Cycles build, so ccycles can be stepped into. Gitignored.
+      release  the committed payload.
+    A pull touches the committed ccycles.dll, so a newer release beats an old local build.
+  -->
+  <PropertyGroup>
+    <!-- From the project directory, not $(SolutionDir), so every solution gets the same path. -->
+    <CyclesPayloadRoot>$(MSBuildProjectDirectory)\..\..\..\..\..\big_libs\RhinoCycles\ccycles\win</CyclesPayloadRoot>
+  </PropertyGroup>
+
+  <!-- Chosen at run time: at evaluation, ccycles.vcxproj has not installed this build's payload yet. -->
+  <Target Name="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <CyclesPayloadPath>$(CyclesPayloadRoot)\release</CyclesPayloadPath>
+      <CyclesPayloadPath Condition="'$(Configuration)' == 'Debug' And Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')">$(CyclesPayloadRoot)\debug</CyclesPayloadPath>
+
+      <!-- GetLastWriteTime gives 1601 for a missing file, so release needs no Exists guard. -->
+      <CyclesLocalTicks Condition="Exists('$(CyclesPayloadRoot)\local\ccycles.dll')">$([System.IO.File]::GetLastWriteTime('$(CyclesPayloadRoot)\local\ccycles.dll').Ticks)</CyclesLocalTicks>
+      <CyclesReleaseTicks>$([System.IO.File]::GetLastWriteTime('$(CyclesPayloadRoot)\release\ccycles.dll').Ticks)</CyclesReleaseTicks>
+      <CyclesPayloadPath Condition="'$(CyclesLocalTicks)' != '' And $(CyclesLocalTicks) &gt; $(CyclesReleaseTicks)">$(CyclesPayloadRoot)\local</CyclesPayloadPath>
+    </PropertyGroup>
   </Target>
 
-  <Target Name="PostBuildRelease" AfterTargets="PostBuildEvent" Condition="'$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' And '$(RHINOCYCLESDEV)' != '' ">
-    <Exec Command="powershell ../cycles/cycles/build_cycles_for_rhino.ps1 -buildConfig Release" />
-  </Target>
-  <PropertyGroup>
-    <PostBuildEvent Condition="'$(OS)' == 'Windows_NT' And '$(RHINOCYCLESDEV)' == '' ">
-      Copy /Y $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\* $(OutputPath). > NUL
-      rem /MIR so kernels/sources dropped from the build (e.g. an arch no longer built) do not linger and get loaded.
-      robocopy $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\lib $(OutputPath)RhinoCycles\lib /MIR /NJH /NJS /NFL /NDL /NP
+  <!--
+    Runs on every build and the payload is 300+ MB, so robocopy copies only files that
+    differ - not just newer ones, so switching to an older payload replaces ccycles.dll.
+    No /S at the top level: other plug-ins live there. The command is a property because
+    XML folds newlines in an attribute into spaces.
+  -->
+  <Target Name="DeployCyclesPayload" AfterTargets="Build" DependsOnTargets="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <CyclesDeployCommand>
+      rem /R:1 /W:1: a file locked by a running Rhino fails the build instead of retrying for hours.
+      robocopy "$(CyclesPayloadPath)" "$(OutputPath)." /R:1 /W:1 /NJH /NJS /NFL /NDL /NP
       if errorlevel 8 exit /b 1
-      robocopy $(SolutionDir)..\..\big_libs\RhinoCycles\ccycles\win\release\source $(OutputPath)RhinoCycles\source /MIR /NJH /NJS /NFL /NDL /NP
+      rem Build notes belong to one local build: drop them with it.
+      if not exist "$(CyclesPayloadPath)\ccycles_build_notes.txt" if exist "$(OutputPath)ccycles_build_notes.txt" del /Q "$(OutputPath)ccycles_build_notes.txt"
+      rem /MIR so kernels or sources dropped from the payload do not linger and get loaded.
+      robocopy "$(CyclesPayloadPath)\lib" "$(OutputPath)RhinoCycles\lib" /MIR /NJH /NJS /NFL /NDL /NP
+      if errorlevel 8 exit /b 1
+      robocopy "$(CyclesPayloadPath)\source" "$(OutputPath)RhinoCycles\source" /MIR /NJH /NJS /NFL /NDL /NP
       if errorlevel 8 exit /b 1
       exit /b 0
-    </PostBuildEvent>
-  </PropertyGroup>
+      </CyclesDeployCommand>
+    </PropertyGroup>
+    <Exec WorkingDirectory="$(OutDir)" Command="$(CyclesDeployCommand)" />
+  </Target>
+
+  <!--
+    A Message, not a Warning: release Cycles under a Debug Rhino is normal. The
+    no-debug-payload hint is opt-in (RHINOCYCLESDEV), or every Debug build would show it.
+  -->
+  <Target Name="ReportCyclesPayload" AfterTargets="DeployCyclesPayload" DependsOnTargets="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
+    <Message Importance="high" Text="RhinoCycles: deployed Cycles payload from $(CyclesPayloadPath)" />
+
+    <!-- Explains why a local +Cycles build stopped being used after a pull. -->
+    <Message Importance="high"
+             Condition="'$(CyclesLocalTicks)' != '' And $(CyclesLocalTicks) &lt;= $(CyclesReleaseTicks)"
+             Text="RhinoCycles: your local Cycles payload is older than the committed one, so the committed one was used. Rebuild a +Cycles configuration to use yours again." />
+    <Message Importance="high"
+             Condition="'$(Configuration)' == 'Debug' And '$(RHINOCYCLESDEV)' != '' And !Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')"
+             Text="RhinoCycles: no debug Cycles payload in big_libs, so this Debug build uses release Cycles and ccycles cannot be stepped into. Build Debug+Cycles once to produce one." />
+  </Target>
 </Project>
