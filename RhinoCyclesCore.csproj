@@ -235,9 +235,8 @@
   </ItemGroup>
   <!--
     Cycles always deploys from big_libs\RhinoCycles\ccycles\win (a +Cycles build installs
-    there first). Most preferred first:
-      local    a narrow build_cycles.ps1 build, while newer than release. Gitignored.
-      debug    Debug only: a Debug+Cycles build, so ccycles can be stepped into. Gitignored.
+    there first), in every configuration:
+      local    a +Cycles build, while newer than release. Gitignored.
       release  the committed payload.
     A pull touches the committed ccycles.dll, so a newer release beats an old local build.
   -->
@@ -250,7 +249,6 @@
   <Target Name="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
     <PropertyGroup>
       <CyclesPayloadPath>$(CyclesPayloadRoot)\release</CyclesPayloadPath>
-      <CyclesPayloadPath Condition="'$(Configuration)' == 'Debug' And Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')">$(CyclesPayloadRoot)\debug</CyclesPayloadPath>
 
       <!-- GetLastWriteTime gives 1601 for a missing file, so release needs no Exists guard. -->
       <CyclesLocalTicks Condition="Exists('$(CyclesPayloadRoot)\local\ccycles.dll')">$([System.IO.File]::GetLastWriteTime('$(CyclesPayloadRoot)\local\ccycles.dll').Ticks)</CyclesLocalTicks>
@@ -285,8 +283,8 @@
   </Target>
 
   <!--
-    A Message, not a Warning: release Cycles under a Debug Rhino is normal. The
-    no-debug-payload hint is opt-in (RHINOCYCLESDEV), or every Debug build would show it.
+    A Message, not a Warning: the committed Cycles under a Debug Rhino is normal. The
+    no-local-payload hint is opt-in (RHINOCYCLESDEV), or every Debug build would show it.
   -->
   <Target Name="ReportCyclesPayload" AfterTargets="DeployCyclesPayload" DependsOnTargets="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
     <Message Importance="high" Text="RhinoCycles: deployed Cycles payload from $(CyclesPayloadPath)" />
@@ -296,7 +294,7 @@
              Condition="'$(CyclesLocalTicks)' != '' And $(CyclesLocalTicks) &lt;= $(CyclesReleaseTicks)"
              Text="RhinoCycles: your local Cycles payload is older than the committed one, so the committed one was used. Rebuild a +Cycles configuration to use yours again." />
     <Message Importance="high"
-             Condition="'$(Configuration)' == 'Debug' And '$(RHINOCYCLESDEV)' != '' And !Exists('$(CyclesPayloadRoot)\debug\ccycles.dll')"
-             Text="RhinoCycles: no debug Cycles payload in big_libs, so this Debug build uses release Cycles and ccycles cannot be stepped into. Build Debug+Cycles once to produce one." />
+             Condition="'$(Configuration)' == 'Debug' And '$(RHINOCYCLESDEV)' != '' And !Exists('$(CyclesPayloadRoot)\local\ccycles.dll')"
+             Text="RhinoCycles: no local Cycles payload in big_libs, so this Debug build uses the committed Cycles and ccycles cannot be stepped into. Build Debug+Cycles once to produce one." />
   </Target>
 </Project>
