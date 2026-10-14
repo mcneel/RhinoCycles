@@ -286,9 +286,13 @@ namespace RhinoCyclesKernelCompiler
 
 		static int Main(string[] args)
 		{
+			if (args.Length > 0 && args[0] == "--list-devices")
+			{
+				return ListDevices(Array.IndexOf(args, "--trace") > 0);
+			}
 			if (args.Length < 2)
 			{
-				Console.WriteLine("Need kernel and user data paths of RhinoCycles");
+				Console.WriteLine("Need kernel and user data paths of RhinoCycles, or --list-devices [--trace]");
 				return -1;
 			}
 			bool hacky = false;
@@ -341,6 +345,43 @@ namespace RhinoCyclesKernelCompiler
 			}
 		}
 
+		private static void ReportFailedGpus()
+		{
+			DeviceTypeMask failed = CSycles.failed_gpus_mask();
+			foreach (DeviceType t in Enum.GetValues(typeof(DeviceType)))
+			{
+				var bit = (DeviceTypeMask)(1u << (int)t);
+				if ((failed & bit) == 0) continue;
+				Console.Error.WriteLine($"{Vendor(t)} {BackendName(t)} failed to initialise: {CSycles.gpu_init_error(t)}".TrimStart());
+			}
+		}
+
+		/// <summary>
+		/// Support aid: list the render devices Cycles finds, and why a GPU backend failed.
+		/// --trace also logs every SYCL and Level Zero call (Intel GPUs).
+		/// </summary>
+		private static int ListDevices(bool trace)
+		{
+			if (trace)
+			{
+				// Same CRT environment Cycles sets SYCL_DEVICE_FILTER in; read when the SYCL runtime starts.
+				CSycles.putenv("SYCL_PI_TRACE", "-1");
+				CSycles.putenv("ZE_DEBUG", "1");
+			}
+
+			CSycles.path_init(Path.Combine(AppContext.BaseDirectory, "RhinoCycles"), Path.GetTempPath());
+			CSycles.initialise(DeviceTypeMask.All);
+			ReportFailedGpus();
+
+			for (int i = 0; i < Device.Count; i++)
+			{
+				Device device = Device.GetDevice(i);
+				Console.WriteLine($"{i}: {BackendName(device.Type)} | {device.Description} | {device.Name}");
+			}
+
+			return 0;
+		}
+
 		private static int RunCompile(string[] args)
 		{
 			int result = 0;
@@ -354,14 +395,7 @@ namespace RhinoCyclesKernelCompiler
 			Console.WriteLine($"Data path  : {dataUserPath}");
 			CSycles.path_init(kernelPath, dataUserPath);
 			CSycles.initialise(DeviceTypeMask.All);
-
-			DeviceTypeMask failed = CSycles.failed_gpus_mask();
-			foreach (DeviceType t in Enum.GetValues(typeof(DeviceType)))
-			{
-				var bit = (DeviceTypeMask)(1u << (int)t);
-				if ((failed & bit) == 0) continue;
-				Console.Error.WriteLine($"{Vendor(t)} {BackendName(t)} failed to initialise: {CSycles.gpu_init_error(t)}".TrimStart());
-			}
+			ReportFailedGpus();
 
 			SetupTables();
 			Console.WriteLine("Cycles initialized.");
