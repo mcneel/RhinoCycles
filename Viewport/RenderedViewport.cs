@@ -570,6 +570,13 @@ namespace RhinoCycles.Viewport
 				{
 					pn = $"{pn} - {LOC.STR("fallback to CPU, the GPU did not respond")}";
 				}
+				else if (!originalDevice.isDeviceReady && RcCore.It.CompileProcessFinished && RcCore.It.CompileProcessError)
+				{
+					// The compile ended without making the GPU ready, e.g. the compiler crashed. Nothing is
+					// compiling any more, so don't say it is.
+					var error = Localization.LocalizeString("Error compiling kernels, check _RhinoCyclesCompileLog", 98);
+					pn = $"{pn} - {error}";
+				}
 				else if (!originalDevice.isDeviceReady)
 				{
 					var fallback = Localization.LocalizeString("fallback to CPU, kernels still compiling", 97);

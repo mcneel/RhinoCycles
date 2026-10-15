@@ -90,13 +90,16 @@ namespace RhinoCyclesKernelCompiler
 			string compilingSignal = $"{gpuCompileFile}.compiling";
 			if (File.Exists(compilingSignal))
 			{
-				Log("Already compiling in another process.");
-				return;
+				if (!IsStale(compilingSignal))
+				{
+					Log("Already compiling in another process.");
+					return;
+				}
+				Log("The previous compile did not finish (its process is gone). Compiling again.");
 			}
 
-			var fs = File.Create(compilingSignal);
-			fs.Close();
-			fs.Dispose();
+			// The process id lets a later compile tell this one from one that crashed.
+			File.WriteAllText(compilingSignal, Environment.ProcessId.ToString());
 
 			Log("Compile started.");
 
@@ -177,6 +180,45 @@ namespace RhinoCyclesKernelCompiler
 				sw.Stop();
 			}
 
+		}
+
+		// A compile that crashed or was killed leaves its .compiling file behind, and every later compile
+		// of that GPU would then wait for it until Rhino purges the file after 30 minutes. The file holds
+		// the id of the compiling process: it is stale when that process is gone, or when a process with
+		// the same id started after the file was written. A file without an id (from an older compiler)
+		// is left to the purge.
+		static bool IsStale(string compilingSignal)
+		{
+			try
+			{
+				if (!int.TryParse(File.ReadAllText(compilingSignal).Trim(), out int pid))
+					return false;
+
+				using (var process = Process.GetProcessById(pid))
+				{
+					return process.HasExited || process.StartTime > File.GetLastWriteTime(compilingSignal);
+				}
+			}
+			catch (ArgumentException)
+			{
+				return true; // No process with that id.
+			}
+			catch (Exception)
+			{
+				return false;
+			}
+		}
+
+		static bool IsOurs(string compilingSignal)
+		{
+			try
+			{
+				return File.ReadAllText(compilingSignal).Trim() == Environment.ProcessId.ToString();
+			}
+			catch (Exception)
+			{
+				return false;
+			}
 		}
 
 		// Cycles reports a fatal device error by putting the error text in the status (it
@@ -402,8 +444,9 @@ namespace RhinoCyclesKernelCompiler
 				{
 					foreach (var gpuTask in gpuTasks)
 					{
+						// Only our own: another process may still be compiling a GPU we skipped.
 						var compilingFile = $"{gpuTask.Path}.compiling";
-						if (File.Exists(compilingFile))
+						if (File.Exists(compilingFile) && IsOurs(compilingFile))
 						{
 							File.Delete(compilingFile);
 						}
