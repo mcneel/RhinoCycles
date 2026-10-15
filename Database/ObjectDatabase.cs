@@ -32,9 +32,9 @@ namespace RhinoCyclesCore.Database
 		private readonly ConcurrentDictionary<Tuple<Guid, int>, CyclesMesh> _cqMeshChanges = new ();
 		private readonly ConcurrentDictionary<IntPtr, ccl.Transform> _cqMeshOcsFrames = new ();
 		/// <summary>
-		/// Record the planar mapping state.
+		/// Record the planar, spherical or cylindrical mapping per mesh, null if none.
 		/// </summary>
-		private readonly ConcurrentDictionary<IntPtr, Tuple<bool, bool, ccl.Transform>> _cqMeshPlanarUvw = new ();
+		private readonly ConcurrentDictionary<IntPtr, PrimitiveMapping> _cqMeshPrimitiveMappings = new ();
 		/// <summary>
 		/// record mesh removes from cycles
 		/// </summary>
@@ -124,9 +124,9 @@ namespace RhinoCyclesCore.Database
 		public ConcurrentDictionary<IntPtr, ccl.Transform> MeshOcsFrames => _cqMeshOcsFrames;
 
 		/// <summary>
-		/// Get Planar mapping state. Item1 = has-mapping, Item2 = capped, Item3 = transform.
+		/// Get the planar, spherical or cylindrical mapping per mesh, null if none.
 		/// </summary>
-		public ConcurrentDictionary<IntPtr, Tuple<bool, bool, ccl.Transform>> MeshPlanarUvw => _cqMeshPlanarUvw;
+		public ConcurrentDictionary<IntPtr, PrimitiveMapping> MeshPrimitiveMappings => _cqMeshPrimitiveMappings;
 
 		/// <summary>
 		/// Get list of meshes to delete.
@@ -358,11 +358,11 @@ namespace RhinoCyclesCore.Database
 		}
 
 		/// <summary>
-		/// Record the Planar mapping state.
+		/// Record the planar, spherical or cylindrical mapping of a mesh, null if none.
 		/// </summary>
-		public void RecordMeshPlanarUvw(IntPtr meshId, bool hasMapping, bool capped, ccl.Transform xform)
+		public void RecordMeshPrimitiveMapping(IntPtr meshId, PrimitiveMapping mapping)
 		{
-			_cqMeshPlanarUvw[meshId] = Tuple.Create(hasMapping, capped, xform);
+			_cqMeshPrimitiveMappings[meshId] = mapping;
 		}
 	}
 }
