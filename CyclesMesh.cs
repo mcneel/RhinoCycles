@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 **/
+using RhinoCyclesCore.ExtensionMethods;
 using System;
 using System.Collections.Generic;
 
@@ -61,25 +62,9 @@ namespace RhinoCyclesCore
 		public ccl.Transform OcsFrame { get; set; } = ccl.Transform.Identity();
 
 		/// <summary>
-		/// True when the source mesh's instance has a Planar mapping (UV or UVW).
+		/// Planar, spherical or cylindrical mapping of one of the mesh's mapping channels, null if none.
 		/// </summary>
-		public bool HasPlanarUvwMapping { get; set; } = false;
-
-		/// <summary>
-		/// False means that the Z texture coordinate will always be 0.0.
-		/// Only meaningful when <see cref="HasPlanarUvwMapping"/> is true.
-		/// </summary>
-		public bool PlanarUvwCapped { get; set; } = false;
-
-		/// <summary>
-		/// Pre-composed world-to-UVW transform for the Planar mapping on this
-		/// mesh's instance. Composition (applied right-to-left to a world point):
-		///   xform = m_uvw * Translate(0.5, 0.5, 0) * Scale(0.5, 0.5, 1) * m_Pxyz
-		/// Only meaningful when <see cref="HasPlanarUvwMapping"/> is true. The
-		/// W-clamp for Planar UV mode is applied kernel-side based on
-		/// <see cref="PlanarUvwCapped"/>; the C# side does not zero the W row.
-		/// </summary>
-		public ccl.Transform PlanarUvwXform { get; set; } = ccl.Transform.Identity();
+		public PrimitiveMapping PrimitiveMapping { get; set; }
 
 		public void Clear()
 		{
@@ -88,6 +73,78 @@ namespace RhinoCyclesCore
 			this.Uvs = null;
 			this.VertexNormals = null;
 			this.VertexColors = null;
+		}
+	}
+
+	/// <summary>
+	/// A planar, spherical or cylindrical mapping that the Cycles kernel evaluates per
+	/// shading point, like the display does.
+	/// </summary>
+	public class PrimitiveMapping
+	{
+		/// <summary>
+		/// ON_TextureMapping::TYPE value.
+		/// </summary>
+		public int Type { get; private set; }
+		public int Channel { get; private set; }
+		public bool Capped { get; private set; }
+		public bool Divided { get; private set; }
+		/// <summary>
+		/// Object space to mapping primitive space.
+		/// </summary>
+		public ccl.Transform P { get; private set; }
+		public ccl.Transform N { get; private set; }
+		public ccl.Transform Uvw { get; private set; }
+
+		/// <summary>
+		/// Set <paramref name="mapping"/> on <paramref name="ob"/>, or clear it if null.
+		/// </summary>
+		public static void Apply(ccl.Object ob, PrimitiveMapping mapping)
+		{
+			if (mapping == null)
+				ob.ClearPrimitiveMapping();
+			else
+				ob.SetPrimitiveMapping(mapping.Type, mapping.Channel, mapping.Capped, mapping.Divided, mapping.P, mapping.N, mapping.Uvw);
+		}
+
+		/// <summary>
+		/// Null unless <paramref name="mc"/> has a planar, spherical or cylindrical mapping.
+		/// </summary>
+		public static PrimitiveMapping FromMappingChannel(Rhino.Render.ChangeQueue.MappingChannel mc)
+		{
+			var mapping = mc.Mapping;
+			var type = mapping.MappingType;
+			if (type != Rhino.Render.TextureMappingType.PlaneMapping &&
+				type != Rhino.Render.TextureMappingType.CylinderMapping &&
+				type != Rhino.Render.TextureMappingType.SphereMapping)
+				return null;
+
+			// The mesh UVs evaluate the mapping at Local^-1 * P, see ON_Xform::GetMappingXforms.
+			var p = Rhino.Geometry.Transform.Identity;
+			var n = Rhino.Geometry.Transform.Identity;
+			var local = mc.Local;
+			if (!local.IsZero && !local.IsIdentity && local.TryGetInverse(out var localInverse))
+			{
+				p = localInverse;
+				for (int i = 0; i < 3; i++)
+				{
+					for (int j = 0; j < 3; j++)
+					{
+						n[i, j] = local[j, i];
+					}
+				}
+			}
+
+			return new PrimitiveMapping
+			{
+				Type = (int)type,
+				Channel = mc.Channel == 0 ? 1 : mc.Channel,
+				Capped = mapping.Capped,
+				Divided = mapping.TextureSpace == Rhino.Render.TextureSpace.Divided,
+				P = (mapping.PrimitiveTransform * p).ToCyclesTransform(),
+				N = (mapping.NormalTransform * n).ToCyclesTransform(),
+				Uvw = mapping.UvwTransform.ToCyclesTransform(),
+			};
 		}
 	}
 }
