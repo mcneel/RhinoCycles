@@ -735,17 +735,27 @@ namespace RhinoCyclesCore.Core
 		/// <returns></returns>
 		private ProcessStartInfo SetupProcessStartInfo(string compileTaskFile)
 		{
-			AddLogString("RcCore SetupProcessStartInfo entry");
-			Assembly assembly = Assembly.GetExecutingAssembly();
-			string assemblyDirectory = Path.GetDirectoryName(path: assembly.Location);
-			AddLogString($"RcCore SetupProcessStartInfo {assembly.Location}");
-			string programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
 			string argumentsToProgramToRun = $"\"{KernelPath}\" \"{compileTaskFile}\"";
 #if ON_RUNTIME_WIN
 #if DEBUG
 			argumentsToProgramToRun += " inception";
 #endif
 #endif
+			return SetupChildProcessStartInfo(argumentsToProgramToRun);
+		}
+
+		/// <summary>
+		/// Start info for the RhinoCyclesKernelCompiler child with the given command line.
+		/// Shared by the kernel compile run and the out-of-process GPU probe (RH-98895), so both
+		/// get the same executable resolution, the dotnet shim on macOS and the same environment.
+		/// </summary>
+		internal ProcessStartInfo SetupChildProcessStartInfo(string argumentsToProgramToRun)
+		{
+			AddLogString("RcCore SetupProcessStartInfo entry");
+			Assembly assembly = Assembly.GetExecutingAssembly();
+			string assemblyDirectory = Path.GetDirectoryName(path: assembly.Location);
+			AddLogString($"RcCore SetupProcessStartInfo {assembly.Location}");
+			string programToRun = Path.Combine(assemblyDirectory, "RhinoCyclesKernelCompiler");
 
 			if(HostUtils.RunningOnWindows) {
 				programToRun += ".exe";

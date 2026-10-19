@@ -278,7 +278,29 @@ namespace RhinoCycles
 							RcCore.It.AddLogString($"RhinoCycles GPU {retried} was disabled in a different GPU/driver/Rhino environment; trying again");
 						}
 						DeviceTypeMask previouslyDisabled = RhinoCyclesCore.Utilities.DisabledGpus;
-						CSycles.initialise(DeviceTypeMask.All & ~previouslyDisabled);
+						DeviceTypeMask wanted = DeviceTypeMask.All & ~previouslyDisabled;
+
+						// RH-98895: ask a process we can afford to lose first. A driver that takes the
+						// scan down with it - a stack overflow, an abort, a crash on a thread of its own,
+						// a hang - kills the probe instead of Rhino, and we come up without that backend
+						// rather than not coming up at all. Cached per GPU/driver/Rhino environment, so
+						// this is not a second device scan at every start.
+						DeviceTypeMask crashed = RhinoCyclesCore.Utilities.CrashedGpuBackends(wanted);
+						foreach (DeviceType t in Enum.GetValues(typeof(DeviceType)))
+						{
+							var crashedBit = (DeviceTypeMask)(1u << (int)t);
+							if ((crashed & crashedBit) == 0) continue;
+							// Recorded as an ordinary backend failure, so the existing notification, the
+							// options-page message and the Retry GPUs button carry it with no new machinery.
+							bool crashRecorded = RhinoCyclesCore.Utilities.DisableGpu(crashedBit,
+								RhinoCyclesCore.Utilities.GpuProbeWasArmed
+									? "the device probe was armed to fail on purpose with RhinoCyclesDisableGpu, not a real failure"
+									: "the device scan did not survive this backend out of process", crashed);
+							RcCore.It.AddLogString($"RhinoCycles GPU {t} crashed the device probe; skipped{(crashRecorded ? " (recorded)" : "")}");
+						}
+						wanted &= ~crashed;
+
+						CSycles.initialise(wanted);
 
 						DeviceTypeMask failed = CSycles.failed_gpus_mask();
 						foreach (DeviceType t in Enum.GetValues(typeof(DeviceType)))

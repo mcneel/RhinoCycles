@@ -599,6 +599,7 @@ namespace RhinoCyclesCore
 
 		public static void EnableGpus()
 		{
+			ForgetGpuProbe();
 			if(File.Exists(_DisableGpusFile))
 			{
 				File.Delete(_DisableGpusFile);
@@ -681,6 +682,7 @@ namespace RhinoCyclesCore
 		/// <summary>Re-enable only the auto-disabled backends, leaving RhinoCyclesDisableGpu alone.</summary>
 		public static void EnableGpuBackends()
 		{
+			ForgetGpuProbe();
 			foreach (var gpu in AllGpus)
 			{
 				EnableGpu(gpu);
@@ -921,7 +923,7 @@ namespace RhinoCyclesCore
 		/// updated, or Rhino itself is updated. Windows-only detail; on other platforms this
 		/// comes down to the Rhino version.
 		/// </summary>
-		private static string GpuEnvironmentSignature
+		internal static string GpuEnvironmentSignature
 		{
 			get
 			{
@@ -965,6 +967,200 @@ namespace RhinoCyclesCore
 			}
 			return cleared;
 		}
+
+
+		private static string _GpuProbeFile =>
+			Path.Combine(RcPlugIn.SettingsDirectory, "gpu_probe");
+
+		private const string _ProbedKey = "probed=";
+		private const string _CrashedKey = "crashed=";
+
+		private static DeviceTypeMask _AllGpuMask =>
+			_GpuBackends.Aggregate((DeviceTypeMask)0, (mask, b) => mask | b.Mask);
+
+		/// <summary>
+		/// The backends that cannot be scanned in this process without killing it. RH-98895.
+		///
+		/// Cycles catches the ordinary driver failure by itself, per backend. This is for the
+		/// death no catch can see, which today takes Rhino down during startup and leaves nothing
+		/// written behind, so the next start walks into it again. <see cref="GpuProbe"/> finds out
+		/// in a child process we can afford to lose.
+		///
+		/// The verdict is cached against the environment signature: one probe per GPU, driver or
+		/// Rhino change, not one per start. A probe that cannot be run returns nothing and records
+		/// nothing - this must never be the reason someone loses a working GPU.
+		/// </summary>
+		/// <param name="wanted">The backends the scan is about to ask for.</param>
+		/// <returns>The subset of <paramref name="wanted"/> to leave out of the scan.</returns>
+		public static DeviceTypeMask CrashedGpuBackends(DeviceTypeMask wanted)
+		{
+			if ((wanted & _AllGpuMask) == 0) return 0;
+
+			var arming = ArmedGpuProbe;
+			GpuProbeWasArmed = arming.IsArmed;
+
+			var signature = GpuEnvironmentSignature;
+			if (!arming.IsArmed)
+			{
+				var cached = _CachedProbeVerdict(signature, wanted);
+				if (cached.HasValue) return cached.Value;
+			}
+
+			DeviceTypeMask crashed;
+			try
+			{
+				// An armed start passes the marker to every run of this start - the combined scan
+				// and each narrowing run - so one arming describes the whole sequence.
+				crashed = _ProbeForCrashedBackends(wanted, arming.IsArmed ? _ArmedGpuProbeFile : null);
+			}
+			finally
+			{
+				// Spent whatever came of it, so an arming costs one start and never a second one.
+				if (arming.IsArmed) DisarmGpuProbe();
+			}
+			_WriteProbeRecord(signature, wanted, crashed, arming);
+			return crashed;
+		}
+
+		private static DeviceTypeMask _ProbeForCrashedBackends(DeviceTypeMask wanted, string armingFile)
+		{
+			var whole = GpuProbe.Run(wanted, armingFile);
+			RcCore.It.AddLogString($"RhinoCycles GPU probe of {wanted}: {whole.Outcome} - {whole.Detail}");
+			if (!whole.IsCrash) return 0;
+
+			// Something in there kills the process. Out of process, finding out which is a loop over
+			// five masks on a machine that is already broken - and it is the difference between
+			// losing one backend and losing every GPU in the box.
+			DeviceTypeMask crashed = 0;
+			foreach (var (mask, _, name) in _GpuBackends)
+			{
+				if ((wanted & mask) == 0) continue;
+				// CPU rides along: it is what Cycles falls back to and it cannot be the culprit.
+				var one = GpuProbe.Run(DeviceTypeMask.CPU | mask, armingFile);
+				RcCore.It.AddLogString($"RhinoCycles GPU probe of {name}: {one.Outcome} - {one.Detail}");
+				// NotRun means the probe is broken, not the backend. Benefit of the doubt.
+				if (one.IsCrash) crashed |= mask;
+			}
+
+			if (crashed == 0)
+			{
+				// Every backend came back on its own, but the combined scan did not - and the
+				// combined scan is exactly what we are about to run. We cannot say who to blame, so
+				// skip the lot: the same place a crash leaves the user, without the crash.
+				crashed = wanted & _AllGpuMask;
+				RcCore.It.AddLogString("RhinoCycles GPU probe: no single backend reproduced it; skipping every GPU backend");
+			}
+			return crashed;
+		}
+
+		/// <summary>
+		/// The cached verdict, or null when there is no usable one. The probed mask has to match
+		/// too: a verdict about four backends says nothing about a fifth.
+		/// </summary>
+		private static DeviceTypeMask? _CachedProbeVerdict(string signature, DeviceTypeMask wanted)
+		{
+			try
+			{
+				var f = _GpuProbeFile;
+				if (!File.Exists(f)) return null;
+				if (!string.Equals(_RecordedSignature(f), signature, StringComparison.Ordinal)) return null;
+				if (!_TryReadMask(_RecordField(f, _ProbedKey), out DeviceTypeMask probed)) return null;
+				if (probed != wanted) return null;
+				if (!_TryReadMask(_RecordField(f, _CrashedKey), out DeviceTypeMask crashed)) return null;
+				return crashed;
+			}
+			catch (Exception) { return null; }
+		}
+
+		private static void _WriteProbeRecord(string signature, DeviceTypeMask probed, DeviceTypeMask crashed,
+			GpuProbeArming arming)
+		{
+			try
+			{
+				var sb = new StringBuilder();
+				sb.AppendLine(_SignatureKey + signature);
+				sb.AppendLine(_ProbedKey + ((uint)probed).ToString("x8", CultureInfo.InvariantCulture));
+				sb.AppendLine(_CrashedKey + ((uint)crashed).ToString("x8", CultureInfo.InvariantCulture));
+				sb.AppendLine("crashednames=" + string.Join(",", _GpuBackends
+					.Where(b => (crashed & b.Mask) != 0).Select(b => b.Name)));
+				// So a record from a tester's machine cannot be mistaken for a driver problem.
+				if (arming.IsArmed) sb.AppendLine("armed=" + arming.ToString());
+				sb.AppendLine("when=" + DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+				File.WriteAllText(_GpuProbeFile, sb.ToString());
+			}
+			catch (Exception) { }
+		}
+
+		private static bool _TryReadMask(string value, out DeviceTypeMask mask)
+		{
+			mask = 0;
+			if (string.IsNullOrEmpty(value)) return false;
+			if (!uint.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint parsed))
+			{
+				return false;
+			}
+			mask = (DeviceTypeMask)parsed;
+			return true;
+		}
+
+		/// <summary>Drop the probe verdict, so the next start scans for real again.</summary>
+		public static void ForgetGpuProbe()
+		{
+			try { if (File.Exists(_GpuProbeFile)) File.Delete(_GpuProbeFile); } catch (Exception) { }
+		}
+
+		/// <summary>The probe verdict for RhinoCyclesSupportReport, empty when there is none.</summary>
+		public static string GpuProbeRecord
+		{
+			get
+			{
+				try
+				{
+					var f = _GpuProbeFile;
+					return File.Exists(f) ? File.ReadAllText(f).TrimEnd() : string.Empty;
+				}
+				catch (Exception ex) { return "<could not read: " + ex.GetType().Name + ">"; }
+			}
+		}
+
+		// RH-98895 test hook. Everything the probe guards against needs a driver that really kills
+		// the device scan, so the failure half - a probe that dies, one that hangs, the narrowing
+		// loop, the fallback when no single backend reproduces it - is otherwise unreachable.
+		// Arming is deliberately not cleared by the retry paths: it is spent by the next start's
+		// probe, not by someone pressing Retry GPUs.
+		private static string _ArmedGpuProbeFile =>
+			Path.Combine(RcPlugIn.SettingsDirectory, "arm_gpu_probe");
+
+		/// <summary>Make the next start's device probe fail the way <paramref name="arming"/> says.</summary>
+		public static void ArmGpuProbe(GpuProbeArming arming)
+		{
+			try
+			{
+				var settingsDirectory = RcPlugIn.SettingsDirectory;
+				if (!Directory.Exists(settingsDirectory))
+				{
+					Directory.CreateDirectory(settingsDirectory);
+				}
+				File.WriteAllText(_ArmedGpuProbeFile, arming.ToRecord());
+			}
+			catch (Exception) { }
+		}
+
+		/// <summary>Drop an arming that has not been spent yet.</summary>
+		public static void DisarmGpuProbe()
+		{
+			try { if (File.Exists(_ArmedGpuProbeFile)) File.Delete(_ArmedGpuProbeFile); } catch (Exception) { }
+		}
+
+		/// <summary>The arming waiting for the next probe, or not armed.</summary>
+		public static GpuProbeArming ArmedGpuProbe => GpuProbeArming.Read(_ArmedGpuProbeFile);
+
+		/// <summary>
+		/// True when this start's probe was armed to fail. Process lifetime only - what is on the
+		/// disk is gone by the time the backends are recorded, and the records want to say that
+		/// nothing really failed.
+		/// </summary>
+		public static bool GpuProbeWasArmed { get; private set; }
 
 		public static void EnableGpu(DeviceTypeMask gpu)
 		{

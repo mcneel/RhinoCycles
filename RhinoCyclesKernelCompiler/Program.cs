@@ -19,6 +19,8 @@ limitations under the License.
 using System;
 using ccl;
 using RhinoCyclesCore;
+using RhinoCyclesCore.Core;
+using System.Globalization;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Threading;
@@ -290,6 +292,12 @@ namespace RhinoCyclesKernelCompiler
 			{
 				return ListDevices(Array.IndexOf(args, "--trace") > 0);
 			}
+			// RH-98895: the host asks us to scan the GPUs before it dares to, because a driver
+			// that takes the scan down with it can afford to kill this process and not Rhino.
+			if (args.Length > 0 && string.Equals(args[0], GpuProbe.ProbeArgument, StringComparison.Ordinal))
+			{
+				return RunProbe(args);
+			}
 			if (args.Length < 2)
 			{
 				Console.WriteLine("Need kernel and user data paths of RhinoCycles, or --list-devices [--trace]");
@@ -379,6 +387,63 @@ namespace RhinoCyclesKernelCompiler
 				Console.WriteLine($"{i}: {BackendName(device.Type)} | {device.Description} | {device.Name}");
 			}
 
+			return 0;
+		}
+
+		/// <summary>
+		/// Enumerate the GPU backends and say which ones came back, then get out. The result
+		/// line is written after the scan returns, so the host can read its presence as 'the
+		/// scan survived' - whatever the exit code says afterwards. RH-98895.
+		/// </summary>
+		private static int RunProbe(string[] args)
+		{
+			if (args.Length < 3)
+			{
+				Console.Error.WriteLine($"{GpuProbe.ProbeArgument} needs the kernel and user data paths");
+				return -1;
+			}
+
+			string kernelPath = args[1];
+			string dataUserPath = args[2];
+			DeviceTypeMask mask = DeviceTypeMask.All;
+			if (args.Length > 3 &&
+				uint.TryParse(args[3], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint requested))
+			{
+				mask = (DeviceTypeMask)requested;
+			}
+
+			// RH-98895 test hook: a fifth argument names an arming file. Only a host that was armed
+			// on purpose passes one, and an unreadable one reads as not armed, so an ordinary probe
+			// cannot end up here.
+			GpuProbeArming arming = args.Length > 4 ? GpuProbeArming.Read(args[4]) : GpuProbeArming.NotArmed;
+			if (arming.Fires(mask))
+			{
+				// Before path_init, so nothing of Cycles is loaded: what is being tested is the
+				// host's reading of a child that never reports, not anything the scan does.
+				Console.WriteLine($"Armed {arming} - failing instead of scanning {mask}");
+				Console.Out.Flush();
+				if (arming.Mode == GpuProbeArmedMode.Hang)
+				{
+					// What a driver that never returns looks like from outside. The host's timeout
+					// is the only thing that ends this, which is the point.
+					Thread.Sleep(System.Threading.Timeout.Infinite);
+				}
+				// Kill, not Environment.FailFast: FailFast goes through Windows Error Reporting,
+				// which on a machine with a JIT debugger registered can hold the process open on a
+				// dialog - long enough to turn the Died test into a TimedOut one. Kill is immediate
+				// and silent, and dying before the result line is the whole signal the host reads.
+				Process.GetCurrentProcess().Kill();
+			}
+
+			Console.WriteLine($"Probing {mask}");
+			CSycles.path_init(kernelPath, dataUserPath);
+			CSycles.initialise(mask);
+
+			ReportFailedGpus();
+
+			// Last thing out, and the only thing the host needs.
+			Console.WriteLine($"{GpuProbe.ResultPrefix}{(uint)CSycles.failed_gpus_mask():x8}");
+			Console.Out.Flush();
 			return 0;
 		}
 
