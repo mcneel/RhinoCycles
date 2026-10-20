@@ -98,7 +98,6 @@ namespace RhinoCyclesCore
 		public TextureEnvironmentMappingMode EnvProjectionMode { get; set; }
 
 		public int MappingChannel { get; set; } = 0;
-		public bool IsSimulatedProcedural { get; set; } = false; // RH-92750: baked procedural is linear, skip sRGB decode
 		public string GetUvMapForChannel()
 		{
 			var chan = MappingChannel > 0 ? MappingChannel : 1;

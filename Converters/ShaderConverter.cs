@@ -79,7 +79,7 @@ namespace RhinoCyclesCore.Converters
 			if (isComposite && SubtreeNeedsSimulation(render_texture))
 			{
 				// RH-92750: bake composite to bitmap to match the display's simulation.
-				CyclesTextureImage cti = new CyclesTextureImage { IsSimulatedProcedural = true };
+				CyclesTextureImage cti = new CyclesTextureImage();
 				texture_list.Add(cti);
 				procedural = new BitmapTextureProcedural(render_texture, cti, bitmap_converter, docsrn, gamma, true, is_color);
 			}

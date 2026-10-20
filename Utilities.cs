@@ -384,9 +384,9 @@ namespace RhinoCyclesCore
 
 				procedural.CreateAndConnectProceduralNode(sh, uv_output_socket, color_input_node, alphaNodes, IsData);
 
-				// Gamma decode in the shader since the kernel no longer converts (RH-83550),
-				// but only for trees with image content - procedurals are already linear (RH-92750).
-				if (!IsData && teximg.TextureList.Count > 0 && !teximg.TextureList.Any(t => t.IsSimulatedProcedural))
+				// Gamma decode in the shader since the kernel no longer converts (RH-83550).
+				// Procedural colors and baked procedurals are sRGB too, like plain colors.
+				if (!IsData)
 				{
 					gammaNode = new GammaNode(sh, "gamma node for color channel");
 					gammaNode.ins.Gamma.Value = gamma;
