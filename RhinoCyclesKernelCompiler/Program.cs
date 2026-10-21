@@ -292,8 +292,7 @@ namespace RhinoCyclesKernelCompiler
 			{
 				return ListDevices(Array.IndexOf(args, "--trace") > 0);
 			}
-			// RH-98895: the host asks us to scan the GPUs before it dares to, because a driver
-			// that takes the scan down with it can afford to kill this process and not Rhino.
+			// RH-98895: the host scans here first, so a driver that kills the scan kills this process, not Rhino.
 			if (args.Length > 0 && string.Equals(args[0], GpuProbe.ProbeArgument, StringComparison.Ordinal))
 			{
 				return RunProbe(args);
@@ -390,11 +389,7 @@ namespace RhinoCyclesKernelCompiler
 			return 0;
 		}
 
-		/// <summary>
-		/// Enumerate the GPU backends and say which ones came back, then get out. The result
-		/// line is written after the scan returns, so the host can read its presence as 'the
-		/// scan survived' - whatever the exit code says afterwards. RH-98895.
-		/// </summary>
+		/// <summary>RH-98895: scan the GPU backends for the host, then report. The last line is the verdict.</summary>
 		private static int RunProbe(string[] args)
 		{
 			if (args.Length < 3)
@@ -412,26 +407,13 @@ namespace RhinoCyclesKernelCompiler
 				mask = (DeviceTypeMask)requested;
 			}
 
-			// RH-98895 test hook: a fifth argument names an arming file. Only a host that was armed
-			// on purpose passes one, and an unreadable one reads as not armed, so an ordinary probe
-			// cannot end up here.
-			GpuProbeArming arming = args.Length > 4 ? GpuProbeArming.Read(args[4]) : GpuProbeArming.NotArmed;
-			if (arming.Fires(mask))
+			// Test hook, see GpuProbe.TestVariable.
+			if (GpuProbe.TestFires(mask, out bool hang))
 			{
-				// Before path_init, so nothing of Cycles is loaded: what is being tested is the
-				// host's reading of a child that never reports, not anything the scan does.
-				Console.WriteLine($"Armed {arming} - failing instead of scanning {mask}");
+				Console.WriteLine($"{GpuProbe.TestVariable} - failing instead of scanning {mask}");
 				Console.Out.Flush();
-				if (arming.Mode == GpuProbeArmedMode.Hang)
-				{
-					// What a driver that never returns looks like from outside. The host's timeout
-					// is the only thing that ends this, which is the point.
-					Thread.Sleep(System.Threading.Timeout.Infinite);
-				}
-				// Kill, not Environment.FailFast: FailFast goes through Windows Error Reporting,
-				// which on a machine with a JIT debugger registered can hold the process open on a
-				// dialog - long enough to turn the Died test into a TimedOut one. Kill is immediate
-				// and silent, and dying before the result line is the whole signal the host reads.
+				if (hang) Thread.Sleep(System.Threading.Timeout.Infinite);
+				// Kill, not FailFast: Windows Error Reporting can hold a FailFast open long enough to look like a hang.
 				Process.GetCurrentProcess().Kill();
 			}
 
@@ -441,7 +423,6 @@ namespace RhinoCyclesKernelCompiler
 
 			ReportFailedGpus();
 
-			// Last thing out, and the only thing the host needs.
 			Console.WriteLine($"{GpuProbe.ResultPrefix}{(uint)CSycles.failed_gpus_mask():x8}");
 			Console.Out.Flush();
 			return 0;

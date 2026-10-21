@@ -22,148 +22,87 @@ using System.Text;
 
 namespace RhinoCyclesCore.Core
 {
-	/// <summary>What became of a probe run.</summary>
 	public enum GpuProbeOutcome
 	{
-		/// <summary>The probe could not be started at all. Says nothing about the GPUs.</summary>
+		/// <summary>The probe could not be started. Says nothing about the GPUs.</summary>
 		NotRun,
-		/// <summary>The scan ran to the end and reported.</summary>
 		Survived,
-		/// <summary>The probe died before it could report.</summary>
 		Died,
-		/// <summary>The probe was still running when the timeout ran out.</summary>
 		TimedOut,
 	}
 
-	/// <summary>The outcome of one probe run.</summary>
 	public readonly struct GpuProbeResult
 	{
-		public GpuProbeResult(GpuProbeOutcome outcome, DeviceTypeMask probed,
-			DeviceTypeMask failedGpus, string detail)
+		public GpuProbeResult(GpuProbeOutcome outcome, string detail)
 		{
 			Outcome = outcome;
-			Probed = probed;
-			FailedGpus = failedGpus;
 			Detail = detail ?? string.Empty;
 		}
 
 		public GpuProbeOutcome Outcome { get; }
 
-		/// <summary>The backends this run was asked to look at.</summary>
-		public DeviceTypeMask Probed { get; }
-
-		/// <summary>
-		/// The backends that failed but were caught, as Cycles reported them. Only meaningful
-		/// when <see cref="Outcome"/> is <see cref="GpuProbeOutcome.Survived"/>; the host does
-		/// not act on these, because its own scan will see and record them again.
-		/// </summary>
-		public DeviceTypeMask FailedGpus { get; }
-
-		/// <summary>What the probe said, for the log and the support report.</summary>
 		public string Detail { get; }
 
-		/// <summary>True when this run is evidence that the scan kills the process.</summary>
+		/// <summary>True when the scan killed or hung the probe.</summary>
 		public bool IsCrash => Outcome == GpuProbeOutcome.Died || Outcome == GpuProbeOutcome.TimedOut;
 	}
 
 	/// <summary>
-	/// RH-98895: run the Cycles device scan in a throwaway child process before the host runs it
-	/// for real.
-	///
-	/// Cycles already catches the ordinary driver failure - each backend is asked separately and
-	/// on Windows a structured-exception translator turns a driver access violation into an
-	/// exception (see Device::available_devices). What no catch can see is a death that takes the
-	/// process with it: a stack overflow, a driver calling abort, a crash on a thread the driver
-	/// made itself, or a hang. Today that kills Rhino during startup, every start, with nothing
-	/// written down - and the user is left on the forum being told about Safe Mode.
-	///
-	/// So: ask a process we can afford to lose first. The scan already runs out of process in
-	/// RhinoCyclesKernelCompiler, which calls CSycles.initialise itself, so this reuses that
-	/// executable with a --probe argument and the launching, environment and output plumbing in
-	/// <see cref="RcCore.SetupChildProcessStartInfo"/>.
-	///
-	/// A probe costs a second driver load, so <see cref="Utilities.CrashedGpuBackends"/> caches
-	/// the verdict against the GPU/driver/Rhino signature: once per environment, not once per
-	/// start.
+	/// RH-98895: run the Cycles device scan in a RhinoCyclesKernelCompiler child first, so a driver
+	/// that kills or hangs the scan takes down the child instead of Rhino.
 	/// </summary>
 	public static class GpuProbe
 	{
-		/// <summary>First argument that puts RhinoCyclesKernelCompiler into probe mode.</summary>
 		public const string ProbeArgument = "--probe";
 
-		/// <summary>
-		/// The probe's last line of stdout, followed by the failed-GPU mask as eight hex digits.
-		/// Its presence is the whole result: it is written after the scan returns, so a probe
-		/// that printed it got to the end.
-		/// </summary>
+		/// <summary>Written by the child after the scan returns; its presence is the verdict, not the exit code.</summary>
 		public const string ResultPrefix = "rhinocycles-probe-failed-gpus=";
 
 		/// <summary>
-		/// How long a scan may take before we call it hung. Deliberately generous - a cold CUDA
-		/// or OptiX init on a slow machine is seconds, and calling a healthy machine hung would
-		/// cost it its GPUs. Override with RHINOCYCLES_GPU_PROBE_TIMEOUT (seconds) while testing.
+		/// Testing only: crash, hang, crash:CUDA (any backend name) or crash:combined (only when more
+		/// than one GPU backend is probed). Inherited by the child, which fails instead of scanning.
+		/// </summary>
+		public const string TestVariable = "RHINOCYCLES_GPU_PROBE_TEST";
+
+		private const DeviceTypeMask AllGpus =
+			DeviceTypeMask.CUDA | DeviceTypeMask.OPTIX | DeviceTypeMask.HIP | DeviceTypeMask.METAL | DeviceTypeMask.ONEAPI;
+
+		/// <summary>
+		/// A healthy scan takes well under a second; this is what Raytraced may wait on a hanging
+		/// driver (twice: combined, then the singles). RHINOCYCLES_GPU_PROBE_TIMEOUT overrides it (seconds).
 		/// </summary>
 		public static TimeSpan Timeout
 		{
 			get
 			{
-				var seconds = 120;
-				try
+				var fromEnvironment = Environment.GetEnvironmentVariable("RHINOCYCLES_GPU_PROBE_TIMEOUT");
+				if (int.TryParse(fromEnvironment, NumberStyles.Integer, CultureInfo.InvariantCulture, out int seconds) && seconds > 0)
 				{
-					var fromEnvironment = Environment.GetEnvironmentVariable("RHINOCYCLES_GPU_PROBE_TIMEOUT");
-					if (!string.IsNullOrEmpty(fromEnvironment) &&
-						int.TryParse(fromEnvironment, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed) &&
-						parsed > 0)
-					{
-						seconds = parsed;
-					}
+					return TimeSpan.FromSeconds(seconds);
 				}
-				catch (Exception) { }
-				return TimeSpan.FromSeconds(seconds);
+				return TimeSpan.FromSeconds(30);
 			}
 		}
 
-		/// <summary>
-		/// Scan <paramref name="mask"/> in a child process and report what became of it.
-		/// Never throws: a probe that cannot be run is <see cref="GpuProbeOutcome.NotRun"/>,
-		/// which leaves the caller exactly where it was.
-		/// </summary>
-		/// <param name="armingFile">
-		/// RH-98895 test hook: the arming file to hand the child, or null for an ordinary run.
-		/// The child reads the arming out of this same file, so host and child cannot disagree
-		/// about what was armed.
-		/// </param>
-		public static GpuProbeResult Run(DeviceTypeMask mask, string armingFile = null)
+		/// <summary>Scan <paramref name="mask"/> in a child process. Never throws.</summary>
+		public static GpuProbeResult Run(DeviceTypeMask mask)
 		{
 			var arguments = string.Format(CultureInfo.InvariantCulture, "{0} \"{1}\" \"{2}\" {3:x8}",
 				ProbeArgument, RcCore.It.KernelPath, RcCore.It.DataUserPath, (uint)mask);
-			if (!string.IsNullOrEmpty(armingFile))
-			{
-				arguments += string.Format(CultureInfo.InvariantCulture, " \"{0}\"", armingFile);
-			}
 
 			var stdout = new StringBuilder();
 			var stderr = new StringBuilder();
 
 			try
 			{
-				var startInfo = RcCore.It.SetupChildProcessStartInfo(arguments);
-				using (var process = new Process { StartInfo = startInfo })
+				using (var process = new Process { StartInfo = RcCore.It.SetupChildProcessStartInfo(arguments) })
 				{
-					process.OutputDataReceived += (sender, e) =>
-					{
-						if (e.Data == null) return;
-						lock (stdout) { stdout.AppendLine(e.Data); }
-					};
-					process.ErrorDataReceived += (sender, e) =>
-					{
-						if (e.Data == null) return;
-						lock (stderr) { stderr.AppendLine(e.Data); }
-					};
+					process.OutputDataReceived += (sender, e) => { if (e.Data != null) lock (stdout) { stdout.AppendLine(e.Data); } };
+					process.ErrorDataReceived += (sender, e) => { if (e.Data != null) lock (stderr) { stderr.AppendLine(e.Data); } };
 
 					if (!process.Start())
 					{
-						return new GpuProbeResult(GpuProbeOutcome.NotRun, mask, 0, "the probe would not start");
+						return new GpuProbeResult(GpuProbeOutcome.NotRun, "the probe would not start");
 					}
 					process.BeginOutputReadLine();
 					process.BeginErrorReadLine();
@@ -171,59 +110,49 @@ namespace RhinoCyclesCore.Core
 					if (!process.WaitForExit((int)Timeout.TotalMilliseconds))
 					{
 						try { process.Kill(); } catch (Exception) { }
-						return new GpuProbeResult(GpuProbeOutcome.TimedOut, mask, 0,
-							string.Format(CultureInfo.InvariantCulture,
-								"the scan was still running after {0} seconds", (int)Timeout.TotalSeconds));
+						return new GpuProbeResult(GpuProbeOutcome.TimedOut,
+							string.Format(CultureInfo.InvariantCulture, "the scan was still running after {0} seconds", (int)Timeout.TotalSeconds));
 					}
-					// Second wait with no timeout: this is what flushes the async readers, so the
-					// result line is not still in flight when we go looking for it below.
+					// Without a timeout this also flushes the async readers.
 					process.WaitForExit();
 
-					string output;
+					string output, errors;
 					lock (stdout) { output = stdout.ToString(); }
-					string errors;
-					lock (stderr) { errors = stderr.ToString(); }
+					lock (stderr) { errors = stderr.ToString().Trim(); }
 
-					// The result line is the verdict, not the exit code. A broken driver can take
-					// the process down on its way out, after the scan returned and we already
-					// know what we came for.
-					if (_TryReadResult(output, out DeviceTypeMask failed))
+					if (output.Contains(ResultPrefix))
 					{
-						return new GpuProbeResult(GpuProbeOutcome.Survived, mask, failed, errors.Trim());
+						return new GpuProbeResult(GpuProbeOutcome.Survived, errors);
 					}
 
-					var detail = string.Format(CultureInfo.InvariantCulture,
-						"the scan did not report back (exit code {0})", process.ExitCode);
-					if (errors.Trim().Length > 0) detail += "; " + errors.Trim();
-					return new GpuProbeResult(GpuProbeOutcome.Died, mask, 0, detail);
+					var detail = string.Format(CultureInfo.InvariantCulture, "the scan did not report back (exit code {0})", process.ExitCode);
+					if (errors.Length > 0) detail += "; " + errors;
+					return new GpuProbeResult(GpuProbeOutcome.Died, detail);
 				}
 			}
 			catch (Exception ex)
 			{
-				// Could not launch, could not read it back - either way this is not a verdict
-				// on the GPUs, and startup carries on as if the probe did not exist.
-				return new GpuProbeResult(GpuProbeOutcome.NotRun, mask, 0,
-					ex.GetType().Name + ": " + ex.Message);
+				return new GpuProbeResult(GpuProbeOutcome.NotRun, ex.GetType().Name + ": " + ex.Message);
 			}
 		}
 
-		private static bool _TryReadResult(string output, out DeviceTypeMask failed)
+		/// <summary>For the child: whether <see cref="TestVariable"/> asks a probe of <paramref name="mask"/> to fail, and how.</summary>
+		public static bool TestFires(DeviceTypeMask mask, out bool hang)
 		{
-			failed = 0;
-			if (string.IsNullOrEmpty(output)) return false;
-			foreach (var line in output.Split('\n'))
+			hang = false;
+			var test = Environment.GetEnvironmentVariable(TestVariable);
+			if (string.IsNullOrEmpty(test)) return false;
+
+			var parts = test.Split(':');
+			hang = string.Equals(parts[0], "hang", StringComparison.OrdinalIgnoreCase);
+			if (parts.Length < 2) return true;
+
+			if (string.Equals(parts[1], "combined", StringComparison.OrdinalIgnoreCase))
 			{
-				var trimmed = line.Trim();
-				if (!trimmed.StartsWith(ResultPrefix, StringComparison.Ordinal)) continue;
-				var value = trimmed.Substring(ResultPrefix.Length).Trim();
-				if (!uint.TryParse(value, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out uint parsed))
-				{
-					continue;
-				}
-				failed = (DeviceTypeMask)parsed;
-				return true;
+				var gpus = (uint)(mask & AllGpus);
+				return (gpus & (gpus - 1)) != 0;
 			}
-			return false;
+			return Enum.TryParse(parts[1], true, out DeviceTypeMask backend) && (mask & backend) != 0;
 		}
 	}
 }
