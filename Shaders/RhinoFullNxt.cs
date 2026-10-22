@@ -55,7 +55,10 @@ namespace RhinoCyclesCore.Shaders
 
 		public ClosureSocket GetClosureSocket()
 		{
-			if (m_original.DisplayMaterial)
+			ClosureSocket lastclosure;
+
+			// Must match RenderEngine.CreateMaterialShader.
+			if (m_original.DisplayMaterial && m_original.ValidDisplayMaterial)
 			{
 				var front = GetShaderPart(m_original.Front);
 				var back = GetShaderPart(m_original.Back);
@@ -71,48 +74,46 @@ namespace RhinoCyclesCore.Shaders
 				frontclosure.Connect(flipper.ins.Closure1);
 				backclosure.Connect(flipper.ins.Closure2);
 
-				return flipper.GetClosureSocket();
+				lastclosure = flipper.GetClosureSocket();
 			}
 			else
 			{
 				var last = GetShaderPart(m_original.Front);
-				var lastclosure = last.GetClosureSocket();
-
-				if (m_original.ShadowCatcher)
-				{
-					var lightpath = new LightPathNode(m_shader, "light_path_for_shadow_catcher");
-					var pathadder = new MathAdd(m_shader, "path_adder_for_shadow_catcher");
-					var noshow = new TransparentBsdfNode(m_shader, "shadow_catcher_transp_bsdf");
-					var refl_flipper = new MixClosureNode(m_shader, "shadow_catcher_reflection_flipper");
-					pathadder.UseClamp = true;
-					lightpath.outs.IsReflectionRay.Connect(pathadder.ins.Value1);
-					lightpath.outs.IsDiffuseRay.Connect(pathadder.ins.Value2);
-					pathadder.outs.Value.Connect(refl_flipper.ins.Fac);
-					lastclosure.Connect(refl_flipper.ins.Closure1);
-					noshow.outs.BSDF.Connect(refl_flipper.ins.Closure2);
-					lastclosure = refl_flipper.outs.Closure;
-				}
-
-				// InvisibleUnderside may be true if it is set for a material
-				// on a Ground Plane. Handle this case by adding a transparent BSDF
-				// for when the backface is hit. Otherwise just 'regular' shader
-				// as created by GetShaderPart() above.
-				if (m_original.InvisibleUnderside)
-				{
-					var transparent = new TransparentBsdfNode(m_shader, "transparent_gp");
-					transparent.ins.Color.Value = new float4(1.0, 1.0, 1.0, 1.0);
-					var backfacing = new GeometryInfoNode(m_shader, "backfacepicker_");
-					var flipper = new MixClosureNode(m_shader, "front_or_back_");
-
-					lastclosure.Connect(flipper.ins.Closure1);
-					transparent.outs.BSDF.Connect(flipper.ins.Closure2);
-					backfacing.outs.Backfacing.Connect(flipper.ins.Fac);
-					lastclosure = flipper.GetClosureSocket();
-				}
-
-				return lastclosure;
+				lastclosure = last.GetClosureSocket();
 			}
 
+			if (m_original.ShadowCatcher)
+			{
+				var lightpath = new LightPathNode(m_shader, "light_path_for_shadow_catcher");
+				var pathadder = new MathAdd(m_shader, "path_adder_for_shadow_catcher");
+				var noshow = new TransparentBsdfNode(m_shader, "shadow_catcher_transp_bsdf");
+				var refl_flipper = new MixClosureNode(m_shader, "shadow_catcher_reflection_flipper");
+				pathadder.UseClamp = true;
+				lightpath.outs.IsReflectionRay.Connect(pathadder.ins.Value1);
+				lightpath.outs.IsDiffuseRay.Connect(pathadder.ins.Value2);
+				pathadder.outs.Value.Connect(refl_flipper.ins.Fac);
+				lastclosure.Connect(refl_flipper.ins.Closure1);
+				noshow.outs.BSDF.Connect(refl_flipper.ins.Closure2);
+				lastclosure = refl_flipper.outs.Closure;
+			}
+
+			// InvisibleUnderside may be true if it is set for a material
+			// on a Ground Plane. Handle this case by adding a transparent BSDF
+			// for when the backface is hit. This also overrides a back shader.
+			if (m_original.InvisibleUnderside)
+			{
+				var transparent = new TransparentBsdfNode(m_shader, "transparent_gp");
+				transparent.ins.Color.Value = new float4(1.0, 1.0, 1.0, 1.0);
+				var backfacing = new GeometryInfoNode(m_shader, "backfacepicker_");
+				var flipper = new MixClosureNode(m_shader, "front_or_back_");
+
+				lastclosure.Connect(flipper.ins.Closure1);
+				transparent.outs.BSDF.Connect(flipper.ins.Closure2);
+				backfacing.outs.Backfacing.Connect(flipper.ins.Fac);
+				lastclosure = flipper.GetClosureSocket();
+			}
+
+			return lastclosure;
 		}
 
 		public override Shader GetShader()
