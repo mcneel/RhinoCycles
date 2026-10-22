@@ -102,6 +102,9 @@ namespace RhinoCyclesCore
 				Database.UploadObjectChanges();
 				UploadProgress?.Invoke(this, new UploadProgressEventArgs(1.0f, "Object changes uploaded"));
 
+				// RH-98012: refresh clip participation masks on objects that did not change themselves
+				Database.UploadClippingPlaneParticipationChanges();
+
 				if (ShouldBreak) return false;
 
 				// shader changes on objects (replacement)
