@@ -269,8 +269,10 @@
       rem /R:1 /W:1: a file locked by a running Rhino fails the build instead of retrying for hours.
       robocopy "$(CyclesPayloadPath)" "$(OutputPath)." /R:1 /W:1 /NJH /NJS /NFL /NDL /NP
       if errorlevel 8 exit /b 1
-      rem Build notes belong to one local build: drop them with it.
+      rem Build notes belong to one local build, the manifest to one published payload: drop
+      rem each when the payload being deployed has none, or ListDevices describes the wrong one.
       if not exist "$(CyclesPayloadPath)\ccycles_build_notes.txt" if exist "$(OutputPath)ccycles_build_notes.txt" del /Q "$(OutputPath)ccycles_build_notes.txt"
+      if not exist "$(CyclesPayloadPath)\ccycles_payload.json" if exist "$(OutputPath)ccycles_payload.json" del /Q "$(OutputPath)ccycles_payload.json"
       rem /MIR so kernels or sources dropped from the payload do not linger and get loaded.
       robocopy "$(CyclesPayloadPath)\lib" "$(OutputPath)RhinoCycles\lib" /MIR /NJH /NJS /NFL /NDL /NP
       if errorlevel 8 exit /b 1
@@ -282,19 +284,13 @@
     <Exec WorkingDirectory="$(OutDir)" Command="$(CyclesDeployCommand)" />
   </Target>
 
-  <!--
-    A Message, not a Warning: the committed Cycles under a Debug Rhino is normal. The
-    no-local-payload hint is opt-in (RHINOCYCLESDEV), or every Debug build would show it.
-  -->
+  <!-- A Message, not a Warning: the committed Cycles under a Debug Rhino is normal. -->
   <Target Name="ReportCyclesPayload" AfterTargets="DeployCyclesPayload" DependsOnTargets="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
     <Message Importance="high" Text="RhinoCycles: deployed Cycles payload from $(CyclesPayloadPath)" />
 
     <!-- Explains why a local +Cycles build stopped being used after a pull. -->
     <Message Importance="high"
              Condition="'$(CyclesLocalTicks)' != '' And $(CyclesLocalTicks) &lt;= $(CyclesReleaseTicks)"
-             Text="RhinoCycles: your local Cycles payload is older than the committed one, so the committed one was used. Rebuild a +Cycles configuration to use yours again." />
-    <Message Importance="high"
-             Condition="'$(Configuration)' == 'Debug' And '$(RHINOCYCLESDEV)' != '' And !Exists('$(CyclesPayloadRoot)\local\ccycles.dll')"
-             Text="RhinoCycles: no local Cycles payload in big_libs, so this Debug build uses the committed Cycles and ccycles cannot be stepped into. Build Debug+Cycles once to produce one." />
+             Text="RhinoCycles: your local Cycles payload is older than the committed one, so the committed one was used. Build Cycles.sln, or a +Cycles configuration, to use yours again." />
   </Target>
 </Project>
