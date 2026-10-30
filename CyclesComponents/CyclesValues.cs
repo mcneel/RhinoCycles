@@ -52,7 +52,7 @@ namespace CyclesComponents
 
 				case "color":
 				case "color2":
-					if (TryColour(value, out var r, out var g, out var b)) { text = Format(r, g, b); return true; }
+					if (TryColour(value, out var r, out var g, out var b)) { text = FormatColour(r, g, b); return true; }
 					if (TryNumber(value, out var grey)) { text = Format(grey, grey, grey); return true; }
 					break;
 
@@ -167,9 +167,21 @@ namespace CyclesComponents
 			return false;
 		}
 
+		/* Cycles sockets are floats: the shortest text that reads back as the same float. */
 		private static string Format(params double[] values)
 		{
-			return string.Join(" ", values.Select(v => v.ToString("G9", CultureInfo.InvariantCulture)));
+			return Format("R", values);
+		}
+
+		/* Colours pass through Eto's float sRGB, good to about six digits, so 0.8 stays 0.8. */
+		private static string FormatColour(params double[] values)
+		{
+			return Format("G6", values);
+		}
+
+		private static string Format(string format, double[] values)
+		{
+			return string.Join(" ", values.Select(v => ((float)v).ToString(format, CultureInfo.InvariantCulture)));
 		}
 	}
 }

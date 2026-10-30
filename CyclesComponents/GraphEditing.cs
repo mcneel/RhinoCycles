@@ -76,7 +76,7 @@ namespace CyclesComponents
 				return true;
 			}
 
-			var doc = ReadDocument(material) ?? NewGraphDocument(material);
+			var doc = ReadDocument(material) ?? ImportGraphDocument(material) ?? NewGraphDocument(material);
 			doc.File.FallbackName = material.Name;
 			// The material holds it, so closing the tab need not offer to save a file.
 			doc.Unmodify();
@@ -123,17 +123,53 @@ namespace CyclesComponents
 			var doc = Document.NewInactiveDocument();
 
 			var output = ObjectProxies.FindByType(typeof(CyclesMaterialOutput)).Emit();
-			var writer = ObjectProxies.FindByType(typeof(CyclesMaterialComponent)).Emit();
 			doc.Objects.Add(output, new PointF(400, 100));
-			doc.Objects.Add(writer, new PointF(700, 100));
-			Connections.Connect(((Component)output).Parameters.Output(0), ((Component)writer).Parameters.Input(0));
+			AddMaterialWriter(doc, (Component)output, material, true);
 
-			// Bind the new Cycles Material component to this material rather than a new one.
+			return doc;
+		}
+
+		/// <summary>
+		/// The graph built from the material's XML, or null if it has none.
+		/// </summary>
+		private static Document ImportGraphDocument(RenderMaterial material)
+		{
+			if (!material.Fields.TryGetValue(GraphXmlField, out string xml) || string.IsNullOrWhiteSpace(xml))
+				return null;
+
+			var result = GraphImport.Import(xml);
+
+			// A lossy graph would overwrite the material's XML on the first solution, so it is
+			// only connected to the material when everything came across.
+			var complete = result.Problems.Count == 0;
+			AddMaterialWriter(result.Document, result.Output, material, complete);
+
+			RhinoApp.WriteLine(string.Format("Imported the graph of '{0}' into Grasshopper 2: {1} nodes.",
+				material.Name, result.Document.Objects.Count - 2));
+			if (!complete)
+			{
+				foreach (var problem in result.Problems)
+					RhinoApp.WriteLine("  " + problem);
+				RhinoApp.WriteLine("  Material Output is not connected to Cycles Material, so the material keeps its XML until you connect them.");
+			}
+
+			return result.Document;
+		}
+
+		/// <summary>
+		/// Add a Cycles Material component after the output, bound to this material rather than a new one.
+		/// </summary>
+		private static void AddMaterialWriter(Document doc, Component output, RenderMaterial material, bool connect)
+		{
+			var writer = ObjectProxies.FindByType(typeof(CyclesMaterialComponent)).Emit();
+			var pivot = output.Attributes.Pivot;
+			doc.Objects.Add(writer, new PointF(pivot.X + 300, pivot.Y));
+			if (connect)
+				Connections.Connect(output.Parameters.Output(0), ((Component)writer).Parameters.Input(0));
+
 			material.BeginChange(RenderContent.ChangeContexts.Program);
 			material.Fields.Set(SourceField, writer.InstanceId.ToString());
 			material.EndChange();
-
-			return doc;
 		}
 
 		/// <summary>
