@@ -1,0 +1,4 @@
+<Project>
+  <!-- Built like Grasshopper 2's own component libraries: the same frameworks, output folders and settings. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\grasshopper2\Directory.Build.props" />
+</Project>

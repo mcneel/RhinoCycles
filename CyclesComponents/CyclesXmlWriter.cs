@@ -30,7 +30,8 @@ namespace CyclesComponents
 	{
 		internal static string Write(IEnumerable<KeyValuePair<string, CyclesSocket>> outputInputs)
 		{
-			var names = new Dictionary<CyclesNode, string>(ReferenceEqualityComparer.Instance);
+			// CyclesNode has no Equals, so nodes are keyed by reference.
+			var names = new Dictionary<CyclesNode, string>();
 			var order = new List<CyclesNode>();
 
 			void Visit(CyclesNode node)

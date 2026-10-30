@@ -1,44 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Prototype Grasshopper 2 library of Cycles shader nodes. Not part of any solution yet:
-       build it with dotnet build -c Debug or -c Release against that Rhino build's output. -->
+  <!-- Grasshopper 2 library of Cycles shader nodes, read from the Cycles node registry. -->
+  <Import Project="$(MSBuildThisFileDirectory)..\..\..\..\..\RhinoProjectPropertySheets\Rhino.CS.PlugIn.props" />
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <OutputPath>$(ComponentOutputPath)</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)\$(TargetFramework)\</IntermediateOutputPath>
     <TargetExt>.rhp</TargetExt>
     <AssemblyName>G2CyclesComponents</AssemblyName>
     <AssemblyTitle>Cycles</AssemblyTitle>
     <Description>Cycles shader nodes, read from the Cycles node registry.</Description>
-    <Company>Robert McNeel &amp; Associates</Company>
-    <Copyright>Copyright © Robert McNeel &amp; Associates 2026</Copyright>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <NoWarn>CS1591</NoWarn>
-
-    <RhinoBin Condition="'$(RhinoBin)' == ''">$(MSBuildThisFileDirectory)..\..\..\..\..\bin\$(Configuration)\</RhinoBin>
-    <!-- Where Grasshopper 2 loads its component libraries from. -->
-    <OutputPath>$(RhinoBin)Plug-ins\Grasshopper2\net8.0\Components\</OutputPath>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- csycles is net48 only; RhinoCyclesCore uses it under net8.0 the same way. -->
+    <NoWarn>$(NoWarn);NU1702</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Grasshopper2">
-      <HintPath>$(RhinoBin)Plug-ins\Grasshopper2\net8.0\Grasshopper2.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GrasshopperIO">
-      <HintPath>$(RhinoBin)Plug-ins\Grasshopper2\net8.0\GrasshopperIO.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RhinoCommon">
-      <HintPath>$(RhinoBin)netcore\ref\RhinoCommon.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Eto">
-      <HintPath>$(RhinoBin)Eto.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <!-- RhinoCycles ships csycles; this needs one with ShaderNodeTypes. -->
-    <Reference Include="csycles">
-      <HintPath>$(MSBuildThisFileDirectory)..\..\cycles-core\src\csycles\bin\Debug\csycles.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
+    <ProjectReference Include="..\..\..\grasshopper2\Grasshopper2\Grasshopper2.csproj" ExcludeAssets="all" Private="False" />
+    <ProjectReference Include="..\..\..\grasshopper2\GrasshopperIO\GrasshopperIO.csproj" ExcludeAssets="all" Private="False" />
+    <ProjectReference Include="..\..\..\..\..\DotNetSDK\rhinocommon\dotnet\RhinoCommon.csproj" Private="False" ExcludeAssets="all" />
+    <ProjectReference Include="..\..\..\..\..\DotNetSDK\Eto\src\Eto\Eto.csproj" Private="False" ExcludeAssets="all" />
+    <!-- RhinoCycles ships csycles, and the ccycles it calls, in Plug-ins. -->
+    <ProjectReference Include="..\..\cycles-core\src\csycles\csycles.csproj" Private="False" ExcludeAssets="all" />
   </ItemGroup>
 </Project>
