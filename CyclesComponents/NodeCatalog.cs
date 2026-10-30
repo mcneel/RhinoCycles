@@ -77,13 +77,43 @@ namespace CyclesComponents
 			return ShaderNodeTypes.All.Where(t => !g_hidden.Contains(t.Name) && !t.Name.StartsWith("convert_", StringComparison.Ordinal));
 		}
 
+		/* rgb_ramp's colour and alpha tables, edited together as one gradient. */
+		internal const string RampSocket = "ramp";
+		internal const string RampAlphaSocket = "ramp_alpha";
+
+		/* The curves behind a curve node's table, as Blender has them. */
+		private static readonly (string Name, string Code)[] g_colourCurves = { ("Combined", "C"), ("Red", "R"), ("Green", "G"), ("Blue", "B") };
+		private static readonly (string Name, string Code)[] g_vectorCurves = { ("X", "X"), ("Y", "Y"), ("Z", "Z") };
+		private static readonly (string Name, string Code)[] g_floatCurve = { ("Curve", "curve") };
+
 		/// <summary>
 		/// Sockets that become component inputs. Arrays, transforms and node references
-		/// need editors of their own, so they are left out for now.
+		/// need editors of their own, so they are left out for now; the colour ramp is a
+		/// gradient, and curve tables are a function per channel.
 		/// </summary>
 		internal static IEnumerable<ShaderNodeSocketInfo> VisibleInputs(ShaderNodeTypeInfo nodeType)
 		{
-			return nodeType.Inputs.Where(s => !s.IsInternal && IsSettable(s.Type));
+			return nodeType.Inputs.Where(s => !s.IsInternal && (IsSettable(s.Type) || IsRamp(s) || CurveChannels(s) != null));
+		}
+
+		internal static bool IsRamp(ShaderNodeSocketInfo socket)
+		{
+			return socket.Type == "array_color" && socket.Name == RampSocket;
+		}
+
+		/// <summary>
+		/// The function inputs a curve table is made from, one per channel, or null for any other
+		/// socket. rgb_curves has Blender's combined curve first, applied before red, green and blue.
+		/// </summary>
+		internal static (string Name, string Code)[] CurveChannels(ShaderNodeSocketInfo socket)
+		{
+			switch (socket.Type)
+			{
+				case "array_color" when socket.Name == "curves": return g_colourCurves;
+				case "array_vector" when socket.Name == "curves": return g_vectorCurves;
+				case "array_float" when socket.Name == "curve": return g_floatCurve;
+				default: return null;
+			}
 		}
 
 		private static bool IsSettable(string socketType)

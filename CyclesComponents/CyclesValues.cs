@@ -20,6 +20,7 @@ using System.Linq;
 
 using ccl;
 using Grasshopper2.Types.Colour;
+using Grasshopper2.Types.Functions;
 using Rhino.Geometry;
 
 namespace CyclesComponents
@@ -105,6 +106,73 @@ namespace CyclesComponents
 
 			problem = $"'{name}' is not a value of '{socket.UiName}'. Use one of: {EnumNames(socket)}.";
 			return false;
+		}
+
+		/* RAMP_TABLE_SIZE in Cycles. */
+		internal const int RampSize = 256;
+
+		/// <summary>
+		/// A gradient as rgb_ramp's tables: linear colours and alphas at even steps from 0 to 1.
+		/// </summary>
+		internal static void FormatRamp(Gradient gradient, out string colours, out string alphas)
+		{
+			gradient = gradient.RemapAutomatic(0.0, 1.0);
+			var rgb = new double[RampSize * 3];
+			var alpha = new double[RampSize];
+			for (var i = 0; i < RampSize; i++)
+			{
+				if (!gradient.ColourAt(i / (RampSize - 1.0), out var colour))
+					continue;
+
+				var linear = colour.WithSpace(Space.RgbLinear);
+				rgb[3 * i] = linear[0];
+				rgb[3 * i + 1] = linear[1];
+				rgb[3 * i + 2] = linear[2];
+				alpha[i] = linear.Alpha;
+			}
+
+			// Six digits are more than a 256-step table can show, and keep the XML short.
+			colours = Format("G6", rgb);
+			alphas = Format("G6", alpha);
+		}
+
+		/// <summary>
+		/// Curves as a curve node's table, sampled at even steps from minX to maxX, one column per
+		/// curve. Of four curves the first is Blender's combined curve, applied before the other
+		/// three. A missing curve is a straight line.
+		/// </summary>
+		internal static string FormatCurves(Function[] curves, double minX, double maxX)
+		{
+			var x = Enumerable.Range(0, RampSize).Select(i => minX + i * (maxX - minX) / (RampSize - 1)).ToArray();
+			var combined = curves.Length == 4;
+			var input = combined ? Sample(curves[0], x) : x;
+			var columns = (combined ? curves.Skip(1) : curves).Select(c => Sample(c, input)).ToArray();
+
+			var table = new double[RampSize * columns.Length];
+			for (var i = 0; i < RampSize; i++)
+				for (var c = 0; c < columns.Length; c++)
+					table[i * columns.Length + c] = columns[c][i];
+
+			return Format("G6", table);
+		}
+
+		/// <summary>
+		/// A curve at each x. Where it has no value, outside a cubic interpolation's points say,
+		/// the nearest value it has holds, as Blender extends a curve.
+		/// </summary>
+		private static double[] Sample(Function curve, double[] x)
+		{
+			bool Valid(double v) => !double.IsNaN(v) && !double.IsInfinity(v);
+
+			var y = x.Select(v => curve is null ? v : curve.Y(v)).ToArray();
+			var first = Array.FindIndex(y, Valid);
+			if (first < 0)
+				return x;
+
+			for (var i = 0; i < y.Length; i++)
+				if (!Valid(y[i]))
+					y[i] = i < first ? y[first] : y[i - 1];
+			return y;
 		}
 
 		internal static string EnumNames(ShaderNodeSocketInfo socket)
