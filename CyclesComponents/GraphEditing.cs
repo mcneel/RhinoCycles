@@ -76,7 +76,16 @@ namespace CyclesComponents
 				return true;
 			}
 
-			var doc = ReadDocument(material) ?? ImportGraphDocument(material) ?? NewGraphDocument(material);
+			var doc = ReadDocument(material);
+			if (doc is null)
+			{
+				var hasXml = material.Fields.TryGetValue(GraphXmlField, out string xml) && !string.IsNullOrWhiteSpace(xml);
+				doc = hasXml ? ImportGraphDocument(material, xml) : NewGraphDocument(material);
+
+				// XML that does not parse is left as it is; the command line says why.
+				if (doc is null)
+					return true;
+			}
 			doc.File.FallbackName = material.Name;
 			// The material holds it, so closing the tab need not offer to save a file.
 			doc.Unmodify();
@@ -91,7 +100,18 @@ namespace CyclesComponents
 		/// </summary>
 		internal static bool IsMaterialDocument(Document doc)
 		{
-			return doc != null && g_open.Values.Any(d => ReferenceEquals(d, doc));
+			return MaterialOf(doc).HasValue;
+		}
+
+		/// <summary>
+		/// The id of the material this document was opened from, or null for any other document.
+		/// </summary>
+		internal static Guid? MaterialOf(Document doc)
+		{
+			foreach (var pair in g_open)
+				if (doc != null && ReferenceEquals(pair.Value, doc))
+					return pair.Key;
+			return null;
 		}
 
 		internal static byte[] Serialise(Document doc)
@@ -130,14 +150,16 @@ namespace CyclesComponents
 		}
 
 		/// <summary>
-		/// The graph built from the material's XML, or null if it has none.
+		/// The graph built from the material's XML, or null if the XML does not parse.
 		/// </summary>
-		private static Document ImportGraphDocument(RenderMaterial material)
+		private static Document ImportGraphDocument(RenderMaterial material, string xml)
 		{
-			if (!material.Fields.TryGetValue(GraphXmlField, out string xml) || string.IsNullOrWhiteSpace(xml))
-				return null;
-
 			var result = GraphImport.Import(xml);
+			if (result.Output is null)
+			{
+				RhinoApp.WriteLine(string.Format("Cannot open '{0}' in Grasshopper 2. {1}", material.Name, string.Join(" ", result.Problems)));
+				return null;
+			}
 
 			// A lossy graph would overwrite the material's XML on the first solution, so it is
 			// only connected to the material when everything came across.

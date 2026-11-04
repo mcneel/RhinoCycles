@@ -75,10 +75,13 @@ namespace CyclesComponents
 				return;
 			}
 
-			// One material per component, found again by the component's id.
+			// One material per component, found again by the component's id. A document opened from
+			// a material writes to that one, as a duplicated material shares the component's id.
 			var source = InstanceId.ToString();
-			var material = doc.RenderMaterials.FirstOrDefault(m => m.TypeId == GraphEditing.MaterialType &&
-				m.Fields.TryGetValue(GraphEditing.SourceField, out string s) && s == source);
+			var opened = GraphEditing.MaterialOf(Document);
+			var material = (opened.HasValue ? doc.RenderMaterials.FirstOrDefault(m => m.Id == opened.Value && m.TypeId == GraphEditing.MaterialType) : null)
+				?? doc.RenderMaterials.FirstOrDefault(m => m.TypeId == GraphEditing.MaterialType &&
+					m.Fields.TryGetValue(GraphEditing.SourceField, out string s) && s == source);
 
 			if (material is null)
 			{

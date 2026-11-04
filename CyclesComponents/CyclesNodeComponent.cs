@@ -240,10 +240,12 @@ namespace CyclesComponents
 
 				if (value is CyclesSocket link)
 				{
-					if (socket.IsLinkable)
-						links[socket.Name] = link;
-					else
+					if (!socket.IsLinkable)
 						access.AddWarning("Not linkable", $"'{socket.UiName}' is a setting and cannot take a link.");
+					else if (!CanLink(link, socket, out var fromType))
+						access.AddWarning("Not linkable", $"Cycles cannot turn a {fromType} into the {socket.Type} input '{socket.UiName}'.");
+					else
+						links[socket.Name] = link;
 					continue;
 				}
 
@@ -284,6 +286,18 @@ namespace CyclesComponents
 				if (socket != null)
 					access.SetItem(o, new CyclesSocket(node, socket.Name));
 			}
+		}
+
+		/// <summary>
+		/// Whether Cycles can feed the linked output into this input: through a registered
+		/// convert node, or into a closure. A value into a boolean it cannot.
+		/// </summary>
+		private static bool CanLink(CyclesSocket link, ShaderNodeSocketInfo input, out string fromType)
+		{
+			fromType = ShaderNodeTypes.Find(link.Node.Type)?.Outputs.FirstOrDefault(s => s.Name == link.Socket)?.Type;
+			if (fromType is null || fromType == input.Type || input.Type == "closure")
+				return true;
+			return ShaderNodeTypes.Find($"convert_{fromType}_to_{input.Type}") != null;
 		}
 
 		private Function[] CurveFunctions(IDataAccess access, (string Name, string Code)[] channels)
