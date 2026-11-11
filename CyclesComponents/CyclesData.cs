@@ -31,16 +31,18 @@ namespace CyclesComponents
 	[IoId("00000000-ffeb-43ee-9cd1-9c5db87ebfcf")]
 	public sealed class CyclesNode : IStorable
 	{
-		public CyclesNode(string type, IReadOnlyDictionary<string, string> values, IReadOnlyDictionary<string, CyclesSocket> links)
+		public CyclesNode(string type, IReadOnlyDictionary<string, string> values, IReadOnlyDictionary<string, CyclesSocket> links, Guid id = default)
 		{
 			Type = type ?? throw new ArgumentNullException(nameof(type));
 			Values = values ?? new Dictionary<string, string>();
 			Links = links ?? new Dictionary<string, CyclesSocket>();
+			Id = id;
 		}
 
 		public CyclesNode(IReader reader)
 		{
 			Type = reader.String(nameof(Type));
+			Id = reader.HasItem(nameof(Id)) && Guid.TryParse(reader.String(nameof(Id)), out var id) ? id : Guid.Empty;
 
 			var valueNames = reader.StringArray("ValueNames");
 			var valueTexts = reader.StringArray(nameof(Values));
@@ -60,6 +62,7 @@ namespace CyclesComponents
 		void IStorable.Store(IWriter writer)
 		{
 			writer.String(nameof(Type), Type);
+			writer.String(nameof(Id), Id.ToString());
 			writer.StringArray("ValueNames", Values.Keys.ToArray());
 			writer.StringArray(nameof(Values), Values.Values.ToArray());
 			writer.StringArray("LinkNames", Links.Keys.ToArray());
@@ -70,6 +73,11 @@ namespace CyclesComponents
 		/// Cycles node type name, e.g. "principled_bsdf".
 		/// </summary>
 		public string Type { get; }
+
+		/// <summary>
+		/// The component this node came from, which names it in the XML; empty if unknown.
+		/// </summary>
+		public Guid Id { get; }
 
 		/// <summary>
 		/// Input values by socket name, in Cycles XML attribute form.

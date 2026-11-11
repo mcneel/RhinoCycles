@@ -39,23 +39,68 @@ namespace RhinoCyclesCore.Materials
 	{
 		/* Field names are shared with the Grasshopper 2 Cycles components, which set them by name. */
 		public const string GraphXmlField = "cycles-graph-xml";
+		private const string GraphXmlPrompt = "Graph XML";
 		public const string SourceField = "cycles-graph-source";
 		/* The Grasshopper 2 document the graph came from, for editing it again. */
 		public const string DocumentField = "cycles-graph-document";
+		/* Values the material editor changed in the XML that the document does not have yet. */
+		public const string EditsField = "cycles-graph-edits";
 
-		/* Shown while the graph is empty, rather than a black object. */
-		private const string EmptyGraphXml = "<diffuse_bsdf name=\"d\" color=\"0.5 0.5 0.5\" />" +
-		                                     "<connect from=\"d BSDF\" to=\"output surface\" />";
+		/* While the graph is empty, the Principled BSDF a new graph starts with in Grasshopper 2. */
+		internal const string EmptyGraphXml = "<principled_bsdf name=\"principled_bsdf\" />" +
+		                                     "<connect from=\"principled_bsdf BSDF\" to=\"output surface\" />";
 
 		private static readonly Dictionary<Size, Bitmap> material_icons = new Dictionary<Size, Bitmap>();
 
 		private string _graphXml = string.Empty;
 
+		/* Set while this class changes the graph itself, which is not a replacement. */
+		[ThreadStatic]
+		private static bool g_changing;
+
+		static CyclesGraphMaterial()
+		{
+			RenderContent.ContentFieldChanged += OnContentFieldChanged;
+		}
+
+		/// <summary>
+		/// XML typed or pasted into the Graph XML field replaces the graph. Grasshopper 2 writes
+		/// the field in the Program context, and the material's own changes are flagged.
+		/// </summary>
+		private static void OnContentFieldChanged(object sender, RenderContentFieldChangedEventArgs e)
+		{
+			// RDK names the field by its prompt here.
+			var field = e.FieldName;
+			if (g_changing || e.ChangeContext != ChangeContexts.UI || (field != GraphXmlField && field != GraphXmlPrompt) || !(e.Content is CyclesGraphMaterial changed))
+				return;
+
+			// Not while the content is in the middle of changing.
+			var id = changed.Id;
+			var doc = changed.DocumentAssoc;
+			Eto.Forms.Application.Instance.AsyncInvoke(() =>
+			{
+				if (doc?.RenderMaterials.FirstOrDefault(m => m.Id == id) is CyclesGraphMaterial material &&
+				    material.HasGraphOrigin() && material.Fields.TryGetValue(GraphXmlField, out string xml))
+					material.ReplaceGraph(xml);
+			});
+		}
+
+		/// <summary>
+		/// Whether the graph came from a Grasshopper 2 document, which a replaced graph drops.
+		/// </summary>
+		private bool HasGraphOrigin()
+		{
+			return (Fields.TryGetValue(DocumentField, out byte[] document) && document?.Length > 0) ||
+			       (Fields.TryGetValue(SourceField, out string source) && !string.IsNullOrEmpty(source)) ||
+			       (Fields.TryGetValue(EditsField, out string edits) && !string.IsNullOrEmpty(edits));
+		}
+
 		public CyclesGraphMaterial()
 		{
-			Fields.Add(GraphXmlField, string.Empty, "Graph XML");
+			Fields.Add(GraphXmlField, string.Empty, GraphXmlPrompt);
 			var source = Fields.Add(SourceField, string.Empty, "Source");
 			var document = Fields.Add(DocumentField, new byte[0]);
+			var edits = Fields.Add(EditsField, string.Empty, "Edits");
 
 			/* Hiding a field refreshes the content UI, which throws off the UI thread. The RDK
 			 * copies materials there for previews; those copies never get a UI. */
@@ -63,6 +108,7 @@ namespace RhinoCyclesCore.Materials
 			{
 				source.IsHiddenInAutoUI = true;
 				document.IsHiddenInAutoUI = true;
+				edits.IsHiddenInAutoUI = true;
 			}
 		}
 
@@ -95,7 +141,75 @@ namespace RhinoCyclesCore.Materials
 		protected override void OnAddUserInterfaceSections()
 		{
 			AddUserInterfaceSection(new CyclesGraphMaterialSection());
+			AddUserInterfaceSection(new CyclesGraphSurfaceSection());
+			AddUserInterfaceSection(new CyclesGraphVolumeSection());
+			AddUserInterfaceSection(new CyclesGraphDisplacementSection());
 			AddAutomaticUserInterfaceSection("Parameters", 0);
+		}
+
+		/// <summary>
+		/// Change one value of the graph, as the material editor does: in the open Grasshopper 2
+		/// graph that writes this material if there is one, otherwise in the XML, kept as an edit
+		/// for the stored document until Edit opens it.
+		/// </summary>
+		/// <param name="xml">The graph with the value changed.</param>
+		/// <returns>false if the open graph keeps its own value.</returns>
+		internal bool SetGraphValue(string xml, string node, string socket, string value)
+		{
+			switch (ApplyEditInGrasshopper(Id, node, socket, value))
+			{
+				case 1: return true;
+				case 2: return false;
+			}
+
+			var edits = Fields.TryGetValue(EditsField, out string text) ? text : string.Empty;
+			g_changing = true;
+			try
+			{
+				BeginChange(ChangeContexts.UI);
+				Fields.Set(GraphXmlField, xml);
+				Fields.Set(EditsField, CyclesGraphXml.AddEdit(edits, node, socket, value));
+				EndChange();
+			}
+			finally
+			{
+				g_changing = false;
+			}
+			return true;
+		}
+
+		/// <summary>
+		/// Replace the whole graph, such as with XML copied from Blender. Its Grasshopper 2 document
+		/// and waiting edits belong to the old graph, so they go, and Edit imports the XML.
+		/// </summary>
+		internal void ReplaceGraph(string xml)
+		{
+			FindGraphEditing()?.GetMethod("ReleaseMaterial", new[] { typeof(Guid) })?.Invoke(null, new object[] { Id });
+
+			g_changing = true;
+			try
+			{
+				BeginChange(ChangeContexts.UI);
+				Fields.Set(GraphXmlField, xml ?? string.Empty);
+				Fields.Set(SourceField, string.Empty);
+				Fields.Set(DocumentField, new byte[0]);
+				Fields.Set(EditsField, string.Empty);
+				EndChange();
+			}
+			finally
+			{
+				g_changing = false;
+			}
+		}
+
+		/// <summary>
+		/// GraphEditing.ApplyEdit, if the Grasshopper 2 Cycles components are loaded: 0 when no
+		/// open graph writes the material, 1 when the graph took the value, 2 when it keeps its own.
+		/// </summary>
+		private static int ApplyEditInGrasshopper(Guid materialId, string node, string socket, string value)
+		{
+			var apply = FindGraphEditing()?.GetMethod("ApplyEdit", new[] { typeof(Guid), typeof(string), typeof(string), typeof(string) });
+			return apply == null ? 0 : (int)apply.Invoke(null, new object[] { materialId, node, socket, value });
 		}
 
 		/// <summary>
@@ -106,9 +220,10 @@ namespace RhinoCyclesCore.Materials
 		public static bool EditInGrasshopper(Guid materialId)
 		{
 			var editing = FindGraphEditing();
-			if (editing == null)
+			if (editing == null && Rhino.RhinoDoc.ActiveDoc is Rhino.RhinoDoc doc)
 			{
-				Rhino.RhinoApp.RunScript("_-GH2 _Enter", false);
+				// RunScript only posts the script while Rhino waits for input; this runs GH2 now.
+				Rhino.RhinoApp.ExecuteCommand(doc, "_GH2");
 				editing = FindGraphEditing();
 			}
 
@@ -123,31 +238,56 @@ namespace RhinoCyclesCore.Materials
 				?.GetType("CyclesComponents.GraphEditing");
 		}
 
-		/* The colour of the first BSDF-ish colour input, for viewports that do not render Cycles. */
-		private static readonly Regex g_colour = new Regex("\\b(?:base_color|color)=\"([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\"", RegexOptions.Compiled);
-
+		/// <summary>
+		/// A physically based material for display modes that do not render Cycles, read from the
+		/// shader on Surface; see <see cref="CyclesGraphLook"/>.
+		/// </summary>
 		public override void SimulateMaterial(ref Material simulatedMaterial, RenderTexture.TextureGeneration tg)
 		{
 			base.SimulateMaterial(ref simulatedMaterial, tg);
 
-			var colour = Color.FromArgb(204, 204, 204);
-			if (Fields.TryGetValue(GraphXmlField, out string xml) && !string.IsNullOrEmpty(xml))
-			{
-				var match = g_colour.Match(xml);
-				if (match.Success)
-					colour = Color.FromArgb(ToSrgbByte(match.Groups[1].Value), ToSrgbByte(match.Groups[2].Value), ToSrgbByte(match.Groups[3].Value));
-			}
+			var xml = Fields.TryGetValue(GraphXmlField, out string text) && !string.IsNullOrWhiteSpace(text) ? text : EmptyGraphXml;
+			var graph = CyclesGraphXml.Parse(xml);
+			var look = graph == null ? new CyclesGraphLook() : CyclesGraphLook.FromGraph(graph);
 
-			simulatedMaterial.DiffuseColor = colour;
+			// Rhino's material colours are gamma-encoded; the graph's are linear.
+			var baseColour = ToSrgb(look.BaseColor);
+			simulatedMaterial.ToPhysicallyBased();
+			var pbr = simulatedMaterial.PhysicallyBased;
+			pbr.BaseColor = baseColour;
+			pbr.Metallic = Clamp(look.Metallic);
+			pbr.Roughness = Clamp(look.Roughness);
+			pbr.Alpha = Clamp(look.Alpha);
+			pbr.Opacity = 1.0 - Clamp(look.Transmission);
+			pbr.OpacityIOR = look.Ior;
+			pbr.OpacityRoughness = Clamp(look.Roughness);
+			pbr.Clearcoat = Clamp(look.Coat);
+			pbr.ClearcoatRoughness = Clamp(look.CoatRoughness);
+			pbr.Sheen = Clamp(look.Sheen);
+			pbr.Subsurface = Clamp(look.Subsurface);
+			pbr.SubsurfaceScatteringColor = baseColour;
+			pbr.Emission = ToSrgb(look.Emission);
+
+			if (tg != RenderTexture.TextureGeneration.Disallow && !string.IsNullOrEmpty(look.BaseColorImage) && System.IO.File.Exists(look.BaseColorImage))
+				pbr.SetTexture(new Rhino.DocObjects.Texture { FileName = look.BaseColorImage }, Rhino.DocObjects.TextureType.PBR_BaseColor);
+
+			simulatedMaterial.DiffuseColor = baseColour.AsSystemColor();
 			simulatedMaterial.Name = Name;
 		}
 
-		private static int ToSrgbByte(string linear)
+		private static Rhino.Display.Color4f ToSrgb(float[] linear)
 		{
-			var c = double.Parse(linear, CultureInfo.InvariantCulture);
-			c = Math.Max(0.0, Math.Min(1.0, c));
-			var srgb = c <= 0.0031308 ? c * 12.92 : 1.055 * Math.Pow(c, 1.0 / 2.4) - 0.055;
-			return (int)Math.Round(srgb * 255.0);
+			float S(float c)
+			{
+				c = Math.Max(0f, Math.Min(1f, c));
+				return (float)(c <= 0.0031308 ? c * 12.92 : 1.055 * Math.Pow(c, 1.0 / 2.4) - 0.055);
+			}
+			return new Rhino.Display.Color4f(S(linear[0]), S(linear[1]), S(linear[2]), 1f);
+		}
+
+		private static double Clamp(double x)
+		{
+			return Math.Max(0.0, Math.Min(1.0, x));
 		}
 
 		public float Gamma { get; set; }

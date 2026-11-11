@@ -19,6 +19,7 @@ using Rhino.Render;
 using Rhino.UI;
 using Rhino.UI.Controls;
 using System;
+using System.Linq;
 
 namespace RhinoCyclesCore.Materials
 {
@@ -31,14 +32,16 @@ namespace RhinoCyclesCore.Materials
 		{
 			var edit = new Button { Text = LOC.STR("Edit in Grasshopper") };
 			edit.Click += OnEditClick;
+			var paste = new Button { Text = LOC.STR("Paste XML") };
+			paste.Click += OnPasteClick;
 
 			Content = new TableLayout
 			{
 				Spacing = new Eto.Drawing.Size(5, 5),
 				Rows =
 				{
-					new TableRow(new Label { Text = LOC.STR("The shader graph of this material is edited in Grasshopper 2."), Wrap = WrapMode.Word }),
-					new TableRow(edit),
+					new TableRow(new Label { Text = LOC.STR("Nodes and links are edited in Grasshopper 2. Values can also be changed below."), Wrap = WrapMode.Word }),
+					new TableRow(new TableLayout(new TableRow(new TableCell(edit, true), new TableCell(paste, true))) { Spacing = new Eto.Drawing.Size(5, 0) }),
 					null
 				}
 			};
@@ -52,16 +55,42 @@ namespace RhinoCyclesCore.Materials
 
 		private void OnEditClick(object sender, EventArgs e)
 		{
-			var collection = ViewModel.GetData(Rhino.UI.Controls.DataSource.ProviderIds.ContentSelection, false, false) as RenderContentCollection;
-			if (collection == null)
-				return;
-
-			Guid materialId;
-			using (var iterator = collection.Iterator())
-				materialId = iterator.First()?.Id ?? Guid.Empty;
-
+			var materialId = SelectedMaterialId();
 			if (materialId != Guid.Empty && !CyclesGraphMaterial.EditInGrasshopper(materialId))
 				Rhino.RhinoApp.WriteLine(LOC.STR("The Cycles components for Grasshopper 2 are not installed, so this graph cannot be edited."));
+		}
+
+		/// <summary>
+		/// Replace the graph with Cycles XML from the clipboard, such as copied from Blender.
+		/// </summary>
+		private void OnPasteClick(object sender, EventArgs e)
+		{
+			var materialId = SelectedMaterialId();
+			var material = Rhino.RhinoDoc.ActiveDoc?.RenderMaterials.FirstOrDefault(m => m.Id == materialId) as CyclesGraphMaterial;
+			if (material == null)
+				return;
+
+			string xml;
+			using (var clipboard = new Clipboard())
+				xml = clipboard.Text;
+
+			var graph = CyclesGraphXml.Parse(xml);
+			if (graph == null || graph.IsEmpty)
+			{
+				Rhino.RhinoApp.WriteLine(LOC.STR("The clipboard holds no Cycles XML to paste."));
+				return;
+			}
+
+			material.ReplaceGraph(xml);
+		}
+
+		private Guid SelectedMaterialId()
+		{
+			if (!(ViewModel.GetData(Rhino.UI.Controls.DataSource.ProviderIds.ContentSelection, false, false) is RenderContentCollection collection))
+				return Guid.Empty;
+
+			using (var iterator = collection.Iterator())
+				return iterator.First()?.Id ?? Guid.Empty;
 		}
 	}
 }

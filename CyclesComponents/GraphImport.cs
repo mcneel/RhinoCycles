@@ -42,8 +42,8 @@ namespace CyclesComponents
 	/// </summary>
 	internal static class GraphImport
 	{
-		private const float ColumnWidth = 300f;
-		private const float RowHeight = 20f;
+		internal const float ColumnWidth = 300f;
+		internal const float RowHeight = 20f;
 
 		internal sealed class Result
 		{
@@ -92,6 +92,10 @@ namespace CyclesComponents
 				var component = CreateNode(type, result.Problems);
 				if (component == null)
 					continue;
+
+				// The XML's own name for the node, so the graph reads as it did.
+				if (element.Attribute("name") != null)
+					component.SetLabel(name);
 
 				// Tables are read whole below, not attribute by attribute.
 				var nodeType = ShaderNodeTypes.Find(type);
@@ -240,7 +244,7 @@ namespace CyclesComponents
 			return proxy.Emit() as CyclesNodeComponent;
 		}
 
-		private static IParameter FindParameter(CyclesNodeComponent component, string type, string socketName, bool input)
+		internal static IParameter FindParameter(CyclesNodeComponent component, string type, string socketName, bool input)
 		{
 			var nodeType = ShaderNodeTypes.Find(type);
 			if (nodeType == null)
@@ -296,7 +300,7 @@ namespace CyclesComponents
 		/// <summary>
 		/// An XML attribute as the Grasshopper value <see cref="CyclesValues"/> turns back into the same text.
 		/// </summary>
-		private static object ParseValue(ShaderNodeSocketInfo socket, string text)
+		internal static object ParseValue(ShaderNodeSocketInfo socket, string text)
 		{
 			var numbers = text.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)
 				.Select(t => double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? (double?)d : null)
@@ -309,6 +313,8 @@ namespace CyclesComponents
 					return AllNumbers(1) ? numbers[0].Value : null;
 				case "int":
 				case "uint":
+					// Blender writes some checkboxes, such as Thin Wall, which Cycles keeps as integers.
+					if (bool.TryParse(text, out var on)) return on ? 1 : 0;
 					return AllNumbers(1) ? (object)(int)Math.Round(numbers[0].Value) : null;
 				case "boolean":
 					if (bool.TryParse(text, out var flag)) return flag;

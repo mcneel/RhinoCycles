@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,10 +29,20 @@ namespace CyclesComponents
 	/// </summary>
 	internal static class CyclesXmlWriter
 	{
+		/// <summary>
+		/// A node's name in the XML: its type and the start of its component's id, so a change
+		/// made to the XML elsewhere finds the component again.
+		/// </summary>
+		internal static string NodeName(string type, Guid id)
+		{
+			return $"{type}_{id.ToString("N").Substring(0, 8)}";
+		}
+
 		internal static string Write(IEnumerable<KeyValuePair<string, CyclesSocket>> outputInputs)
 		{
 			// CyclesNode has no Equals, so nodes are keyed by reference.
 			var names = new Dictionary<CyclesNode, string>();
+			var used = new HashSet<string>(StringComparer.Ordinal);
 			var order = new List<CyclesNode>();
 
 			void Visit(CyclesNode node)
@@ -44,7 +55,13 @@ namespace CyclesComponents
 				foreach (var link in node.Links.Values)
 					Visit(link.Node);
 
-				names[node] = $"n{order.Count}";
+				// A component solved more than once gives several nodes; the others go by position.
+				var name = node.Id == Guid.Empty ? null : NodeName(node.Type, node.Id);
+				if (name == null || used.Contains(name))
+					name = $"n{order.Count}";
+				used.Add(name);
+
+				names[node] = name;
 				order.Add(node);
 			}
 

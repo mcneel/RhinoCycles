@@ -210,6 +210,14 @@ namespace CyclesComponents
 		/// </summary>
 		public string NodeType { get; }
 
+		/// <summary>
+		/// Show a name on the slab under the node type, such as the node's name in imported XML.
+		/// </summary>
+		internal void SetLabel(string label)
+		{
+			Label = label;
+		}
+
 		protected override IIcon IconInternal => NodeCatalog.Icon(string.IsNullOrEmpty(NodeType) ? "cycles" : NodeType);
 		#endregion
 
@@ -279,7 +287,7 @@ namespace CyclesComponents
 				values[curves.Name] = CyclesValues.FormatCurves(CurveFunctions(access, NodeCatalog.CurveChannels(curves)), minX, maxX);
 			}
 
-			var node = new CyclesNode(NodeType, values, links);
+			var node = new CyclesNode(NodeType, values, links, InstanceId);
 			for (var o = 0; o < Parameters.OutputCount; o++)
 			{
 				var socket = FindSocket(nodeType.Outputs, Parameters.Output(o).Nomen.Name);

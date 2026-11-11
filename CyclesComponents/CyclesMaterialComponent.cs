@@ -15,24 +15,22 @@ limitations under the License.
 **/
 
 using System;
-using System.Linq;
 
 using GrasshopperIO;
 using Grasshopper2.Components;
 using Grasshopper2.Parameters;
 using Grasshopper2.UI;
 using Grasshopper2.UI.Icon;
-using Rhino;
-using Rhino.Render;
 
 namespace CyclesComponents
 {
 	/// <summary>
-	/// Writes a Cycles shader graph into a "Cycles Graph" render material in the Rhino document,
-	/// creating it on the first solution and updating the same one after that. The material
-	/// also gets this document, so its Edit button can open the graph again.
+	/// Writes the XML of a Material Output into a "Cycles Graph" render material. Material Output
+	/// writes the material itself now; this is kept for documents saved before, which still
+	/// write through it.
 	/// </summary>
 	[IoId("00000000-e98c-4231-9011-d063c3a7bcf7"), Grasshopper2.Author("Lars")]
+	[Obsolete("Material Output writes the material itself.")]
 	public sealed class CyclesMaterialComponent : Component
 	{
 		#region constructor
@@ -65,55 +63,22 @@ namespace CyclesComponents
 
 		protected override void Process(IDataAccess access)
 		{
-			access.GetItem(0, out string xml);
-			access.GetItem(1, out string name);
-
-			var doc = RhinoDoc.ActiveDoc;
-			if (doc is null)
+			// Old documents Grasshopper restores from an autosave would otherwise make a new material each time.
+			if (!GraphEditing.IsMaterialDocument(Document))
 			{
-				access.AddError("No document", "There is no active Rhino document to add the material to.");
+				access.AddRemark("Not writing", "Cycles Material only writes the material its graph was opened from with Edit.");
 				return;
 			}
 
-			// One material per component, found again by the component's id. A document opened from
-			// a material writes to that one, as a duplicated material shares the component's id.
-			var source = InstanceId.ToString();
-			var opened = GraphEditing.MaterialOf(Document);
-			var material = (opened.HasValue ? doc.RenderMaterials.FirstOrDefault(m => m.Id == opened.Value && m.TypeId == GraphEditing.MaterialType) : null)
-				?? doc.RenderMaterials.FirstOrDefault(m => m.TypeId == GraphEditing.MaterialType &&
-					m.Fields.TryGetValue(GraphEditing.SourceField, out string s) && s == source);
+			access.GetItem(0, out string xml);
+			access.GetItem(1, out string name);
 
-			if (material is null)
+			GraphEditing.OnUiThread(() =>
 			{
-				material = RenderContent.Create(doc, GraphEditing.MaterialType) as RenderMaterial;
-				if (material is null)
-				{
-					access.AddError("No Cycles Graph material", "RhinoCycles is not loaded, or is too old to have the Cycles Graph material.");
-					return;
-				}
-				if (string.IsNullOrWhiteSpace(name))
-					name = "Cycles Graph";
-			}
-
-			var current = material.Fields.TryGetValue(GraphEditing.GraphXmlField, out string existing) ? existing : null;
-			var rename = !string.IsNullOrWhiteSpace(name) && material.Name != name;
-			var hasDocument = material.Fields.TryGetValue(GraphEditing.DocumentField, out byte[] stored) && stored?.Length > 0;
-			if (current != xml || rename || !hasDocument)
-			{
-				// One change for graph and document, so a running Raytraced restarts once.
-				material.BeginChange(RenderContent.ChangeContexts.Program);
-				if (rename)
-					material.Name = name;
-				material.Fields.Set(GraphEditing.GraphXmlField, xml ?? string.Empty);
-				material.Fields.Set(GraphEditing.SourceField, source);
-				material.Fields.Set(GraphEditing.DocumentField, GraphEditing.Serialise(Document));
-				material.EndChange();
-
-				if (GraphEditing.IsMaterialDocument(Document))
-					Document.Unmodify();
-			}
-
-			access.SetItem(0, material.Id.ToString());
+				var material = GraphEditing.WriteMaterial(this, access, xml, name, true);
+				if (material != null)
+					access.SetItem(0, material.Id.ToString());
+			});
 		}
 		#endregion
 	}
