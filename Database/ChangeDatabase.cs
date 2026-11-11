@@ -2202,8 +2202,8 @@ namespace RhinoCyclesCore.Database
 				PrimitiveMapping.Apply(cob, primitiveMapping);
 				cob.IsShadowCatcher = ob.IsShadowCatcher;
 				cob.IsSolid = ob.IsSolid;
-				/* 5.x has no Reflect visibility; clearing Glossy keeps it out of reflections. */
-				var norefl = PathRay.AllVisibility & ~PathRay.Glossy;
+				/* Diffuse and Glossy gate reflection visibility. */
+				var norefl = PathRay.AllVisibility & ~(PathRay.Diffuse | PathRay.Glossy);
 				var vis = ob.Visible ? (ob.IsShadowCatcher ? norefl: PathRay.AllVisibility): PathRay.Hidden;
 				if (ob.CastShadow == false)
 				{
