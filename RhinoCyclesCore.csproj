@@ -234,9 +234,9 @@
     <EmbeddedResource Include="Icons\OpenCL.ico" />
   </ItemGroup>
   <!--
-    Cycles always deploys from big_libs\RhinoCycles\ccycles\win (a +Cycles build installs
+    Cycles always deploys from big_libs\RhinoCycles\ccycles\win (a from-source build installs
     there first), in every configuration:
-      local    a +Cycles build, while newer than release. Gitignored.
+      local    a from-source build, while newer than release. Gitignored.
       release  the committed payload.
     A pull touches the committed ccycles.dll, so a newer release beats an old local build.
   -->
@@ -288,9 +288,9 @@
   <Target Name="ReportCyclesPayload" AfterTargets="DeployCyclesPayload" DependsOnTargets="SelectCyclesPayload" Condition="'$(OS)' == 'Windows_NT'">
     <Message Importance="high" Text="RhinoCycles: deployed Cycles payload from $(CyclesPayloadPath)" />
 
-    <!-- Explains why a local +Cycles build stopped being used after a pull. -->
+    <!-- Explains why a local from-source build stopped being used after a pull. -->
     <Message Importance="high"
              Condition="'$(CyclesLocalTicks)' != '' And $(CyclesLocalTicks) &lt;= $(CyclesReleaseTicks)"
-             Text="RhinoCycles: your local Cycles payload is older than the committed one, so the committed one was used. Build Cycles.sln, or a +Cycles configuration, to use yours again." />
+             Text="RhinoCycles: your local Cycles payload is older than the committed one, so the committed one was used. Build Cycles.sln, or turn on Build from source in the Cycles page of the ccycles properties, to use yours again." />
   </Target>
 </Project>
