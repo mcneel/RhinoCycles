@@ -727,8 +727,9 @@ namespace RhinoCyclesCore.Core
 		// Lines the kernel compiler tags with the device they belong to:
 		// [gpu <id>|<gpu name>|<backend>] <message>
 		private static readonly Regex GpuTaggedLine = new Regex(@"^\[gpu (?<id>\d+)\|(?<name>[^|\]]+)\|(?<backend>[^\]]+)\]\s?(?<msg>.*)$", RegexOptions.Compiled);
-		// Third party chatter like "[OpenColorIO Info]: ..." arrives on stderr but isn't an error.
-		private static readonly Regex InformationalLine = new Regex(@"^\[[^\]]*\b(Info|Warning)\]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		// Third party chatter like "[OpenColorIO Info]: ..." arrives on stderr but isn't an error, nor
+		// are Cycles' own warnings, e.g. "00:00.02 | WARNING: HIPEW initialization failed" without AMD drivers.
+		private static readonly Regex InformationalLine = new Regex(@"^(\[[^\]]*\b(Info|Warning)\]|[\d:.]+ \| WARNING:)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		private static List<string> SplitLogLines(string log)
 		{
