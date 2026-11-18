@@ -123,8 +123,13 @@ namespace RhinoCyclesCore.Materials
 				}
 				case "add_closure":
 				{
-					var sum = Blend(Input(graph, node, "closure1", depth), Input(graph, node, "closure2", depth), 0.5, 0.5);
-					sum.Emission = Scale(sum.Emission, 2.0);
+					var first = Input(graph, node, "closure1", depth);
+					var second = Input(graph, node, "closure2", depth);
+					var sum = Blend(first, second, 0.5, 0.5);
+					// Closures add up, and so do their colours.
+					if (first.Alpha > 0.0 && second.Alpha > 0.0)
+						sum.BaseColor = new[] { Math.Min(1f, first.BaseColor[0] + second.BaseColor[0]), Math.Min(1f, first.BaseColor[1] + second.BaseColor[1]), Math.Min(1f, first.BaseColor[2] + second.BaseColor[2]) };
+					sum.Emission = new[] { first.Emission[0] + second.Emission[0], first.Emission[1] + second.Emission[1], first.Emission[2] + second.Emission[2] };
 					return sum;
 				}
 			}
@@ -142,6 +147,12 @@ namespace RhinoCyclesCore.Materials
 
 		private static CyclesGraphLook Blend(CyclesGraphLook a, CyclesGraphLook b, double wa, double wb)
 		{
+			// A transparent side, such as an alpha cut-out, only takes alpha away.
+			if (a.Alpha <= 0.0 && b.Alpha > 0.0)
+				return Weighted(b, wb);
+			if (b.Alpha <= 0.0 && a.Alpha > 0.0)
+				return Weighted(a, wa);
+
 			double L(double x, double y) => wa * x + wb * y;
 			float[] C(float[] x, float[] y) => new[] { (float)L(x[0], y[0]), (float)L(x[1], y[1]), (float)L(x[2], y[2]) };
 
@@ -160,6 +171,28 @@ namespace RhinoCyclesCore.Materials
 				Subsurface = L(a.Subsurface, b.Subsurface),
 				Emission = C(a.Emission, b.Emission),
 				BaseColorImage = a.BaseColorImage ?? b.BaseColorImage,
+			};
+		}
+
+		/// <summary>
+		/// A look at a weight in a mix with something transparent: as visible, as emissive.
+		/// </summary>
+		private static CyclesGraphLook Weighted(CyclesGraphLook look, double weight)
+		{
+			return new CyclesGraphLook
+			{
+				BaseColor = look.BaseColor,
+				Metallic = look.Metallic,
+				Roughness = look.Roughness,
+				Alpha = weight * look.Alpha,
+				Transmission = look.Transmission,
+				Ior = look.Ior,
+				Coat = look.Coat,
+				CoatRoughness = look.CoatRoughness,
+				Sheen = look.Sheen,
+				Subsurface = look.Subsurface,
+				Emission = Scale(look.Emission, weight),
+				BaseColorImage = look.BaseColorImage,
 			};
 		}
 
@@ -201,8 +234,9 @@ namespace RhinoCyclesCore.Materials
 				case "normal_map":
 					return Col(graph.NodeType(from) == "rgb_curves" ? "value" : "color");
 				default:
-					// Procedural textures and the like: the input's own value is the best guess.
-					return Numbers(graph.Value(node, socket) ?? Default(graph, node, socket), 3, 0.8f);
+					// Procedural textures and the like: the input's own value is the best guess, else
+					// grey, as the default of a linked input can be black (Curves, Hue/Saturation).
+					return Numbers(graph.Value(node, socket), 3, 0.8f);
 			}
 		}
 
