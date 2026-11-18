@@ -27,7 +27,7 @@ using Grasshopper2.UI.InputPanel;
 namespace CyclesComponents
 {
 	/// <summary>
-	/// The end of a Cycles shader graph: writes the graph as Cycles XML into a "Cycles Graph"
+	/// The end of a Cycles shader graph: writes the graph as Cycles XML into a "Node-Based"
 	/// render material, created on the first solution and updated after that. The material
 	/// also gets this document, so its Edit button can open the graph again.
 	/// </summary>

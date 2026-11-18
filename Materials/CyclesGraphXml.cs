@@ -26,7 +26,7 @@ using System.Xml.Linq;
 namespace RhinoCyclesCore.Materials
 {
 	/// <summary>
-	/// The XML of a Cycles Graph material as the material editor reads and changes it: nodes by
+	/// The XML of a Node-Based material as the material editor reads and changes it: nodes by
 	/// name, the link into each input, and one value changed at a time.
 	/// </summary>
 	internal sealed class CyclesGraphXml
@@ -75,11 +75,6 @@ namespace RhinoCyclesCore.Materials
 		}
 
 		/// <summary>
-		/// Whether there is no node and no connect, as for text that is not a graph.
-		/// </summary>
-		internal bool IsEmpty => _nodes.Count == 0 && _links.Count == 0;
-
-		/// <summary>
 		/// The Cycles node type of a node, or null if there is no such node.
 		/// </summary>
 		internal string NodeType(string node)
@@ -98,6 +93,20 @@ namespace RhinoCyclesCore.Materials
 		internal string Value(string node, string socket)
 		{
 			return node != null && _nodes.TryGetValue(node, out var element) ? FindAttribute(element, socket)?.Value : null;
+		}
+
+		/// <summary>
+		/// The value ccycles gives an input before it reads the XML, where that differs from Cycles'
+		/// own default, or null.
+		/// </summary>
+		internal static string ReaderDefault(string nodeType, string socket)
+		{
+			// shader_xml.cpp starts a tangent on Rhino's UV map.
+			if (nodeType == "tangent" && socket == "direction_type")
+				return "uv_map";
+			if (nodeType == "tangent" && socket == "attribute")
+				return "uvmap1";
+			return null;
 		}
 
 		/// <summary>
@@ -177,9 +186,10 @@ namespace RhinoCyclesCore.Materials
 			return string.Join(" ", words);
 		}
 
+		/* By the exact name, as Cycles reads it. */
 		private static XAttribute FindAttribute(XElement element, string socket)
 		{
-			return element.Attributes().FirstOrDefault(a => string.Equals(a.Name.LocalName, socket, StringComparison.OrdinalIgnoreCase));
+			return element.Attribute(socket);
 		}
 
 		private static bool Split(string text, out string node, out string socket)

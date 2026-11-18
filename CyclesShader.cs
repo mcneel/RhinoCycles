@@ -154,7 +154,7 @@ namespace RhinoCyclesCore
 			Metal,
 			Custom
 		}
-		private static ProbableMaterial WhatMaterial(RenderMaterial rm, Rhino.DocObjects.Material m)
+		internal static ProbableMaterial WhatMaterial(RenderMaterial rm, Rhino.DocObjects.Material m)
 		{
 			if (rm.TypeId.Equals(RenderMaterial.PictureMaterialGuid))
 			{

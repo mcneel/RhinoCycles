@@ -36,19 +36,19 @@ using Rhino.Render;
 namespace CyclesComponents
 {
 	/// <summary>
-	/// The Grasshopper 2 document a Cycles Graph material carries, and opening it for editing.
+	/// The Grasshopper 2 document a Node-Based material carries, and opening it for editing.
 	/// RhinoCycles' Edit button calls <see cref="EditMaterial"/> by reflection.
 	/// </summary>
 	public static class GraphEditing
 	{
-		/* RhinoCyclesCore.Materials.CyclesGraphMaterial and its fields, which this plugin does not reference. */
+		/* RhinoCyclesCore.Materials.NodeBasedMaterial and its fields, which this plugin does not reference. */
 		internal static readonly Guid MaterialType = new Guid("E5B2C7F2-C65B-44DB-923E-A3EB96EE60DC");
 		internal const string GraphXmlField = "cycles-graph-xml";
 		internal const string SourceField = "cycles-graph-source";
 		internal const string DocumentField = "cycles-graph-document";
 		internal const string EditsField = "cycles-graph-edits";
 
-		/* The shader of a new graph. CyclesGraphMaterial renders the same while its graph is empty. */
+		/* The shader of a new graph. NodeBasedMaterial renders the same while its graph is empty. */
 		private const string DefaultShader = "principled_bsdf";
 
 		/* Documents opened from a material, by material id. */
@@ -56,7 +56,7 @@ namespace CyclesComponents
 		private static bool g_watchingDocuments;
 
 		/// <summary>
-		/// Open the graph of a Cycles Graph material in the Grasshopper 2 editor, or bring it
+		/// Open the graph of a Node-Based material in the Grasshopper 2 editor, or bring it
 		/// forward when it is open already. A material without a document gets a new one with
 		/// a Principled BSDF into a Material Output that writes to it.
 		/// </summary>
@@ -249,7 +249,7 @@ namespace CyclesComponents
 		}
 
 		/// <summary>
-		/// Write a graph into the Cycles Graph material of a writer, creating it on the first solution
+		/// Write a graph into the Node-Based material of a writer, creating it on the first solution
 		/// and updating the same one after that. The material also gets the writer's document.
 		/// </summary>
 		/// <param name="opened">Write to the material the document was opened from, if there is one.
@@ -276,11 +276,11 @@ namespace CyclesComponents
 				material = RenderContent.Create(doc, MaterialType) as RenderMaterial;
 				if (material is null)
 				{
-					access.AddError("No Cycles Graph material", "RhinoCycles is not loaded, or is too old to have the Cycles Graph material.");
+					access.AddError("No Node-Based material", "RhinoCycles is not loaded, or is too old to have the Node-Based material.");
 					return null;
 				}
 				if (string.IsNullOrWhiteSpace(name))
-					name = "Cycles Graph";
+					name = "Node-Based";
 			}
 
 			var current = material.Fields.TryGetValue(GraphXmlField, out string existing) ? existing : null;

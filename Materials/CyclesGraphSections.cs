@@ -28,15 +28,16 @@ using System.Linq;
 namespace RhinoCyclesCore.Materials
 {
 	/// <summary>
-	/// One output of a Cycles Graph material in the material editor, as Blender's material
+	/// One output of a Node-Based material in the material editor, as Blender's material
 	/// properties show it: the node plugged in with its inputs, and behind a linked input the
 	/// node it comes from, unfolded on request. A changed value goes to the graph through
-	/// <see cref="CyclesGraphMaterial.SetGraphValue"/>.
+	/// <see cref="NodeBasedMaterial.SetGraphValue"/>.
 	/// </summary>
 	public abstract class CyclesGraphOutputSection : EtoContentUISection3
 	{
-		private const int Indent = 14;
 		private const int MaxDepth = 16;
+
+		private static int Indent => RhinoLayout.Padding(RhinoLayout.PaddingType.Indented).Left;
 
 		/* Linked inputs shown unfolded, by their path from the output, kept across rebuilds. */
 		private readonly HashSet<string> _unfolded = new HashSet<string>(StringComparer.Ordinal);
@@ -56,8 +57,14 @@ namespace RhinoCyclesCore.Materials
 			{
 				RenderContent.ContentChanged -= OnContentChanged;
 				RenderContent.ContentChanged += OnContentChanged;
+				_following = true;
+				Refresh(false);
 			};
-			UnLoad += (sender, e) => RenderContent.ContentChanged -= OnContentChanged;
+			UnLoad += (sender, e) =>
+			{
+				RenderContent.ContentChanged -= OnContentChanged;
+				_following = false;
+			};
 		}
 
 		/// <summary>
@@ -68,6 +75,38 @@ namespace RhinoCyclesCore.Materials
 		public override Guid ViewModelId => Guid.Empty;
 
 		public override int SectionHeight => (int)Math.Ceiling(Content.GetPreferredSize(new SizeF(Width > 0 ? Width : 300, float.PositiveInfinity)).Height);
+
+		/// <summary>
+		/// True to hide the section while nothing is connected to its output, as nodes are
+		/// added in Grasshopper 2 and not here.
+		/// </summary>
+		protected virtual bool HiddenWhenUnlinked => false;
+
+		/* Whether the output is linked, as of the last rebuild. Rebuilds follow the material's changes
+		 * while the section is loaded; until then the holder's polling reads the field. */
+		private bool _linked;
+		private bool _following;
+		private string _linkXml;
+
+		public override bool Hidden => base.Hidden || (HiddenWhenUnlinked && !(_following ? _linked : IsLinkedInField()));
+
+		private bool IsLinkedInField()
+		{
+			string xml = null;
+			using (var iterator = GetSelection().Iterator())
+			{
+				if (iterator?.First() is NodeBasedMaterial selected)
+					selected.Fields.TryGetValue(NodeBasedMaterial.GraphXmlField, out xml);
+			}
+
+			xml = xml ?? string.Empty;
+			if (_linkXml == null || !string.Equals(xml, _linkXml, StringComparison.Ordinal))
+			{
+				_linkXml = xml;
+				_linked = !string.IsNullOrWhiteSpace(xml) && CyclesGraphXml.Parse(xml)?.Source("output", OutputSocket, OutputSocket).HasValue == true;
+			}
+			return _linked;
+		}
 
 		protected override void Dispose(bool disposing)
 		{
@@ -87,7 +126,7 @@ namespace RhinoCyclesCore.Materials
 				return;
 
 			var material = SelectedMaterial();
-			var xml = material != null && material.Fields.TryGetValue(CyclesGraphMaterial.GraphXmlField, out string text) ? text : null;
+			var xml = material != null && material.Fields.TryGetValue(NodeBasedMaterial.GraphXmlField, out string text) ? text : null;
 			if (!force && (material?.Id ?? Guid.Empty) == _materialId && xml == _xml)
 				return;
 
@@ -96,34 +135,39 @@ namespace RhinoCyclesCore.Materials
 			Rebuild(material);
 		}
 
-		private CyclesGraphMaterial SelectedMaterial()
+		private NodeBasedMaterial SelectedMaterial()
 		{
 			using (var iterator = GetSelection().Iterator())
 			{
-				if (!(iterator?.First() is CyclesGraphMaterial selected))
+				if (!(iterator?.First() is NodeBasedMaterial selected))
 					return null;
 
 				// The document's own material, so a change is undoable and reaches Raytraced.
-				return selected.DocumentAssoc?.RenderMaterials.FirstOrDefault(m => m.Id == selected.Id) as CyclesGraphMaterial ?? selected;
+				return selected.DocumentAssoc?.RenderMaterials.FirstOrDefault(m => m.Id == selected.Id) as NodeBasedMaterial ?? selected;
 			}
 		}
 
-		private void Rebuild(CyclesGraphMaterial material)
+		private void Rebuild(NodeBasedMaterial material)
 		{
-			var layout = new TableLayout { Spacing = new Size(4, 2), Padding = new Padding(0, 2) };
+			var layout = new TableLayout
+			{
+				Padding = RhinoLayout.Padding(RhinoLayout.PaddingType.Table),
+				Spacing = RhinoLayout.Spacing(RhinoLayout.SpacingType.Table),
+			};
 
 			// An empty graph renders as the Principled BSDF a new graph starts with.
-			_graph = material == null ? null : CyclesGraphXml.Parse(string.IsNullOrWhiteSpace(_xml) ? CyclesGraphMaterial.EmptyGraphXml : _xml);
+			_graph = material == null ? null : CyclesGraphXml.Parse(string.IsNullOrWhiteSpace(_xml) ? NodeBasedMaterial.EmptyGraphXml : _xml);
 			var source = _graph?.Source("output", OutputSocket, OutputSocket);
+			_linked = source.HasValue;
 			if (_graph == null)
 			{
 				if (material != null)
-					layout.Rows.Add(Row(0, LOC.STR("The graph XML does not parse."), null));
+					layout.Rows.Add(new TableRow(RhinoLayout.NewLabel(LOC.STR("The graph XML does not parse."))));
 			}
 			else if (source.HasValue)
 				AddNode(layout, material, source.Value.Node, 0, OutputSocket, new HashSet<string>(StringComparer.Ordinal));
 			else
-				layout.Rows.Add(Row(0, LOC.STR("None"), null));
+				layout.Rows.Add(new TableRow(RhinoLayout.NewLabel(LOC.STR("None"))));
 
 			layout.Rows.Add(null);
 			Content = layout;
@@ -132,18 +176,30 @@ namespace RhinoCyclesCore.Materials
 		/// <summary>
 		/// A node's title and inputs, and the nodes behind its unfolded linked inputs.
 		/// </summary>
-		private void AddNode(TableLayout layout, CyclesGraphMaterial material, string node, int depth, string path, HashSet<string> visiting)
+		private void AddNode(TableLayout layout, NodeBasedMaterial material, string node, int depth, string path, HashSet<string> visiting)
 		{
 			var type = _graph.NodeType(node);
 			var nodeType = ShaderNodeTypes.Find(type);
-			layout.Rows.Add(Row(depth, CyclesGraphXml.DisplayName(type ?? node), null, true));
+			layout.Rows.Add(Heading(depth, CyclesGraphXml.DisplayName(type ?? node)));
 			if (nodeType == null || depth >= MaxDepth || !visiting.Add(node))
 				return;
+
+			// Null while a link sets it.
+			string Setting(string name)
+			{
+				var info = nodeType.Inputs.FirstOrDefault(s => s.Name == name);
+				if (info != null && _graph.Source(node, name, info.UiName).HasValue)
+					return null;
+				return _graph.Value(node, name) ?? CyclesGraphXml.ReaderDefault(type, name) ?? info?.Default;
+			}
 
 			foreach (var socket in nodeType.Inputs)
 			{
 				// Texture mapping is left to Grasshopper, as Blender keeps it off the material properties.
 				if (socket.IsInternal || socket.Name.StartsWith("tex_mapping.", StringComparison.Ordinal))
+					continue;
+
+				if (!CyclesInputUse.IsUsed(type, socket.Name, Setting))
 					continue;
 
 				var source = _graph.Source(node, socket.Name, socket.UiName);
@@ -159,28 +215,68 @@ namespace RhinoCyclesCore.Materials
 							_unfolded.Add(key);
 						Refresh(true);
 					};
-					layout.Rows.Add(Row(depth, socket.UiName, link));
+					layout.Rows.Add(Row(depth + 1, socket.UiName, link));
 					if (unfolded)
 						AddNode(layout, material, from, depth + 1, key, visiting);
 					continue;
 				}
 
-				var editor = Editor(material, node, socket);
+				var defaultLink = DefaultLink(socket.Flags);
+				var editor = defaultLink != null ? Note(defaultLink) : Editor(material, node, type, socket);
 				if (editor != null)
-					layout.Rows.Add(Row(depth, socket.UiName, editor));
+					layout.Rows.Add(Row(depth + 1, socket.UiName, editor));
 			}
 
 			visiting.Remove(node);
 		}
 
-		private static TableRow Row(int depth, string label, Control editor, bool title = false)
+		/// <summary>
+		/// What Cycles links an input to when nothing else is, which makes its value unused, or null.
+		/// </summary>
+		private static string DefaultLink(int flags)
 		{
-			var text = new Label { Text = label, VerticalAlignment = VerticalAlignment.Center, Wrap = WrapMode.None };
-			if (title)
-				text.Font = SystemFonts.Bold();
+			/* Cycles SocketType::LINK_* flags, in the order ShaderGraph::default_inputs tests them. */
+			if ((flags & (1 << 4)) != 0) return LOC.STR("Generated");
+			if ((flags & (1 << 5)) != 0) return LOC.STR("Object Normal");
+			if ((flags & (1 << 6)) != 0) return LOC.STR("UV");
+			if ((flags & ((1 << 7) | (1 << 8))) != 0) return LOC.STR("Incoming");
+			if ((flags & (1 << 9)) != 0) return LOC.STR("Shading Normal");
+			if ((flags & (1 << 10)) != 0) return LOC.STR("Position");
+			if ((flags & (1 << 11)) != 0) return LOC.STR("Radial (Z Axis)");
+			return null;
+		}
 
-			var cell = new Panel { Content = text, Padding = new Padding(depth * Indent, 0, 4, 0) };
-			return new TableRow(new TableCell(cell), new TableCell(editor, true));
+		private static Control Note(string text)
+		{
+			return new Label { Text = text, VerticalAlignment = VerticalAlignment.Center };
+		}
+
+		/// <summary>
+		/// A node's name over a line, as Rhino's options lists head a group.
+		/// </summary>
+		private static TableRow Heading(int depth, string text)
+		{
+			return new TableRow(new Panel { Content = new LabelSeparator { Text = text }, Padding = new Padding(depth * Indent, 0, 0, 0) });
+		}
+
+		/// <summary>
+		/// A label and its control, each taking half the width, as in Rhino's options lists. Only
+		/// the label is indented, so the controls of nested nodes line up.
+		/// </summary>
+		private static TableRow Row(int depth, string label, Control editor)
+		{
+			var row = RhinoLayout.LabelRow(label, editor, true);
+			// Out of the cell first, or the cell takes it back from the panel.
+			var text = row.Cells[0].Control;
+			row.Cells[0].Control = null;
+			row.Cells[0].Control = new Panel { Content = text, Padding = new Padding(depth * Indent, 0, 0, 0) };
+			foreach (var cell in row.Cells)
+				cell.ScaleWidth = true;
+
+			return new TableRow(new TableLayout(row)
+			{
+				Spacing = new Size(RhinoLayout.Spacing(RhinoLayout.SpacingType.Table).Width, 0),
+			});
 		}
 
 		#region editors
@@ -188,10 +284,11 @@ namespace RhinoCyclesCore.Materials
 		/// A control for an input's value, or null for inputs the material editor does not set,
 		/// such as tables.
 		/// </summary>
-		private Control Editor(CyclesGraphMaterial material, string node, ShaderNodeSocketInfo socket)
+		private Control Editor(NodeBasedMaterial material, string node, string type, ShaderNodeSocketInfo socket)
 		{
-			var text = _graph.Value(node, socket.Name) ?? socket.Default;
-			void Set(string value) => SetValue(material, node, socket.Name, value);
+			var text = _graph.Value(node, socket.Name) ?? CyclesGraphXml.ReaderDefault(type, socket.Name) ?? socket.Default;
+			var rebuild = CyclesInputUse.ChangesUse(type, socket.Name);
+			void Set(string value) => SetValue(material, node, socket.Name, value, rebuild);
 
 			switch (socket.Type)
 			{
@@ -207,7 +304,7 @@ namespace RhinoCyclesCore.Materials
 				case "point2": return Numbers(text, 2, Set);
 				case "enum": return Choice(text, socket, Set);
 				case "string": return Text(text, Set);
-				case "closure": return new Label { Text = LOC.STR("None"), VerticalAlignment = VerticalAlignment.Center };
+				case "closure": return Note(LOC.STR("None"));
 				default: return null;
 			}
 		}
@@ -299,15 +396,26 @@ namespace RhinoCyclesCore.Materials
 			return box;
 		}
 
-		private void SetValue(CyclesGraphMaterial material, string node, string socket, string value)
+		private void SetValue(NodeBasedMaterial material, string node, string socket, string value, bool rebuild)
 		{
 			if (_graph == null)
 				return;
 
-			// The section already shows the value, and a rebuild would take the focus away.
+			// The section already shows the value, and a rebuild would take the focus away,
+			// unless the value changes which inputs are shown.
 			_xml = _graph.WithValue(node, socket, value);
 			if (!material.SetGraphValue(_xml, node, socket, value))
 				Application.Instance.AsyncInvoke(() => Refresh(true));
+			else if (rebuild)
+			{
+				// From the edited XML: with the graph open in Grasshopper 2 the material has not changed yet.
+				var materialId = material.Id;
+				Application.Instance.AsyncInvoke(() =>
+				{
+					if (!IsDisposed && _materialId == materialId)
+						Rebuild(material);
+				});
+			}
 		}
 
 		private static double[] Numbers(string text, int count)
@@ -348,12 +456,16 @@ namespace RhinoCyclesCore.Materials
 	{
 		protected override string OutputSocket => "volume";
 
+		protected override bool HiddenWhenUnlinked => true;
+
 		public override LocalizeStringPair Caption => new LocalizeStringPair("Volume", LOC.STR("Volume"));
 	}
 
 	public sealed class CyclesGraphDisplacementSection : CyclesGraphOutputSection
 	{
 		protected override string OutputSocket => "displacement";
+
+		protected override bool HiddenWhenUnlinked => true;
 
 		public override LocalizeStringPair Caption => new LocalizeStringPair("Displacement", LOC.STR("Displacement"));
 	}

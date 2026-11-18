@@ -25,7 +25,7 @@ using Grasshopper2.UI.Icon;
 namespace CyclesComponents
 {
 	/// <summary>
-	/// Writes the XML of a Material Output into a "Cycles Graph" render material. Material Output
+	/// Writes the XML of a Material Output into a "Node-Based" render material. Material Output
 	/// writes the material itself now; this is kept for documents saved before, which still
 	/// write through it.
 	/// </summary>
