@@ -530,9 +530,12 @@ namespace RhinoCyclesCore.Materials
 
 		public string MaterialXml => _graphXml;
 
+		/* Where a node sits in a node editor, which Cycles would report as an input it does not have. */
+		private static readonly Regex g_position = new Regex("\\s+ui_position\\s*=\\s*(\"[^\"]*\"|'[^']*')", RegexOptions.Compiled);
+
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
-			var xml = string.IsNullOrWhiteSpace(_graphXml) ? EmptyGraphXml : _graphXml;
+			var xml = g_position.Replace(string.IsNullOrWhiteSpace(_graphXml) ? EmptyGraphXml : _graphXml, string.Empty);
 			var parsed = ccl.Shader.GraphFromCyclesXml(sh, xml, out var problems);
 			if (!string.IsNullOrEmpty(problems))
 				RcCore.It.AddLogString($"Node-Based material '{Name}': {problems}");

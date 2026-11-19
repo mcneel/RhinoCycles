@@ -134,7 +134,7 @@ namespace CyclesComponents
 				return;
 			}
 
-			var xml = CyclesXmlWriter.Write(connected);
+			var xml = CyclesXmlWriter.Write(connected, CyclesXmlWriter.Positions(Document), CyclesXmlWriter.Position(this));
 			access.SetItem(0, xml);
 
 			GraphEditing.OnUiThread(() => Write(access, xml));

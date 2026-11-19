@@ -348,16 +348,28 @@ namespace CyclesComponents
 		}
 
 		/// <summary>
-		/// Store the document in the material if it changed.
+		/// Store the document in the material if it changed, and the XML's node positions if
+		/// components moved since the graph last wrote it.
 		/// </summary>
 		internal static void StoreDocument(RenderMaterial material, Document doc)
 		{
 			var text = Serialise(doc);
-			if (StoredDocument(material) == text)
+			var source = material.Fields.TryGetValue(SourceField, out string s) ? s : null;
+			var outputs = doc.Objects.ForwardsOfT<CyclesMaterialOutput>().ToList();
+			var writer = outputs.FirstOrDefault(o => o.InstanceId.ToString() == source) ?? outputs.FirstOrDefault();
+
+			// A paused output has not written the XML, whose nodes keep their own names.
+			string placed = null;
+			if (writer != null && !writer.Paused && material.Fields.TryGetValue(GraphXmlField, out string xml))
+				placed = CyclesXmlWriter.WithPositions(xml, doc, writer);
+
+			if (StoredDocument(material) == text && placed == null)
 				return;
 
 			material.BeginChange(RenderContent.ChangeContexts.Program);
 			material.Fields.Set(DocumentField, text);
+			if (placed != null)
+				material.Fields.Set(GraphXmlField, placed);
 			material.EndChange();
 		}
 

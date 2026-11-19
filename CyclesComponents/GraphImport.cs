@@ -63,6 +63,8 @@ namespace CyclesComponents
 			var nodes = new Dictionary<string, (string Type, CyclesNodeComponent Component)>(StringComparer.Ordinal);
 			var editors = new Dictionary<string, List<(IParameter Target, AbstractParameter Editor)>>(StringComparer.Ordinal);
 			var connects = new List<(string FromNode, string FromSocket, string ToNode, string ToSocket)>();
+			var positions = new Dictionary<string, PointF>(StringComparer.Ordinal);
+			PointF? outputPosition = null;
 
 			foreach (var element in elements)
 			{
@@ -77,10 +79,15 @@ namespace CyclesComponents
 					continue;
 				}
 
+				// Layout only, so a position that does not read is no problem.
+				var hasPosition = CyclesXmlWriter.TryParsePosition((string)element.Attribute(CyclesXmlWriter.PositionAttribute), out var position);
+
 				if (type == "output")
 				{
-					if (element.Attributes().Any(a => a.Name.LocalName != "name"))
+					if (element.Attributes().Any(a => a.Name.LocalName != "name" && a.Name.LocalName != CyclesXmlWriter.PositionAttribute))
 						result.Problems.Add("Values on the output node are not imported.");
+					if (hasPosition)
+						outputPosition = position;
 					continue;
 				}
 
@@ -104,7 +111,7 @@ namespace CyclesComponents
 				foreach (var attribute in element.Attributes())
 				{
 					var socketName = attribute.Name.LocalName;
-					if (socketName == "name" || socketName == curves?.Name || (hasRamp && (socketName == NodeCatalog.RampSocket || socketName == NodeCatalog.RampAlphaSocket)))
+					if (socketName == "name" || socketName == CyclesXmlWriter.PositionAttribute || socketName == curves?.Name || (hasRamp && (socketName == NodeCatalog.RampSocket || socketName == NodeCatalog.RampAlphaSocket)))
 						continue;
 					SetInput(component, type, socketName, attribute.Value, result.Problems);
 				}
@@ -133,6 +140,8 @@ namespace CyclesComponents
 
 				if (wired.Count > 0)
 					editors[name] = wired;
+				if (hasPosition)
+					positions[name] = position;
 				nodes[name] = (type, component);
 			}
 
@@ -168,22 +177,40 @@ namespace CyclesComponents
 
 			foreach (var pair in nodes)
 			{
+				var component = pair.Value.Component;
+				editors.TryGetValue(pair.Key, out var wired);
+
+				// Where the XML says, with its editors stacked below it, where Blender draws a ramp or curve.
+				if (positions.TryGetValue(pair.Key, out var corner))
+				{
+					CyclesXmlWriter.AddAt(result.Document, component, corner);
+					var editorTop = component.Attributes.Bounds.Bottom + RowHeight;
+					foreach (var (target, editor) in wired ?? Enumerable.Empty<(IParameter, AbstractParameter)>())
+					{
+						CyclesXmlWriter.AddAt(result.Document, editor, new PointF(corner.X, editorTop));
+						editorTop = editor.Attributes.Bounds.Bottom + RowHeight;
+						Connections.Connect(editor, target);
+					}
+					continue;
+				}
+
 				var column = depth[pair.Key];
 				var nodeTop = Top(column);
-				var component = pair.Value.Component;
 				Place(component, column, nodeTop, Math.Max(component.Parameters.InputCount, component.Parameters.OutputCount) + 1);
 
 				// Editors wired into their inputs, level with the node where the column allows.
-				if (editors.TryGetValue(pair.Key, out var wired))
-					foreach (var (target, editor) in wired)
-					{
-						Place(editor, column - 1, Math.Max(Top(column - 1), nodeTop), Editors.Rows(editor));
-						Connections.Connect(editor, target);
-					}
+				foreach (var (target, editor) in wired ?? Enumerable.Empty<(IParameter, AbstractParameter)>())
+				{
+					Place(editor, column - 1, Math.Max(Top(column - 1), nodeTop), Editors.Rows(editor));
+					Connections.Connect(editor, target);
+				}
 			}
 
 			var output = (CyclesMaterialOutput)ObjectProxies.FindByType(typeof(CyclesMaterialOutput)).Emit();
-			Place(output, outputColumn, 50f, output.Parameters.InputCount + 1);
+			if (outputPosition.HasValue)
+				CyclesXmlWriter.AddAt(result.Document, output, outputPosition.Value);
+			else
+				Place(output, outputColumn, 50f, output.Parameters.InputCount + 1);
 			result.Output = output;
 
 			foreach (var c in connects)
