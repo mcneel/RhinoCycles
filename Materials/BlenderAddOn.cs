@@ -82,7 +82,8 @@ namespace RhinoCyclesCore.Materials
 		public static bool IsShipped => File.Exists(Path.Combine(Folder, "blender_manifest.toml"));
 
 		/// <summary>
-		/// Blender 4.2 and later where they are usually installed, and the one .blend files open with.
+		/// Blender 4.2 and later where they are usually installed, the ones Windows lists as installed
+		/// apps, and the one .blend files open with.
 		/// </summary>
 		public static List<Installation> Find()
 		{
@@ -136,6 +137,9 @@ namespace RhinoCyclesCore.Materials
 				yield return Path.Combine(root, "Steam", "steamapps", "common", "Blender", "blender.exe");
 			}
 
+			foreach (var folder in InstalledAppFolders())
+				yield return Path.Combine(folder, "blender.exe");
+
 			// The Blender .blend files open with, which can be a copy unpacked anywhere.
 			string command = null;
 			try
@@ -150,6 +154,46 @@ namespace RhinoCyclesCore.Materials
 			var launcher = match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
 			if (!string.IsNullOrEmpty(launcher))
 				yield return Path.Combine(Path.GetDirectoryName(launcher) ?? string.Empty, "blender.exe");
+		}
+
+		/// <summary>
+		/// The folders of the Blenders in Windows' list of installed apps, wherever they were installed.
+		/// </summary>
+		private static List<string> InstalledAppFolders()
+		{
+			var folders = new List<string>();
+			var lists = new[]
+			{
+				(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry64),
+				(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry32),
+				(Microsoft.Win32.RegistryHive.CurrentUser, Microsoft.Win32.RegistryView.Default),
+			};
+			foreach (var (hive, view) in lists)
+			{
+				try
+				{
+					using (var root = Microsoft.Win32.RegistryKey.OpenBaseKey(hive, view))
+					using (var uninstall = root.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"))
+					{
+						if (uninstall == null)
+							continue;
+						foreach (var name in uninstall.GetSubKeyNames())
+						{
+							using (var app = uninstall.OpenSubKey(name))
+							{
+								var display = app?.GetValue("DisplayName") as string;
+								var location = (app?.GetValue("InstallLocation") as string)?.Trim().Trim('"');
+								if (!string.IsNullOrEmpty(location) && display != null && display.IndexOf("Blender", StringComparison.OrdinalIgnoreCase) >= 0)
+									folders.Add(location);
+							}
+						}
+					}
+				}
+				catch (Exception)
+				{
+				}
+			}
+			return folders;
 		}
 
 		private static IEnumerable<string> MacPrograms()
