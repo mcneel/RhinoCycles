@@ -16,6 +16,7 @@ limitations under the License.
 
 using ccl;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -48,21 +49,51 @@ namespace RhinoCyclesCore.Materials
 		private const int MaxDepth = 32;
 
 		/// <summary>
+		/// One reading of a graph: what each node gave, so a node linked into several inputs is
+		/// read once, and the nodes being read, so a loop ends.
+		/// </summary>
+		private sealed class Walk
+		{
+			public readonly CyclesGraphXml Graph;
+			public readonly Dictionary<string, CyclesGraphLook> Closures = new Dictionary<string, CyclesGraphLook>();
+			public readonly Dictionary<(string, string), (float[] Rgb, string Image)> Colours = new Dictionary<(string, string), (float[] Rgb, string Image)>();
+			public readonly HashSet<string> Reading = new HashSet<string>();
+
+			public Walk(CyclesGraphXml graph)
+			{
+				Graph = graph;
+			}
+		}
+
+		/// <summary>
 		/// The look of the shader linked into the output's Surface.
 		/// </summary>
 		internal static CyclesGraphLook FromGraph(CyclesGraphXml graph)
 		{
 			var surface = graph.Source("output", "surface", "Surface");
-			return surface.HasValue ? Closure(graph, surface.Value.Node, 0) : new CyclesGraphLook();
+			return surface.HasValue ? Closure(new Walk(graph), surface.Value.Node, 0) : new CyclesGraphLook();
 		}
 
-		private static CyclesGraphLook Closure(CyclesGraphXml graph, string node, int depth)
+		private static CyclesGraphLook Closure(Walk walk, string node, int depth)
 		{
-			var look = new CyclesGraphLook();
-			if (depth > MaxDepth)
-				return look;
+			if (walk.Closures.TryGetValue(node, out var known))
+				return known;
+			// Too deep, or a loop back to a node being read.
+			if (depth > MaxDepth || !walk.Reading.Add(node))
+				return new CyclesGraphLook();
 
-			float[] Col(string socket) => Colour(graph, node, socket, depth, look);
+			var look = ClosureOf(walk, node, depth);
+			walk.Reading.Remove(node);
+			walk.Closures[node] = look;
+			return look;
+		}
+
+		private static CyclesGraphLook ClosureOf(Walk walk, string node, int depth)
+		{
+			var graph = walk.Graph;
+			var look = new CyclesGraphLook();
+
+			float[] Col(string socket) => Colour(walk, node, socket, depth, look);
 			double Num(string socket) => Number(graph, node, socket);
 
 			switch (graph.NodeType(node))
@@ -119,12 +150,12 @@ namespace RhinoCyclesCore.Materials
 				case "mix_closure":
 				{
 					var fac = Math.Max(0.0, Math.Min(1.0, Num("fac")));
-					return Blend(Input(graph, node, "closure1", depth), Input(graph, node, "closure2", depth), 1.0 - fac, fac);
+					return Blend(Input(walk, node, "closure1", depth), Input(walk, node, "closure2", depth), 1.0 - fac, fac);
 				}
 				case "add_closure":
 				{
-					var first = Input(graph, node, "closure1", depth);
-					var second = Input(graph, node, "closure2", depth);
+					var first = Input(walk, node, "closure1", depth);
+					var second = Input(walk, node, "closure2", depth);
 					var sum = Blend(first, second, 0.5, 0.5);
 					// Closures add up, and so do their colours.
 					if (first.Alpha > 0.0 && second.Alpha > 0.0)
@@ -139,10 +170,10 @@ namespace RhinoCyclesCore.Materials
 		/// <summary>
 		/// The look of the closure linked into an input, or nothing (transparent) if none is.
 		/// </summary>
-		private static CyclesGraphLook Input(CyclesGraphXml graph, string node, string socket, int depth)
+		private static CyclesGraphLook Input(Walk walk, string node, string socket, int depth)
 		{
-			var source = graph.Source(node, socket, socket);
-			return source.HasValue ? Closure(graph, source.Value.Node, depth + 1) : new CyclesGraphLook { Alpha = 0.0 };
+			var source = walk.Graph.Source(node, socket, socket);
+			return source.HasValue ? Closure(walk, source.Value.Node, depth + 1) : new CyclesGraphLook { Alpha = 0.0 };
 		}
 
 		private static CyclesGraphLook Blend(CyclesGraphLook a, CyclesGraphLook b, double wa, double wb)
@@ -200,14 +231,38 @@ namespace RhinoCyclesCore.Materials
 		/// A colour input: its value, or an estimate of what the node linked into it gives. An
 		/// image is noted for the display material instead.
 		/// </summary>
-		private static float[] Colour(CyclesGraphXml graph, string node, string socket, int depth, CyclesGraphLook look)
+		private static float[] Colour(Walk walk, string node, string socket, int depth, CyclesGraphLook look)
 		{
+			var graph = walk.Graph;
 			var source = graph.Source(node, socket, socket);
 			if (!source.HasValue || depth > MaxDepth)
 				return Numbers(graph.Value(node, socket) ?? Default(graph, node, socket), 3, 0.8f);
 
-			var from = source.Value.Node;
-			float[] Col(string s) => Colour(graph, from, s, depth + 1, look);
+			if (!walk.Colours.TryGetValue((node, socket), out var known))
+			{
+				var from = source.Value.Node;
+				// A loop back to a node being read gives the input's own value.
+				if (!walk.Reading.Add(from))
+					return Numbers(graph.Value(node, socket), 3, 0.8f);
+
+				// Collects the image found under this input.
+				var found = new CyclesGraphLook();
+				known = (LinkedColour(walk, node, socket, from, depth, found), found.BaseColorImage);
+				walk.Reading.Remove(from);
+				walk.Colours[(node, socket)] = known;
+			}
+
+			look.BaseColorImage = look.BaseColorImage ?? known.Image;
+			return known.Rgb;
+		}
+
+		/// <summary>
+		/// An estimate of what the node linked into a colour input gives.
+		/// </summary>
+		private static float[] LinkedColour(Walk walk, string node, string socket, string from, int depth, CyclesGraphLook look)
+		{
+			var graph = walk.Graph;
+			float[] Col(string s) => Colour(walk, from, s, depth + 1, look);
 
 			switch (graph.NodeType(from))
 			{

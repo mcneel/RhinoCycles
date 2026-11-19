@@ -43,8 +43,12 @@ namespace RhinoCyclesCore.Materials
 		public const string GraphXmlField = "cycles-graph-xml";
 		private const string GraphXmlPrompt = "Cycles XML";
 		public const string SourceField = "cycles-graph-source";
-		/* The Grasshopper 2 document the graph came from, for editing it again. */
-		public const string DocumentField = "cycles-graph-document";
+		/* The Grasshopper 2 document the graph came from, for editing it again. Base64 text, as RDK
+		 * undo cannot restore a byte array field. */
+		public const string DocumentField = "cycles-graph-gh2-document";
+		/* Where materials saved before kept that document, as bytes. Only read; it keeps its type,
+		 * as Debug builds assert when a field read from a file changes type. */
+		public const string BytesDocumentField = "cycles-graph-document";
 		/* Values the material editor changed in the XML that the document does not have yet. */
 		public const string EditsField = "cycles-graph-edits";
 
@@ -92,7 +96,8 @@ namespace RhinoCyclesCore.Materials
 		/// </summary>
 		private bool HasGraphOrigin()
 		{
-			return (Fields.TryGetValue(DocumentField, out byte[] document) && document?.Length > 0) ||
+			return (Fields.TryGetValue(DocumentField, out string document) && !string.IsNullOrEmpty(document)) ||
+			       (Fields.TryGetValue(BytesDocumentField, out byte[] bytes) && bytes?.Length > 0) ||
 			       (Fields.TryGetValue(SourceField, out string source) && !string.IsNullOrEmpty(source)) ||
 			       (Fields.TryGetValue(EditsField, out string edits) && !string.IsNullOrEmpty(edits));
 		}
@@ -101,7 +106,8 @@ namespace RhinoCyclesCore.Materials
 		{
 			Fields.Add(GraphXmlField, string.Empty, GraphXmlPrompt);
 			var source = Fields.Add(SourceField, string.Empty, "Source");
-			var document = Fields.Add(DocumentField, new byte[0]);
+			var document = Fields.Add(DocumentField, string.Empty);
+			var bytesDocument = Fields.Add(BytesDocumentField, new byte[0]);
 			var edits = Fields.Add(EditsField, string.Empty, "Edits");
 
 			/* Hiding a field refreshes the content UI, which throws off the UI thread. The RDK
@@ -110,6 +116,7 @@ namespace RhinoCyclesCore.Materials
 			{
 				source.IsHiddenInAutoUI = true;
 				document.IsHiddenInAutoUI = true;
+				bytesDocument.IsHiddenInAutoUI = true;
 				edits.IsHiddenInAutoUI = true;
 			}
 		}
@@ -165,6 +172,8 @@ namespace RhinoCyclesCore.Materials
 			}
 
 			var edits = Fields.TryGetValue(EditsField, out string text) ? text : string.Empty;
+			var doc = DocumentAssoc;
+			var undo = doc?.BeginUndoRecord(LOC.STR("Node-Based Value")) ?? 0;
 			g_changing = true;
 			try
 			{
@@ -176,6 +185,8 @@ namespace RhinoCyclesCore.Materials
 			finally
 			{
 				g_changing = false;
+				if (undo != 0)
+					doc.EndUndoRecord(undo);
 			}
 			return true;
 		}
@@ -188,19 +199,26 @@ namespace RhinoCyclesCore.Materials
 		{
 			FindGraphEditing()?.GetMethod("ReleaseMaterial", new[] { typeof(Guid) })?.Invoke(null, new object[] { Id });
 
+			// Its own undo step, as the field edit has ended by now.
+			var doc = DocumentAssoc;
+			var undo = doc?.BeginUndoRecord(LOC.STR("Replace Node-Based Graph")) ?? 0;
 			g_changing = true;
 			try
 			{
 				BeginChange(ChangeContexts.UI);
 				Fields.Set(GraphXmlField, xml ?? string.Empty);
 				Fields.Set(SourceField, string.Empty);
-				Fields.Set(DocumentField, new byte[0]);
+				Fields.Set(DocumentField, string.Empty);
+				if (Fields.TryGetValue(BytesDocumentField, out byte[] bytes) && bytes?.Length > 0)
+					Fields.Set(BytesDocumentField, new byte[0]);
 				Fields.Set(EditsField, string.Empty);
 				EndChange();
 			}
 			finally
 			{
 				g_changing = false;
+				if (undo != 0)
+					doc.EndUndoRecord(undo);
 			}
 		}
 

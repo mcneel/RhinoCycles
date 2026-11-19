@@ -45,7 +45,8 @@ namespace CyclesComponents
 		internal static readonly Guid MaterialType = new Guid("E5B2C7F2-C65B-44DB-923E-A3EB96EE60DC");
 		internal const string GraphXmlField = "cycles-graph-xml";
 		internal const string SourceField = "cycles-graph-source";
-		internal const string DocumentField = "cycles-graph-document";
+		internal const string DocumentField = "cycles-graph-gh2-document";
+		internal const string BytesDocumentField = "cycles-graph-document";
 		internal const string EditsField = "cycles-graph-edits";
 
 		/* The shader of a new graph. NodeBasedMaterial renders the same while its graph is empty. */
@@ -74,6 +75,8 @@ namespace CyclesComponents
 			if (!g_watchingDocuments)
 			{
 				editor.Documents.Changed += DocumentsChanged;
+				RhinoDoc.BeginSaveDocument += BeginSaveDocument;
+				RhinoDoc.CloseDocument += CloseDocument;
 				g_watchingDocuments = true;
 			}
 
@@ -127,21 +130,41 @@ namespace CyclesComponents
 			return null;
 		}
 
-		internal static byte[] Serialise(Document doc)
+		/// <summary>
+		/// The document as the material stores it: base64 text, which RDK undo can restore.
+		/// </summary>
+		internal static string Serialise(Document doc)
 		{
 			var node = Node.Create("Document");
 			doc.Store(node, FileContents.Small | FileContents.Projection);
-			return IO.WriteNodeToByteArray(node, default);
+			return Convert.ToBase64String(IO.WriteNodeToByteArray(node, default));
+		}
+
+		/// <summary>
+		/// The stored document's base64 text, or null if there is none. Materials saved before
+		/// it was text still have it as bytes.
+		/// </summary>
+		private static string StoredDocument(RenderMaterial material)
+		{
+			if (material.Fields.TryGetValue(DocumentField, out string text) && !string.IsNullOrEmpty(text))
+				return text;
+			return material.Fields.TryGetValue(BytesDocumentField, out byte[] bytes) && bytes?.Length > 0 ? Convert.ToBase64String(bytes) : null;
+		}
+
+		private static bool HasDocument(RenderMaterial material)
+		{
+			return StoredDocument(material) != null;
 		}
 
 		private static Document ReadDocument(RenderMaterial material)
 		{
-			if (!material.Fields.TryGetValue(DocumentField, out byte[] bytes) || bytes is null || bytes.Length == 0)
+			var text = StoredDocument(material);
+			if (text is null)
 				return null;
 
 			try
 			{
-				var reader = IO.ReadNodeFromByteArray(bytes, default);
+				var reader = IO.ReadNodeFromByteArray(Convert.FromBase64String(text), default);
 				return reader is null ? null : new Document(reader);
 			}
 			catch (Exception ex)
@@ -264,12 +287,21 @@ namespace CyclesComponents
 				return null;
 			}
 
-			// A duplicated material shares the writer's id, so the opened one is looked for first.
 			var source = writer.InstanceId.ToString();
 			var openedId = opened ? MaterialOf(writer.Document) : null;
-			var material = (openedId.HasValue ? doc.RenderMaterials.FirstOrDefault(m => m.Id == openedId.Value && m.TypeId == MaterialType) : null)
-				?? doc.RenderMaterials.FirstOrDefault(m => m.TypeId == MaterialType &&
-					m.Fields.TryGetValue(SourceField, out string s) && s == source);
+			RenderMaterial material;
+			if (openedId.HasValue)
+			{
+				// Only the material it was opened from, not a duplicate sharing the writer's id.
+				material = doc.RenderMaterials.FirstOrDefault(m => m.Id == openedId.Value && m.TypeId == MaterialType);
+				if (material is null)
+				{
+					access.AddWarning("No material", "The material this graph was opened from is not in the active document.");
+					return null;
+				}
+			}
+			else
+				material = MaterialOfSource(doc, source);
 
 			if (material is null)
 			{
@@ -286,8 +318,7 @@ namespace CyclesComponents
 			var current = material.Fields.TryGetValue(GraphXmlField, out string existing) ? existing : null;
 			var currentSource = material.Fields.TryGetValue(SourceField, out string bound) ? bound : null;
 			var rename = !string.IsNullOrWhiteSpace(name) && material.Name != name;
-			var hasDocument = material.Fields.TryGetValue(DocumentField, out byte[] stored) && stored?.Length > 0;
-			if (current != xml || currentSource != source || rename || !hasDocument)
+			if (current != xml || currentSource != source || rename || !HasDocument(material))
 			{
 				// One change for graph and document, so a running Raytraced restarts once.
 				material.BeginChange(RenderContent.ChangeContexts.Program);
@@ -308,16 +339,25 @@ namespace CyclesComponents
 		}
 
 		/// <summary>
+		/// The material a writer outside a material document writes: the first whose source it is.
+		/// </summary>
+		private static RenderMaterial MaterialOfSource(RhinoDoc doc, string source)
+		{
+			return doc?.RenderMaterials.FirstOrDefault(m => m.TypeId == MaterialType &&
+				m.Fields.TryGetValue(SourceField, out string s) && s == source);
+		}
+
+		/// <summary>
 		/// Store the document in the material if it changed.
 		/// </summary>
 		internal static void StoreDocument(RenderMaterial material, Document doc)
 		{
-			var bytes = Serialise(doc);
-			if (material.Fields.TryGetValue(DocumentField, out byte[] existing) && existing != null && existing.SequenceEqual(bytes))
+			var text = Serialise(doc);
+			if (StoredDocument(material) == text)
 				return;
 
 			material.BeginChange(RenderContent.ChangeContexts.Program);
-			material.Fields.Set(DocumentField, bytes);
+			material.Fields.Set(DocumentField, text);
 			material.EndChange();
 		}
 
@@ -382,14 +422,19 @@ namespace CyclesComponents
 			if (g_open.TryGetValue(materialId, out var opened) && editor.Documents.Index(opened) >= 0)
 				return opened;
 
-			var material = RhinoDoc.ActiveDoc?.RenderMaterials.FirstOrDefault(m => m.Id == materialId);
+			var rhinoDoc = RhinoDoc.ActiveDoc;
+			var material = rhinoDoc?.RenderMaterials.FirstOrDefault(m => m.Id == materialId);
 			var source = material != null && material.Fields.TryGetValue(SourceField, out string s) ? s : null;
 			if (string.IsNullOrEmpty(source))
 				return null;
 
-			// A duplicated material shares its source with the original, whose document writes only that one.
-			return editor.Documents.All.Select(stack => stack.Root).FirstOrDefault(d => d != null && !IsMaterialDocument(d) &&
-				d.Objects.ForwardsOfT<CyclesMaterialOutput>().Any(o => o.InstanceId.ToString() == source));
+			// A duplicated material shares its source with the original, and the graph writes only the first.
+			if (MaterialOfSource(rhinoDoc, source)?.Id != materialId)
+				return null;
+
+			// Only an output that writes: not one that belongs to a material, such as in a restored autosave.
+			return editor.Documents.All.Select(stack => stack.Root).FirstOrDefault(d => d != null && !IsMaterialDocument(d) && !HasCyclesMaterial(d) &&
+				d.Objects.ForwardsOfT<CyclesMaterialOutput>().Any(o => o.InstanceId.ToString() == source && !o.Paused && o.BoundMaterial == Guid.Empty));
 		}
 
 		/// <summary>
@@ -490,6 +535,39 @@ namespace CyclesComponents
 					StoreDocument(material, pair.Value);
 				g_open.Remove(pair.Key);
 			}
+		}
+
+		/// <summary>
+		/// Store the open graphs in their materials, so the file has what the tabs show.
+		/// </summary>
+		private static void BeginSaveDocument(object sender, DocumentSaveEventArgs e)
+		{
+			foreach (var pair in g_open.ToList())
+			{
+				var material = e.Document?.RenderMaterials.FirstOrDefault(m => m.Id == pair.Key);
+				if (material is null)
+					continue;
+
+				try
+				{
+					StoreDocument(material, pair.Value);
+				}
+				catch (Exception ex)
+				{
+					Grasshopper2.Diagnostics.Logger.Add(ex, $"{nameof(GraphEditing)}.{nameof(BeginSaveDocument)}()");
+				}
+			}
+		}
+
+		/// <summary>
+		/// Forget the graphs opened from a closing document's materials. Their tabs stay as ordinary
+		/// documents, whose Material Output belongs to a material and so writes nothing.
+		/// </summary>
+		private static void CloseDocument(object sender, DocumentEventArgs e)
+		{
+			foreach (var id in g_open.Keys.ToList())
+				if (e.Document?.RenderMaterials.Any(m => m.Id == id) == true)
+					g_open.Remove(id);
 		}
 	}
 }
