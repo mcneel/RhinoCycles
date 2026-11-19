@@ -85,10 +85,38 @@ namespace RhinoCyclesCore.Materials
 			var doc = changed.DocumentAssoc;
 			Eto.Forms.Application.Instance.AsyncInvoke(() =>
 			{
-				if (doc?.RenderMaterials.FirstOrDefault(m => m.Id == id) is NodeBasedMaterial material &&
-				    material.HasGraphOrigin() && material.Fields.TryGetValue(GraphXmlField, out string xml))
+				if (!(doc?.RenderMaterials.FirstOrDefault(m => m.Id == id) is NodeBasedMaterial material) ||
+				    !material.Fields.TryGetValue(GraphXmlField, out string xml))
+					return;
+
+				// A whole material file, as the Blender add-on copies it, gives its graph.
+				var graph = GraphFromMaterialFile(xml);
+				if (graph != null)
+					material.ReplaceGraph(graph);
+				else if (material.HasGraphOrigin())
 					material.ReplaceGraph(xml);
 			});
+		}
+
+		/// <summary>
+		/// The graph in the XML of a Node-Based material file (.rmtl), or null if the text is not one.
+		/// </summary>
+		internal static string GraphFromMaterialFile(string text)
+		{
+			var body = Regex.Replace(text ?? string.Empty, "<\\?xml[^>]*\\?>", string.Empty).TrimStart();
+			if (!body.StartsWith("<xml", StringComparison.Ordinal))
+				return null;
+
+			try
+			{
+				var material = XElement.Parse(body).Element("material");
+				var parameter = material?.Descendants("parameter").FirstOrDefault(p => (string)p.Attribute("name") == GraphXmlField);
+				return parameter?.Value;
+			}
+			catch (System.Xml.XmlException)
+			{
+				return null;
+			}
 		}
 
 		/// <summary>
