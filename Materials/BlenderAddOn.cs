@@ -154,7 +154,7 @@ namespace RhinoCyclesCore.Materials
 
 		private static IEnumerable<string> MacPrograms()
 		{
-			var home = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+			var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 			foreach (var folder in new[] { "/Applications", Path.Combine(home, "Applications") })
 			{
 				if (!Directory.Exists(folder))
@@ -162,6 +162,7 @@ namespace RhinoCyclesCore.Materials
 				foreach (var app in Directory.GetDirectories(folder, "Blender*.app"))
 					yield return Path.Combine(app, "Contents", "MacOS", "Blender");
 			}
+			yield return Path.Combine(home, "Library", "Application Support", "Steam", "steamapps", "common", "Blender", "Blender.app", "Contents", "MacOS", "Blender");
 		}
 
 		/// <summary>
@@ -216,7 +217,7 @@ namespace RhinoCyclesCore.Materials
 			var versionFolder = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
 			return HostUtils.RunningOnWindows
 				? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Blender Foundation", "Blender", versionFolder)
-				: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library", "Application Support", "Blender", versionFolder);
+				: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "Blender", versionFolder);
 		}
 
 		private static PersistentSettings Settings => Rhino.PlugIns.PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"))?.Settings;
@@ -297,6 +298,9 @@ namespace RhinoCyclesCore.Materials
 		public static void Install(IEnumerable<Installation> blenders)
 		{
 			var list = blenders.ToList();
+			if (!ClosedForFirstInstall(list))
+				return;
+
 			string package;
 			try
 			{
@@ -315,6 +319,50 @@ namespace RhinoCyclesCore.Materials
 				var results = task.Status == TaskStatus.RanToCompletion ? task.Result : list.Select(b => (Blender: b, Error: task.Exception?.InnerException?.Message)).ToList();
 				RhinoApp.InvokeOnUiThread(new Action(() => Report(results)));
 			});
+		}
+
+		/// <summary>
+		/// Have the Blenders that get the add-on for the first time closed first: one that is open
+		/// saves its preferences, without the add-on, over the install's when it closes with changed
+		/// preferences, which switches the add-on off. False if the user cancels.
+		/// </summary>
+		private static bool ClosedForFirstInstall(List<Installation> blenders)
+		{
+			var open = blenders.Where(b => !b.HasAddOn && IsOpen(b)).ToList();
+			while (open.Count > 0)
+			{
+				var message = string.Format(LOC.STR("Close {0}, then choose Retry. Installed while Blender is open, the add-on can be switched off again when Blender closes."), Labels(open));
+				if (Dialogs.ShowMessage(message, Title, ShowMessageButton.RetryCancel, ShowMessageIcon.Warning) != ShowMessageResult.Retry)
+					return false;
+				open = open.Where(IsOpen).ToList();
+			}
+			return true;
+		}
+
+		private static bool IsOpen(Installation blender)
+		{
+			var program = Path.GetFullPath(blender.Executable);
+			var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(program));
+			try
+			{
+				return processes.Any(p =>
+				{
+					try
+					{
+						var running = p.MainModule?.FileName;
+						return running != null && string.Equals(Path.GetFullPath(running), program, StringComparison.OrdinalIgnoreCase);
+					}
+					catch (Exception)
+					{
+						return false;
+					}
+				});
+			}
+			finally
+			{
+				foreach (var p in processes)
+					p.Dispose();
+			}
 		}
 
 		private static void Report(List<(Installation Blender, string Error)> results)
