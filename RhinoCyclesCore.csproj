@@ -37,6 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Pipes" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -81,6 +82,7 @@
     <Compile Include="Materials\VertexColorMaterial.cs" />
     <Compile Include="Materials\EmissiveMaterial.cs" />
     <Compile Include="Materials\XmlMaterial.cs" />
+    <Compile Include="Materials\BlenderAddOn.cs" />
     <Compile Include="Materials\NodeBasedMaterial.cs" />
     <Compile Include="Materials\NodeBasedMaterialSection.cs" />
     <Compile Include="Materials\CyclesGraphLook.cs" />

@@ -79,6 +79,7 @@
     <Compile Include="Commands\SetThreads.cs" />
     <Compile Include="Commands\SetRenderOptions.cs" />
     <Compile Include="Commands\ListDevices.cs" />
+    <Compile Include="Commands\InstallBlenderAddOn.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Viewport\RenderedViewport.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -161,6 +162,8 @@
   </ItemGroup>
   <ItemGroup>
     <LicenseFiles Include="$(ProjectDir)..\cycles-core\src\doc\license\*.txt" />
+    <!-- The Blender add-on, as a Blender extension; RhinoCyclesCore's BlenderAddOn installs it. -->
+    <BlenderAddOnFiles Include="$(ProjectDir)..\Blender\rhino_materials\**\*" Exclude="$(ProjectDir)..\Blender\rhino_materials\**\__pycache__\**" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Icons\Cycles_material.ico" />
@@ -172,6 +175,7 @@
     <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\CMakeLists.txt" />
     <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\OSL.txt" />
     <Delete Files="$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\licenses\pthreads.txt" />
+    <Copy SourceFiles="@(BlenderAddOnFiles)" DestinationFiles="@(BlenderAddOnFiles->'$(RhinoBinDir)\$(Configuration)\Plug-ins\RhinoCycles\blender\rhino_materials\%(RecursiveDir)%(Filename)%(Extension)')" OverwriteReadOnlyFiles="True" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.

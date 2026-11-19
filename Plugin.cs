@@ -64,6 +64,7 @@ namespace RhinoCycles
 				sw.Start();
 				pluginLoaded = true;
 				RhinoApp.Initialized += RhinoApp_Initialized;
+				Panels.Show += OnPanelShown;
 				RcCore.It.InitializeResourceManager();
 
 				// code got moved to separate DLL so use that to register from.
@@ -97,6 +98,24 @@ namespace RhinoCycles
 				RcCore.It.AddLogString("RhinoCycles OnLoad exit");
 			}
 			return LoadReturnCode.Success;
+		}
+
+		/// <summary>
+		/// The first time the Materials panel opens, offer the Blender add-on, once the panel is up.
+		/// </summary>
+		private void OnPanelShown(object sender, ShowPanelEventArgs e)
+		{
+			if (!e.Show || e.PanelId != PanelIds.Materials)
+				return;
+
+			Panels.Show -= OnPanelShown;
+			RhinoApp.Idle += OfferBlenderAddOn;
+		}
+
+		private void OfferBlenderAddOn(object sender, EventArgs e)
+		{
+			RhinoApp.Idle -= OfferBlenderAddOn;
+			RhinoCyclesCore.Materials.BlenderAddOn.OfferOnce();
 		}
 
 		private void RhinoApp_Initialized(object sender, EventArgs e)

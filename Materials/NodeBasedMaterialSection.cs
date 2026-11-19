@@ -23,7 +23,8 @@ using System;
 namespace RhinoCyclesCore.Materials
 {
 	/// <summary>
-	/// The Edit button of a Node-Based material, which opens its graph in Grasshopper 2.
+	/// The Edit button of a Node-Based material, which opens its graph in Grasshopper 2, and the
+	/// one that installs the Blender add-on these materials come from.
 	/// </summary>
 	public class NodeBasedMaterialSection : EtoContentUISection3
 	{
@@ -32,11 +33,14 @@ namespace RhinoCyclesCore.Materials
 			var edit = new Button { Text = LOC.STR("Edit in Grasshopper") };
 			edit.Click += OnEditClick;
 
+			var blender = new Button { Text = LOC.STR("Blender Add-on...") };
+			blender.Click += (sender, e) => BlenderAddOn.InstallInteractively();
+
 			Content = new TableLayout
 			{
 				Padding = RhinoLayout.Padding(RhinoLayout.PaddingType.Table),
 				Spacing = RhinoLayout.Spacing(RhinoLayout.SpacingType.Table),
-				Rows = { new TableRow(new TableCell(edit), new TableCell(null, true)), null }
+				Rows = { new TableRow(new TableCell(edit), new TableCell(blender), new TableCell(null, true)), null }
 			};
 		}
 
