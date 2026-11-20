@@ -104,6 +104,7 @@ namespace RhinoCyclesCore.Materials
 		/// </summary>
 		public static Installation FromProgram(string program)
 		{
+			program = program?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 			if (string.IsNullOrEmpty(program))
 				return null;
 
@@ -327,6 +328,8 @@ namespace RhinoCyclesCore.Materials
 			var dialog = new Rhino.UI.OpenFileDialog { Title = LOC.STR("Choose the Blender program") };
 			if (HostUtils.RunningOnWindows)
 				dialog.Filter = LOC.STR("Blender") + " (blender.exe)|blender.exe";
+			else
+				dialog.InitialDirectory = "/Applications";
 			if (!dialog.ShowOpenDialog())
 				return null;
 
