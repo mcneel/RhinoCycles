@@ -105,28 +105,9 @@ namespace RhinoCycles
 		/// </summary>
 		private void OnPanelShown(object sender, ShowPanelEventArgs e)
 		{
-			if (e.Show && e.PanelId == PanelIds.Materials)
-				ScheduleBlenderAddOnOffer();
-		}
-
-		/// <summary>
-		/// The Mac raises no Panels.Show for a Materials panel already open at startup.
-		/// </summary>
-		private void OfferIfMaterialsPanelOpen(object sender, EventArgs e)
-		{
-			RhinoApp.Idle -= OfferIfMaterialsPanelOpen;
-			if (Panels.IsPanelVisible(PanelIds.Materials, true))
-				ScheduleBlenderAddOnOffer();
-		}
-
-		private bool blenderAddOnOfferScheduled;
-
-		private void ScheduleBlenderAddOnOffer()
-		{
-			if (blenderAddOnOfferScheduled)
+			if (!e.Show || e.PanelId != PanelIds.Materials)
 				return;
 
-			blenderAddOnOfferScheduled = true;
 			Panels.Show -= OnPanelShown;
 			RhinoApp.Idle += OfferBlenderAddOn;
 		}
@@ -141,7 +122,6 @@ namespace RhinoCycles
 		{
 			RcCore.It.AddLogString("RhinoApp_Initialized");
 			RcCore.It.AppInitialised = true;
-			RhinoApp.Idle += OfferIfMaterialsPanelOpen;
 		}
 
 		private static readonly object InitialiseLock = new object();
