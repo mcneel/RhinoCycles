@@ -218,6 +218,9 @@ namespace CyclesComponents
 			Label = label;
 		}
 
+		/* The label SetLabel gave it, saved with the document. */
+		internal string LabelText => Label;
+
 		protected override IIcon IconInternal => NodeCatalog.Icon(string.IsNullOrEmpty(NodeType) ? "cycles" : NodeType);
 		#endregion
 

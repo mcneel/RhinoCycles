@@ -353,6 +353,10 @@ namespace CyclesComponents
 		/// </summary>
 		internal static void StoreDocument(RenderMaterial material, Document doc)
 		{
+			// Such as after Change Type, which keeps the material's id.
+			if (material.TypeId != MaterialType)
+				return;
+
 			var text = Serialise(doc);
 			var source = material.Fields.TryGetValue(SourceField, out string s) ? s : null;
 			var outputs = doc.Objects.ForwardsOfT<CyclesMaterialOutput>().ToList();
@@ -367,10 +371,16 @@ namespace CyclesComponents
 				return;
 
 			material.BeginChange(RenderContent.ChangeContexts.Program);
-			material.Fields.Set(DocumentField, text);
-			if (placed != null)
-				material.Fields.Set(GraphXmlField, placed);
-			material.EndChange();
+			try
+			{
+				material.Fields.Set(DocumentField, text);
+				if (placed != null)
+					material.Fields.Set(GraphXmlField, placed);
+			}
+			finally
+			{
+				material.EndChange();
+			}
 		}
 
 		/// <summary>
@@ -435,7 +445,7 @@ namespace CyclesComponents
 				return opened;
 
 			var rhinoDoc = RhinoDoc.ActiveDoc;
-			var material = rhinoDoc?.RenderMaterials.FirstOrDefault(m => m.Id == materialId);
+			var material = rhinoDoc?.RenderMaterials.FirstOrDefault(m => m.Id == materialId && m.TypeId == MaterialType);
 			var source = material != null && material.Fields.TryGetValue(SourceField, out string s) ? s : null;
 			if (string.IsNullOrEmpty(source))
 				return null;
@@ -454,8 +464,15 @@ namespace CyclesComponents
 		/// </summary>
 		private static EditResult SetValue(Document doc, string node, string socketName, string text)
 		{
-			var component = doc.Objects.ForwardsOfT<CyclesNodeComponent>()
-				.FirstOrDefault(c => CyclesXmlWriter.NodeName(c.NodeType, c.InstanceId) == node);
+			var components = doc.Objects.ForwardsOfT<CyclesNodeComponent>().ToList();
+			var component = components.FirstOrDefault(c => CyclesXmlWriter.NodeName(c.NodeType, c.InstanceId) == node);
+
+			// A paused import has not rewritten the XML, whose nodes keep the names the import labelled them with.
+			if (component is null)
+			{
+				var labelled = components.Where(c => c.LabelText == node).ToList();
+				component = labelled.Count == 1 ? labelled[0] : null;
+			}
 			var socket = component is null ? null : ShaderNodeTypes.Find(component.NodeType)?.Inputs.FirstOrDefault(s => s.Name == socketName);
 			var parameter = socket is null ? null : GraphImport.FindParameter(component, component.NodeType, socketName, true);
 			var value = parameter is null ? null : GraphImport.ParseValue(socket, text);
@@ -542,10 +559,10 @@ namespace CyclesComponents
 			// Keep what changed since the last solution, such as moved components.
 			foreach (var pair in g_open.Where(p => ReferenceEquals(p.Value, e.Stack.Root)).ToList())
 			{
-				var material = RhinoDoc.ActiveDoc?.RenderMaterials.FirstOrDefault(m => m.Id == pair.Key);
+				var material = RhinoDoc.ActiveDoc?.RenderMaterials.FirstOrDefault(m => m.Id == pair.Key && m.TypeId == MaterialType);
+				g_open.Remove(pair.Key);
 				if (material != null)
 					StoreDocument(material, pair.Value);
-				g_open.Remove(pair.Key);
 			}
 		}
 
@@ -556,7 +573,7 @@ namespace CyclesComponents
 		{
 			foreach (var pair in g_open.ToList())
 			{
-				var material = e.Document?.RenderMaterials.FirstOrDefault(m => m.Id == pair.Key);
+				var material = e.Document?.RenderMaterials.FirstOrDefault(m => m.Id == pair.Key && m.TypeId == MaterialType);
 				if (material is null)
 					continue;
 
