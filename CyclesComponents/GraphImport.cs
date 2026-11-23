@@ -321,7 +321,17 @@ namespace CyclesComponents
 				return;
 			}
 
+			// A Grasshopper colour holds 0 to 1, so a brighter one, such as an emission's, is clamped.
+			if ((socket.Type == "color" || socket.Type == "color2") && OutsideUnitRange(text))
+				problems.Add($"{type} input '{socketName}': '{text}' is clamped to the 0 to 1 a Grasshopper colour holds.");
+
 			parameter.PersistentDataWeak = Garden.ITreeFromList(new[] { value });
+		}
+
+		private static bool OutsideUnitRange(string text)
+		{
+			return text.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)
+				.Any(t => double.TryParse(t, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) && (d < 0.0 || d > 1.0));
 		}
 
 		/// <summary>

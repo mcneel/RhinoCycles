@@ -52,9 +52,22 @@ namespace CyclesComponents
 		/* The shader of a new graph. NodeBasedMaterial renders the same while its graph is empty. */
 		private const string DefaultShader = "principled_bsdf";
 
-		/* Documents opened from a material, by material id. */
+		/* Documents opened from a material, by material id, and the Rhino document each material is
+		 * in, which on the Mac need not be the active one. */
 		private static readonly Dictionary<Guid, Document> g_open = new Dictionary<Guid, Document>();
+		private static readonly Dictionary<Guid, uint> g_openIn = new Dictionary<Guid, uint>();
 		private static bool g_watchingDocuments;
+
+		private static RhinoDoc RhinoDocOf(Guid materialId)
+		{
+			return g_openIn.TryGetValue(materialId, out var serial) ? RhinoDoc.FromRuntimeSerialNumber(serial) : RhinoDoc.ActiveDoc;
+		}
+
+		private static void Forget(Guid materialId)
+		{
+			g_open.Remove(materialId);
+			g_openIn.Remove(materialId);
+		}
 
 		/// <summary>
 		/// Open the graph of a Node-Based material in the Grasshopper 2 editor, or bring it
@@ -86,6 +99,14 @@ namespace CyclesComponents
 				return true;
 			}
 
+			// The graph that writes the material is still open, so that one rather than a copy of it.
+			var writing = SourceGraph(editor, materialId);
+			if (writing != null)
+			{
+				editor.Documents.Push(writing);
+				return true;
+			}
+
 			var doc = ReadDocument(material);
 			if (doc != null && !ApplyPendingEdits(material, doc))
 			{
@@ -101,12 +122,22 @@ namespace CyclesComponents
 				if (doc is null)
 					return true;
 			}
+
+			// The stored copy of a graph made in Grasshopper 2 writes this material only, so not a
+			// new one in the next document after File > New.
+			var source = material.Fields.TryGetValue(SourceField, out string s) ? s : null;
+			var outputs = doc.Objects.ForwardsOfT<CyclesMaterialOutput>().ToList();
+			var writer = outputs.FirstOrDefault(o => o.InstanceId.ToString() == source) ?? outputs.FirstOrDefault();
+			if (writer != null && writer.BoundMaterial == Guid.Empty)
+				writer.BoundMaterial = material.Id;
+
 			ClearPendingEdits(material);
 			doc.File.FallbackName = material.Name;
 			// The material holds it, so closing the tab need not offer to save a file.
 			doc.Unmodify();
 
 			g_open[materialId] = doc;
+			g_openIn[materialId] = RhinoDoc.ActiveDoc.RuntimeSerialNumber;
 			editor.Documents.Push(doc);
 			return true;
 		}
@@ -135,9 +166,30 @@ namespace CyclesComponents
 		/// </summary>
 		internal static string Serialise(Document doc)
 		{
+			return Serialise(doc, true);
+		}
+
+		/* With or without the canvas view, which alone is no change to the graph. */
+		private static string Serialise(Document doc, bool view)
+		{
 			var node = Node.Create("Document");
-			doc.Store(node, FileContents.Small | FileContents.Projection);
+			doc.Store(node, view ? FileContents.Small | FileContents.Projection : FileContents.Small);
 			return Convert.ToBase64String(IO.WriteNodeToByteArray(node, default));
+		}
+
+		/// <summary>
+		/// Whether the material stores this graph, wherever its canvas was panned or zoomed to.
+		/// </summary>
+		private static bool StoresGraph(RenderMaterial material, Document doc, string text)
+		{
+			var stored = StoredDocument(material);
+			if (stored is null)
+				return false;
+			if (stored == text)
+				return true;
+
+			var storedDoc = ReadDocument(material);
+			return storedDoc != null && Serialise(storedDoc, false) == Serialise(doc, false);
 		}
 
 		/// <summary>
@@ -254,7 +306,7 @@ namespace CyclesComponents
 		internal static bool WritesOpenedMaterial(CyclesMaterialOutput output)
 		{
 			var id = MaterialOf(output.Document);
-			var material = id.HasValue ? RhinoDoc.ActiveDoc?.RenderMaterials.FirstOrDefault(m => m.Id == id.Value) : null;
+			var material = id.HasValue ? RhinoDocOf(id.Value)?.RenderMaterials.FirstOrDefault(m => m.Id == id.Value) : null;
 			var source = material != null && material.Fields.TryGetValue(SourceField, out string s) ? s : null;
 
 			var outputs = output.Document.Objects.ForwardsOfT<CyclesMaterialOutput>().ToList();
@@ -280,15 +332,15 @@ namespace CyclesComponents
 		/// <returns>The material, or null if there is none; the writer then says why.</returns>
 		internal static RenderMaterial WriteMaterial(Component writer, IDataAccess access, string xml, string name, bool opened)
 		{
-			var doc = RhinoDoc.ActiveDoc;
+			var source = writer.InstanceId.ToString();
+			var openedId = opened ? MaterialOf(writer.Document) : null;
+			var doc = openedId.HasValue ? RhinoDocOf(openedId.Value) : RhinoDoc.ActiveDoc;
 			if (doc is null)
 			{
 				access.AddError("No document", "There is no active Rhino document to add the material to.");
 				return null;
 			}
 
-			var source = writer.InstanceId.ToString();
-			var openedId = opened ? MaterialOf(writer.Document) : null;
 			RenderMaterial material;
 			if (openedId.HasValue)
 			{
@@ -296,7 +348,7 @@ namespace CyclesComponents
 				material = doc.RenderMaterials.FirstOrDefault(m => m.Id == openedId.Value && m.TypeId == MaterialType);
 				if (material is null)
 				{
-					access.AddWarning("No material", "The material this graph was opened from is not in the active document.");
+					access.AddWarning("No material", "The material this graph was opened from is no longer in its Rhino document.");
 					return null;
 				}
 			}
@@ -367,7 +419,7 @@ namespace CyclesComponents
 			if (writer != null && !writer.Paused && material.Fields.TryGetValue(GraphXmlField, out string xml))
 				placed = CyclesXmlWriter.WithPositions(xml, doc, writer);
 
-			if (StoredDocument(material) == text && placed == null)
+			if (placed == null && StoresGraph(material, doc, text))
 				return;
 
 			material.BeginChange(RenderContent.ChangeContexts.Program);
@@ -393,7 +445,7 @@ namespace CyclesComponents
 				return;
 
 			// Forgotten first, so closing the tab does not store it in the material again.
-			g_open.Remove(materialId);
+			Forget(materialId);
 			Editor.Instance?.Documents.Pop(doc, false);
 		}
 
@@ -444,6 +496,15 @@ namespace CyclesComponents
 			if (g_open.TryGetValue(materialId, out var opened) && editor.Documents.Index(opened) >= 0)
 				return opened;
 
+			return SourceGraph(editor, materialId);
+		}
+
+		/// <summary>
+		/// An open document, not opened from a material, whose Material Output writes the material
+		/// as its source, such as the graph that made it.
+		/// </summary>
+		private static Document SourceGraph(Editor editor, Guid materialId)
+		{
 			var rhinoDoc = RhinoDoc.ActiveDoc;
 			var material = rhinoDoc?.RenderMaterials.FirstOrDefault(m => m.Id == materialId && m.TypeId == MaterialType);
 			var source = material != null && material.Fields.TryGetValue(SourceField, out string s) ? s : null;
@@ -559,8 +620,8 @@ namespace CyclesComponents
 			// Keep what changed since the last solution, such as moved components.
 			foreach (var pair in g_open.Where(p => ReferenceEquals(p.Value, e.Stack.Root)).ToList())
 			{
-				var material = RhinoDoc.ActiveDoc?.RenderMaterials.FirstOrDefault(m => m.Id == pair.Key && m.TypeId == MaterialType);
-				g_open.Remove(pair.Key);
+				var material = RhinoDocOf(pair.Key)?.RenderMaterials.FirstOrDefault(m => m.Id == pair.Key && m.TypeId == MaterialType);
+				Forget(pair.Key);
 				if (material != null)
 					StoreDocument(material, pair.Value);
 			}
@@ -595,8 +656,8 @@ namespace CyclesComponents
 		private static void CloseDocument(object sender, DocumentEventArgs e)
 		{
 			foreach (var id in g_open.Keys.ToList())
-				if (e.Document?.RenderMaterials.Any(m => m.Id == id) == true)
-					g_open.Remove(id);
+				if (g_openIn.TryGetValue(id, out var serial) ? serial == e.Document?.RuntimeSerialNumber : e.Document?.RenderMaterials.Any(m => m.Id == id) == true)
+					Forget(id);
 		}
 	}
 }

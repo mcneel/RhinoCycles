@@ -295,6 +295,9 @@ namespace RhinoCyclesCore.Materials
 		/// </summary>
 		public static void InstallInteractively()
 		{
+			if (RefusedWhileInstalling())
+				return;
+
 			if (!IsShipped)
 			{
 				Dialogs.ShowMessage(LOC.STR("The Blender add-on is not part of this Rhino installation."), Title);
@@ -344,6 +347,9 @@ namespace RhinoCyclesCore.Materials
 		/// </summary>
 		public static void Install(IEnumerable<Installation> blenders)
 		{
+			if (RefusedWhileInstalling())
+				return;
+
 			var list = blenders.ToList();
 			if (!ClosedForFirstInstall(list))
 				return;
@@ -360,12 +366,28 @@ namespace RhinoCyclesCore.Materials
 			}
 
 			RhinoApp.WriteLine(string.Format(LOC.STR("Installing the Blender add-on into {0}..."), Labels(list)));
+			g_installing = true;
 			Task.Run(() => list.Select(b => (Blender: b, Error: InstallInto(b, package))).ToList()).ContinueWith(task =>
 			{
 				try { File.Delete(package); } catch (Exception) { }
 				var results = task.Status == TaskStatus.RanToCompletion ? task.Result : list.Select(b => (Blender: b, Error: task.Exception?.InnerException?.Message)).ToList();
-				RhinoApp.InvokeOnUiThread(new Action(() => Report(results)));
+				RhinoApp.InvokeOnUiThread(new Action(() =>
+				{
+					g_installing = false;
+					Report(results);
+				}));
 			});
+		}
+
+		/* An install running in the background, whose hidden Blender would pass for an open one.
+		 * Only the UI thread reads and sets it. */
+		private static bool g_installing;
+
+		private static bool RefusedWhileInstalling()
+		{
+			if (g_installing)
+				Dialogs.ShowMessage(LOC.STR("The Blender add-on is being installed already."), Title);
+			return g_installing;
 		}
 
 		/// <summary>
