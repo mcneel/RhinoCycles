@@ -952,11 +952,13 @@ namespace RhinoCyclesCore.Core
 
 				foreach (Process process in processes)
 				{
+					// Kill throws when access is denied or the process is already exiting.
 					try
 					{
 						process.Kill();
 					}
-					finally { }
+					catch (System.ComponentModel.Win32Exception) { }
+					catch (InvalidOperationException) { }
 				}
 			}
 			else if(HostUtils.RunningOnOSX)
