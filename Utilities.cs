@@ -586,7 +586,7 @@ namespace RhinoCyclesCore
 		{
 			if(!File.Exists(_DisableGpusFile))
 			{
-				File.Create(_DisableGpusFile);
+				File.Create(_DisableGpusFile).Dispose();
 			}
 		}
 
@@ -633,16 +633,99 @@ namespace RhinoCyclesCore
 			return f != null && File.Exists(f);
 		}
 
+		/// <summary>
+		/// Record that a backend failed to start, stamped with the environment so a driver, GPU
+		/// or Rhino change earns a retry.
+		/// </summary>
+		/// <returns>True when this failure was not on record yet.</returns>
 		public static bool DisableGpu(DeviceTypeMask gpu)
 		{
 			var f = _DisabledGpuFile(gpu);
 			if (f == null) return false;
-			if (!File.Exists(f))
+			var signature = GpuEnvironmentSignature;
+			try
 			{
-				File.Create(f);
+				if (File.Exists(f) && string.Equals(_RecordedSignature(f), signature, StringComparison.Ordinal))
+				{
+					return false;
+				}
+				File.WriteAllText(f, _SignatureKey + signature + Environment.NewLine);
 			}
+			catch (Exception) { return false; }
 			return true;
 		}
+
+		private const string _SignatureKey = "signature=";
+
+		/// <summary>
+		/// The environment a failure record was written in. Records from before this format have
+		/// no signature line and read as empty, which makes them stale.
+		/// </summary>
+		private static string _RecordedSignature(string path)
+		{
+			try
+			{
+				foreach (var line in File.ReadAllLines(path))
+				{
+					if (line.StartsWith(_SignatureKey, StringComparison.Ordinal))
+					{
+						return line.Substring(_SignatureKey.Length).Trim();
+					}
+				}
+			}
+			catch (Exception) { }
+			return string.Empty;
+		}
+
+		/// <summary>
+		/// Changes when Rhino is updated and, on Windows only, when a GPU is swapped or a display
+		/// driver is updated. On Mac the GPU list is empty, so only a Rhino update counts.
+		/// </summary>
+		private static string GpuEnvironmentSignature
+		{
+			get
+			{
+				var parts = new List<string> { RhinoApp.Version.ToString() };
+				try
+				{
+					foreach (var gpu in DisplayDeviceInfo.GpuDeviceInfos())
+					{
+						parts.Add(string.Format("{0};{1};{2}", gpu.Name, gpu.Vendor, gpu.DriverDateAsString));
+					}
+				}
+				catch (Exception) { }
+				return string.Join("|", parts);
+			}
+		}
+
+		/// <summary>
+		/// Drop failure records written in a different environment, so a backend that failed once
+		/// gets one more try after an update instead of staying off forever.
+		/// </summary>
+		/// <returns>The backends that were re-enabled.</returns>
+		public static DeviceTypeMask ClearStaleGpuDisables()
+		{
+			DeviceTypeMask cleared = 0;
+			if (DisabledGpus == 0) return cleared;
+			var current = GpuEnvironmentSignature;
+			foreach (var (mask, _) in _GpuSentinels)
+			{
+				var f = _DisabledGpuFile(mask);
+				if (f == null || !File.Exists(f)) continue;
+				try
+				{
+					if (string.Equals(_RecordedSignature(f), current, StringComparison.Ordinal)) continue;
+					File.Delete(f);
+					cleared |= mask;
+				}
+				catch (Exception) { }
+			}
+			return cleared;
+		}
+
+		/// <summary>Backend names in a mask, for the log. DeviceTypeMask isn't [Flags].</summary>
+		public static string GpuNames(DeviceTypeMask mask) =>
+			string.Join(", ", AllGpus.Where(m => (mask & m) != 0));
 
 		public static void EnableGpu(DeviceTypeMask gpu)
 		{

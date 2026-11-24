@@ -155,6 +155,11 @@ namespace RhinoCycles
 						CSycles.initialise(DeviceTypeMask.CPU);
 					} else
 					{
+						DeviceTypeMask retried = RhinoCyclesCore.Utilities.ClearStaleGpuDisables();
+						if (retried != 0)
+						{
+							RcCore.It.AddLogString($"RhinoCycles GPU {RhinoCyclesCore.Utilities.GpuNames(retried)} was disabled in a different GPU/driver/Rhino environment; trying again");
+						}
 						DeviceTypeMask previouslyDisabled = RhinoCyclesCore.Utilities.DisabledGpus;
 						CSycles.initialise(DeviceTypeMask.All & ~previouslyDisabled);
 
@@ -163,8 +168,9 @@ namespace RhinoCycles
 						{
 							var bit = (DeviceTypeMask)(1u << (int)t);
 							if ((failed & bit) == 0) continue;
-							bool persisted = RhinoCyclesCore.Utilities.DisableGpu(bit);
-							RcCore.It.AddLogString($"RhinoCycles GPU {t} failed to initialise{(persisted ? "; disabled for next start" : "")}: {CSycles.gpu_init_error(t)}");
+							bool newlyRecorded = RhinoCyclesCore.Utilities.DisableGpu(bit);
+							bool disabled = RhinoCyclesCore.Utilities.IsGpuDisabled(bit);
+							RcCore.It.AddLogString($"RhinoCycles GPU {t} failed to initialise{(disabled ? "; disabled for next start" : "")}{(newlyRecorded ? " (recorded)" : "")}: {CSycles.gpu_init_error(t)}");
 						}
 
 						if (RcCore.It.AllSettings.StartGpuKernelCompiler)
