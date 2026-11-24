@@ -284,7 +284,7 @@ namespace RhinoCyclesCore.Materials
 			settings.SetBool(AskedSetting, true);
 
 			var question = string.Format(LOC.STR("Rhino has an add-on for Blender that copies Blender materials to Rhino as Node-Based materials, and back. Install it into {0}?{1}{1}You can also install it later with the {2} command, or from the Nodes section of a Node-Based material."),
-				Labels(missing), Environment.NewLine, CommandName);
+				Labels(missing), Environment.NewLine, LOC.COMMANDNAME("InstallBlenderAddOn"));
 			if (Dialogs.ShowMessage(question, Title, ShowMessageButton.YesNo, ShowMessageIcon.Question) == ShowMessageResult.Yes)
 				Install(missing);
 		}
@@ -454,18 +454,27 @@ namespace RhinoCyclesCore.Materials
 		private static string Package()
 		{
 			var zip = Path.Combine(Path.GetTempPath(), string.Format(CultureInfo.InvariantCulture, "{0}-{1}.zip", ExtensionId, Guid.NewGuid().ToString("N")));
-			using (var stream = File.Create(zip))
-			using (var archive = new ZipArchive(stream, ZipArchiveMode.Create))
+			try
 			{
-				foreach (var file in Directory.GetFiles(Folder, "*", SearchOption.AllDirectories))
+				using (var stream = File.Create(zip))
+				using (var archive = new ZipArchive(stream, ZipArchiveMode.Create))
 				{
-					var relative = file.Substring(Folder.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/');
-					if (relative.Split('/').Contains("__pycache__"))
-						continue;
-					using (var source = File.OpenRead(file))
-					using (var target = archive.CreateEntry(relative).Open())
-						source.CopyTo(target);
+					foreach (var file in Directory.GetFiles(Folder, "*", SearchOption.AllDirectories))
+					{
+						var relative = file.Substring(Folder.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Replace('\\', '/');
+						if (relative.Split('/').Contains("__pycache__"))
+							continue;
+						using (var source = File.OpenRead(file))
+						using (var target = archive.CreateEntry(relative).Open())
+							source.CopyTo(target);
+					}
 				}
+			}
+			catch
+			{
+				// Not a half-written zip left in the temporary folder.
+				try { File.Delete(zip); } catch (Exception) { }
+				throw;
 			}
 			return zip;
 		}

@@ -28,7 +28,7 @@ namespace RhinoCycles.Commands
 	[Guid("6E128F15-7803-43D3-9F4F-897EAF90B103")]
 	public class InstallBlenderAddOn : Command
 	{
-		public override string LocalName => LOC.COMMANDNAME(BlenderAddOn.CommandName);
+		public override string LocalName => LOC.COMMANDNAME("InstallBlenderAddOn");
 
 		public override string EnglishName => BlenderAddOn.CommandName;
 

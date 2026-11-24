@@ -33,6 +33,7 @@ using Grasshopper2.Types.Colour;
 using Grasshopper2.Types.Functions;
 using Grasshopper2.Types.Functions.Standard;
 using Rhino.Geometry;
+using LOC = Rhino.UI.LOC;
 
 namespace CyclesComponents
 {
@@ -75,7 +76,7 @@ namespace CyclesComponents
 					    SplitSocketRef((string)element.Attribute("to"), out var tn, out var ts))
 						connects.Add((fn, fs, tn, ts));
 					else
-						result.Problems.Add("connect needs from=\"node socket\" and to=\"node socket\"");
+						result.Problems.Add(LOC.STR("connect needs from=\"node socket\" and to=\"node socket\""));
 					continue;
 				}
 
@@ -85,7 +86,7 @@ namespace CyclesComponents
 				if (type == "output")
 				{
 					if (element.Attributes().Any(a => a.Name.LocalName != "name" && a.Name.LocalName != CyclesXmlWriter.PositionAttribute))
-						result.Problems.Add("Values on the output node are not imported.");
+						result.Problems.Add(LOC.STR("Values on the output node are not imported."));
 					if (hasPosition)
 						outputPosition = position;
 					continue;
@@ -222,7 +223,7 @@ namespace CyclesComponents
 
 				if (source == null || target == null)
 				{
-					result.Problems.Add($"Cannot connect {c.FromNode} {c.FromSocket} to {c.ToNode} {c.ToSocket}.");
+					result.Problems.Add(string.Format(LOC.STR("Cannot connect {0} {1} to {2} {3}."), c.FromNode, c.FromSocket, c.ToNode, c.ToSocket));
 					continue;
 				}
 				Connections.Connect(source, target);
@@ -245,7 +246,7 @@ namespace CyclesComponents
 			}
 			catch (Exception ex)
 			{
-				problems.Add("The XML does not parse: " + ex.Message);
+				problems.Add(string.Format(LOC.STR("The XML does not parse: {0}"), ex.Message));
 				return null;
 			}
 		}
@@ -263,9 +264,9 @@ namespace CyclesComponents
 			var proxy = ObjectProxies.FindById(NodeCatalog.ProxyId(type));
 			if (proxy == null)
 			{
-				problems.Add(ShaderNodeTypes.Find(type) == null
-					? $"'{type}' is not a Cycles shader node."
-					: $"'{type}' has no Grasshopper component.");
+				problems.Add(string.Format(ShaderNodeTypes.Find(type) == null
+					? LOC.STR("'{0}' is not a Cycles shader node.")
+					: LOC.STR("'{0}' has no Grasshopper component."), type));
 				return null;
 			}
 			return proxy.Emit() as CyclesNodeComponent;
@@ -310,20 +311,20 @@ namespace CyclesComponents
 			var parameter = FindParameter(component, type, socketName, true);
 			if (socket == null || parameter == null)
 			{
-				problems.Add($"{type} input '{socketName}' is not imported.");
+				problems.Add(string.Format(LOC.STR("{0} input '{1}' is not imported."), type, socketName));
 				return;
 			}
 
 			var value = ParseValue(socket, text);
 			if (value == null)
 			{
-				problems.Add($"{type} input '{socketName}': cannot read '{text}' as {socket.Type}.");
+				problems.Add(string.Format(LOC.STR("{0} input '{1}': cannot read '{2}' as {3}."), type, socketName, text, socket.Type));
 				return;
 			}
 
 			// A Grasshopper colour holds 0 to 1, so a brighter one, such as an emission's, is clamped.
 			if ((socket.Type == "color" || socket.Type == "color2") && OutsideUnitRange(text))
-				problems.Add($"{type} input '{socketName}': '{text}' is clamped to the 0 to 1 a Grasshopper colour holds.");
+				problems.Add(string.Format(LOC.STR("{0} input '{1}': '{2}' is clamped to the 0 to 1 a Grasshopper colour holds."), type, socketName, text));
 
 			parameter.PersistentDataWeak = Garden.ITreeFromList(new[] { value });
 		}
@@ -396,7 +397,7 @@ namespace CyclesComponents
 			var count = rgb == null ? 0 : rgb.Length / 3;
 			if (count == 0 || rgb.Length % 3 != 0 || (alphaText != null && (alpha == null || alpha.Length != count)))
 			{
-				problems.Add($"{type} input '{NodeCatalog.RampSocket}': cannot read it as a colour table with an alpha table of the same length.");
+				problems.Add(string.Format(LOC.STR("{0} input '{1}': cannot read it as a colour table with an alpha table of the same length."), type, NodeCatalog.RampSocket));
 				return null;
 			}
 
@@ -437,7 +438,7 @@ namespace CyclesComponents
 			var curves = new List<((string Name, string Code) Channel, Function Curve)>();
 			if (count < 2 || numbers.Length % columns.Length != 0)
 			{
-				problems.Add($"{nodeType.Name} input '{socket.Name}': cannot read it as a table of {columns.Length} number(s) per entry.");
+				problems.Add(string.Format(LOC.STR("{0} input '{1}': cannot read it as a table of {2} number(s) per entry."), nodeType.Name, socket.Name, columns.Length));
 				return curves;
 			}
 

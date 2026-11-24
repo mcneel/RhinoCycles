@@ -53,8 +53,8 @@ namespace RhinoCyclesCore.Materials
 		private void OnEditClick(object sender, EventArgs e)
 		{
 			var materialId = SelectedMaterialId();
-			if (materialId != Guid.Empty && !NodeBasedMaterial.EditInGrasshopper(materialId))
-				Rhino.RhinoApp.WriteLine(LOC.STR("The Cycles components for Grasshopper 2 are not installed, so this graph cannot be edited."));
+			if (materialId != Guid.Empty)
+				NodeBasedMaterial.EditInGrasshopper(materialId);
 		}
 
 		private Guid SelectedMaterialId()

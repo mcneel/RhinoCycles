@@ -32,6 +32,7 @@ using Grasshopper2.UI;
 using Grasshopper2.UI.Canvas;
 using Rhino;
 using Rhino.Render;
+using LOC = Rhino.UI.LOC;
 
 namespace CyclesComponents
 {
@@ -110,7 +111,7 @@ namespace CyclesComponents
 			var doc = ReadDocument(material);
 			if (doc != null && !ApplyPendingEdits(material, doc))
 			{
-				RhinoApp.WriteLine(string.Format("'{0}' was changed in the material editor in a way its Grasshopper 2 graph cannot follow, so the graph is rebuilt from the material.", material.Name));
+				RhinoApp.WriteLine(string.Format(LOC.STR("'{0}' was changed in the material editor in a way its Grasshopper 2 graph cannot follow, so the graph is rebuilt from the material."), material.Name));
 				doc = null;
 			}
 			if (doc is null)
@@ -256,7 +257,7 @@ namespace CyclesComponents
 			var result = GraphImport.Import(xml);
 			if (result.Output is null)
 			{
-				RhinoApp.WriteLine(string.Format("Cannot open '{0}' in Grasshopper 2. {1}", material.Name, string.Join(" ", result.Problems)));
+				RhinoApp.WriteLine(string.Format(LOC.STR("Cannot open '{0}' in Grasshopper 2. {1}"), material.Name, string.Join(" ", result.Problems)));
 				return null;
 			}
 
@@ -266,13 +267,13 @@ namespace CyclesComponents
 			result.Output.Paused = !complete;
 			Bind(material, result.Output);
 
-			RhinoApp.WriteLine(string.Format("Imported the graph of '{0}' into Grasshopper 2: {1} nodes.",
+			RhinoApp.WriteLine(string.Format(LOC.STR("Imported the graph of '{0}' into Grasshopper 2: {1} nodes."),
 				material.Name, result.Document.Objects.Count - 1));
 			if (!complete)
 			{
 				foreach (var problem in result.Problems)
 					RhinoApp.WriteLine("  " + problem);
-				RhinoApp.WriteLine("  The material keeps its XML until you use Write to Material on Material Output.");
+				RhinoApp.WriteLine("  " + LOC.STR("The material keeps its XML until you use Write to Material on Material Output."));
 			}
 
 			return result.Document;
@@ -472,9 +473,9 @@ namespace CyclesComponents
 
 			var result = SetValue(doc, node, socket, value);
 			if (result == EditResult.Linked)
-				RhinoApp.WriteLine(string.Format("'{0}' of {1} is fed by a wire in Grasshopper 2, so it keeps the value the graph gives it.", socket, node));
+				RhinoApp.WriteLine(string.Format(LOC.STR("'{0}' of {1} is fed by a wire in Grasshopper 2, so it keeps the value the graph gives it."), socket, node));
 			else if (result == EditResult.Missing)
-				RhinoApp.WriteLine(string.Format("The open Grasshopper 2 graph has no '{0}' of {1}, so the material keeps the graph's value.", socket, node));
+				RhinoApp.WriteLine(string.Format(LOC.STR("The open Grasshopper 2 graph has no '{0}' of {1}, so the material keeps the graph's value."), socket, node));
 
 			// Written again from the graph either way, so the material shows what the graph holds.
 			foreach (var output in doc.Objects.ForwardsOfT<CyclesMaterialOutput>())
@@ -566,7 +567,7 @@ namespace CyclesComponents
 					case EditResult.Missing:
 						return false;
 					case EditResult.Linked:
-						RhinoApp.WriteLine(string.Format("'{0}' of {1} is fed by a wire in Grasshopper 2, so the change from the material editor is not kept.", socket, node));
+						RhinoApp.WriteLine(string.Format(LOC.STR("'{0}' of {1} is fed by a wire in Grasshopper 2, so the change from the material editor is not kept."), socket, node));
 						break;
 				}
 			}

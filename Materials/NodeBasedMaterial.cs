@@ -264,7 +264,7 @@ namespace RhinoCyclesCore.Materials
 		/// Open the material's graph in Grasshopper 2, starting it if needed. The Grasshopper 2
 		/// Cycles components do the work; RhinoCycles does not reference Grasshopper 2.
 		/// </summary>
-		/// <returns>false if the Cycles components for Grasshopper 2 are not installed.</returns>
+		/// <returns>false if the graph did not open; the command line says why.</returns>
 		public static bool EditInGrasshopper(Guid materialId)
 		{
 			var editing = FindGraphEditing();
@@ -276,7 +276,17 @@ namespace RhinoCyclesCore.Materials
 			}
 
 			var edit = editing?.GetMethod("EditMaterial", new[] { typeof(Guid) });
-			return edit != null && (bool)edit.Invoke(null, new object[] { materialId });
+			if (edit == null)
+			{
+				Rhino.RhinoApp.WriteLine(LOC.STR("The Cycles components for Grasshopper 2 are not installed, so this graph cannot be edited."));
+				return false;
+			}
+
+			if ((bool)edit.Invoke(null, new object[] { materialId }))
+				return true;
+
+			Rhino.RhinoApp.WriteLine(LOC.STR("Grasshopper 2 could not open the graph: the material is not a Node-Based material in the active document, or Grasshopper 2 did not start."));
+			return false;
 		}
 
 		private static Type FindGraphEditing()
