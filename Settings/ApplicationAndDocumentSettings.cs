@@ -255,7 +255,14 @@ namespace RhinoCyclesCore.Settings
 
 		}
 
-		public bool RenderDeviceIsCuda => RenderDevice.IsMultiCuda || RenderDevice.IsCuda;
+		public bool RenderDeviceIsCuda
+		{
+			get
+			{
+				Device dev = RenderDevice;
+				return dev != null && (dev.IsMultiCuda || dev.IsCuda);
+			}
+		}
 
 		public Device RenderDevice
 		{

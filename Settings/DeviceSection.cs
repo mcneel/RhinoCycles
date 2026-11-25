@@ -706,6 +706,12 @@ namespace RhinoCyclesCore.Settings
 				string deviceSelectionString = string.Join(",", deviceSelectionStrings);
 
 				var dev = ccl.Device.DeviceFromString(deviceSelectionString);
+				if (dev == null)
+				{
+					RcCore.It.AddLogString($"Device selection \"{deviceSelectionString}\" did not resolve to a device, leaving the current selection alone");
+					return;
+				}
+
 				vud.IntermediateSelectedDeviceStr = dev.DeviceString;
 				vud.SelectedDeviceStr = vud.IntermediateSelectedDeviceStr;
 			}

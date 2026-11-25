@@ -333,7 +333,7 @@ namespace RhinoCyclesCore.Settings
 			set => throw new InvalidOperationException();
 		}
 		public bool AllowSelectedDeviceOverride { get => RcCore.It.AllSettings.AllowSelectedDeviceOverride; }
-		public Device RenderDevice { get => Device.DeviceFromString(Device.ValidDeviceString(SelectedDeviceStr)); }
+		public Device RenderDevice { get => Device.DeviceFromString(Device.ValidDeviceString(SelectedDeviceStr)) ?? Device.FirstCpu; }
 		public virtual bool ShowMaxPasses
 		{
 			get { return mDict.GetBool(SettingNames.MaxPasses, DefaultEngineSettings.ShowMaxPasses); }
