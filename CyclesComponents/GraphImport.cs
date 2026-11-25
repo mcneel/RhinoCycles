@@ -51,6 +51,9 @@ namespace CyclesComponents
 			public Document Document;
 			public CyclesMaterialOutput Output;
 			public List<string> Problems = new List<string>();
+
+			// Inputs Cycles does not have, such as a newer Blender's, which no render reads either.
+			public List<string> Ignored = new List<string>();
 		}
 
 		internal static Result Import(string xml)
@@ -114,7 +117,7 @@ namespace CyclesComponents
 					var socketName = attribute.Name.LocalName;
 					if (socketName == "name" || socketName == CyclesXmlWriter.PositionAttribute || socketName == curves?.Name || (hasRamp && (socketName == NodeCatalog.RampSocket || socketName == NodeCatalog.RampAlphaSocket)))
 						continue;
-					SetInput(component, type, socketName, attribute.Value, result.Problems);
+					SetInput(component, type, socketName, attribute.Value, result);
 				}
 
 				var wired = new List<(IParameter Target, AbstractParameter Editor)>();
@@ -305,11 +308,18 @@ namespace CyclesComponents
 			return null;
 		}
 
-		private static void SetInput(CyclesNodeComponent component, string type, string socketName, string text, List<string> problems)
+		private static void SetInput(CyclesNodeComponent component, string type, string socketName, string text, Result result)
 		{
+			var problems = result.Problems;
 			var socket = ShaderNodeTypes.Find(type)?.Inputs.FirstOrDefault(s => s.Name == socketName);
+			if (socket == null)
+			{
+				result.Ignored.Add(string.Format(LOC.STR("{0} input '{1}' is left out, as Cycles in Rhino has no such input."), type, socketName));
+				return;
+			}
+
 			var parameter = FindParameter(component, type, socketName, true);
-			if (socket == null || parameter == null)
+			if (parameter == null)
 			{
 				problems.Add(string.Format(LOC.STR("{0} input '{1}' is not imported."), type, socketName));
 				return;

@@ -269,6 +269,8 @@ namespace CyclesComponents
 
 			RhinoApp.WriteLine(string.Format(LOC.STR("Imported the graph of '{0}' into Grasshopper 2: {1} nodes."),
 				material.Name, result.Document.Objects.Count - 1));
+			foreach (var ignored in result.Ignored)
+				RhinoApp.WriteLine("  " + ignored);
 			if (!complete)
 			{
 				foreach (var problem in result.Problems)

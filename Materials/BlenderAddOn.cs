@@ -385,9 +385,11 @@ namespace RhinoCyclesCore.Materials
 
 		private static bool RefusedWhileInstalling()
 		{
-			if (g_installing)
+			// Read once: the install can finish while the message is up.
+			var installing = g_installing;
+			if (installing)
 				Dialogs.ShowMessage(LOC.STR("The Blender add-on is being installed already."), Title);
-			return g_installing;
+			return installing;
 		}
 
 		/// <summary>
