@@ -379,9 +379,9 @@ namespace RhinoCyclesCore.Settings
 			if (rd.IsCpu) m_tc.SelectedPage = m_tabpage_cpu;
 			if (ccl.Device.CudaAvailable() && (rd.IsCuda || rd.IsMultiCuda)) m_tc.SelectedPage = m_tabpage_cuda;
 			if (ccl.Device.OptixAvailable() && (rd.IsOptix|| rd.IsMultiOptix)) m_tc.SelectedPage = m_tabpage_optix;
-			if (ccl.Device.MetalAvailable() && rd.IsMetal) m_tc.SelectedPage = m_tabpage_metal;
-			if (ccl.Device.HipAvailable() && rd.IsHip) m_tc.SelectedPage = m_tabpage_hip;
-			if (ccl.Device.OneApiAvailable() && rd.IsOneApi) m_tc.SelectedPage = m_tabpage_oneapi;
+			if (ccl.Device.MetalAvailable() && (rd.IsMetal || rd.IsMultiMetal)) m_tc.SelectedPage = m_tabpage_metal;
+			if (ccl.Device.HipAvailable() && (rd.IsHip || rd.IsMultiHip)) m_tc.SelectedPage = m_tabpage_hip;
+			if (ccl.Device.OneApiAvailable() && (rd.IsOneApi || rd.IsMultiOneApi)) m_tc.SelectedPage = m_tabpage_oneapi;
 			base.OnShown(e);
 		}
 
@@ -419,9 +419,9 @@ namespace RhinoCyclesCore.Settings
 			var rd = ActiveDevice(vud);
 			if (ccl.Device.CudaAvailable() && (rd.IsCuda || rd.IsMultiCuda)) m_tc.SelectedPage = m_tabpage_cuda;
 			else if (ccl.Device.OptixAvailable() && (rd.IsOptix || rd.IsMultiOptix)) m_tc.SelectedPage = m_tabpage_optix;
-			else if (ccl.Device.MetalAvailable() && rd.IsMetal) m_tc.SelectedPage = m_tabpage_metal;
-			else if (ccl.Device.HipAvailable() && rd.IsHip) m_tc.SelectedPage = m_tabpage_hip;
-			else if (ccl.Device.OneApiAvailable() && rd.IsOneApi) m_tc.SelectedPage = m_tabpage_oneapi;
+			else if (ccl.Device.MetalAvailable() && (rd.IsMetal || rd.IsMultiMetal)) m_tc.SelectedPage = m_tabpage_metal;
+			else if (ccl.Device.HipAvailable() && (rd.IsHip || rd.IsMultiHip)) m_tc.SelectedPage = m_tabpage_hip;
+			else if (ccl.Device.OneApiAvailable() && (rd.IsOneApi || rd.IsMultiOneApi)) m_tc.SelectedPage = m_tabpage_oneapi;
 			else m_tc.SelectedPage = m_tabpage_cpu;
 		}
 

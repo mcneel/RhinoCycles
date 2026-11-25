@@ -727,8 +727,9 @@ namespace RhinoCyclesCore.Core
 		// Lines the kernel compiler tags with the device they belong to:
 		// [gpu <id>|<gpu name>|<backend>] <message>
 		private static readonly Regex GpuTaggedLine = new Regex(@"^\[gpu (?<id>\d+)\|(?<name>[^|\]]+)\|(?<backend>[^\]]+)\]\s?(?<msg>.*)$", RegexOptions.Compiled);
-		// Third party chatter like "[OpenColorIO Info]: ..." arrives on stderr but isn't an error.
-		private static readonly Regex InformationalLine = new Regex(@"^\[[^\]]*\b(Info|Warning)\]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		// Third party chatter like "[OpenColorIO Info]: ..." arrives on stderr but isn't an error, nor
+		// are Cycles' own warnings, e.g. "00:00.02 | WARNING: HIPEW initialization failed" without AMD drivers.
+		private static readonly Regex InformationalLine = new Regex(@"^(\[[^\]]*\b(Info|Warning)\]|[\d:.]+ \| WARNING:)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		private static List<string> SplitLogLines(string log)
 		{
@@ -1044,7 +1045,10 @@ namespace RhinoCyclesCore.Core
 					process.ErrorDataReceived += new DataReceivedEventHandler((sender,e) => {
 						if(e.Data != null)
 						{
-							compileStdErr.Enqueue(e.Data);
+							if (e.Data.StartsWith(SyclDeviceTypeNotice, StringComparison.Ordinal))
+								compileStdOut.Enqueue(e.Data);
+							else
+								compileStdErr.Enqueue(e.Data);
 							SetCompileLog();
 						}
 					});
@@ -1121,11 +1125,13 @@ namespace RhinoCyclesCore.Core
 
 				foreach (Process process in processes)
 				{
+					// Kill throws when access is denied or the process is already exiting.
 					try
 					{
 						process.Kill();
 					}
-					finally { }
+					catch (System.ComponentModel.Win32Exception) { }
+					catch (InvalidOperationException) { }
 				}
 			}
 			else if(HostUtils.RunningOnOSX)
@@ -1215,6 +1221,9 @@ namespace RhinoCyclesCore.Core
 		ConcurrentQueue<string> logFlushStrings = new ();
 		ConcurrentQueue<string> compileStdOut = new ();
 		ConcurrentQueue<string> compileStdErr = new ();
+
+		// SYCL prints this on stderr because Cycles sets SYCL_DEVICE_TYPE to keep Intel NPUs out (RH-99497). Not an error.
+		const string SyclDeviceTypeNotice = "WARNING: The legacy environment variables SYCL_BE and SYCL_DEVICE_TYPE";
 
 		Dictionary<StopwatchType, Stopwatch> stopwatches = new Dictionary<StopwatchType, Stopwatch>();
 
