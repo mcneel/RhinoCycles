@@ -47,7 +47,8 @@ namespace RhinoCyclesCore.Materials
 		/// </summary>
 		public const string CommandName = "InstallBlenderAddOn";
 
-		private const string AskedSetting = "blender-add-on-asked";
+		/* The add-on version last offered, so a newer one is offered again. */
+		private const string OfferedSetting = "blender-add-on-offered-version";
 
 		/* Extensions, and the command line that installs them, came with Blender 4.2. */
 		private static readonly Version MinimumBlender = new Version(4, 2);
@@ -72,6 +73,16 @@ namespace RhinoCyclesCore.Materials
 			public string Label => string.Format(CultureInfo.InvariantCulture, "Blender {0}.{1}", Version.Major, Version.Minor);
 
 			public bool HasAddOn => File.Exists(Path.Combine(ExtensionsFolder, ExtensionId, "blender_manifest.toml"));
+
+			/// <summary>
+			/// The version of the add-on this Blender has, or null if it has none.
+			/// </summary>
+			public Version AddOnVersion => ManifestVersion(Path.Combine(ExtensionsFolder, ExtensionId));
+
+			/// <summary>
+			/// Whether this Blender has the add-on at this version or a newer one.
+			/// </summary>
+			public bool HasAddOnVersion(Version version) => AddOnVersion is Version v && v >= version;
 		}
 
 		/// <summary>
@@ -80,6 +91,27 @@ namespace RhinoCyclesCore.Materials
 		public static string Folder => Path.Combine(RcCore.It.PluginPath ?? string.Empty, "RhinoCycles", "blender", ExtensionId);
 
 		public static bool IsShipped => File.Exists(Path.Combine(Folder, "blender_manifest.toml"));
+
+		/// <summary>
+		/// The version of the add-on Rhino ships, or null if it ships none.
+		/// </summary>
+		public static Version ShippedVersion => ManifestVersion(Folder);
+
+		private static readonly Regex g_manifestVersion = new Regex("^\\s*version\\s*=\\s*\"([^\"]*)\"", RegexOptions.Multiline);
+
+		/* The version in an extension's blender_manifest.toml, or null. */
+		private static Version ManifestVersion(string folder)
+		{
+			try
+			{
+				var match = g_manifestVersion.Match(File.ReadAllText(Path.Combine(folder, "blender_manifest.toml")));
+				return match.Success && Version.TryParse(match.Groups[1].Value, out var version) ? version : null;
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
 
 		/// <summary>
 		/// Blender 4.2 and later where they are usually installed, the ones Windows lists as installed
@@ -268,25 +300,45 @@ namespace RhinoCyclesCore.Materials
 		private static PersistentSettings Settings => Rhino.PlugIns.PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"))?.Settings;
 
 		/// <summary>
-		/// Offer the add-on once, when the Materials panel opens and a Blender that has not got it is
-		/// installed. Not asked again, whichever the answer.
+		/// Offer the add-on when the Materials panel opens and Blender is installed: once, to the
+		/// Blenders without it, then again only when Rhino ships a newer version, to the Blenders
+		/// with an older one. Not asked again for a version, whichever the answer.
 		/// </summary>
 		public static void OfferOnce()
 		{
 			var settings = Settings;
-			if (settings == null || settings.GetBool(AskedSetting, false) || !IsShipped)
+			var shipped = ShippedVersion;
+			if (settings == null || shipped == null)
 				return;
 
-			var missing = Find().Where(b => !b.HasAddOn).ToList();
-			if (missing.Count == 0)
+			var offered = Version.TryParse(settings.GetString(OfferedSetting, string.Empty), out var last) ? last : null;
+			if (offered != null && offered >= shipped)
 				return;
 
-			settings.SetBool(AskedSetting, true);
+			var found = Find();
+			if (found.Count == 0)
+				return;
 
-			var question = string.Format(LOC.STR("Rhino has an add-on for Blender that copies Blender materials to Rhino as Node-Based materials, and back. Install it into {0}?{1}{1}You can also install it later with the {2} command, or from the Nodes section of a Node-Based material."),
-				Labels(missing), Environment.NewLine, LOC.COMMANDNAME("InstallBlenderAddOn"));
+			settings.SetString(OfferedSetting, shipped.ToString());
+
+			string question;
+			List<Installation> blenders;
+			if (offered == null)
+			{
+				blenders = found.Where(b => !b.HasAddOnVersion(shipped)).ToList();
+				question = string.Format(LOC.STR("Rhino has an add-on for Blender that copies Blender materials to Rhino as Node-Based materials, and back. Install it into {0}?{1}{1}You can also install it later with the {2} command, or from the Nodes section of a Node-Based material."),
+					Labels(blenders), Environment.NewLine, LOC.COMMANDNAME("InstallBlenderAddOn"));
+			}
+			else
+			{
+				blenders = found.Where(b => b.HasAddOn && !b.HasAddOnVersion(shipped)).ToList();
+				question = string.Format(LOC.STR("This Rhino has a newer version of the Blender add-on that copies materials to and from Rhino. Update it in {0}?"), Labels(blenders));
+			}
+			if (blenders.Count == 0)
+				return;
+
 			if (Dialogs.ShowMessage(question, Title, ShowMessageButton.YesNo, ShowMessageIcon.Question) == ShowMessageResult.Yes)
-				Install(missing);
+				Install(blenders);
 		}
 
 		/// <summary>
