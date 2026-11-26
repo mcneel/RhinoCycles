@@ -47,7 +47,6 @@ namespace CyclesComponents
 		internal const string GraphXmlField = "cycles-graph-xml";
 		internal const string SourceField = "cycles-graph-source";
 		internal const string DocumentField = "cycles-graph-gh2-document";
-		internal const string BytesDocumentField = "cycles-graph-document";
 		internal const string EditsField = "cycles-graph-edits";
 
 		/* The shader of a new graph. NodeBasedMaterial renders the same while its graph is empty. */
@@ -194,14 +193,11 @@ namespace CyclesComponents
 		}
 
 		/// <summary>
-		/// The stored document's base64 text, or null if there is none. Materials saved before
-		/// it was text still have it as bytes.
+		/// The stored document's base64 text, or null if there is none.
 		/// </summary>
 		private static string StoredDocument(RenderMaterial material)
 		{
-			if (material.Fields.TryGetValue(DocumentField, out string text) && !string.IsNullOrEmpty(text))
-				return text;
-			return material.Fields.TryGetValue(BytesDocumentField, out byte[] bytes) && bytes?.Length > 0 ? Convert.ToBase64String(bytes) : null;
+			return material.Fields.TryGetValue(DocumentField, out string text) && !string.IsNullOrEmpty(text) ? text : null;
 		}
 
 		private static bool HasDocument(RenderMaterial material)

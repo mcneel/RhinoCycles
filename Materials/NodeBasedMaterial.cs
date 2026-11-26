@@ -46,9 +46,6 @@ namespace RhinoCyclesCore.Materials
 		/* The Grasshopper 2 document the graph came from, for editing it again. Base64 text, as RDK
 		 * undo cannot restore a byte array field. */
 		public const string DocumentField = "cycles-graph-gh2-document";
-		/* Where materials saved before kept that document, as bytes. Only read; it keeps its type,
-		 * as Debug builds assert when a field read from a file changes type. */
-		public const string BytesDocumentField = "cycles-graph-document";
 		/* Values the material editor changed in the XML that the document does not have yet. */
 		public const string EditsField = "cycles-graph-edits";
 
@@ -125,7 +122,6 @@ namespace RhinoCyclesCore.Materials
 		private bool HasGraphOrigin()
 		{
 			return (Fields.TryGetValue(DocumentField, out string document) && !string.IsNullOrEmpty(document)) ||
-			       (Fields.TryGetValue(BytesDocumentField, out byte[] bytes) && bytes?.Length > 0) ||
 			       (Fields.TryGetValue(SourceField, out string source) && !string.IsNullOrEmpty(source)) ||
 			       (Fields.TryGetValue(EditsField, out string edits) && !string.IsNullOrEmpty(edits));
 		}
@@ -135,7 +131,6 @@ namespace RhinoCyclesCore.Materials
 			Fields.Add(GraphXmlField, string.Empty, GraphXmlPrompt);
 			var source = Fields.Add(SourceField, string.Empty, "Source");
 			var document = Fields.Add(DocumentField, string.Empty);
-			var bytesDocument = Fields.Add(BytesDocumentField, new byte[0]);
 			var edits = Fields.Add(EditsField, string.Empty, "Edits");
 
 			/* Hiding a field refreshes the content UI, which throws off the UI thread. The RDK
@@ -144,7 +139,6 @@ namespace RhinoCyclesCore.Materials
 			{
 				source.IsHiddenInAutoUI = true;
 				document.IsHiddenInAutoUI = true;
-				bytesDocument.IsHiddenInAutoUI = true;
 				edits.IsHiddenInAutoUI = true;
 			}
 		}
@@ -237,8 +231,6 @@ namespace RhinoCyclesCore.Materials
 				Fields.Set(GraphXmlField, xml ?? string.Empty);
 				Fields.Set(SourceField, string.Empty);
 				Fields.Set(DocumentField, string.Empty);
-				if (Fields.TryGetValue(BytesDocumentField, out byte[] bytes) && bytes?.Length > 0)
-					Fields.Set(BytesDocumentField, new byte[0]);
 				Fields.Set(EditsField, string.Empty);
 				EndChange();
 			}
