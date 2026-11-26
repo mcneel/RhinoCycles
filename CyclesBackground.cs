@@ -289,6 +289,8 @@ namespace RhinoCyclesCore
 				var h = renderSize.IsEmpty ? Math.Abs(bottom - top) : renderSize.Height;
 				var viewport_ar = (float)w / h;
 				Bitmap bm = new Bitmap(file);
+				// Turn the source, not the canvas: the canvas is drawn flipped and sized to the view.
+				RotateUpright(bm);
 				var image_ar = (float)bm.Width / bm.Height;
 
 				int nw = 0;
@@ -338,44 +340,6 @@ namespace RhinoCyclesCore
 				{
 					newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipY);
 				}
-				const int ExifOrientationId = 0x112;
-				List<int> propertyIdList = new List<int>(bm.PropertyIdList);
-				// Read orientation tag
-				if (propertyIdList.Contains(ExifOrientationId))
-				{
-					var prop = bm.GetPropertyItem(ExifOrientationId);
-					var orient = BitConverter.ToInt16(prop.Value, 0);
-					switch(orient)
-					{
-						case 1:
-							newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipNone);
-							break;
-						case 2:
-							newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipX);
-							break;
-						case 3:
-							newBitmap.RotateFlip(RotateFlipType.Rotate180FlipNone);
-							break;
-						case 4:
-							newBitmap.RotateFlip(RotateFlipType.Rotate180FlipX);
-							break;
-						case 5:
-							newBitmap.RotateFlip(RotateFlipType.Rotate90FlipX);
-							break;
-						case 6:
-							newBitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
-							break;
-						case 7:
-							newBitmap.RotateFlip(RotateFlipType.Rotate270FlipX);
-							break;
-						case 8:
-							newBitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
-							break;
-						default:
-							newBitmap.RotateFlip(RotateFlipType.RotateNoneFlipNone);
-							break;
-					}
-				}
 				var tmpFolder = System.IO.Path.GetTempPath();
 				var newwallpaperFn = System.IO.Path.Combine(tmpFolder, wallpaperName);
 				newBitmap.Save(newwallpaperFn);
@@ -389,6 +353,41 @@ namespace RhinoCyclesCore
 				RcCore.It.AddLogStringIfVerbose("wallpaper failure: "
 					+ e.GetType().Name + ": " + e.Message);
 				Wallpaper.Clear();
+			}
+		}
+
+		/// <summary>
+		/// Turn bm upright for its EXIF/TIFF Orientation tag.
+		/// </summary>
+		private static void RotateUpright(Bitmap bm)
+		{
+			const int ExifOrientationId = 0x112;
+			if (Array.IndexOf(bm.PropertyIdList, ExifOrientationId) < 0) { return; }
+
+			var orient = BitConverter.ToInt16(bm.GetPropertyItem(ExifOrientationId).Value, 0);
+			switch(orient)
+			{
+				case 2:
+					bm.RotateFlip(RotateFlipType.RotateNoneFlipX);
+					break;
+				case 3:
+					bm.RotateFlip(RotateFlipType.Rotate180FlipNone);
+					break;
+				case 4:
+					bm.RotateFlip(RotateFlipType.Rotate180FlipX);
+					break;
+				case 5:
+					bm.RotateFlip(RotateFlipType.Rotate90FlipX);
+					break;
+				case 6:
+					bm.RotateFlip(RotateFlipType.Rotate90FlipNone);
+					break;
+				case 7:
+					bm.RotateFlip(RotateFlipType.Rotate270FlipX);
+					break;
+				case 8:
+					bm.RotateFlip(RotateFlipType.Rotate270FlipNone);
+					break;
 			}
 		}
 
