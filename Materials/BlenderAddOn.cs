@@ -50,6 +50,9 @@ namespace RhinoCyclesCore.Materials
 		/* The add-on version last offered, so a newer one is offered again. */
 		private const string OfferedSetting = "blender-add-on-offered-version";
 
+		/* Blender programs the user chose, which Find includes from then on. */
+		private const string ChosenSetting = "blender-programs-chosen";
+
 		/* Extensions, and the command line that installs them, came with Blender 4.2. */
 		private static readonly Version MinimumBlender = new Version(4, 2);
 
@@ -115,19 +118,40 @@ namespace RhinoCyclesCore.Materials
 
 		/// <summary>
 		/// Blender 4.2 and later where they are usually installed, the ones Windows lists as installed
-		/// apps, and the one .blend files open with.
+		/// apps or Spotlight knows on a Mac, the one .blend files open with, and the ones the user chose.
+		/// One per extensions folder, as copies of a version share it.
 		/// </summary>
 		public static List<Installation> Find()
 		{
-			var programs = HostUtils.RunningOnWindows ? WindowsPrograms() : MacPrograms();
+			var programs = (HostUtils.RunningOnWindows ? WindowsPrograms() : MacPrograms()).Concat(ChosenPrograms());
 			var found = new List<Installation>();
 			foreach (var program in programs.Distinct(StringComparer.OrdinalIgnoreCase))
 			{
 				var blender = FromProgram(program);
-				if (blender != null && found.All(b => !string.Equals(b.Executable, blender.Executable, StringComparison.OrdinalIgnoreCase)))
+				if (blender != null && found.All(b => !string.Equals(b.Executable, blender.Executable, StringComparison.OrdinalIgnoreCase) &&
+				                                      !string.Equals(b.ExtensionsFolder, blender.ExtensionsFolder, StringComparison.OrdinalIgnoreCase)))
 					found.Add(blender);
 			}
 			return found.OrderBy(b => b.Version).ToList();
+		}
+
+		private static string[] ChosenPrograms()
+		{
+			return Settings?.GetStringList(ChosenSetting, new string[0]) ?? new string[0];
+		}
+
+		/* Keep a Blender the user chose for Find, dropping chosen ones that are gone. */
+		private static void Remember(Installation blender)
+		{
+			var settings = Settings;
+			if (settings == null)
+				return;
+
+			var chosen = ChosenPrograms()
+				.Where(p => File.Exists(p) && !string.Equals(p, blender.Executable, StringComparison.OrdinalIgnoreCase))
+				.ToList();
+			chosen.Add(blender.Executable);
+			settings.SetStringList(ChosenSetting, chosen.ToArray());
 		}
 
 		/// <summary>
@@ -190,7 +214,8 @@ namespace RhinoCyclesCore.Materials
 		}
 
 		/// <summary>
-		/// The folders of the Blenders in Windows' list of installed apps, wherever they were installed.
+		/// The folders of the Blenders in Windows' list of installed apps, wherever they were installed,
+		/// published by the Blender Foundation.
 		/// </summary>
 		private static List<string> InstalledAppFolders()
 		{
@@ -215,8 +240,10 @@ namespace RhinoCyclesCore.Materials
 							using (var app = uninstall.OpenSubKey(name))
 							{
 								var display = app?.GetValue("DisplayName") as string;
+								var publisher = app?.GetValue("Publisher") as string;
 								var location = (app?.GetValue("InstallLocation") as string)?.Trim().Trim('"');
-								if (!string.IsNullOrEmpty(location) && display != null && display.IndexOf("Blender", StringComparison.OrdinalIgnoreCase) >= 0)
+								if (!string.IsNullOrEmpty(location) && display != null && display.IndexOf("Blender", StringComparison.OrdinalIgnoreCase) >= 0 &&
+								    publisher != null && publisher.IndexOf("Blender Foundation", StringComparison.OrdinalIgnoreCase) >= 0)
 									folders.Add(location);
 							}
 						}
@@ -240,6 +267,45 @@ namespace RhinoCyclesCore.Materials
 					yield return Path.Combine(app, "Contents", "MacOS", "Blender");
 			}
 			yield return Path.Combine(home, "Library", "Application Support", "Steam", "steamapps", "common", "Blender", "Blender.app", "Contents", "MacOS", "Blender");
+
+			foreach (var app in SpotlightApps("org.blenderfoundation.blender"))
+				yield return Path.Combine(app, "Contents", "MacOS", "Blender");
+		}
+
+		/// <summary>
+		/// The apps with this bundle id that Spotlight knows of, wherever they are; none if it cannot say.
+		/// </summary>
+		private static List<string> SpotlightApps(string bundleId)
+		{
+			var start = new ProcessStartInfo("/usr/bin/mdfind", string.Format(CultureInfo.InvariantCulture, "\"kMDItemCFBundleIdentifier == '{0}'\"", bundleId))
+			{
+				UseShellExecute = false,
+				CreateNoWindow = true,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+			};
+			try
+			{
+				using (var process = Process.Start(start))
+				{
+					var output = process.StandardOutput.ReadToEndAsync();
+					_ = process.StandardError.ReadToEndAsync();
+					if (!process.WaitForExit(5000))
+					{
+						try { process.Kill(); } catch (Exception) { }
+						return new List<string>();
+					}
+
+					return output.Result.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)
+						.Select(l => l.Trim())
+						.Where(l => l.EndsWith(".app", StringComparison.OrdinalIgnoreCase) && !l.Contains("/.Trash/"))
+						.ToList();
+				}
+			}
+			catch (Exception)
+			{
+				return new List<string>();
+			}
 		}
 
 		/// <summary>
@@ -391,6 +457,8 @@ namespace RhinoCyclesCore.Materials
 			var blender = FromProgram(dialog.FileName);
 			if (blender == null)
 				Dialogs.ShowMessage(string.Format(LOC.STR("{0} is not Blender 4.2 or later."), dialog.FileName), Title);
+			else
+				Remember(blender);
 			return blender;
 		}
 
