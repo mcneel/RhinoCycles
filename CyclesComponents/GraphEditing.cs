@@ -289,16 +289,6 @@ namespace CyclesComponents
 		}
 
 		/// <summary>
-		/// Whether the document has a Cycles Material, which wrote materials before Material Output did.
-		/// </summary>
-		internal static bool HasCyclesMaterial(Document doc)
-		{
-#pragma warning disable CS0618 // Obsolete, but still in documents saved before.
-			return doc != null && doc.Objects.ForwardsOfT<CyclesMaterialComponent>().Any();
-#pragma warning restore CS0618
-		}
-
-		/// <summary>
 		/// Whether this output writes the material its document was opened from: the output the
 		/// material is bound to, or the first one when that is gone. Others write nothing.
 		/// </summary>
@@ -329,7 +319,7 @@ namespace CyclesComponents
 		/// <param name="opened">Write to the material the document was opened from, if there is one.
 		/// Otherwise the material is the one whose source is the writer.</param>
 		/// <returns>The material, or null if there is none; the writer then says why.</returns>
-		internal static RenderMaterial WriteMaterial(Component writer, IDataAccess access, string xml, string name, bool opened)
+		internal static RenderMaterial WriteMaterial(Component writer, IDataAccess access, string xml, bool opened)
 		{
 			var source = writer.InstanceId.ToString();
 			var openedId = opened ? MaterialOf(writer.Document) : null;
@@ -354,6 +344,8 @@ namespace CyclesComponents
 			else
 				material = MaterialOfSource(doc, source);
 
+			// A new material's name; after that it is named in the material editor.
+			string name = null;
 			if (material is null)
 			{
 				material = RenderContent.Create(doc, MaterialType) as RenderMaterial;
@@ -362,8 +354,7 @@ namespace CyclesComponents
 					access.AddError("No Node-Based material", "RhinoCycles is not loaded, or is too old to have the Node-Based material.");
 					return null;
 				}
-				if (string.IsNullOrWhiteSpace(name))
-					name = "Node-Based";
+				name = "Node-Based";
 			}
 
 			var current = material.Fields.TryGetValue(GraphXmlField, out string existing) ? existing : null;
@@ -515,7 +506,7 @@ namespace CyclesComponents
 				return null;
 
 			// Only an output that writes: not one that belongs to a material, such as in a restored autosave.
-			return editor.Documents.All.Select(stack => stack.Root).FirstOrDefault(d => d != null && !IsMaterialDocument(d) && !HasCyclesMaterial(d) &&
+			return editor.Documents.All.Select(stack => stack.Root).FirstOrDefault(d => d != null && !IsMaterialDocument(d) &&
 				d.Objects.ForwardsOfT<CyclesMaterialOutput>().Any(o => o.InstanceId.ToString() == source && !o.Paused && o.BoundMaterial == Guid.Empty));
 		}
 

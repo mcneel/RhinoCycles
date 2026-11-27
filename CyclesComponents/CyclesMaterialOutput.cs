@@ -142,10 +142,6 @@ namespace CyclesComponents
 
 		private void Write(IDataAccess access, string xml)
 		{
-			// Documents from before Material Output wrote materials still write through Cycles Material.
-			if (GraphEditing.HasCyclesMaterial(Document))
-				return;
-
 			if (Paused)
 			{
 				access.AddWarning("Not writing", "The import was incomplete, so the material keeps its own graph. Use Write to Material on this node to replace it.");
@@ -168,7 +164,7 @@ namespace CyclesComponents
 			}
 
 			// The material is named in the material editor.
-			var material = GraphEditing.WriteMaterial(this, access, xml, null, opened);
+			var material = GraphEditing.WriteMaterial(this, access, xml, opened);
 			if (material != null && Parameters.OutputCount > MaterialOutput)
 				access.SetItem(MaterialOutput, material.Id.ToString());
 		}
