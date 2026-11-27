@@ -149,17 +149,13 @@ namespace CyclesComponents
 		}
 
 		/// <summary>
-		/// A stable proxy id per node type, so palettes and recent lists survive restarts.
+		/// A stable proxy id per node type, so palettes and recent lists survive restarts. SHA-256,
+		/// as Rhino uses, since MD5 is not FIPS-compliant and can throw where FIPS is enforced.
 		/// </summary>
 		internal static Guid ProxyId(string nodeType)
 		{
-			using (var md5 = MD5.Create())
-			{
-				var bytes = md5.ComputeHash(Encoding.UTF8.GetBytes("cycles-shader-node:" + nodeType));
-				/* The 00000000 prefix Grasshopper's own ids use. */
-				bytes[0] = bytes[1] = bytes[2] = bytes[3] = 0;
-				return new Guid(bytes);
-			}
+			using (var sha256 = SHA256.Create())
+				return new Guid(sha256.ComputeHash(Encoding.UTF8.GetBytes("cycles-shader-node:" + nodeType)).Take(16).ToArray());
 		}
 
 		/// <summary>
