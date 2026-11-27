@@ -78,8 +78,9 @@ namespace CyclesComponents
 
 		#region properties
 		/// <summary>
-		/// Not writing to the material, so it keeps its graph. Set after an incomplete import,
-		/// which would otherwise replace the material's graph with what came across.
+		/// Not writing to the material, so it keeps its graph. Set when this graph lacks something
+		/// the material has, such as after an incomplete import, which would otherwise replace the
+		/// material's graph with what came across.
 		/// </summary>
 		internal bool Paused { get; set; }
 
@@ -103,19 +104,28 @@ namespace CyclesComponents
 			using (panel.BeginCategory("Material"))
 			{
 				var bar = panel.AddBar(false);
-				bar.AddPushButton(null, new Nomen("Write to Material", "Replace the material's graph with this one, losing what the import could not bring across.", "Material", "Material"), Resume);
+				bar.AddPushButton(null, new Nomen("Write to Material", "Replace the material's graph with this one, losing what this graph lacks.", "Material", "Material"), Resume);
 			}
 		}
+
+		/* Set by Write to Material, so the next write replaces the material's graph even if its XML is the same. */
+		private bool _rewrite;
 
 		private void Resume()
 		{
 			Paused = false;
+			_rewrite = true;
 			Expire();
 			Document?.Solution.Start();
 		}
 
 		protected override void Process(IDataAccess access)
 		{
+			// One added after Edit opened the document belongs to the material too, connected or not,
+			// so it never makes a new material after File > New.
+			if (BoundMaterial == Guid.Empty && GraphEditing.IsMaterialDocumentAnyThread(Document))
+				GraphEditing.OnUiThread(() => BoundMaterial = GraphEditing.MaterialOf(Document) ?? Guid.Empty);
+
 			var connected = new List<KeyValuePair<string, CyclesSocket>>();
 			for (var i = 0; i < g_outputSockets.Length; i++)
 			{
@@ -142,13 +152,13 @@ namespace CyclesComponents
 
 		private void Write(IDataAccess access, string xml)
 		{
+			var opened = GraphEditing.IsMaterialDocument(Document);
+
 			if (Paused)
 			{
-				access.AddWarning("Not writing", "The import was incomplete, so the material keeps its own graph. Use Write to Material on this node to replace it.");
+				access.AddWarning("Not writing", "This graph lacks something the material has, so the material keeps its own graph. Use Write to Material on this node to replace it.");
 				return;
 			}
-
-			var opened = GraphEditing.IsMaterialDocument(Document);
 
 			// Such as a copy Grasshopper restores from an autosave, which would make a new material.
 			if (!opened && BoundMaterial != Guid.Empty)
@@ -164,7 +174,9 @@ namespace CyclesComponents
 			}
 
 			// The material is named in the material editor.
-			var material = GraphEditing.WriteMaterial(this, access, xml, opened);
+			var material = GraphEditing.WriteMaterial(this, access, xml, opened, _rewrite);
+			if (material != null)
+				_rewrite = false;
 			if (material != null && Parameters.OutputCount > MaterialOutput)
 				access.SetItem(MaterialOutput, material.Id.ToString());
 		}

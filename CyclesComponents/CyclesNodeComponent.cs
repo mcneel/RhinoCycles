@@ -70,7 +70,7 @@ namespace CyclesComponents
 
 			var sockets = NodeCatalog.VisibleInputs(nodeType).ToList();
 			for (var i = 0; i < Parameters.InputCount; i++)
-				if (Parameters.Input(i) is TextParameter parameter && FindSocket(sockets, parameter.Nomen.Name) is ShaderNodeSocketInfo socket && socket.Type == "enum")
+				if (Parameters.Input(i) is TextParameter parameter && FindSocket(sockets, parameter) is ShaderNodeSocketInfo socket && socket.Type == "enum")
 					SetEnumPresets(parameter, socket);
 		}
 
@@ -238,12 +238,13 @@ namespace CyclesComponents
 			var links = new Dictionary<string, CyclesSocket>();
 			var inputSockets = NodeCatalog.VisibleInputs(nodeType).ToList();
 
-			// Match parameters to sockets by their fixed name (users can rename the display
-			// name), so a file outlives a reordering in Cycles.
+			// Match parameters to sockets by their fixed name, as users can rename the code, so a file
+			// outlives a reordering in Cycles; by the code only for a name Cycles no longer has.
 			for (var i = 0; i < Parameters.InputCount; i++)
 			{
-				var socket = FindSocket(inputSockets, Parameters.Input(i).Nomen.Name);
-				if (socket is null)
+				// Curve channels are read below.
+				var socket = FindSocket(inputSockets, Parameters.Input(i));
+				if (socket is null || NodeCatalog.CurveChannels(socket) != null)
 					continue;
 
 				if (!access.GetItem(i, out object value) || value is null)
@@ -293,7 +294,7 @@ namespace CyclesComponents
 			var node = new CyclesNode(NodeType, values, links, InstanceId);
 			for (var o = 0; o < Parameters.OutputCount; o++)
 			{
-				var socket = FindSocket(nodeType.Outputs, Parameters.Output(o).Nomen.Name);
+				var socket = FindSocket(nodeType.Outputs, Parameters.Output(o));
 				if (socket != null)
 					access.SetItem(o, new CyclesSocket(node, socket.Name));
 			}
@@ -301,14 +302,28 @@ namespace CyclesComponents
 
 		/// <summary>
 		/// Whether Cycles can feed the linked output into this input: through a registered
-		/// convert node, or into a closure. A value into a boolean it cannot.
+		/// convert node, or into a closure. A value into a boolean it cannot, nor a closure
+		/// into anything but a closure.
 		/// </summary>
 		private static bool CanLink(CyclesSocket link, ShaderNodeSocketInfo input, out string fromType)
 		{
 			fromType = ShaderNodeTypes.Find(link.Node.Type)?.Outputs.FirstOrDefault(s => s.Name == link.Socket)?.Type;
-			if (fromType is null || fromType == input.Type || input.Type == "closure")
+			return CanLink(fromType, input.Type);
+		}
+
+		/// <summary>
+		/// Whether Cycles links an output of one socket type into an input of another, as
+		/// shader_xml.cpp's can_connect decides. An unknown type is given the benefit of the doubt.
+		/// </summary>
+		internal static bool CanLink(string fromType, string toType)
+		{
+			if (fromType is null || toType is null || fromType == toType || toType == "closure")
 				return true;
-			return ShaderNodeTypes.Find($"convert_{fromType}_to_{input.Type}") != null;
+
+			// convert_closure_to_* exist, but Cycles leaves such a link out.
+			if (fromType == "closure")
+				return false;
+			return ShaderNodeTypes.Find($"convert_{fromType}_to_{toType}") != null;
 		}
 
 		private Function[] CurveFunctions(IDataAccess access, (string Name, string Code)[] channels)
@@ -316,7 +331,7 @@ namespace CyclesComponents
 			var functions = new Function[channels.Length];
 			for (var i = 0; i < Parameters.InputCount; i++)
 			{
-				var c = Array.FindIndex(channels, channel => channel.Name == Parameters.Input(i).Nomen.Name);
+				var c = ChannelIndex(channels, Parameters.Input(i));
 				if (c < 0 || !access.GetItem(i, out object value) || value is null)
 					continue;
 
@@ -336,9 +351,52 @@ namespace CyclesComponents
 			return double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var number) ? number : 0.0;
 		}
 
-		private static ShaderNodeSocketInfo FindSocket(IReadOnlyList<ShaderNodeSocketInfo> sockets, string parameterName)
+		/// <summary>
+		/// The socket a parameter was added for: by its name, which is fixed, or by its code, Cycles'
+		/// socket name, when Cycles no longer gives a socket that name. Users can rename the code,
+		/// such as by dragging a wire in. A curve channel is no socket of its own.
+		/// </summary>
+		private static ShaderNodeSocketInfo FindSocket(IReadOnlyList<ShaderNodeSocketInfo> sockets, IParameter parameter)
 		{
-			return sockets.FirstOrDefault(s => string.Equals(NodeCatalog.ParameterName(s, sockets), parameterName, StringComparison.Ordinal));
+			var name = parameter.Nomen.Name;
+			return sockets.FirstOrDefault(s => string.Equals(NodeCatalog.ParameterName(s, sockets), name, StringComparison.Ordinal)) ??
+			       (IsChannel(sockets, name) ? null : sockets.FirstOrDefault(s => string.Equals(s.Name, parameter.UserName, StringComparison.Ordinal)));
+		}
+
+		private static bool IsChannel(IEnumerable<ShaderNodeSocketInfo> sockets, string name)
+		{
+			return sockets.Any(s => NodeCatalog.CurveChannels(s)?.Any(channel => channel.Name == name) == true);
+		}
+
+		/// <summary>
+		/// The input or output parameter added for a socket among its siblings, or null; as
+		/// <see cref="FindSocket"/> matches them.
+		/// </summary>
+		internal IParameter FindParameter(ShaderNodeSocketInfo socket, IReadOnlyList<ShaderNodeSocketInfo> sockets, bool input)
+		{
+			var count = input ? Parameters.InputCount : Parameters.OutputCount;
+			IParameter At(int i) => input ? Parameters.Input(i) : Parameters.Output(i);
+
+			var name = NodeCatalog.ParameterName(socket, sockets);
+			for (var i = 0; i < count; i++)
+				if (At(i).Nomen.Name == name)
+					return At(i);
+
+			// By its code, one whose name Cycles no longer gives a socket.
+			var names = new HashSet<string>(sockets.Select(s => NodeCatalog.ParameterName(s, sockets)), StringComparer.Ordinal);
+			for (var i = 0; i < count; i++)
+				if (!names.Contains(At(i).Nomen.Name) && !IsChannel(sockets, At(i).Nomen.Name) && At(i).UserName == socket.Name)
+					return At(i);
+			return null;
+		}
+
+		/// <summary>
+		/// Which curve channel a parameter was added for, or -1. By its name only: channel names are
+		/// the catalogue's own and do not change, and a renamed code such as "X" would misroute.
+		/// </summary>
+		internal static int ChannelIndex((string Name, string Code)[] channels, IParameter parameter)
+		{
+			return Array.FindIndex(channels, channel => channel.Name == parameter.Nomen.Name);
 		}
 		#endregion
 
@@ -381,10 +439,9 @@ namespace CyclesComponents
 			double Persistent(string socketName)
 			{
 				var socket = sockets.FirstOrDefault(s => s.Name == socketName);
-				for (var i = 0; i < Parameters.InputCount && socket != null; i++)
-					if (Parameters.Input(i).Nomen.Name == NodeCatalog.ParameterName(socket, sockets))
-						if (Parameters.Input(i).PersistentDataWeak.NonNullItems.FirstOrDefault() is double number)
-							return number;
+				var parameter = socket is null ? null : FindParameter(socket, sockets, true);
+				if (parameter?.PersistentDataWeak.NonNullItems.FirstOrDefault() is double number)
+					return number;
 				return Setting(new Dictionary<string, string>(), sockets, socketName);
 			}
 

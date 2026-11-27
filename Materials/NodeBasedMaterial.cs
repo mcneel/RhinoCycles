@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -181,7 +182,8 @@ namespace RhinoCyclesCore.Materials
 		/// <summary>
 		/// Change one value of the graph, as the material editor does: in the open Grasshopper 2
 		/// graph that writes this material if there is one, otherwise in the XML, kept as an edit
-		/// for the stored document until Edit opens it.
+		/// for the stored document until Edit opens it. An open graph that is paused shows the
+		/// value too, but the XML takes it.
 		/// </summary>
 		/// <param name="xml">The graph with the value changed.</param>
 		/// <returns>false if the open graph keeps its own value.</returns>
@@ -200,9 +202,15 @@ namespace RhinoCyclesCore.Materials
 			try
 			{
 				BeginChange(ChangeContexts.UI);
-				Fields.Set(GraphXmlField, xml);
-				Fields.Set(EditsField, CyclesGraphXml.AddEdit(edits, node, socket, value));
-				EndChange();
+				try
+				{
+					Fields.Set(GraphXmlField, xml);
+					Fields.Set(EditsField, CyclesGraphXml.AddEdit(edits, node, socket, value));
+				}
+				finally
+				{
+					EndChange();
+				}
 			}
 			finally
 			{
@@ -219,7 +227,9 @@ namespace RhinoCyclesCore.Materials
 		/// </summary>
 		internal void ReplaceGraph(string xml)
 		{
-			FindGraphEditing()?.GetMethod("ReleaseMaterial", new[] { typeof(Guid) })?.Invoke(null, new object[] { Id });
+			var release = FindGraphEditing()?.GetMethod("ReleaseMaterial", new[] { typeof(Guid) });
+			if (release != null)
+				TryInvoke(release, new object[] { Id }, out _);
 
 			// Its own undo step, as the field edit has ended by now.
 			var doc = DocumentAssoc;
@@ -228,11 +238,17 @@ namespace RhinoCyclesCore.Materials
 			try
 			{
 				BeginChange(ChangeContexts.UI);
-				Fields.Set(GraphXmlField, xml ?? string.Empty);
-				Fields.Set(SourceField, string.Empty);
-				Fields.Set(DocumentField, string.Empty);
-				Fields.Set(EditsField, string.Empty);
-				EndChange();
+				try
+				{
+					Fields.Set(GraphXmlField, xml ?? string.Empty);
+					Fields.Set(SourceField, string.Empty);
+					Fields.Set(DocumentField, string.Empty);
+					Fields.Set(EditsField, string.Empty);
+				}
+				finally
+				{
+					EndChange();
+				}
 			}
 			finally
 			{
@@ -249,7 +265,7 @@ namespace RhinoCyclesCore.Materials
 		private static int ApplyEditInGrasshopper(Guid materialId, string node, string socket, string value)
 		{
 			var apply = FindGraphEditing()?.GetMethod("ApplyEdit", new[] { typeof(Guid), typeof(string), typeof(string), typeof(string) });
-			return apply == null ? 0 : (int)apply.Invoke(null, new object[] { materialId, node, socket, value });
+			return apply != null && TryInvoke(apply, new object[] { materialId, node, socket, value }, out var result) ? (int)result : 0;
 		}
 
 		/// <summary>
@@ -274,7 +290,10 @@ namespace RhinoCyclesCore.Materials
 				return false;
 			}
 
-			if ((bool)edit.Invoke(null, new object[] { materialId }))
+			// The command line has said why if it threw.
+			if (!TryInvoke(edit, new object[] { materialId }, out var opened))
+				return false;
+			if ((bool)opened)
 				return true;
 
 			Rhino.RhinoApp.WriteLine(LOC.STR("Grasshopper 2 could not open the graph: the material is not a Node-Based material in the active document, or Grasshopper 2 did not start."));
@@ -286,6 +305,30 @@ namespace RhinoCyclesCore.Materials
 			return AppDomain.CurrentDomain.GetAssemblies()
 				.FirstOrDefault(a => a.GetName().Name == "G2CyclesComponents")
 				?.GetType("CyclesComponents.GraphEditing");
+		}
+
+		/// <summary>
+		/// Call a GraphEditing method. With ccycles missing or too old the Cycles shader nodes do not
+		/// load, and it throws; the command line then says why.
+		/// </summary>
+		/// <returns>false if it threw.</returns>
+		private static bool TryInvoke(MethodInfo method, object[] args, out object result)
+		{
+			try
+			{
+				result = method.Invoke(null, args);
+				return true;
+			}
+			catch (TargetInvocationException ex)
+			{
+				var reason = ex.GetBaseException();
+				var unavailable = reason is TypeLoadException || reason is BadImageFormatException;
+				Rhino.RhinoApp.WriteLine(string.Format(unavailable
+					? LOC.STR("The Cycles shader nodes are not available, so Grasshopper 2 cannot work on this graph: {0}")
+					: LOC.STR("Grasshopper 2 failed on this graph: {0}"), reason.Message));
+				result = null;
+				return false;
+			}
 		}
 
 		/// <summary>

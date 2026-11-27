@@ -64,11 +64,15 @@ namespace CyclesComponents
 			if (elements == null)
 				return result;
 
-			var nodes = new Dictionary<string, (string Type, CyclesNodeComponent Component)>(StringComparer.Ordinal);
-			var editors = new Dictionary<string, List<(IParameter Target, AbstractParameter Editor)>>(StringComparer.Ordinal);
-			var connects = new List<(string FromNode, string FromSocket, string ToNode, string ToSocket)>();
-			var positions = new Dictionary<string, PointF>(StringComparer.Ordinal);
+			// Nodes in XML order. As ccycles reads it, a connect names the nodes defined before it,
+			// the last of a name, so each is resolved where it stands.
+			var nodes = new List<(string Type, CyclesNodeComponent Component)>();
+			var named = new Dictionary<string, int>(StringComparer.Ordinal);
+			var editors = new Dictionary<int, List<(IParameter Target, AbstractParameter Editor)>>();
+			var connects = new List<(int From, string FromNode, string FromSocket, int To, string ToNode, string ToSocket)>();
+			var positions = new Dictionary<int, PointF>();
 			PointF? outputPosition = null;
+			int Named(string node) => named.TryGetValue(node, out var index) ? index : NoNode;
 
 			foreach (var element in elements)
 			{
@@ -77,7 +81,7 @@ namespace CyclesComponents
 				{
 					if (SplitSocketRef((string)element.Attribute("from"), out var fn, out var fs) &&
 					    SplitSocketRef((string)element.Attribute("to"), out var tn, out var ts))
-						connects.Add((fn, fs, tn, ts));
+						connects.Add((Named(fn), fn, fs, tn == "output" ? OutputNode : Named(tn), tn, ts));
 					else
 						result.Problems.Add(LOC.STR("connect needs from=\"node socket\" and to=\"node socket\""));
 					continue;
@@ -99,14 +103,30 @@ namespace CyclesComponents
 				if (type == "background")
 					type = "background_shader";
 
-				var name = (string)element.Attribute("name") ?? $"{type}{nodes.Count}";
+				// A node that cannot be made leaves its name to an earlier one.
 				var component = CreateNode(type, result.Problems);
 				if (component == null)
 					continue;
 
+				var name = (string)element.Attribute("name");
+				var hasName = !string.IsNullOrEmpty(name);
+				if (hasName && named.ContainsKey(name))
+					result.Problems.Add(string.Format(LOC.STR("Two nodes are named '{0}', so connects after the second use it."), name));
+				if (hasName)
+					named[name] = nodes.Count;
+
 				// The XML's own name for the node, so the graph reads as it did.
-				if (element.Attribute("name") != null)
+				if (hasName)
 					component.SetLabel(name);
+
+				// ccycles starts a tangent on Rhino's UV map, which the XML can change.
+				if (type == "tangent")
+				{
+					if (element.Attribute("direction_type") == null)
+						SetInput(component, type, "direction_type", "uv_map", result);
+					if (element.Attribute("attribute") == null)
+						SetInput(component, type, "attribute", "uvmap1", result);
+				}
 
 				// Tables are read whole below, not attribute by attribute.
 				var nodeType = ShaderNodeTypes.Find(type);
@@ -135,7 +155,7 @@ namespace CyclesComponents
 				{
 					var read = ReadCurves(nodeType, element, curves, result.Problems, out var minX, out var maxX);
 					foreach (var (channel, curve) in read)
-						if (FindInput(component, channel.Name) is FunctionParameter curveInput)
+						if (FindChannel(component, NodeCatalog.CurveChannels(curves), channel) is FunctionParameter curveInput)
 						{
 							curveInput.Set(curve);
 							wired.Add((curveInput, Editors.ForCurve(channel.Code, curve, minX, maxX)));
@@ -143,31 +163,60 @@ namespace CyclesComponents
 				}
 
 				if (wired.Count > 0)
-					editors[name] = wired;
+					editors[nodes.Count] = wired;
 				if (hasPosition)
-					positions[name] = position;
-				nodes[name] = (type, component);
+					positions[nodes.Count] = position;
+				nodes.Add((type, component));
 			}
 
 			// Columns by depth, so data flows left to right. Editors get the column before their node.
-			var depth = nodes.Keys.ToDictionary(n => n, n => editors.ContainsKey(n) ? 1 : 0, StringComparer.Ordinal);
-			for (var pass = 0; pass < nodes.Count; pass++)
-				foreach (var c in connects)
-					if (depth.ContainsKey(c.FromNode) && depth.ContainsKey(c.ToNode) && depth[c.ToNode] < depth[c.FromNode] + 1)
-						depth[c.ToNode] = depth[c.FromNode] + 1;
+			var depth = Enumerable.Range(0, nodes.Count).Select(n => editors.ContainsKey(n) ? 1 : 0).ToArray();
+			if (nodes.Count > LayoutLimit)
+			{
+				// The passes below would take too long, so columns of nodes in XML order, with room for editors.
+				for (var n = 0; n < nodes.Count; n++)
+					depth[n] = 1 + 2 * (n / NodesPerColumn);
+			}
+			else
+			{
+				var links = connects.Where(c => c.From >= 0 && c.To >= 0).ToList();
+				for (var pass = 0; pass < nodes.Count; pass++)
+				{
+					var deeper = false;
+					foreach (var c in links)
+						if (depth[c.To] < depth[c.From] + 1)
+						{
+							depth[c.To] = depth[c.From] + 1;
+							deeper = true;
+						}
+					if (!deeper)
+						break;
+				}
+			}
 
 			// Then each node moves right to just before its nearest consumer, so wires stay short.
-			var outputColumn = depth.Count == 0 ? 0 : depth.Values.Max() + 1;
-			for (var pass = 0; pass < nodes.Count; pass++)
-				foreach (var name in nodes.Keys)
+			var outputColumn = nodes.Count == 0 ? 0 : depth.Max() + 1;
+			if (nodes.Count <= LayoutLimit)
+			{
+				var consumers = connects.Where(c => c.From >= 0 && (c.To >= 0 || c.To == OutputNode)).ToLookup(c => c.From, c => c.To);
+				for (var pass = 0; pass < nodes.Count; pass++)
 				{
-					var consumers = connects
-						.Where(c => c.FromNode == name && (c.ToNode == "output" || depth.ContainsKey(c.ToNode)))
-						.Select(c => c.ToNode == "output" ? outputColumn : depth[c.ToNode])
-						.ToList();
-					if (consumers.Count > 0)
-						depth[name] = Math.Max(depth[name], consumers.Min() - 1);
+					var moved = false;
+					for (var n = 0; n < nodes.Count; n++)
+					{
+						if (!consumers.Contains(n))
+							continue;
+						var column = consumers[n].Min(to => to == OutputNode ? outputColumn : depth[to]) - 1;
+						if (column > depth[n])
+						{
+							depth[n] = column;
+							moved = true;
+						}
+					}
+					if (!moved)
+						break;
 				}
+			}
 
 			// Objects stack down their column by height; the document places them by their centre.
 			var nextTop = new Dictionary<int, float>();
@@ -179,13 +228,13 @@ namespace CyclesComponents
 				nextTop[column] = top + height + 2 * RowHeight;
 			}
 
-			foreach (var pair in nodes)
+			for (var n = 0; n < nodes.Count; n++)
 			{
-				var component = pair.Value.Component;
-				editors.TryGetValue(pair.Key, out var wired);
+				var component = nodes[n].Component;
+				editors.TryGetValue(n, out var wired);
 
 				// Where the XML says, with its editors stacked below it, where Blender draws a ramp or curve.
-				if (positions.TryGetValue(pair.Key, out var corner))
+				if (positions.TryGetValue(n, out var corner))
 				{
 					CyclesXmlWriter.AddAt(result.Document, component, corner);
 					var editorTop = component.Attributes.Bounds.Bottom + RowHeight;
@@ -198,7 +247,7 @@ namespace CyclesComponents
 					continue;
 				}
 
-				var column = depth[pair.Key];
+				var column = depth[n];
 				var nodeTop = Top(column);
 				Place(component, column, nodeTop, Math.Max(component.Parameters.InputCount, component.Parameters.OutputCount) + 1);
 
@@ -217,23 +266,90 @@ namespace CyclesComponents
 				Place(output, outputColumn, 50f, output.Parameters.InputCount + 1);
 			result.Output = output;
 
+			// Refused as ccycles refuses them, in its order, so an input's first link is one it keeps.
+			var connected = new HashSet<IParameter>();
+			var upstream = nodes.Select(_ => new List<int>()).ToArray();
 			foreach (var c in connects)
 			{
-				var target = c.ToNode == "output"
+				var target = c.To == OutputNode
 					? FindOutputInput(output, c.ToSocket)
-					: nodes.TryGetValue(c.ToNode, out var to) ? FindParameter(to.Component, to.Type, c.ToSocket, true) : null;
-				var source = nodes.TryGetValue(c.FromNode, out var from) ? FindParameter(from.Component, from.Type, c.FromSocket, false) : null;
+					: c.To >= 0 ? FindParameter(nodes[c.To].Component, nodes[c.To].Type, c.ToSocket, true) : null;
+				var source = c.From >= 0 ? FindParameter(nodes[c.From].Component, nodes[c.From].Type, c.FromSocket, false) : null;
 
 				if (source == null || target == null)
 				{
 					result.Problems.Add(string.Format(LOC.STR("Cannot connect {0} {1} to {2} {3}."), c.FromNode, c.FromSocket, c.ToNode, c.ToSocket));
 					continue;
 				}
+
+				var fromType = SocketType(nodes[c.From].Type, c.FromSocket, false);
+				var toType = SocketType(c.To == OutputNode ? "output" : nodes[c.To].Type, c.ToSocket, true);
+				if (!CyclesNodeComponent.CanLink(fromType, toType))
+				{
+					result.Problems.Add(string.Format(LOC.STR("Cycles cannot connect {0} {1} ({2}) to {3} {4} ({5})."), c.FromNode, c.FromSocket, fromType, c.ToNode, c.ToSocket, toType));
+					continue;
+				}
+
+				if (c.To >= 0 && TakesFrom(upstream, c.From, c.To))
+				{
+					result.Problems.Add(string.Format(LOC.STR("The connect from {0} {1} to {2} {3} would make a loop, so it is left out."), c.FromNode, c.FromSocket, c.ToNode, c.ToSocket));
+					continue;
+				}
+
+				// Cycles keeps an input's first link.
+				if (!connected.Add(target))
+				{
+					result.Problems.Add(string.Format(LOC.STR("{0} {1} is connected already, so the connect from {2} {3} is left out."), c.ToNode, c.ToSocket, c.FromNode, c.FromSocket));
+					continue;
+				}
+
 				Connections.Connect(source, target);
+				if (c.To >= 0)
+					upstream[c.To].Add(c.From);
 			}
 
 			return result;
 		}
+
+		/// <summary>
+		/// The type of a node's socket, or null if it has no such socket.
+		/// </summary>
+		private static string SocketType(string type, string socketName, bool input)
+		{
+			var nodeType = ShaderNodeTypes.Find(type);
+			var sockets = nodeType == null ? null : input ? nodeType.Inputs : nodeType.Outputs;
+			return sockets?.FirstOrDefault(s => string.Equals(s.Name, socketName, StringComparison.OrdinalIgnoreCase))?.Type;
+		}
+
+		/// <summary>
+		/// Whether a node takes anything from another, directly or through other nodes, as
+		/// shader_xml.cpp's takes_from does. A link from the first into the second would close a loop.
+		/// </summary>
+		private static bool TakesFrom(List<int>[] upstream, int node, int target)
+		{
+			var pending = new Stack<int>();
+			var seen = new HashSet<int>();
+			pending.Push(node);
+			while (pending.Count > 0)
+			{
+				var current = pending.Pop();
+				if (current == target)
+					return true;
+				if (!seen.Add(current))
+					continue;
+				foreach (var feeding in upstream[current])
+					pending.Push(feeding);
+			}
+			return false;
+		}
+
+		/* What a connect names, other than a node by its index. */
+		private const int NoNode = -1;
+		private const int OutputNode = -2;
+
+		/* Beyond so many nodes, the layout puts them in columns as they come, of so many each. */
+		private const int LayoutLimit = 300;
+		private const int NodesPerColumn = 50;
 
 		/// <summary>
 		/// The node and connect elements, unwrapping a &lt;shader&gt; block as Cycles' example scenes have.
@@ -283,18 +399,7 @@ namespace CyclesComponents
 
 			var sockets = input ? NodeCatalog.VisibleInputs(nodeType).ToList() : nodeType.Outputs.ToList();
 			var socket = sockets.FirstOrDefault(s => string.Equals(s.Name, socketName, StringComparison.OrdinalIgnoreCase));
-			if (socket == null)
-				return null;
-
-			var name = NodeCatalog.ParameterName(socket, sockets);
-			var count = input ? component.Parameters.InputCount : component.Parameters.OutputCount;
-			for (var i = 0; i < count; i++)
-			{
-				var parameter = input ? component.Parameters.Input(i) : component.Parameters.Output(i);
-				if (parameter.Nomen.Name == name)
-					return parameter;
-			}
-			return null;
+			return socket == null ? null : component.FindParameter(socket, sockets, input);
 		}
 
 		private static IParameter FindOutputInput(CyclesMaterialOutput output, string socketName)
@@ -421,6 +526,9 @@ namespace CyclesComponents
 			if (interpolateText != null && interpolateSocket != null && ParseValue(interpolateSocket, interpolateText) is bool flag)
 				interpolate = flag;
 
+			ReportLargeTable(count, type, NodeCatalog.RampSocket, problems);
+			samples = Resample(samples, interpolate);
+			count = samples.Length;
 			var grips = Simplify(samples, interpolate).Select(i => new GradientGrip(count == 1 ? 0.0 : i / (count - 1.0),
 				Colour.FromRgbLinear(samples[i][0], samples[i][1], samples[i][2], (float)samples[i][3]))).ToArray();
 			return new GripGradient(interpolate ? Progression.Linear : Progression.Immediate, Space3.RgbLinear, grips);
@@ -452,18 +560,52 @@ namespace CyclesComponents
 				return curves;
 			}
 
+			ReportLargeTable(count, nodeType.Name, socket.Name, problems);
 			var x0 = minX;
-			var dx = (maxX - minX) / (count - 1);
+			var dx = (maxX - minX) / (Math.Min(count, CyclesValues.RampSize) - 1);
 			for (var c = 0; c < columns.Length; c++)
 			{
-				var samples = Enumerable.Range(0, count).Select(i => new[] { numbers[i * columns.Length + c] }).ToArray();
-				if (Enumerable.Range(0, count).All(i => Math.Abs(samples[i][0] - (x0 + i * dx)) <= TableTolerance))
+				var samples = Resample(Enumerable.Range(0, count).Select(i => new[] { numbers[i * columns.Length + c] }).ToArray(), true);
+				if (Enumerable.Range(0, samples.Length).All(i => Math.Abs(samples[i][0] - (x0 + i * dx)) <= TableTolerance))
 					continue;
 
 				var points = Simplify(samples, true).Select(i => new Point2d(x0 + i * dx, samples[i][0]));
 				curves.Add((columns[c], new InterpolationFunction(InterpolationAlgorithm.Linear, points)));
 			}
 			return curves;
+		}
+
+		/* More entries than this are no table Cycles or Blender writes. */
+		private const int LargeTable = 4096;
+
+		private static void ReportLargeTable(int count, string type, string socketName, List<string> problems)
+		{
+			if (count > LargeTable)
+				problems.Add(string.Format(LOC.STR("{0} input '{1}' has {2} entries, so it is resampled to the {3} of Cycles' own tables."), type, socketName, count, CyclesValues.RampSize));
+		}
+
+		/// <summary>
+		/// A table longer than Cycles' own at that size, which the graph writes anyway, so Simplify
+		/// stays quick: linear between entries, or without interpolation, the entry that holds
+		/// there, as Cycles looks it up.
+		/// </summary>
+		private static double[][] Resample(double[][] samples, bool interpolate)
+		{
+			var size = CyclesValues.RampSize;
+			if (samples.Length <= size)
+				return samples;
+
+			var resampled = new double[size][];
+			for (var i = 0; i < size; i++)
+			{
+				var x = i * (samples.Length - 1.0) / (size - 1);
+				var k = Math.Min((int)x, samples.Length - 1);
+				var t = x - k;
+				resampled[i] = !interpolate || k == samples.Length - 1
+					? samples[k]
+					: samples[k].Zip(samples[k + 1], (a, b) => a + t * (b - a)).ToArray();
+			}
+			return resampled;
 		}
 
 		/// <summary>
@@ -496,10 +638,11 @@ namespace CyclesComponents
 			return keep;
 		}
 
-		private static IParameter FindInput(CyclesNodeComponent component, string name)
+		private static IParameter FindChannel(CyclesNodeComponent component, (string Name, string Code)[] channels, (string Name, string Code) channel)
 		{
-			for (var i = 0; i < component.Parameters.InputCount; i++)
-				if (component.Parameters.Input(i).Nomen.Name == name)
+			var c = Array.IndexOf(channels, channel);
+			for (var i = 0; i < component.Parameters.InputCount && c >= 0; i++)
+				if (CyclesNodeComponent.ChannelIndex(channels, component.Parameters.Input(i)) == c)
 					return component.Parameters.Input(i);
 			return null;
 		}

@@ -56,6 +56,9 @@ namespace CyclesComponents
 		 * in, which on the Mac need not be the active one. */
 		private static readonly Dictionary<Guid, Document> g_open = new Dictionary<Guid, Document>();
 		private static readonly Dictionary<Guid, uint> g_openIn = new Dictionary<Guid, uint>();
+		/* The documents in g_open, for the solver thread, which must not read g_open. */
+		private static readonly System.Collections.Concurrent.ConcurrentDictionary<Document, bool> g_openDocuments =
+			new System.Collections.Concurrent.ConcurrentDictionary<Document, bool>();
 		private static bool g_watchingDocuments;
 
 		private static RhinoDoc RhinoDocOf(Guid materialId)
@@ -65,6 +68,8 @@ namespace CyclesComponents
 
 		private static void Forget(Guid materialId)
 		{
+			if (g_open.TryGetValue(materialId, out var doc))
+				g_openDocuments.TryRemove(doc, out _);
 			g_open.Remove(materialId);
 			g_openIn.Remove(materialId);
 		}
@@ -80,6 +85,9 @@ namespace CyclesComponents
 			var material = RhinoDoc.ActiveDoc?.RenderMaterials.FirstOrDefault(m => m.Id == materialId);
 			if (material is null || material.TypeId != MaterialType)
 				return false;
+
+			// Throws here, before anything opens, when ccycles is missing or too old to list its nodes.
+			_ = ShaderNodeTypes.All;
 
 			var editor = Editor.ShowEditor();
 			if (editor is null)
@@ -107,14 +115,18 @@ namespace CyclesComponents
 				return true;
 			}
 
+			// Paused when the graph lacks what the material has: changes it cannot place, which the
+			// XML has, or a stored document that does not read, kept until Write to Material.
+			bool pause;
 			var doc = ReadDocument(material);
-			if (doc != null && !ApplyPendingEdits(material, doc))
+			if (doc != null)
+				pause = !ApplyPendingEdits(material, doc);
+			else
 			{
-				RhinoApp.WriteLine(string.Format(LOC.STR("'{0}' was changed in the material editor in a way its Grasshopper 2 graph cannot follow, so the graph is rebuilt from the material."), material.Name));
-				doc = null;
-			}
-			if (doc is null)
-			{
+				pause = HasDocument(material);
+				if (pause)
+					RhinoApp.WriteLine(string.Format(LOC.STR("The Grasshopper 2 document stored in '{0}' cannot be read, so the graph is rebuilt from the material's XML. Its Material Output is paused, so the material keeps that document until you use Write to Material."), material.Name));
+
 				var hasXml = material.Fields.TryGetValue(GraphXmlField, out string xml) && !string.IsNullOrWhiteSpace(xml);
 				doc = hasXml ? ImportGraphDocument(material, xml) : NewGraphDocument(material);
 
@@ -123,20 +135,32 @@ namespace CyclesComponents
 					return true;
 			}
 
-			// The stored copy of a graph made in Grasshopper 2 writes this material only, so not a
-			// new one in the next document after File > New.
-			var source = material.Fields.TryGetValue(SourceField, out string s) ? s : null;
+			// Every output here writes this material only, so none makes a new one in the next
+			// document after File > New, or in an autosave copy.
 			var outputs = doc.Objects.ForwardsOfT<CyclesMaterialOutput>().ToList();
-			var writer = outputs.FirstOrDefault(o => o.InstanceId.ToString() == source) ?? outputs.FirstOrDefault();
-			if (writer != null && writer.BoundMaterial == Guid.Empty)
-				writer.BoundMaterial = material.Id;
+			foreach (var output in outputs.Where(o => o.BoundMaterial == Guid.Empty))
+				output.BoundMaterial = material.Id;
 
-			ClearPendingEdits(material);
+			// The material's own copy is its graph from now on, paused or not, so the file the graph
+			// came from no longer writes it.
+			var writer = WriterOf(outputs, material);
+			if (writer != null && !(SourceOf(material, out var braced) == writer.InstanceId && braced))
+				Bind(material, writer);
+
+			// The document has the waiting changes now, unless it lacks some; those wait on, and it does not write.
+			if (!pause)
+				ClearPendingEdits(material);
+			else if (writer != null)
+				writer.Paused = true;
+
 			doc.File.FallbackName = material.Name;
 			// The material holds it, so closing the tab need not offer to save a file.
 			doc.Unmodify();
 
+			if (g_open.TryGetValue(materialId, out var previous))
+				g_openDocuments.TryRemove(previous, out _);
 			g_open[materialId] = doc;
+			g_openDocuments[doc] = true;
 			g_openIn[materialId] = RhinoDoc.ActiveDoc.RuntimeSerialNumber;
 			editor.Documents.Push(doc);
 			return true;
@@ -148,6 +172,14 @@ namespace CyclesComponents
 		internal static bool IsMaterialDocument(Document doc)
 		{
 			return MaterialOf(doc).HasValue;
+		}
+
+		/// <summary>
+		/// <see cref="IsMaterialDocument"/> for the solver thread.
+		/// </summary>
+		internal static bool IsMaterialDocumentAnyThread(Document doc)
+		{
+			return doc != null && g_openDocuments.ContainsKey(doc);
 		}
 
 		/// <summary>
@@ -284,8 +316,42 @@ namespace CyclesComponents
 		{
 			output.BoundMaterial = material.Id;
 			material.BeginChange(RenderContent.ChangeContexts.Program);
-			material.Fields.Set(SourceField, output.InstanceId.ToString());
-			material.EndChange();
+			try
+			{
+				material.Fields.Set(SourceField, SourceText(output.InstanceId, true));
+			}
+			finally
+			{
+				material.EndChange();
+			}
+		}
+
+		/* Material documents write the source braced, graphs outside one plain. A graph outside one,
+		 * such as the file the material came from, no longer writes a material with a braced source. */
+		private static string SourceText(Guid outputId, bool opened)
+		{
+			return outputId.ToString(opened ? "B" : "D");
+		}
+
+		/// <summary>
+		/// The id of the output the material names as its source, or empty if there is none.
+		/// </summary>
+		/// <param name="opened">Whether a material document wrote it.</param>
+		private static Guid SourceOf(RenderMaterial material, out bool opened)
+		{
+			var text = material.Fields.TryGetValue(SourceField, out string s) ? s : null;
+			opened = text != null && text.StartsWith("{", StringComparison.Ordinal);
+			return Guid.TryParse(text, out var id) ? id : Guid.Empty;
+		}
+
+		/// <summary>
+		/// The output of a material document that writes the material: the one the material names
+		/// as its source, or the first one when that is gone.
+		/// </summary>
+		private static CyclesMaterialOutput WriterOf(IReadOnlyList<CyclesMaterialOutput> outputs, RenderMaterial material)
+		{
+			var source = material is null ? Guid.Empty : SourceOf(material, out _);
+			return outputs.FirstOrDefault(o => o.InstanceId == source) ?? outputs.FirstOrDefault();
 		}
 
 		/// <summary>
@@ -296,11 +362,9 @@ namespace CyclesComponents
 		{
 			var id = MaterialOf(output.Document);
 			var material = id.HasValue ? RhinoDocOf(id.Value)?.RenderMaterials.FirstOrDefault(m => m.Id == id.Value) : null;
-			var source = material != null && material.Fields.TryGetValue(SourceField, out string s) ? s : null;
 
 			var outputs = output.Document.Objects.ForwardsOfT<CyclesMaterialOutput>().ToList();
-			var writer = outputs.FirstOrDefault(o => o.InstanceId.ToString() == source) ?? outputs.FirstOrDefault();
-			return ReferenceEquals(writer, output);
+			return ReferenceEquals(WriterOf(outputs, material), output);
 		}
 
 		/// <summary>
@@ -318,10 +382,11 @@ namespace CyclesComponents
 		/// </summary>
 		/// <param name="opened">Write to the material the document was opened from, if there is one.
 		/// Otherwise the material is the one whose source is the writer.</param>
+		/// <param name="rewrite">Write even if nothing changed, so changes waiting for the document go.</param>
 		/// <returns>The material, or null if there is none; the writer then says why.</returns>
-		internal static RenderMaterial WriteMaterial(Component writer, IDataAccess access, string xml, bool opened)
+		internal static RenderMaterial WriteMaterial(Component writer, IDataAccess access, string xml, bool opened, bool rewrite)
 		{
-			var source = writer.InstanceId.ToString();
+			var source = SourceText(writer.InstanceId, opened);
 			var openedId = opened ? MaterialOf(writer.Document) : null;
 			var doc = openedId.HasValue ? RhinoDocOf(openedId.Value) : RhinoDoc.ActiveDoc;
 			if (doc is null)
@@ -342,7 +407,18 @@ namespace CyclesComponents
 				}
 			}
 			else
-				material = MaterialOfSource(doc, source);
+			{
+				// Once Edit has written the material, its own copy is the graph to change, not this one.
+				material = MaterialOfSource(doc, writer.InstanceId);
+				var edited = false;
+				if (material != null)
+					SourceOf(material, out edited);
+				if (edited)
+				{
+					access.AddRemark("Not writing", "The material of this graph is now edited with Edit in the material editor, so this graph no longer writes it.");
+					return null;
+				}
+			}
 
 			// A new material's name; after that it is named in the material editor.
 			string name = null;
@@ -360,18 +436,26 @@ namespace CyclesComponents
 			var current = material.Fields.TryGetValue(GraphXmlField, out string existing) ? existing : null;
 			var currentSource = material.Fields.TryGetValue(SourceField, out string bound) ? bound : null;
 			var rename = !string.IsNullOrWhiteSpace(name) && material.Name != name;
-			if (current != xml || currentSource != source || rename || !HasDocument(material))
+			if (rewrite || current != xml || currentSource != source || rename || !HasDocument(material))
 			{
+				var document = Serialise(writer.Document);
+
 				// One change for graph and document, so a running Raytraced restarts once.
 				material.BeginChange(RenderContent.ChangeContexts.Program);
-				if (rename)
-					material.Name = name;
-				material.Fields.Set(GraphXmlField, xml ?? string.Empty);
-				material.Fields.Set(SourceField, source);
-				material.Fields.Set(DocumentField, Serialise(writer.Document));
-				// The document is the graph now, so earlier changes waiting for it are moot.
-				material.Fields.Set(EditsField, string.Empty);
-				material.EndChange();
+				try
+				{
+					if (rename)
+						material.Name = name;
+					material.Fields.Set(GraphXmlField, xml ?? string.Empty);
+					material.Fields.Set(SourceField, source);
+					material.Fields.Set(DocumentField, document);
+					// The document is the graph now, so earlier changes waiting for it are moot.
+					material.Fields.Set(EditsField, string.Empty);
+				}
+				finally
+				{
+					material.EndChange();
+				}
 
 				if (IsMaterialDocument(writer.Document))
 					writer.Document.Unmodify();
@@ -381,12 +465,12 @@ namespace CyclesComponents
 		}
 
 		/// <summary>
-		/// The material a writer outside a material document writes: the first whose source it is.
+		/// The first material whose source is this output, however it was written. A writer outside
+		/// a material document writes it, unless a material document wrote it last.
 		/// </summary>
-		private static RenderMaterial MaterialOfSource(RhinoDoc doc, string source)
+		private static RenderMaterial MaterialOfSource(RhinoDoc doc, Guid outputId)
 		{
-			return doc?.RenderMaterials.FirstOrDefault(m => m.TypeId == MaterialType &&
-				m.Fields.TryGetValue(SourceField, out string s) && s == source);
+			return outputId == Guid.Empty ? null : doc?.RenderMaterials.FirstOrDefault(m => m.TypeId == MaterialType && SourceOf(m, out _) == outputId);
 		}
 
 		/// <summary>
@@ -399,10 +483,14 @@ namespace CyclesComponents
 			if (material.TypeId != MaterialType)
 				return;
 
-			var text = Serialise(doc);
-			var source = material.Fields.TryGetValue(SourceField, out string s) ? s : null;
 			var outputs = doc.Objects.ForwardsOfT<CyclesMaterialOutput>().ToList();
-			var writer = outputs.FirstOrDefault(o => o.InstanceId.ToString() == source) ?? outputs.FirstOrDefault();
+			var writer = WriterOf(outputs, material);
+
+			// A stored document that does not read stays until Write to Material replaces it.
+			if ((writer is null || writer.Paused) && HasDocument(material) && ReadDocument(material) is null)
+				return;
+
+			var text = Serialise(doc);
 
 			// A paused output has not written the XML, whose nodes keep their own names.
 			string placed = null;
@@ -453,7 +541,8 @@ namespace CyclesComponents
 		/// this by reflection.
 		/// </summary>
 		/// <returns>0 if no open graph writes the material, so the change waits in the material
-		/// for <see cref="EditMaterial"/>; 1 if the graph took it; 2 if the graph keeps its own value.</returns>
+		/// for <see cref="EditMaterial"/>, though a paused graph shows it; 1 if the graph took it;
+		/// 2 if the graph keeps its own value.</returns>
 		public static int ApplyEdit(Guid materialId, string node, string socket, string value)
 		{
 			var doc = OpenGraph(materialId);
@@ -461,6 +550,17 @@ namespace CyclesComponents
 				return NoOpenGraph;
 
 			var result = SetValue(doc, node, socket, value);
+
+			// A paused graph does not write the material, so the material takes the change too.
+			if (!WritesMaterial(doc, materialId))
+			{
+				if (result == EditResult.Applied)
+					doc.Solution.Start();
+				else
+					RhinoApp.WriteLine(string.Format(LOC.STR("'{0}' of {1} is changed in the material only, as the paused Grasshopper 2 graph cannot take it. Write to Material would undo the change."), socket, node));
+				return NoOpenGraph;
+			}
+
 			if (result == EditResult.Linked)
 				RhinoApp.WriteLine(string.Format(LOC.STR("'{0}' of {1} is fed by a wire in Grasshopper 2, so it keeps the value the graph gives it."), socket, node));
 			else if (result == EditResult.Missing)
@@ -490,6 +590,20 @@ namespace CyclesComponents
 		}
 
 		/// <summary>
+		/// Whether an open graph of the material writes it: not when the output that would is
+		/// paused, or gone. A graph outside a material document is open only if it writes.
+		/// </summary>
+		private static bool WritesMaterial(Document doc, Guid materialId)
+		{
+			if (!IsMaterialDocument(doc))
+				return true;
+
+			var material = RhinoDocOf(materialId)?.RenderMaterials.FirstOrDefault(m => m.Id == materialId);
+			var writer = WriterOf(doc.Objects.ForwardsOfT<CyclesMaterialOutput>().ToList(), material);
+			return writer != null && !writer.Paused;
+		}
+
+		/// <summary>
 		/// An open document, not opened from a material, whose Material Output writes the material
 		/// as its source, such as the graph that made it.
 		/// </summary>
@@ -497,8 +611,12 @@ namespace CyclesComponents
 		{
 			var rhinoDoc = RhinoDoc.ActiveDoc;
 			var material = rhinoDoc?.RenderMaterials.FirstOrDefault(m => m.Id == materialId && m.TypeId == MaterialType);
-			var source = material != null && material.Fields.TryGetValue(SourceField, out string s) ? s : null;
-			if (string.IsNullOrEmpty(source))
+			if (material is null)
+				return null;
+
+			// Written from a material document since, so no graph outside one writes it.
+			var source = SourceOf(material, out var opened);
+			if (source == Guid.Empty || opened)
 				return null;
 
 			// A duplicated material shares its source with the original, and the graph writes only the first.
@@ -507,7 +625,7 @@ namespace CyclesComponents
 
 			// Only an output that writes: not one that belongs to a material, such as in a restored autosave.
 			return editor.Documents.All.Select(stack => stack.Root).FirstOrDefault(d => d != null && !IsMaterialDocument(d) &&
-				d.Objects.ForwardsOfT<CyclesMaterialOutput>().Any(o => o.InstanceId.ToString() == source && !o.Paused && o.BoundMaterial == Guid.Empty));
+				d.Objects.ForwardsOfT<CyclesMaterialOutput>().Any(o => o.InstanceId == source && !o.Paused && o.BoundMaterial == Guid.Empty));
 		}
 
 		/// <summary>
@@ -541,26 +659,39 @@ namespace CyclesComponents
 
 		/// <summary>
 		/// Changes the material editor made while the document was closed, onto its components.
+		/// The command line lists those the document cannot take.
 		/// </summary>
-		/// <returns>false if one no longer matches a component, so the document cannot follow the XML.</returns>
+		/// <returns>false if one no longer matches a component, or they do not parse, so the
+		/// document lacks a change the XML has.</returns>
 		private static bool ApplyPendingEdits(RenderMaterial material, Document doc)
 		{
 			var edits = PendingEdits(material);
+			var missing = new List<string>();
 			if (edits is null)
-				return false;
-
-			foreach (var (node, socket, value) in edits)
+				missing.Add(LOC.STR("Changes that cannot be read."));
+			else
 			{
-				switch (SetValue(doc, node, socket, value))
+				foreach (var (node, socket, value) in edits)
 				{
-					case EditResult.Missing:
-						return false;
-					case EditResult.Linked:
-						RhinoApp.WriteLine(string.Format(LOC.STR("'{0}' of {1} is fed by a wire in Grasshopper 2, so the change from the material editor is not kept."), socket, node));
-						break;
+					switch (SetValue(doc, node, socket, value))
+					{
+						case EditResult.Missing:
+							missing.Add(string.Format(LOC.STR("'{0}' of {1} set to {2}."), socket, node, value));
+							break;
+						case EditResult.Linked:
+							RhinoApp.WriteLine(string.Format(LOC.STR("'{0}' of {1} is fed by a wire in Grasshopper 2, so the change from the material editor is not kept."), socket, node));
+							break;
+					}
 				}
 			}
-			return true;
+			if (missing.Count == 0)
+				return true;
+
+			RhinoApp.WriteLine(string.Format(LOC.STR("'{0}' was changed in the material editor in ways its Grasshopper 2 graph cannot follow, so its Material Output is paused. The graph does not have:"), material.Name));
+			foreach (var change in missing)
+				RhinoApp.WriteLine("  " + change);
+			RhinoApp.WriteLine("  " + LOC.STR("The material keeps its XML until you use Write to Material on Material Output."));
+			return false;
 		}
 
 		/// <summary>
@@ -597,8 +728,14 @@ namespace CyclesComponents
 				return;
 
 			material.BeginChange(RenderContent.ChangeContexts.Program);
-			material.Fields.Set(EditsField, string.Empty);
-			material.EndChange();
+			try
+			{
+				material.Fields.Set(EditsField, string.Empty);
+			}
+			finally
+			{
+				material.EndChange();
+			}
 		}
 		#endregion
 
@@ -612,8 +749,18 @@ namespace CyclesComponents
 			{
 				var material = RhinoDocOf(pair.Key)?.RenderMaterials.FirstOrDefault(m => m.Id == pair.Key && m.TypeId == MaterialType);
 				Forget(pair.Key);
-				if (material != null)
+				if (material is null)
+					continue;
+
+				// Not out of the event, so Grasshopper 2 still closes the tab.
+				try
+				{
 					StoreDocument(material, pair.Value);
+				}
+				catch (Exception ex)
+				{
+					RhinoApp.WriteLine(string.Format(LOC.STR("The Grasshopper 2 graph of '{0}' could not be stored in the material: {1}"), material.Name, ex.Message));
+				}
 			}
 		}
 
