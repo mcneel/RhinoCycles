@@ -65,6 +65,25 @@ namespace RhinoCyclesCore.Materials
 		static NodeBasedMaterial()
 		{
 			RenderContent.ContentFieldChanged += OnContentFieldChanged;
+			RenderContent.ContentChanged += OnContentChanged;
+		}
+
+		/* The graph a change in the UI replaced, and the one it set, by material id. Only the UI
+		 * thread reads and writes it. */
+		private static readonly Dictionary<Guid, (string Before, string After)> g_uiGraphChanges = new Dictionary<Guid, (string Before, string After)>();
+
+		/// <summary>
+		/// Note the graph a change in the UI replaced, which a replacement of the graph puts back
+		/// before its own undo step, so one undo goes back to the material as it was.
+		/// </summary>
+		private static void OnContentChanged(object sender, RenderContentChangedEventArgs e)
+		{
+			if (g_changing || e.ChangeContext != ChangeContexts.UI || !(e.Content is NodeBasedMaterial changed) || e.OldContent == null)
+				return;
+
+			if (e.OldContent.Fields.TryGetValue(GraphXmlField, out string before) &&
+			    changed.Fields.TryGetValue(GraphXmlField, out string after) && before != after)
+				g_uiGraphChanges[changed.Id] = (before, after);
 		}
 
 		/// <summary>
@@ -84,30 +103,61 @@ namespace RhinoCyclesCore.Materials
 			Eto.Forms.Application.Instance.AsyncInvoke(() =>
 			{
 				if (!(doc?.RenderMaterials.FirstOrDefault(m => m.Id == id) is NodeBasedMaterial material) ||
-				    !material.Fields.TryGetValue(GraphXmlField, out string xml))
+				    !material.Fields.TryGetValue(GraphXmlField, out string text))
 					return;
 
+				// The graph before this change, if the change noted is this one.
+				string previous = null;
+				if (g_uiGraphChanges.TryGetValue(id, out var change))
+				{
+					g_uiGraphChanges.Remove(id);
+					if (change.After == text)
+						previous = change.Before;
+				}
+
 				// A whole material file, as the Blender add-on copies it, gives its graph.
-				var graph = GraphFromMaterialFile(xml);
+				var graph = GraphFromMaterialFile(text, out var materialFile);
 				if (graph != null)
-					material.ReplaceGraph(graph);
-				else if (material.HasGraphOrigin())
-					material.ReplaceGraph(xml);
+					material.ReplaceGraph(graph, previous);
+				else if (materialFile)
+				{
+					if (previous != null)
+					{
+						material.SetGraphWithoutUndo(previous);
+						Rhino.RhinoApp.WriteLine(LOC.STR("The pasted Rhino material is not a Node-Based material, so it has no Cycles graph. The graph stays as it was."));
+					}
+					else
+						Rhino.RhinoApp.WriteLine(LOC.STR("The pasted Rhino material is not a Node-Based material, so it has no Cycles graph. Use Undo to get the graph back."));
+				}
+				else
+				{
+					var clean = text.TrimStart(ByteOrderMark);
+					if (material.HasGraphOrigin())
+						material.ReplaceGraph(clean, previous);
+					else if (clean != text)
+						material.SetGraphWithoutUndo(clean);
+				}
 			});
 		}
 
+		/* Text copied from a file can start with one. */
+		internal const char ByteOrderMark = (char)0xFEFF;
+
 		/// <summary>
-		/// The graph in the XML of a Node-Based material file (.rmtl), or null if the text is not one.
+		/// The graph in the XML of a Node-Based material file (.rmtl), or null if the text is not
+		/// one. materialFile tells whether the text is a material file of another type.
 		/// </summary>
-		internal static string GraphFromMaterialFile(string text)
+		internal static string GraphFromMaterialFile(string text, out bool materialFile)
 		{
-			var body = Regex.Replace(text ?? string.Empty, "<\\?xml[^>]*\\?>", string.Empty).TrimStart();
+			materialFile = false;
+			var body = Regex.Replace(text ?? string.Empty, "<\\?xml[^>]*\\?>", string.Empty).TrimStart(ByteOrderMark, ' ', '\t', '\r', '\n');
 			if (!body.StartsWith("<xml", StringComparison.Ordinal))
 				return null;
 
 			try
 			{
 				var material = XElement.Parse(body).Element("material");
+				materialFile = material != null;
 				var parameter = material?.Descendants("parameter").FirstOrDefault(p => (string)p.Attribute("name") == GraphXmlField);
 				return parameter?.Value;
 			}
@@ -151,17 +201,21 @@ namespace RhinoCyclesCore.Materials
 		public override bool Icon(Size size, out Bitmap bitmap)
 		{
 			bitmap = null;
-			if (!material_icons.TryGetValue(size, out var icon))
+			lock (material_icons)
 			{
-				Image img = Rhino.Resources.Assets.Rhino.SystemDrawing.Bitmaps.TryGet(Rhino.Resources.ResourceIds.Svg_CyclesMaterialSvg, new Size(48, 48));
-				if (img == null)
-					return false;
-				icon = new Bitmap(img);
-				material_icons.Add(size, icon);
-			}
+				if (!material_icons.TryGetValue(size, out var icon))
+				{
+					Image img = Rhino.Resources.Assets.Rhino.SystemDrawing.Bitmaps.TryGet(Rhino.Resources.ResourceIds.Svg_CyclesMaterialSvg, new Size(48, 48));
+					if (img == null)
+						return false;
+					icon = new Bitmap(img);
+					material_icons.Add(size, icon);
+				}
 
-			// The caller owns the bitmap and disposes it, so it gets a copy of the cached one.
-			bitmap = new Bitmap(icon);
+				// Each caller gets its own copy, as a Bitmap must not be read on two threads at once.
+				// RhinoCommon copies its pixels and leaves it to the garbage collector.
+				bitmap = new Bitmap(icon);
+			}
 			return true;
 		}
 
@@ -225,11 +279,22 @@ namespace RhinoCyclesCore.Materials
 		/// Replace the whole graph, such as with XML copied from Blender. Its Grasshopper 2 document
 		/// and waiting edits belong to the old graph, so they go, and Edit imports the XML.
 		/// </summary>
-		internal void ReplaceGraph(string xml)
+		/// <param name="previous">The graph before the field edit that brought this one, if known.
+		/// It is put back first, so undoing the replacement goes back to the material as it was.</param>
+		internal void ReplaceGraph(string xml, string previous = null)
 		{
+			if (previous != null)
+				SetGraphWithoutUndo(previous);
+
+			// Grasshopper 2 stores an open graph in the material before closing it, so undo brings
+			// it back as it is now.
 			var release = FindGraphEditing()?.GetMethod("ReleaseMaterial", new[] { typeof(Guid) });
 			if (release != null)
 				TryInvoke(release, new object[] { Id }, out _);
+
+			// The output the graph came from stays named, braced as a material document writes it,
+			// so that graph no longer writes this material and makes no new one either.
+			var source = Fields.TryGetValue(SourceField, out string text) && Guid.TryParse(text, out var outputId) ? outputId.ToString("B") : string.Empty;
 
 			// Its own undo step, as the field edit has ended by now.
 			var doc = DocumentAssoc;
@@ -241,7 +306,7 @@ namespace RhinoCyclesCore.Materials
 				try
 				{
 					Fields.Set(GraphXmlField, xml ?? string.Empty);
-					Fields.Set(SourceField, string.Empty);
+					Fields.Set(SourceField, source);
 					Fields.Set(DocumentField, string.Empty);
 					Fields.Set(EditsField, string.Empty);
 				}
@@ -255,6 +320,30 @@ namespace RhinoCyclesCore.Materials
 				g_changing = false;
 				if (undo != 0)
 					doc.EndUndoRecord(undo);
+			}
+		}
+
+		/// <summary>
+		/// Set the graph outside any undo step, where the field edit being corrected has its own.
+		/// </summary>
+		private void SetGraphWithoutUndo(string xml)
+		{
+			g_changing = true;
+			try
+			{
+				BeginChange(ChangeContexts.Program);
+				try
+				{
+					Fields.Set(GraphXmlField, xml ?? string.Empty);
+				}
+				finally
+				{
+					EndChange();
+				}
+			}
+			finally
+			{
+				g_changing = false;
 			}
 		}
 
@@ -333,7 +422,8 @@ namespace RhinoCyclesCore.Materials
 
 		/// <summary>
 		/// Changing another material to Node-Based starts the graph from that material: a Principled
-		/// BSDF with the values Raytraced renders it with. Textures are not carried over.
+		/// BSDF from its physically based values, see <see cref="GraphFromMaterial"/>. Textures are
+		/// not carried over.
 		/// </summary>
 		public override MatchDataResult MatchData(RenderContent oldContent)
 		{
@@ -361,8 +451,10 @@ namespace RhinoCyclesCore.Materials
 		private const double DielectricIor = 1.5;
 
 		/// <summary>
-		/// A Principled BSDF graph from a material's physically based values, converted as
-		/// RhinoFullNxt converts them for Raytraced.
+		/// A Principled BSDF graph from a material's physically based values. A physically based
+		/// material converts as RhinoFullNxt converts it for Raytraced; any other goes through
+		/// Rhino's physically based version of it, which is not what Raytraced renders, with its
+		/// emission colour at strength 1.
 		/// </summary>
 		private static string GraphFromMaterial(RenderMaterial old)
 		{
@@ -370,6 +462,7 @@ namespace RhinoCyclesCore.Materials
 			if (material == null)
 				return null;
 			var wasPhysicallyBased = material.IsPhysicallyBased;
+			var customEmission = material.EmissionColor;
 			if (!wasPhysicallyBased)
 				material.ToPhysicallyBased();
 			var pbr = material.PhysicallyBased;
@@ -425,14 +518,26 @@ namespace RhinoCyclesCore.Materials
 				new XAttribute("subsurface_scale", Format(subsurface)),
 				new XAttribute("subsurface_radius", Format(radius, radius, radius)));
 
-			// Rhino folds the emission strength into the colour.
-			var strength = old.Fields.TryGetValue("intensity", out double intensity) ? intensity
-				: old.Fields.TryGetValue("emission-multiplier", out double multiplier) ? multiplier : 0.0;
-			if (strength > 0.0)
+			// A physically based material has the emission strength folded into the colour; the
+			// custom path of Raytraced takes any other's emission colour at strength 1.
+			double[] emission = null;
+			var strength = 1.0;
+			if (wasPhysicallyBased)
 			{
-				var e = pbr.Emission;
-				var unscaled = new Rhino.Display.Color4f((float)(e.R / strength), (float)(e.G / strength), (float)(e.B / strength), 1f);
-				node.Add(new XAttribute("emission_color", Format(Linear(unscaled))));
+				strength = old.Fields.TryGetValue("intensity", out double intensity) ? intensity
+					: old.Fields.TryGetValue("emission-multiplier", out double multiplier) ? multiplier : 0.0;
+				if (strength > 0.0)
+				{
+					var e = pbr.Emission;
+					emission = Linear(new Rhino.Display.Color4f((float)(e.R / strength), (float)(e.G / strength), (float)(e.B / strength), 1f));
+				}
+			}
+			else
+				emission = Linear(new Rhino.Display.Color4f(customEmission));
+
+			if (emission != null && emission.Any(c => c > 0.0))
+			{
+				node.Add(new XAttribute("emission_color", Format(emission)));
 				node.Add(new XAttribute("emission_strength", Format(strength)));
 			}
 
@@ -546,12 +651,12 @@ namespace RhinoCyclesCore.Materials
 		{
 			base.SimulateMaterial(ref simulatedMaterial, tg);
 
-			var xml = Fields.TryGetValue(GraphXmlField, out string text) && !string.IsNullOrWhiteSpace(text) ? text : EmptyGraphXml;
-			var graph = CyclesGraphXml.Parse(xml);
-			var look = graph == null ? new CyclesGraphLook() : CyclesGraphLook.FromGraph(graph);
+			var look = Look();
 
-			// Rhino's material colours are gamma-encoded; the graph's are linear.
-			var baseColour = ToSrgb(look.BaseColor);
+			// The graph's colours are linear; Rhino's are what Raytraced and Change Type raise to the
+			// document's gamma.
+			var gamma = PreProcessGamma(DocumentAssoc);
+			var baseColour = FromLinear(look.BaseColor, gamma);
 			simulatedMaterial.ToPhysicallyBased();
 			var pbr = simulatedMaterial.PhysicallyBased;
 			pbr.BaseColor = baseColour;
@@ -561,12 +666,13 @@ namespace RhinoCyclesCore.Materials
 			pbr.Opacity = 1.0 - Clamp(look.Transmission);
 			pbr.OpacityIOR = look.Ior;
 			pbr.OpacityRoughness = Clamp(look.Roughness);
-			pbr.Clearcoat = Clamp(look.Coat);
+			// Rhino draws its clearcoat at a quarter, as Change Type writes it.
+			pbr.Clearcoat = Clamp(4.0 * look.Coat);
 			pbr.ClearcoatRoughness = Clamp(look.CoatRoughness);
 			pbr.Sheen = Clamp(look.Sheen);
 			pbr.Subsurface = Clamp(look.Subsurface);
 			pbr.SubsurfaceScatteringColor = baseColour;
-			pbr.Emission = ToSrgb(look.Emission);
+			pbr.Emission = FromLinear(EmissionParts(look.Emission).Colour, gamma);
 
 			if (tg != RenderTexture.TextureGeneration.Disallow && !string.IsNullOrEmpty(look.BaseColorImage) && System.IO.File.Exists(look.BaseColorImage))
 				pbr.SetTexture(new Rhino.DocObjects.Texture { FileName = look.BaseColorImage }, Rhino.DocObjects.TextureType.PBR_BaseColor);
@@ -576,14 +682,37 @@ namespace RhinoCyclesCore.Materials
 			simulatedMaterial.Name = Name;
 		}
 
-		private static Rhino.Display.Color4f ToSrgb(float[] linear)
+		private CyclesGraphLook Look()
 		{
-			float S(float c)
-			{
-				c = Math.Max(0f, Math.Min(1f, c));
-				return (float)(c <= 0.0031308 ? c * 12.92 : 1.055 * Math.Pow(c, 1.0 / 2.4) - 0.055);
-			}
-			return new Rhino.Display.Color4f(S(linear[0]), S(linear[1]), S(linear[2]), 1f);
+			var xml = Fields.TryGetValue(GraphXmlField, out string text) && !string.IsNullOrWhiteSpace(text) ? text : EmptyGraphXml;
+			var graph = CyclesGraphXml.Parse(xml);
+			return graph == null ? new CyclesGraphLook() : CyclesGraphLook.FromGraph(graph);
+		}
+
+		/// <summary>
+		/// The strength of the simulated emission, whose colour is scaled to fit; for Raytraced, which
+		/// renders a Node-Based material in a blend or decal from its simulated look.
+		/// </summary>
+		internal float SimulatedEmissionStrength()
+		{
+			return EmissionParts(Look().Emission).Strength;
+		}
+
+		/* Linear emission as a colour no channel of which is above 1, keeping its hue, and the strength scaled out. */
+		private static (float[] Colour, float Strength) EmissionParts(float[] emission)
+		{
+			var max = Math.Max(emission[0], Math.Max(emission[1], emission[2]));
+			if (!(max > 1f))
+				return (emission, 1f);
+			return (new[] { emission[0] / max, emission[1] / max, emission[2] / max }, max);
+		}
+
+		/* A linear colour as a Rhino colour, which Raytraced raises to gamma. */
+		private static Rhino.Display.Color4f FromLinear(float[] linear, double gamma)
+		{
+			var exponent = gamma > 0.0 ? 1.0 / gamma : 1.0;
+			float C(float c) => float.IsNaN(c) ? 0f : (float)Math.Pow(Math.Max(0f, Math.Min(1f, c)), exponent);
+			return new Rhino.Display.Color4f(C(linear[0]), C(linear[1]), C(linear[2]), 1f);
 		}
 
 		private static double Clamp(double x)
@@ -595,10 +724,14 @@ namespace RhinoCyclesCore.Materials
 
 		public ShaderBody.CyclesMaterial MaterialType => ShaderBody.CyclesMaterial.CustomRenderMaterial;
 
+		/* The name, for GetShader on the render thread, where the content may be gone. */
+		private string _name = string.Empty;
+
 		public void BakeParameters(Converters.BitmapConverter bitmapConverter, uint docsrn)
 		{
 			if (Fields.TryGetValue(GraphXmlField, out string xml))
 				_graphXml = xml ?? string.Empty;
+			_name = Name ?? string.Empty;
 		}
 
 		public string MaterialXml => _graphXml;
@@ -606,13 +739,42 @@ namespace RhinoCyclesCore.Materials
 		/* Where a node sits in a node editor, which Cycles would report as an input it does not have. */
 		private static readonly Regex g_position = new Regex("\\s+ui_position\\s*=\\s*(\"[^\"]*\"|'[^']*')", RegexOptions.Compiled);
 
+		/* Graphs whose problems the command line has had, so each is reported once, not on every render. */
+		private static readonly HashSet<string> g_reported = new HashSet<string>(StringComparer.Ordinal);
+
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
 			var xml = g_position.Replace(string.IsNullOrWhiteSpace(_graphXml) ? EmptyGraphXml : _graphXml, string.Empty);
-			var parsed = ccl.Shader.GraphFromCyclesXml(sh, xml, out var problems);
+			var read = ccl.Shader.GraphFromCyclesXml(sh, xml, out var problems);
+
+			// XML that does not parse renders as its simulated look does: the Principled BSDF of an empty graph.
+			var parsed = read || ccl.Shader.GraphFromCyclesXml(sh, EmptyGraphXml, out _);
+
 			if (!string.IsNullOrEmpty(problems))
-				RcCore.It.AddLogString($"Node-Based material '{Name}': {problems}");
+			{
+				RcCore.It.AddLogString($"Node-Based material '{_name}': {problems}");
+				ReportProblems(xml, _name, problems, read);
+			}
 			return parsed;
+		}
+
+		private static void ReportProblems(string xml, string name, string problems, bool read)
+		{
+			lock (g_reported)
+			{
+				if (!g_reported.Add(xml))
+					return;
+			}
+
+			var lines = problems.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+			Rhino.RhinoApp.InvokeOnUiThread(new Action(() =>
+			{
+				Rhino.RhinoApp.WriteLine(read
+					? string.Format(LOC.STR("Cycles left out parts of the graph of the Node-Based material '{0}':"), name)
+					: string.Format(LOC.STR("Cycles cannot read the graph of the Node-Based material '{0}', so it renders as a plain Principled BSDF:"), name));
+				foreach (var line in lines)
+					Rhino.RhinoApp.WriteLine("  " + line);
+			}));
 		}
 
 		public ClosureSocket GetClosureSocket(ccl.Shader sh)

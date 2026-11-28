@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 **/
 
+using ccl;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -33,30 +34,122 @@ namespace RhinoCyclesCore.Materials
 	{
 		private readonly XElement _root;
 		private readonly Dictionary<string, XElement> _nodes = new Dictionary<string, XElement>(StringComparer.Ordinal);
-		private readonly List<(string FromNode, string FromSocket, string ToNode, string ToSocket)> _links =
-			new List<(string FromNode, string FromSocket, string ToNode, string ToSocket)>();
+		/* The link into each input, by node and lower-case socket name, as ccycles keeps them. */
+		private readonly Dictionary<(string Node, string Socket), (string Node, string Socket)> _sources =
+			new Dictionary<(string Node, string Socket), (string Node, string Socket)>();
+		/* The nodes each node takes from, for finding loops. */
+		private readonly Dictionary<string, List<string>> _upstream = new Dictionary<string, List<string>>(StringComparer.Ordinal);
 
 		private CyclesGraphXml(XElement root)
 		{
 			_root = root;
 
-			// Cycles' example scenes wrap the graph in a shader element.
-			var shader = root.Descendants("shader").FirstOrDefault();
-			foreach (var element in (shader ?? root).Elements())
+			// As ccycles reads it: the first shader of Cycles' example scenes, else the elements themselves.
+			var body = root.Element("shader") ?? root.Element("cycles")?.Element("shader") ?? root;
+
+			// Without ccycles' node types, connects are taken as they are.
+			var typesKnown = TypeInfo("output") != null;
+
+			// The nodes a connect can name so far, with their Cycles types.
+			var defined = new Dictionary<string, string>(StringComparer.Ordinal) { ["output"] = "output" };
+			foreach (var element in body.Elements())
 			{
-				if (element.Name.LocalName == "connect")
+				var kind = element.Name.LocalName;
+				if (kind == "connect")
 				{
 					if (Split((string)element.Attribute("from"), out var fromNode, out var fromSocket) &&
 					    Split((string)element.Attribute("to"), out var toNode, out var toSocket))
-						_links.Add((fromNode, fromSocket, toNode, toSocket));
+						Connect(defined, typesKnown, fromNode, fromSocket, toNode, toSocket);
 					continue;
 				}
 
 				var name = (string)element.Attribute("name");
-				if (name != null && element.Name.LocalName != "output")
-					_nodes[name] = element;
+				if (kind == "output" || name == null || name == "output")
+					continue;
+				_nodes[name] = element;
+
+				// ccycles leaves out unknown types and convert nodes placed by hand.
+				var type = kind == "background" ? "background_shader" : kind;
+				if (name.Length > 0 && !type.StartsWith("convert_", StringComparison.Ordinal) && (!typesKnown || TypeInfo(type) != null))
+					defined[name] = type;
 			}
 		}
+
+		/// <summary>
+		/// Add a link unless ccycles would leave it out: a node not defined before it, sockets the
+		/// nodes lack, types Cycles cannot convert, a loop, or an input linked already.
+		/// </summary>
+		private void Connect(Dictionary<string, string> defined, bool typesKnown, string fromNode, string fromSocket, string toNode, string toSocket)
+		{
+			if (!defined.TryGetValue(fromNode, out var fromType) || !defined.TryGetValue(toNode, out var toType))
+				return;
+
+			if (typesKnown)
+			{
+				var output = TypeInfo(fromType)?.Outputs.FirstOrDefault(s => string.Equals(s.Name, fromSocket, StringComparison.OrdinalIgnoreCase));
+				var input = TypeInfo(toType)?.Inputs.FirstOrDefault(s => s.IsLinkable && string.Equals(s.Name, toSocket, StringComparison.OrdinalIgnoreCase));
+				if (output == null || input == null || !CanConnect(output.Type, input.Type))
+					return;
+				fromSocket = output.Name;
+				toSocket = input.Name;
+			}
+
+			var key = (toNode, toSocket.ToLowerInvariant());
+			if (_sources.ContainsKey(key) || TakesFrom(fromNode, toNode))
+				return;
+
+			_sources[key] = (fromNode, fromSocket);
+			if (!_upstream.TryGetValue(toNode, out var from))
+				_upstream[toNode] = from = new List<string>();
+			from.Add(fromNode);
+		}
+
+		/* As ccycles' can_connect: through a convert node, and anything but a closure into a closure. */
+		private static bool CanConnect(string from, string to)
+		{
+			if (from == to || to == "closure")
+				return true;
+			if (from == "closure")
+				return false;
+			return TypeInfo("convert_" + from + "_to_" + to) != null;
+		}
+
+		/* Whether node takes anything from target, so a link from node into target would close a loop. */
+		private bool TakesFrom(string node, string target)
+		{
+			var pending = new Stack<string>();
+			var seen = new HashSet<string>(StringComparer.Ordinal);
+			pending.Push(node);
+			while (pending.Count > 0)
+			{
+				var current = pending.Pop();
+				if (current == target)
+					return true;
+				if (!seen.Add(current) || !_upstream.TryGetValue(current, out var from))
+					continue;
+				foreach (var f in from)
+					pending.Push(f);
+			}
+			return false;
+		}
+
+		private static ShaderNodeTypeInfo TypeInfo(string type)
+		{
+			try
+			{
+				return ShaderNodeTypes.Find(type);
+			}
+			catch (Exception)
+			{
+				// ccycles missing or too old to list its nodes.
+				return null;
+			}
+		}
+
+		/* What pugixml, which ccycles reads the XML with, takes as text: an & that starts no
+		 * entity, and a < in a value. */
+		private static readonly Regex g_bareAmpersand = new Regex("&(?!(?:amp|lt|gt|quot|apos);|#[0-9]+;|#x[0-9A-Fa-f]+;)", RegexOptions.Compiled);
+		private static readonly Regex g_quotedValue = new Regex("=\\s*(\"[^\"]*\"|'[^']*')", RegexOptions.Compiled);
 
 		/// <summary>
 		/// The graph, or null if the XML does not parse.
@@ -65,7 +158,9 @@ namespace RhinoCyclesCore.Materials
 		{
 			try
 			{
-				var body = Regex.Replace(xml ?? string.Empty, "<\\?xml[^>]*\\?>", string.Empty);
+				var body = Regex.Replace(xml ?? string.Empty, "<\\?xml[^>]*\\?>", string.Empty).TrimStart('\uFEFF');
+				body = g_bareAmpersand.Replace(body, "&amp;");
+				body = g_quotedValue.Replace(body, m => m.Value.Replace("<", "&lt;"));
 				return new CyclesGraphXml(XElement.Parse("<root>" + body + "</root>"));
 			}
 			catch (XmlException)
@@ -110,18 +205,14 @@ namespace RhinoCyclesCore.Materials
 		}
 
 		/// <summary>
-		/// The node and output linked into an input, which connect names by either of its names.
+		/// The node and output linked into an input, by its Cycles socket name in any case, as
+		/// ccycles matches it.
 		/// </summary>
-		internal (string Node, string Socket)? Source(string node, string socket, string uiName)
+		internal (string Node, string Socket)? Source(string node, string socket)
 		{
-			foreach (var link in _links)
-			{
-				if (link.ToNode == node &&
-				    (string.Equals(link.ToSocket, socket, StringComparison.OrdinalIgnoreCase) ||
-				     string.Equals(link.ToSocket, uiName, StringComparison.OrdinalIgnoreCase)))
-					return (link.FromNode, link.FromSocket);
-			}
-			return null;
+			if (node == null || socket == null)
+				return null;
+			return _sources.TryGetValue((node, socket.ToLowerInvariant()), out var source) ? source : ((string Node, string Socket)?)null;
 		}
 
 		/// <summary>

@@ -514,13 +514,27 @@ namespace CyclesComponents
 		}
 
 		/// <summary>
-		/// Close the graph opened from a material whose graph was replaced, such as by pasted XML,
-		/// without storing it back, so Edit imports the new graph. RhinoCycles calls this by reflection.
+		/// Close the graph opened from a material whose graph is about to be replaced, such as by
+		/// pasted XML, so Edit imports the new graph. It is stored in the material first, so undoing
+		/// the replacement brings it back as it is now. RhinoCycles calls this by reflection.
 		/// </summary>
 		public static void ReleaseMaterial(Guid materialId)
 		{
 			if (!g_open.TryGetValue(materialId, out var doc))
 				return;
+
+			var material = RhinoDocOf(materialId)?.RenderMaterials.FirstOrDefault(m => m.Id == materialId && m.TypeId == MaterialType);
+			if (material != null)
+			{
+				try
+				{
+					StoreDocument(material, doc);
+				}
+				catch (Exception ex)
+				{
+					Grasshopper2.Diagnostics.Logger.Add(ex, $"{nameof(GraphEditing)}.{nameof(ReleaseMaterial)}()");
+				}
+			}
 
 			// Forgotten first, so closing the tab does not store it in the material again.
 			Forget(materialId);

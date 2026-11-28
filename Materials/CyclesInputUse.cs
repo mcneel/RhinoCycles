@@ -114,6 +114,16 @@ namespace RhinoCyclesCore.Materials
 			Unless("subsurface_scattering", "subsurface_ior subsurface_anisotropy", "method", "burley");
 			Unless("subsurface_scattering", "subsurface_roughness", "method", "burley", "random_walk_skin");
 
+			If("principled_hair_bsdf", "color", "parametrization", "Direct coloring");
+			If("principled_hair_bsdf", "melanin melanin_redness tint random_color", "parametrization", "Melanin concentration");
+			If("principled_hair_bsdf", "absorption_coefficient", "parametrization", "Absorption coefficient");
+
+			// Preetham and Hosek-Wilkie are precomputed from the sun direction; the others model the atmosphere.
+			If("sky_texture", "sun_direction turbidity", "sky_type", "preetham", "hosek_wilkie");
+			If("sky_texture", "ground_albedo", "sky_type", "hosek_wilkie");
+			If("sky_texture", "sun_disc sun_size sun_intensity sun_elevation sun_rotation altitude air_density aerosol_density ozone_density",
+				"sky_type", "single_scattering", "multiple_scattering");
+
 			If("scatter_volume volume_coefficients", "anisotropy", "phase", "Henyey-Greenstein", "Draine");
 			If("scatter_volume volume_coefficients", "IOR backscatter", "phase", "Fournier-Forand");
 			If("scatter_volume volume_coefficients", "alpha", "phase", "Draine");

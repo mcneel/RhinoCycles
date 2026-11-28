@@ -97,7 +97,7 @@ namespace RhinoCyclesCore
 			{
 				UnitScale = (float)Rhino.LengthUnit.Scale(Rhino.LengthUnit.Meters, ModelUnits)
 			};
-			RecordDataForShaderPart(materialShader, rm, gamma);
+			RecordDataForShaderPart(materialShader, rm, gamma, true);
 			return materialShader;
 		}
 
@@ -255,14 +255,14 @@ namespace RhinoCyclesCore
 				if (rm.FindChild("material-1") is RenderMaterial first)
 				{
 					ShaderBody materialOne = new ShaderBody(first.RenderHash);
-					RecordDataForShaderPart(materialOne, first, gamma);
+					RecordDataForShaderPart(materialOne, first, gamma, true);
 					shb.MaterialOne = materialOne;
 					shb.MaterialOne.Name = "material-1";
 				}
 				if (rm.FindChild("material-2") is RenderMaterial second)
 				{
 					ShaderBody materialTwo = new ShaderBody(second.RenderHash);
-					RecordDataForShaderPart(materialTwo, second, gamma);
+					RecordDataForShaderPart(materialTwo, second, gamma, true);
 					shb.MaterialTwo = materialTwo;
 					shb.MaterialTwo.Name = "material-2";
 				}
@@ -485,6 +485,12 @@ namespace RhinoCyclesCore
 			{
 				shb.EmissionStrength = (float)intensity;
 			}
+			// A Node-Based material's simulated emission colour is scaled to fit, with the strength apart.
+			if (rm is NodeBasedMaterial nodeBased)
+			{
+				shb.EmissionStrength = nodeBased.SimulatedEmissionStrength();
+			}
+			else
 			{
 				// Rhino factors intensity (emission-multiplier) into EmissionColor.
 				// undo that so we can use emission strength as input instead.
@@ -546,10 +552,18 @@ namespace RhinoCyclesCore
 			}
 		}
 
-		private bool RecordDataForShaderPart(ShaderBody shb, RenderMaterial rm, float gamma)
+		/// <param name="nested">True for a blend material's child or a decal's material.</param>
+		private bool RecordDataForShaderPart(ShaderBody shb, RenderMaterial rm, float gamma, bool nested = false)
 		{
 			if (null == rm)
 				return false;
+
+			// A Node-Based graph renders only as a whole material; nested, its simulated look stands in.
+			if (nested && rm is NodeBasedMaterial)
+			{
+				RecordDataForPbrShaderPart(shb, rm, gamma);
+				return true;
+			}
 
 			//The only materials we deal with "natively" are Cycles materials.
 			//So special case those

@@ -95,7 +95,8 @@ namespace RhinoCyclesCore.Materials
 			string xml = null;
 			using (var iterator = GetSelection().Iterator())
 			{
-				if (iterator?.First() is NodeBasedMaterial selected)
+				// Several materials show a note in Surface only.
+				if (iterator?.First() is NodeBasedMaterial selected && iterator.Next() == null)
 					selected.Fields.TryGetValue(NodeBasedMaterial.GraphXmlField, out xml);
 			}
 
@@ -103,7 +104,7 @@ namespace RhinoCyclesCore.Materials
 			if (_linkXml == null || !string.Equals(xml, _linkXml, StringComparison.Ordinal))
 			{
 				_linkXml = xml;
-				_linked = !string.IsNullOrWhiteSpace(xml) && CyclesGraphXml.Parse(xml)?.Source("output", OutputSocket, OutputSocket).HasValue == true;
+				_linked = !string.IsNullOrWhiteSpace(xml) && CyclesGraphXml.Parse(xml)?.Source("output", OutputSocket).HasValue == true;
 			}
 			return _linked;
 		}
@@ -125,22 +126,28 @@ namespace RhinoCyclesCore.Materials
 			if (IsDisposed)
 				return;
 
-			var material = SelectedMaterial();
+			var material = SelectedMaterial(out var several);
 			var xml = material != null && material.Fields.TryGetValue(NodeBasedMaterial.GraphXmlField, out string text) ? text : null;
-			if (!force && (material?.Id ?? Guid.Empty) == _materialId && xml == _xml)
+			if (!force && (material?.Id ?? Guid.Empty) == _materialId && xml == _xml && several == _several)
 				return;
 
 			_materialId = material?.Id ?? Guid.Empty;
 			_xml = xml;
+			_several = several;
 			Rebuild(material);
 		}
 
-		private NodeBasedMaterial SelectedMaterial()
+		/* Whether more than one material is selected, which the section does not edit. */
+		private bool _several;
+
+		private NodeBasedMaterial SelectedMaterial(out bool several)
 		{
+			several = false;
 			using (var iterator = GetSelection().Iterator())
 			{
 				if (!(iterator?.First() is NodeBasedMaterial selected))
 					return null;
+				several = iterator.Next() != null;
 
 				// The document's own material, so a change is undoable and reaches Raytraced.
 				return selected.DocumentAssoc?.RenderMaterials.FirstOrDefault(m => m.Id == selected.Id) as NodeBasedMaterial ?? selected;
@@ -156,10 +163,12 @@ namespace RhinoCyclesCore.Materials
 			};
 
 			// An empty graph renders as the Principled BSDF a new graph starts with.
-			_graph = material == null ? null : CyclesGraphXml.Parse(string.IsNullOrWhiteSpace(_xml) ? NodeBasedMaterial.EmptyGraphXml : _xml);
-			var source = _graph?.Source("output", OutputSocket, OutputSocket);
+			_graph = material == null || _several ? null : CyclesGraphXml.Parse(string.IsNullOrWhiteSpace(_xml) ? NodeBasedMaterial.EmptyGraphXml : _xml);
+			var source = _graph?.Source("output", OutputSocket);
 			_linked = source.HasValue;
-			if (_graph == null)
+			if (_several)
+				layout.Rows.Add(new TableRow(RhinoLayout.NewLabel(LOC.STR("Select one material to edit its nodes."))));
+			else if (_graph == null)
 			{
 				if (material != null)
 					layout.Rows.Add(new TableRow(RhinoLayout.NewLabel(LOC.STR("The graph XML does not parse."))));
@@ -187,10 +196,9 @@ namespace RhinoCyclesCore.Materials
 			// Null while a link sets it.
 			string Setting(string name)
 			{
-				var info = nodeType.Inputs.FirstOrDefault(s => s.Name == name);
-				if (info != null && _graph.Source(node, name, info.UiName).HasValue)
+				if (_graph.Source(node, name).HasValue)
 					return null;
-				return _graph.Value(node, name) ?? CyclesGraphXml.ReaderDefault(type, name) ?? info?.Default;
+				return _graph.Value(node, name) ?? CyclesGraphXml.ReaderDefault(type, name) ?? nodeType.Inputs.FirstOrDefault(s => s.Name == name)?.Default;
 			}
 
 			foreach (var socket in nodeType.Inputs)
@@ -202,7 +210,7 @@ namespace RhinoCyclesCore.Materials
 				if (!CyclesInputUse.IsUsed(type, socket.Name, Setting))
 					continue;
 
-				var source = _graph.Source(node, socket.Name, socket.UiName);
+				var source = _graph.Source(node, socket.Name);
 				if (source.HasValue)
 				{
 					var from = source.Value.Node;
@@ -321,9 +329,9 @@ namespace RhinoCyclesCore.Materials
 			if (socket.Type == "uint")
 				stepper.MinValue = 0.0;
 
-			stepper.ValueChanged += (sender, e) => set(decimals == 0
+			CommitOnce(stepper, () => set(decimals == 0
 				? ((long)Math.Round(stepper.Value)).ToString(CultureInfo.InvariantCulture)
-				: Format(stepper.Value));
+				: Format(stepper.Value)));
 			return stepper;
 		}
 
@@ -332,17 +340,77 @@ namespace RhinoCyclesCore.Materials
 			var values = Numbers(text, count);
 			var steppers = values.Select(v => new NumericStepper { DecimalPlaces = 3, MaximumDecimalPlaces = 6, Increment = 0.01, Value = v }).ToList();
 			foreach (var stepper in steppers)
-				stepper.ValueChanged += (sender, e) => set(string.Join(" ", steppers.Select(s => Format(s.Value))));
+				CommitOnce(stepper, () => set(string.Join(" ", steppers.Select(s => Format(s.Value)))));
 
 			// The fields share the width, as narrow as the panel may be.
 			return new TableLayout(new TableRow(steppers.Select(s => new TableCell(s, true)).ToArray())) { Spacing = new Size(2, 0) };
 		}
 
+		/// <summary>
+		/// Pass a stepper's value on once: a typed value on Enter or when the stepper loses focus,
+		/// and steps of its arrows after a short pause, so each change is one undo step.
+		/// </summary>
+		private static void CommitOnce(NumericStepper stepper, Action commit)
+		{
+			var committed = stepper.Value;
+			var typing = false;
+			var pause = new UITimer { Interval = 0.4 };
+
+			void Commit()
+			{
+				pause.Stop();
+				typing = false;
+				if (stepper.Value.Equals(committed))
+					return;
+				committed = stepper.Value;
+				commit();
+			}
+
+			pause.Elapsed += (sender, e) => Commit();
+			stepper.ValueChanged += (sender, e) =>
+			{
+				pause.Stop();
+				if (!typing)
+					pause.Start();
+			};
+			stepper.KeyDown += (sender, e) =>
+			{
+				if (e.Key == Keys.Enter)
+					Commit();
+				else if (e.Key != Keys.Up && e.Key != Keys.Down && e.Key != Keys.PageUp && e.Key != Keys.PageDown)
+					typing = true;
+			};
+			stepper.LostFocus += (sender, e) => Commit();
+			stepper.UnLoad += (sender, e) => pause.Stop();
+		}
+
 		private static Control Flag(string text, Action<string> set)
 		{
-			var check = new CheckBox { Checked = text == "true" || text == "1" };
+			var check = new CheckBox { Checked = IsTrue(text) };
 			check.CheckedChanged += (sender, e) => set(check.Checked == true ? "true" : "false");
 			return check;
+		}
+
+		/// <summary>
+		/// A boolean as Cycles reads it: "true" in any case, or a number atoi reads as not 0.
+		/// </summary>
+		private static bool IsTrue(string text)
+		{
+			text = text ?? string.Empty;
+			if (string.Equals(text, "true", StringComparison.OrdinalIgnoreCase))
+				return true;
+
+			var i = 0;
+			while (i < text.Length && char.IsWhiteSpace(text[i]))
+				i++;
+			if (i < text.Length && (text[i] == '+' || text[i] == '-'))
+				i++;
+			for (; i < text.Length && text[i] >= '0' && text[i] <= '9'; i++)
+			{
+				if (text[i] != '0')
+					return true;
+			}
+			return false;
 		}
 
 		/// <summary>
@@ -363,8 +431,9 @@ namespace RhinoCyclesCore.Materials
 		private static Control Choice(string text, ShaderNodeSocketInfo socket, Action<string> set)
 		{
 			var choice = new DropDown();
+			// Cycles' own names, as the XML has them.
 			foreach (var entry in socket.EnumValues.Where(e => !string.IsNullOrWhiteSpace(e.Key)))
-				choice.Items.Add(new ListItem { Text = CyclesGraphXml.DisplayName(entry.Key), Key = entry.Key });
+				choice.Items.Add(new ListItem { Text = entry.Key, Key = entry.Key });
 			choice.SelectedKey = text;
 
 			choice.SelectedIndexChanged += (sender, e) =>
@@ -398,7 +467,8 @@ namespace RhinoCyclesCore.Materials
 
 		private void SetValue(NodeBasedMaterial material, string node, string socket, string value, bool rebuild)
 		{
-			if (_graph == null)
+			// A control of an earlier build, such as a text box losing focus, can belong to another material.
+			if (_graph == null || _several || material == null || material.Id != _materialId)
 				return;
 
 			// The section already shows the value, and a rebuild would take the focus away,

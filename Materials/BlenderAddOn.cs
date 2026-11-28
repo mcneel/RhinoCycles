@@ -53,6 +53,9 @@ namespace RhinoCyclesCore.Materials
 		/* Blender programs the user chose, which Find includes from then on. */
 		private const string ChosenSetting = "blender-programs-chosen";
 
+		/* The day the offer last looked for Blender and found none. */
+		private const string SearchedSetting = "blender-last-searched";
+
 		/* Extensions, and the command line that installs them, came with Blender 4.2. */
 		private static readonly Version MinimumBlender = new Version(4, 2);
 
@@ -69,18 +72,18 @@ namespace RhinoCyclesCore.Materials
 			public string Executable { get; internal set; }
 
 			/// <summary>
-			/// Where this Blender keeps the extensions its user installs.
+			/// Where this Blender keeps the extensions its user installs, or null if that cannot be told.
 			/// </summary>
 			public string ExtensionsFolder { get; internal set; }
 
 			public string Label => string.Format(CultureInfo.InvariantCulture, "Blender {0}.{1}", Version.Major, Version.Minor);
 
-			public bool HasAddOn => File.Exists(Path.Combine(ExtensionsFolder, ExtensionId, "blender_manifest.toml"));
+			public bool HasAddOn => ExtensionsFolder != null && File.Exists(Path.Combine(ExtensionsFolder, ExtensionId, "blender_manifest.toml"));
 
 			/// <summary>
 			/// The version of the add-on this Blender has, or null if it has none.
 			/// </summary>
-			public Version AddOnVersion => ManifestVersion(Path.Combine(ExtensionsFolder, ExtensionId));
+			public Version AddOnVersion => ExtensionsFolder == null ? null : ManifestVersion(Path.Combine(ExtensionsFolder, ExtensionId));
 
 			/// <summary>
 			/// Whether this Blender has the add-on at this version or a newer one.
@@ -123,13 +126,19 @@ namespace RhinoCyclesCore.Materials
 		/// </summary>
 		public static List<Installation> Find()
 		{
-			var programs = (HostUtils.RunningOnWindows ? WindowsPrograms() : MacPrograms()).Concat(ChosenPrograms());
+			return Find(ChosenPrograms());
+		}
+
+		/* Find, with the chosen programs read beforehand, as only the UI thread reads the settings. */
+		private static List<Installation> Find(IEnumerable<string> chosen)
+		{
+			var programs = (HostUtils.RunningOnWindows ? WindowsPrograms() : MacPrograms()).Concat(chosen);
 			var found = new List<Installation>();
 			foreach (var program in programs.Distinct(StringComparer.OrdinalIgnoreCase))
 			{
 				var blender = FromProgram(program);
 				if (blender != null && found.All(b => !string.Equals(b.Executable, blender.Executable, StringComparison.OrdinalIgnoreCase) &&
-				                                      !string.Equals(b.ExtensionsFolder, blender.ExtensionsFolder, StringComparison.OrdinalIgnoreCase)))
+				                                      (blender.ExtensionsFolder == null || !string.Equals(b.ExtensionsFolder, blender.ExtensionsFolder, StringComparison.OrdinalIgnoreCase))))
 					found.Add(blender);
 			}
 			return found.OrderBy(b => b.Version).ToList();
@@ -177,8 +186,24 @@ namespace RhinoCyclesCore.Materials
 			{
 				Version = version,
 				Executable = program,
-				ExtensionsFolder = Path.Combine(UserResources(program, version), "extensions", "user_default"),
+				ExtensionsFolder = ExtensionsFolderOf(program, version),
 			};
+		}
+
+		/// <summary>
+		/// The folder of a Blender's user_default extensions repository, as Blender finds it, or null.
+		/// </summary>
+		private static string ExtensionsFolderOf(string program, Version version)
+		{
+			var extensions = Environment.GetEnvironmentVariable("BLENDER_USER_EXTENSIONS");
+			if (string.IsNullOrEmpty(extensions))
+			{
+				var resources = UserResources(program, version);
+				if (string.IsNullOrEmpty(resources))
+					return null;
+				extensions = Path.Combine(resources, "extensions");
+			}
+			return Path.Combine(extensions, "user_default");
 		}
 
 		private static IEnumerable<string> WindowsPrograms()
@@ -345,7 +370,7 @@ namespace RhinoCyclesCore.Materials
 		}
 
 		/// <summary>
-		/// Where a Blender keeps its user's settings and extensions, as Blender finds it.
+		/// Where a Blender keeps its user's settings and extensions, as Blender finds it, or null.
 		/// </summary>
 		private static string UserResources(string program, Version version)
 		{
@@ -358,9 +383,12 @@ namespace RhinoCyclesCore.Materials
 				return portable;
 
 			var versionFolder = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
+			var home = Environment.GetFolderPath(HostUtils.RunningOnWindows ? Environment.SpecialFolder.ApplicationData : Environment.SpecialFolder.UserProfile);
+			if (string.IsNullOrEmpty(home))
+				return null;
 			return HostUtils.RunningOnWindows
-				? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Blender Foundation", "Blender", versionFolder)
-				: Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "Application Support", "Blender", versionFolder);
+				? Path.Combine(home, "Blender Foundation", "Blender", versionFolder)
+				: Path.Combine(home, "Library", "Application Support", "Blender", versionFolder);
 		}
 
 		private static PersistentSettings Settings => Rhino.PlugIns.PlugIn.Find(new Guid("9BC28E9E-7A6C-4B8F-A0C6-3D05E02D1B97"))?.Settings;
@@ -374,16 +402,46 @@ namespace RhinoCyclesCore.Materials
 		{
 			var settings = Settings;
 			var shipped = ShippedVersion;
-			if (settings == null || shipped == null)
+			if (settings == null || shipped == null || g_searching)
 				return;
 
 			var offered = Version.TryParse(settings.GetString(OfferedSetting, string.Empty), out var last) ? last : null;
 			if (offered != null && offered >= shipped)
 				return;
 
-			var found = Find();
-			if (found.Count == 0)
+			// Without a Blender, looking again once a day is enough.
+			var today = DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+			if (settings.GetString(SearchedSetting, string.Empty) == today)
 				return;
+
+			// Looking can take seconds, so not on the UI thread; the question is asked on it.
+			var chosen = ChosenPrograms();
+			g_searching = true;
+			Task.Run(() => Find(chosen)).ContinueWith(task =>
+			{
+				var found = task.Status == TaskStatus.RanToCompletion ? task.Result : new List<Installation>();
+				RhinoApp.InvokeOnUiThread(new Action(() =>
+				{
+					g_searching = false;
+					Offer(found, offered, shipped, today);
+				}));
+			});
+		}
+
+		/* A search for the offer running in the background. Only the UI thread reads and sets it. */
+		private static bool g_searching;
+
+		private static void Offer(List<Installation> found, Version offered, Version shipped, string today)
+		{
+			var settings = Settings;
+			if (settings == null)
+				return;
+
+			if (found.Count == 0)
+			{
+				settings.SetString(SearchedSetting, today);
+				return;
+			}
 
 			settings.SetString(OfferedSetting, shipped.ToString());
 
@@ -626,7 +684,8 @@ namespace RhinoCyclesCore.Materials
 						return LOC.STR("Blender did not finish within two minutes.");
 					}
 
-					if (process.ExitCode == 0 && blender.HasAddOn)
+					// Blender's word for it where its extensions folder cannot be told.
+					if (process.ExitCode == 0 && (blender.ExtensionsFolder == null || blender.HasAddOn))
 						return null;
 
 					var said = (errors.Result + Environment.NewLine + output.Result)

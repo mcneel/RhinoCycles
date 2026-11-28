@@ -70,7 +70,7 @@ namespace RhinoCyclesCore.Materials
 		/// </summary>
 		internal static CyclesGraphLook FromGraph(CyclesGraphXml graph)
 		{
-			var surface = graph.Source("output", "surface", "Surface");
+			var surface = graph.Source("output", "surface");
 			return surface.HasValue ? Closure(new Walk(graph), surface.Value.Node, 0) : new CyclesGraphLook();
 		}
 
@@ -93,13 +93,16 @@ namespace RhinoCyclesCore.Materials
 			var graph = walk.Graph;
 			var look = new CyclesGraphLook();
 
-			float[] Col(string socket) => Colour(walk, node, socket, depth, look);
+			// Only a base colour may give the display material its image.
+			float[] Base(string socket) => Colour(walk, node, socket, depth, look);
+			float[] Col(string socket) => Colour(walk, node, socket, depth, null);
 			double Num(string socket) => Number(graph, node, socket);
 
 			switch (graph.NodeType(node))
 			{
 				case "principled_bsdf":
-					look.BaseColor = Col("base_color");
+				{
+					look.BaseColor = Base("base_color");
 					look.Metallic = Num("metallic");
 					look.Roughness = Num("roughness");
 					look.Ior = Num("ior");
@@ -108,34 +111,38 @@ namespace RhinoCyclesCore.Materials
 					look.Coat = Num("coat_weight");
 					look.CoatRoughness = Num("coat_roughness");
 					look.Sheen = Num("sheen_weight");
-					look.Subsurface = Num("subsurface_weight");
+					// Rhino's amount: Change Type and Raytraced write it as the scale at full weight,
+					// while a part weight, as Blender graphs have, is the amount itself.
+					var subsurfaceWeight = Clamp(Num("subsurface_weight"));
+					look.Subsurface = subsurfaceWeight >= 1.0 ? Clamp(Num("subsurface_scale")) : subsurfaceWeight;
 					look.Emission = Scale(Col("emission_color"), Num("emission_strength"));
 					break;
+				}
 				case "diffuse_bsdf":
 				case "translucent_bsdf":
 				case "toon_bsdf":
-					look.BaseColor = Col("color");
+					look.BaseColor = Base("color");
 					look.Roughness = 1.0;
 					break;
 				case "glossy_bsdf":
 				case "metallic_bsdf":
-					look.BaseColor = Col("color");
+					look.BaseColor = Base("color");
 					look.Metallic = 1.0;
 					look.Roughness = Num("roughness");
 					break;
 				case "glass_bsdf":
 				case "refraction_bsdf":
-					look.BaseColor = Col("color");
+					look.BaseColor = Base("color");
 					look.Roughness = Num("roughness");
 					look.Ior = Num("IOR");
 					look.Transmission = 1.0;
 					break;
 				case "sheen_bsdf":
-					look.BaseColor = Col("color");
+					look.BaseColor = Base("color");
 					look.Sheen = 1.0;
 					break;
 				case "subsurface_scattering":
-					look.BaseColor = Col("color");
+					look.BaseColor = Base("color");
 					look.Subsurface = 1.0;
 					break;
 				case "transparent_bsdf":
@@ -149,13 +156,25 @@ namespace RhinoCyclesCore.Materials
 					break;
 				case "mix_closure":
 				{
-					var fac = Math.Max(0.0, Math.Min(1.0, Num("fac")));
-					return Blend(Input(walk, node, "closure1", depth), Input(walk, node, "closure2", depth), 1.0 - fac, fac);
+					var fac = Clamp(Num("fac"));
+					var first = Input(walk, node, "closure1", depth);
+					var second = Input(walk, node, "closure2", depth);
+					// An unlinked closure is black, as Cycles renders it.
+					if (first == null && second == null)
+						return Black();
+					if (first == null)
+						return Darkened(second, fac);
+					if (second == null)
+						return Darkened(first, 1.0 - fac);
+					return Blend(first, second, 1.0 - fac, fac);
 				}
 				case "add_closure":
 				{
 					var first = Input(walk, node, "closure1", depth);
 					var second = Input(walk, node, "closure2", depth);
+					// An unlinked closure adds nothing.
+					if (first == null || second == null)
+						return first ?? second ?? Black();
 					var sum = Blend(first, second, 0.5, 0.5);
 					// Closures add up, and so do their colours.
 					if (first.Alpha > 0.0 && second.Alpha > 0.0)
@@ -168,12 +187,29 @@ namespace RhinoCyclesCore.Materials
 		}
 
 		/// <summary>
-		/// The look of the closure linked into an input, or nothing (transparent) if none is.
+		/// The look of the closure linked into an input, or null if none is.
 		/// </summary>
 		private static CyclesGraphLook Input(Walk walk, string node, string socket, int depth)
 		{
-			var source = walk.Graph.Source(node, socket, socket);
-			return source.HasValue ? Closure(walk, source.Value.Node, depth + 1) : new CyclesGraphLook { Alpha = 0.0 };
+			var source = walk.Graph.Source(node, socket);
+			return source.HasValue ? Closure(walk, source.Value.Node, depth + 1) : null;
+		}
+
+		private static CyclesGraphLook Black()
+		{
+			return new CyclesGraphLook { BaseColor = new[] { 0f, 0f, 0f } };
+		}
+
+		/// <summary>
+		/// A look mixed at a weight with an unlinked closure, which is opaque black.
+		/// </summary>
+		private static CyclesGraphLook Darkened(CyclesGraphLook look, double weight)
+		{
+			var dark = Weighted(look, 1.0);
+			dark.Alpha = weight * look.Alpha + (1.0 - weight);
+			dark.BaseColor = Scale(look.BaseColor, dark.Alpha > 0.0 ? weight * look.Alpha / dark.Alpha : 0.0);
+			dark.Emission = Scale(look.Emission, weight);
+			return dark;
 		}
 
 		private static CyclesGraphLook Blend(CyclesGraphLook a, CyclesGraphLook b, double wa, double wb)
@@ -229,12 +265,12 @@ namespace RhinoCyclesCore.Materials
 
 		/// <summary>
 		/// A colour input: its value, or an estimate of what the node linked into it gives. An
-		/// image is noted for the display material instead.
+		/// image is noted in look, if there is one, for the display material instead.
 		/// </summary>
 		private static float[] Colour(Walk walk, string node, string socket, int depth, CyclesGraphLook look)
 		{
 			var graph = walk.Graph;
-			var source = graph.Source(node, socket, socket);
+			var source = graph.Source(node, socket);
 			if (!source.HasValue || depth > MaxDepth)
 				return Numbers(graph.Value(node, socket) ?? Default(graph, node, socket), 3, 0.8f);
 
@@ -252,7 +288,8 @@ namespace RhinoCyclesCore.Materials
 				walk.Colours[(node, socket)] = known;
 			}
 
-			look.BaseColorImage = look.BaseColorImage ?? known.Image;
+			if (look != null)
+				look.BaseColorImage = look.BaseColorImage ?? known.Image;
 			return known.Rgb;
 		}
 
@@ -300,7 +337,7 @@ namespace RhinoCyclesCore.Materials
 		/// </summary>
 		private static double Number(CyclesGraphXml graph, string node, string socket)
 		{
-			var source = graph.Source(node, socket, socket);
+			var source = graph.Source(node, socket);
 			if (source.HasValue && graph.NodeType(source.Value.Node) == "value")
 				return Numbers(graph.Value(source.Value.Node, "value"), 1, 0f)[0];
 
