@@ -167,6 +167,15 @@ namespace RhinoCyclesCore.Materials
 			}
 		}
 
+		/* A whole material file pasted into the field stays there only until the field takes its graph. */
+		private static string GraphToRender(string text)
+		{
+			var graph = GraphFromMaterialFile(text, out var materialFile);
+			if (graph == null && !materialFile)
+				return text;
+			return string.IsNullOrWhiteSpace(graph) ? EmptyGraphXml : graph;
+		}
+
 		/// <summary>
 		/// Whether the graph came from a Grasshopper 2 document, which a replaced graph drops.
 		/// </summary>
@@ -684,7 +693,7 @@ namespace RhinoCyclesCore.Materials
 
 		private CyclesGraphLook Look()
 		{
-			var xml = Fields.TryGetValue(GraphXmlField, out string text) && !string.IsNullOrWhiteSpace(text) ? text : EmptyGraphXml;
+			var xml = Fields.TryGetValue(GraphXmlField, out string text) && !string.IsNullOrWhiteSpace(text) ? GraphToRender(text) : EmptyGraphXml;
 			var graph = CyclesGraphXml.Parse(xml);
 			return graph == null ? new CyclesGraphLook() : CyclesGraphLook.FromGraph(graph);
 		}
@@ -744,7 +753,7 @@ namespace RhinoCyclesCore.Materials
 
 		public bool GetShader(ccl.Shader sh, bool finalize)
 		{
-			var xml = g_position.Replace(string.IsNullOrWhiteSpace(_graphXml) ? EmptyGraphXml : _graphXml, string.Empty);
+			var xml = g_position.Replace(string.IsNullOrWhiteSpace(_graphXml) ? EmptyGraphXml : GraphToRender(_graphXml), string.Empty);
 			var read = ccl.Shader.GraphFromCyclesXml(sh, xml, out var problems);
 
 			// XML that does not parse renders as its simulated look does: the Principled BSDF of an empty graph.
